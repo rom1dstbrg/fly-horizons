@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
 
     for (const item of items) {
       const product = products.find((p) => p.id === item.id);
-      if (!product) return NextResponse.json({ error: `Produit introuvable` }, { status: 400 });
+      if (!product) return NextResponse.json({ error: "Produit introuvable" }, { status: 400 });
       if (product.stock < item.quantity) return NextResponse.json({ error: `Stock insuffisant pour : ${product.title}` }, { status: 400 });
     }
 
@@ -132,7 +132,6 @@ export async function POST(request: NextRequest) {
         await adminSupabase.rpc("increment_coupon_usage", { coupon_code: validCoupon.code });
       }
 
-      // Email pour commande gratuite
       if (user?.email) {
         await sendOrderConfirmation({
           to: user.email,
@@ -153,8 +152,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ url: `${siteUrl}/orders/success?order_id=${order.id}` });
     }
 
-    // Line items Stripe
-    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
+    // Line items Stripe — typage explicite sans SessionCreateParams
+    type LineItem = {
+      price_data: {
+        currency: string;
+        product_data: { name: string; images?: string[] };
+        unit_amount: number;
+      };
+      quantity: number;
+    };
+
+    const lineItems: LineItem[] = [
       ...items.map((item: { title: string; price: number; quantity: number; image_url: string | null }) => ({
         price_data: {
           currency: "eur",

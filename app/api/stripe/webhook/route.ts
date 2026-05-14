@@ -48,7 +48,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Commande introuvable" }, { status: 404 });
     }
 
-    // Adresse de livraison depuis Stripe
     const shippingDetails = session.shipping_details;
     const shippingAddress = shippingDetails?.address
       ? {
@@ -61,7 +60,6 @@ export async function POST(request: NextRequest) {
         }
       : order.shipping_address;
 
-    // Mettre a jour la commande
     await adminSupabase
       .from("orders")
       .update({
@@ -71,7 +69,6 @@ export async function POST(request: NextRequest) {
       })
       .eq("id", orderId);
 
-    // Decrementer le stock
     for (const item of order.items ?? []) {
       if (!item.product_id) continue;
       const { data: product } = await adminSupabase
@@ -88,14 +85,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Incrementer usage coupon
     if (order.coupon_code) {
       await adminSupabase.rpc("increment_coupon_usage", {
         coupon_code: order.coupon_code,
       });
     }
 
-    // Envoyer email de confirmation
     const customerEmail = session.customer_details?.email ?? session.customer_email;
     if (customerEmail) {
       await sendOrderConfirmation({
