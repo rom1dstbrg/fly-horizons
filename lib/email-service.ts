@@ -41,7 +41,7 @@ export async function sendOrderConfirmation(params: SendOrderConfirmationParams)
     const { data, error } = await resend.emails.send({
       from: EMAIL_FROM,
       to: [to],
-      reply_to: EMAIL_REPLY_TO,
+      replyTo: EMAIL_REPLY_TO,
       subject: `Confirmation de commande #${orderRef} - Fly Horizons Shop`,
       html,
     });
