@@ -1,0 +1,3 @@
+supabase : xromainbeatsx@gmail.com
+resend : same as FH
+stripe : romainpilot2003@gmail.com
