@@ -1,105 +1,378 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingBag } from "lucide-react";
+import { ChevronDown, Gift, Route, ShoppingBag, Lock, Mail, Package, BadgeCheck, Clock, MapPin, Users, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { FeaturedProducts } from "@/components/shop/FeaturedProducts";
+import { formatDuration } from "@/lib/vouchers";
 
 export default async function HomePage() {
   const supabase = await createClient();
 
-  const { data: products } = await supabase
-    .from("products")
-    .select("*, images:product_images(*)")
-    .eq("active", true)
-    .eq("featured", true)
-    .order("created_at", { ascending: false })
-    .limit(4);
+  const [{ data: packs }, { data: products }] = await Promise.all([
+    supabase
+      .from("products")
+      .select("*, images:product_images(*)")
+      .eq("active", true)
+      .eq("product_type", "voucher")
+      .order("voucher_duration_minutes", { ascending: true }),
+    supabase
+      .from("products")
+      .select("*, images:product_images(*)")
+      .eq("active", true)
+      .eq("featured", true)
+      .eq("product_type", "physical")
+      .order("created_at", { ascending: false })
+      .limit(4),
+  ]);
 
   return (
-    <main className="bg-background pb-16">
+    <main className="bg-background">
 
-      {/* ── Hero card ── */}
-      <div className="px-4 sm:px-8 lg:px-[50px] pt-[98px]">
-        <div className="mx-auto max-w-[2000px] rounded-[28px] overflow-hidden bg-[#0b2238] h-[calc(100dvh-98px)] min-h-0 lg:h-auto lg:min-h-[640px] grid grid-cols-1 lg:grid-cols-2">
+      {/* ═══ HERO ═══ */}
+      <section className="relative h-screen min-h-[580px] overflow-hidden">
+        <video
+          autoPlay loop muted playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        >
+          <source src="/vol-rev%202.2.webm" type="video/webm" />
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/35 to-black/65" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent" />
 
-          {/* Gauche — texte */}
-          <div className="flex flex-col justify-center pl-10 pr-6 py-14 sm:pl-16 lg:pl-28 xl:pl-40 lg:py-24 relative z-10">
-
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 self-start bg-[#F2B705]/15 border border-[#F2B705]/30 rounded-full px-4 py-1.5 mb-8">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#F2B705]" />
-              <span className="text-[#F2B705] text-xs font-semibold tracking-[2px] uppercase">
-                Boutique officielle
-              </span>
-            </div>
-
-            {/* Titre */}
-            <h1 className="text-5xl sm:text-6xl lg:text-[68px] font-bold text-white leading-[1.05] tracking-tight mb-6">
-              Fly<br />
-              <span className="text-[#F2B705]">Horizons</span>
-            </h1>
-
-            {/* Sous-titre */}
-            <p className="text-white/55 text-base sm:text-lg leading-relaxed max-w-sm mb-10">
-              Accessoires aviation premium pour les passionnés du ciel.
-            </p>
-
-            {/* Boutons */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Link
-                href="/shop"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#F2B705] text-[#113356] rounded-[10px] font-semibold text-sm hover:bg-[#e6a800] transition-all shadow-[0_6px_24px_rgba(242,183,5,.3)] hover:-translate-y-px"
-              >
-                <ShoppingBag size={16} />
-                Explorer la boutique
-              </Link>
-
-              <a
-                href="#produits"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-transparent text-white border border-white/25 rounded-[10px] font-semibold text-sm hover:bg-white/10 hover:border-white/50 transition-all"
-              >
-                Notre sélection
-              </a>
-            </div>
+        <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-4 pb-16 pt-[76px]">
+          <div className="inline-flex items-center gap-2 bg-[#F2B705]/15 border border-[#F2B705]/35 rounded-full px-5 py-2 mb-8 backdrop-blur-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#F2B705] animate-pulse" />
+            <span className="text-[#F2B705] text-xs font-bold tracking-[2.5px] uppercase">
+              Boutique officielle · Fly Horizons
+            </span>
           </div>
 
-          {/* Droite — image */}
-          <div className="relative min-h-[280px] sm:min-h-[340px] lg:min-h-0">
-            <Image
-              src="/piste.jpg"
-              alt="Piste aviation Fly Horizons"
-              fill
-              className="object-cover object-center"
-              priority
-              sizes="(max-width: 1024px) 100vw, 700px"
-            />
+          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[80px] font-extrabold text-white leading-[1.0] tracking-tight mb-6 drop-shadow-lg">
+            Survolez la Belgique<br />
+            <span className="text-[#F2B705]">à votre façon.</span>
+          </h1>
 
-            {/* Overlay desktop : gauche → droite (blend avec zone texte) */}
-            <div
-              className="absolute inset-0 hidden lg:block"
-              style={{
-                background:
-                  "linear-gradient(to right, #0b2238 0%, rgba(11,34,56,.5) 28%, transparent 62%)",
-              }}
-            />
+          <p className="text-white/75 text-base sm:text-lg md:text-xl leading-relaxed max-w-xl mb-10 font-light">
+            Vols privés en avion léger, itinéraires sur mesure et accessoires.<br className="hidden sm:block" />
+            Une expérience unique au départ de Charleroi.
+          </p>
 
-            {/* Overlay mobile : haut → bas (transition texte au-dessus → image dessous) */}
-            <div
-              className="absolute inset-0 lg:hidden"
-              style={{
-                background:
-                  "linear-gradient(to bottom, #0b2238 0%, rgba(11,34,56,.35) 40%, transparent 78%)",
-              }}
-            />
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <a
+              href="#nos-vols"
+              className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-[#F2B705] text-[#113356] rounded-xl font-bold text-sm hover:bg-[#e6a800] transition-all shadow-[0_8px_30px_rgba(242,183,5,.35)] hover:-translate-y-0.5 active:translate-y-0"
+            >
+              <Gift size={16} />
+              Réserver un vol
+            </a>
+            <a
+              href="#vol-sur-mesure"
+              className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-white/10 text-white border border-white/30 rounded-xl font-semibold text-sm hover:bg-white/20 hover:border-white/50 transition-all backdrop-blur-sm"
+            >
+              <Route size={16} />
+              Vol sur mesure
+            </a>
+            <a
+              href="#collection"
+              className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-white/10 text-white border border-white/30 rounded-xl font-semibold text-sm hover:bg-white/20 hover:border-white/50 transition-all backdrop-blur-sm"
+            >
+              <ShoppingBag size={16} />
+              Boutique
+            </a>
           </div>
-
         </div>
-      </div>
 
-      {/* ── Produits populaires ── */}
-      <div id="produits">
-        <FeaturedProducts products={products ?? []} />
-      </div>
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/50 z-10">
+          <span className="text-xs font-medium tracking-widest uppercase">Découvrir</span>
+          <ChevronDown size={18} className="animate-bounce" />
+        </div>
+      </section>
+
+      {/* ═══ BARRE DE CONFIANCE ═══ */}
+      <section className="bg-white border-b border-border">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {[
+              { icon: <Lock size={20} className="text-[#113356]" />, title: "Paiement sécurisé", desc: "Via Stripe — carte bancaire" },
+              { icon: <Mail size={20} className="text-[#113356]" />, title: "Code par email", desc: "Voucher envoyé instantanément" },
+              { icon: <Package size={20} className="text-[#113356]" />, title: "Livraison Belgique", desc: "Accessoires livrés partout" },
+              { icon: <BadgeCheck size={20} className="text-[#113356]" />, title: "Pilote certifié EASA", desc: "Sécurité & professionnalisme" },
+            ].map(({ icon, title, desc }) => (
+              <div key={title} className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-[#f5f8ff] border border-[#dce8ff] flex items-center justify-center shrink-0">
+                  {icon}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{title}</p>
+                  <p className="text-xs text-muted-foreground">{desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ NOS VOLS ═══ */}
+      {(packs ?? []).length > 0 && (
+        <section id="nos-vols" className="py-20 bg-white">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+
+            <div className="text-center mb-12">
+              <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">Au départ de Charleroi (EBCI)</p>
+              <h2 className="text-4xl font-extrabold text-foreground">
+                Choisissez votre vol
+              </h2>
+              <p className="text-muted-foreground text-base mt-3 max-w-md mx-auto">
+                Du vol découverte à l&apos;aventure prolongée — sélectionnez la durée qui vous convient.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {(packs ?? []).map((pack) => {
+                const duree = pack.voucher_duration_minutes ?? 60;
+                const image = pack.images?.[0]?.url ?? null;
+                return (
+                  <Link key={pack.id} href={`/vols/${pack.slug}`} className="group flex h-full">
+                    <div className="flex flex-col w-full rounded-2xl overflow-hidden border border-border bg-white shadow-sm hover:shadow-lg transition-all duration-300">
+
+                      {/* Visuel */}
+                      <div className="relative h-44 bg-[#0b2238] overflow-hidden shrink-0">
+                        {image ? (
+                          <Image
+                            src={image}
+                            alt={pack.title}
+                            fill
+                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 bg-gradient-to-br from-[#0b2238] to-[#113356] flex flex-col items-center justify-center gap-2">
+                            <span className="text-4xl font-black text-white leading-none">{formatDuration(duree)}</span>
+                            <span className="text-[#F2B705] text-xs font-semibold tracking-widest uppercase opacity-80">Vol privé</span>
+                          </div>
+                        )}
+                        <div className="absolute top-3 left-3">
+                          <span className="bg-[#F2B705] text-[#113356] text-xs font-bold px-2.5 py-1 rounded-full">
+                            {formatDuration(duree)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Infos */}
+                      <div className="p-4 flex flex-col flex-1">
+                        <h3 className="font-bold text-foreground text-sm leading-snug mb-1.5 group-hover:text-[#113356] transition-colors">
+                          {pack.title}
+                        </h3>
+                        <p className="text-muted-foreground text-xs leading-relaxed line-clamp-2 flex-1">
+                          {pack.short_description ?? ""}
+                        </p>
+                        <div className="mt-4 flex items-center justify-between">
+                          <span className="text-[#113356] font-black text-lg">{pack.price} €</span>
+                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#113356] bg-[#f5f8ff] border border-[#dce8ff] rounded-lg px-3 py-1.5 group-hover:bg-[#113356] group-hover:text-white group-hover:border-[#113356] transition-all">
+                            Réserver
+                          </span>
+                        </div>
+                      </div>
+
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+
+            <div className="mt-10 text-center">
+              <p className="text-sm text-muted-foreground">
+                Vous avez un itinéraire précis en tête ?{" "}
+                <Link href="/vol-sur-mesure" className="text-[#113356] font-semibold hover:underline">
+                  Créez un vol entièrement sur mesure →
+                </Link>
+              </p>
+            </div>
+
+          </div>
+        </section>
+      )}
+
+      {/* ═══ VOL SUR MESURE ═══ */}
+      <section id="vol-sur-mesure" className="bg-[#0b2238] py-20 overflow-hidden">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+
+            {/* Texte */}
+            <div>
+              <span className="inline-flex items-center gap-2 text-[#F2B705] text-xs font-bold tracking-[3px] uppercase mb-5">
+                <Sparkles size={11} className="fill-[#F2B705]" /> Exclusivité Fly Horizons
+              </span>
+              <h2 className="text-4xl sm:text-5xl font-extrabold text-white leading-tight mb-5">
+                Votre itinéraire,<br />
+                <span className="text-[#F2B705]">tracé par vous.</span>
+              </h2>
+              <p className="text-white/60 text-base leading-relaxed mb-8 max-w-md">
+                Placez vos points sur la carte et l&apos;algorithme calcule votre route optimale en temps réel au départ de Charleroi.
+              </p>
+
+              <div className="space-y-5 mb-10">
+                {[
+                  {
+                    n: "01",
+                    title: "Tracez votre route",
+                    desc: "Cliquez sur la carte pour ajouter des étapes. Namur, Bruxelles, la côte, les Ardennes…",
+                  },
+                  {
+                    n: "02",
+                    title: "Visualisez votre vol en direct",
+                    desc: "L'algorithme optimise le parcours et calcule la durée instantanément.",
+                  },
+                  {
+                    n: "03",
+                    title: "Recevez votre confirmation",
+                    desc: "Un email récapitulatif avec tous les détails de votre vol vous est envoyé.",
+                  },
+                ].map(({ n, title, desc }) => (
+                  <div key={n} className="flex gap-4">
+                    <div className="w-9 h-9 rounded-full bg-[#F2B705]/15 border border-[#F2B705]/30 flex items-center justify-center shrink-0 text-[#F2B705] text-xs font-black">
+                      {n}
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold text-sm">{title}</p>
+                      <p className="text-white/50 text-sm mt-0.5">{desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <Link
+                href="/vol-sur-mesure"
+                className="inline-flex items-center gap-2 px-7 py-3.5 bg-[#F2B705] text-[#113356] rounded-xl font-bold text-sm hover:bg-[#e6a800] transition-all shadow-[0_6px_24px_rgba(242,183,5,.25)] hover:-translate-y-0.5"
+              >
+                <Route size={16} />
+                Créer mon vol sur mesure
+              </Link>
+            </div>
+
+            {/* Illustration carte */}
+            <div className="hidden lg:flex items-center justify-center">
+              <div className="relative w-full max-w-[420px]">
+                <div className="bg-[#0d2d47] border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
+                  <div className="absolute top-4 right-4 bg-[#F2B705] text-[#113356] text-[10px] font-black px-2.5 py-1 rounded-full z-10">
+                    LIVE
+                  </div>
+                  <div className="p-4 pb-0">
+                    <svg viewBox="0 0 420 240" xmlns="http://www.w3.org/2000/svg" className="w-full rounded-xl overflow-hidden">
+                      <rect width="420" height="240" fill="#1a3f5c" rx="10"/>
+                      <line x1="0" y1="80" x2="420" y2="80" stroke="#ffffff08" strokeWidth="1"/>
+                      <line x1="0" y1="160" x2="420" y2="160" stroke="#ffffff08" strokeWidth="1"/>
+                      <line x1="140" y1="0" x2="140" y2="240" stroke="#ffffff08" strokeWidth="1"/>
+                      <line x1="280" y1="0" x2="280" y2="240" stroke="#ffffff08" strokeWidth="1"/>
+                      <polyline points="210,120 100,75 65,155 175,200 310,170 360,85 210,120"
+                        stroke="#F2B705" strokeWidth="2.5" fill="none" strokeDasharray="9,5" strokeLinecap="round" opacity="0.9"/>
+                      <circle cx="210" cy="120" r="12" fill="#113356" stroke="#F2B705" strokeWidth="2.5"/>
+                      <text x="210" y="125" textAnchor="middle" fontSize="10" fill="#F2B705" fontFamily="sans-serif">✈</text>
+                      {([
+                        [100, 75], [65, 155], [175, 200], [310, 170], [360, 85]
+                      ] as [number, number][]).map(([cx, cy], i) => (
+                        <g key={i}>
+                          <circle cx={cx} cy={cy} r="9" fill="#F2B705" stroke="white" strokeWidth="1.5"/>
+                          <text x={cx} y={cy + 4} textAnchor="middle" fontSize="8" fill="#113356" fontFamily="sans-serif" fontWeight="bold">{i + 1}</text>
+                        </g>
+                      ))}
+                    </svg>
+                  </div>
+                  <div className="flex divide-x divide-white/10 border-t border-white/10">
+                    {[
+                      { label: "Distance", value: "312 km" },
+                      { label: "Durée", value: "~101 min" },
+                      { label: "Étapes", value: "5 points" },
+                    ].map(({ label, value }) => (
+                      <div key={label} className="flex-1 px-4 py-3 text-center">
+                        <p className="text-[10px] text-white/40 uppercase tracking-wider">{label}</p>
+                        <p className="text-sm font-bold text-white mt-0.5">{value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ POURQUOI FLY HORIZONS ═══ */}
+      <section className="bg-[#f5f5f7] py-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 lg:gap-16 items-start">
+
+            {/* Gauche — accroche */}
+            <div className="lg:col-span-2 lg:sticky lg:top-28">
+              <p className="text-xs font-bold text-[#113356] uppercase tracking-[3px] mb-4">Fly Horizons</p>
+              <h2 className="text-4xl sm:text-5xl font-extrabold text-foreground leading-tight mb-6">
+                Une aviation<br />privée comme<br />
+                <span className="text-[#113356]">vous l&apos;imaginez.</span>
+              </h2>
+              <p className="text-muted-foreground text-base leading-relaxed mb-8">
+                Ailleurs vous choisissez dans un catalogue. Ici vous dessinez votre vol. Chaque détail est fait pour que l&apos;expérience soit mémorable.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link
+                  href="/packs"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#113356] text-white rounded-xl text-sm font-semibold hover:bg-[#0b2238] transition-colors"
+                >
+                  <Gift size={14} />
+                  Voir nos vols
+                </Link>
+                <Link
+                  href="/vol-sur-mesure"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-[#dce8ff] text-[#113356] rounded-xl text-sm font-semibold hover:border-[#113356]/40 hover:bg-[#f5f8ff] transition-colors"
+                >
+                  <Route size={14} />
+                  Vol sur mesure
+                </Link>
+              </div>
+            </div>
+
+            {/* Droite — liste de features */}
+            <div className="lg:col-span-3 space-y-0 divide-y divide-border">
+              {[
+                {
+                  icon: <MapPin size={20} className="text-[#113356]" />,
+                  title: "Itinéraire 100 % libre",
+                  desc: "Vous placez vos points sur la carte. Namur, Bruxelles, la côte, les Ardennes… Vous décidez de chaque virage — pas de circuit imposé.",
+                },
+                {
+                  icon: <Clock size={20} className="text-[#113356]" />,
+                  title: "Prix au plus juste",
+                  desc: "Vous payez le coût réel du vol, calculé à la minute. Aucune commission, aucun forfait opaque — juste ce que votre trajet coûte vraiment.",
+                },
+                {
+                  icon: <Users size={20} className="text-[#113356]" />,
+                  title: "Pour vous et vos proches",
+                  desc: "Jusqu'à 3 passagers à bord, casques audio fournis. Un moment fort à partager en famille ou entre amis, inoubliable.",
+                },
+              ].map(({ icon, title, desc }) => (
+                <div key={title} className="flex gap-5 py-7 group">
+                  <div className="w-11 h-11 rounded-xl bg-white border border-[#dce8ff] flex items-center justify-center shrink-0 shadow-sm group-hover:border-[#113356]/30 transition-colors">
+                    {icon}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-foreground mb-1.5">{title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ COLLECTION FLY HORIZONS ═══ */}
+      {(products ?? []).length > 0 && (
+        <div id="collection">
+          <FeaturedProducts products={products ?? []} />
+        </div>
+      )}
 
     </main>
   );

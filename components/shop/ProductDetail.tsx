@@ -3,19 +3,22 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingBag, ChevronLeft, Package } from "lucide-react";
+import { ShoppingBag, ChevronLeft, Package, Mail, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { useCartStore } from "@/store/cart";
 import { formatPrice } from "@/lib/utils";
+import { formatDuration } from "@/lib/vouchers";
 import type { Product } from "@/types/database";
 
 interface ProductDetailProps {
   product: Product;
   relatedProducts?: Product[];
+  backHref?: string;
+  backLabel?: string;
 }
 
-export function ProductDetail({ product, relatedProducts = [] }: ProductDetailProps) {
+export function ProductDetail({ product, relatedProducts = [], backHref, backLabel }: ProductDetailProps) {
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
@@ -23,7 +26,9 @@ export function ProductDetail({ product, relatedProducts = [] }: ProductDetailPr
 
   const images = product.images ?? [];
   const mainImage = images[activeImage]?.url ?? null;
-  const isOutOfStock = product.stock === 0;
+  const isVoucher = product.product_type === "voucher" ||
+    (product.voucher_duration_minutes != null && product.voucher_duration_minutes > 0);
+  const isOutOfStock = !isVoucher && product.stock === 0;
 
   function handleAddToCart() {
     if (isOutOfStock) return;
@@ -34,6 +39,7 @@ export function ProductDetail({ product, relatedProducts = [] }: ProductDetailPr
       quantity,
       image_url: images[0]?.url ?? null,
       slug: product.slug,
+      product_type: isVoucher ? "voucher" : "physical",
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
@@ -46,11 +52,11 @@ export function ProductDetail({ product, relatedProducts = [] }: ProductDetailPr
         {/* Breadcrumb */}
         <div className="mb-8">
           <Link
-            href="/shop"
+            href={backHref ?? "/shop"}
             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
           >
             <ChevronLeft size={16} />
-            Retour a la boutique
+            {backLabel ?? "Retour a la boutique"}
           </Link>
         </div>
 
@@ -58,8 +64,7 @@ export function ProductDetail({ product, relatedProducts = [] }: ProductDetailPr
 
           {/* Images */}
           <div className="space-y-4">
-            {/* Image principale */}
-            <div className="relative aspect-square bg-muted rounded-lg overflow-hidden border border-border">
+            <div className="relative aspect-square rounded-lg overflow-hidden border border-border">
               {mainImage ? (
                 <Image
                   src={mainImage}
@@ -69,8 +74,23 @@ export function ProductDetail({ product, relatedProducts = [] }: ProductDetailPr
                   sizes="(max-width: 1024px) 100vw, 50vw"
                   priority
                 />
+              ) : isVoucher ? (
+                /* Fallback visuel pour voucher sans image */
+                <div className="absolute inset-0 bg-gradient-to-br from-[#0b2238] to-[#0e2d4a] flex flex-col items-center justify-center gap-6 p-10">
+                  <div className="inline-flex items-center gap-1.5 bg-[#F2B705]/10 border border-[#F2B705]/30 rounded-full px-4 py-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#F2B705]" />
+                    <span className="text-[#F2B705] text-xs font-semibold tracking-wider uppercase">Voucher</span>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-white text-6xl font-black leading-none">
+                      {formatDuration(product.voucher_duration_minutes ?? 60)}
+                    </p>
+                    <p className="text-white/50 text-sm mt-3">de vol avec Fly Horizons</p>
+                  </div>
+                  <Ticket size={40} className="text-[#F2B705]/30" />
+                </div>
               ) : (
-                <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                <div className="absolute inset-0 bg-muted flex items-center justify-center text-muted-foreground">
                   <Package size={48} />
                 </div>
               )}
@@ -113,8 +133,18 @@ export function ProductDetail({ product, relatedProducts = [] }: ProductDetailPr
           {/* Infos produit */}
           <div className="space-y-6">
 
-            {/* Tags */}
-            {product.tags.length > 0 && (
+            {/* Badge voucher */}
+            {isVoucher && (
+              <div className="inline-flex items-center gap-1.5 bg-[#F2B705]/10 border border-[#F2B705]/30 rounded-full px-3 py-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#F2B705]" />
+                <span className="text-[#F2B705] text-xs font-semibold tracking-wider uppercase">
+                  Voucher — {formatDuration(product.voucher_duration_minutes ?? 60)}
+                </span>
+              </div>
+            )}
+
+            {/* Tags (produits physiques) */}
+            {!isVoucher && product.tags.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {product.tags.map((tag) => (
                   <span
@@ -146,22 +176,21 @@ export function ProductDetail({ product, relatedProducts = [] }: ProductDetailPr
               </span>
             </div>
 
-            {/* Stock */}
+            {/* Disponibilité */}
             <div className="flex items-center gap-2">
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  isOutOfStock ? "bg-destructive" : "bg-green-500"
-                }`}
-              />
+              <span className={`w-2 h-2 rounded-full ${isOutOfStock ? "bg-destructive" : "bg-green-500"}`} />
               <span className="text-sm text-muted-foreground">
-                {isOutOfStock ? "Rupture de stock" : "En stock"}
+                {isVoucher
+                  ? "Disponible — livraison par email"
+                  : isOutOfStock
+                  ? "Rupture de stock"
+                  : "En stock"}
               </span>
             </div>
 
             {/* Quantite + ajout panier */}
             {!isOutOfStock && (
               <div className="space-y-4">
-                {/* Selecteur quantite */}
                 <div className="flex items-center gap-4">
                   <span className="text-sm text-muted-foreground">Quantite</span>
                   <div className="flex items-center border border-border rounded-md overflow-hidden">
@@ -183,26 +212,53 @@ export function ProductDetail({ product, relatedProducts = [] }: ProductDetailPr
                   </div>
                 </div>
 
-                {/* Bouton ajout panier */}
                 <Button
                   onClick={handleAddToCart}
                   size="lg"
                   className="w-full bg-primary text-primary-foreground hover:bg-gold-400 font-semibold shadow-gold"
                 >
-                  <ShoppingBag size={18} className="mr-2" />
-                  {added ? "Ajoute au panier !" : "Ajouter au panier"}
+                  {isVoucher ? (
+                    <>
+                      <Ticket size={18} className="mr-2" />
+                      {added ? "Ajoute au panier !" : "Acheter ce voucher"}
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingBag size={18} className="mr-2" />
+                      {added ? "Ajoute au panier !" : "Ajouter au panier"}
+                    </>
+                  )}
                 </Button>
               </div>
             )}
 
             {/* Infos livraison */}
             <div className="border-t border-border pt-6 space-y-2">
-              <p className="text-xs text-muted-foreground">
-                Livraison disponible en Belgique, France, Pays-Bas et Allemagne.
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Paiement securise via Stripe.
-              </p>
+              {isVoucher ? (
+                <>
+                  <div className="flex items-start gap-2">
+                    <Mail size={14} className="text-primary mt-0.5 shrink-0" />
+                    <p className="text-xs text-muted-foreground">
+                      Votre code vous est envoyé par email immédiatement après le paiement.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Ticket size={14} className="text-primary mt-0.5 shrink-0" />
+                    <p className="text-xs text-muted-foreground">
+                      Entrez votre code à l&apos;étape « Détails » sur shop.fly-horizons.com/reservation pour réserver votre vol.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs text-muted-foreground">
+                    Livraison disponible en Belgique, France, Pays-Bas et Allemagne.
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Paiement securise via Stripe.
+                  </p>
+                </>
+              )}
             </div>
 
           </div>
@@ -214,14 +270,14 @@ export function ProductDetail({ product, relatedProducts = [] }: ProductDetailPr
             <div className="flex items-end justify-between mb-8">
               <div>
                 <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-2">
-                  Vous aimerez aussi
+                  {isVoucher ? "Autres durées disponibles" : "Vous aimerez aussi"}
                 </p>
                 <h2 className="text-2xl font-bold text-foreground">
-                  Autres produits
+                  {isVoucher ? "Autres vouchers" : "Autres produits"}
                 </h2>
               </div>
               <Link
-                href="/shop"
+                href={isVoucher ? "/vouchers" : "/shop"}
                 className="hidden sm:inline-flex text-sm text-primary hover:text-[#e6a800] font-medium transition-colors"
               >
                 Voir tout

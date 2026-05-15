@@ -47,6 +47,12 @@ export async function createProduct(formData: FormData) {
     const price = parseFloat(formData.get("price") as string);
     const stock = parseInt(formData.get("stock") as string, 10);
     const featured = formData.get("featured") === "true";
+    const product_type = (formData.get("product_type") as string) || "physical";
+    const voucherDurationRaw = formData.get("voucher_duration_minutes");
+    const voucher_duration_minutes =
+      product_type === "voucher" && voucherDurationRaw
+        ? parseInt(voucherDurationRaw as string, 10)
+        : null;
     const tagsRaw = formData.get("tags") as string;
     const tags = tagsRaw
       ? tagsRaw.split(",").map((t) => t.trim()).filter(Boolean)
@@ -63,10 +69,12 @@ export async function createProduct(formData: FormData) {
         slug: "",
         short_description: short_description || null,
         price,
-        stock: isNaN(stock) ? 0 : stock,
+        stock: product_type === "voucher" ? 0 : (isNaN(stock) ? 0 : stock),
         featured,
         tags,
         active: true,
+        product_type,
+        voucher_duration_minutes,
       })
       .select()
       .single();
@@ -95,6 +103,12 @@ export async function updateProduct(productId: string, formData: FormData) {
     const stock = parseInt(formData.get("stock") as string, 10);
     const featured = formData.get("featured") === "true";
     const active = formData.get("active") === "true";
+    const product_type = (formData.get("product_type") as string) || "physical";
+    const voucherDurationRaw = formData.get("voucher_duration_minutes");
+    const voucher_duration_minutes =
+      product_type === "voucher" && voucherDurationRaw
+        ? parseInt(voucherDurationRaw as string, 10)
+        : null;
     const tagsRaw = formData.get("tags") as string;
     const tags = tagsRaw
       ? tagsRaw.split(",").map((t) => t.trim()).filter(Boolean)
@@ -106,10 +120,12 @@ export async function updateProduct(productId: string, formData: FormData) {
         title,
         short_description: short_description || null,
         price,
-        stock: isNaN(stock) ? 0 : stock,
+        stock: product_type === "voucher" ? 0 : (isNaN(stock) ? 0 : stock),
         featured,
         active,
         tags,
+        product_type,
+        voucher_duration_minutes,
       })
       .eq("id", productId);
 
@@ -129,13 +145,11 @@ export async function deleteProductImage(imageId: string, imageUrl: string) {
     await checkAdmin();
     const adminSupabase = createAdminClient();
 
-    // Supprimer de la DB
     await adminSupabase
       .from("product_images")
       .delete()
       .eq("id", imageId);
 
-    // Extraire le path depuis l'URL Supabase Storage
     const urlParts = imageUrl.split("/product-images/");
     if (urlParts[1]) {
       await adminSupabase.storage

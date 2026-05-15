@@ -15,11 +15,14 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
         <div className="flex items-end justify-between mb-10">
           <div>
             <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-2">
-              Selection
+              Collection officielle
             </p>
             <h2 className="text-3xl font-bold text-foreground">
-              Produits populaires
+              Portez les couleurs Fly Horizons
             </h2>
+            <p className="text-muted-foreground text-sm mt-2 max-w-md">
+              Produits dérivés et accessoires aviation — pour les passionnés du ciel.
+            </p>
           </div>
           <Link
             href="/shop"

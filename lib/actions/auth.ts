@@ -49,9 +49,11 @@ export async function register(formData: FormData) {
     return { error: "Le mot de passe doit contenir au moins 8 caractères." };
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://shop.fly-horizons.com";
+  const siteUrl = process.env.NODE_ENV === "development"
+    ? `http://localhost:${process.env.PORT ?? 3000}`
+    : process.env.NEXT_PUBLIC_SITE_URL ?? "https://shop.fly-horizons.com";
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -61,14 +63,23 @@ export async function register(formData: FormData) {
   });
 
   if (error) {
-    if (error.message.includes("already registered")) {
+    console.error("[register] Supabase signUp error:", error.message, error.code);
+    if (
+      error.message.includes("already registered") ||
+      error.message.includes("User already registered")
+    ) {
       return { error: "Un compte existe déjà avec cet email." };
     }
-    return { error: "Erreur lors de la création du compte." };
+    return { error: `Erreur lors de la création du compte. (${error.message})` };
   }
 
-  revalidatePath("/", "layout");
-  redirect("/account");
+  // Email confirmation disabled — session is returned immediately
+  if (data.session) {
+    revalidatePath("/", "layout");
+    redirect("/account");
+  }
+
+  return { success: true };
 }
 
 // -----------------------------------------------

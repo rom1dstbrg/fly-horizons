@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingBag, ChevronDown } from "lucide-react";
+import { Calendar, Gift, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function HeroSection() {
@@ -10,15 +10,15 @@ export function HeroSection() {
 
       {/* Background image aviation */}
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-105"
         style={{
           backgroundImage: "url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1920&q=80')",
+          filter: "blur(3px)",
         }}
       />
 
-      {/* Overlay gradient */}
-      <div className="absolute inset-0 bg-gradient-hero" />
-      <div className="absolute inset-0 bg-navy-950/40" />
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-black/55" />
 
       {/* Contenu */}
       <div className="relative z-10 container-shop text-center px-4">
@@ -38,7 +38,7 @@ export function HeroSection() {
         </h1>
 
         <p className="text-lg sm:text-xl text-white/70 max-w-xl mx-auto mb-10 leading-relaxed">
-          Accessoires aviation premium pour les passionnes du ciel.
+          Vivez l&apos;expérience du vol en avion léger au-dessus de la Belgique.
         </p>
 
         {/* CTAs */}
@@ -48,9 +48,9 @@ export function HeroSection() {
             size="lg"
             className="bg-primary text-primary-foreground hover:bg-gold-400 font-semibold px-8 shadow-gold"
           >
-            <Link href="/shop">
-              <ShoppingBag size={18} className="mr-2" />
-              Decouvrir la boutique
+            <Link href="/reservation">
+              <Calendar size={18} className="mr-2" />
+              Réserver une date
             </Link>
           </Button>
 
@@ -60,9 +60,10 @@ export function HeroSection() {
             variant="outline"
             className="border-white/30 text-white hover:bg-white/10 hover:border-white/50 font-medium px-8"
           >
-            <a href="https://fly-horizons.com" target="_blank" rel="noopener noreferrer">
-              fly-horizons.com
-            </a>
+            <Link href="/vouchers">
+              <Gift size={18} className="mr-2" />
+              Offrir un vol
+            </Link>
           </Button>
         </div>
       </div>

@@ -15,6 +15,13 @@ interface ProductFormProps {
   product?: Product & { images?: ProductImage[] };
 }
 
+const VOUCHER_DURATIONS = [
+  { value: 30,  label: "30 minutes" },
+  { value: 60,  label: "1 heure" },
+  { value: 90,  label: "1h30" },
+  { value: 120, label: "2 heures" },
+];
+
 export function ProductForm({ product }: ProductFormProps) {
   const router = useRouter();
   const isEdit = !!product;
@@ -29,6 +36,12 @@ export function ProductForm({ product }: ProductFormProps) {
 
   const [featured, setFeatured] = useState(product?.featured ?? false);
   const [active, setActive] = useState(product?.active ?? true);
+  const [productType, setProductType] = useState<"physical" | "voucher">(
+    product?.product_type ?? "physical"
+  );
+  const [voucherDuration, setVoucherDuration] = useState<number>(
+    product?.voucher_duration_minutes ?? 60
+  );
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
@@ -105,6 +118,8 @@ export function ProductForm({ product }: ProductFormProps) {
     e.preventDefault();
     setError(null);
     setSuccess(null);
+    // Hidden inputs in the form already carry product_type and voucher_duration_minutes
+    // so new FormData(e.currentTarget) picks them up natively — no closure timing issues
     const formData = new FormData(e.currentTarget);
     formData.set("featured", String(featured));
     formData.set("active", String(active));
@@ -134,6 +149,58 @@ export function ProductForm({ product }: ProductFormProps) {
           {success}
         </div>
       )}
+
+      {/* Type de produit */}
+      <div className="card-premium p-6 space-y-4">
+        <h2 className="font-semibold text-foreground">Type de produit</h2>
+
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => setProductType("physical")}
+            className={`flex-1 py-2.5 px-4 rounded-lg border text-sm font-medium transition-colors ${
+              productType === "physical"
+                ? "bg-primary/10 border-primary/40 text-primary"
+                : "border-border text-muted-foreground hover:text-foreground hover:border-primary/20"
+            }`}
+          >
+            Physique
+          </button>
+          <button
+            type="button"
+            onClick={() => setProductType("voucher")}
+            className={`flex-1 py-2.5 px-4 rounded-lg border text-sm font-medium transition-colors ${
+              productType === "voucher"
+                ? "bg-primary/10 border-primary/40 text-primary"
+                : "border-border text-muted-foreground hover:text-foreground hover:border-primary/20"
+            }`}
+          >
+            Voucher
+          </button>
+        </div>
+
+        {productType === "voucher" && (
+          <div className="space-y-2">
+            <Label className="text-sm text-muted-foreground">Durée du vol</Label>
+            <div className="flex gap-2 flex-wrap">
+              {VOUCHER_DURATIONS.map((d) => (
+                <button
+                  key={d.value}
+                  type="button"
+                  onClick={() => setVoucherDuration(d.value)}
+                  className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                    voucherDuration === d.value
+                      ? "bg-primary/10 border-primary/40 text-primary"
+                      : "border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Titre */}
       <div className="card-premium p-6 space-y-4">
@@ -183,9 +250,11 @@ export function ProductForm({ product }: ProductFormProps) {
 
       {/* Prix et stock */}
       <div className="card-premium p-6 space-y-4">
-        <h2 className="font-semibold text-foreground">Prix et stock</h2>
+        <h2 className="font-semibold text-foreground">
+          {productType === "voucher" ? "Prix" : "Prix et stock"}
+        </h2>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className={`grid gap-4 ${productType === "physical" ? "grid-cols-2" : "grid-cols-1"}`}>
           <div className="space-y-2">
             <Label htmlFor="price" className="text-sm text-muted-foreground">
               Prix (EUR) *
@@ -203,20 +272,28 @@ export function ProductForm({ product }: ProductFormProps) {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="stock" className="text-sm text-muted-foreground">
-              Stock
-            </Label>
-            <Input
-              id="stock"
-              name="stock"
-              type="number"
-              min="0"
-              defaultValue={product?.stock ?? 0}
-              className="bg-input border-border text-foreground"
-            />
-          </div>
+          {productType === "physical" && (
+            <div className="space-y-2">
+              <Label htmlFor="stock" className="text-sm text-muted-foreground">
+                Stock
+              </Label>
+              <Input
+                id="stock"
+                name="stock"
+                type="number"
+                min="0"
+                defaultValue={product?.stock ?? 0}
+                className="bg-input border-border text-foreground"
+              />
+            </div>
+          )}
         </div>
+
+        {productType === "voucher" && (
+          <p className="text-xs text-muted-foreground">
+            Les codes sont générés automatiquement à chaque achat — aucun stock à gérer.
+          </p>
+        )}
       </div>
 
       {/* Options */}
@@ -328,6 +405,12 @@ export function ProductForm({ product }: ProductFormProps) {
         <p className="text-xs text-muted-foreground bg-secondary/50 border border-border rounded-md px-4 py-3">
           Les images peuvent etre ajoutees apres la creation du produit.
         </p>
+      )}
+
+      {/* Hidden inputs — valeurs React lues nativement par new FormData(), sans dépendre des closures */}
+      <input type="hidden" name="product_type" value={productType} />
+      {productType === "voucher" && (
+        <input type="hidden" name="voucher_duration_minutes" value={voucherDuration} />
       )}
 
       {/* Actions */}

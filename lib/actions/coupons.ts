@@ -57,6 +57,29 @@ export async function createCoupon(formData: FormData) {
   }
 }
 
+export async function updateCoupon(couponId: string, data: {
+  code?: string;
+  type?: "percentage" | "fixed";
+  value?: number;
+  expires_at?: string | null;
+}) {
+  try {
+    await checkAdmin();
+    const adminSupabase = createAdminClient();
+    const update: Record<string, unknown> = {};
+    if (data.code) update.code = data.code.toUpperCase().trim();
+    if (data.type) update.type = data.type;
+    if (data.value !== undefined) update.value = data.value;
+    if ("expires_at" in data) update.expires_at = data.expires_at || null;
+    const { error } = await adminSupabase.from("coupons").update(update).eq("id", couponId);
+    if (error) return { error: error.message };
+    revalidatePath("/admin/coupons");
+    return { success: true };
+  } catch {
+    return { error: "Non autorise" };
+  }
+}
+
 export async function toggleCouponActive(couponId: string, active: boolean) {
   try {
     await checkAdmin();

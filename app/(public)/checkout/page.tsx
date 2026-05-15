@@ -11,12 +11,11 @@ import { useCartStore } from "@/store/cart";
 import { formatPrice } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 
-const SHIPPING_RATES: Record<string, { name: string; rate: number }> = {
-  BE: { name: "Belgique",   rate: 4.95 },
-  FR: { name: "France",     rate: 6.95 },
-  NL: { name: "Pays-Bas",   rate: 6.95 },
-  DE: { name: "Allemagne",  rate: 7.95 },
-};
+interface ShippingRateRow {
+  country_code: string;
+  country_name: string;
+  rate_standard: number;
+}
 
 interface SavedAddress {
   id: string;
@@ -38,6 +37,13 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null);
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [shippingRates, setShippingRates] = useState<ShippingRateRow[]>([]);
+  // null = loading, true/false = resolved from DB
+  const [isVoucherOnlyDB, setIsVoucherOnlyDB] = useState<boolean | null>(null);
+
+  // Fallback from cart store while DB resolves
+  const isVoucherOnlyCart = items.length > 0 && items.every((i) => i.product_type === "voucher");
+  const isVoucherOnly = isVoucherOnlyDB ?? isVoucherOnlyCart;
 
   useEffect(() => {
     if (items.length === 0) {
@@ -45,8 +51,32 @@ export default function CheckoutPage() {
       return;
     }
 
-    // Charger les adresses sauvegardees
     const supabase = createClient();
+
+    // Verify product types from DB — cart store may have stale/missing product_type
+    supabase
+      .from("products")
+      .select("id, product_type, voucher_duration_minutes")
+      .in("id", items.map((i) => i.id))
+      .then(({ data }) => {
+        if (data) {
+          const allVouchers = data.every(
+            (p) => p.product_type === "voucher" ||
+              (p.voucher_duration_minutes != null && p.voucher_duration_minutes > 0)
+          );
+          setIsVoucherOnlyDB(allVouchers);
+        }
+      });
+
+    supabase
+      .from("shipping_rates")
+      .select("country_code, country_name, rate_standard")
+      .eq("active", true)
+      .order("country_name")
+      .then(({ data }) => {
+        if (data && data.length > 0) setShippingRates(data);
+      });
+
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return;
       const { data } = await supabase
@@ -65,7 +95,8 @@ export default function CheckoutPage() {
   }, [items.length, router]);
 
   const subtotal = totalPrice();
-  const shipping = SHIPPING_RATES[country]?.rate ?? 4.95;
+  const shippingRate = isVoucherOnly ? null : shippingRates.find(r => r.country_code === country);
+  const shipping = isVoucherOnly ? 0 : (shippingRate?.rate_standard ?? 4.95);
   const total = subtotal + shipping;
 
   const selectedAddress = savedAddresses.find((a) => a.id === selectedAddressId);
@@ -86,7 +117,7 @@ export default function CheckoutPage() {
             quantity: i.quantity,
             image_url: i.image_url,
           })),
-          shippingCountry: country,
+          shippingCountry: isVoucherOnly ? null : country,
           couponCode: couponCode || null,
           shippingAddress: selectedAddress ? {
             full_name: selectedAddress.full_name,
@@ -154,88 +185,96 @@ export default function CheckoutPage() {
                 </div>
               ))}
             </div>
+            {isVoucherOnly && (
+              <p className="text-xs text-[#F2B705]/80 bg-[#F2B705]/5 border border-[#F2B705]/20 rounded-md px-3 py-2 mt-4">
+                Voucher(s) — votre code sera envoyé par email immédiatement après le paiement.
+              </p>
+            )}
           </div>
 
-          {/* Adresses sauvegardees */}
-          {savedAddresses.length > 0 && (
-            <div className="card-premium p-6">
-              <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                <MapPin size={16} className="text-primary" />
-                Adresse de livraison
-              </h2>
-              <div className="space-y-3">
-                {savedAddresses.map((addr) => (
-                  <label
-                    key={addr.id}
-                    className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                      selectedAddressId === addr.id
-                        ? "border-primary/40 bg-primary/5"
-                        : "border-border hover:border-primary/20"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="address"
-                      value={addr.id}
-                      checked={selectedAddressId === addr.id}
-                      onChange={() => {
-                        setSelectedAddressId(addr.id);
-                        setCountry(addr.country);
-                      }}
-                      className="mt-0.5 accent-primary"
-                    />
-                    <div className="text-sm">
-                      <p className="font-medium text-foreground">{addr.full_name}</p>
-                      <p className="text-muted-foreground">{addr.line1}</p>
-                      {addr.line2 && <p className="text-muted-foreground">{addr.line2}</p>}
-                      <p className="text-muted-foreground">
-                        {addr.postal_code} {addr.city}, {addr.country}
-                      </p>
-                    </div>
-                    {addr.is_default && (
-                      <span className="ml-auto text-xs text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded-full shrink-0">
-                        Par defaut
-                      </span>
-                    )}
-                  </label>
-                ))}
-                <Link
-                  href="/account"
-                  className="text-xs text-primary hover:text-gold-400 transition-colors"
-                >
-                  Gerer mes adresses
-                </Link>
-              </div>
-            </div>
-          )}
+          {/* Livraison — masqué pour les vouchers */}
+          {!isVoucherOnly && (
+            <>
+              {savedAddresses.length > 0 && (
+                <div className="card-premium p-6">
+                  <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                    <MapPin size={16} className="text-primary" />
+                    Adresse de livraison
+                  </h2>
+                  <div className="space-y-3">
+                    {savedAddresses.map((addr) => (
+                      <label
+                        key={addr.id}
+                        className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                          selectedAddressId === addr.id
+                            ? "border-primary/40 bg-primary/5"
+                            : "border-border hover:border-primary/20"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="address"
+                          value={addr.id}
+                          checked={selectedAddressId === addr.id}
+                          onChange={() => {
+                            setSelectedAddressId(addr.id);
+                            setCountry(addr.country);
+                          }}
+                          className="mt-0.5 accent-primary"
+                        />
+                        <div className="text-sm">
+                          <p className="font-medium text-foreground">{addr.full_name}</p>
+                          <p className="text-muted-foreground">{addr.line1}</p>
+                          {addr.line2 && <p className="text-muted-foreground">{addr.line2}</p>}
+                          <p className="text-muted-foreground">
+                            {addr.postal_code} {addr.city}, {addr.country}
+                          </p>
+                        </div>
+                        {addr.is_default && (
+                          <span className="ml-auto text-xs text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded-full shrink-0">
+                            Par defaut
+                          </span>
+                        )}
+                      </label>
+                    ))}
+                    <Link
+                      href="/account"
+                      className="text-xs text-primary hover:text-gold-400 transition-colors"
+                    >
+                      Gerer mes adresses
+                    </Link>
+                  </div>
+                </div>
+              )}
 
-          {/* Pays livraison (si pas d'adresse sauvegardee) */}
-          {savedAddresses.length === 0 && (
-            <div className="card-premium p-6">
-              <h2 className="font-semibold text-foreground mb-4">
-                Pays de livraison
-              </h2>
-              <div className="space-y-2">
-                <Label className="text-muted-foreground text-sm">Pays</Label>
-                <select
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  className="w-full bg-input border border-border text-foreground rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                >
-                  {Object.entries(SHIPPING_RATES).map(([code, info]) => (
-                    <option key={code} value={code}>
-                      {info.name} — {formatPrice(info.rate)}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-muted-foreground">
-                  <Link href="/account" className="text-primary hover:text-gold-400">
-                    Connectez-vous
-                  </Link>{" "}
-                  pour sauvegarder vos adresses.
-                </p>
-              </div>
-            </div>
+              {savedAddresses.length === 0 && (
+                <div className="card-premium p-6">
+                  <h2 className="font-semibold text-foreground mb-4">
+                    Pays de livraison
+                  </h2>
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground text-sm">Pays</Label>
+                    <select
+                      value={country}
+                      onChange={(e) => setCountry(e.target.value)}
+                      className="w-full bg-input border border-border text-foreground rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                    >
+                      {shippingRates.map((rate) => (
+                        <option key={rate.country_code} value={rate.country_code}>
+                          {rate.country_name} — {formatPrice(rate.rate_standard)}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-muted-foreground">
+                      <Link href="/account" className="text-primary hover:text-gold-400">
+                        Connectez-vous
+                      </Link>{" "}
+                      pour sauvegarder vos adresses.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {/* Code promo */}
@@ -261,10 +300,17 @@ export default function CheckoutPage() {
               <span>Sous-total</span>
               <span>{formatPrice(subtotal)}</span>
             </div>
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>Livraison ({SHIPPING_RATES[country]?.name})</span>
-              <span>{formatPrice(shipping)}</span>
-            </div>
+            {isVoucherOnly ? (
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Livraison</span>
+                <span className="text-green-500 font-medium">Gratuite</span>
+              </div>
+            ) : (
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>Livraison ({shippingRate?.country_name ?? country})</span>
+                <span>{formatPrice(shipping)}</span>
+              </div>
+            )}
             <div className="border-t border-border pt-3 flex justify-between font-bold text-foreground">
               <span>Total</span>
               <span className="text-primary text-lg">{formatPrice(total)}</span>
@@ -287,7 +333,9 @@ export default function CheckoutPage() {
           </Button>
 
           <p className="text-xs text-muted-foreground text-center">
-            L&apos;adresse definitive sera confirmee sur la page Stripe.
+            {isVoucherOnly
+              ? "Votre code de vol sera envoyé par email après le paiement."
+              : "L'adresse definitive sera confirmee sur la page Stripe."}
           </p>
 
         </div>

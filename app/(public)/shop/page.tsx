@@ -9,35 +9,40 @@ export const metadata = {
 export default async function ShopPage() {
   const supabase = await createClient();
 
-  const { data: products } = await supabase
+  const { data: physicalProducts } = await supabase
     .from("products")
     .select("*, images:product_images(*)")
     .eq("active", true)
+    .eq("product_type", "physical")
     .order("created_at", { ascending: false });
 
-  // Extraire tous les tags uniques
   const allTags = Array.from(
-    new Set((products ?? []).flatMap((p) => p.tags ?? []))
+    new Set((physicalProducts ?? []).flatMap((p) => p.tags ?? []))
   ).sort();
 
   return (
-    <main className="min-h-screen bg-gradient-navy pt-24 pb-16">
-      <div className="container-shop">
+    <main className="min-h-screen bg-gradient-navy pb-16">
+      <div className="container-shop pt-24 pb-0">
 
-        {/* Header page */}
         <div className="mb-10">
           <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-2">
             Collection
           </p>
           <h1 className="text-4xl font-bold text-foreground">
-            Boutique
+            Accessoires
           </h1>
           <p className="text-muted-foreground mt-2">
-            {products?.length ?? 0} produit{(products?.length ?? 0) !== 1 ? "s" : ""}
+            {physicalProducts?.length ?? 0} produit{(physicalProducts?.length ?? 0) !== 1 ? "s" : ""}
           </p>
         </div>
 
-        <ShopClient products={products ?? []} tags={allTags} />
+        {(physicalProducts?.length ?? 0) > 0 ? (
+          <ShopClient products={physicalProducts ?? []} tags={allTags} />
+        ) : (
+          <p className="text-muted-foreground py-12 text-center">
+            Aucun accessoire disponible pour le moment.
+          </p>
+        )}
 
       </div>
     </main>

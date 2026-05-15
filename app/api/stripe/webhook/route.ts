@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendOrderConfirmation } from "@/lib/email-service";
+import { sendOrderConfirmation, sendVoucherEmail } from "@/lib/email-service";
+import { generateVoucherCode } from "@/lib/vouchers";
+import type { VoucherEmailCode } from "@/lib/email-templates";
+import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-04-22.dahlia",
@@ -32,6 +35,108 @@ export async function POST(request: NextRequest) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
+
+    // ── Vol sur mesure (acompte) ──────────────────────────────
+    if (session.metadata?.type === "reservation_perso") {
+      const { reservationId, voucherId, voucherCode, paymentToken } = session.metadata;
+      if (reservationId) {
+        await adminSupabase.from("reservations")
+          .update({ statut: "acompte_recu", payment_token: null })
+          .eq("id", reservationId);
+        if (voucherId) {
+          await adminSupabase.from("voucher_codes").update({ status: "used", used_at: new Date().toISOString() }).eq("id", voucherId);
+        }
+        const { data: resa } = await adminSupabase.from("reservations").select("*, clients(*)").eq("id", reservationId).single();
+        if (resa?.clients) {
+          const c = resa.clients as { prenom: string; nom: string; email: string };
+          const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+          await resend.emails.send({
+            from: EMAIL_FROM, to: [c.email], replyTo: EMAIL_REPLY_TO,
+            subject: "Confirmation de paiement — Vol sur mesure Fly Horizons",
+            html: `<!DOCTYPE html><html><body style="font-family:'Segoe UI',Arial,sans-serif;background:#f0f4f8;margin:0;padding:0;"><div style="max-width:560px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(17,51,86,.1);"><div style="background:#113356;padding:28px 32px;"><p style="color:#F2B705;margin:0;font-size:11px;letter-spacing:2px;text-transform:uppercase;">Fly Horizons</p><h1 style="color:#fff;margin:8px 0 0;font-size:20px;">Acompte reçu ✓</h1></div><div style="padding:32px;"><p style="color:#113356;">Bonjour <strong>${c.prenom}</strong>,</p><p style="color:#4a5568;font-size:14px;">Votre acompte pour votre vol sur mesure a bien été reçu :</p><div style="background:#f8fafc;border-radius:10px;padding:20px;margin:20px 0;border:1px solid #e2e8f0;"><table style="width:100%;border-collapse:collapse;"><tr><td style="padding:5px 0;font-size:12px;color:#64748b;width:130px;">Date souhaitée</td><td style="padding:5px 0;font-size:14px;font-weight:600;color:#113356;">${dateStr}</td></tr><tr><td style="padding:5px 0;font-size:12px;color:#64748b;">Heure</td><td style="padding:5px 0;font-size:14px;font-weight:600;color:#113356;">${resa.heure_vol}</td></tr><tr><td style="padding:5px 0;font-size:12px;color:#64748b;">Durée estimée</td><td style="padding:5px 0;font-size:14px;color:#64748b;">${resa.duree} minutes</td></tr>${voucherCode ? `<tr><td style="padding:5px 0;font-size:12px;color:#64748b;">Voucher</td><td style="padding:5px 0;font-size:14px;color:#16a34a;">${voucherCode} appliqué</td></tr>` : ""}</table></div><p style="color:#4a5568;font-size:13px;">Nous vous recontacterons sous 24h pour affiner votre itinéraire et confirmer la date exacte.</p><p style="color:#113356;font-size:13px;font-weight:600;margin-top:20px;">L'équipe Fly Horizons</p></div></div></body></html>`,
+          });
+          await resend.emails.send({
+            from: EMAIL_FROM, to: [EMAIL_REPLY_TO],
+            subject: `[Vol sur mesure payé] ${c.prenom} ${c.nom} — ${resa.date_vol}`,
+            html: `<p>${c.prenom} ${c.nom} (${c.email}) a payé l'acompte pour un vol sur mesure le <strong>${resa.date_vol} à ${resa.heure_vol}</strong>, ~${resa.duree} min, ${resa.distance_km ?? "?"} km.</p><p>Waypoints : ${(resa.waypoints ?? []).length} points.</p>`,
+          });
+        }
+      }
+      return NextResponse.json({ received: true });
+    }
+
+    // ── Réservation standard ──────────────────────────────────
+    if (session.metadata?.type === "reservation") {
+      const { reservationId, voucherId, voucherCode } = session.metadata;
+      if (reservationId) {
+        await adminSupabase
+          .from("reservations")
+          .update({ statut: "en_attente" })
+          .eq("id", reservationId)
+          .eq("statut", "payment_pending");
+
+        if (voucherId) {
+          await adminSupabase
+            .from("voucher_codes")
+            .update({ status: "used", used_at: new Date().toISOString() })
+            .eq("id", voucherId);
+        }
+
+        // Récupérer la réservation + client pour l'email
+        const { data: resa } = await adminSupabase
+          .from("reservations")
+          .select("*, clients(*)")
+          .eq("id", reservationId)
+          .single();
+
+        if (resa?.clients) {
+          const c = resa.clients as { prenom: string; nom: string; email: string };
+          const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
+            weekday: "long", day: "numeric", month: "long", year: "numeric",
+          });
+          await resend.emails.send({
+            from: EMAIL_FROM,
+            to: [c.email],
+            replyTo: EMAIL_REPLY_TO,
+            subject: "Confirmation de paiement — Fly Horizons",
+            html: `<!DOCTYPE html><html><body style="font-family:'Segoe UI',Arial,sans-serif;background:#f0f4f8;margin:0;padding:0;">
+<div style="max-width:560px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(17,51,86,.1);">
+  <div style="background:#113356;padding:28px 32px;">
+    <p style="color:#F2B705;margin:0;font-size:11px;letter-spacing:2px;text-transform:uppercase;">Fly Horizons</p>
+    <h1 style="color:#fff;margin:8px 0 0;font-size:20px;">Paiement confirmé ✓</h1>
+  </div>
+  <div style="padding:32px;">
+    <p style="color:#113356;">Bonjour <strong>${c.prenom}</strong>,</p>
+    <p style="color:#4a5568;font-size:14px;">Votre paiement a bien été reçu. Voici votre réservation :</p>
+    <div style="background:#f8fafc;border-radius:10px;padding:20px;margin:20px 0;border:1px solid #e2e8f0;">
+      <table style="width:100%;border-collapse:collapse;">
+        <tr><td style="padding:5px 0;font-size:12px;color:#64748b;width:130px;">Date</td><td style="padding:5px 0;font-size:14px;font-weight:600;color:#113356;">${dateStr}</td></tr>
+        <tr><td style="padding:5px 0;font-size:12px;color:#64748b;">Heure</td><td style="padding:5px 0;font-size:14px;font-weight:600;color:#113356;">${resa.heure_vol}</td></tr>
+        <tr><td style="padding:5px 0;font-size:12px;color:#64748b;">Durée</td><td style="padding:5px 0;font-size:14px;font-weight:600;color:#113356;">${resa.duree} minutes</td></tr>
+        ${voucherCode ? `<tr><td style="padding:5px 0;font-size:12px;color:#64748b;">Voucher</td><td style="padding:5px 0;font-size:14px;color:#16a34a;">${voucherCode} appliqué</td></tr>` : ""}
+      </table>
+    </div>
+    <p style="color:#4a5568;font-size:13px;">Nous vous contacterons pour confirmer tous les détails. À très bientôt à bord !</p>
+    <p style="color:#113356;font-size:13px;font-weight:600;">L'équipe Fly Horizons</p>
+  </div>
+  <div style="background:#f8fafc;padding:16px 32px;border-top:1px solid #e2e8f0;text-align:center;">
+    <p style="color:#94a3b8;font-size:11px;margin:0;">fly-horizons.com · info@fly-horizons.com</p>
+  </div>
+</div></body></html>`,
+          });
+
+          await resend.emails.send({
+            from: EMAIL_FROM,
+            to: [EMAIL_REPLY_TO],
+            subject: `[Réservation payée] ${c.prenom} ${c.nom} — ${resa.date_vol} à ${resa.heure_vol}`,
+            html: `<p>${c.prenom} ${c.nom} (${c.email}) a payé et réservé le <strong>${resa.date_vol} à ${resa.heure_vol}</strong> pour ${resa.duree} min.</p>${voucherCode ? `<p>Voucher : ${voucherCode}</p>` : ""}`,
+          });
+        }
+      }
+      return NextResponse.json({ received: true });
+    }
+
+    // ── Commande shop ────────────────────────────────────────
     const orderId = session.metadata?.orderId;
 
     if (!orderId) {
@@ -76,15 +181,49 @@ export async function POST(request: NextRequest) {
       })
       .eq("id", orderId);
 
+    // Traitement par article : stock physique OU génération de codes voucher
+    const voucherCodes: VoucherEmailCode[] = [];
+
     for (const item of order.items ?? []) {
       if (!item.product_id) continue;
+
       const { data: product } = await adminSupabase
         .from("products")
-        .select("stock")
+        .select("stock, product_type, voucher_duration_minutes")
         .eq("id", item.product_id)
         .single();
 
-      if (product) {
+      if (!product) continue;
+
+      const isVoucher = product.product_type === "voucher" ||
+        (product.voucher_duration_minutes != null && product.voucher_duration_minutes > 0);
+
+      if (isVoucher) {
+        // Générer un code par quantité
+        for (let i = 0; i < item.quantity; i++) {
+          const code = generateVoucherCode();
+          const expiresAt = new Date();
+          expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+          await adminSupabase.from("voucher_codes").insert({
+            code,
+            order_id: orderId,
+            order_item_id: item.id,
+            product_id: item.product_id,
+            duration_minutes: product.voucher_duration_minutes ?? 60,
+            product_title: item.title,
+            recipient_email: customerEmail || null,
+            recipient_name: customerName ?? null,
+            status: "unused",
+            expires_at: expiresAt.toISOString(),
+          });
+          voucherCodes.push({
+            code,
+            duration_minutes: product.voucher_duration_minutes ?? 60,
+            product_title: item.title,
+          });
+        }
+      } else {
+        // Décrémenter le stock pour les produits physiques
         await adminSupabase
           .from("products")
           .update({ stock: Math.max(0, product.stock - item.quantity) })
@@ -107,10 +246,12 @@ export async function POST(request: NextRequest) {
           title: string;
           quantity: number;
           unit_price: number;
+          image_url?: string | null;
         }) => ({
           title: i.title,
           quantity: i.quantity,
           unit_price: i.unit_price,
+          image_url: i.image_url ?? null,
         })) ?? [],
         subtotal: order.subtotal,
         shippingCost: order.shipping_cost,
@@ -118,10 +259,21 @@ export async function POST(request: NextRequest) {
         total: order.total,
         couponCode: order.coupon_code,
         shippingAddress,
+        orderDate: order.created_at,
       });
+
+      // Email voucher séparé avec les codes
+      if (voucherCodes.length > 0) {
+        await sendVoucherEmail({
+          to: customerEmail,
+          orderRef: orderId.slice(0, 8).toUpperCase(),
+          customerName,
+          codes: voucherCodes,
+        });
+      }
     }
 
-    console.log(`Commande ${orderId} payee, email envoye a ${customerEmail}`);
+    console.log(`Commande ${orderId} payée — ${voucherCodes.length} code(s) voucher générés`);
   }
 
   if (event.type === "checkout.session.expired") {

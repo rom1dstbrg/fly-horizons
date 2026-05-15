@@ -39,9 +39,27 @@ export interface Product {
   active: boolean;
   featured: boolean;
   tags: string[];
+  product_type: "physical" | "voucher";
+  voucher_duration_minutes: number | null;
   created_at: string;
   updated_at: string;
   images?: ProductImage[];
+}
+
+export interface VoucherCode {
+  id: string;
+  code: string;
+  order_id: string | null;
+  order_item_id: string | null;
+  product_id: string | null;
+  duration_minutes: number;
+  product_title: string;
+  recipient_email: string | null;
+  recipient_name: string | null;
+  status: "unused" | "used" | "expired";
+  used_at: string | null;
+  expires_at: string | null;
+  created_at: string;
 }
 
 export interface ProductImage {

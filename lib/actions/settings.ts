@@ -18,23 +18,22 @@ async function checkAdmin() {
 
 export async function updateShippingSettings(
   rateValues: Record<string, string>,
+  activeValues: Record<string, boolean>,
   threshold: string
 ) {
   try {
     await checkAdmin();
     const adminSupabase = createAdminClient();
 
-    // Mettre a jour chaque taux de livraison
     for (const [id, value] of Object.entries(rateValues)) {
       const rate = parseFloat(value);
       if (isNaN(rate)) continue;
       await adminSupabase
         .from("shipping_rates")
-        .update({ rate_standard: rate })
+        .update({ rate_standard: rate, active: activeValues[id] ?? true })
         .eq("id", id);
     }
 
-    // Mettre a jour le seuil de livraison gratuite
     const thresholdValue = parseFloat(threshold);
     if (!isNaN(thresholdValue)) {
       await adminSupabase
@@ -47,6 +46,72 @@ export async function updateShippingSettings(
     }
 
     revalidatePath("/admin/settings");
+    return { success: true };
+  } catch {
+    return { error: "Erreur serveur" };
+  }
+}
+
+export async function addShippingCountry(
+  countryCode: string,
+  countryName: string,
+  rate: number
+) {
+  try {
+    await checkAdmin();
+    const adminSupabase = createAdminClient();
+
+    const { error } = await adminSupabase
+      .from("shipping_rates")
+      .insert({
+        country_code: countryCode.toUpperCase(),
+        country_name: countryName,
+        rate_standard: rate,
+        active: true,
+      });
+
+    if (error) return { error: error.message };
+
+    revalidatePath("/admin/settings");
+    return { success: true };
+  } catch {
+    return { error: "Erreur serveur" };
+  }
+}
+
+export async function deleteShippingCountry(id: string) {
+  try {
+    await checkAdmin();
+    const adminSupabase = createAdminClient();
+
+    await adminSupabase
+      .from("shipping_rates")
+      .delete()
+      .eq("id", id);
+
+    revalidatePath("/admin/settings");
+    return { success: true };
+  } catch {
+    return { error: "Erreur serveur" };
+  }
+}
+
+export async function updatePrixVol(prixHeure: number, acomptePersoHeure: number) {
+  try {
+    await checkAdmin();
+    if (isNaN(prixHeure) || prixHeure <= 0) return { error: "Prix invalide" };
+    if (isNaN(acomptePersoHeure) || acomptePersoHeure < 0) return { error: "Acompte invalide" };
+    const adminSupabase = createAdminClient();
+    await adminSupabase
+      .from("crm_settings")
+      .upsert({ key: "prix_heure", value: String(prixHeure) });
+    await adminSupabase
+      .from("crm_settings")
+      .upsert({ key: "acompte_perso_heure", value: String(acomptePersoHeure) });
+    revalidatePath("/admin/settings");
+    revalidatePath("/packs");
+    revalidatePath("/reservation");
+    revalidatePath("/vol-sur-mesure");
     return { success: true };
   } catch {
     return { error: "Erreur serveur" };

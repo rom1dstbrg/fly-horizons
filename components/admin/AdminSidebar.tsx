@@ -12,6 +12,10 @@ import {
   LogOut,
   Menu,
   X,
+  Ticket,
+  ExternalLink,
+  Route,
+  MessageSquare,
 } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 
@@ -19,8 +23,11 @@ const NAV_ITEMS = [
   { href: "/admin",           label: "Dashboard",  icon: LayoutDashboard },
   { href: "/admin/products",  label: "Produits",   icon: Package },
   { href: "/admin/orders",    label: "Commandes",  icon: ShoppingCart },
-  { href: "/admin/coupons",   label: "Coupons",    icon: Tag },
-  { href: "/admin/settings",  label: "Parametres", icon: Settings },
+  { href: "/admin/vouchers",  label: "Services / Vols", icon: Ticket },
+  { href: "/admin/vols-sur-mesure", label: "Vols mesure", icon: Route },
+  { href: "/admin/coupons",         label: "Coupons",     icon: Tag },
+  { href: "/admin/contacts",        label: "Messages",    icon: MessageSquare },
+  { href: "/admin/settings",        label: "Parametres",  icon: Settings },
 ];
 
 export function AdminSidebar() {
@@ -66,6 +73,19 @@ export function AdminSidebar() {
           );
         })}
       </nav>
+
+      {/* Lien admin réservations */}
+      <div className="px-3 pb-2">
+        <a
+          href="https://fly-horizons.com/admin.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+        >
+          <ExternalLink size={17} />
+          Admin Réservations
+        </a>
+      </div>
 
       {/* Logout */}
       <div className="px-3 py-4 border-t border-border">

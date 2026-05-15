@@ -10,6 +10,7 @@ import { formatPrice } from "@/lib/utils";
 export default function CartPage() {
   const { items, removeItem, updateQuantity, totalPrice } = useCartStore();
   const total = totalPrice();
+  const isVoucherOnly = items.length > 0 && items.every((i) => i.product_type === "voucher");
 
   if (items.length === 0) {
     return (
@@ -87,11 +88,16 @@ export default function CartPage() {
                 {/* Infos */}
                 <div className="flex-1 min-w-0">
                   <Link
-                    href={`/product/${item.slug}`}
+                    href={`/shop/${item.slug}`}
                     className="font-semibold text-foreground text-sm hover:text-primary transition-colors line-clamp-2"
                   >
                     {item.title}
                   </Link>
+                  {item.product_type === "voucher" && (
+                    <span className="inline-block text-[10px] font-semibold text-[#F2B705] bg-[#F2B705]/10 border border-[#F2B705]/20 rounded-full px-2 py-0.5 mt-1">
+                      Voucher — livraison par email
+                    </span>
+                  )}
                   <p className="text-primary font-bold mt-1">
                     {formatPrice(item.price)}
                   </p>
@@ -149,7 +155,11 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>Livraison</span>
-                  <span className="text-foreground">Calcule au checkout</span>
+                  {isVoucherOnly ? (
+                    <span className="text-green-500 font-medium">Gratuite</span>
+                  ) : (
+                    <span className="text-foreground">Calcule au checkout</span>
+                  )}
                 </div>
               </div>
 

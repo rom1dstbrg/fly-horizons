@@ -1,132 +1,51 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { formatPrice } from "@/lib/utils";
-import { OrderStatusSelect } from "@/components/admin/OrderStatusSelect";
-import { DeleteOrderButton } from "@/components/admin/DeleteOrderButton";
+import { OrdersClient } from "@/components/admin/OrdersClient";
 
 export const metadata = { title: "Commandes — Admin" };
-
-const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  pending:    { label: "En attente",  color: "text-yellow-700 bg-yellow-50 border-yellow-200" },
-  paid:       { label: "Payee",       color: "text-blue-700 bg-blue-50 border-blue-200" },
-  processing: { label: "En cours",    color: "text-blue-700 bg-blue-50 border-blue-200" },
-  shipped:    { label: "Expediee",    color: "text-purple-700 bg-purple-50 border-purple-200" },
-  delivered:  { label: "Livree",      color: "text-green-700 bg-green-50 border-green-200" },
-  cancelled:  { label: "Annulee",     color: "text-red-700 bg-red-50 border-red-200" },
-  refunded:   { label: "Remboursee",  color: "text-muted-foreground bg-muted border-border" },
-};
 
 export default async function AdminOrdersPage() {
   const adminSupabase = createAdminClient();
 
-  const { data: orders } = await adminSupabase
-    .from("orders")
-    .select("*, items:order_items(id, title, quantity, unit_price)")
-    .order("created_at", { ascending: false });
+  const [{ data: orders }, { data: voucherCodes }] = await Promise.all([
+    adminSupabase
+      .from("orders")
+      .select("*, items:order_items(id, title, quantity, unit_price)")
+      .order("created_at", { ascending: false }),
+    adminSupabase
+      .from("voucher_codes")
+      .select("id, code, order_id, product_title, duration_minutes, status"),
+  ]);
+
+  // Group voucher codes by order_id
+  const vouchersByOrder: Record<string, { id: string; code: string; product_title: string; duration_minutes: number; status: string }[]> = {};
+  for (const vc of voucherCodes ?? []) {
+    if (!vc.order_id) continue;
+    if (!vouchersByOrder[vc.order_id]) vouchersByOrder[vc.order_id] = [];
+    vouchersByOrder[vc.order_id].push(vc);
+  }
+
+  const ordersWithVouchers = (orders ?? []).map((order) => ({
+    ...order,
+    voucher_codes: vouchersByOrder[order.id] ?? [],
+  }));
+
+  const total = ordersWithVouchers.length;
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Commandes</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          {orders?.length ?? 0} commande{(orders?.length ?? 0) !== 1 ? "s" : ""}
+          {total} commande{total !== 1 ? "s" : ""}
         </p>
       </div>
 
-      {!orders || orders.length === 0 ? (
+      {ordersWithVouchers.length === 0 ? (
         <div className="card-premium p-12 text-center">
           <p className="text-muted-foreground">Aucune commande pour le moment.</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {orders.map((order) => {
-            const date = new Date(order.created_at).toLocaleDateString("fr-BE", {
-              day: "numeric", month: "long", year: "numeric",
-              hour: "2-digit", minute: "2-digit",
-            });
-            const address = order.shipping_address;
-
-            return (
-              <div key={order.id} className="card-premium p-6">
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
-                  <div>
-                    <p className="font-mono text-sm text-foreground/70 mb-1">
-                      #{order.id.slice(0, 8).toUpperCase()}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{date}</p>
-                    {order.coupon_code && (
-                      <p className="text-xs text-primary mt-1">Coupon : {order.coupon_code}</p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <OrderStatusSelect orderId={order.id} currentStatus={order.status} />
-                    <span className="text-primary font-bold text-lg">
-                      {formatPrice(order.total)}
-                    </span>
-                    <DeleteOrderButton orderId={order.id} />
-                  </div>
-                </div>
-
-                <div className="space-y-1 mb-4 pb-4 border-b border-border">
-                  {order.items?.map((item: { id: string; title: string; quantity: number; unit_price: number }) => (
-                    <div key={item.id} className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{item.title} x{item.quantity}</span>
-                      <span className="text-foreground">{formatPrice(item.unit_price * item.quantity)}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground text-xs">Sous-total</p>
-                    <p className="text-foreground font-medium">{formatPrice(order.subtotal)}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs">Livraison</p>
-                    <p className="text-foreground font-medium">{formatPrice(order.shipping_cost)}</p>
-                  </div>
-                  {order.discount_amount > 0 && (
-                    <div>
-                      <p className="text-muted-foreground text-xs">Remise</p>
-                      <p className="text-green-500 font-medium">-{formatPrice(order.discount_amount)}</p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="mt-4 pt-4 border-t border-border">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                    Expedition
-                  </p>
-                  {address?.line1 || address?.city ? (
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div className="space-y-0.5">
-                        {address.full_name && (
-                          <p className="text-sm font-semibold text-foreground">{address.full_name}</p>
-                        )}
-                        {address.email && (
-                          <p className="text-sm text-primary font-medium">{address.email}</p>
-                        )}
-                        {address.line1 && (
-                          <p className="text-sm text-foreground">{address.line1}</p>
-                        )}
-                        {address.line2 && (
-                          <p className="text-sm text-foreground">{address.line2}</p>
-                        )}
-                        <p className="text-sm text-foreground">
-                          {[address.postal_code, address.city].filter(Boolean).join(" ")}
-                        </p>
-                        {address.country && (
-                          <p className="text-sm text-muted-foreground">{address.country}</p>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-destructive font-medium">Adresse non renseignee</p>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <OrdersClient orders={ordersWithVouchers} />
       )}
     </div>
   );

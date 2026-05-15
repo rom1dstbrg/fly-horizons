@@ -2,11 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendOrderConfirmation } from "@/lib/email-service";
+import { sendOrderConfirmation, sendVoucherEmail } from "@/lib/email-service";
+import { generateVoucherCode } from "@/lib/vouchers";
+import type { VoucherEmailCode } from "@/lib/email-templates";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-04-22.dahlia",
 });
+
+// A product is a voucher if product_type = "voucher" OR it has a duration set
+// (handles products created before the product_type column was added)
+function isVoucherProduct(p: { product_type?: string | null; voucher_duration_minutes?: number | null }) {
+  return p.product_type === "voucher" || (p.voucher_duration_minutes != null && p.voucher_duration_minutes > 0);
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,15 +29,6 @@ export async function POST(request: NextRequest) {
     const adminSupabase = createAdminClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    const { data: shippingRate } = await adminSupabase
-      .from("shipping_rates")
-      .select("*")
-      .eq("country_code", shippingCountry ?? "BE")
-      .eq("active", true)
-      .single();
-
-    const shippingCost = shippingRate?.rate_standard ?? 4.95;
-
     const productIds = items.map((i: { id: string }) => i.id);
     const { data: products } = await adminSupabase
       .from("products")
@@ -41,10 +40,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Un ou plusieurs produits sont indisponibles." }, { status: 400 });
     }
 
+    const allVouchers = products.every(isVoucherProduct);
+
     for (const item of items) {
       const product = products.find((p) => p.id === item.id);
       if (!product) return NextResponse.json({ error: "Produit introuvable" }, { status: 400 });
-      if (product.stock < item.quantity) return NextResponse.json({ error: `Stock insuffisant pour : ${product.title}` }, { status: 400 });
+      if (!isVoucherProduct(product) && product.stock < item.quantity) {
+        return NextResponse.json({ error: `Stock insuffisant pour : ${product.title}` }, { status: 400 });
+      }
+    }
+
+    // Shipping cost is 0 for voucher-only orders
+    let shippingCost = 0;
+    let shippingRateData = null;
+    if (!allVouchers && shippingCountry) {
+      const { data: shippingRate } = await adminSupabase
+        .from("shipping_rates")
+        .select("*")
+        .eq("country_code", shippingCountry)
+        .eq("active", true)
+        .single();
+      shippingRateData = shippingRate;
+      shippingCost = shippingRate?.rate_standard ?? 4.95;
     }
 
     const subtotal = items.reduce(
@@ -115,20 +132,43 @@ export async function POST(request: NextRequest) {
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
-    // Coupon 100% : bypass Stripe
+    // Coupon 100% : bypass Stripe — handle stock + voucher codes here
     if (isFreeEverything) {
       const savedAddress = clientAddress
         ? { ...clientAddress, email: user?.email ?? "" }
-        : {};
+        : { email: user?.email ?? "" };
 
       await adminSupabase.from("orders").update({
         status: "paid",
         shipping_address: savedAddress,
       }).eq("id", order.id);
 
+      const voucherCodes: VoucherEmailCode[] = [];
+
       for (const item of items) {
         const product = products.find((p) => p.id === item.id);
-        if (product) {
+        if (!product) continue;
+
+        if (isVoucherProduct(product)) {
+          for (let i = 0; i < item.quantity; i++) {
+            const code = generateVoucherCode();
+            await adminSupabase.from("voucher_codes").insert({
+              code,
+              order_id: order.id,
+              product_id: item.id,
+              duration_minutes: product.voucher_duration_minutes ?? 60,
+              product_title: item.title,
+              recipient_email: user?.email ?? null,
+              recipient_name: clientAddress?.full_name ?? null,
+              status: "unused",
+            });
+            voucherCodes.push({
+              code,
+              duration_minutes: product.voucher_duration_minutes ?? 60,
+              product_title: item.title,
+            });
+          }
+        } else {
           await adminSupabase.from("products")
             .update({ stock: Math.max(0, product.stock - item.quantity) })
             .eq("id", item.id);
@@ -144,10 +184,11 @@ export async function POST(request: NextRequest) {
           to: user.email,
           orderRef: order.id.slice(0, 8).toUpperCase(),
           customerName: clientAddress?.full_name || undefined,
-          items: items.map((i: { title: string; price: number; quantity: number }) => ({
+          items: items.map((i: { title: string; price: number; quantity: number; image_url?: string | null }) => ({
             title: i.title,
             quantity: i.quantity,
             unit_price: i.price,
+            image_url: i.image_url ?? null,
           })),
           subtotal,
           shippingCost: 0,
@@ -155,13 +196,22 @@ export async function POST(request: NextRequest) {
           total: 0,
           couponCode: validCoupon?.code,
           shippingAddress: clientAddress ?? undefined,
+          orderDate: new Date().toISOString(),
         });
+
+        if (voucherCodes.length > 0) {
+          await sendVoucherEmail({
+            to: user.email,
+            orderRef: order.id.slice(0, 8).toUpperCase(),
+            customerName: clientAddress?.full_name || undefined,
+            codes: voucherCodes,
+          });
+        }
       }
 
       return NextResponse.json({ url: `${siteUrl}/orders/success?order_id=${order.id}` });
     }
 
-    // Line items Stripe — typage explicite sans SessionCreateParams
     type LineItem = {
       price_data: {
         currency: string;
@@ -171,27 +221,28 @@ export async function POST(request: NextRequest) {
       quantity: number;
     };
 
-    const lineItems: LineItem[] = [
-      ...items.map((item: { title: string; price: number; quantity: number; image_url: string | null }) => ({
-        price_data: {
-          currency: "eur",
-          product_data: {
-            name: item.title,
-            images: item.image_url ? [item.image_url] : [],
-          },
-          unit_amount: Math.round(item.price * 100),
+    const lineItems: LineItem[] = items.map((item: { title: string; price: number; quantity: number; image_url: string | null }) => ({
+      price_data: {
+        currency: "eur",
+        product_data: {
+          name: item.title,
+          images: item.image_url ? [item.image_url] : [],
         },
-        quantity: item.quantity,
-      })),
-      {
+        unit_amount: Math.round(item.price * 100),
+      },
+      quantity: item.quantity,
+    }));
+
+    if (!allVouchers && shippingCost > 0) {
+      lineItems.push({
         price_data: {
           currency: "eur",
-          product_data: { name: `Livraison (${shippingRate?.country_name ?? "Belgique"})` },
+          product_data: { name: `Livraison (${shippingRateData?.country_name ?? shippingCountry})` },
           unit_amount: Math.round(shippingCost * 100),
         },
         quantity: 1,
-      },
-    ];
+      });
+    }
 
     if (discountAmount > 0) {
       lineItems.push({
@@ -204,19 +255,26 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams: Parameters<typeof stripe.checkout.sessions.create>[0] = {
       mode: "payment",
       payment_method_types: ["card"],
       line_items: lineItems,
-      shipping_address_collection: {
-        allowed_countries: ["BE", "FR", "NL", "DE"],
-      },
       metadata: { orderId: order.id, userId: user?.id ?? "" },
       customer_email: user?.email ?? undefined,
       success_url: `${siteUrl}/orders/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/cart`,
       locale: "fr",
-    });
+    };
+
+    if (!allVouchers) {
+      sessionParams.shipping_address_collection = {
+        allowed_countries: ["BE", "FR", "NL", "DE"],
+      };
+    } else {
+      sessionParams.phone_number_collection = { enabled: true };
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     await adminSupabase.from("orders")
       .update({ stripe_session_id: session.id })

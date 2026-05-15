@@ -75,6 +75,22 @@ export async function deleteOrder(orderId: string) {
   }
 }
 
+export async function deleteReservationPerso(resaId: string) {
+  try {
+    await checkAdmin();
+    const adminSupabase = createAdminClient();
+    const { error } = await adminSupabase
+      .from("reservations")
+      .delete()
+      .eq("id", resaId);
+    if (error) return { error: error.message };
+    revalidatePath("/admin/vols-sur-mesure");
+    return { success: true };
+  } catch {
+    return { error: "Erreur suppression" };
+  }
+}
+
 export async function deleteCoupon(couponId: string) {
   try {
     await checkAdmin();

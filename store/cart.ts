@@ -8,6 +8,7 @@ export interface CartItem {
   quantity: number;
   image_url: string | null;
   slug: string;
+  product_type?: "physical" | "voucher";
 }
 
 interface CartStore {

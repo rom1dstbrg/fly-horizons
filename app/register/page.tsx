@@ -6,10 +6,13 @@ import { register } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function RegisterPage() {
   const [error, setError]            = useState<string | null>(null);
+  const [success, setSuccess]        = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [showPassword, setShowPassword] = useState(false);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -19,6 +22,7 @@ export default function RegisterPage() {
     startTransition(async () => {
       const result = await register(formData);
       if (result?.error) setError(result.error);
+      else setSuccess(true);
     });
   }
 
@@ -38,6 +42,22 @@ export default function RegisterPage() {
         </div>
 
         <div className="card-premium p-8">
+          {success ? (
+            <div className="text-center space-y-4">
+              <div className="text-4xl">✉️</div>
+              <h2 className="text-lg font-semibold text-foreground">
+                Vérifiez vos emails
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Un lien de confirmation a été envoyé à votre adresse email.
+                Cliquez dessus pour activer votre compte.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Pensez à vérifier vos spams si vous ne le trouvez pas.
+              </p>
+            </div>
+          ) : (
+          <>
           <form onSubmit={handleSubmit} className="space-y-5">
 
             {error && (
@@ -83,15 +103,25 @@ export default function RegisterPage() {
                   (8 caractères minimum)
                 </span>
               </Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="••••••••"
-                required
-                autoComplete="new-password"
-                className="bg-input border-border text-foreground"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  required
+                  autoComplete="new-password"
+                  className="bg-input border-border text-foreground pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
 
             <Button
@@ -113,6 +143,8 @@ export default function RegisterPage() {
               Se connecter
             </Link>
           </p>
+          </>
+          )}
         </div>
 
       </div>

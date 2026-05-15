@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Package, ChevronRight } from "lucide-react";
+import { Package, ChevronRight, Copy } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
+import { formatDuration } from "@/lib/vouchers";
 
 export const metadata = {
   title: "Mes commandes",
@@ -18,6 +20,14 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   refunded:   { label: "Remboursee",   color: "text-muted-foreground bg-muted/10 border-border" },
 };
 
+interface VoucherCodeRow {
+  id: string;
+  code: string;
+  duration_minutes: number;
+  status: string;
+  order_id: string;
+}
+
 export default async function OrdersPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -26,10 +36,28 @@ export default async function OrdersPage() {
 
   const { data: orders } = await supabase
     .from("orders")
-    .select("*, items:order_items(*, product:products(title, slug))")
+    .select("*, items:order_items(*)")
     .eq("user_id", user.id)
     .neq("status", "pending")
     .order("created_at", { ascending: false });
+
+  // Fetch voucher codes for all orders using admin client (bypasses RLS)
+  const orderIds = orders?.map((o) => o.id) ?? [];
+  let vouchersByOrder: Record<string, VoucherCodeRow[]> = {};
+
+  if (orderIds.length > 0) {
+    const adminSupabase = createAdminClient();
+    const { data: voucherCodes } = await adminSupabase
+      .from("voucher_codes")
+      .select("id, code, duration_minutes, status, order_id")
+      .in("order_id", orderIds);
+
+    vouchersByOrder = (voucherCodes ?? []).reduce((acc, v) => {
+      if (!acc[v.order_id]) acc[v.order_id] = [];
+      acc[v.order_id].push(v as VoucherCodeRow);
+      return acc;
+    }, {} as Record<string, VoucherCodeRow[]>);
+  }
 
   return (
     <main className="min-h-screen bg-gradient-navy pt-24 pb-16">
@@ -71,6 +99,7 @@ export default async function OrdersPage() {
                 month: "long",
                 year: "numeric",
               });
+              const vouchers = vouchersByOrder[order.id] ?? [];
 
               return (
                 <div key={order.id} className="card-premium p-6">
@@ -110,8 +139,51 @@ export default async function OrdersPage() {
                     )}
                   </div>
 
-                  {/* Adresse livraison */}
-                  {order.shipping_address?.city && (
+                  {/* Codes de vol */}
+                  {vouchers.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-border">
+                      <p className="text-xs font-semibold text-[#F2B705] uppercase tracking-wider mb-3">
+                        {vouchers.length > 1 ? "Vos codes de vol" : "Votre code de vol"}
+                      </p>
+                      <div className="space-y-2">
+                        {vouchers.map((v) => (
+                          <div
+                            key={v.id}
+                            className="flex items-center justify-between gap-3 bg-[#F2B705]/5 border border-[#F2B705]/20 rounded-lg px-4 py-3"
+                          >
+                            <div>
+                              <p className="font-mono text-sm font-bold text-foreground tracking-widest">
+                                {v.code}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {formatDuration(v.duration_minutes)} de vol
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${
+                                v.status === "unused"
+                                  ? "bg-green-500/10 text-green-500 border-green-500/30"
+                                  : "bg-muted text-muted-foreground border-border"
+                              }`}>
+                                {v.status === "unused" ? "Disponible" : v.status === "used" ? "Utilisé" : "Expiré"}
+                              </span>
+                              <a
+                                href="https://fly-horizons.com"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-primary hover:text-gold-400 transition-colors font-medium"
+                              >
+                                Réserver →
+                              </a>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Adresse livraison (uniquement pour produits physiques) */}
+                  {order.shipping_address?.city && vouchers.length === 0 && (
                     <p className="text-xs text-muted-foreground border-t border-border pt-3">
                       Livraison : {order.shipping_address.line1}, {order.shipping_address.postal_code} {order.shipping_address.city}
                     </p>

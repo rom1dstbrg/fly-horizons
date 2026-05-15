@@ -4,7 +4,18 @@
       "WebFetch(domain:fly-horizons.com)",
       "Bash(curl -s https://fly-horizons.com)",
       "Bash(curl *)",
-      "Bash(supabase *)"
+      "Bash(supabase *)",
+      "Bash(npm run *)",
+      "Bash(del \"C:\\\\Users\\\\romai\\\\Documents\\\\Projects\\\\shop_fly-horizons\\\\lib\\\\sendcloud.ts\")",
+      "Bash(del \"C:\\\\Users\\\\romai\\\\Documents\\\\Projects\\\\shop_fly-horizons\\\\app\\\\api\\\\sendcloud\\\\webhook\\\\route.ts\")",
+      "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\('next:', p.dependencies.next\\)\")",
+      "Bash(npx tsc *)",
+      "Bash(dir \"C:\\\\Users\\\\romai\\\\Documents\\\\Projects\\\\CRM_Fly-Horizons\")",
+      "Bash(npm install *)",
+      "Bash(node *)",
+      "Bash(xargs grep -l \"dynamic.*params\\\\|params.*Promise\")",
+      "PowerShell(\\(Get-Content \"C:\\\\Users\\\\romai\\\\Documents\\\\Projects\\\\shop_fly-horizons\\\\lib\\\\email-templates.ts\" | Measure-Object -Line\\).Lines)",
+      "PowerShell(Get-Content *)"
     ]
   }
 }

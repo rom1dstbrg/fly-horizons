@@ -1,5 +1,6 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { Toaster } from "sonner";
 
 export default function PublicLayout({
   children,
@@ -13,6 +14,7 @@ export default function PublicLayout({
         {children}
       </div>
       <Footer />
+      <Toaster position="bottom-center" richColors />
     </div>
   );
 }
