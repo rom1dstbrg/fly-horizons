@@ -244,17 +244,6 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    if (discountAmount > 0) {
-      lineItems.push({
-        price_data: {
-          currency: "eur",
-          product_data: { name: `Reduction (${couponCode})` },
-          unit_amount: -Math.round(discountAmount * 100),
-        },
-        quantity: 1,
-      });
-    }
-
     const sessionParams: Parameters<typeof stripe.checkout.sessions.create>[0] = {
       mode: "payment",
       payment_method_types: ["card"],
@@ -265,6 +254,16 @@ export async function POST(request: NextRequest) {
       cancel_url: `${siteUrl}/cart`,
       locale: "fr",
     };
+
+    if (discountAmount > 0) {
+      const stripeCoupon = await stripe.coupons.create({
+        amount_off: Math.round(discountAmount * 100),
+        currency: "eur",
+        duration: "once",
+        name: `Reduction ${couponCode}`,
+      });
+      sessionParams.discounts = [{ coupon: stripeCoupon.id }];
+    }
 
     if (!allVouchers) {
       sessionParams.shipping_address_collection = {
