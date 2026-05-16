@@ -25,13 +25,13 @@ export default async function ShopPage() {
       <div className="container-shop pt-24 pb-0">
 
         <div className="mb-10">
-          <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-2">
+          <p className="text-xs font-bold text-[#113356] uppercase tracking-[3px] mb-2">
             Collection
           </p>
-          <h1 className="text-4xl font-bold text-foreground">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-2">
             Accessoires
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-muted-foreground text-sm">
             {physicalProducts?.length ?? 0} produit{(physicalProducts?.length ?? 0) !== 1 ? "s" : ""}
           </p>
         </div>

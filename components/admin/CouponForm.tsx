@@ -112,6 +112,36 @@ export function CouponForm() {
         </div>
       </div>
 
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label className="text-sm text-muted-foreground">
+            Nb max d&apos;utilisations (optionnel)
+          </Label>
+          <Input
+            name="max_uses"
+            type="number"
+            min="1"
+            step="1"
+            placeholder="ex : 10"
+            className="bg-input border-border text-foreground placeholder:text-muted-foreground"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-sm text-muted-foreground">
+            Max par client (optionnel)
+          </Label>
+          <Input
+            name="max_uses_per_user"
+            type="number"
+            min="1"
+            step="1"
+            placeholder="ex : 1"
+            className="bg-input border-border text-foreground placeholder:text-muted-foreground"
+          />
+        </div>
+      </div>
+
       <Button
         type="submit"
         disabled={isPending}

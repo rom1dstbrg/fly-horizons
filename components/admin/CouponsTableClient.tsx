@@ -15,6 +15,8 @@ interface Coupon {
   active: boolean;
   expires_at: string | null;
   usage_count: number;
+  max_uses: number | null;
+  max_uses_per_user: number | null;
   created_at: string;
 }
 
@@ -31,12 +33,16 @@ function EditCouponForm({ coupon, onClose }: { coupon: Coupon; onClose: () => vo
     e.preventDefault();
     setError("");
     const fd = new FormData(e.currentTarget);
+    const maxUsesRaw = fd.get("max_uses") as string;
+    const maxUsesPerUserRaw = fd.get("max_uses_per_user") as string;
     startTransition(async () => {
       const r = await updateCoupon(coupon.id, {
         code: fd.get("code") as string,
         type,
         value: parseFloat(fd.get("value") as string),
         expires_at: (fd.get("expires_at") as string) || null,
+        max_uses: maxUsesRaw ? parseInt(maxUsesRaw) : null,
+        max_uses_per_user: maxUsesPerUserRaw ? parseInt(maxUsesPerUserRaw) : null,
       });
       if (r.error) { setError(r.error); return; }
       onClose();
@@ -44,7 +50,7 @@ function EditCouponForm({ coupon, onClose }: { coupon: Coupon; onClose: () => vo
   }
 
   return (
-    <td colSpan={6} className="px-4 py-3 bg-secondary/20">
+    <td colSpan={7} className="px-4 py-3 bg-secondary/20">
       <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3">
         {error && <p className="w-full text-xs text-destructive">{error}</p>}
         <div>
@@ -76,6 +82,20 @@ function EditCouponForm({ coupon, onClose }: { coupon: Coupon; onClose: () => vo
           <input name="expires_at" type="date" defaultValue={expiresDefault}
             className="h-8 px-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
         </div>
+        <div>
+          <label className="block text-xs text-muted-foreground mb-1">Max total</label>
+          <input name="max_uses" type="number" min="1" step="1"
+            defaultValue={coupon.max_uses ?? ""}
+            placeholder="∞"
+            className="h-8 px-2 w-20 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+        </div>
+        <div>
+          <label className="block text-xs text-muted-foreground mb-1">Max/client</label>
+          <input name="max_uses_per_user" type="number" min="1" step="1"
+            defaultValue={coupon.max_uses_per_user ?? ""}
+            placeholder="∞"
+            className="h-8 px-2 w-20 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+        </div>
         <div className="flex gap-2">
           <button type="submit" disabled={isPending}
             className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors">
@@ -102,6 +122,12 @@ function CouponRow({ coupon }: { coupon: Coupon }) {
     });
   }
 
+  const usageLabel = coupon.max_uses
+    ? `${coupon.usage_count}/${coupon.max_uses}`
+    : `${coupon.usage_count}`;
+
+  const isExhausted = coupon.max_uses !== null && coupon.usage_count >= coupon.max_uses;
+
   return (
     <>
       <tr className="border-b border-border last:border-0 hover:bg-secondary/20 transition-colors">
@@ -114,7 +140,14 @@ function CouponRow({ coupon }: { coupon: Coupon }) {
           </span>
         </td>
         <td className="px-4 py-3 hidden md:table-cell">
-          <span className="text-sm text-muted-foreground">{coupon.usage_count} fois</span>
+          <span className={`text-sm ${isExhausted ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+            {usageLabel} fois
+          </span>
+        </td>
+        <td className="px-4 py-3 hidden lg:table-cell">
+          <span className="text-sm text-muted-foreground">
+            {coupon.max_uses_per_user ? `${coupon.max_uses_per_user}×` : "Illimité"}
+          </span>
         </td>
         <td className="px-4 py-3 hidden lg:table-cell">
           <span className="text-sm text-muted-foreground">
@@ -167,7 +200,8 @@ export function CouponsTableClient({ coupons }: { coupons: Coupon[] }) {
           <tr className="border-b border-border">
             <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Code</th>
             <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">Remise</th>
-            <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">Utilisation</th>
+            <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">Utilisations</th>
+            <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">Par client</th>
             <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">Expiration</th>
             <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Actif</th>
             <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Actions</th>

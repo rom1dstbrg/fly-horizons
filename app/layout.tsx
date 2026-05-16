@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
+import { SplashScreen } from "@/components/SplashScreen";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -11,8 +12,8 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: {
-    default: "Fly Horizons Shop",
-    template: "%s | Fly Horizons Shop",
+    default: "Fly Horizons",
+    template: "%s | Fly Horizons",
   },
   description: "Boutique officielle Fly Horizons — Accessoires aviation premium.",
   metadataBase: new URL(
@@ -32,6 +33,7 @@ export default function RootLayout({
   return (
     <html lang="fr" className={`${poppins.variable} h-full`}>
       <body className="min-h-full antialiased">
+        <SplashScreen />
         {children}
       </body>
     </html>

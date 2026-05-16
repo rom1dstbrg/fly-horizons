@@ -15,7 +15,16 @@
       "Bash(node *)",
       "Bash(xargs grep -l \"dynamic.*params\\\\|params.*Promise\")",
       "PowerShell(\\(Get-Content \"C:\\\\Users\\\\romai\\\\Documents\\\\Projects\\\\shop_fly-horizons\\\\lib\\\\email-templates.ts\" | Measure-Object -Line\\).Lines)",
-      "PowerShell(Get-Content *)"
+      "PowerShell(Get-Content *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\romai\\\\Documents\\\\Projects\\\\shop_fly-horizons\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(npx next *)",
+      "Bash(dir \"C:\\\\Users\\\\romai\\\\Documents\\\\Projects\\\\shop_fly-horizons\\\\public\" /b)",
+      "Bash(findstr logo *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\romai\\\\Documents\\\\Projects\\\\shop_fly-horizons\" -Recurse -Force)",
+      "Bash(Select-Object -First 50)",
+      "Bash(xargs grep -l \"Stripe\\\\|stripe\")",
+      "Bash(npx supabase *)"
     ]
   }
 }

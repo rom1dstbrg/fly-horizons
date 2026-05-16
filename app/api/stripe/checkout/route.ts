@@ -80,22 +80,38 @@ export async function POST(request: NextRequest) {
         .eq("active", true)
         .single();
 
-      if (coupon) {
-        const notExpired = !coupon.expires_at || new Date(coupon.expires_at) > new Date();
-        if (notExpired) {
-          if (coupon.type === "percentage") {
-            if (coupon.value >= 100) {
-              discountAmount = subtotal + shippingCost;
-              isFreeEverything = true;
-            } else {
-              discountAmount = (subtotal * coupon.value) / 100;
-            }
-          } else {
-            discountAmount = Math.min(coupon.value, subtotal);
-          }
-          validCoupon = coupon;
+      if (!coupon) {
+        return NextResponse.json({ error: "Code promo invalide." }, { status: 400 });
+      }
+      if (coupon.expires_at && new Date(coupon.expires_at) <= new Date()) {
+        return NextResponse.json({ error: "Ce code promo a expiré." }, { status: 400 });
+      }
+      if (coupon.max_uses && (coupon.usage_count ?? 0) >= coupon.max_uses) {
+        return NextResponse.json({ error: "Ce code promo n'est plus disponible (quota atteint)." }, { status: 400 });
+      }
+      if (coupon.max_uses_per_user && user) {
+        const { count } = await adminSupabase
+          .from("orders")
+          .select("id", { count: "exact", head: true })
+          .eq("coupon_code", coupon.code)
+          .eq("user_id", user.id)
+          .neq("status", "cancelled");
+        if ((count ?? 0) >= coupon.max_uses_per_user) {
+          return NextResponse.json({ error: "Vous avez déjà utilisé ce code promo." }, { status: 400 });
         }
       }
+
+      if (coupon.type === "percentage") {
+        if (coupon.value >= 100) {
+          discountAmount = subtotal + shippingCost;
+          isFreeEverything = true;
+        } else {
+          discountAmount = (subtotal * coupon.value) / 100;
+        }
+      } else {
+        discountAmount = Math.min(coupon.value, subtotal);
+      }
+      validCoupon = coupon;
     }
 
     const total = Math.max(0, subtotal - discountAmount + (isFreeEverything ? 0 : shippingCost));

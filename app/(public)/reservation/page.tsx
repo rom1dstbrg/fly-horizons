@@ -2,210 +2,228 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import {
-  ChevronLeft, ChevronRight, Check, MapPin, Clock,
-  Tag, Lock, CheckCircle, AlertCircle, Loader2,
-  User, Phone, Mail,
+  ChevronLeft, ChevronRight, Clock, Lock,
+  CheckCircle, AlertCircle, Loader2, Tag, MapPin, Users, Calendar,
 } from "lucide-react";
+import { formatDuration } from "@/lib/vouchers";
 
-// ── Types ────────────────────────────────────────────────────
-const DUREES = [30, 60, 90, 120] as const;
-type Duree = typeof DUREES[number];
-type Step = "date-time" | "details" | "payment";
+// ── Types ───────────────────────────────────────────────────────────
+type Step = "datetime" | "infos" | "paiement";
 
-const PACK_LABELS: Record<Duree, string> = {
-  30:  "Vol découverte",
-  60:  "Vol initiation",
-  90:  "Vol panoramique",
-  120: "Grand vol",
-};
-
-interface VoucherInfo {
-  id?: string;
-  code: string;
-  duration_minutes: number;
-  product_title: string;
+interface VolProduct {
+  id: string;
+  title: string;
+  short_description: string | null;
+  price: number;
+  voucher_duration_minutes: number;
+  images?: { url: string }[];
 }
-
-interface FormData {
-  duree: Duree;
-  date: string;
-  heure: string;
-  prenom: string;
-  nom: string;
-  email: string;
-  telephone: string;
-  poids_total: string;
-  voucherInput: string;
-  voucher: VoucherInfo | null;
+interface VoucherInfo { code: string; duration_minutes: number; product_title: string; }
+interface FormState {
+  product: VolProduct | null;
+  date: string; heure: string;
+  prenom: string; nom: string; email: string; telephone: string;
+  passengers: number; poids_total: string;
+  voucherInput: string; voucher: VoucherInfo | null;
   accept_cgp: boolean;
 }
 
 const MONTHS_FR = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
-const DAYS_FR   = ["L","M","M","J","V","S","D"];
-
-function computePrice(duree: Duree, prixHeure: number, voucher: VoucherInfo | null, prixPack?: number) {
-  const full = prixPack ?? Math.round((prixHeure / 60) * duree);
-  if (!voucher) return { price: full, discount: 0, full };
-  const covered = Math.min(duree, voucher.duration_minutes);
-  const price = Math.round((prixHeure / 60) * Math.max(0, duree - covered));
-  return { price, discount: full - price, full };
-}
+const DAYS_FR   = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
 
 const STEPS: { key: Step; label: string }[] = [
-  { key: "date-time", label: "Date & heure" },
-  { key: "details",   label: "Détails" },
-  { key: "payment",   label: "Paiement" },
+  { key: "datetime", label: "Date & heure" },
+  { key: "infos",    label: "Informations" },
+  { key: "paiement", label: "Paiement" },
 ];
 
-// ── Page ─────────────────────────────────────────────────────
+function computePrice(product: VolProduct | null, voucher: VoucherInfo | null) {
+  if (!product) return { price: 0, discount: 0, full: 0 };
+  const full = product.price;
+  if (!voucher) return { price: full, discount: 0, full };
+  const covered  = Math.min(product.voucher_duration_minutes, voucher.duration_minutes);
+  const discount = Math.round((full / product.voucher_duration_minutes) * covered);
+  return { price: Math.max(0, full - discount), discount, full };
+}
+function fmtVoucher(raw: string) {
+  const c = raw.replace(/[^A-Z0-9]/gi, "").toUpperCase().slice(0, 16);
+  return c.match(/.{1,4}/g)?.join("-") ?? c;
+}
+
+// ── Page ────────────────────────────────────────────────────────────
 export default function ReservationPage() {
   const router = useRouter();
-  const [step, setStep] = useState<Step>("date-time");
-  const [prixHeure, setPrixHeure] = useState(254);
-  const [packPrices, setPackPrices] = useState<Partial<Record<Duree, number>>>({});
-  const [form, setForm] = useState<FormData>({
-    duree: 60, date: "", heure: "",
-    prenom: "", nom: "", email: "", telephone: "", poids_total: "",
+  const [step, setStep]     = useState<Step>("datetime");
+  const [prodLoading, setProdLoading] = useState(true);
+  const [form, setForm] = useState<FormState>({
+    product: null, date: "", heure: "",
+    prenom: "", nom: "", email: "", telephone: "",
+    passengers: 0, poids_total: "",
     voucherInput: "", voucher: null, accept_cgp: false,
   });
 
   const today = new Date();
   const [calYear,  setCalYear]  = useState(today.getFullYear());
   const [calMonth, setCalMonth] = useState(today.getMonth() + 1);
-  const [availableDays,   setAvailableDays]   = useState<string[]>([]);
-  const [calLoading,      setCalLoading]      = useState(false);
-  const [slots,           setSlots]           = useState<string[]>([]);
-  const [slotsLoading,    setSlotsLoading]    = useState(false);
-  const [voucherLoading,  setVoucherLoading]  = useState(false);
-  const [voucherError,    setVoucherError]    = useState("");
-  const [submitting,      setSubmitting]      = useState(false);
-  const [submitError,     setSubmitError]     = useState("");
+  const [availDays,    setAvailDays]    = useState<string[]>([]);
+  const [calLoading,   setCalLoading]   = useState(false);
+  const [slots,        setSlots]        = useState<string[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [vcLoading,    setVcLoading]    = useState(false);
+  const [vcError,      setVcError]      = useState("");
+  const [submitting,   setSubmitting]   = useState(false);
+  const [submitError,  setSubmitError]  = useState("");
 
-  // Lire ?duree= dans l'URL et pré-sélectionner
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const d = parseInt(params.get("duree") ?? "");
-    if (([30, 60, 90, 120] as number[]).includes(d)) {
-      setForm(f => ({ ...f, duree: d as Duree }));
-    }
-  }, []);
-
-  // Prix + auth
+  // ── Data ─────────────────────────────────────────────────────────
   useEffect(() => {
     const sb = createClient();
-    // Charger les prix depuis les produits voucher (source unique)
+    const dureeParam = parseInt(new URLSearchParams(window.location.search).get("duree") ?? "");
+
+    if (!dureeParam) { router.replace("/nos-offres"); return; }
+
     sb.from("products")
-      .select("price, voucher_duration_minutes")
-      .eq("active", true)
-      .eq("product_type", "voucher")
+      .select("id, title, short_description, price, voucher_duration_minutes, images:product_images(url)")
+      .eq("active", true).eq("product_type", "voucher").eq("voucher_duration_minutes", dureeParam)
+      .single()
       .then(({ data }) => {
-        if (!data) return;
-        const prices: Partial<Record<Duree, number>> = {};
-        let totalRate = 0; let count = 0;
-        data.forEach(p => {
-          const d = p.voucher_duration_minutes as Duree;
-          if (d && p.price) {
-            prices[d] = p.price;
-            totalRate += (p.price / d) * 60;
-            count++;
-          }
-        });
-        setPackPrices(prices);
-        // prix_heure dérivé des produits pour le calcul de différence voucher
-        if (count > 0) setPrixHeure(Math.round(totalRate / count));
+        if (data) {
+          setForm(f => ({ ...f, product: data as VolProduct }));
+        } else {
+          router.replace("/nos-offres");
+        }
+        setProdLoading(false);
       });
-    // Fallback: prix_heure depuis crm_settings si pas de produits configurés
-    sb.from("crm_settings").select("value").eq("key", "prix_heure").single()
-      .then(({ data }) => { if (data?.value && Object.keys({}).length === 0) setPrixHeure(parseFloat(data.value)); });
+
     sb.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
       sb.from("profiles").select("full_name, phone").eq("id", user.id).single()
         .then(({ data }) => {
-          const parts = (data?.full_name || "").split(" ");
-          setForm(f => ({ ...f, email: user.email ?? "", prenom: parts[0] ?? "", nom: parts.slice(1).join(" ") ?? "", telephone: data?.phone ?? "" }));
+          const p = (data?.full_name ?? "").split(" ");
+          setForm(f => ({ ...f, email: user.email ?? "", prenom: p[0] ?? "", nom: p.slice(1).join(" "), telephone: data?.phone ?? "" }));
         });
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const duree = form.product?.voucher_duration_minutes ?? 60;
+
   const loadMonth = useCallback(async (y: number, m: number) => {
+    if (!form.product) return;
     setCalLoading(true);
     try {
-      const r = await fetch(`/api/reservation/month?year=${y}&month=${m}&duree=${form.duree}`);
-      const d = await r.json();
-      setAvailableDays(d.available ?? []);
+      const r = await fetch(`/api/reservation/month?year=${y}&month=${m}&duree=${form.product.voucher_duration_minutes}`);
+      setAvailDays((await r.json()).available ?? []);
     } finally { setCalLoading(false); }
-  }, [form.duree]);
+  }, [form.product]);
 
-  useEffect(() => { loadMonth(calYear, calMonth); }, [calYear, calMonth, loadMonth]);
-
+  useEffect(() => { if (step === "datetime") loadMonth(calYear, calMonth); }, [calYear, calMonth, loadMonth, step]);
   useEffect(() => {
-    if (!form.date) { setSlots([]); return; }
+    if (!form.date || !form.product) { setSlots([]); return; }
     setSlotsLoading(true);
-    fetch(`/api/reservation/slots?date=${form.date}&duree=${form.duree}`)
-      .then(r => r.json()).then(d => setSlots(d.slots ?? []))
-      .finally(() => setSlotsLoading(false));
-  }, [form.date, form.duree]);
+    fetch(`/api/reservation/slots?date=${form.date}&duree=${form.product.voucher_duration_minutes}`)
+      .then(r => r.json()).then(d => setSlots(d.slots ?? [])).finally(() => setSlotsLoading(false));
+  }, [form.date, form.product]);
 
-  async function validateVoucher() {
-    if (!form.voucherInput.trim()) return;
-    setVoucherLoading(true); setVoucherError("");
+  // ── Voucher & submit ─────────────────────────────────────────────
+  async function validateVoucher(code: string) {
+    if (!code.trim()) return;
+    setVcLoading(true); setVcError("");
     try {
-      const r = await fetch(`/api/vouchers/validate?code=${encodeURIComponent(form.voucherInput.trim())}`);
+      const r = await fetch(`/api/vouchers/validate?code=${encodeURIComponent(code.trim())}`);
       const d = await r.json();
       if (!d.valid) {
-        setVoucherError(d.status === "expired" ? "Ce voucher a expiré." : d.status === "used" ? "Ce voucher a déjà été utilisé." : "Code invalide.");
+        setVcError(
+          d.status === "expired"  ? "Ce voucher a expiré." :
+          d.status === "used"     ? "Ce voucher a déjà été utilisé." :
+          d.status === "reserved" ? "Ce voucher est en cours d'utilisation." : "Code invalide."
+        );
         setForm(f => ({ ...f, voucher: null }));
       } else {
         setForm(f => ({ ...f, voucher: { code: d.code, duration_minutes: d.duration_minutes, product_title: d.product_title } }));
       }
-    } catch { setVoucherError("Erreur de vérification."); }
-    finally { setVoucherLoading(false); }
+    } catch { setVcError("Erreur de vérification."); }
+    finally { setVcLoading(false); }
+  }
+
+  function handleVoucherChange(raw: string) {
+    const fmt = fmtVoucher(raw);
+    setForm(f => ({ ...f, voucherInput: fmt, voucher: null }));
+    setVcError("");
+    if (fmt.replace(/-/g, "").length === 16) validateVoucher(fmt);
   }
 
   async function handleSubmit() {
     setSubmitting(true); setSubmitError("");
-    const { price } = computePrice(form.duree, prixHeure, form.voucher);
-    const payload = { prenom: form.prenom, nom: form.nom, email: form.email, telephone: form.telephone, duree: form.duree, date: form.date, heure: form.heure, poids_total: form.poids_total ? parseInt(form.poids_total) : null, voucher_code: form.voucher?.code };
+    if (form.voucherInput && !form.voucher) { await validateVoucher(form.voucherInput); setSubmitting(false); return; }
+    const { price } = computePrice(form.product, form.voucher);
+    const payload = {
+      prenom: form.prenom, nom: form.nom, email: form.email, telephone: form.telephone,
+      duree, date: form.date, heure: form.heure,
+      passengers: form.passengers, poids_total: form.poids_total ? parseInt(form.poids_total) : null,
+      voucher_code: form.voucher?.code,
+    };
     if (price === 0) {
       const r = await fetch("/api/reservation/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       const d = await r.json();
       if (!r.ok) { setSubmitError(d.error || "Erreur."); setSubmitting(false); return; }
       router.push("/reservation/success");
     } else {
-      const r = await fetch("/api/reservation/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, amount_cents: price * 100, voucher_id: form.voucher?.id }) });
+      const r = await fetch("/api/reservation/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, amount_cents: price * 100 }) });
       const d = await r.json();
       if (!r.ok) { setSubmitError(d.error || "Erreur."); setSubmitting(false); return; }
       window.location.href = d.url;
     }
   }
 
-  // Prix du pack: depuis le produit si dispo, sinon calcul depuis prix_heure
-  const prixPack = packPrices[form.duree] ?? Math.round((prixHeure / 60) * form.duree);
-  const { price, discount, full: prixPlein } = computePrice(form.duree, prixHeure, form.voucher, prixPack);
+  // ── Computed ─────────────────────────────────────────────────────
+  const { price, discount, full: prixPlein } = computePrice(form.product, form.voucher);
   const stepIndex = STEPS.findIndex(s => s.key === step);
+  const formattedDate = form.date
+    ? new Date(form.date + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long" })
+    : null;
 
-  // ── Calendar ─────────────────────────────────────────────
+  const ctaDisabled =
+    step === "datetime" ? !form.date || !form.heure :
+    step === "infos"    ? !form.prenom || !form.nom || !form.email || !form.poids_total || !form.passengers || vcLoading :
+                          !form.accept_cgp || submitting;
+
+  function handleCTA() {
+    if (step === "datetime") { setStep("infos"); return; }
+    if (step === "infos") {
+      if (form.voucherInput && !form.voucher) validateVoucher(form.voucherInput).then(() => setStep("paiement"));
+      else setStep("paiement");
+      return;
+    }
+    handleSubmit();
+  }
+
+  function goBack() {
+    if (stepIndex > 0) setStep(STEPS[stepIndex - 1].key);
+  }
+
+  // ── Calendar ─────────────────────────────────────────────────────
   function renderCalendar() {
     const firstDay = new Date(calYear, calMonth - 1, 1).getDay();
-    const offset = firstDay === 0 ? 6 : firstDay - 1;
-    const daysInMonth = new Date(calYear, calMonth, 0).getDate();
-    const cells = [];
+    const offset   = firstDay === 0 ? 6 : firstDay - 1;
+    const total    = new Date(calYear, calMonth, 0).getDate();
+    const cells: React.ReactNode[] = [];
     for (let i = 0; i < offset; i++) cells.push(<div key={`e${i}`} />);
-    for (let d = 1; d <= daysInMonth; d++) {
-      const ds = `${calYear}-${String(calMonth).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
-      const isAvail = availableDays.includes(ds);
+    for (let d = 1; d <= total; d++) {
+      const ds      = `${calYear}-${String(calMonth).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      const isAvail = availDays.includes(ds);
       const isSel   = form.date === ds;
       const isPast  = new Date(ds + "T12:00:00Z") < today;
       cells.push(
         <button key={d} type="button" disabled={!isAvail || isPast}
           onClick={() => setForm(f => ({ ...f, date: ds, heure: "" }))}
           className={[
-            "h-9 w-full rounded-lg text-sm font-medium transition-all select-none",
-            isSel   ? "bg-primary text-primary-foreground shadow-sm" :
-            isAvail && !isPast ? "hover:bg-primary/10 text-foreground" :
-            "text-muted-foreground/25 cursor-not-allowed",
+            "h-10 w-full rounded-lg text-sm font-medium transition-all duration-150 select-none flex items-center justify-center",
+            isSel              ? "bg-[#fbae17] text-[#0b2238] font-bold shadow-sm scale-105" :
+            isAvail && !isPast ? "hover:bg-[#fbae17]/10 hover:text-[#fbae17] text-foreground/70 cursor-pointer font-semibold" :
+                                 "text-muted-foreground/25 cursor-not-allowed text-xs",
           ].join(" ")}
         >{d}</button>
       );
@@ -213,415 +231,491 @@ export default function ReservationPage() {
     return cells;
   }
 
-  // ── Sidebar ───────────────────────────────────────────────
-  const formattedDate = form.date
-    ? new Date(form.date + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long" })
-    : null;
-
-  function Sidebar() {
+  // ── Render ───────────────────────────────────────────────────────
+  if (prodLoading || !form.product) {
     return (
-      <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden lg:sticky lg:top-[130px]">
-
-        {/* Visual pack */}
-        <div className="relative h-40 bg-[#0b2238] flex flex-col items-center justify-center gap-1 overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,#1a4a7a_0%,#0b2238_70%)]" />
-          <p className="relative text-[#F2B705] text-[10px] font-bold tracking-[3px] uppercase mb-1">Fly Horizons</p>
-          <p className="relative text-white text-5xl font-black leading-none">{form.duree}<span className="text-2xl font-bold">min</span></p>
-          <p className="relative text-white/50 text-xs font-medium tracking-wide mt-1">{PACK_LABELS[form.duree]}</p>
-        </div>
-
-        {/* Info */}
-        <div className="p-5 space-y-4">
-
-          <div>
-            <p className="font-semibold text-foreground">{PACK_LABELS[form.duree]} · {form.duree} min</p>
-            <div className="flex items-baseline gap-2 mt-1">
-              <p className={`text-2xl font-bold ${price === 0 && form.voucher ? "text-green-600" : "text-primary"}`}>
-                {price === 0 && form.voucher ? "Gratuit" : `${price} €`}
-              </p>
-              {discount > 0 && (
-                <p className="text-sm text-muted-foreground line-through">{prixPlein} €</p>
-              )}
-            </div>
-            {discount > 0 && (
-              <p className="text-xs text-green-600 font-medium mt-0.5">−{discount} € avec votre voucher</p>
-            )}
-          </div>
-
-          <div className="space-y-2.5 border-t border-border pt-4">
-            <div className="flex items-start gap-2.5">
-              <MapPin size={13} className="text-muted-foreground mt-0.5 shrink-0" />
-              <div>
-                <p className="text-xs font-medium text-foreground">Aéroport de Charleroi (EBCI)</p>
-                <p className="text-xs text-muted-foreground">Charleroi, Belgique</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <Clock size={13} className="text-muted-foreground shrink-0" />
-              <p className="text-xs text-muted-foreground">{form.duree} minutes de vol</p>
-            </div>
-            {formattedDate && (
-              <div className="flex items-center gap-2.5">
-                <Check size={13} className="text-primary shrink-0" />
-                <p className="text-xs text-foreground font-medium capitalize">
-                  {formattedDate}{form.heure ? ` · ${form.heure}` : ""}
-                </p>
-              </div>
-            )}
-          </div>
-
-          <p className="text-[11px] text-muted-foreground pt-1 border-t border-border">
-            Vol privé en avion léger avec un pilote professionnel.
-          </p>
-        </div>
+      <div className="bg-[#f5f5f7] flex-1 flex items-center justify-center">
+        <Loader2 size={28} className="animate-spin text-muted-foreground/30" />
       </div>
     );
   }
 
-  // ── Progress bar ──────────────────────────────────────────
-  const allSteps = [...STEPS, { key: "success" as const, label: "Réservé" }];
-
   return (
-    <div className="min-h-screen bg-[#f5f5f7] dark:bg-background">
+    <div className="bg-[#f5f5f7] pb-16 flex-1">
+      <div className="h-[84px]" />
 
-      {/* Spacer qui pousse le contenu sous le header fixe (top-3.5 + h-[60px] = 74px) */}
-      <div className="h-[86px] bg-white dark:bg-card" />
-
-      {/* Progress header — sticky juste sous le header du site */}
-      <div className="sticky top-[76px] z-[39] bg-white dark:bg-card border-b border-border shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-center">
-          <div className="flex items-center">
-            {allSteps.map((s, i) => {
-              const isPast   = i < stepIndex;
-              const isActive = s.key === step;
-              return (
-                <div key={s.key} className="flex items-center">
-                  <div className="flex flex-col items-center gap-1 px-1">
-                    <div className={[
-                      "w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold transition-all",
-                      isPast   ? "bg-primary text-primary-foreground" :
-                      isActive ? "bg-primary text-primary-foreground ring-[3px] ring-primary/25" :
-                                 "bg-muted text-muted-foreground",
-                    ].join(" ")}>
-                      {isPast ? <Check size={11} /> : i + 1}
-                    </div>
-                    <span className={`text-[10px] hidden sm:block whitespace-nowrap font-medium leading-none ${isActive ? "text-foreground" : "text-muted-foreground"}`}>
-                      {s.label}
-                    </span>
-                  </div>
-                  {i < allSteps.length - 1 && (
-                    <div className={`w-8 sm:w-14 h-px mx-0.5 mb-3.5 transition-all ${isPast ? "bg-primary" : "bg-border"}`} />
-                  )}
-                </div>
-              );
-            })}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+          {/* Page header — above grid so summary card top-aligns with main card */}
+          <div className="mb-4">
+            <div className="inline-flex items-center gap-2 mb-1.5">
+              {step === "datetime" && <Calendar size={14} className="text-muted-foreground" />}
+              {step === "infos"    && <Users    size={14} className="text-muted-foreground" />}
+              {step === "paiement" && <Lock     size={14} className="text-muted-foreground" />}
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-[2px]">
+                {step === "datetime" && "Calendrier"}
+                {step === "infos"    && "Informations"}
+                {step === "paiement" && "Paiement"}
+              </p>
+            </div>
+            <h1 className="text-xl font-extrabold text-foreground">
+              {step === "datetime" && "Date & heure de vol"}
+              {step === "infos"    && "Vos informations"}
+              {step === "paiement" && "Récapitulatif de votre réservation"}
+            </h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              {step === "datetime" && `Sélectionnez votre créneau pour un vol de ${formatDuration(duree)}.`}
+              {step === "infos"    && "Ces informations servent à confirmer et préparer votre vol."}
+              {step === "paiement" && "Vérifiez les détails avant de procéder au paiement."}
+            </p>
           </div>
-        </div>
-      </div>
 
-      {/* Layout */}
-      <div className="max-w-5xl mx-auto px-4 py-8 pb-16">
-        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 items-start">
 
-          {/* ══ Main content ══ */}
-          <div className="flex-1 min-w-0 space-y-4">
+            {/* ── Main ── */}
+            <div className="min-w-0 pb-20 lg:pb-0">
 
-            {/* ── Step 1 : Date & heure ── */}
-            {step === "date-time" && (
-              <div className="bg-white dark:bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+              {/* ─ Step 2 ─ */}
+              {step === "datetime" && (
+                <div className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
 
-                {/* Duration */}
-                <div className="px-6 pt-6 pb-4 border-b border-border">
-                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-3">Durée du vol</p>
-                  <div className="grid grid-cols-4 gap-2">
-                    {DUREES.map(d => {
-                      const p = packPrices[d] ?? Math.round((prixHeure / 60) * d);
-                      const sel = form.duree === d;
-                      return (
-                        <button key={d} type="button"
-                          onClick={() => setForm(f => ({ ...f, duree: d, date: "", heure: "" }))}
-                          className={[
-                            "flex flex-col items-center py-3 px-2 rounded-xl border-2 transition-all",
-                            sel ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:border-primary/40 hover:bg-secondary/50",
-                          ].join(" ")}
-                        >
-                          <span className={`text-sm font-bold ${sel ? "text-primary" : "text-foreground"}`}>{d} min</span>
-                          <span className="text-xs text-muted-foreground mt-0.5">{p} €</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Calendar */}
-                <div className="px-6 py-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <button type="button"
-                      onClick={() => { if (calMonth === 1) { setCalMonth(12); setCalYear(y => y - 1); } else setCalMonth(m => m - 1); }}
-                      className="w-8 h-8 rounded-lg border border-border flex items-center justify-center hover:bg-secondary transition-colors">
-                      <ChevronLeft size={15} />
-                    </button>
-                    <span className="text-sm font-semibold">{MONTHS_FR[calMonth - 1]} {calYear}</span>
-                    <button type="button"
-                      onClick={() => { if (calMonth === 12) { setCalMonth(1); setCalYear(y => y + 1); } else setCalMonth(m => m + 1); }}
-                      className="w-8 h-8 rounded-lg border border-border flex items-center justify-center hover:bg-secondary transition-colors">
-                      <ChevronRight size={15} />
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-7 gap-0.5 mb-0.5">
-                    {DAYS_FR.map((d, i) => (
-                      <div key={i} className="text-center text-[11px] font-medium text-muted-foreground/60 py-1">{d}</div>
-                    ))}
-                  </div>
-
-                  {calLoading ? (
-                    <div className="flex items-center justify-center py-12">
-                      <Loader2 size={20} className="animate-spin text-muted-foreground" />
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-7 gap-0.5">
-                      {renderCalendar()}
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-4 mt-4 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-primary/20 border border-primary/40 inline-block" />Disponible</span>
-                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-primary inline-block" />Sélectionné</span>
-                  </div>
-                </div>
-
-                {/* Time slots */}
-                {form.date && (
-                  <div className="px-6 pb-5 pt-4 border-t border-border">
-                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-3">
-                      Créneaux disponibles
-                      <span className="font-normal normal-case tracking-normal ml-1 text-foreground/60">
-                        — {new Date(form.date + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long" })}
+                  {/* Calendrier */}
+                  <div className="p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <button type="button"
+                        onClick={() => { if (calMonth === 1) { setCalMonth(12); setCalYear(y => y - 1); } else setCalMonth(m => m - 1); }}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all border border-border cursor-pointer">
+                        <ChevronLeft size={15} />
+                      </button>
+                      <span className="text-sm font-bold text-foreground">
+                        {MONTHS_FR[calMonth - 1]} {calYear}
                       </span>
-                    </p>
-                    {slotsLoading ? (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
-                        <Loader2 size={14} className="animate-spin" /> Chargement…
+                      <button type="button"
+                        onClick={() => { if (calMonth === 12) { setCalMonth(1); setCalYear(y => y + 1); } else setCalMonth(m => m + 1); }}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all border border-border cursor-pointer">
+                        <ChevronRight size={15} />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-7 mb-1">
+                      {DAYS_FR.map((d, i) => (
+                        <div key={i} className="h-8 flex items-center justify-center text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+                          {d}
+                        </div>
+                      ))}
+                    </div>
+
+                    {calLoading
+                      ? <div className="flex items-center justify-center h-44"><Loader2 size={20} className="animate-spin text-muted-foreground/30" /></div>
+                      : <div className="grid grid-cols-7 gap-0.5">{renderCalendar()}</div>
+                    }
+
+                    <div className="flex flex-wrap items-center gap-4 mt-4 pt-4 border-t border-border text-[10px] text-muted-foreground">
+                      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#113356]" />Sélectionné</span>
+                      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full border-2 border-border" />Disponible</span>
+                      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-muted" />Indisponible</span>
+                    </div>
+                  </div>
+
+                  {/* Séparation */}
+                  <div className="border-t border-border" />
+
+                  {/* Créneaux horaires */}
+                  <div className="p-5">
+                    {!form.date ? (
+                      <div className="flex items-center gap-3 py-1">
+                        <Clock size={14} className="text-muted-foreground/40 shrink-0" />
+                        <p className="text-sm text-muted-foreground">Sélectionnez une date ci-dessus pour voir les créneaux disponibles</p>
+                      </div>
+                    ) : slotsLoading ? (
+                      <div className="flex items-center justify-center py-4">
+                        <Loader2 size={18} className="animate-spin text-muted-foreground/30" />
                       </div>
                     ) : slots.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">Aucun créneau disponible ce jour.</p>
+                      <div className="flex items-center gap-3 py-1">
+                        <Clock size={14} className="text-muted-foreground/40 shrink-0" />
+                        <div>
+                          <p className="text-sm font-semibold text-foreground capitalize">{formattedDate}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">Aucun créneau disponible — essayez une autre date</p>
+                        </div>
+                      </div>
                     ) : (
-                      <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                        {slots.map(s => (
-                          <button key={s} type="button"
-                            onClick={() => setForm(f => ({ ...f, heure: s }))}
-                            className={[
-                              "py-2 rounded-lg text-sm font-medium border-2 transition-all",
-                              form.heure === s ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary/50 hover:bg-secondary/50",
-                            ].join(" ")}
-                          >{s}</button>
-                        ))}
+                      <div>
+                        <div className="flex items-baseline gap-2 mb-3">
+                          <p className="text-sm font-extrabold text-foreground capitalize">{formattedDate}</p>
+                          <span className="text-xs text-muted-foreground">· {formatDuration(duree)}</span>
+                        </div>
+                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                          {slots.map(s => (
+                            <button key={s} type="button"
+                              onClick={() => setForm(f => ({ ...f, heure: s }))}
+                              className={[
+                                "py-2.5 rounded-xl border text-sm font-bold transition-all duration-150 text-center cursor-pointer",
+                                form.heure === s
+                                  ? "border-[#fbae17] bg-[#fbae17] text-[#0b2238] shadow-sm"
+                                  : "border-border text-foreground hover:border-[#fbae17]/50 hover:bg-[#fbae17]/5 hover:text-[#fbae17]",
+                              ].join(" ")}
+                            >{s}</button>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
-                )}
-
-                {/* Description */}
-                <div className="px-6 pb-5 pt-4 border-t border-border">
-                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">À propos</p>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Vol en avion léger au départ de l&apos;Aéroport de Charleroi (EBCI), avec un pilote professionnel.
-                    Vols disponibles en semaine et le week-end selon disponibilités.
-                  </p>
-                  <p className="text-xs text-muted-foreground/70 mt-2">
-                    Vous avez un numéro de vol ? Vous pourrez le renseigner à l&apos;étape suivante.
-                  </p>
                 </div>
+              )}
 
-                <div className="px-6 pb-6">
-                  <button type="button" disabled={!form.date || !form.heure}
-                    onClick={() => setStep("details")}
-                    className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-35 transition-all">
-                    Continuer <ChevronRight size={16} />
-                  </button>
-                </div>
-              </div>
-            )}
+              {/* ─ Step 3 ─ */}
+              {step === "infos" && (
+                <div className="rounded-2xl border border-border bg-white shadow-sm divide-y divide-border overflow-hidden">
 
-            {/* ── Step 2 : Détails ── */}
-            {step === "details" && (
-              <div className="bg-white dark:bg-card rounded-2xl border border-border shadow-sm p-6 space-y-4">
-
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { label: "Prénom", key: "prenom", placeholder: "Jean", type: "text" },
-                    { label: "Nom",    key: "nom",    placeholder: "Dupont", type: "text" },
-                  ].map(({ label, key, placeholder, type }) => (
-                    <div key={key}>
-                      <label className="block text-xs font-medium text-muted-foreground mb-1.5">{label} <span className="text-destructive">*</span></label>
-                      <input type={type} value={form[key as keyof FormData] as string} required
-                        onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
-                        className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                        placeholder={placeholder} />
+                  {/* Contact */}
+                  <div className="p-5 sm:p-7">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px] mb-4">Coordonnées</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <Field label="Prénom" required value={form.prenom} onChange={v => setForm(f => ({ ...f, prenom: v }))} placeholder="Jean" />
+                      <Field label="Nom" required value={form.nom} onChange={v => setForm(f => ({ ...f, nom: v }))} placeholder="Dupont" />
+                      <div className="sm:col-span-2">
+                        <Field label="Email" required type="email" value={form.email} onChange={v => setForm(f => ({ ...f, email: v }))} placeholder="jean@exemple.com" />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <Field label="Téléphone" type="tel" value={form.telephone} onChange={v => setForm(f => ({ ...f, telephone: v }))} placeholder="+32 470 00 00 00" />
+                      </div>
                     </div>
-                  ))}
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                    <Mail size={11} className="inline mr-1" />Email <span className="text-destructive">*</span>
-                  </label>
-                  <input type="email" value={form.email} required onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                    className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    placeholder="jean@exemple.com" />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                    <Phone size={11} className="inline mr-1" />Téléphone
-                  </label>
-                  <input type="tel" value={form.telephone} onChange={e => setForm(f => ({ ...f, telephone: e.target.value }))}
-                    className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    placeholder="+32 470 00 00 00" />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                    Poids total des passagers (kg) <span className="text-destructive">*</span>
-                  </label>
-                  <input type="number" value={form.poids_total} required min={1} max={500}
-                    onChange={e => setForm(f => ({ ...f, poids_total: e.target.value }))}
-                    className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    placeholder="ex : 160" />
-                  <p className="mt-1 text-xs text-muted-foreground">Somme de tous les passagers — requis pour le calcul masse & centrage.</p>
-                </div>
-
-                {/* Voucher */}
-                <div className="pt-1 border-t border-border">
-                  <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                    <Tag size={11} className="inline mr-1" />Numéro de vol <span className="text-muted-foreground/50 font-normal">(optionnel)</span>
-                  </label>
-                  <div className="flex gap-2">
-                    <input type="text" value={form.voucherInput}
-                      onChange={e => { setForm(f => ({ ...f, voucherInput: e.target.value.toUpperCase(), voucher: null })); setVoucherError(""); }}
-                      onKeyDown={e => e.key === "Enter" && validateVoucher()}
-                      className="flex-1 h-10 px-3 rounded-lg border border-input bg-background text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring uppercase"
-                      placeholder="FH-XXXX-XXXX" />
-                    <button type="button" onClick={validateVoucher}
-                      disabled={!form.voucherInput.trim() || voucherLoading}
-                      className="px-4 h-10 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center gap-1.5">
-                      {voucherLoading ? <Loader2 size={14} className="animate-spin" /> : "Vérifier"}
-                    </button>
                   </div>
-                  {voucherError && (
-                    <p className="mt-1.5 text-xs text-destructive flex items-center gap-1"><AlertCircle size={12} /> {voucherError}</p>
-                  )}
-                  {form.voucher && (
-                    <div className="mt-2 flex items-center gap-2 text-xs text-green-600 dark:text-green-400 bg-green-500/10 px-3 py-2 rounded-lg">
-                      <CheckCircle size={13} />
-                      <span><strong>{form.voucher.product_title}</strong> ({form.voucher.duration_minutes} min) — appliqué</span>
+
+                  {/* Vol */}
+                  <div className="p-5 sm:p-7">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px] mb-4">Détails du vol</p>
+                    <div className="space-y-5">
+
+                      <div>
+                        <label className="block text-sm font-semibold text-foreground mb-3">
+                          Nombre de passagers <span className="text-muted-foreground font-normal">(requis)</span>
+                        </label>
+                        <div className="flex gap-2.5">
+                          {[1, 2, 3].map(n => (
+                            <button key={n} type="button"
+                              onClick={() => setForm(f => ({ ...f, passengers: n }))}
+                              className={[
+                                "flex-1 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-150 text-center cursor-pointer",
+                                form.passengers === n
+                                  ? "border-[#fbae17] bg-[#fbae17] text-[#0b2238] shadow-sm"
+                                  : "border-border text-foreground hover:border-[#fbae17]/50 hover:bg-[#fbae17]/5 hover:text-[#fbae17]",
+                              ].join(" ")}
+                            >
+                              {n} {n === 1 ? "passager" : "passagers"}
+                            </button>
+                          ))}
+                        </div>
+                        <p className="mt-2 text-xs text-muted-foreground">Prix identique quel que soit le nombre.</p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-foreground mb-2">
+                          Poids total des passagers <span className="text-muted-foreground font-normal">(kg, requis)</span>
+                        </label>
+                        <div className="flex items-center gap-3">
+                          <input type="number" value={form.poids_total} required min={1} max={500} placeholder="ex : 160"
+                            onChange={e => setForm(f => ({ ...f, poids_total: e.target.value }))}
+                            className="w-36 h-10 px-3 rounded-xl border border-border bg-white text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#fbae17]/20 focus:border-[#fbae17] transition-all placeholder:text-muted-foreground/40" />
+                          <span className="text-sm text-muted-foreground">kg</span>
+                        </div>
+                        <p className="mt-2 text-xs text-muted-foreground">Somme de tous — requis pour le calcul masse &amp; centrage.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Voucher */}
+                  <div className="p-5 sm:p-7">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px] mb-1.5">Bon de vol cadeau</p>
+                    <p className="text-sm text-muted-foreground mb-4">Vous avez reçu un voucher ? Saisissez votre code ci-dessous.</p>
+                    <div className="flex gap-2.5">
+                      <input type="text" value={form.voucherInput}
+                        onChange={e => handleVoucherChange(e.target.value)}
+                        onKeyDown={e => e.key === "Enter" && validateVoucher(form.voucherInput)}
+                        className="flex-1 h-10 px-3 rounded-xl border border-border bg-white text-sm font-mono uppercase tracking-widest text-foreground focus:outline-none focus:ring-2 focus:ring-[#fbae17]/20 focus:border-[#fbae17] transition-all placeholder:text-muted-foreground/40 placeholder:tracking-normal placeholder:font-sans"
+                        placeholder="XXXX-XXXX-XXXX-XXXX" maxLength={19} />
+                      <button type="button"
+                        onClick={() => validateVoucher(form.voucherInput)}
+                        disabled={!form.voucherInput.trim() || vcLoading}
+                        className="px-4 h-10 rounded-xl border border-border bg-muted text-sm font-semibold text-foreground hover:bg-[#fbae17]/5 hover:border-[#fbae17]/40 hover:text-[#fbae17] disabled:opacity-40 transition-all flex items-center gap-1.5">
+                        {vcLoading ? <Loader2 size={13} className="animate-spin" /> : <><Tag size={12} />Appliquer</>}
+                      </button>
+                    </div>
+                    {vcError && (
+                      <p className="mt-2.5 text-sm text-destructive flex items-center gap-1.5">
+                        <AlertCircle size={13} className="shrink-0" /> {vcError}
+                      </p>
+                    )}
+                    {form.voucher && (
+                      <div className="mt-2.5 inline-flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-200 px-3.5 py-2 rounded-xl">
+                        <CheckCircle size={13} />
+                        <span><strong>{form.voucher.product_title}</strong> — {form.voucher.duration_minutes} min offerts</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* ─ Step 4 ─ */}
+              {step === "paiement" && (
+                <div className="space-y-4">
+
+                  {/* Recap card */}
+                  <div className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
+                    <div className="bg-[#0b2238] px-6 py-6 flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-[#fbae17] text-[9px] font-black tracking-[3px] uppercase mb-3">Fly Horizons</p>
+                        <h2 className="text-white text-base font-extrabold leading-snug">{form.product?.title}</h2>
+                        <p className="text-white/50 text-sm mt-1.5 capitalize">
+                          {formattedDate}{form.heure && ` · ${form.heure}`}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-white/30 text-[9px] uppercase tracking-widest mb-1">Durée</p>
+                        <span className="bg-[#fbae17] text-[#0b2238] text-sm font-bold px-3 py-1 rounded-full">
+                          {formatDuration(duree)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="px-6 py-5 grid grid-cols-2 gap-x-6 gap-y-4 border-b border-border">
+                      {[
+                        { l: "Passager principal", v: `${form.prenom} ${form.nom}` },
+                        { l: "Email",              v: form.email },
+                        { l: "Passagers / Masse",  v: `${form.passengers} pax · ${form.poids_total} kg` },
+                        { l: "Aéroport",           v: "Charleroi · EBCI" },
+                      ].map(({ l, v }) => (
+                        <div key={l}>
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[2px] mb-0.5">{l}</p>
+                          <p className="text-sm font-semibold text-foreground truncate">{v}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="px-6 py-5 flex items-end justify-between gap-4">
+                      <div className="space-y-1">
+                        {discount > 0 && (
+                          <>
+                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                              <span>Prix public</span>
+                              <span className="line-through">{prixPlein} €</span>
+                            </div>
+                            <div className="flex items-center gap-4 text-xs text-green-600 font-medium">
+                              <span>Voucher ({form.voucher?.duration_minutes} min)</span>
+                              <span>−{discount} €</span>
+                            </div>
+                          </>
+                        )}
+                        <p className="text-xs text-muted-foreground">Par avion · jusqu&apos;à 3 passagers</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[2px] mb-1">Total</p>
+                        <p className={`text-3xl font-black tabular-nums ${price === 0 ? "text-green-600" : "text-[#113356]"}`}>
+                          {price === 0 ? "Gratuit" : `${price} €`}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* CGP */}
+                  <div className="rounded-2xl border border-border bg-white shadow-sm p-5">
+                    <label className="flex items-start gap-3.5 cursor-pointer">
+                      <input type="checkbox" checked={form.accept_cgp}
+                        onChange={e => setForm(f => ({ ...f, accept_cgp: e.target.checked }))}
+                        className="mt-0.5 w-4 h-4 accent-[#113356] shrink-0 cursor-pointer" />
+                      <span className="text-sm text-muted-foreground leading-relaxed">
+                        J&apos;ai lu et j&apos;accepte les{" "}
+                        <a href="https://fly-horizons.com/cgp.html" target="_blank" rel="noopener noreferrer"
+                          className="text-[#113356] underline underline-offset-2 font-semibold">
+                          Conditions Générales de Participation
+                        </a>{" "}
+                        et j&apos;autorise l&apos;utilisation de mes données personnelles pour le traitement de cette réservation.
+                      </span>
+                    </label>
+                  </div>
+
+                  {submitError && (
+                    <div className="flex items-center gap-2.5 text-sm text-destructive bg-destructive/5 border border-destructive/20 px-4 py-3.5 rounded-xl">
+                      <AlertCircle size={14} className="shrink-0" /> {submitError}
                     </div>
                   )}
                 </div>
+              )}
 
-                <div className="flex gap-3 pt-2">
-                  <button type="button" onClick={() => setStep("date-time")}
-                    className="flex-1 h-11 rounded-xl border border-border text-sm font-medium flex items-center justify-center gap-2 hover:bg-secondary transition-colors">
-                    <ChevronLeft size={16} /> Retour
+              {/* ── Navigation ── */}
+              <div className="mt-5 flex items-center justify-between gap-4">
+
+                {/* Retour — gauche */}
+                {stepIndex > 0 ? (
+                  <button type="button" onClick={goBack}
+                    className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer group">
+                    <ChevronLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
+                    Retour
                   </button>
-                  <button type="button"
-                    disabled={!form.prenom || !form.nom || !form.email || !form.poids_total}
-                    onClick={() => setStep("payment")}
-                    className="flex-1 h-11 rounded-xl bg-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-35 transition-all">
-                    Continuer <ChevronRight size={16} />
+                ) : <div />}
+
+                {/* Continuer — droite */}
+                <div className="flex flex-col items-end gap-2">
+                  <button type="button" disabled={ctaDisabled} onClick={handleCTA}
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#113356] text-white rounded-xl text-sm font-bold transition-all duration-200 disabled:opacity-30 hover:bg-[#0b2238] shadow-sm hover:shadow-md hover:-translate-y-px active:translate-y-0 cursor-pointer">
+                    {(submitting || vcLoading) && <Loader2 size={14} className="animate-spin" />}
+                    {step === "paiement" && !submitting && price > 0 && <Lock size={13} />}
+                    {step === "paiement" && !submitting && price === 0 && <CheckCircle size={13} />}
+                    <span>
+                      {step === "datetime" && (form.date && form.heure ? "Continuer" : form.date ? "Sélectionnez un créneau" : "Sélectionnez une date")}
+                      {step === "infos"    && (vcLoading ? "Vérification…" : "Continuer vers le paiement")}
+                      {step === "paiement" && (submitting ? "Traitement en cours…" : price === 0 ? "Confirmer gratuitement" : `Payer ${price} € en toute sécurité`)}
+                    </span>
+                    {!submitting && !vcLoading && step !== "paiement" && <ChevronRight size={15} />}
                   </button>
+                  {step === "paiement" && price > 0 && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <Lock size={9} /> Paiement sécurisé Stripe
+                    </p>
+                  )}
                 </div>
+
               </div>
-            )}
 
-            {/* ── Step 3 : Paiement ── */}
-            {step === "payment" && (
-              <div className="bg-white dark:bg-card rounded-2xl border border-border shadow-sm p-6 space-y-4">
+            </div>
 
-                {/* Récap identité */}
-                <div className="bg-secondary/40 rounded-xl p-4 space-y-1.5">
-                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">Récapitulatif</p>
-                  <div className="flex items-center gap-2 text-sm"><User size={13} className="text-muted-foreground" /><span className="font-medium">{form.prenom} {form.nom}</span></div>
-                  <div className="flex items-center gap-2 text-sm"><Mail size={13} className="text-muted-foreground" /><span className="text-muted-foreground">{form.email}</span></div>
-                  {form.telephone && <div className="flex items-center gap-2 text-sm"><Phone size={13} className="text-muted-foreground" /><span className="text-muted-foreground">{form.telephone}</span></div>}
-                </div>
+            {/* ── Summary sidebar ── */}
+            <div className="hidden lg:block">
+              <div className="sticky top-[96px]">
+                <div className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
 
-                {/* Prix */}
-                <div className="rounded-xl border border-border p-4 space-y-2">
-                  {discount > 0 && (
-                    <>
-                      <div className="flex justify-between text-sm text-muted-foreground">
-                        <span>Prix standard ({form.duree} min)</span>
+                  {/* Image thumbnail */}
+                  {form.product?.images?.[0]?.url && (
+                    <div className="relative h-36 overflow-hidden">
+                      <Image
+                        src={form.product.images[0].url}
+                        alt={form.product.title}
+                        fill
+                        className="object-cover"
+                        sizes="300px"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0b2238]/80 to-transparent" />
+                      <div className="absolute bottom-3 left-4">
+                        <span className="bg-[#fbae17] text-[#0b2238] text-xs font-bold px-2.5 py-1 rounded-full">
+                          {formatDuration(form.product.voucher_duration_minutes)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="bg-[#0b2238] px-4 py-3.5">
+                    <p className="text-[#fbae17] text-[9px] font-black tracking-[3px] uppercase mb-2">Votre réservation</p>
+                    {form.product ? (
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="text-white font-bold text-sm leading-snug">{form.product.title}</p>
+                        {!form.product.images?.[0]?.url && (
+                          <span className="bg-[#fbae17] text-[#0b2238] text-xs font-bold px-2.5 py-1 rounded-full shrink-0">
+                            {formatDuration(form.product.voucher_duration_minutes)}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-white/30 text-sm">Sélectionnez votre vol</p>
+                    )}
+                  </div>
+
+                  <div className="px-4 py-3.5 space-y-2.5 border-b border-border">
+                    <SumRow icon={<MapPin size={12} />} label="Départ" value="Charleroi · EBCI" />
+                    {formattedDate && (
+                      <SumRow icon={<Calendar size={12} />} label="Date" value={<span className="capitalize">{formattedDate}</span>} bright />
+                    )}
+                    {form.heure && (
+                      <SumRow icon={<Clock size={12} />} label="Heure" value={form.heure} bright />
+                    )}
+                    {form.passengers > 0 && (
+                      <SumRow icon={<Users size={12} />} label="Passagers" value={`${form.passengers} passager${form.passengers > 1 ? "s" : ""}`} />
+                    )}
+                    {form.voucher && (
+                      <SumRow icon={<Tag size={12} />} label="Voucher" value={`−${discount} € · ${form.voucher.duration_minutes} min`} green />
+                    )}
+                  </div>
+
+                  <div className="px-4 py-3.5">
+                    {discount > 0 && (
+                      <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                        <span>Prix public</span>
                         <span className="line-through">{prixPlein} €</span>
                       </div>
-                      <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
-                        <span>Voucher ({form.voucher?.duration_minutes} min offerts)</span>
-                        <span>−{discount} €</span>
-                      </div>
-                    </>
-                  )}
-                  <div className="flex justify-between items-center pt-1 border-t border-border">
-                    <span className="font-semibold">Total</span>
-                    <span className={`text-2xl font-bold ${price === 0 ? "text-green-600" : "text-primary"}`}>
-                      {price === 0 ? "Gratuit" : `${price} €`}
-                    </span>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-muted-foreground">Total</span>
+                      <span className={`text-xl font-black tabular-nums ${price === 0 && form.voucher ? "text-green-600" : "text-[#113356]"}`}>
+                        {price === 0 && form.voucher ? "Gratuit" : form.product ? `${price} €` : "—"}
+                      </span>
+                    </div>
+                    <p className="text-muted-foreground text-[10px] mt-1">Par avion · jusqu&apos;à 3 passagers</p>
                   </div>
                 </div>
 
-                {/* CGP */}
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input type="checkbox" checked={form.accept_cgp}
-                    onChange={e => setForm(f => ({ ...f, accept_cgp: e.target.checked }))}
-                    className="mt-0.5 w-4 h-4 accent-primary flex-shrink-0 rounded" />
-                  <span className="text-xs text-muted-foreground leading-relaxed">
-                    J&apos;accepte les{" "}
-                    <a href="https://fly-horizons.com/cgp.html" target="_blank" rel="noopener noreferrer"
-                      className="text-primary underline underline-offset-2">
-                      Conditions Générales de Participation
-                    </a>{" "}
-                    et que mes données soient utilisées pour traiter ma réservation.
-                  </span>
-                </label>
-
-                {submitError && (
-                  <p className="text-xs text-destructive flex items-center gap-1.5">
-                    <AlertCircle size={13} /> {submitError}
-                  </p>
-                )}
-
-                <div className="flex gap-3">
-                  <button type="button" onClick={() => setStep("details")}
-                    className="flex-1 h-11 rounded-xl border border-border text-sm font-medium flex items-center justify-center gap-2 hover:bg-secondary transition-colors">
-                    <ChevronLeft size={16} /> Retour
-                  </button>
-                  <button type="button" disabled={!form.accept_cgp || submitting} onClick={handleSubmit}
-                    className="flex-grow h-11 rounded-xl bg-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-35 transition-all">
-                    {submitting ? (
-                      <><Loader2 size={16} className="animate-spin" /> Traitement…</>
-                    ) : price === 0 ? (
-                      <><CheckCircle size={16} /> Confirmer gratuitement</>
-                    ) : (
-                      <><Lock size={15} /> Payer {price} € par carte</>
-                    )}
-                  </button>
+                <div className="flex items-center gap-1.5 px-1 mt-3">
+                  <Lock size={9} className="text-muted-foreground/50 shrink-0" />
+                  <p className="text-[10px] text-muted-foreground/60">Paiement sécurisé · Pilote EASA certifié</p>
                 </div>
-
-                {price > 0 && (
-                  <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5">
-                    <Lock size={10} /> Paiement sécurisé par <strong>Stripe</strong> — vos données ne sont jamais stockées
-                  </p>
-                )}
               </div>
-            )}
-          </div>
+            </div>
 
-          {/* ══ Sidebar ══ */}
-          <div className="lg:w-64 xl:w-72 shrink-0">
-            <Sidebar />
           </div>
+      </div>
 
+      {/* ── Mobile bottom bar ── */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-4 py-3.5 bg-white/95 backdrop-blur-md border-t border-border shadow-[0_-4px_24px_rgba(0,0,0,0.06)]">
+        <div className="flex items-center gap-3">
+          {stepIndex > 0 && (
+            <button type="button" onClick={goBack}
+              className="flex items-center gap-1 text-sm font-semibold text-muted-foreground shrink-0">
+              <ChevronLeft size={15} /> Retour
+            </button>
+          )}
+          <button type="button" disabled={ctaDisabled} onClick={handleCTA}
+            className="flex-1 py-3.5 rounded-xl bg-[#113356] text-white font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-30 transition-all hover:bg-[#0b2238]">
+            {(submitting || vcLoading) && <Loader2 size={14} className="animate-spin" />}
+            {step === "paiement" && !submitting && price > 0 && <Lock size={13} />}
+            <span>
+              {step === "datetime" && (form.date && form.heure ? "Continuer" : form.date ? "Choisissez un créneau" : "Choisissez une date")}
+              {step === "infos"    && (vcLoading ? "Vérification…" : "Continuer")}
+              {step === "paiement" && (submitting ? "Traitement…" : price === 0 ? "Confirmer" : `Payer ${price} €`)}
+            </span>
+            {!submitting && !vcLoading && step !== "paiement" && <ChevronRight size={15} />}
+          </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────
+function Field({ label, required, type = "text", value, onChange, placeholder }: {
+  label: string; required?: boolean; type?: string;
+  value: string; onChange: (v: string) => void; placeholder?: string;
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-semibold text-foreground mb-2">
+        {label}{required && <span className="text-muted-foreground font-normal"> *</span>}
+      </label>
+      <input type={type} value={value} required={required} placeholder={placeholder}
+        onChange={e => onChange(e.target.value)}
+        className="w-full h-10 px-3 rounded-xl border border-border bg-white text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#fbae17]/20 focus:border-[#fbae17] transition-all placeholder:text-muted-foreground/40" />
+    </div>
+  );
+}
+
+function SumRow({ icon, label, value, bright, green }: {
+  icon: React.ReactNode; label: string; value: React.ReactNode; bright?: boolean; green?: boolean;
+}) {
+  return (
+    <div className="flex items-start gap-2.5">
+      <span className={`mt-0.5 shrink-0 ${green ? "text-green-500" : bright ? "text-[#fbae17]" : "text-muted-foreground/50"}`}>{icon}</span>
+      <div className="min-w-0">
+        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[2px]">{label}</p>
+        <p className={`text-xs font-semibold mt-0.5 truncate ${green ? "text-green-600" : bright ? "text-foreground" : "text-muted-foreground"}`}>
+          {value}
+        </p>
       </div>
     </div>
   );

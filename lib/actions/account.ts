@@ -127,22 +127,22 @@ export async function deleteAddress(addressId: string) {
   }
 }
 
-export async function setDefaultAddress(addressId: string, userId: string) {
+export async function setDefaultAddress(addressId: string) {
   try {
-    const { supabase } = await getUser();
+    const { supabase, user } = await getUser();
 
     // Retirer le defaut de toutes les adresses
     await supabase
       .from("addresses")
       .update({ is_default: false })
-      .eq("user_id", userId);
+      .eq("user_id", user.id);
 
     // Definir la nouvelle adresse par defaut
     const { error } = await supabase
       .from("addresses")
       .update({ is_default: true })
       .eq("id", addressId)
-      .eq("user_id", userId);
+      .eq("user_id", user.id);
 
     if (error) return { error: error.message };
     revalidatePath("/account");

@@ -25,6 +25,10 @@ export async function createCoupon(formData: FormData) {
     const type = formData.get("type") as "percentage" | "fixed";
     const value = parseFloat(formData.get("value") as string);
     const expiresAt = formData.get("expires_at") as string;
+    const maxUsesRaw = formData.get("max_uses") as string;
+    const maxUsesPerUserRaw = formData.get("max_uses_per_user") as string;
+    const maxUses = maxUsesRaw ? parseInt(maxUsesRaw) : null;
+    const maxUsesPerUser = maxUsesPerUserRaw ? parseInt(maxUsesPerUserRaw) : null;
 
     if (!code || isNaN(value) || value <= 0) {
       return { error: "Code et valeur requis." };
@@ -41,6 +45,8 @@ export async function createCoupon(formData: FormData) {
         value,
         active: true,
         expires_at: expiresAt || null,
+        max_uses: maxUses,
+        max_uses_per_user: maxUsesPerUser,
       });
 
     if (error) {
@@ -62,6 +68,8 @@ export async function updateCoupon(couponId: string, data: {
   type?: "percentage" | "fixed";
   value?: number;
   expires_at?: string | null;
+  max_uses?: number | null;
+  max_uses_per_user?: number | null;
 }) {
   try {
     await checkAdmin();
@@ -71,6 +79,8 @@ export async function updateCoupon(couponId: string, data: {
     if (data.type) update.type = data.type;
     if (data.value !== undefined) update.value = data.value;
     if ("expires_at" in data) update.expires_at = data.expires_at || null;
+    if ("max_uses" in data) update.max_uses = data.max_uses ?? null;
+    if ("max_uses_per_user" in data) update.max_uses_per_user = data.max_uses_per_user ?? null;
     const { error } = await adminSupabase.from("coupons").update(update).eq("id", couponId);
     if (error) return { error: error.message };
     revalidatePath("/admin/coupons");

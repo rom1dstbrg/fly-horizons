@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronDown, Gift, Route, ShoppingBag, Lock, Mail, Package, BadgeCheck, Clock, MapPin, Users, Sparkles } from "lucide-react";
+import { ChevronDown, Gift, Route, Lock, Mail, Package, BadgeCheck, Clock, MapPin, Users, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { FeaturedProducts } from "@/components/shop/FeaturedProducts";
 import { formatDuration } from "@/lib/vouchers";
@@ -43,7 +43,7 @@ export default async function HomePage() {
           <div className="inline-flex items-center gap-2 bg-[#F2B705]/15 border border-[#F2B705]/35 rounded-full px-5 py-2 mb-8 backdrop-blur-sm">
             <span className="w-1.5 h-1.5 rounded-full bg-[#F2B705] animate-pulse" />
             <span className="text-[#F2B705] text-xs font-bold tracking-[2.5px] uppercase">
-              Boutique officielle · Fly Horizons
+              Paiements sécurisés
             </span>
           </div>
 
@@ -71,13 +71,6 @@ export default async function HomePage() {
             >
               <Route size={16} />
               Vol sur mesure
-            </a>
-            <a
-              href="#collection"
-              className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-white/10 text-white border border-white/30 rounded-xl font-semibold text-sm hover:bg-white/20 hover:border-white/50 transition-all backdrop-blur-sm"
-            >
-              <ShoppingBag size={16} />
-              Boutique
             </a>
           </div>
         </div>
@@ -136,7 +129,7 @@ export default async function HomePage() {
                     <div className="flex flex-col w-full rounded-2xl overflow-hidden border border-border bg-white shadow-sm hover:shadow-lg transition-all duration-300">
 
                       {/* Visuel */}
-                      <div className="relative h-44 bg-[#0b2238] overflow-hidden shrink-0">
+                      <div className="relative h-56 bg-[#0b2238] overflow-hidden shrink-0">
                         {image ? (
                           <Image
                             src={image}
@@ -159,17 +152,17 @@ export default async function HomePage() {
                       </div>
 
                       {/* Infos */}
-                      <div className="p-4 flex flex-col flex-1">
+                      <div className="p-5 flex flex-col flex-1">
                         <h3 className="font-bold text-foreground text-sm leading-snug mb-1.5 group-hover:text-[#113356] transition-colors">
                           {pack.title}
                         </h3>
                         <p className="text-muted-foreground text-xs leading-relaxed line-clamp-2 flex-1">
                           {pack.short_description ?? ""}
                         </p>
-                        <div className="mt-4 flex items-center justify-between">
-                          <span className="text-[#113356] font-black text-lg">{pack.price} €</span>
+                        <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
+                          <span className="text-[#113356] font-black text-xl">{pack.price} €</span>
                           <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#113356] bg-[#f5f8ff] border border-[#dce8ff] rounded-lg px-3 py-1.5 group-hover:bg-[#113356] group-hover:text-white group-hover:border-[#113356] transition-all">
-                            Réserver
+                            Aperçu
                           </span>
                         </div>
                       </div>

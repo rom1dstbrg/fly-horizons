@@ -27,8 +27,13 @@ export async function login(formData: FormData) {
     return { error: "Email ou mot de passe incorrect." };
   }
 
+  // Prevent open redirect — only allow same-origin relative paths
+  const safeRedirect = redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//")
+    ? redirectTo
+    : "/account";
+
   revalidatePath("/", "layout");
-  redirect(redirectTo ?? "/account");
+  redirect(safeRedirect);
 }
 
 // -----------------------------------------------
@@ -51,7 +56,7 @@ export async function register(formData: FormData) {
 
   const siteUrl = process.env.NODE_ENV === "development"
     ? `http://localhost:${process.env.PORT ?? 3000}`
-    : process.env.NEXT_PUBLIC_SITE_URL ?? "https://shop.fly-horizons.com";
+    : "https://fly-horizons.com";
 
   const { data, error } = await supabase.auth.signUp({
     email,

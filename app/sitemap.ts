@@ -2,7 +2,7 @@ import { MetadataRoute } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://shop.fly-horizons.com";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
   const adminSupabase = createAdminClient();
 
   const { data: products } = await adminSupabase

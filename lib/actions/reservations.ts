@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationPaymentInvitationEmail } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 
 async function checkAdmin() {
@@ -11,6 +12,18 @@ async function checkAdmin() {
   if (!user) throw new Error("Non autorisé");
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
   if (profile?.role !== "admin") throw new Error("Non autorisé");
+}
+
+export async function updateStatutReservation(id: string, statut: string) {
+  try {
+    await checkAdmin();
+    const supabase = createAdminClient();
+    await supabase.from("reservations").update({ statut }).eq("id", id);
+    revalidatePath("/admin/reservations");
+    return { success: true };
+  } catch {
+    return { error: "Erreur serveur" };
+  }
 }
 
 export async function updateStatutReservationPerso(id: string, statut: string) {
@@ -46,8 +59,8 @@ export async function sendEmailConfirmation(id: string, type: "date" | "heure") 
       ? "Fly Horizons — Votre date de vol est confirmée"
       : "Fly Horizons — Votre créneau horaire est confirmé";
     const html = type === "date"
-      ? buildEmailDate(client, dateStr, resa.duree)
-      : buildEmailHeure(client, dateStr, resa.heure_vol, resa.duree);
+      ? reservationDateConfirmeeEmail({ prenom: client.prenom, dateStr, duree: resa.duree })
+      : reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree });
     await resend.emails.send({ from: EMAIL_FROM, to: [client.email], replyTo: EMAIL_REPLY_TO, subject, html });
     if (type === "heure") {
       await supabase.from("reservations").update({ facture_envoyee_at: new Date().toISOString() }).eq("id", id);
@@ -59,51 +72,128 @@ export async function sendEmailConfirmation(id: string, type: "date" | "heure") 
   }
 }
 
-function buildEmailDate(client: { prenom: string }, dateStr: string, duree: number) {
-  return `<!DOCTYPE html><html><body style="font-family:'Segoe UI',Arial,sans-serif;background:#f0f4f8;margin:0;padding:24px;">
-<div style="max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(17,51,86,.1);">
-  <div style="background:#113356;padding:28px 32px;">
-    <p style="color:#F2B705;margin:0;font-size:11px;letter-spacing:2px;text-transform:uppercase;">Fly Horizons</p>
-    <h1 style="color:#fff;margin:8px 0 0;font-size:20px;">Date de vol confirmée ✓</h1>
-  </div>
-  <div style="padding:32px;">
-    <p style="color:#113356;">Bonjour <strong>${client.prenom}</strong>,</p>
-    <p style="color:#4a5568;font-size:14px;">Votre date de vol sur mesure est confirmée :</p>
-    <div style="background:#f8fafc;border-radius:10px;padding:20px;margin:20px 0;border:1px solid #e2e8f0;">
-      <p style="margin:0;font-size:16px;font-weight:600;color:#113356;">${dateStr}</p>
-      <p style="margin:6px 0 0;font-size:14px;color:#64748b;">Durée estimée : ${duree} minutes</p>
-    </div>
-    <p style="color:#4a5568;font-size:13px;">Nous vous recontacterons prochainement pour confirmer votre créneau horaire exact.</p>
-    <p style="color:#113356;font-size:13px;font-weight:600;margin-top:20px;">L'équipe Fly Horizons</p>
-  </div>
-  <div style="background:#f8fafc;padding:16px 32px;border-top:1px solid #e2e8f0;text-align:center;">
-    <p style="color:#94a3b8;font-size:11px;margin:0;">fly-horizons.com · info@fly-horizons.com</p>
-  </div>
-</div></body></html>`;
+export async function createAdminReservation(data: {
+  client_id?: string;
+  prenom?: string;
+  nom?: string;
+  email?: string;
+  telephone?: string;
+  date_vol: string;
+  heure_vol: string;
+  duree: number;
+  passagers: number;
+  poids_total?: number | null;
+  voucher_code?: string;
+  envoyer_paiement: boolean;
+  montant_override?: number | null;
+}) {
+  try {
+    await checkAdmin();
+    const supabase = createAdminClient();
+
+    // Resolve or create client
+    let clientId = data.client_id;
+    if (!clientId) {
+      if (!data.prenom || !data.nom || !data.email) {
+        return { error: "Prénom, nom et email obligatoires pour un nouveau client" };
+      }
+      const { data: newId } = await supabase.rpc("next_client_id");
+      if (!newId) return { error: "Erreur génération ID client" };
+      const { error: cliErr } = await supabase.from("clients").insert({
+        id: newId,
+        prenom: data.prenom,
+        nom: data.nom,
+        email: data.email,
+        telephone: data.telephone || null,
+      });
+      if (cliErr) return { error: "Erreur création client" };
+      clientId = newId;
+    }
+
+    const { data: client } = await supabase.from("clients").select("*").eq("id", clientId).single();
+    if (!client) return { error: "Client introuvable" };
+
+    // Calculate price
+    const { data: settings } = await supabase
+      .from("crm_settings")
+      .select("key, value")
+      .in("key", ["prix_heure"]);
+    const prixHeure = parseFloat(settings?.find(s => s.key === "prix_heure")?.value ?? "254");
+
+    let voucherDuration = 0;
+    if (data.voucher_code) {
+      const { data: voucher } = await supabase
+        .from("voucher_codes")
+        .select("duration_minutes")
+        .eq("code", data.voucher_code.toUpperCase().trim())
+        .eq("status", "unused")
+        .maybeSingle();
+      if (voucher) voucherDuration = voucher.duration_minutes ?? 0;
+    }
+
+    const billableMins = Math.max(0, data.duree - voucherDuration);
+    const montant = data.montant_override != null
+      ? data.montant_override
+      : Math.round((prixHeure / 60) * billableMins);
+
+    const paymentToken = data.envoyer_paiement && montant > 0
+      ? crypto.randomUUID()
+      : null;
+    const statut = data.envoyer_paiement && montant > 0 ? "payment_pending" : "en_attente";
+
+    const { data: resa, error: resaErr } = await supabase
+      .from("reservations")
+      .insert({
+        client_id: clientId,
+        date_vol: data.date_vol,
+        heure_vol: data.heure_vol,
+        duree: data.duree,
+        passagers: data.passagers,
+        poids_total: data.poids_total || null,
+        statut,
+        type_resa: "standard",
+        voucher_code: data.voucher_code?.toUpperCase().trim() || null,
+        payment_token: paymentToken,
+        acompte: montant > 0 ? montant : null,
+      })
+      .select()
+      .single();
+
+    if (resaErr) return { error: "Erreur création réservation" };
+
+    if (paymentToken && montant > 0) {
+        const rawUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+      const siteUrl = rawUrl.startsWith("http://localhost") || rawUrl.startsWith("http://127")
+        ? rawUrl
+        : "https://fly-horizons.com";
+      const paymentUrl = `${siteUrl}/api/reservation/pay/${paymentToken}`;
+      const dateStr = new Date(data.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
+        weekday: "long", day: "numeric", month: "long", year: "numeric",
+      });
+      await resend.emails.send({
+        from: EMAIL_FROM,
+        to: [client.email],
+        replyTo: EMAIL_REPLY_TO,
+        subject: "Votre réservation — Lien de paiement Fly Horizons",
+        html: reservationPaymentInvitationEmail({
+          prenom: client.prenom,
+          nom: client.nom,
+          dateStr,
+          heure: data.heure_vol,
+          duree: data.duree,
+          montant,
+          paymentUrl,
+          voucherCode: data.voucher_code || null,
+        }),
+      });
+    }
+
+    revalidatePath("/admin/reservations");
+    revalidatePath("/admin/clients");
+    return { success: true, reservationId: resa.id };
+  } catch (e) {
+    console.error("createAdminReservation error:", e);
+    return { error: "Erreur serveur" };
+  }
 }
 
-function buildEmailHeure(client: { prenom: string }, dateStr: string, heure: string, duree: number) {
-  return `<!DOCTYPE html><html><body style="font-family:'Segoe UI',Arial,sans-serif;background:#f0f4f8;margin:0;padding:24px;">
-<div style="max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(17,51,86,.1);">
-  <div style="background:#113356;padding:28px 32px;">
-    <p style="color:#F2B705;margin:0;font-size:11px;letter-spacing:2px;text-transform:uppercase;">Fly Horizons</p>
-    <h1 style="color:#fff;margin:8px 0 0;font-size:20px;">Créneau horaire confirmé ✓</h1>
-  </div>
-  <div style="padding:32px;">
-    <p style="color:#113356;">Bonjour <strong>${client.prenom}</strong>,</p>
-    <p style="color:#4a5568;font-size:14px;">Votre vol sur mesure est planifié :</p>
-    <div style="background:#f8fafc;border-radius:10px;padding:20px;margin:20px 0;border:1px solid #e2e8f0;">
-      <table style="width:100%;border-collapse:collapse;">
-        <tr><td style="padding:4px 0;font-size:12px;color:#64748b;width:100px;">Date</td><td style="font-size:14px;font-weight:600;color:#113356;">${dateStr}</td></tr>
-        <tr><td style="padding:4px 0;font-size:12px;color:#64748b;">Heure</td><td style="font-size:14px;font-weight:600;color:#113356;">${heure}</td></tr>
-        <tr><td style="padding:4px 0;font-size:12px;color:#64748b;">Durée est.</td><td style="font-size:14px;color:#64748b;">${duree} minutes</td></tr>
-      </table>
-    </div>
-    <p style="color:#4a5568;font-size:13px;">Rendez-vous à l'Aéroport de Charleroi (EBCI). À très bientôt à bord !</p>
-    <p style="color:#113356;font-size:13px;font-weight:600;margin-top:20px;">L'équipe Fly Horizons</p>
-  </div>
-  <div style="background:#f8fafc;padding:16px 32px;border-top:1px solid #e2e8f0;text-align:center;">
-    <p style="color:#94a3b8;font-size:11px;margin:0;">fly-horizons.com · info@fly-horizons.com</p>
-  </div>
-</div></body></html>`;
-}

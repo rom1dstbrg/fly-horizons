@@ -31,13 +31,17 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // -------------------------------------------------
-  // Protection routes /account/* et /orders
+  // Protection routes /account/*, /orders, /checkout
   // Redirige vers /login si pas connecté
+  // /orders/success est volontairement exclu : page de
+  // confirmation accessible sans session (after Stripe redirect)
   // -------------------------------------------------
-  if (
-    (pathname.startsWith("/account") || pathname.startsWith("/orders")) &&
-    !user
-  ) {
+  const requiresAuth =
+    pathname.startsWith("/account") ||
+    pathname === "/orders" ||
+    pathname.startsWith("/checkout");
+
+  if (requiresAuth && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("redirectTo", pathname);

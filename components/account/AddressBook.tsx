@@ -25,7 +25,6 @@ interface Address {
 
 interface AddressBookProps {
   addresses: Address[];
-  userId: string;
 }
 
 const COUNTRIES = [
@@ -160,7 +159,7 @@ function AddressForm({
   );
 }
 
-export function AddressBook({ addresses, userId }: AddressBookProps) {
+export function AddressBook({ addresses }: AddressBookProps) {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -173,7 +172,7 @@ export function AddressBook({ addresses, userId }: AddressBookProps) {
 
   function handleSetDefault(id: string) {
     startTransition(async () => {
-      await setDefaultAddress(id, userId);
+      await setDefaultAddress(id);
     });
   }
 

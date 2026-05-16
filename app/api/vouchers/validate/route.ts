@@ -1,11 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { rateLimit, getIp } from "@/lib/rate-limit";
+
+const VOUCHER_CODE_RE = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/i;
 
 export async function GET(request: NextRequest) {
+  const { allowed } = rateLimit(`voucher-validate:${getIp(request)}`, 20, 60_000);
+  if (!allowed) {
+    return NextResponse.json({ error: "Trop de requêtes" }, { status: 429 });
+  }
+
   const code = request.nextUrl.searchParams.get("code");
 
   if (!code) {
     return NextResponse.json({ error: "Code requis" }, { status: 400 });
+  }
+
+  if (!VOUCHER_CODE_RE.test(code.trim())) {
+    return NextResponse.json({ valid: false, error: "Code invalide" }, { status: 404 });
   }
 
   const adminSupabase = createAdminClient();

@@ -91,6 +91,39 @@ export async function deleteReservationPerso(resaId: string) {
   }
 }
 
+export async function deleteClient(clientId: string) {
+  try {
+    await checkAdmin();
+    const adminSupabase = createAdminClient();
+    // Supprime d'abord les réservations associées (au cas où pas de cascade FK)
+    await adminSupabase.from("reservations").delete().eq("client_id", clientId);
+    const { error } = await adminSupabase.from("clients").delete().eq("id", clientId);
+    if (error) return { error: error.message };
+    revalidatePath("/admin/clients");
+    revalidatePath("/admin/reservations");
+    return { success: true };
+  } catch {
+    return { error: "Erreur suppression client" };
+  }
+}
+
+export async function deleteReservationStandard(resaId: string) {
+  try {
+    await checkAdmin();
+    const adminSupabase = createAdminClient();
+    const { error } = await adminSupabase
+      .from("reservations")
+      .delete()
+      .eq("id", resaId);
+    if (error) return { error: error.message };
+    revalidatePath("/admin/reservations");
+    revalidatePath("/admin");
+    return { success: true };
+  } catch {
+    return { error: "Erreur suppression" };
+  }
+}
+
 export async function deleteCoupon(couponId: string) {
   try {
     await checkAdmin();

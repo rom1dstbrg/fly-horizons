@@ -3,8 +3,14 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendVolSurMesureQuote } from "@/lib/email-service";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { randomUUID } from "crypto";
+import { rateLimit, getIp } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
+  const { allowed } = rateLimit(`vsm-checkout:${getIp(request)}`, 5, 60_000);
+  if (!allowed) {
+    return NextResponse.json({ error: "Trop de requêtes, veuillez patienter." }, { status: 429 });
+  }
+
   try {
     const body = await request.json();
     const {
@@ -30,15 +36,23 @@ export async function POST(request: NextRequest) {
     const acompteHeure = parseFloat(settingsMap.acompte_perso_heure ?? "300");
     const prixHeure = parseFloat(settingsMap.prix_heure ?? "254");
 
-    // Fetch voucher duration from DB (no status filter — already validated client-side)
+    // Valider le voucher côté serveur (statut + expiration)
     let voucherDuration = 0;
     if (voucher_id) {
       const { data: voucher } = await supabase
         .from("voucher_codes")
-        .select("duration_minutes")
+        .select("duration_minutes, status, expires_at")
         .eq("id", voucher_id)
         .single();
-      voucherDuration = voucher?.duration_minutes ?? 0;
+
+      if (!voucher || voucher.status !== "unused") {
+        return NextResponse.json({ error: "Code voucher invalide ou déjà utilisé" }, { status: 400 });
+      }
+      if (voucher.expires_at && new Date(voucher.expires_at) < new Date()) {
+        return NextResponse.json({ error: "Ce voucher a expiré" }, { status: 400 });
+      }
+
+      voucherDuration = voucher.duration_minutes ?? 0;
     }
 
     const effectiveDureMin = dureMin ?? 0;
@@ -49,16 +63,27 @@ export async function POST(request: NextRequest) {
       ? Math.round((acompteHeure / 60) * billableMin)
       : Math.round(acompteHeure);
     const discount = prixEstime - prixBillable;
-    const taxes = taxesEscales ? parseInt(taxesEscales) : 0;
+    const taxes = Math.max(0, taxesEscales ? parseInt(taxesEscales) : 0);
     const totalAcompte = acompte + taxes;
 
-    // Create/find client
-    const { data: clientId } = await supabase.rpc("next_client_id");
-    if (!clientId) return NextResponse.json({ error: "Erreur génération ID client" }, { status: 500 });
+    // Find or create client by email
+    const { data: existingClient } = await supabase
+      .from("clients")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
 
-    await supabase.from("clients").insert({
-      id: clientId, nom, prenom, email, telephone: telephone || null,
-    }).select().maybeSingle();
+    let clientId: string;
+    if (existingClient) {
+      clientId = existingClient.id;
+    } else {
+      const { data: newId } = await supabase.rpc("next_client_id");
+      if (!newId) return NextResponse.json({ error: "Erreur génération ID client" }, { status: 500 });
+      clientId = newId;
+      await supabase.from("clients").insert({
+        id: clientId, nom, prenom, email, telephone: telephone || null,
+      });
+    }
 
     // Generate payment token for deferred Stripe checkout
     const paymentToken = totalAcompte > 0 ? randomUUID() : null;
@@ -99,7 +124,7 @@ export async function POST(request: NextRequest) {
     }
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-    const paymentUrl = paymentToken ? `${siteUrl}/vol-sur-mesure/pay/${paymentToken}` : null;
+    const paymentUrl = paymentToken ? `${siteUrl}/api/vol-sur-mesure/pay/${paymentToken}` : null;
 
     // Send quote email to client
     await sendVolSurMesureQuote({

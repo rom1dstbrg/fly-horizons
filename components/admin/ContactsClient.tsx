@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { updateContactStatut, replyContact, deleteContact } from "@/lib/actions/contacts";
-import { ChevronDown, ChevronUp, Send, Trash2, Loader2, Mail } from "lucide-react";
+import { DeleteButton } from "@/components/admin/DeleteButton";
+import { ChevronDown, ChevronUp, Send, Loader2, Mail } from "lucide-react";
 
 const STATUTS = [
   { value: "nouveau",  label: "Nouveau",  color: "bg-yellow-100 text-yellow-700 border-yellow-200" },
@@ -30,7 +31,6 @@ interface Contact {
 function ContactCard({ contact }: { contact: Contact }) {
   const [expanded, setExpanded] = useState(false);
   const [reponse, setReponse] = useState(contact.reponse ?? "");
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const [message, setMessage] = useState("");
   const [isPending, startTransition] = useTransition();
 
@@ -46,12 +46,6 @@ function ContactCard({ contact }: { contact: Contact }) {
     });
   }
 
-  function handleDelete() {
-    startTransition(async () => {
-      await deleteContact(contact.id);
-    });
-  }
-
   function handleReply() {
     startTransition(async () => {
       const r = await replyContact(contact.id, reponse, contact.email, contact.nom, contact.sujet);
@@ -63,8 +57,11 @@ function ContactCard({ contact }: { contact: Contact }) {
 
   return (
     <div className="card-premium p-4">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      {/* Header — entièrement cliquable */}
+      <div
+        className="flex items-start justify-between gap-4 cursor-pointer select-none"
+        onClick={() => setExpanded(e => !e)}
+      >
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <p className="font-semibold text-foreground text-sm">{contact.nom}</p>
@@ -77,34 +74,24 @@ function ContactCard({ contact }: { contact: Contact }) {
           <p className="text-xs text-muted-foreground mt-0.5">{dateStr}</p>
         </div>
 
-        <div className="flex items-center gap-1 shrink-0">
-          {confirmDelete ? (
-            <>
-              <button onClick={handleDelete} disabled={isPending}
-                className="px-2 py-1 rounded bg-destructive text-destructive-foreground text-xs font-medium hover:bg-destructive/90 disabled:opacity-50">
-                {isPending ? <Loader2 size={11} className="animate-spin" /> : "Supprimer"}
-              </button>
-              <button onClick={() => setConfirmDelete(false)}
-                className="px-2 py-1 rounded border border-border text-xs text-muted-foreground hover:bg-secondary">
-                Annuler
-              </button>
-            </>
-          ) : (
-            <button onClick={() => setConfirmDelete(true)} title="Supprimer"
-              className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
-              <Trash2 size={14} />
-            </button>
-          )}
-          <button onClick={() => setExpanded(e => !e)}
-            className="p-1.5 rounded-lg hover:bg-secondary transition-colors text-muted-foreground">
+        <div
+          className="flex items-center gap-1 shrink-0"
+          onClick={e => e.stopPropagation()}
+        >
+          <DeleteButton
+            onDelete={() => deleteContact(contact.id)}
+            confirmMessage="Confirmer ?"
+          />
+          <span className="p-1.5 text-muted-foreground pointer-events-none">
             {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-          </button>
+          </span>
         </div>
       </div>
 
       {/* Preview message */}
       {!expanded && (
-        <p className="text-xs text-muted-foreground mt-2 line-clamp-2 leading-relaxed">
+        <p className="text-xs text-muted-foreground mt-2 line-clamp-2 leading-relaxed cursor-pointer select-none"
+          onClick={() => setExpanded(true)}>
           {contact.message}
         </p>
       )}

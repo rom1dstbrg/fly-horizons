@@ -76,19 +76,19 @@ async function send(to: string, subject: string, html: string) {
 export async function sendOrderConfirmation(params: SendOrderConfirmationParams) {
   const { to, orderRef, ...rest } = params;
   const html = orderConfirmationEmail({ orderRef, customerEmail: to, ...rest });
-  return send(to, `Confirmation de commande #${orderRef} — Fly Horizons Shop`, html);
+  return send(to, `Confirmation de commande #${orderRef} — Fly Horizons`, html);
 }
 
 export async function sendOrderProcessingEmail(params: SendStatusEmailParams) {
   const { to, orderRef, customerName } = params;
   const html = orderProcessingEmail({ orderRef, customerName });
-  return send(to, `Votre commande #${orderRef} est en préparation — Fly Horizons Shop`, html);
+  return send(to, `Votre commande #${orderRef} est en préparation — Fly Horizons`, html);
 }
 
 export async function sendOrderShippedEmail(params: SendStatusEmailParams) {
   const { to, orderRef, customerName, shippingAddress } = params;
   const html = orderShippedEmail({ orderRef, customerName, shippingAddress });
-  return send(to, `Votre commande #${orderRef} est expédiée ! — Fly Horizons Shop`, html);
+  return send(to, `Votre commande #${orderRef} est expédiée ! — Fly Horizons`, html);
 }
 
 export async function sendVoucherEmail(params: {

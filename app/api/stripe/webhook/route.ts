@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendOrderConfirmation, sendVoucherEmail } from "@/lib/email-service";
 import { generateVoucherCode } from "@/lib/vouchers";
 import type { VoucherEmailCode } from "@/lib/email-templates";
+import { reservationPaymentConfirmationEmail, volSurMesureAcompteEmail } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -50,10 +51,19 @@ export async function POST(request: NextRequest) {
         if (resa?.clients) {
           const c = resa.clients as { prenom: string; nom: string; email: string };
           const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+          const montantPaye = session.amount_total ? session.amount_total / 100 : 0;
           await resend.emails.send({
             from: EMAIL_FROM, to: [c.email], replyTo: EMAIL_REPLY_TO,
             subject: "Confirmation de paiement — Vol sur mesure Fly Horizons",
-            html: `<!DOCTYPE html><html><body style="font-family:'Segoe UI',Arial,sans-serif;background:#f0f4f8;margin:0;padding:0;"><div style="max-width:560px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(17,51,86,.1);"><div style="background:#113356;padding:28px 32px;"><p style="color:#F2B705;margin:0;font-size:11px;letter-spacing:2px;text-transform:uppercase;">Fly Horizons</p><h1 style="color:#fff;margin:8px 0 0;font-size:20px;">Acompte reçu ✓</h1></div><div style="padding:32px;"><p style="color:#113356;">Bonjour <strong>${c.prenom}</strong>,</p><p style="color:#4a5568;font-size:14px;">Votre acompte pour votre vol sur mesure a bien été reçu :</p><div style="background:#f8fafc;border-radius:10px;padding:20px;margin:20px 0;border:1px solid #e2e8f0;"><table style="width:100%;border-collapse:collapse;"><tr><td style="padding:5px 0;font-size:12px;color:#64748b;width:130px;">Date souhaitée</td><td style="padding:5px 0;font-size:14px;font-weight:600;color:#113356;">${dateStr}</td></tr><tr><td style="padding:5px 0;font-size:12px;color:#64748b;">Heure</td><td style="padding:5px 0;font-size:14px;font-weight:600;color:#113356;">${resa.heure_vol}</td></tr><tr><td style="padding:5px 0;font-size:12px;color:#64748b;">Durée estimée</td><td style="padding:5px 0;font-size:14px;color:#64748b;">${resa.duree} minutes</td></tr>${voucherCode ? `<tr><td style="padding:5px 0;font-size:12px;color:#64748b;">Voucher</td><td style="padding:5px 0;font-size:14px;color:#16a34a;">${voucherCode} appliqué</td></tr>` : ""}</table></div><p style="color:#4a5568;font-size:13px;">Nous vous recontacterons sous 24h pour affiner votre itinéraire et confirmer la date exacte.</p><p style="color:#113356;font-size:13px;font-weight:600;margin-top:20px;">L'équipe Fly Horizons</p></div></div></body></html>`,
+            html: volSurMesureAcompteEmail({
+              prenom: c.prenom,
+              nom: c.nom,
+              dateStr,
+              heure: resa.heure_vol,
+              dureeEstimee: resa.duree,
+              voucherCode: voucherCode || null,
+              montantPaye,
+            }),
           });
           await resend.emails.send({
             from: EMAIL_FROM, to: [EMAIL_REPLY_TO],
@@ -71,7 +81,7 @@ export async function POST(request: NextRequest) {
       if (reservationId) {
         await adminSupabase
           .from("reservations")
-          .update({ statut: "en_attente" })
+          .update({ statut: "en_attente", payment_token: null })
           .eq("id", reservationId)
           .eq("statut", "payment_pending");
 
@@ -94,35 +104,23 @@ export async function POST(request: NextRequest) {
           const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
             weekday: "long", day: "numeric", month: "long", year: "numeric",
           });
+          const montantPaye = session.amount_total ? session.amount_total / 100 : 0;
           await resend.emails.send({
             from: EMAIL_FROM,
             to: [c.email],
             replyTo: EMAIL_REPLY_TO,
             subject: "Confirmation de paiement — Fly Horizons",
-            html: `<!DOCTYPE html><html><body style="font-family:'Segoe UI',Arial,sans-serif;background:#f0f4f8;margin:0;padding:0;">
-<div style="max-width:560px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(17,51,86,.1);">
-  <div style="background:#113356;padding:28px 32px;">
-    <p style="color:#F2B705;margin:0;font-size:11px;letter-spacing:2px;text-transform:uppercase;">Fly Horizons</p>
-    <h1 style="color:#fff;margin:8px 0 0;font-size:20px;">Paiement confirmé ✓</h1>
-  </div>
-  <div style="padding:32px;">
-    <p style="color:#113356;">Bonjour <strong>${c.prenom}</strong>,</p>
-    <p style="color:#4a5568;font-size:14px;">Votre paiement a bien été reçu. Voici votre réservation :</p>
-    <div style="background:#f8fafc;border-radius:10px;padding:20px;margin:20px 0;border:1px solid #e2e8f0;">
-      <table style="width:100%;border-collapse:collapse;">
-        <tr><td style="padding:5px 0;font-size:12px;color:#64748b;width:130px;">Date</td><td style="padding:5px 0;font-size:14px;font-weight:600;color:#113356;">${dateStr}</td></tr>
-        <tr><td style="padding:5px 0;font-size:12px;color:#64748b;">Heure</td><td style="padding:5px 0;font-size:14px;font-weight:600;color:#113356;">${resa.heure_vol}</td></tr>
-        <tr><td style="padding:5px 0;font-size:12px;color:#64748b;">Durée</td><td style="padding:5px 0;font-size:14px;font-weight:600;color:#113356;">${resa.duree} minutes</td></tr>
-        ${voucherCode ? `<tr><td style="padding:5px 0;font-size:12px;color:#64748b;">Voucher</td><td style="padding:5px 0;font-size:14px;color:#16a34a;">${voucherCode} appliqué</td></tr>` : ""}
-      </table>
-    </div>
-    <p style="color:#4a5568;font-size:13px;">Nous vous contacterons pour confirmer tous les détails. À très bientôt à bord !</p>
-    <p style="color:#113356;font-size:13px;font-weight:600;">L'équipe Fly Horizons</p>
-  </div>
-  <div style="background:#f8fafc;padding:16px 32px;border-top:1px solid #e2e8f0;text-align:center;">
-    <p style="color:#94a3b8;font-size:11px;margin:0;">fly-horizons.com · info@fly-horizons.com</p>
-  </div>
-</div></body></html>`,
+            html: reservationPaymentConfirmationEmail({
+              prenom: c.prenom,
+              nom: c.nom,
+              dateStr,
+              heure: resa.heure_vol,
+              duree: resa.duree,
+              passengers: resa.passagers ?? undefined,
+              poids_total: resa.poids_total ?? null,
+              voucherCode: voucherCode || null,
+              montantPaye,
+            }),
           });
 
           await resend.emails.send({
@@ -278,13 +276,33 @@ export async function POST(request: NextRequest) {
 
   if (event.type === "checkout.session.expired") {
     const session = event.data.object as Stripe.Checkout.Session;
-    const orderId = session.metadata?.orderId;
+    const { orderId, voucherId, reservationId, type } = session.metadata ?? {};
+
+    // Release any voucher that was atomically reserved for this session
+    if (voucherId) {
+      await adminSupabase
+        .from("voucher_codes")
+        .update({ status: "unused" })
+        .eq("id", voucherId)
+        .eq("status", "reserved");
+    }
+
+    // Cancel pending shop order
     if (orderId) {
       await adminSupabase
         .from("orders")
         .update({ status: "cancelled" })
         .eq("id", orderId)
         .eq("status", "pending");
+    }
+
+    // Cancel pending reservation (standard or perso)
+    if (reservationId && (type === "reservation" || type === "reservation_perso")) {
+      await adminSupabase
+        .from("reservations")
+        .update({ statut: "annulee" })
+        .eq("id", reservationId)
+        .in("statut", ["payment_pending", "en_attente"]);
     }
   }
 

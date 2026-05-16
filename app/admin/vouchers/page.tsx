@@ -1,5 +1,4 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { formatPrice } from "@/lib/utils";
 import { VouchersClient } from "@/components/admin/VouchersClient";
 
 export const metadata = { title: "Vouchers — Admin" };
@@ -7,10 +6,25 @@ export const metadata = { title: "Vouchers — Admin" };
 export default async function AdminVouchersPage() {
   const adminSupabase = createAdminClient();
 
-  const { data: vouchers } = await adminSupabase
-    .from("voucher_codes")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const [{ data: vouchers }, { data: rawClients }] = await Promise.all([
+    adminSupabase
+      .from("voucher_codes")
+      .select("*")
+      .order("created_at", { ascending: false }),
+    adminSupabase
+      .from("clients")
+      .select("id, prenom, nom, email")
+      .order("nom"),
+  ]);
+
+  // Deduplicate clients by email for the picker
+  const seen = new Set<string>();
+  const clients = (rawClients ?? []).filter(c => {
+    const key = c.email.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 
   const total   = vouchers?.length ?? 0;
   const unused  = vouchers?.filter((v) => v.status === "unused").length ?? 0;
@@ -27,7 +41,6 @@ export default async function AdminVouchersPage() {
         </div>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
         <div className="card-premium p-4 text-center">
           <p className="text-2xl font-bold text-primary">{unused}</p>
@@ -43,20 +56,7 @@ export default async function AdminVouchersPage() {
         </div>
       </div>
 
-      {!vouchers || vouchers.length === 0 ? (
-        <div className="card-premium p-12 text-center">
-          <p className="text-muted-foreground">Aucun voucher émis pour le moment.</p>
-          <p className="text-sm text-muted-foreground mt-2">
-            Les codes sont générés automatiquement lors de l'achat d'un produit voucher.
-          </p>
-        </div>
-      ) : (
-        <VouchersClient vouchers={vouchers} />
-      )}
+      <VouchersClient vouchers={vouchers ?? []} clients={clients} />
     </div>
   );
 }
-
-// Unused import suppression
-const _unused = formatPrice;
-void _unused;

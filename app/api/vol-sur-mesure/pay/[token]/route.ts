@@ -36,6 +36,25 @@ export async function GET(
     return NextResponse.redirect(new URL("/vol-sur-mesure/success", siteUrl));
   }
 
+  // Atomic voucher claim — prevents double-use if two sessions are opened
+  let voucherId = "";
+  if (resa.voucher_code) {
+    const { data: claimed } = await supabase
+      .from("voucher_codes")
+      .update({ status: "reserved" })
+      .eq("code", resa.voucher_code)
+      .eq("status", "unused")
+      .select("id")
+      .maybeSingle();
+
+    // Voucher already reserved/used — abort rather than let payment proceed
+    // with a voucher that won't be honoured
+    if (!claimed) {
+      return NextResponse.redirect(new URL("/vol-sur-mesure?error=voucher_indisponible", siteUrl));
+    }
+    voucherId = claimed.id;
+  }
+
   const c = resa.clients as { prenom: string; nom: string; email: string };
   const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
     day: "numeric", month: "long", year: "numeric",
@@ -46,6 +65,7 @@ export async function GET(
     payment_method_types: ["card"],
     customer_email: c.email,
     locale: "fr",
+    expires_at: Math.floor(Date.now() / 1000) + 30 * 60, // 30 min — libère le voucher plus vite
     line_items: [
       {
         price_data: {
@@ -63,7 +83,7 @@ export async function GET(
       type: "reservation_perso",
       reservationId: resa.id,
       clientId: resa.client_id,
-      voucherId: "",
+      voucherId,
       voucherCode: resa.voucher_code || "",
       paymentToken: token,
     },

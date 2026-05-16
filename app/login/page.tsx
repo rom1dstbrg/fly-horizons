@@ -99,7 +99,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <Link href="/">
             <span className="text-2xl font-semibold text-gold-gradient">
-              Fly Horizons Shop
+              Fly Horizons
             </span>
           </Link>
           <p className="text-muted-foreground text-sm mt-2">

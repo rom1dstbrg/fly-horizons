@@ -7,9 +7,10 @@ import {
 } from "@/lib/actions/vouchers";
 import { formatDuration } from "@/lib/vouchers";
 import {
-  Check, RotateCcw, Copy, Plus, Trash2, Pencil, X,
-  Loader2, ChevronDown, ChevronUp,
+  Check, RotateCcw, Copy, Plus, Pencil, X,
+  Loader2, ChevronDown, ChevronUp, Users,
 } from "lucide-react";
+import { DeleteButton } from "@/components/admin/DeleteButton";
 
 interface VoucherCode {
   id: string;
@@ -52,19 +53,76 @@ function CopyCode({ code }: { code: string }) {
   );
 }
 
-function CreateVoucherForm({ onClose }: { onClose: () => void }) {
+interface ClientOption {
+  id: string;
+  prenom: string;
+  nom: string;
+  email: string;
+}
+
+function ClientPicker({ clients, onSelect }: {
+  clients: ClientOption[];
+  onSelect: (c: ClientOption) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const suggestions = query.length >= 2
+    ? clients.filter(c =>
+        c.email.toLowerCase().includes(query.toLowerCase()) ||
+        `${c.prenom} ${c.nom}`.toLowerCase().includes(query.toLowerCase())
+      ).slice(0, 5)
+    : [];
+
+  return (
+    <div className="relative">
+      <label className="block text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1">
+        <Users size={11} /> Choisir un client existant
+      </label>
+      <input
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        placeholder="Nom ou email…"
+        className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+      />
+      {suggestions.length > 0 && (
+        <ul className="absolute z-10 mt-1 w-full bg-popover border border-border rounded-lg shadow-lg overflow-hidden text-sm">
+          {suggestions.map(c => (
+            <li key={c.id}>
+              <button
+                type="button"
+                onClick={() => { onSelect(c); setQuery(""); }}
+                className="w-full text-left px-3 py-2 hover:bg-secondary transition-colors"
+              >
+                <span className="font-medium text-foreground">{c.prenom} {c.nom}</span>
+                <span className="ml-2 text-xs text-muted-foreground">{c.email}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function CreateVoucherForm({ onClose, clients }: { onClose: () => void; clients: ClientOption[] }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [created, setCreated] = useState<string | null>(null);
+  const [recipientName, setRecipientName] = useState("");
+  const [recipientEmail, setRecipientEmail] = useState("");
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(""); setCreated(null);
     const formData = new FormData(e.currentTarget);
+    // Override with controlled values
+    formData.set("recipient_name", recipientName);
+    formData.set("recipient_email", recipientEmail);
     startTransition(async () => {
       const r = await createManualVoucher(formData);
       if (r.error) { setError(r.error); return; }
       setCreated(r.code ?? null);
+      setRecipientName("");
+      setRecipientEmail("");
       (e.target as HTMLFormElement).reset();
     });
   }
@@ -107,23 +165,40 @@ function CreateVoucherForm({ onClose }: { onClose: () => void }) {
               className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
           </div>
         </div>
+
+        {/* Recipient — client picker or manual */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <ClientPicker
+            clients={clients}
+            onSelect={c => { setRecipientName(`${c.prenom} ${c.nom}`); setRecipientEmail(c.email); }}
+          />
           <div>
             <label className="block text-xs font-medium text-muted-foreground mb-1.5">Nom destinataire</label>
-            <input name="recipient_name" placeholder="Jean Dupont"
-              className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+            <input
+              value={recipientName}
+              onChange={e => setRecipientName(e.target.value)}
+              placeholder="Jean Dupont"
+              className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
           </div>
           <div>
             <label className="block text-xs font-medium text-muted-foreground mb-1.5">Email destinataire</label>
-            <input name="recipient_email" type="email" placeholder="jean@exemple.com"
-              className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1.5">Expiration</label>
-            <input name="expires_at" type="date"
-              className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+            <input
+              value={recipientEmail}
+              onChange={e => setRecipientEmail(e.target.value)}
+              type="email"
+              placeholder="jean@exemple.com"
+              className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
           </div>
         </div>
+
+        <div>
+          <label className="block text-xs font-medium text-muted-foreground mb-1.5">Expiration</label>
+          <input name="expires_at" type="date"
+            className="w-full sm:w-48 h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+        </div>
+
         <div className="flex gap-2 pt-1">
           <button type="submit" disabled={isPending}
             className="flex items-center gap-2 px-4 h-9 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors">
@@ -220,7 +295,6 @@ function EditVoucherForm({ voucher, onClose }: { voucher: VoucherCode; onClose: 
 function VoucherRow({ voucher }: { voucher: VoucherCode }) {
   const [isPending, startTransition] = useTransition();
   const [editing, setEditing] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const statusCfg = STATUS_CONFIG[voucher.status] ?? STATUS_CONFIG.unused;
   const date = new Date(voucher.created_at).toLocaleDateString("fr-BE", { day: "numeric", month: "short", year: "numeric" });
   const usedDate = voucher.used_at
@@ -231,12 +305,6 @@ function VoucherRow({ voucher }: { voucher: VoucherCode }) {
     startTransition(async () => {
       if (voucher.status === "unused") await markVoucherUsed(voucher.id);
       else if (voucher.status === "used") await markVoucherUnused(voucher.id);
-    });
-  }
-
-  function handleDelete() {
-    startTransition(async () => {
-      await deleteVoucher(voucher.id);
     });
   }
 
@@ -292,30 +360,16 @@ function VoucherRow({ voucher }: { voucher: VoucherCode }) {
             </button>
           )}
           {/* Edit */}
-          <button onClick={() => { setEditing(e => !e); setConfirmDelete(false); }}
+          <button onClick={() => setEditing(e => !e)}
             title="Modifier"
             className={`p-1.5 rounded-md border transition-colors ${editing ? "border-primary text-primary bg-primary/5" : "border-border text-muted-foreground hover:text-foreground hover:border-primary/40"}`}>
             {editing ? <ChevronUp size={14} /> : <Pencil size={14} />}
           </button>
           {/* Delete */}
-          {confirmDelete ? (
-            <div className="flex items-center gap-1">
-              <button onClick={handleDelete} disabled={isPending}
-                className="px-2 py-1 rounded-md bg-destructive text-destructive-foreground text-xs font-medium hover:bg-destructive/90 transition-colors disabled:opacity-50">
-                {isPending ? <Loader2 size={11} className="animate-spin" /> : "Oui"}
-              </button>
-              <button onClick={() => setConfirmDelete(false)}
-                className="px-2 py-1 rounded-md border border-border text-xs text-muted-foreground hover:bg-secondary transition-colors">
-                Non
-              </button>
-            </div>
-          ) : (
-            <button onClick={() => { setConfirmDelete(true); setEditing(false); }}
-              title="Supprimer"
-              className="p-1.5 rounded-md border border-border text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors">
-              <Trash2 size={14} />
-            </button>
-          )}
+          <DeleteButton
+            onDelete={() => deleteVoucher(voucher.id)}
+            confirmMessage="Confirmer ?"
+          />
         </div>
       </div>
 
@@ -324,7 +378,7 @@ function VoucherRow({ voucher }: { voucher: VoucherCode }) {
   );
 }
 
-export function VouchersClient({ vouchers }: { vouchers: VoucherCode[] }) {
+export function VouchersClient({ vouchers, clients }: { vouchers: VoucherCode[]; clients: ClientOption[] }) {
   const [tab, setTab] = useState("all");
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
@@ -340,7 +394,7 @@ export function VouchersClient({ vouchers }: { vouchers: VoucherCode[] }) {
 
   return (
     <div className="space-y-4">
-      {showCreate && <CreateVoucherForm onClose={() => setShowCreate(false)} />}
+      {showCreate && <CreateVoucherForm onClose={() => setShowCreate(false)} clients={clients} />}
 
       {/* Filters + actions */}
       <div className="flex items-center gap-3 flex-wrap">

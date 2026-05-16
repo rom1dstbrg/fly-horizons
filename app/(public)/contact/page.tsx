@@ -2,7 +2,7 @@ import { Mail, MapPin, Clock, Bug } from "lucide-react";
 import { ContactForm } from "@/components/shop/ContactForm";
 
 export const metadata = {
-  title: "Contact — Fly Horizons Shop",
+  title: "Contact — Fly Horizons",
   description: "Une question ? Un problème ? Contactez l'équipe Fly Horizons.",
 };
 

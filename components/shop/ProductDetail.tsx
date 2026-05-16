@@ -245,7 +245,7 @@ export function ProductDetail({ product, relatedProducts = [], backHref, backLab
                   <div className="flex items-start gap-2">
                     <Ticket size={14} className="text-primary mt-0.5 shrink-0" />
                     <p className="text-xs text-muted-foreground">
-                      Entrez votre code à l&apos;étape « Détails » sur shop.fly-horizons.com/reservation pour réserver votre vol.
+                      Entrez votre code à l&apos;étape « Détails » sur fly-horizons.com/reservation pour réserver votre vol.
                     </p>
                   </div>
                 </>

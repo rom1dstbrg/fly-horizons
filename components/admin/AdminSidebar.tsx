@@ -1,33 +1,39 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   LayoutDashboard,
   Package,
   ShoppingCart,
+  CalendarCheck,
+  CalendarDays,
+  Route,
+  Users,
+  Ticket,
   Tag,
+  MessageSquare,
   Settings,
   LogOut,
   Menu,
   X,
-  Ticket,
-  ExternalLink,
-  Route,
-  MessageSquare,
 } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 
 const NAV_ITEMS = [
-  { href: "/admin",           label: "Dashboard",  icon: LayoutDashboard },
-  { href: "/admin/products",  label: "Produits",   icon: Package },
-  { href: "/admin/orders",    label: "Commandes",  icon: ShoppingCart },
-  { href: "/admin/vouchers",  label: "Services / Vols", icon: Ticket },
-  { href: "/admin/vols-sur-mesure", label: "Vols mesure", icon: Route },
-  { href: "/admin/coupons",         label: "Coupons",     icon: Tag },
-  { href: "/admin/contacts",        label: "Messages",    icon: MessageSquare },
-  { href: "/admin/settings",        label: "Parametres",  icon: Settings },
+  { href: "/admin",                   label: "Dashboard",       icon: LayoutDashboard },
+  { href: "/admin/products",          label: "Produits",        icon: Package },
+  { href: "/admin/orders",            label: "Commandes",       icon: ShoppingCart },
+  { href: "/admin/reservations",      label: "Réservations",    icon: CalendarCheck },
+  { href: "/admin/disponibilites",    label: "Disponibilités",  icon: CalendarDays },
+  { href: "/admin/vols-sur-mesure",   label: "Vols sur mesure", icon: Route },
+  { href: "/admin/clients",           label: "Clients",         icon: Users },
+  { href: "/admin/vouchers",          label: "Vouchers",        icon: Ticket },
+  { href: "/admin/coupons",           label: "Coupons",         icon: Tag },
+  { href: "/admin/contacts",          label: "Messages",        icon: MessageSquare },
+  { href: "/admin/settings",          label: "Paramètres",      icon: Settings },
 ];
 
 export function AdminSidebar() {
@@ -39,12 +45,14 @@ export function AdminSidebar() {
       {/* Logo */}
       <div className="px-6 py-5 border-b border-border">
         <Link href="/" className="block">
-          <span className="text-base font-bold text-gold-gradient tracking-wide">
-            FLY HORIZONS
-          </span>
-          <span className="block text-xs text-muted-foreground mt-0.5">
-            Admin
-          </span>
+          <Image
+            src="/logo-sidebar-admin.png"
+            alt="Fly Horizons Admin"
+            width={160}
+            height={40}
+            className="h-10 w-auto object-contain"
+            unoptimized
+          />
         </Link>
       </div>
 
@@ -74,19 +82,6 @@ export function AdminSidebar() {
         })}
       </nav>
 
-      {/* Lien admin réservations */}
-      <div className="px-3 pb-2">
-        <a
-          href="https://fly-horizons.com/admin.html"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-        >
-          <ExternalLink size={17} />
-          Admin Réservations
-        </a>
-      </div>
-
       {/* Logout */}
       <div className="px-3 py-4 border-t border-border">
         <form action={logout}>
@@ -95,7 +90,7 @@ export function AdminSidebar() {
             className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors w-full"
           >
             <LogOut size={17} />
-            Deconnexion
+            Déconnexion
           </button>
         </form>
       </div>
@@ -112,9 +107,14 @@ export function AdminSidebar() {
       {/* Header mobile */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 h-16 bg-card border-b border-border flex items-center justify-between px-4">
         <Link href="/">
-          <span className="text-base font-bold text-gold-gradient tracking-wide">
-            FLY HORIZONS
-          </span>
+          <Image
+            src="/logo-sidebar-admin.png"
+            alt="Fly Horizons Admin"
+            width={120}
+            height={32}
+            className="h-8 w-auto object-contain"
+            unoptimized
+          />
         </Link>
         <button
           onClick={() => setMobileOpen(!mobileOpen)}

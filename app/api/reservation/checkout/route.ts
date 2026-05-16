@@ -1,33 +1,114 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { rateLimit, getIp } from "@/lib/rate-limit";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-04-22.dahlia",
 });
 
 export async function POST(request: NextRequest) {
+  const { allowed } = rateLimit(`reservation-checkout:${getIp(request)}`, 5, 60_000);
+  if (!allowed) {
+    return NextResponse.json({ error: "Trop de requêtes, veuillez patienter." }, { status: 429 });
+  }
+
   try {
     const body = await request.json();
-    const { prenom, nom, email, telephone, duree, date, heure, amount_cents, voucher_code, voucher_id, poids_total } = body;
+    const { prenom, nom, email, telephone, duree, date, heure, voucher_code, voucher_id, poids_total, passengers } = body;
 
-    if (!prenom || !nom || !email || !duree || !date || !heure || !amount_cents) {
+    if (!prenom || !nom || !email || !duree || !date || !heure) {
       return NextResponse.json({ error: "Champs obligatoires manquants" }, { status: 400 });
+    }
+
+    const dureeMins = parseInt(duree);
+    if (isNaN(dureeMins) || dureeMins <= 0) {
+      return NextResponse.json({ error: "Durée invalide" }, { status: 400 });
     }
 
     const supabase = createAdminClient();
 
-    // Créer le client
-    const { data: clientId } = await supabase.rpc("next_client_id");
-    if (!clientId) return NextResponse.json({ error: "Erreur génération ID client" }, { status: 500 });
+    // Récupérer le prix depuis la DB — jamais depuis le client
+    const { data: settings } = await supabase
+      .from("crm_settings")
+      .select("key, value")
+      .in("key", ["prix_heure"]);
 
-    await supabase.from("clients").insert({
-      id: clientId,
-      nom,
-      prenom,
-      email,
-      telephone: telephone || null,
-    });
+    const prixHeure = parseFloat(
+      settings?.find((s) => s.key === "prix_heure")?.value ?? "254"
+    );
+
+    // Prix du pack depuis les produits (priorité sur le taux horaire)
+    const { data: packProduct } = await supabase
+      .from("products")
+      .select("price")
+      .eq("active", true)
+      .eq("product_type", "voucher")
+      .eq("voucher_duration_minutes", dureeMins)
+      .maybeSingle();
+
+    const prixPlein = packProduct?.price ?? Math.round((prixHeure / 60) * dureeMins);
+
+    // Valider et récupérer le voucher côté serveur
+    let voucherDuration = 0;
+    let resolvedVoucherId: string | null = null;
+
+    if (voucher_code || voucher_id) {
+      // Atomic claim — marks as "reserved" only if currently "unused"
+      // Prevents two concurrent checkouts from using the same voucher
+      const updateQuery = supabase
+        .from("voucher_codes")
+        .update({ status: "reserved" })
+        .eq("status", "unused")
+        .select("id, duration_minutes, expires_at");
+
+      const { data: claimed } = voucher_id
+        ? await updateQuery.eq("id", voucher_id).maybeSingle()
+        : await updateQuery.eq("code", (voucher_code as string).toUpperCase().trim()).maybeSingle();
+
+      if (!claimed) {
+        return NextResponse.json({ error: "Code voucher invalide ou déjà utilisé" }, { status: 400 });
+      }
+      if (claimed.expires_at && new Date(claimed.expires_at) < new Date()) {
+        // Release immediately if already expired
+        await supabase.from("voucher_codes").update({ status: "expired" }).eq("id", claimed.id);
+        return NextResponse.json({ error: "Ce voucher a expiré" }, { status: 400 });
+      }
+
+      voucherDuration = claimed.duration_minutes ?? 0;
+      resolvedVoucherId = claimed.id;
+    }
+
+    const billableMins = Math.max(0, dureeMins - voucherDuration);
+    const price = billableMins === 0
+      ? 0
+      : Math.round((prixHeure / 60) * billableMins);
+
+    const amountCents = Math.round(price * 100);
+
+    // Prix 0 : ne devrait pas arriver ici (le client appelle /submit), mais on couvre le cas
+    if (amountCents <= 0) {
+      return NextResponse.json({ error: "Montant invalide pour un paiement Stripe" }, { status: 400 });
+    }
+
+    // Find or create client by email
+    const { data: existingClient } = await supabase
+      .from("clients")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
+
+    let clientId: string;
+    if (existingClient) {
+      clientId = existingClient.id;
+    } else {
+      const { data: newId } = await supabase.rpc("next_client_id");
+      if (!newId) return NextResponse.json({ error: "Erreur génération ID client" }, { status: 500 });
+      clientId = newId;
+      await supabase.from("clients").insert({
+        id: clientId, nom, prenom, email, telephone: telephone || null,
+      });
+    }
 
     // Créer la réservation en attente de paiement
     const { data: resa, error: resaErr } = await supabase
@@ -36,8 +117,8 @@ export async function POST(request: NextRequest) {
         client_id: clientId,
         date_vol: date,
         heure_vol: heure,
-        duree: parseInt(duree),
-        passagers: 1,
+        duree: dureeMins,
+        passagers: passengers ? parseInt(passengers) : 1,
         statut: "payment_pending",
         type_resa: "standard",
         voucher_code: voucher_code || null,
@@ -58,15 +139,16 @@ export async function POST(request: NextRequest) {
       payment_method_types: ["card"],
       customer_email: email,
       locale: "fr",
+      expires_at: Math.floor(Date.now() / 1000) + 30 * 60, // 30 min — libère le voucher plus vite
       line_items: [
         {
           price_data: {
             currency: "eur",
             product_data: {
-              name: `Vol Fly Horizons — ${duree} min`,
+              name: `Vol Fly Horizons — ${dureeMins} min`,
               description: `${dateStr} à ${heure} · ${prenom} ${nom}`,
             },
-            unit_amount: parseInt(amount_cents),
+            unit_amount: amountCents,
           },
           quantity: 1,
         },
@@ -75,7 +157,7 @@ export async function POST(request: NextRequest) {
         type: "reservation",
         reservationId: resa.id,
         clientId,
-        voucherId: voucher_id || "",
+        voucherId: resolvedVoucherId ?? "",
         voucherCode: voucher_code || "",
       },
       success_url: `${siteUrl}/reservation/success?session_id={CHECKOUT_SESSION_ID}`,

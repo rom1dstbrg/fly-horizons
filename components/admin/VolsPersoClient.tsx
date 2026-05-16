@@ -3,7 +3,8 @@
 import { useState, useTransition } from "react";
 import { updateStatutReservationPerso, sendEmailConfirmation } from "@/lib/actions/reservations";
 import { deleteReservationPerso } from "@/lib/actions/delete";
-import { MapPin, Mail, ChevronDown, ChevronUp, Loader2, Trash2 } from "lucide-react";
+import { DeleteButton } from "@/components/admin/DeleteButton";
+import { MapPin, Mail, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 
 const STATUTS = [
   { value: "en_attente",      label: "En attente",       color: "bg-yellow-100 text-yellow-700 border-yellow-200" },
@@ -40,7 +41,6 @@ export function VolsPersoClient({ reservations }: { reservations: Reservation[] 
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [emailLoading, setEmailLoading] = useState<string | null>(null);
   const [messages, setMessages] = useState<Record<string, string>>({});
-  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   function toggle(id: string) { setExpanded(prev => prev === id ? null : id); }
 
@@ -50,13 +50,6 @@ export function VolsPersoClient({ reservations }: { reservations: Reservation[] 
       const r = await updateStatutReservationPerso(id, statut);
       if (r.error) setMessages(m => ({ ...m, [id]: r.error! }));
       setLoadingId(null);
-    });
-  }
-
-  async function handleDelete(id: string) {
-    startTransition(async () => {
-      await deleteReservationPerso(id);
-      setConfirmDelete(null);
     });
   }
 
@@ -90,8 +83,11 @@ export function VolsPersoClient({ reservations }: { reservations: Reservation[] 
 
         return (
           <div key={r.id} className="card-premium p-4">
-            {/* Header row */}
-            <div className="flex items-start justify-between gap-4">
+            {/* Header row — entièrement cliquable */}
+            <div
+              className="flex items-start justify-between gap-4 cursor-pointer select-none"
+              onClick={() => toggle(r.id)}
+            >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="font-semibold text-foreground text-sm">
@@ -112,28 +108,17 @@ export function VolsPersoClient({ reservations }: { reservations: Reservation[] 
                 )}
               </div>
 
-              <div className="flex items-center gap-1 shrink-0">
-                {confirmDelete === r.id ? (
-                  <>
-                    <button onClick={() => handleDelete(r.id)} disabled={isPending}
-                      className="px-2 py-1 rounded bg-destructive text-destructive-foreground text-xs font-medium hover:bg-destructive/90 disabled:opacity-50">
-                      {isPending ? <Loader2 size={11} className="animate-spin" /> : "Supprimer"}
-                    </button>
-                    <button onClick={() => setConfirmDelete(null)}
-                      className="px-2 py-1 rounded border border-border text-xs text-muted-foreground hover:bg-secondary">
-                      Annuler
-                    </button>
-                  </>
-                ) : (
-                  <button onClick={() => setConfirmDelete(r.id)} title="Supprimer"
-                    className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
-                    <Trash2 size={14} />
-                  </button>
-                )}
-                <button onClick={() => toggle(r.id)}
-                  className="p-1.5 rounded-lg hover:bg-secondary transition-colors text-muted-foreground">
+              <div
+                className="flex items-center gap-1 shrink-0"
+                onClick={e => e.stopPropagation()}
+              >
+                <DeleteButton
+                  onDelete={() => deleteReservationPerso(r.id)}
+                  confirmMessage="Confirmer ?"
+                />
+                <span className="p-1.5 text-muted-foreground pointer-events-none">
                   {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                </button>
+                </span>
               </div>
             </div>
 
@@ -167,7 +152,7 @@ export function VolsPersoClient({ reservations }: { reservations: Reservation[] 
                 {/* Détails passagers */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                   {[
-                    { label: "Passagers", value: r.passagers },
+                    { label: "Passagers", value: String(r.passagers) },
                     { label: "Poids total", value: r.poids_total ? `${r.poids_total} kg` : "—" },
                     { label: "Taxes escales", value: r.taxes_escales ? `${r.taxes_escales} €` : "—" },
                     { label: "Acompte", value: r.acompte ? `${r.acompte} €` : "—" },
@@ -186,7 +171,7 @@ export function VolsPersoClient({ reservations }: { reservations: Reservation[] 
                   </div>
                 )}
 
-                {/* Actions */}
+                {/* Actions statut */}
                 <div className="flex flex-wrap gap-2">
                   <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider w-full">Statut</p>
                   {STATUTS.map(s => (

@@ -15,9 +15,9 @@ export function Footer() {
           <div className="space-y-4">
             <Link href="/">
               <Image
-                src="/header-shop-white.png"
-                alt="Fly Horizons Shop"
-                width={160} height={36}
+                src="/logo-footer.png"
+                alt="Fly Horizons"
+                width={160} height={40}
                 className="block h-8 w-auto object-contain"
                 unoptimized
               />
@@ -46,18 +46,18 @@ export function Footer() {
             </p>
             <ul className="space-y-2.5">
               <li>
-                <Link href="/packs" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Nos vols
+                <Link href="/nos-offres" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  Nos offres
+                </Link>
+              </li>
+              <li>
+                <Link href="/reservation" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  Réserver
                 </Link>
               </li>
               <li>
                 <Link href="/vol-sur-mesure" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Vol sur mesure
-                </Link>
-              </li>
-              <li>
-                <Link href="/vouchers" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Vouchers cadeaux
                 </Link>
               </li>
               <li>
@@ -92,11 +92,6 @@ export function Footer() {
               <li>
                 <Link href="/cgv" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Conditions générales
-                </Link>
-              </li>
-              <li>
-                <Link href="https://fly-horizons.com" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  fly-horizons.com
                 </Link>
               </li>
             </ul>
