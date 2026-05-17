@@ -45,6 +45,18 @@ export async function GET(
     return NextResponse.redirect(new URL("/reservation/success", siteUrl));
   }
 
+  // Resolve the voucher ID from the stored code so the webhook can mark it used
+  let resolvedVoucherId = "";
+  if (resa.voucher_code) {
+    const { data: voucher } = await supabase
+      .from("voucher_codes")
+      .select("id")
+      .eq("code", resa.voucher_code)
+      .in("status", ["unused", "reserved"])
+      .maybeSingle();
+    if (voucher) resolvedVoucherId = voucher.id;
+  }
+
   const c = resa.clients as { prenom: string; nom: string; email: string };
   const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
     day: "numeric", month: "long", year: "numeric",
@@ -73,7 +85,7 @@ export async function GET(
       type: "reservation",
       reservationId: resa.id,
       clientId: resa.client_id,
-      voucherId: "",
+      voucherId: resolvedVoucherId,
       voucherCode: resa.voucher_code || "",
       paymentToken: token,
     },

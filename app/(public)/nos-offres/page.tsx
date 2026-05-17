@@ -1,11 +1,10 @@
 import Link from "next/link";
-import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import {
   Clock, Users, MapPin, Route, CalendarCheck,
   Zap, Shuffle, PlaneTakeoff, ArrowRight, MousePointerClick,
 } from "lucide-react";
-import { formatDuration } from "@/lib/vouchers";
+import { PackCard } from "@/components/shop/PackCard";
 
 export const metadata = {
   title: "Nos offres — Fly Horizons",
@@ -175,22 +174,24 @@ export default async function NosOffresPage() {
       </div>
 
       {/* ══════════════════════════════════════════
-          SECTION — Vols à durée fixe (secondaire)
+          SECTION — Vols à durée fixe
       ══════════════════════════════════════════ */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 py-14">
 
-        {/* En-tête section */}
-        <div className="flex items-end justify-between mb-6">
-          <div>
-            <div className="inline-flex items-center gap-2 mb-2">
-              <Clock size={14} className="text-muted-foreground" />
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-[2px]">Durée fixe</p>
-            </div>
-            <h2 className="text-xl font-extrabold text-foreground">Vous préférez une durée prédéfinie ?</h2>
-            <p className="text-muted-foreground text-sm mt-1 max-w-md">
-              Choisissez votre durée de vol — 30, 60, 90 ou 120 minutes. La date se fixe quand vous êtes prêt.
-            </p>
+        {/* En-tête */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-2 mb-3">
+            <Clock size={13} className="text-[#F2B705]" />
+            <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px]">Durée fixe</p>
           </div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-foreground">
+            Vous préférez une durée prédéfinie ?
+          </h2>
+          <div className="w-10 h-0.5 bg-[#F2B705] mx-auto mt-4 mb-3 rounded-full" />
+          <p className="text-muted-foreground text-sm mt-0 max-w-lg mx-auto">
+            Choisissez votre durée de vol — 30, 60, 90 ou 120 minutes.
+            La date se fixe quand vous êtes prêt.
+          </p>
         </div>
 
         {/* Grille packs */}
@@ -199,62 +200,15 @@ export default async function NosOffresPage() {
             Aucun vol disponible pour le moment.
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {packs.map((pack) => {
-              const duree = pack.voucher_duration_minutes ?? 60;
-              const image = pack.images?.[0]?.url ?? null;
-
-              return (
-                <Link key={pack.id} href={`/vols/${pack.slug}`} className="group flex h-full">
-                  <div className="flex flex-col w-full rounded-2xl overflow-hidden border border-border bg-white shadow-sm hover:shadow-lg transition-all duration-300">
-
-                    <div className="relative h-48 bg-[#0b2238] overflow-hidden shrink-0">
-                      {image ? (
-                        <Image
-                          src={image}
-                          alt={pack.title}
-                          fill
-                          className="object-cover transition-transform duration-500 group-hover:scale-105"
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                        />
-                      ) : (
-                        <div className="absolute inset-0 bg-gradient-to-br from-[#0b2238] to-[#113356] flex flex-col items-center justify-center gap-2">
-                          <span className="text-4xl font-black text-white leading-none">{formatDuration(duree)}</span>
-                          <span className="text-[#F2B705] text-xs font-semibold tracking-widest uppercase opacity-80">Vol privé</span>
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                      <div className="absolute top-3 left-3">
-                        <span className="bg-[#F2B705] text-[#113356] text-xs font-bold px-2.5 py-1 rounded-full">
-                          {formatDuration(duree)}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="p-5 flex flex-col flex-1">
-                      <h3 className="font-bold text-foreground text-sm leading-snug mb-1.5 group-hover:text-[#113356] transition-colors">
-                        {pack.title}
-                      </h3>
-                      <p className="text-muted-foreground text-xs leading-relaxed flex-1 line-clamp-3">
-                        {pack.short_description ?? ""}
-                      </p>
-                      <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
-                        <span className="text-[#113356] font-black text-xl">{pack.price}&nbsp;€</span>
-                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#113356] bg-[#f5f8ff] border border-[#dce8ff] rounded-lg px-3 py-1.5 group-hover:bg-[#113356] group-hover:text-white group-hover:border-[#113356] transition-all">
-                          Voir l&apos;offre
-                        </span>
-                      </div>
-                    </div>
-
-                  </div>
-                </Link>
-              );
-            })}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+            {packs.map((pack) => (
+              <PackCard key={pack.id} pack={pack} />
+            ))}
           </div>
         )}
 
         {/* CTA retour vers vol sur mesure */}
-        <div className="mt-8 bg-[#0b2238] rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="mt-6 bg-[#0b2238] rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             <p className="text-white font-bold text-sm">Vous ne savez pas encore combien de temps vous voulez voler ?</p>
             <p className="text-white/50 text-xs mt-1">Tracez votre route — le prix et la durée se calculent automatiquement.</p>
@@ -274,7 +228,7 @@ export default async function NosOffresPage() {
           Réservation directe
       ══════════════════════════════════════════ */}
       <div className="border-t border-border bg-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 py-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex flex-wrap justify-center sm:justify-start gap-6">
               {[

@@ -25,7 +25,6 @@ function IconInstagram({ size = 16 }: { size?: number }) {
 const SERVICES = [
   { href: "/nos-offres",     label: "Nos offres" },
   { href: "/vol-sur-mesure", label: "Vol sur mesure" },
-  { href: "/vouchers",       label: "Vouchers cadeaux" },
   { href: "/shop",           label: "Boutique" },
 ];
 
@@ -57,10 +56,10 @@ export function Footer() {
 
   return (
     <footer className="bg-[#0b2238] border-t border-white/5 mt-auto">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 max-xs:py-7">
 
         {/* ── Grille principale ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-10 pb-10 border-b border-white/5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-10 max-xs:gap-6 pb-10 max-xs:pb-6 border-b border-white/5">
 
           {/* ── Marque ── */}
           <div>
@@ -74,12 +73,12 @@ export function Footer() {
               />
             </Link>
 
-            <p className="text-white/45 text-sm leading-relaxed max-w-xs mt-6">
+            <p className="text-white/45 text-sm leading-relaxed max-w-xs mt-4 max-xs:mt-3 max-xs:text-xs">
               Des vols privés en avion léger, tracés par vous, payés à la minute.
             </p>
 
             {/* Réseaux sociaux */}
-            <div className="mt-5 flex items-center gap-2">
+            <div className="mt-4 max-xs:mt-3 flex items-center gap-2">
               {SOCIALS.map(({ href, label, icon }) => (
                 <a key={href} href={href} target="_blank" rel="noopener noreferrer"
                   aria-label={label}
@@ -142,7 +141,7 @@ export function Footer() {
         </div>
 
         {/* ── Barre de bas ── */}
-        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="pt-5 max-xs:pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 max-xs:gap-2">
           <p className="text-xs text-white/25">
             © {year} Fly Horizons. Tous droits réservés.
           </p>

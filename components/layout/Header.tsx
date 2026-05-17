@@ -38,12 +38,12 @@ export function Header() {
 
   return (
     <header
-      className={`fixed top-3.5 inset-x-4 mx-auto max-w-[1300px] z-50 rounded-2xl bg-card border border-border transition-shadow duration-300 ${
+      className={`fixed top-2 max-xs:top-1.5 md:top-3.5 inset-x-3 max-xs:inset-x-2.5 md:inset-x-4 mx-auto max-w-[1300px] z-50 rounded-2xl bg-card border border-border transition-shadow duration-300 ${
         scrolled ? "shadow-premium-lg" : "shadow-premium"
       }`}
     >
-      <div className="px-5 sm:px-6">
-        <div className="flex items-center h-[60px]">
+      <div className="px-4 max-xs:px-3 md:px-5 lg:px-6">
+        <div className="flex items-center h-14 max-xs:h-12 md:h-[60px]">
 
           {/* Logo */}
           <Link href="/" className="shrink-0 flex items-center leading-none">
@@ -51,7 +51,7 @@ export function Header() {
               src="/logo-header.png"
               alt="Fly Horizons"
               width={160} height={40}
-              className="h-8 w-auto object-contain"
+              className="h-7 max-xs:h-[22px] md:h-8 w-auto object-contain"
               priority unoptimized
             />
           </Link>
@@ -68,10 +68,10 @@ export function Header() {
               <Link href="/contact" className={navLinkClass}>Contact</Link>
             </nav>
 
-            {/* Séparateur */}
+            {/* Séparateur desktop */}
             <div className="hidden md:block w-px h-5 bg-border mx-1" />
 
-            {/* Compte — desktop : bouton Connexion si non connecté, icône si connecté */}
+            {/* Compte desktop */}
             {user ? (
               <Link href="/account" className={`hidden md:flex ${iconLinkClass}`} aria-label="Mon compte">
                 <User size={19} />
@@ -86,24 +86,19 @@ export function Header() {
               </Link>
             )}
 
-            {/* Compte — mobile (icône) */}
-            <Link href={user ? "/account" : "/login"} className={`md:hidden ${iconLinkClass}`} aria-label="Mon compte">
-              <User size={19} />
-            </Link>
-
-            {/* Panier */}
-            <Link href="/cart" className={`relative ${iconLinkClass}`} aria-label="Panier">
+            {/* Panier desktop uniquement */}
+            <Link href="/cart" className={`relative hidden md:flex ${iconLinkClass}`} aria-label="Panier">
               <ShoppingBag size={19} />
               <CartCount />
             </Link>
 
-            {/* Burger mobile */}
+            {/* Burger mobile uniquement */}
             <button
-              className={`md:hidden ${iconLinkClass}`}
+              className={`md:hidden ${iconLinkClass} ml-0.5`}
               onClick={() => setMenuOpen(!menuOpen)}
               aria-label="Menu"
             >
-              {menuOpen ? <X size={19} /> : <Menu size={19} />}
+              {menuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
         </div>
@@ -112,58 +107,38 @@ export function Header() {
       {/* Menu mobile */}
       {menuOpen && (
         <div className="md:hidden border-t border-border rounded-b-2xl overflow-hidden bg-card">
-          <nav className="px-4 py-4 flex flex-col gap-0.5">
-            <Link
-              href="/"
-              className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors"
-              onClick={() => setMenuOpen(false)}
-            >
-              <Home size={17} className="opacity-60 text-[#113356]" />
+          <nav className="px-3 py-3 flex flex-col gap-0.5">
+            <Link href="/" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
+              <Home size={16} className="opacity-60 text-[#113356]" />
               Accueil
             </Link>
-            <Link
-              href="/nos-offres"
-              className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors"
-              onClick={() => setMenuOpen(false)}
-            >
-              <Ticket size={17} className="opacity-60 text-[#113356]" />
+            <Link href="/nos-offres" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
+              <Ticket size={16} className="opacity-60 text-[#113356]" />
               Nos offres
             </Link>
-            <Link
-              href="/shop"
-              className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors"
-              onClick={() => setMenuOpen(false)}
-            >
-              <Store size={17} className="opacity-60 text-[#113356]" />
+            <Link href="/shop" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
+              <Store size={16} className="opacity-60 text-[#113356]" />
               Boutique
             </Link>
-            <Link
-              href="/contact"
-              className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors"
-              onClick={() => setMenuOpen(false)}
-            >
-              <Mail size={17} className="opacity-60 text-[#113356]" />
+            <Link href="/vol-sur-mesure" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
+              <Route size={16} className="opacity-60 text-[#113356]" />
+              Vol sur mesure
+            </Link>
+            <Link href="/contact" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
+              <Mail size={16} className="opacity-60 text-[#113356]" />
               Contact
             </Link>
 
-            <div className="w-full h-px bg-border my-1" />
+            <div className="w-full h-px bg-border my-1.5" />
 
-            <Link
-              href="/vol-sur-mesure"
-              className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors"
-              onClick={() => setMenuOpen(false)}
-            >
-              <Route size={17} className="opacity-60 text-[#113356]" />
-              Vol sur mesure
+            {/* Panier + compte dans le menu mobile */}
+            <Link href="/cart" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
+              <ShoppingBag size={16} className="opacity-60 text-[#113356]" />
+              <span className="flex-1">Panier</span>
+              <CartCount />
             </Link>
-
-            <div className="w-full h-px bg-border my-1" />
-
-            <Link
-              href={user ? "/account" : "/login"}
-              className="text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors"
-              onClick={() => setMenuOpen(false)}
-            >
+            <Link href={user ? "/account" : "/login"} className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
+              <User size={16} className="opacity-60 text-[#113356]" />
               {user ? "Mon compte" : "Connexion"}
             </Link>
           </nav>

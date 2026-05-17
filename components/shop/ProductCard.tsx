@@ -45,7 +45,7 @@ export function ProductCard({ product }: ProductCardProps) {
       <div className="card-premium overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-premium-lg flex flex-col w-full">
 
         {/* Image */}
-        <div className="relative aspect-square bg-muted overflow-hidden shrink-0">
+        <div className="relative aspect-square max-xs:aspect-[4/3] bg-muted overflow-hidden shrink-0">
           {mainImage ? (
             <Image
               src={mainImage}
@@ -108,12 +108,12 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
 
         {/* Infos */}
-        <div className="p-4 flex flex-col flex-1">
+        <div className="p-4 max-xs:p-3 flex flex-col flex-1">
           <h3 className="font-semibold text-foreground text-sm leading-snug group-hover:text-primary transition-colors line-clamp-2 mb-2">
             {product.title}
           </h3>
 
-          <p className={`text-muted-foreground text-xs leading-relaxed ${isVoucher ? "line-clamp-3 min-h-[3.75rem]" : "line-clamp-2 min-h-[2.5rem]"}`}>
+          <p className={`text-muted-foreground text-xs leading-relaxed ${isVoucher ? "line-clamp-2 max-xs:line-clamp-1 min-h-[3.75rem] max-xs:min-h-0" : "line-clamp-2 max-xs:line-clamp-1 min-h-[2.5rem] max-xs:min-h-0"}`}>
             {product.short_description ?? ""}
           </p>
 

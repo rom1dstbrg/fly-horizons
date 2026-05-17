@@ -60,36 +60,46 @@ export async function GET(
     day: "numeric", month: "long", year: "numeric",
   });
 
-  const session = await stripe.checkout.sessions.create({
-    mode: "payment",
-    payment_method_types: ["card"],
-    customer_email: c.email,
-    locale: "fr",
-    expires_at: Math.floor(Date.now() / 1000) + 30 * 60, // 30 min — libère le voucher plus vite
-    line_items: [
-      {
-        price_data: {
-          currency: "eur",
-          product_data: {
-            name: `Acompte vol sur mesure — ~${resa.duree} min`,
-            description: `${dateStr} à ${resa.heure_vol} · ${c.prenom} ${c.nom}`,
+  let session;
+  try {
+    session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      payment_method_types: ["card"],
+      customer_email: c.email,
+      locale: "fr",
+      expires_at: Math.floor(Date.now() / 1000) + 30 * 60, // 30 min — libère le voucher plus vite
+      line_items: [
+        {
+          price_data: {
+            currency: "eur",
+            product_data: {
+              name: `Acompte vol sur mesure — ~${resa.duree} min`,
+              description: `${dateStr} à ${resa.heure_vol} · ${c.prenom} ${c.nom}`,
+            },
+            unit_amount: Math.round(totalAcompte * 100),
           },
-          unit_amount: Math.round(totalAcompte * 100),
+          quantity: 1,
         },
-        quantity: 1,
+      ],
+      metadata: {
+        type: "reservation_perso",
+        reservationId: resa.id,
+        clientId: resa.client_id,
+        voucherId,
+        voucherCode: resa.voucher_code || "",
+        paymentToken: token,
       },
-    ],
-    metadata: {
-      type: "reservation_perso",
-      reservationId: resa.id,
-      clientId: resa.client_id,
-      voucherId,
-      voucherCode: resa.voucher_code || "",
-      paymentToken: token,
-    },
-    success_url: `${siteUrl}/vol-sur-mesure/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${siteUrl}/vol-sur-mesure?cancelled=1`,
-  });
+      success_url: `${siteUrl}/vol-sur-mesure/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${siteUrl}/vol-sur-mesure?cancelled=1`,
+    });
+  } catch (stripeError) {
+    // Rollback voucher claim if Stripe session creation failed
+    if (voucherId) {
+      await supabase.from("voucher_codes").update({ status: "unused" }).eq("id", voucherId).eq("status", "reserved");
+    }
+    console.error("Stripe session creation error (vol-sur-mesure):", stripeError);
+    return NextResponse.redirect(new URL("/vol-sur-mesure?error=erreur_paiement", siteUrl));
+  }
 
   return NextResponse.redirect(session.url!);
 }

@@ -60,12 +60,19 @@ export function HeroSection() {
             variant="outline"
             className="border-white/30 text-white hover:bg-white/10 hover:border-white/50 font-medium px-8"
           >
-            <Link href="/vouchers">
+            <Link href="/nos-offres">
               <Gift size={18} className="mr-2" />
               Offrir un vol
             </Link>
           </Button>
         </div>
+
+        {/* Code promo bienvenue */}
+        <p className="mt-6 text-xs italic text-white/40">
+          Première commande ? Utilisez le code{" "}
+          <span className="font-mono not-italic text-white/55">WELCOME2026</span>
+          {" "}pour −10% — valable une seule fois par compte.
+        </p>
       </div>
 
       {/* Scroll indicator */}

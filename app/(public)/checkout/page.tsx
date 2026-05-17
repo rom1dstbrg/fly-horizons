@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, Tag, MapPin } from "lucide-react";
+import Image from "next/image";
+import { ChevronLeft, Lock, MapPin, Package, ShieldCheck, Tag, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,22 +29,31 @@ interface SavedAddress {
   is_default: boolean;
 }
 
+interface CouponInfo {
+  code: string;
+  type: "percentage" | "fixed";
+  value: number;
+  applies_to: "voucher" | "physical" | null;
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, totalPrice } = useCartStore();
   const [country, setCountry] = useState("BE");
-  const [couponCode, setCouponCode] = useState("");
+  const [couponInput, setCouponInput] = useState("");
+  const [coupon, setCoupon] = useState<CouponInfo | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [shippingRates, setShippingRates] = useState<ShippingRateRow[]>([]);
-  // null = loading, true/false = resolved from DB
   const [isVoucherOnlyDB, setIsVoucherOnlyDB] = useState<boolean | null>(null);
 
-  // Fallback from cart store while DB resolves
   const isVoucherOnlyCart = items.length > 0 && items.every((i) => i.product_type === "voucher");
   const isVoucherOnly = isVoucherOnlyDB ?? isVoucherOnlyCart;
+  const hasVoucher = items.some((i) => i.product_type === "voucher");
 
   useEffect(() => {
     if (items.length === 0) {
@@ -53,7 +63,6 @@ export default function CheckoutPage() {
 
     const supabase = createClient();
 
-    // Verify product types from DB — cart store may have stale/missing product_type
     supabase
       .from("products")
       .select("id, product_type, voucher_duration_minutes")
@@ -97,14 +106,46 @@ export default function CheckoutPage() {
   const subtotal = totalPrice();
   const shippingRate = isVoucherOnly ? null : shippingRates.find(r => r.country_code === country);
   const shipping = isVoucherOnly ? 0 : (shippingRate?.rate_standard ?? 4.95);
-  const total = subtotal + shipping;
 
+  const voucherSubtotal = items.filter(i => i.product_type === "voucher").reduce((s, i) => s + i.price * i.quantity, 0);
+  const physicalSubtotal = items.filter(i => i.product_type !== "voucher").reduce((s, i) => s + i.price * i.quantity, 0);
+  const applicableSubtotal = coupon?.applies_to === "voucher" ? voucherSubtotal
+    : coupon?.applies_to === "physical" ? physicalSubtotal
+    : subtotal;
+
+  const couponDiscount = coupon
+    ? coupon.type === "percentage"
+      ? Math.round(applicableSubtotal * coupon.value) / 100
+      : Math.min(coupon.value, applicableSubtotal)
+    : 0;
+
+  const total = Math.max(0, subtotal + shipping - couponDiscount);
   const selectedAddress = savedAddresses.find((a) => a.id === selectedAddressId);
+
+  async function applyCoupon() {
+    const raw = couponInput.trim().toUpperCase();
+    if (!raw) return;
+    setCouponLoading(true);
+    setCouponError(null);
+    try {
+      const r = await fetch(`/api/promo/validate?code=${encodeURIComponent(raw)}`);
+      const d = await r.json();
+      if (d.valid) {
+        setCoupon({ code: d.code, type: d.type, value: d.value, applies_to: d.applies_to ?? null });
+        setCouponInput("");
+      } else {
+        setCouponError(d.error ?? "Code invalide.");
+      }
+    } catch {
+      setCouponError("Erreur de connexion.");
+    } finally {
+      setCouponLoading(false);
+    }
+  }
 
   async function handleCheckout() {
     setLoading(true);
     setError(null);
-
     try {
       const response = await fetch("/api/stripe/checkout", {
         method: "POST",
@@ -118,7 +159,7 @@ export default function CheckoutPage() {
             image_url: i.image_url,
           })),
           shippingCountry: isVoucherOnly ? null : country,
-          couponCode: couponCode || null,
+          couponCode: coupon?.code ?? null,
           shippingAddress: selectedAddress ? {
             full_name: selectedAddress.full_name,
             line1: selectedAddress.line1,
@@ -131,17 +172,13 @@ export default function CheckoutPage() {
       });
 
       const data = await response.json();
-
       if (!response.ok || data.error) {
         setError(data.error ?? "Erreur lors du checkout.");
         return;
       }
-
-      if (data.url) {
-        window.location.href = data.url;
-      }
+      if (data.url) window.location.href = data.url;
     } catch {
-      setError("Erreur reseau. Veuillez reessayer.");
+      setError("Erreur réseau. Veuillez réessayer.");
     } finally {
       setLoading(false);
     }
@@ -151,8 +188,9 @@ export default function CheckoutPage() {
 
   return (
     <main className="min-h-screen bg-gradient-navy pt-24 pb-16">
-      <div className="container-shop max-w-2xl">
+      <div className="container-shop">
 
+        {/* Header */}
         <div className="mb-8">
           <Link
             href="/cart"
@@ -161,41 +199,17 @@ export default function CheckoutPage() {
             <ChevronLeft size={16} />
             Retour au panier
           </Link>
-          <h1 className="text-3xl font-bold text-foreground">
-            Finaliser la commande
-          </h1>
+          <h1 className="text-3xl font-bold text-foreground">Finaliser la commande</h1>
         </div>
 
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
 
-          {/* Articles */}
-          <div className="card-premium p-6">
-            <h2 className="font-semibold text-foreground mb-4">
-              Articles ({items.length})
-            </h2>
-            <div className="space-y-3">
-              {items.map((item) => (
-                <div key={item.id} className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    {item.title} x{item.quantity}
-                  </span>
-                  <span className="text-foreground font-medium">
-                    {formatPrice(item.price * item.quantity)}
-                  </span>
-                </div>
-              ))}
-            </div>
-            {isVoucherOnly && (
-              <p className="text-xs text-[#F2B705]/80 bg-[#F2B705]/5 border border-[#F2B705]/20 rounded-md px-3 py-2 mt-4">
-                Voucher(s) — votre code sera envoyé par email immédiatement après le paiement.
-              </p>
-            )}
-          </div>
+          {/* ── Colonne gauche : livraison ── */}
+          <div className="lg:col-span-2 space-y-6">
 
-          {/* Livraison — masqué pour les vouchers */}
-          {!isVoucherOnly && (
-            <>
-              {savedAddresses.length > 0 && (
+            {/* Produits physiques : adresse de livraison */}
+            {!isVoucherOnly && (
+              savedAddresses.length > 0 ? (
                 <div className="card-premium p-6">
                   <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
                     <MapPin size={16} className="text-primary" />
@@ -205,7 +219,7 @@ export default function CheckoutPage() {
                     {savedAddresses.map((addr) => (
                       <label
                         key={addr.id}
-                        className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                        className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
                           selectedAddressId === addr.id
                             ? "border-primary/40 bg-primary/5"
                             : "border-border hover:border-primary/20"
@@ -216,40 +230,31 @@ export default function CheckoutPage() {
                           name="address"
                           value={addr.id}
                           checked={selectedAddressId === addr.id}
-                          onChange={() => {
-                            setSelectedAddressId(addr.id);
-                            setCountry(addr.country);
-                          }}
+                          onChange={() => { setSelectedAddressId(addr.id); setCountry(addr.country); }}
                           className="mt-0.5 accent-primary"
                         />
-                        <div className="text-sm">
+                        <div className="text-sm flex-1">
                           <p className="font-medium text-foreground">{addr.full_name}</p>
                           <p className="text-muted-foreground">{addr.line1}</p>
                           {addr.line2 && <p className="text-muted-foreground">{addr.line2}</p>}
-                          <p className="text-muted-foreground">
-                            {addr.postal_code} {addr.city}, {addr.country}
-                          </p>
+                          <p className="text-muted-foreground">{addr.postal_code} {addr.city}, {addr.country}</p>
                         </div>
                         {addr.is_default && (
-                          <span className="ml-auto text-xs text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded-full shrink-0">
-                            Par defaut
+                          <span className="text-xs text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded-full shrink-0">
+                            Par défaut
                           </span>
                         )}
                       </label>
                     ))}
-                    <Link
-                      href="/account"
-                      className="text-xs text-primary hover:text-gold-400 transition-colors"
-                    >
-                      Gerer mes adresses
+                    <Link href="/account" className="text-xs text-primary hover:text-[#e6a800] transition-colors">
+                      Gérer mes adresses →
                     </Link>
                   </div>
                 </div>
-              )}
-
-              {savedAddresses.length === 0 && (
+              ) : (
                 <div className="card-premium p-6">
-                  <h2 className="font-semibold text-foreground mb-4">
+                  <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                    <MapPin size={16} className="text-primary" />
                     Pays de livraison
                   </h2>
                   <div className="space-y-2">
@@ -257,7 +262,7 @@ export default function CheckoutPage() {
                     <select
                       value={country}
                       onChange={(e) => setCountry(e.target.value)}
-                      className="w-full bg-input border border-border text-foreground rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                      className="w-full bg-input border border-border text-foreground rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
                     >
                       {shippingRates.map((rate) => (
                         <option key={rate.country_code} value={rate.country_code}>
@@ -266,77 +271,165 @@ export default function CheckoutPage() {
                       ))}
                     </select>
                     <p className="text-xs text-muted-foreground">
-                      <Link href="/account" className="text-primary hover:text-gold-400">
+                      <Link href="/account" className="text-primary hover:text-[#e6a800]">
                         Connectez-vous
                       </Link>{" "}
                       pour sauvegarder vos adresses.
                     </p>
                   </div>
                 </div>
-              )}
-            </>
-          )}
+              )
+            )}
 
-          {/* Code promo */}
-          <div className="card-premium p-6">
-            <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-              <Tag size={16} className="text-primary" />
-              Code promo
-            </h2>
-            <Input
-              value={couponCode}
-              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-              placeholder="FLYHORIZ10"
-              className="bg-input border-border text-foreground placeholder:text-muted-foreground"
-            />
-            <p className="text-xs text-muted-foreground mt-2">
-              Le code sera verifie lors du paiement.
-            </p>
-          </div>
-
-          {/* Total */}
-          <div className="card-premium p-6 space-y-3">
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>Sous-total</span>
-              <span>{formatPrice(subtotal)}</span>
-            </div>
-            {isVoucherOnly ? (
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Livraison</span>
-                <span className="text-green-500 font-medium">Gratuite</span>
-              </div>
-            ) : (
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>Livraison ({shippingRate?.country_name ?? country})</span>
-                <span>{formatPrice(shipping)}</span>
+            {/* Livraison par email — dès qu'il y a au moins un voucher */}
+            {hasVoucher && (
+              <div className="card-premium p-6">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-full bg-[#F2B705]/10 border border-[#F2B705]/20 flex items-center justify-center shrink-0">
+                    <Tag size={15} className="text-[#F2B705]" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground text-sm">Livraison par email</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Votre code de vol sera envoyé à votre adresse email immédiatement après le paiement. Aucune livraison physique requise.
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
-            <div className="border-t border-border pt-3 flex justify-between font-bold text-foreground">
-              <span>Total</span>
-              <span className="text-primary text-lg">{formatPrice(total)}</span>
+
+            <div className="hidden lg:flex items-center gap-2 text-muted-foreground px-1">
+              <ShieldCheck size={14} />
+              <p className="text-xs">Paiement 100 % sécurisé — vos données sont chiffrées par Stripe</p>
             </div>
           </div>
 
-          {error && (
-            <div className="bg-destructive/10 border border-destructive/30 text-destructive text-sm rounded-md px-4 py-3">
-              {error}
+          {/* ── Colonne droite : récapitulatif commande ── */}
+          <div className="lg:col-span-1">
+            <div className="card-premium p-5 space-y-5 sticky top-24">
+
+              {/* Liste articles */}
+              <div className="space-y-3">
+                {items.map((item) => (
+                  <div key={item.id} className="flex items-center gap-3">
+                    <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-secondary shrink-0 border border-border">
+                      {item.image_url ? (
+                        <Image src={item.image_url} alt={item.title} fill className="object-cover" sizes="48px" />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Package size={14} className="text-muted-foreground" />
+                        </div>
+                      )}
+                      {item.quantity > 1 && (
+                        <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-[9px] font-bold text-black flex items-center justify-center leading-none">
+                          {item.quantity}
+                        </span>
+                      )}
+                    </div>
+                    <p className="flex-1 text-sm text-foreground line-clamp-2 leading-snug">{item.title}</p>
+                    <p className="text-sm font-semibold text-foreground shrink-0">
+                      {formatPrice(item.price * item.quantity)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="border-t border-border" />
+
+              {/* Code promo */}
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                  <Tag size={11} /> Code promo
+                </label>
+                {coupon ? (
+                  <div className="flex items-center justify-between bg-green-500/10 border border-green-500/20 rounded-lg px-3 py-2">
+                    <div>
+                      <p className="text-xs font-bold text-green-500">{coupon.code}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {coupon.type === "percentage" ? `−${coupon.value} %` : `−${formatPrice(coupon.value)}`}
+                        {coupon.applies_to === "voucher" ? " · sur les vols" : coupon.applies_to === "physical" ? " · sur les accessoires" : ""}
+                      </p>
+                    </div>
+                    <button onClick={() => setCoupon(null)} className="text-muted-foreground hover:text-destructive transition-colors ml-2">
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Input
+                      value={couponInput}
+                      onChange={(e) => { setCouponInput(e.target.value.toUpperCase()); setCouponError(null); }}
+                      onKeyDown={(e) => e.key === "Enter" && applyCoupon()}
+                      className="bg-input border-border text-foreground text-sm h-9"
+                    />
+                    <Button
+                      onClick={applyCoupon}
+                      disabled={couponLoading || !couponInput.trim()}
+                      variant="outline"
+                      size="sm"
+                      className="h-9 shrink-0 border-border text-foreground hover:bg-secondary"
+                    >
+                      {couponLoading ? "..." : "Appliquer"}
+                    </Button>
+                  </div>
+                )}
+                {couponError && <p className="text-xs text-destructive mt-1">{couponError}</p>}
+              </div>
+
+              <div className="border-t border-border" />
+
+              {/* Récap financier */}
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Sous-total</span>
+                  <span>{formatPrice(subtotal)}</span>
+                </div>
+                {isVoucherOnly ? (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Livraison</span>
+                    <span className="text-green-500 font-medium">Gratuite</span>
+                  </div>
+                ) : (
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Livraison <span className="text-xs">(produits physiques)</span></span>
+                    <span>{formatPrice(shipping)}</span>
+                  </div>
+                )}
+                {couponDiscount > 0 && (
+                  <div className="flex justify-between text-green-500">
+                    <span>Réduction ({coupon!.code})</span>
+                    <span>−{formatPrice(couponDiscount)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between font-bold text-foreground pt-2 border-t border-border">
+                  <span>Total</span>
+                  <span className="text-primary text-lg">{formatPrice(total)}</span>
+                </div>
+              </div>
+
+              {error && (
+                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-xs rounded-lg px-3 py-2">
+                  {error}
+                </div>
+              )}
+
+              <Button
+                onClick={handleCheckout}
+                disabled={loading}
+                size="lg"
+                className="w-full bg-primary text-primary-foreground hover:bg-gold-400 font-semibold shadow-gold h-12 text-base"
+              >
+                <Lock size={15} className="mr-2" />
+                {loading ? "Redirection..." : "Payer en toute sécurité"}
+              </Button>
+
+              <div className="flex items-center justify-center gap-1.5 text-muted-foreground">
+                <ShieldCheck size={12} />
+                <p className="text-[11px]">Paiement sécurisé via Stripe</p>
+              </div>
+
             </div>
-          )}
-
-          <Button
-            onClick={handleCheckout}
-            disabled={loading}
-            size="lg"
-            className="w-full bg-primary text-primary-foreground hover:bg-gold-400 font-semibold shadow-gold"
-          >
-            {loading ? "Redirection vers Stripe..." : "Payer en toute securite"}
-          </Button>
-
-          <p className="text-xs text-muted-foreground text-center">
-            {isVoucherOnly
-              ? "Votre code de vol sera envoyé par email après le paiement."
-              : "L'adresse definitive sera confirmee sur la page Stripe."}
-          </p>
+          </div>
 
         </div>
       </div>

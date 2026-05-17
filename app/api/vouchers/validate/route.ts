@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
   const { data: voucher, error } = await adminSupabase
     .from("voucher_codes")
-    .select("id, code, duration_minutes, product_title, status, used_at, expires_at, created_at")
+    .select("id, code, duration_minutes, product_title, status, used_at, expires_at, created_at, products(price)")
     .eq("code", code.toUpperCase().trim())
     .single();
 
@@ -43,10 +43,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ valid: false, status: "expired" });
   }
 
+  const productsJoin = voucher.products as { price: number } | { price: number }[] | null;
+  const product_price = Array.isArray(productsJoin)
+    ? (productsJoin[0]?.price ?? 0)
+    : (productsJoin?.price ?? 0);
+
   return NextResponse.json({
     valid: voucher.status === "unused",
+    id: voucher.id,
     code: voucher.code,
     duration_minutes: voucher.duration_minutes,
+    product_price,
     product_title: voucher.product_title,
     status: voucher.status,
     used_at: voucher.used_at,

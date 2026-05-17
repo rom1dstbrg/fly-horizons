@@ -29,7 +29,7 @@ export function VouchersSection({ vouchers, showSeeAll = false }: VouchersSectio
           </div>
           {showSeeAll && (
             <Link
-              href="/vouchers"
+              href="/nos-offres"
               className="hidden sm:inline-flex shrink-0 text-sm text-primary hover:text-[#e6a800] font-medium transition-colors"
             >
               Voir tout

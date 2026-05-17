@@ -49,7 +49,7 @@ export async function submitContact(formData: FormData) {
 
   await Promise.allSettled([
     sendContactNotificationEmail({ nom, email, sujet, message }),
-    sendContactAcknowledgmentEmail({ nom, email, sujet }),
+    sendContactAcknowledgmentEmail({ nom, email, sujet, message }),
   ]);
 
   return { success: true };

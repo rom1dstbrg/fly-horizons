@@ -43,7 +43,8 @@ export async function POST(request: NextRequest) {
       if (reservationId) {
         await adminSupabase.from("reservations")
           .update({ statut: "acompte_recu", payment_token: null })
-          .eq("id", reservationId);
+          .eq("id", reservationId)
+          .eq("statut", "en_attente"); // Garde idempotence — évite de rétrograder si déjà avancé
         if (voucherId) {
           await adminSupabase.from("voucher_codes").update({ status: "used", used_at: new Date().toISOString() }).eq("id", voucherId);
         }

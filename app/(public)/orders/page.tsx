@@ -167,14 +167,14 @@ export default async function OrdersPage() {
                               }`}>
                                 {v.status === "unused" ? "Disponible" : v.status === "used" ? "Utilisé" : "Expiré"}
                               </span>
-                              <a
-                                href="https://fly-horizons.com"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-primary hover:text-gold-400 transition-colors font-medium"
-                              >
-                                Réserver →
-                              </a>
+                              {v.status === "unused" && (
+                                <Link
+                                  href={`/reservation?duree=${v.duration_minutes}&code=${encodeURIComponent(v.code)}`}
+                                  className="text-xs text-primary hover:text-gold-400 transition-colors font-medium whitespace-nowrap"
+                                >
+                                  Réserver →
+                                </Link>
+                              )}
                             </div>
                           </div>
                         ))}

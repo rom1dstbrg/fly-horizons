@@ -17,6 +17,7 @@ interface Coupon {
   usage_count: number;
   max_uses: number | null;
   max_uses_per_user: number | null;
+  applies_to: "voucher" | "physical" | null;
   created_at: string;
 }
 
@@ -43,6 +44,7 @@ function EditCouponForm({ coupon, onClose }: { coupon: Coupon; onClose: () => vo
         expires_at: (fd.get("expires_at") as string) || null,
         max_uses: maxUsesRaw ? parseInt(maxUsesRaw) : null,
         max_uses_per_user: maxUsesPerUserRaw ? parseInt(maxUsesPerUserRaw) : null,
+        applies_to: (fd.get("applies_to") as "voucher" | "physical" | null) || null,
       });
       if (r.error) { setError(r.error); return; }
       onClose();
@@ -95,6 +97,15 @@ function EditCouponForm({ coupon, onClose }: { coupon: Coupon; onClose: () => vo
             defaultValue={coupon.max_uses_per_user ?? ""}
             placeholder="∞"
             className="h-8 px-2 w-20 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+        </div>
+        <div>
+          <label className="block text-xs text-muted-foreground mb-1">Applicable sur</label>
+          <select name="applies_to" defaultValue={coupon.applies_to ?? ""}
+            className="h-8 px-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+            <option value="">Tous</option>
+            <option value="voucher">Vols</option>
+            <option value="physical">Accessoires</option>
+          </select>
         </div>
         <div className="flex gap-2">
           <button type="submit" disabled={isPending}

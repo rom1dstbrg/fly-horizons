@@ -142,6 +142,18 @@ export function CouponForm() {
         </div>
       </div>
 
+      <div className="space-y-2">
+        <Label className="text-sm text-muted-foreground">Applicable sur</Label>
+        <select
+          name="applies_to"
+          className="w-full bg-input border border-border text-foreground rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+        >
+          <option value="">Tous les produits</option>
+          <option value="voucher">Vols uniquement</option>
+          <option value="physical">Accessoires uniquement</option>
+        </select>
+      </div>
+
       <Button
         type="submit"
         disabled={isPending}

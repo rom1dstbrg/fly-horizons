@@ -39,11 +39,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Find or create client by email
-    const { data: existingClient } = await supabase
+    const { data: existingClients } = await supabase
       .from("clients")
       .select("id")
       .eq("email", email)
-      .maybeSingle();
+      .limit(1);
+    const existingClient = existingClients?.[0] ?? null;
 
     let clientId: string;
     if (existingClient) {

@@ -62,9 +62,12 @@ export async function sendEmailConfirmation(id: string, type: "date" | "heure") 
       ? reservationDateConfirmeeEmail({ prenom: client.prenom, dateStr, duree: resa.duree })
       : reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree });
     await resend.emails.send({ from: EMAIL_FROM, to: [client.email], replyTo: EMAIL_REPLY_TO, subject, html });
-    if (type === "heure") {
-      await supabase.from("reservations").update({ facture_envoyee_at: new Date().toISOString() }).eq("id", id);
-    }
+    const now = new Date().toISOString();
+    const newStatut = type === "date" ? "date_confirmee" : "heure_confirmee";
+    const timestampField = type === "date" ? "date_confirmee_at" : "heure_confirmee_at";
+    await supabase.from("reservations")
+      .update({ statut: newStatut, [timestampField]: now })
+      .eq("id", id);
     revalidatePath("/admin/vols-sur-mesure");
     return { success: true };
   } catch {
@@ -193,6 +196,23 @@ export async function createAdminReservation(data: {
     return { success: true, reservationId: resa.id };
   } catch (e) {
     console.error("createAdminReservation error:", e);
+    return { error: "Erreur serveur" };
+  }
+}
+
+export async function updateReservationPersoFields(id: string, fields: {
+  passagers?: number;
+  poids_total?: number | null;
+  commentaire?: string | null;
+  acompte?: number | null;
+}) {
+  try {
+    await checkAdmin();
+    const supabase = createAdminClient();
+    await supabase.from("reservations").update(fields).eq("id", id);
+    revalidatePath("/admin/vols-sur-mesure");
+    return { success: true };
+  } catch {
     return { error: "Erreur serveur" };
   }
 }

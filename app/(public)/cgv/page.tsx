@@ -204,15 +204,13 @@ Juridiction : À défaut de résolution amiable, les tribunaux compétents de Be
 
 export default function CgvPage() {
   return (
-    <main className="min-h-screen bg-background pt-28 pb-20">
+    <main className="min-h-screen bg-gradient-navy pt-24 pb-16">
       <div className="container-shop max-w-3xl">
 
         {/* En-tête */}
-        <div className="mb-12">
-          <p className="text-xs font-bold text-[#113356] uppercase tracking-[3px] mb-2">
-            Légal
-          </p>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-2">
+        <div className="mb-10">
+          <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-2">Légal</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             Conditions Générales de Vente
           </h1>
           <p className="text-muted-foreground text-sm leading-relaxed mb-8">
@@ -221,10 +219,10 @@ export default function CgvPage() {
           </p>
 
           {/* Métadonnées */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-6 bg-card border border-border rounded-2xl">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-6 card-premium">
             <div>
               <p className="text-xs text-muted-foreground mb-1">Version</p>
-              <p className="text-sm font-semibold text-foreground">2.0</p>
+              <p className="text-sm font-semibold text-foreground">2.1</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground mb-1">Marque</p>
@@ -232,7 +230,7 @@ export default function CgvPage() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground mb-1">Mise à jour</p>
-              <p className="text-sm font-semibold text-foreground">16 mai 2025</p>
+              <p className="text-sm font-semibold text-foreground">17 mai 2026</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground mb-1">Droit applicable</p>
@@ -241,11 +239,11 @@ export default function CgvPage() {
           </div>
 
           {/* Avertissement partage de coûts */}
-          <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-            <p className="text-xs font-semibold text-amber-800 uppercase tracking-wider mb-1">
+          <div className="mt-4 p-4 bg-primary/5 border border-primary/20 rounded-xl">
+            <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">
               Activité de partage de coûts
             </p>
-            <p className="text-sm text-amber-700 leading-relaxed">
+            <p className="text-sm text-muted-foreground leading-relaxed">
               Les vols proposés sur ce site sont des vols en partage de coûts au sens du règlement EASA NCO.GEN.104.
               Il ne s&apos;agit pas d&apos;un service de transport aérien commercial. Le paiement couvre la quote-part
               des frais directs du vol (carburant, aéronef, redevances).

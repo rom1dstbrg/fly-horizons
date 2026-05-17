@@ -123,6 +123,7 @@ export async function sendContactAcknowledgmentEmail(params: ContactAcknowledgme
   return send(params.email, "Votre message a bien été reçu — Fly Horizons", html);
 }
 
+
 export async function sendContactReplyEmail(params: ContactReplyProps) {
   const html = contactReplyEmail(params);
   return send(params.email, `Réponse Fly Horizons — ${params.sujet}`, html);

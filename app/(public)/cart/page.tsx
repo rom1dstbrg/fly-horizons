@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Trash2, ShoppingBag, ChevronLeft, Package } from "lucide-react";
+import { Trash2, ShoppingBag, ChevronLeft, Package, Lock, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/store/cart";
 import { formatPrice } from "@/lib/utils";
@@ -88,7 +88,7 @@ export default function CartPage() {
                 {/* Infos */}
                 <div className="flex-1 min-w-0">
                   <Link
-                    href={`/shop/${item.slug}`}
+                    href={item.product_type === "voucher" ? `/vols/${item.slug}` : `/shop/${item.slug}`}
                     className="font-semibold text-foreground text-sm hover:text-primary transition-colors line-clamp-2"
                   >
                     {item.title}
@@ -171,16 +171,18 @@ export default function CartPage() {
               <Button
                 asChild
                 size="lg"
-                className="w-full bg-primary text-primary-foreground hover:bg-gold-400 font-semibold shadow-gold"
+                className="w-full bg-primary text-primary-foreground hover:bg-gold-400 font-semibold shadow-gold text-base h-12"
               >
-                <Link href="/checkout">
+                <Link href="/checkout" className="flex items-center justify-center gap-2">
+                  <Lock size={15} />
                   Passer la commande
                 </Link>
               </Button>
 
-              <p className="text-xs text-muted-foreground text-center">
-                Paiement securise via Stripe
-              </p>
+              <div className="flex items-center justify-center gap-1.5 text-muted-foreground">
+                <ShieldCheck size={13} />
+                <p className="text-xs">Paiement 100 % sécurisé via Stripe</p>
+              </div>
             </div>
           </div>
 

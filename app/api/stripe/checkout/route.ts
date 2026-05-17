@@ -101,16 +101,27 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Calculer le sous-total applicable selon la restriction du coupon
+      const applicableSubtotal = coupon.applies_to === "voucher"
+        ? items.reduce((sum: number, item: { id: string; price: number; quantity: number }) => {
+            const p = products.find(p => p.id === item.id);
+            return sum + (p && isVoucherProduct(p) ? item.price * item.quantity : 0);
+          }, 0)
+        : coupon.applies_to === "physical"
+        ? items.reduce((sum: number, item: { id: string; price: number; quantity: number }) => {
+            const p = products.find(p => p.id === item.id);
+            return sum + (p && !isVoucherProduct(p) ? item.price * item.quantity : 0);
+          }, 0)
+        : subtotal;
+
       if (coupon.type === "percentage") {
-        if (coupon.value >= 100) {
-          discountAmount = subtotal + shippingCost;
-          isFreeEverything = true;
-        } else {
-          discountAmount = (subtotal * coupon.value) / 100;
-        }
+        discountAmount = coupon.value >= 100
+          ? applicableSubtotal
+          : (applicableSubtotal * coupon.value) / 100;
       } else {
-        discountAmount = Math.min(coupon.value, subtotal);
+        discountAmount = Math.min(coupon.value, applicableSubtotal);
       }
+      isFreeEverything = Math.max(0, subtotal - discountAmount + shippingCost) === 0;
       validCoupon = coupon;
     }
 

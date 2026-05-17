@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { updateStatutReservationPerso, sendEmailConfirmation } from "@/lib/actions/reservations";
+import { updateStatutReservationPerso, sendEmailConfirmation, updateReservationPersoFields } from "@/lib/actions/reservations";
 import { deleteReservationPerso } from "@/lib/actions/delete";
 import { DeleteButton } from "@/components/admin/DeleteButton";
-import { MapPin, Mail, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { MapPin, Mail, ChevronDown, ChevronUp, Loader2, Pencil, Check, X } from "lucide-react";
 
 const STATUTS = [
   { value: "en_attente",      label: "En attente",       color: "bg-yellow-100 text-yellow-700 border-yellow-200" },
@@ -32,7 +32,16 @@ type Reservation = {
   taxes_escales: number | null;
   commentaire: string | null;
   created_at: string;
+  date_confirmee_at: string | null;
+  heure_confirmee_at: string | null;
   clients: { id: string; prenom: string; nom: string; email: string; telephone: string | null } | null;
+};
+
+type EditFields = {
+  passagers: string;
+  poids_total: string;
+  commentaire: string;
+  acompte: string;
 };
 
 export function VolsPersoClient({ reservations }: { reservations: Reservation[] }) {
@@ -41,6 +50,23 @@ export function VolsPersoClient({ reservations }: { reservations: Reservation[] 
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [emailLoading, setEmailLoading] = useState<string | null>(null);
   const [messages, setMessages] = useState<Record<string, string>>({});
+
+  // Track which emails have been sent — initialize from DB timestamps
+  const [sentEmails, setSentEmails] = useState<Record<string, Set<"date" | "heure">>>(() => {
+    const init: Record<string, Set<"date" | "heure">> = {};
+    reservations.forEach(r => {
+      const s = new Set<"date" | "heure">();
+      if (r.date_confirmee_at) s.add("date");
+      if (r.heure_confirmee_at) s.add("heure");
+      if (s.size > 0) init[r.id] = s;
+    });
+    return init;
+  });
+
+  // Edit state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editFields, setEditFields] = useState<EditFields>({ passagers: "", poids_total: "", commentaire: "", acompte: "" });
+  const [editSaving, setEditSaving] = useState(false);
 
   function toggle(id: string) { setExpanded(prev => prev === id ? null : id); }
 
@@ -58,9 +84,43 @@ export function VolsPersoClient({ reservations }: { reservations: Reservation[] 
     setEmailLoading(key);
     const r = await sendEmailConfirmation(id, type);
     setEmailLoading(null);
-    if (r.error) setMessages(m => ({ ...m, [id]: r.error! }));
-    else setMessages(m => ({ ...m, [id]: "Email envoyé ✓" }));
-    setTimeout(() => setMessages(m => { const c = { ...m }; delete c[id]; return c; }), 3000);
+    if (r.error) {
+      setMessages(m => ({ ...m, [id]: r.error! }));
+    } else {
+      setSentEmails(prev => {
+        const s = new Set(prev[id] ?? []);
+        s.add(type);
+        return { ...prev, [id]: s };
+      });
+      setMessages(m => ({ ...m, [id]: "Email envoyé ✓" }));
+      setTimeout(() => setMessages(m => { const c = { ...m }; delete c[id]; return c; }), 3000);
+    }
+  }
+
+  function startEdit(r: Reservation) {
+    setEditingId(r.id);
+    setEditFields({
+      passagers: String(r.passagers),
+      poids_total: r.poids_total != null ? String(r.poids_total) : "",
+      commentaire: r.commentaire ?? "",
+      acompte: r.acompte != null ? String(r.acompte) : "",
+    });
+  }
+
+  async function saveEdit(id: string) {
+    setEditSaving(true);
+    const result = await updateReservationPersoFields(id, {
+      passagers: parseInt(editFields.passagers) || 1,
+      poids_total: editFields.poids_total ? parseInt(editFields.poids_total) : null,
+      commentaire: editFields.commentaire.trim() || null,
+      acompte: editFields.acompte !== "" ? parseFloat(editFields.acompte) : null,
+    });
+    setEditSaving(false);
+    if (result.error) {
+      setMessages(m => ({ ...m, [id]: result.error! }));
+    } else {
+      setEditingId(null);
+    }
   }
 
   if (!reservations.length) {
@@ -80,10 +140,14 @@ export function VolsPersoClient({ reservations }: { reservations: Reservation[] 
           weekday: "short", day: "numeric", month: "short", year: "numeric",
         });
         const isExpanded = expanded === r.id;
+        const isEditing = editingId === r.id;
+        const sent = sentEmails[r.id] ?? new Set();
+        const dateSent = sent.has("date");
+        const heureSent = sent.has("heure");
 
         return (
           <div key={r.id} className="card-premium p-4">
-            {/* Header row — entièrement cliquable */}
+            {/* Header row */}
             <div
               className="flex items-start justify-between gap-4 cursor-pointer select-none"
               onClick={() => toggle(r.id)}
@@ -100,7 +164,7 @@ export function VolsPersoClient({ reservations }: { reservations: Reservation[] 
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
                   <p className="text-xs text-muted-foreground">{dateStr}{r.heure_vol ? ` · ${r.heure_vol}` : ""}</p>
                   <p className="text-xs text-muted-foreground">~{r.duree} min · {r.distance_km ? `${r.distance_km} km` : "dist. inconnue"}</p>
-                  {r.acompte && <p className="text-xs text-primary font-semibold">Acompte : {r.acompte} €</p>}
+                  {r.acompte != null && <p className="text-xs text-primary font-semibold">Acompte : {r.acompte} €</p>}
                   {r.waypoints && <p className="text-xs text-muted-foreground">{r.waypoints.length} point{r.waypoints.length > 1 ? "s" : ""}</p>}
                 </div>
                 {client && (
@@ -149,26 +213,99 @@ export function VolsPersoClient({ reservations }: { reservations: Reservation[] 
                   </div>
                 )}
 
-                {/* Détails passagers */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                  {[
-                    { label: "Passagers", value: String(r.passagers) },
-                    { label: "Poids total", value: r.poids_total ? `${r.poids_total} kg` : "—" },
-                    { label: "Taxes escales", value: r.taxes_escales ? `${r.taxes_escales} €` : "—" },
-                    { label: "Acompte", value: r.acompte ? `${r.acompte} €` : "—" },
-                  ].map(({ label, value }) => (
-                    <div key={label} className="bg-secondary/30 rounded-lg p-2.5">
-                      <p className="text-muted-foreground">{label}</p>
-                      <p className="font-semibold text-foreground mt-0.5">{value}</p>
+                {/* Détails — view or edit */}
+                {isEditing ? (
+                  <div className="space-y-3">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Modifier la réservation</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <label className="flex flex-col gap-1">
+                        <span className="text-[10px] text-muted-foreground">Passagers</span>
+                        <input
+                          type="number" min={1} max={10}
+                          value={editFields.passagers}
+                          onChange={e => setEditFields(f => ({ ...f, passagers: e.target.value }))}
+                          className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                      </label>
+                      <label className="flex flex-col gap-1">
+                        <span className="text-[10px] text-muted-foreground">Poids total (kg)</span>
+                        <input
+                          type="number" min={0}
+                          value={editFields.poids_total}
+                          onChange={e => setEditFields(f => ({ ...f, poids_total: e.target.value }))}
+                          className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                          placeholder="—"
+                        />
+                      </label>
+                      <label className="flex flex-col gap-1">
+                        <span className="text-[10px] text-muted-foreground">Acompte reçu (€)</span>
+                        <input
+                          type="number" min={0} step={0.01}
+                          value={editFields.acompte}
+                          onChange={e => setEditFields(f => ({ ...f, acompte: e.target.value }))}
+                          className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                          placeholder="—"
+                        />
+                      </label>
                     </div>
-                  ))}
-                </div>
-
-                {r.commentaire && (
-                  <div>
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Remarques</p>
-                    <p className="text-xs text-muted-foreground bg-secondary/30 rounded-lg p-3">{r.commentaire}</p>
+                    <label className="flex flex-col gap-1">
+                      <span className="text-[10px] text-muted-foreground">Remarques</span>
+                      <textarea
+                        rows={3}
+                        value={editFields.commentaire}
+                        onChange={e => setEditFields(f => ({ ...f, commentaire: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+                        placeholder="Aucune remarque"
+                      />
+                    </label>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => saveEdit(r.id)}
+                        disabled={editSaving}
+                        className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors disabled:opacity-50"
+                      >
+                        {editSaving ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
+                        Enregistrer
+                      </button>
+                      <button
+                        onClick={() => setEditingId(null)}
+                        disabled={editSaving}
+                        className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:bg-secondary transition-colors"
+                      >
+                        <X size={11} /> Annuler
+                      </button>
+                    </div>
                   </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                      {[
+                        { label: "Passagers", value: String(r.passagers) },
+                        { label: "Poids total", value: r.poids_total ? `${r.poids_total} kg` : "—" },
+                        { label: "Taxes escales", value: r.taxes_escales ? `${r.taxes_escales} €` : "—" },
+                        { label: "Acompte", value: r.acompte != null ? `${r.acompte} €` : "—" },
+                      ].map(({ label, value }) => (
+                        <div key={label} className="bg-secondary/30 rounded-lg p-2.5">
+                          <p className="text-muted-foreground">{label}</p>
+                          <p className="font-semibold text-foreground mt-0.5">{value}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {r.commentaire && (
+                      <div>
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Remarques</p>
+                        <p className="text-xs text-muted-foreground bg-secondary/30 rounded-lg p-3">{r.commentaire}</p>
+                      </div>
+                    )}
+
+                    <button
+                      onClick={() => startEdit(r)}
+                      className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:bg-secondary transition-colors"
+                    >
+                      <Pencil size={11} /> Modifier
+                    </button>
+                  </>
                 )}
 
                 {/* Actions statut */}
@@ -190,19 +327,34 @@ export function VolsPersoClient({ reservations }: { reservations: Reservation[] 
                   ))}
                 </div>
 
+                {/* Emails */}
                 <div className="flex flex-wrap gap-2">
                   <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider w-full flex items-center gap-1">
                     <Mail size={10} /> Emails
                   </p>
-                  <button onClick={() => sendEmail(r.id, "date")}
+                  <button
+                    onClick={() => sendEmail(r.id, "date")}
                     disabled={emailLoading === `${r.id}-date`}
-                    className="text-xs px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:bg-secondary transition-colors flex items-center gap-1.5 disabled:opacity-50">
+                    className={[
+                      "text-xs px-3 py-1.5 rounded-lg border transition-colors flex items-center gap-1.5 disabled:opacity-50",
+                      dateSent
+                        ? "bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100"
+                        : "border-border text-muted-foreground hover:bg-secondary",
+                    ].join(" ")}
+                  >
                     {emailLoading === `${r.id}-date` ? <Loader2 size={11} className="animate-spin" /> : <Mail size={11} />}
                     Envoyer confirmation date
                   </button>
-                  <button onClick={() => sendEmail(r.id, "heure")}
+                  <button
+                    onClick={() => sendEmail(r.id, "heure")}
                     disabled={emailLoading === `${r.id}-heure`}
-                    className="text-xs px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:bg-secondary transition-colors flex items-center gap-1.5 disabled:opacity-50">
+                    className={[
+                      "text-xs px-3 py-1.5 rounded-lg border transition-colors flex items-center gap-1.5 disabled:opacity-50",
+                      heureSent
+                        ? "bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100"
+                        : "border-border text-muted-foreground hover:bg-secondary",
+                    ].join(" ")}
+                  >
                     {emailLoading === `${r.id}-heure` ? <Loader2 size={11} className="animate-spin" /> : <Mail size={11} />}
                     Envoyer confirmation heure
                   </button>

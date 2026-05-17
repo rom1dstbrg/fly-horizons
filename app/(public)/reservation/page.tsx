@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import {
   ChevronLeft, ChevronRight, Clock, Lock,
-  CheckCircle, AlertCircle, AlertTriangle, Loader2, Tag, MapPin, Users, Calendar,
+  CheckCircle, AlertCircle, AlertTriangle, Loader2, Tag, MapPin, Users, Calendar, ArrowRight, Gift, X,
 } from "lucide-react";
 import { formatDuration } from "@/lib/vouchers";
 
@@ -22,12 +23,15 @@ interface VolProduct {
   images?: { url: string }[];
 }
 interface VoucherInfo { code: string; duration_minutes: number; product_title: string; }
+interface CouponInfo { code: string; type: string; value: number; description: string; }
 interface FormState {
   product: VolProduct | null;
   date: string; heure: string;
   prenom: string; nom: string; email: string; telephone: string;
   passengers: number; poids_total: string;
-  voucherInput: string; voucher: VoucherInfo | null;
+  codeInput: string;
+  voucher: VoucherInfo | null;
+  coupon: CouponInfo | null;
   accept_cgp: boolean;
 }
 
@@ -40,17 +44,26 @@ const STEPS: { key: Step; label: string }[] = [
   { key: "paiement", label: "Paiement" },
 ];
 
-function computePrice(product: VolProduct | null, voucher: VoucherInfo | null) {
-  if (!product) return { price: 0, discount: 0, full: 0 };
+function computePrice(product: VolProduct | null, voucher: VoucherInfo | null, coupon: CouponInfo | null = null) {
+  if (!product) return { price: 0, discount: 0, couponDiscount: 0, full: 0 };
   const full = product.price;
-  if (!voucher) return { price: full, discount: 0, full };
-  const covered  = Math.min(product.voucher_duration_minutes, voucher.duration_minutes);
-  const discount = Math.round((full / product.voucher_duration_minutes) * covered);
-  return { price: Math.max(0, full - discount), discount, full };
-}
-function fmtVoucher(raw: string) {
-  const c = raw.replace(/[^A-Z0-9]/gi, "").toUpperCase().slice(0, 16);
-  return c.match(/.{1,4}/g)?.join("-") ?? c;
+  let price = full;
+  let discount = 0;
+  if (voucher) {
+    const covered = Math.min(product.voucher_duration_minutes, voucher.duration_minutes);
+    discount = Math.round((full / product.voucher_duration_minutes) * covered);
+    price = Math.max(0, price - discount);
+  }
+  let couponDiscount = 0;
+  if (coupon && price > 0) {
+    if (coupon.type === "percentage") {
+      couponDiscount = Math.round((price * coupon.value) / 100);
+    } else {
+      couponDiscount = Math.min(coupon.value, price);
+    }
+    price = Math.max(0, price - couponDiscount);
+  }
+  return { price, discount, couponDiscount, full };
 }
 
 // ── Page ────────────────────────────────────────────────────────────
@@ -62,7 +75,8 @@ export default function ReservationPage() {
     product: null, date: "", heure: "",
     prenom: "", nom: "", email: "", telephone: "",
     passengers: 0, poids_total: "",
-    voucherInput: "", voucher: null, accept_cgp: false,
+    codeInput: "", voucher: null, coupon: null,
+    accept_cgp: false,
   });
 
   const today = new Date();
@@ -72,15 +86,17 @@ export default function ReservationPage() {
   const [calLoading,   setCalLoading]   = useState(false);
   const [slots,        setSlots]        = useState<string[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
-  const [vcLoading,    setVcLoading]    = useState(false);
-  const [vcError,      setVcError]      = useState("");
+  const [codeLoading, setCodeLoading] = useState(false);
+  const [codeError,   setCodeError]   = useState("");
   const [submitting,   setSubmitting]   = useState(false);
   const [submitError,  setSubmitError]  = useState("");
 
   // ── Data ─────────────────────────────────────────────────────────
   useEffect(() => {
     const sb = createClient();
-    const dureeParam = parseInt(new URLSearchParams(window.location.search).get("duree") ?? "");
+    const params = new URLSearchParams(window.location.search);
+    const dureeParam = parseInt(params.get("duree") ?? "");
+    const codeParam  = params.get("code") ?? "";
 
     if (!dureeParam) { router.replace("/nos-offres"); return; }
 
@@ -95,6 +111,39 @@ export default function ReservationPage() {
           router.replace("/nos-offres");
         }
         setProdLoading(false);
+
+        // Auto-remplir et valider le code passé en param
+        if (codeParam) {
+          const cleaned = codeParam.replace(/[^A-Z0-9]/gi, "").toUpperCase();
+          setCodeLoading(true);
+          if (cleaned.length === 16) {
+            const formatted = cleaned.match(/.{1,4}/g)!.join("-");
+            setForm(f => ({ ...f, codeInput: formatted }));
+            fetch(`/api/vouchers/validate?code=${encodeURIComponent(formatted)}`)
+              .then(r => r.json()).then(d => {
+                if (d.valid) {
+                  setForm(f => ({ ...f, voucher: { code: d.code, duration_minutes: d.duration_minutes, product_title: d.product_title } }));
+                  setCodeLoading(false);
+                } else if (!d.status || (d.status !== "expired" && d.status !== "used" && d.status !== "reserved")) {
+                  fetch(`/api/promo/validate?code=${encodeURIComponent(cleaned)}`)
+                    .then(r => r.json()).then(d2 => {
+                      if (d2.valid) setForm(f => ({ ...f, coupon: { code: d2.code, type: d2.type, value: d2.value, description: d2.description } }));
+                      else setCodeError(d2.error || "Code invalide.");
+                    }).finally(() => setCodeLoading(false));
+                } else {
+                  setCodeError(d.status === "expired" ? "Ce voucher a expiré." : d.status === "used" ? "Ce voucher a déjà été utilisé." : "Ce voucher est en cours d'utilisation.");
+                  setCodeLoading(false);
+                }
+              });
+          } else {
+            setForm(f => ({ ...f, codeInput: cleaned }));
+            fetch(`/api/promo/validate?code=${encodeURIComponent(cleaned)}`)
+              .then(r => r.json()).then(d => {
+                if (d.valid) setForm(f => ({ ...f, coupon: { code: d.code, type: d.type, value: d.value, description: d.description } }));
+                else setCodeError(d.error || "Code invalide.");
+              }).finally(() => setCodeLoading(false));
+          }
+        }
       });
 
     sb.auth.getUser().then(({ data: { user } }) => {
@@ -127,43 +176,49 @@ export default function ReservationPage() {
       .then(r => r.json()).then(d => setSlots(d.slots ?? [])).finally(() => setSlotsLoading(false));
   }, [form.date, form.product]);
 
-  // ── Voucher & submit ─────────────────────────────────────────────
-  async function validateVoucher(code: string) {
-    if (!code.trim()) return;
-    setVcLoading(true); setVcError("");
+  // ── Code auto-détection (voucher 16 chars ou code promo) ─────────
+  async function applyCode(override?: string) {
+    const raw = (override ?? form.codeInput).replace(/\s/g, "").toUpperCase();
+    if (!raw) return;
+    const alnum = raw.replace(/-/g, "");
+    setCodeLoading(true); setCodeError("");
+    setForm(f => ({ ...f, voucher: null, coupon: null }));
     try {
-      const r = await fetch(`/api/vouchers/validate?code=${encodeURIComponent(code.trim())}`);
-      const d = await r.json();
-      if (!d.valid) {
-        setVcError(
-          d.status === "expired"  ? "Ce voucher a expiré." :
-          d.status === "used"     ? "Ce voucher a déjà été utilisé." :
-          d.status === "reserved" ? "Ce voucher est en cours d'utilisation." : "Code invalide."
-        );
-        setForm(f => ({ ...f, voucher: null }));
-      } else {
-        setForm(f => ({ ...f, voucher: { code: d.code, duration_minutes: d.duration_minutes, product_title: d.product_title } }));
+      if (alnum.length === 16) {
+        // Format avec tirets pour la validation voucher: XXXX-XXXX-XXXX-XXXX
+        const formatted = alnum.match(/.{1,4}/g)!.join("-");
+        const r = await fetch(`/api/vouchers/validate?code=${encodeURIComponent(formatted)}`);
+        const d = await r.json();
+        if (d.valid) {
+          setForm(f => ({ ...f, voucher: { code: d.code, duration_minutes: d.duration_minutes, product_title: d.product_title } }));
+          return;
+        }
+        if (d.status === "expired")  { setCodeError("Ce voucher a expiré."); return; }
+        if (d.status === "used")     { setCodeError("Ce voucher a déjà été utilisé."); return; }
+        if (d.status === "reserved") { setCodeError("Ce voucher est en cours d'utilisation."); return; }
+        // Non trouvé dans voucher_codes → essayer comme code promo
       }
-    } catch { setVcError("Erreur de vérification."); }
-    finally { setVcLoading(false); }
-  }
-
-  function handleVoucherChange(raw: string) {
-    const fmt = fmtVoucher(raw);
-    setForm(f => ({ ...f, voucherInput: fmt, voucher: null }));
-    setVcError("");
-    if (fmt.replace(/-/g, "").length === 16) validateVoucher(fmt);
+      // Code promo
+      const r2 = await fetch(`/api/promo/validate?code=${encodeURIComponent(alnum)}`);
+      const d2 = await r2.json();
+      if (d2.valid) {
+        setForm(f => ({ ...f, coupon: { code: d2.code, type: d2.type, value: d2.value, description: d2.description } }));
+      } else {
+        setCodeError(d2.error || "Code invalide — vérifiez et réessayez.");
+      }
+    } catch { setCodeError("Erreur de connexion, veuillez réessayer."); }
+    finally { setCodeLoading(false); }
   }
 
   async function handleSubmit() {
     setSubmitting(true); setSubmitError("");
-    if (form.voucherInput && !form.voucher) { await validateVoucher(form.voucherInput); setSubmitting(false); return; }
-    const { price } = computePrice(form.product, form.voucher);
+    const { price } = computePrice(form.product, form.voucher, form.coupon);
     const payload = {
       prenom: form.prenom, nom: form.nom, email: form.email, telephone: form.telephone,
       duree, date: form.date, heure: form.heure,
       passengers: form.passengers, poids_total: form.poids_total ? parseInt(form.poids_total) : null,
       voucher_code: form.voucher?.code,
+      coupon_code: form.coupon?.code || undefined,
     };
     if (price === 0) {
       const r = await fetch("/api/reservation/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
@@ -179,7 +234,7 @@ export default function ReservationPage() {
   }
 
   // ── Computed ─────────────────────────────────────────────────────
-  const { price, discount, full: prixPlein } = computePrice(form.product, form.voucher);
+  const { price, discount, couponDiscount, full: prixPlein } = computePrice(form.product, form.voucher, form.coupon);
   const stepIndex = STEPS.findIndex(s => s.key === step);
 
   const MAX_WEIGHT  = 178;
@@ -192,16 +247,12 @@ export default function ReservationPage() {
 
   const ctaDisabled =
     step === "datetime" ? !form.date || !form.heure :
-    step === "infos"    ? !form.prenom || !form.nom || !form.email || !form.poids_total || !form.passengers || vcLoading || weightError :
-                          !form.accept_cgp || submitting;
+    step === "infos"    ? !form.prenom || !form.nom || !form.email || !form.poids_total || !form.passengers || weightError :
+                          !form.accept_cgp || submitting || codeLoading;
 
-  function handleCTA() {
+  async function handleCTA() {
     if (step === "datetime") { setStep("infos"); return; }
-    if (step === "infos") {
-      if (form.voucherInput && !form.voucher) validateVoucher(form.voucherInput).then(() => setStep("paiement"));
-      else setStep("paiement");
-      return;
-    }
+    if (step === "infos") { setStep("paiement"); return; }
     handleSubmit();
   }
 
@@ -277,7 +328,7 @@ export default function ReservationPage() {
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 items-start">
 
             {/* ── Main ── */}
-            <div className="min-w-0 pb-20 lg:pb-0">
+            <div className="min-w-0">
 
               {/* ─ Step 2 ─ */}
               {step === "datetime" && (
@@ -441,35 +492,6 @@ export default function ReservationPage() {
                     </div>
                   </div>
 
-                  {/* Voucher */}
-                  <div className="p-5 sm:p-7">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px] mb-1.5">Bon de vol cadeau</p>
-                    <p className="text-sm text-muted-foreground mb-4">Vous avez reçu un voucher ? Saisissez votre code ci-dessous.</p>
-                    <div className="flex gap-2.5">
-                      <input type="text" value={form.voucherInput}
-                        onChange={e => handleVoucherChange(e.target.value)}
-                        onKeyDown={e => e.key === "Enter" && validateVoucher(form.voucherInput)}
-                        className="flex-1 h-10 px-3 rounded-xl border border-border bg-white text-sm font-mono uppercase tracking-widest text-foreground focus:outline-none focus:ring-2 focus:ring-[#fbae17]/20 focus:border-[#fbae17] transition-all placeholder:text-muted-foreground/40 placeholder:tracking-normal placeholder:font-sans"
-                        placeholder="XXXX-XXXX-XXXX-XXXX" maxLength={19} />
-                      <button type="button"
-                        onClick={() => validateVoucher(form.voucherInput)}
-                        disabled={!form.voucherInput.trim() || vcLoading}
-                        className="px-4 h-10 rounded-xl border border-border bg-muted text-sm font-semibold text-foreground hover:bg-[#fbae17]/5 hover:border-[#fbae17]/40 hover:text-[#fbae17] disabled:opacity-40 transition-all flex items-center gap-1.5">
-                        {vcLoading ? <Loader2 size={13} className="animate-spin" /> : <><Tag size={12} />Appliquer</>}
-                      </button>
-                    </div>
-                    {vcError && (
-                      <p className="mt-2.5 text-sm text-destructive flex items-center gap-1.5">
-                        <AlertCircle size={13} className="shrink-0" /> {vcError}
-                      </p>
-                    )}
-                    {form.voucher && (
-                      <div className="mt-2.5 inline-flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-200 px-3.5 py-2 rounded-xl">
-                        <CheckCircle size={13} />
-                        <span><strong>{form.voucher.product_title}</strong> — {form.voucher.duration_minutes} min offerts</span>
-                      </div>
-                    )}
-                  </div>
                 </div>
               )}
 
@@ -487,11 +509,11 @@ export default function ReservationPage() {
                           {formattedDate}{form.heure && ` · ${form.heure}`}
                         </p>
                       </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-white/30 text-[9px] uppercase tracking-widest mb-1">Durée</p>
-                        <span className="bg-[#fbae17] text-[#0b2238] text-sm font-bold px-3 py-1 rounded-full">
-                          {formatDuration(duree)}
-                        </span>
+                      <div className="shrink-0">
+                        <div className="inline-flex items-center gap-1.5 bg-black/40 backdrop-blur-md border border-white/15 rounded-xl px-3 py-1.5">
+                          <span className="text-[#F2B705] font-black text-[13px] leading-none">{formatDuration(duree)}</span>
+                          <span className="text-white/50 text-[11px] leading-none">vol privé</span>
+                        </div>
                       </div>
                     </div>
 
@@ -511,27 +533,70 @@ export default function ReservationPage() {
 
                     <div className="px-6 py-5 flex items-end justify-between gap-4">
                       <div className="space-y-1">
+                        {(discount > 0 || couponDiscount > 0) && (
+                          <p className="text-sm text-muted-foreground line-through tabular-nums">{prixPlein} €</p>
+                        )}
                         {discount > 0 && (
-                          <>
-                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                              <span>Prix public</span>
-                              <span className="line-through">{prixPlein} €</span>
-                            </div>
-                            <div className="flex items-center gap-4 text-xs text-green-600 font-medium">
-                              <span>Voucher ({form.voucher?.duration_minutes} min)</span>
-                              <span>−{discount} €</span>
-                            </div>
-                          </>
+                          <p className="text-xs text-green-600 font-medium">Voucher −{discount} €</p>
+                        )}
+                        {couponDiscount > 0 && (
+                          <p className="text-xs text-green-600 font-medium">Code promo −{couponDiscount} €</p>
                         )}
                         <p className="text-xs text-muted-foreground">Par avion · jusqu&apos;à 3 passagers</p>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[2px] mb-1">Total</p>
+                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[2px] mb-0.5">Total</p>
                         <p className={`text-3xl font-black tabular-nums ${price === 0 ? "text-green-600" : "text-[#113356]"}`}>
                           {price === 0 ? "Gratuit" : `${price} €`}
                         </p>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Code réduction — mobile uniquement */}
+                  <div className="lg:hidden rounded-2xl border border-border bg-white shadow-sm p-5">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px] mb-3">Bon cadeau / Code promo</p>
+                    {(form.voucher || form.coupon) ? (
+                      <div className="flex items-center gap-2 bg-green-50 border border-green-100 px-3 py-2.5 rounded-xl">
+                        <CheckCircle size={13} className="text-green-600 shrink-0" />
+                        <p className="text-sm font-semibold text-green-800 flex-1 min-w-0 truncate">
+                          {form.voucher
+                            ? `${form.voucher.product_title} · −${discount} €`
+                            : `${form.coupon!.code} · ${form.coupon!.description}`}
+                        </p>
+                        <button type="button"
+                          onClick={() => { setForm(f => ({ ...f, codeInput: "", voucher: null, coupon: null })); setCodeError(""); }}
+                          className="shrink-0 text-muted-foreground hover:text-destructive transition-colors cursor-pointer">
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex gap-2">
+                          <input type="text" value={form.codeInput}
+                            onChange={e => {
+                              const val = e.target.value.toUpperCase().replace(/\s/g, "");
+                              setForm(f => ({ ...f, codeInput: val }));
+                              setCodeError("");
+                              if (val.replace(/-/g, "").length === 16) applyCode(val);
+                            }}
+                            onKeyDown={e => e.key === "Enter" && applyCode()}
+                            placeholder="Voucher ou code promo"
+                            maxLength={19}
+                            className="flex-1 h-11 px-4 rounded-xl border border-border bg-white text-sm font-mono uppercase tracking-wide text-foreground focus:outline-none focus:ring-2 focus:ring-[#fbae17]/25 focus:border-[#fbae17] transition-all placeholder:text-muted-foreground/40 placeholder:tracking-normal placeholder:font-sans placeholder:normal-case" />
+                          <button type="button" onClick={() => applyCode()}
+                            disabled={!form.codeInput.trim() || codeLoading}
+                            className="h-11 px-5 rounded-xl bg-[#113356] text-white text-sm font-bold hover:bg-[#0b2238] disabled:opacity-40 transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer whitespace-nowrap">
+                            {codeLoading ? <Loader2 size={14} className="animate-spin" /> : "Appliquer"}
+                          </button>
+                        </div>
+                        {codeError && (
+                          <p className="text-xs text-red-600 mt-2 flex items-center gap-1.5">
+                            <AlertCircle size={12} className="shrink-0" /> {codeError}
+                          </p>
+                        )}
+                      </>
+                    )}
                   </div>
 
                   {/* CGP */}
@@ -575,15 +640,15 @@ export default function ReservationPage() {
                 <div className="flex flex-col items-end gap-2">
                   <button type="button" disabled={ctaDisabled} onClick={handleCTA}
                     className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#113356] text-white rounded-xl text-sm font-bold transition-all duration-200 disabled:opacity-30 hover:bg-[#0b2238] shadow-sm hover:shadow-md hover:-translate-y-px active:translate-y-0 cursor-pointer">
-                    {(submitting || vcLoading) && <Loader2 size={14} className="animate-spin" />}
+                    {(submitting || codeLoading) && <Loader2 size={14} className="animate-spin" />}
                     {step === "paiement" && !submitting && price > 0 && <Lock size={13} />}
                     {step === "paiement" && !submitting && price === 0 && <CheckCircle size={13} />}
                     <span>
                       {step === "datetime" && (form.date && form.heure ? "Continuer" : form.date ? "Sélectionnez un créneau" : "Sélectionnez une date")}
-                      {step === "infos"    && (vcLoading ? "Vérification…" : "Continuer vers le paiement")}
+                      {step === "infos"    && "Continuer vers le paiement"}
                       {step === "paiement" && (submitting ? "Traitement en cours…" : price === 0 ? "Confirmer gratuitement" : `Payer ${price} € en toute sécurité`)}
                     </span>
-                    {!submitting && !vcLoading && step !== "paiement" && <ChevronRight size={15} />}
+                    {!submitting && step !== "paiement" && <ChevronRight size={15} />}
                   </button>
                   {step === "paiement" && price > 0 && (
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5">
@@ -613,9 +678,10 @@ export default function ReservationPage() {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#0b2238]/80 to-transparent" />
                       <div className="absolute bottom-3 left-4">
-                        <span className="bg-[#fbae17] text-[#0b2238] text-xs font-bold px-2.5 py-1 rounded-full">
-                          {formatDuration(form.product.voucher_duration_minutes)}
-                        </span>
+                        <div className="inline-flex items-center gap-1.5 bg-black/40 backdrop-blur-md border border-white/15 rounded-xl px-3 py-1.5">
+                          <span className="text-[#F2B705] font-black text-[13px] leading-none">{formatDuration(form.product.voucher_duration_minutes)}</span>
+                          <span className="text-white/50 text-[11px] leading-none">vol privé</span>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -626,9 +692,10 @@ export default function ReservationPage() {
                       <div className="flex items-start justify-between gap-3">
                         <p className="text-white font-bold text-sm leading-snug">{form.product.title}</p>
                         {!form.product.images?.[0]?.url && (
-                          <span className="bg-[#fbae17] text-[#0b2238] text-xs font-bold px-2.5 py-1 rounded-full shrink-0">
-                            {formatDuration(form.product.voucher_duration_minutes)}
-                          </span>
+                          <div className="inline-flex items-center gap-1.5 bg-black/40 backdrop-blur-md border border-white/15 rounded-xl px-3 py-1.5 shrink-0">
+                            <span className="text-[#F2B705] font-black text-[13px] leading-none">{formatDuration(form.product.voucher_duration_minutes)}</span>
+                            <span className="text-white/50 text-[11px] leading-none">vol privé</span>
+                          </div>
                         )}
                       </div>
                     ) : (
@@ -636,6 +703,7 @@ export default function ReservationPage() {
                     )}
                   </div>
 
+                  {/* Details */}
                   <div className="px-4 py-3.5 space-y-2.5 border-b border-border">
                     <SumRow icon={<MapPin size={12} />} label="Départ" value="Charleroi · EBCI" />
                     {formattedDate && (
@@ -647,25 +715,71 @@ export default function ReservationPage() {
                     {form.passengers > 0 && (
                       <SumRow icon={<Users size={12} />} label="Passagers" value={`${form.passengers} passager${form.passengers > 1 ? "s" : ""}`} />
                     )}
-                    {form.voucher && (
-                      <SumRow icon={<Tag size={12} />} label="Voucher" value={`−${discount} € · ${form.voucher.duration_minutes} min`} green />
+                  </div>
+
+                  {/* Code réduction */}
+                  <div className="px-4 py-3.5 border-b border-border">
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[2px] mb-2.5">Bon cadeau / Code promo</p>
+                    {(form.voucher || form.coupon) ? (
+                      <div className="flex items-center gap-2 bg-green-50 border border-green-100 px-3 py-2.5 rounded-xl">
+                        <CheckCircle size={12} className="text-green-600 shrink-0" />
+                        <p className="text-xs font-semibold text-green-800 flex-1 min-w-0 truncate">
+                          {form.voucher
+                            ? `${form.voucher.product_title} · −${discount} €`
+                            : `${form.coupon!.code} · ${form.coupon!.description}`}
+                        </p>
+                        <button type="button"
+                          onClick={() => { setForm(f => ({ ...f, codeInput: "", voucher: null, coupon: null })); setCodeError(""); }}
+                          className="shrink-0 text-muted-foreground hover:text-destructive transition-colors cursor-pointer">
+                          <X size={13} />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex gap-1.5">
+                          <input type="text" value={form.codeInput}
+                            onChange={e => {
+                              const val = e.target.value.toUpperCase().replace(/\s/g, "");
+                              setForm(f => ({ ...f, codeInput: val }));
+                              setCodeError("");
+                              if (val.replace(/-/g, "").length === 16) applyCode(val);
+                            }}
+                            onKeyDown={e => e.key === "Enter" && applyCode()}
+                            placeholder="Voucher ou code promo"
+                            maxLength={19}
+                            className="flex-1 h-9 px-3 rounded-xl border border-border bg-white text-xs font-mono uppercase tracking-wide text-foreground focus:outline-none focus:ring-2 focus:ring-[#fbae17]/25 focus:border-[#fbae17] transition-all placeholder:text-muted-foreground/40 placeholder:tracking-normal placeholder:font-sans placeholder:normal-case" />
+                          <button type="button" onClick={() => applyCode()}
+                            disabled={!form.codeInput.trim() || codeLoading}
+                            className="h-9 px-3 rounded-xl bg-[#113356] text-white text-xs font-bold hover:bg-[#0b2238] disabled:opacity-40 transition-all flex items-center justify-center shadow-sm cursor-pointer whitespace-nowrap">
+                            {codeLoading ? <Loader2 size={12} className="animate-spin" /> : "OK"}
+                          </button>
+                        </div>
+                        {codeError && (
+                          <p className="text-[11px] text-red-600 mt-1.5 flex items-center gap-1">
+                            <AlertCircle size={10} className="shrink-0" /> {codeError}
+                          </p>
+                        )}
+                      </>
                     )}
                   </div>
 
-                  <div className="px-4 py-3.5">
-                    {discount > 0 && (
-                      <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                        <span>Prix public</span>
-                        <span className="line-through">{prixPlein} €</span>
-                      </div>
+                  <div className="px-4 py-3.5 space-y-2.5">
+                    {(discount > 0 || couponDiscount > 0) && (
+                      <SumRow icon={<Tag size={12} />} label="Prix public" value={<span className="line-through">{prixPlein} €</span>} />
                     )}
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold text-muted-foreground">Total</span>
-                      <span className={`text-xl font-black tabular-nums ${price === 0 && form.voucher ? "text-green-600" : "text-[#113356]"}`}>
-                        {price === 0 && form.voucher ? "Gratuit" : form.product ? `${price} €` : "—"}
-                      </span>
+                    {discount > 0 && (
+                      <SumRow icon={<Gift size={12} />} label="Voucher" value={`−${discount} €`} green />
+                    )}
+                    {couponDiscount > 0 && (
+                      <SumRow icon={<Tag size={12} />} label="Code promo" value={`−${couponDiscount} €`} green />
+                    )}
+                    <div className="flex items-center justify-between mt-1 pt-3 border-t border-border">
+                      <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[2px]">Total</p>
+                      <p className={`text-2xl font-black tabular-nums ${price === 0 && (form.voucher || form.coupon) ? "text-green-600" : "text-[#113356]"}`}>
+                        {price === 0 && (form.voucher || form.coupon) ? "Gratuit" : form.product ? `${price} €` : "—"}
+                      </p>
                     </div>
-                    <p className="text-muted-foreground text-[10px] mt-1">Par avion · jusqu&apos;à 3 passagers</p>
+                    <p className="text-muted-foreground text-[10px]">Par avion · jusqu&apos;à 3 passagers</p>
                   </div>
                 </div>
 
@@ -673,34 +787,31 @@ export default function ReservationPage() {
                   <Lock size={9} className="text-muted-foreground/50 shrink-0" />
                   <p className="text-[10px] text-muted-foreground/60">Paiement sécurisé · Pilote EASA certifié</p>
                 </div>
+
+                {/* ── Durée supplémentaire — visible uniquement si un voucher est en jeu ── */}
+                {form.voucher && <div className="mt-4 rounded-2xl border border-[#dce8ff] bg-[#f5f8ff] p-4">
+                  <p className="text-xs font-bold text-[#113356] mb-1.5">
+                    Vous voulez voler plus longtemps ?
+                  </p>
+                  <p className="text-[11.5px] text-[#113356]/65 leading-relaxed mb-3">
+                    Choisissez une durée supérieure dans nos offres et entrez votre code voucher
+                    à l&apos;étape paiement — vous ne payez que la différence.
+                  </p>
+                  <Link
+                    href="/nos-offres"
+                    className="inline-flex items-center gap-1.5 text-[11.5px] font-bold text-[#113356] hover:text-[#0b2238] transition-colors"
+                  >
+                    Voir toutes les durées
+                    <ArrowRight size={11} />
+                  </Link>
+                </div>}
+
               </div>
             </div>
 
           </div>
       </div>
 
-      {/* ── Mobile bottom bar ── */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-4 py-3.5 bg-white/95 backdrop-blur-md border-t border-border shadow-[0_-4px_24px_rgba(0,0,0,0.06)]">
-        <div className="flex items-center gap-3">
-          {stepIndex > 0 && (
-            <button type="button" onClick={goBack}
-              className="flex items-center gap-1 text-sm font-semibold text-muted-foreground shrink-0">
-              <ChevronLeft size={15} /> Retour
-            </button>
-          )}
-          <button type="button" disabled={ctaDisabled} onClick={handleCTA}
-            className="flex-1 py-3.5 rounded-xl bg-[#113356] text-white font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-30 transition-all hover:bg-[#0b2238]">
-            {(submitting || vcLoading) && <Loader2 size={14} className="animate-spin" />}
-            {step === "paiement" && !submitting && price > 0 && <Lock size={13} />}
-            <span>
-              {step === "datetime" && (form.date && form.heure ? "Continuer" : form.date ? "Choisissez un créneau" : "Choisissez une date")}
-              {step === "infos"    && (vcLoading ? "Vérification…" : "Continuer")}
-              {step === "paiement" && (submitting ? "Traitement…" : price === 0 ? "Confirmer" : `Payer ${price} €`)}
-            </span>
-            {!submitting && !vcLoading && step !== "paiement" && <ChevronRight size={15} />}
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

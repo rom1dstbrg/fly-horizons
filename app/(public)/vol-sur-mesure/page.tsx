@@ -5,8 +5,8 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   ChevronLeft, ChevronRight, Check, MapPin, Clock,
-  Tag, Lock, CheckCircle, AlertCircle, AlertTriangle, Loader2, Mail,
-  User, Trash2, PlaneTakeoff, Info, Shuffle, List, Route,
+  Lock, CheckCircle, AlertCircle, AlertTriangle, Loader2, Mail,
+  User, Trash2, PlaneTakeoff, Info, Shuffle, List, Route, X,
 } from "lucide-react";
 import type { LeafletMapHandle, RouteData, RouteMode, Stopover } from "@/components/vol-sur-mesure/LeafletMap";
 
@@ -19,8 +19,11 @@ interface VoucherInfo {
   id: string;
   code: string;
   duration_minutes: number;
+  product_price: number;
   product_title: string;
 }
+
+interface CouponInfo { code: string; type: string; value: number; description: string; }
 
 interface FormData {
   date: string;
@@ -32,8 +35,9 @@ interface FormData {
   poids_total: string;
   passagers: string;
   commentaire: string;
-  voucherInput: string;
+  codeInput: string;
   voucher: VoucherInfo | null;
+  coupon: CouponInfo | null;
   accept_cgp: boolean;
 }
 
@@ -54,13 +58,8 @@ const ESCALES_DISPO: Record<string, Stopover> = {
 const MONTHS_FR = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 const DAYS_FR   = ["L","M","M","J","V","S","D"];
 
-const MAX_WEIGHT = 178;   // kg — limite masse totale passagers
-const ERROR_KG   = MAX_WEIGHT + 60; // 238 kg — impossible
-
-// Hauteurs fixes pour aligner les éléments flottants
-const HEADER_H  = 86;  // top-3.5(14) + h-[60px] + gap(12) = top des steps bar
-const STEPS_H   = 66;  // hauteur de la steps bar (py-3.5 + contenu)
-const CONTENT_PT = HEADER_H + STEPS_H + 20; // padding-top du contenu = 172
+const MAX_WEIGHT = 178;
+const ERROR_KG   = MAX_WEIGHT + 60;
 
 // ── Page ─────────────────────────────────────────────────────
 export default function VolSurMesurePage() {
@@ -79,7 +78,8 @@ export default function VolSurMesurePage() {
     date: "", heure: "",
     prenom: "", nom: "", email: "", telephone: "",
     poids_total: "", passagers: "1", commentaire: "",
-    voucherInput: "", voucher: null, accept_cgp: false,
+    codeInput: "", voucher: null, coupon: null,
+    accept_cgp: false,
   });
 
   const today = new Date();
@@ -89,22 +89,26 @@ export default function VolSurMesurePage() {
   const [calLoading,    setCalLoading]    = useState(false);
   const [slots,         setSlots]         = useState<string[]>([]);
   const [slotsLoading,  setSlotsLoading]  = useState(false);
-  const [voucherLoading, setVoucherLoading] = useState(false);
-  const [voucherError,   setVoucherError]   = useState("");
+  const [codeLoading,   setCodeLoading]   = useState(false);
+  const [codeError,     setCodeError]     = useState("");
   const [submitting,    setSubmitting]    = useState(false);
   const [submitError,   setSubmitError]   = useState("");
 
   // ── Price logic ───────────────────────────────────────────
-  const dureMin     = routeData.dureMin;
-  const voucherMin  = form.voucher?.duration_minutes ?? 0;
-  const billableMin = Math.max(0, dureMin - voucherMin);
-  const prixEstime  = Math.round((prixHeure / 60) * dureMin);
-  const prixBillable = Math.round((prixHeure / 60) * billableMin);
-  const acompte     = Math.round((acompteHeure / 60) * (dureMin > 0 ? billableMin : 0));
-  const taxes       = routeData.taxesEscales;
-  const totalAcompte = acompte + taxes;
-  const discount    = prixEstime - prixBillable;
-  const dureeForCal = Math.max(30, dureMin);
+  // Le voucher vaut sa valeur d'achat (product_price), déduite de l'acompte total.
+  const dureMin        = routeData.dureMin;
+  const prixEstime     = Math.round((prixHeure / 60) * dureMin);
+  const acompte        = Math.round((acompteHeure / 60) * (dureMin > 0 ? dureMin : 0));
+  const taxes          = routeData.taxesEscales;
+  const discount       = form.voucher?.product_price ?? 0;
+  const afterVoucher   = Math.max(0, acompte + taxes - discount);
+  const couponDiscount = form.coupon && afterVoucher > 0
+    ? form.coupon.type === "percentage"
+      ? Math.round(afterVoucher * form.coupon.value / 100)
+      : Math.min(form.coupon.value, afterVoucher)
+    : 0;
+  const finalAcompte   = Math.max(0, afterVoucher - couponDiscount);
+  const dureeForCal  = Math.max(30, dureMin);
 
   // ── Settings & user ───────────────────────────────────────
   useEffect(() => {
@@ -184,25 +188,36 @@ export default function VolSurMesurePage() {
     );
   }
 
-  // ── Voucher ───────────────────────────────────────────────
-  async function validateVoucher() {
-    if (!form.voucherInput.trim()) return;
-    setVoucherLoading(true); setVoucherError("");
+  // ── Code validation (voucher + promo unifié) ──────────────
+  async function applyCode(override?: string) {
+    const raw = (override ?? form.codeInput).replace(/\s/g, "").toUpperCase();
+    if (!raw) return;
+    const alnum = raw.replace(/-/g, "");
+    setCodeLoading(true); setCodeError("");
+    setForm(f => ({ ...f, voucher: null, coupon: null }));
     try {
-      const r = await fetch(`/api/vouchers/validate?code=${encodeURIComponent(form.voucherInput.trim())}`);
-      const d = await r.json();
-      if (!d.valid) {
-        setVoucherError(
-          d.status === "expired" ? "Ce voucher a expiré." :
-          d.status === "used" ? "Ce voucher a déjà été utilisé." :
-          d.status === "reserved" ? "Ce voucher est en cours d'utilisation." : "Code invalide."
-        );
-        setForm(f => ({ ...f, voucher: null }));
-      } else {
-        setForm(f => ({ ...f, voucher: { id: d.id, code: d.code, duration_minutes: d.duration_minutes, product_title: d.product_title } }));
+      if (alnum.length === 16) {
+        // Envoyer avec tirets: XXXX-XXXX-XXXX-XXXX (requis par l'API)
+        const formatted = alnum.match(/.{1,4}/g)!.join("-");
+        const r = await fetch(`/api/vouchers/validate?code=${encodeURIComponent(formatted)}`);
+        const d = await r.json();
+        if (d.valid) {
+          setForm(f => ({ ...f, voucher: { id: d.id, code: d.code, duration_minutes: d.duration_minutes, product_price: d.product_price ?? 0, product_title: d.product_title } }));
+          return;
+        }
+        if (d.status === "expired")  { setCodeError("Ce voucher a expiré."); return; }
+        if (d.status === "used")     { setCodeError("Ce voucher a déjà été utilisé."); return; }
+        if (d.status === "reserved") { setCodeError("Ce voucher est en cours d'utilisation."); return; }
       }
-    } catch { setVoucherError("Erreur de vérification."); }
-    finally { setVoucherLoading(false); }
+      const r2 = await fetch(`/api/promo/validate?code=${encodeURIComponent(alnum)}`);
+      const d2 = await r2.json();
+      if (d2.valid) {
+        setForm(f => ({ ...f, coupon: { code: d2.code, type: d2.type, value: d2.value, description: d2.description } }));
+      } else {
+        setCodeError(d2.error || "Code invalide — vérifiez et réessayez.");
+      }
+    } catch { setCodeError("Erreur de connexion, veuillez réessayer."); }
+    finally { setCodeLoading(false); }
   }
 
   // ── Submit ────────────────────────────────────────────────
@@ -219,7 +234,8 @@ export default function VolSurMesurePage() {
           waypoints: routeData.waypoints, stopovers: activeStopovers,
           distKm: routeData.distKm, dureMin: routeData.dureMin, taxesEscales: routeData.taxesEscales,
           voucher_code: form.voucher?.code || null,
-          voucher_id: form.voucher?.id || null,
+          voucher_id:   form.voucher?.id   || null,
+          coupon_code:  form.coupon?.code  || null,
         }),
       });
       const d = await r.json();
@@ -229,13 +245,12 @@ export default function VolSurMesurePage() {
     finally { setSubmitting(false); }
   }
 
-  const stepIndex = STEPS.findIndex(s => s.key === step);
+  const stepIndex      = STEPS.findIndex(s => s.key === step);
   const allStepsForBar = [...STEPS, { key: "done" as const, label: "Envoyé" }];
-  const formattedDate = form.date
+  const formattedDate  = form.date
     ? new Date(form.date + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long" })
     : null;
 
-  // Weight checks
   const weightKg    = parseInt(form.poids_total) || 0;
   const weightWarn  = weightKg > MAX_WEIGHT && weightKg <= ERROR_KG;
   const weightError = weightKg > ERROR_KG;
@@ -244,9 +259,9 @@ export default function VolSurMesurePage() {
   function Sidebar() {
     return (
       <div className="bg-card rounded-2xl border border-border overflow-hidden" style={{ boxShadow: "var(--sh-sm)" }}>
-        <div className="relative h-32 bg-navy-dk flex flex-col items-center justify-center gap-1 overflow-hidden">
+        <div className="relative h-32 flex flex-col items-center justify-center gap-1 overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,#1a4a7a_0%,#0b2238_70%)]" />
-          <p className="relative text-gold text-[9px] font-bold tracking-[3px] uppercase mb-1">Vol sur mesure</p>
+          <p className="relative text-[#fbae17] text-[9px] font-bold tracking-[3px] uppercase mb-1">Vol sur mesure</p>
           {dureMin > 0 ? (
             <>
               <p className="relative text-white text-3xl font-black leading-none">~{dureMin}<span className="text-lg font-bold">min</span></p>
@@ -258,24 +273,33 @@ export default function VolSurMesurePage() {
         </div>
 
         <div className="p-4 space-y-3">
+          {/* Prix */}
           {dureMin > 0 && (
-            <div className="pb-3 border-b border-border">
-              <p className="text-xs text-muted-foreground mb-1">Estimation vol</p>
-              <div className="flex items-baseline gap-2">
-                <p className={`text-xl font-bold ${prixBillable === 0 && form.voucher ? "text-green-600" : "text-primary"}`}>
-                  {prixBillable === 0 && form.voucher ? "Gratuit" : `${prixBillable} €`}
-                </p>
-                {discount > 0 && <p className="text-sm text-muted-foreground line-through">{prixEstime} €</p>}
+            <div className="pb-3 border-b border-border space-y-1.5">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">Estimation vol</p>
+                {(discount > 0 || couponDiscount > 0) ? (
+                  <span className="text-xs text-muted-foreground line-through tabular-nums">{prixEstime} €</span>
+                ) : (
+                  <span className="text-xs font-medium tabular-nums">{prixEstime} €</span>
+                )}
               </div>
-              {discount > 0 && <p className="text-xs text-green-600 font-medium">−{discount} € voucher</p>}
-              {totalAcompte > 0 && (
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Acompte : <span className="font-semibold text-foreground">{totalAcompte} €</span>
-                </p>
+              {discount > 0 && (
+                <p className="text-xs text-green-600 font-medium">Voucher −{discount} €</p>
               )}
+              {couponDiscount > 0 && (
+                <p className="text-xs text-green-600 font-medium">Code promo −{couponDiscount} €</p>
+              )}
+              <div className="flex justify-between items-center pt-1.5 border-t border-border">
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Acompte</span>
+                <span className={`text-lg font-black tabular-nums ${finalAcompte === 0 ? "text-green-600" : "text-primary"}`}>
+                  {finalAcompte === 0 ? "Gratuit" : `${finalAcompte} €`}
+                </span>
+              </div>
             </div>
           )}
 
+          {/* Infos route */}
           <div className="space-y-2">
             <div className="flex items-start gap-2">
               <MapPin size={12} className="text-muted-foreground mt-0.5 shrink-0" />
@@ -308,7 +332,7 @@ export default function VolSurMesurePage() {
             )}
           </div>
 
-          {/* Route list — toujours visible dans la sidebar */}
+          {/* Ordre de passage */}
           {routeData.orderedPoints.length > 0 && (
             <div className="pt-3 border-t border-border">
               <div className="flex items-center gap-2 mb-2">
@@ -346,6 +370,52 @@ export default function VolSurMesurePage() {
             </div>
           )}
 
+          {/* Code réduction */}
+          <div className="pt-3 border-t border-border">
+            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[2px] mb-2">Bon cadeau / Code promo</p>
+            {(form.voucher || form.coupon) ? (
+              <div className="flex items-center gap-2 bg-green-50 border border-green-100 px-3 py-2.5 rounded-xl">
+                <CheckCircle size={12} className="text-green-600 shrink-0" />
+                <p className="text-xs font-semibold text-green-800 flex-1 min-w-0 truncate">
+                  {form.voucher
+                    ? `${form.voucher.product_title} · −${discount} €`
+                    : `${form.coupon!.code} · ${form.coupon!.description}`}
+                </p>
+                <button type="button"
+                  onClick={() => { setForm(f => ({ ...f, codeInput: "", voucher: null, coupon: null })); setCodeError(""); }}
+                  className="shrink-0 text-muted-foreground hover:text-destructive transition-colors cursor-pointer">
+                  <X size={13} />
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="flex gap-1.5">
+                  <input type="text" value={form.codeInput}
+                    onChange={e => {
+                      const val = e.target.value.toUpperCase().replace(/\s/g, "");
+                      setForm(f => ({ ...f, codeInput: val }));
+                      setCodeError("");
+                      if (val.replace(/-/g, "").length === 16) applyCode(val);
+                    }}
+                    onKeyDown={e => e.key === "Enter" && applyCode()}
+                    placeholder="Voucher ou code promo"
+                    maxLength={19}
+                    className="flex-1 h-9 px-3 rounded-xl border border-border bg-white text-xs font-mono uppercase tracking-wide text-foreground focus:outline-none focus:ring-2 focus:ring-[#fbae17]/25 focus:border-[#fbae17] transition-all placeholder:text-muted-foreground/40 placeholder:tracking-normal placeholder:font-sans placeholder:normal-case" />
+                  <button type="button" onClick={() => applyCode()}
+                    disabled={!form.codeInput.trim() || codeLoading}
+                    className="h-9 px-3 rounded-xl bg-[#113356] text-white text-xs font-bold hover:bg-[#0b2238] disabled:opacity-40 transition-all flex items-center justify-center shadow-sm cursor-pointer whitespace-nowrap">
+                    {codeLoading ? <Loader2 size={12} className="animate-spin" /> : "OK"}
+                  </button>
+                </div>
+                {codeError && (
+                  <p className="text-[11px] text-red-600 mt-1.5 flex items-center gap-1">
+                    <AlertCircle size={10} className="shrink-0" /> {codeError}
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+
           <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2.5">
             <p className="text-[11px] text-amber-800 leading-relaxed">
               <span className="font-semibold">Pas de paiement immédiat.</span> Vous recevrez un lien par email après confirmation.
@@ -359,97 +429,81 @@ export default function VolSurMesurePage() {
   // ── Render ────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#f5f5f7] dark:bg-background">
+      <div className="h-[84px]" />
 
-      {/* ── Floating steps bar ─────────────────────────────── */}
-      <div
-        className="fixed inset-x-0 z-[49] flex justify-center px-4 pointer-events-none"
-        style={{ top: HEADER_H }}
-      >
-        <div
-          className="pointer-events-auto bg-card border border-border rounded-2xl px-5 py-3.5 flex items-center"
-          style={{ boxShadow: "var(--sh-md)" }}
-        >
-          {allStepsForBar.map((s, i) => {
-            const isPast   = i < stepIndex;
-            const isActive = s.key === step;
-            return (
-              <div key={s.key} className="flex items-center">
-                <div className="flex flex-col items-center gap-1 px-2">
-                  <div className={[
-                    "w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold transition-all",
-                    isPast   ? "bg-primary text-primary-foreground" :
-                    isActive ? "bg-primary text-primary-foreground ring-[3px] ring-primary/25" :
-                               "bg-muted text-muted-foreground",
-                  ].join(" ")}>
-                    {isPast ? <Check size={12} /> : i + 1}
+      {/* Steps bar — sticky, en-dessous du header */}
+      <div className="sticky top-[84px] z-30 bg-[#f5f5f7]/95 backdrop-blur-sm border-b border-border/50">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-3 flex justify-center">
+          <div className="flex items-center">
+            {allStepsForBar.map((s, i) => {
+              const isPast   = i < stepIndex;
+              const isActive = s.key === step;
+              return (
+                <div key={s.key} className="flex items-center">
+                  <div className="flex flex-col items-center gap-1 px-2">
+                    <div className={[
+                      "w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold transition-all",
+                      isPast   ? "bg-primary text-primary-foreground" :
+                      isActive ? "bg-primary text-primary-foreground ring-[3px] ring-primary/25" :
+                                 "bg-muted text-muted-foreground",
+                    ].join(" ")}>
+                      {isPast ? <Check size={12} /> : i + 1}
+                    </div>
+                    <span className={`text-[10px] hidden sm:block whitespace-nowrap font-medium leading-none ${isActive ? "text-foreground" : "text-muted-foreground"}`}>
+                      {s.label}
+                    </span>
                   </div>
-                  <span className={`text-[10px] hidden sm:block whitespace-nowrap font-medium leading-none ${isActive ? "text-foreground" : "text-muted-foreground"}`}>
-                    {s.label}
-                  </span>
+                  {i < allStepsForBar.length - 1 && (
+                    <div className={`w-6 sm:w-10 h-px mb-3.5 transition-all ${isPast ? "bg-primary" : "bg-border"}`} />
+                  )}
                 </div>
-                {i < allStepsForBar.length - 1 && (
-                  <div className={`w-6 sm:w-10 h-px mb-3.5 transition-all ${isPast ? "bg-primary" : "bg-border"}`} />
-                )}
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* ── Main content ───────────────────────────────────── */}
-      <div style={{ paddingTop: CONTENT_PT }} className="pb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+      {/* Main content */}
+      <div className="pb-16">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-6">
           <div className="flex flex-col lg:flex-row gap-6 items-start">
 
             {/* ══ Steps content ══ */}
             <div className="flex-1 min-w-0 space-y-4">
 
-              {/* ── Step 1 : Route ── toujours monté pour préserver la carte Leaflet */}
+              {/* ── Step 1 : Route — toujours monté pour préserver la carte Leaflet */}
               <div style={{ display: step === "route" ? "block" : "none" }}>
                 <div className="rounded-2xl border border-border bg-white overflow-hidden" style={{ boxShadow: "var(--sh-sm)" }}>
 
-                  {/* ── Barre de contrôle ── */}
+                  {/* Contrôles */}
                   <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/30">
                     <div className="flex items-center gap-1 bg-background border border-border rounded-lg p-0.5">
-                      <button
-                        type="button"
-                        onClick={() => setRouteMode("optimized")}
+                      <button type="button" onClick={() => setRouteMode("optimized")}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                          routeMode === "optimized"
-                            ? "bg-[#fbae17] text-[#0b2238] shadow-sm"
-                            : "text-muted-foreground hover:text-foreground"
-                        }`}
-                      >
+                          routeMode === "optimized" ? "bg-[#fbae17] text-[#0b2238] shadow-sm" : "text-muted-foreground hover:text-foreground"
+                        }`}>
                         <Shuffle size={12} /> Route optimisée
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => setRouteMode("manual")}
+                      <button type="button" onClick={() => setRouteMode("manual")}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                          routeMode === "manual"
-                            ? "bg-[#fbae17] text-[#0b2238] shadow-sm"
-                            : "text-muted-foreground hover:text-foreground"
-                        }`}
-                      >
+                          routeMode === "manual" ? "bg-[#fbae17] text-[#0b2238] shadow-sm" : "text-muted-foreground hover:text-foreground"
+                        }`}>
                         <List size={12} /> Ordre des points
                       </button>
                     </div>
                     {routeData.waypoints.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => mapRef.current?.clearWaypoints()}
-                        className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-destructive transition-colors"
-                      >
+                      <button type="button" onClick={() => mapRef.current?.clearWaypoints()}
+                        className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-destructive transition-colors">
                         <Trash2 size={12} /> Effacer tout
                       </button>
                     )}
                   </div>
 
-                  {/* ── Map (hero) ── */}
-                  <div className="relative" style={{ height: 520 }}>
+                  {/* Carte — hauteur responsive + isolate pour contenir les z-index Leaflet */}
+                  <div className="relative isolate h-64 sm:h-96 lg:h-[520px]">
                     {routeData.waypoints.length === 0 && (
                       <div className="absolute bottom-12 inset-x-0 flex justify-center z-[400] pointer-events-none">
-                        <div className="bg-navy/80 backdrop-blur-sm text-white text-xs px-4 py-2 rounded-full font-medium">
+                        <div className="bg-[#0b2238]/80 backdrop-blur-sm text-white text-xs px-4 py-2 rounded-full font-medium">
                           Cliquez sur la carte pour placer des points de passage
                         </div>
                       </div>
@@ -462,14 +516,14 @@ export default function VolSurMesurePage() {
                     />
                   </div>
 
-                  {/* ── Barre de stats ── */}
+                  {/* Stats */}
                   {routeData.distKm > 0 && (
                     <div className="flex items-stretch border-t border-border bg-muted/20">
                       {[
-                        { label: "Distance",     value: `${routeData.distKm} km` },
+                        { label: "Distance",      value: `${routeData.distKm} km` },
                         { label: "Durée estimée", value: `~${routeData.dureMin} min` },
-                        { label: "Prix estimé",  value: `${prixEstime} €` },
-                        { label: "Points",       value: String(routeData.waypoints.length) },
+                        { label: "Prix estimé",   value: `${prixEstime} €` },
+                        { label: "Points",        value: String(routeData.waypoints.length) },
                       ].map(({ label, value }, i) => (
                         <div key={i} className={`flex-1 px-3 py-2.5 text-center ${i > 0 ? "border-l border-border" : ""}`}>
                           <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{label}</p>
@@ -479,7 +533,6 @@ export default function VolSurMesurePage() {
                     </div>
                   )}
 
-                  {/* ── Panneau inférieur ── */}
                   <div className="divide-y divide-border">
 
                     {/* Escales */}
@@ -517,19 +570,15 @@ export default function VolSurMesurePage() {
                         <Info size={13} className="shrink-0 mt-0.5" />
                         <span>
                           Vol en avion léger depuis Charleroi (EBCI). Durée & prix estimés à 100 nœuds.
-                          Vous avez un voucher ? Renseignez-le à l&apos;étape <strong className="text-foreground">Informations</strong>.
+                          Vous avez un voucher ou un code promo ? Renseignez-le dans la barre à droite.
                         </span>
                       </div>
                     </div>
 
-                    {/* Continue */}
+                    {/* Continuer */}
                     <div className="px-5 py-4">
-                      <button
-                        type="button"
-                        disabled={routeData.waypoints.length === 0}
-                        onClick={() => setStep("date-time")}
-                        className="w-full h-11 rounded-xl bg-[#113356] text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#0b2238] disabled:opacity-30 shadow-sm transition-all cursor-pointer"
-                      >
+                      <button type="button" disabled={routeData.waypoints.length === 0} onClick={() => setStep("date-time")}
+                        className="w-full h-11 rounded-xl bg-[#113356] text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#0b2238] disabled:opacity-30 shadow-sm transition-all cursor-pointer">
                         <Route size={14} /> Choisir la date & l&apos;heure <ChevronRight size={15} />
                       </button>
                       {routeData.waypoints.length === 0 && (
@@ -601,9 +650,7 @@ export default function VolSurMesurePage() {
                         </div>
                       ) : (
                         <div>
-                          <div className="flex items-baseline gap-2 mb-3">
-                            <p className="text-sm font-extrabold text-foreground capitalize">{formattedDate}</p>
-                          </div>
+                          <p className="text-sm font-extrabold text-foreground capitalize mb-3">{formattedDate}</p>
                           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                             {slots.map(s => (
                               <button key={s} type="button"
@@ -628,8 +675,7 @@ export default function VolSurMesurePage() {
                       <ChevronLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
                       Retour
                     </button>
-                    <button type="button" disabled={!form.date || !form.heure}
-                      onClick={() => setStep("details")}
+                    <button type="button" disabled={!form.date || !form.heure} onClick={() => setStep("details")}
                       className="inline-flex items-center gap-2 px-6 py-3 bg-[#113356] text-white rounded-xl text-sm font-bold transition-all duration-200 disabled:opacity-30 hover:bg-[#0b2238] shadow-sm hover:shadow-md hover:-translate-y-px active:translate-y-0 cursor-pointer">
                       Continuer <ChevronRight size={15} />
                     </button>
@@ -641,7 +687,6 @@ export default function VolSurMesurePage() {
               {step === "details" && (
                 <div className="rounded-2xl border border-border bg-white shadow-sm divide-y divide-border overflow-hidden">
 
-                  {/* Header */}
                   <div className="p-5">
                     <div className="inline-flex items-center gap-2 mb-1">
                       <User size={12} className="text-muted-foreground" />
@@ -651,7 +696,6 @@ export default function VolSurMesurePage() {
                     <p className="text-sm text-muted-foreground mt-0.5">Ces informations permettent de préparer votre vol et d&apos;envoyer votre confirmation.</p>
                   </div>
 
-                  {/* Coordonnées */}
                   <div className="p-5 sm:p-7">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px] mb-4">Coordonnées</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -666,12 +710,10 @@ export default function VolSurMesurePage() {
                     </div>
                   </div>
 
-                  {/* Détails du vol */}
                   <div className="p-5 sm:p-7">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px] mb-4">Détails du vol</p>
                     <div className="space-y-5">
 
-                      {/* Passagers */}
                       <div>
                         <label className="block text-sm font-semibold text-foreground mb-3">
                           Nombre de passagers <span className="text-muted-foreground font-normal">(requis)</span>
@@ -693,7 +735,6 @@ export default function VolSurMesurePage() {
                         </div>
                       </div>
 
-                      {/* Poids */}
                       <div>
                         <label className="block text-sm font-semibold text-foreground mb-2">
                           Poids total des passagers <span className="text-muted-foreground font-normal">(kg, requis)</span>
@@ -719,7 +760,6 @@ export default function VolSurMesurePage() {
                         )}
                       </div>
 
-                      {/* Remarques */}
                       <div>
                         <label className="block text-sm font-semibold text-foreground mb-2">
                           Remarques <span className="text-muted-foreground font-normal">(optionnel)</span>
@@ -732,42 +772,6 @@ export default function VolSurMesurePage() {
                     </div>
                   </div>
 
-                  {/* Voucher */}
-                  <div className="p-5 sm:p-7">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px] mb-1.5">Bon de vol cadeau</p>
-                    <p className="text-sm text-muted-foreground mb-4">Vous avez un voucher ? Saisissez votre code ci-dessous.</p>
-                    <div className="flex gap-2.5">
-                      <input type="text" value={form.voucherInput}
-                        onChange={e => { setForm(f => ({ ...f, voucherInput: e.target.value.toUpperCase(), voucher: null })); setVoucherError(""); }}
-                        onKeyDown={e => e.key === "Enter" && validateVoucher()}
-                        className="flex-1 h-10 px-3 rounded-xl border border-border bg-white text-sm font-mono uppercase tracking-widest text-foreground focus:outline-none focus:ring-2 focus:ring-[#fbae17]/20 focus:border-[#fbae17] transition-all placeholder:text-muted-foreground/40 placeholder:tracking-normal placeholder:font-sans"
-                        placeholder="FH-XXXX-XXXX" />
-                      <button type="button" onClick={validateVoucher}
-                        disabled={!form.voucherInput.trim() || voucherLoading}
-                        className="px-4 h-10 rounded-xl border border-border bg-muted text-sm font-semibold text-foreground hover:bg-[#fbae17]/5 hover:border-[#fbae17]/40 hover:text-[#fbae17] disabled:opacity-40 transition-all flex items-center gap-1.5 cursor-pointer">
-                        {voucherLoading ? <Loader2 size={13} className="animate-spin" /> : <><Tag size={12} />Appliquer</>}
-                      </button>
-                    </div>
-                    {voucherError && (
-                      <p className="mt-2.5 text-sm text-destructive flex items-center gap-1.5">
-                        <AlertCircle size={13} className="shrink-0" /> {voucherError}
-                      </p>
-                    )}
-                    {form.voucher && (
-                      <div className="mt-2.5 inline-flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-200 px-3.5 py-2 rounded-xl">
-                        <CheckCircle size={13} />
-                        <span><strong>{form.voucher.product_title}</strong> — {form.voucher.duration_minutes} min couverts</span>
-                      </div>
-                    )}
-                    {form.voucher && dureMin > 0 && (
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        Voucher couvre {Math.min(form.voucher.duration_minutes, dureMin)} min sur ~{dureMin} min estimés.
-                        {billableMin > 0 ? ` Reste ${billableMin} min à facturer.` : " Vol entièrement couvert !"}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Nav */}
                   <div className="p-5 flex items-center justify-between gap-4">
                     <button type="button" onClick={() => setStep("date-time")}
                       className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer group">
@@ -788,7 +792,7 @@ export default function VolSurMesurePage() {
               {step === "confirm" && (
                 <div className="space-y-4">
 
-                  {/* Recap card */}
+                  {/* Récap */}
                   <div className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
                     <div className="bg-[#0b2238] px-6 py-6 flex items-start justify-between gap-4">
                       <div>
@@ -799,11 +803,9 @@ export default function VolSurMesurePage() {
                         </p>
                       </div>
                       {dureMin > 0 && (
-                        <div className="text-right shrink-0">
-                          <p className="text-white/30 text-[9px] uppercase tracking-widest mb-1">Durée est.</p>
-                          <span className="bg-[#fbae17] text-[#0b2238] text-sm font-bold px-3 py-1 rounded-full">
-                            ~{dureMin} min
-                          </span>
+                        <div className="inline-flex items-center gap-1.5 bg-black/40 backdrop-blur-md border border-white/15 rounded-xl px-3 py-1.5 shrink-0">
+                          <span className="text-[#F2B705] font-black text-[13px] leading-none">~{dureMin} min</span>
+                          <span className="text-white/50 text-[11px] leading-none">durée est.</span>
                         </div>
                       )}
                     </div>
@@ -839,13 +841,19 @@ export default function VolSurMesurePage() {
                           <span className="font-medium">{taxes} €</span>
                         </div>
                       )}
+                      {couponDiscount > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-green-600">Code promo ({form.coupon?.code})</span>
+                          <span className="text-green-600 font-semibold">−{couponDiscount} €</span>
+                        </div>
+                      )}
                       <div className="flex items-end justify-between pt-3 border-t border-border">
                         <div>
                           <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[2px] mb-0.5">Acompte à régler</p>
                           <p className="text-xs text-muted-foreground">Solde après le vol selon la durée réelle</p>
                         </div>
-                        <span className={`text-3xl font-black tabular-nums ${totalAcompte === 0 ? "text-green-600" : "text-[#113356]"}`}>
-                          {totalAcompte === 0 ? "Gratuit" : `${totalAcompte} €`}
+                        <span className={`text-3xl font-black tabular-nums ${finalAcompte === 0 ? "text-green-600" : "text-[#113356]"}`}>
+                          {finalAcompte === 0 ? "Gratuit" : `${finalAcompte} €`}
                         </span>
                       </div>
                     </div>
@@ -854,13 +862,59 @@ export default function VolSurMesurePage() {
                       <div className="flex items-start gap-2.5 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
                         <Mail size={13} className="text-blue-600 mt-0.5 shrink-0" />
                         <p className="text-sm text-blue-800 leading-relaxed">
-                          {totalAcompte > 0
-                            ? `Après confirmation, vous recevrez un email à ${form.email} avec un lien sécurisé pour payer l'acompte de ${totalAcompte} €.`
-                            : `Votre vol est entièrement couvert par votre voucher. Un email de confirmation vous sera envoyé à ${form.email}.`
+                          {finalAcompte > 0
+                            ? `Après confirmation, vous recevrez un email à ${form.email} avec un lien sécurisé pour payer l'acompte de ${finalAcompte} €.`
+                            : `Votre vol est entièrement couvert. Un email de confirmation vous sera envoyé à ${form.email}.`
                           }
                         </p>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Code — mobile uniquement */}
+                  <div className="lg:hidden rounded-2xl border border-border bg-white shadow-sm p-5">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px] mb-3">Bon cadeau / Code promo</p>
+                    {(form.voucher || form.coupon) ? (
+                      <div className="flex items-center gap-2 bg-green-50 border border-green-100 px-3 py-2.5 rounded-xl">
+                        <CheckCircle size={13} className="text-green-600 shrink-0" />
+                        <p className="text-sm font-semibold text-green-800 flex-1 min-w-0 truncate">
+                          {form.voucher
+                            ? `${form.voucher.product_title} · −${discount} €`
+                            : `${form.coupon!.code} · ${form.coupon!.description}`}
+                        </p>
+                        <button type="button"
+                          onClick={() => { setForm(f => ({ ...f, codeInput: "", voucher: null, coupon: null })); setCodeError(""); }}
+                          className="shrink-0 text-muted-foreground hover:text-destructive transition-colors cursor-pointer">
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex gap-2">
+                          <input type="text" value={form.codeInput}
+                            onChange={e => {
+                              const val = e.target.value.toUpperCase().replace(/\s/g, "");
+                              setForm(f => ({ ...f, codeInput: val }));
+                              setCodeError("");
+                              if (val.replace(/-/g, "").length === 16) applyCode(val);
+                            }}
+                            onKeyDown={e => e.key === "Enter" && applyCode()}
+                            placeholder="Voucher ou code promo"
+                            maxLength={19}
+                            className="flex-1 h-11 px-4 rounded-xl border border-border bg-white text-sm font-mono uppercase tracking-wide text-foreground focus:outline-none focus:ring-2 focus:ring-[#fbae17]/25 focus:border-[#fbae17] transition-all placeholder:text-muted-foreground/40 placeholder:tracking-normal placeholder:font-sans placeholder:normal-case" />
+                          <button type="button" onClick={() => applyCode()}
+                            disabled={!form.codeInput.trim() || codeLoading}
+                            className="h-11 px-5 rounded-xl bg-[#113356] text-white text-sm font-bold hover:bg-[#0b2238] disabled:opacity-40 transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer whitespace-nowrap">
+                            {codeLoading ? <Loader2 size={14} className="animate-spin" /> : "Appliquer"}
+                          </button>
+                        </div>
+                        {codeError && (
+                          <p className="text-xs text-red-600 mt-2 flex items-center gap-1.5">
+                            <AlertCircle size={12} className="shrink-0" /> {codeError}
+                          </p>
+                        )}
+                      </>
+                    )}
                   </div>
 
                   {/* CGP */}
@@ -886,18 +940,17 @@ export default function VolSurMesurePage() {
                     </div>
                   )}
 
-                  {/* Nav */}
                   <div className="flex items-center justify-between gap-4">
                     <button type="button" onClick={() => setStep("details")}
                       className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer group">
                       <ChevronLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
                       Retour
                     </button>
-                    <button type="button" disabled={!form.accept_cgp || submitting} onClick={handleSubmit}
+                    <button type="button" disabled={!form.accept_cgp || submitting || codeLoading} onClick={handleSubmit}
                       className="inline-flex items-center gap-2 px-6 py-3 bg-[#113356] text-white rounded-xl text-sm font-bold transition-all duration-200 disabled:opacity-30 hover:bg-[#0b2238] shadow-sm hover:shadow-md hover:-translate-y-px active:translate-y-0 cursor-pointer">
                       {submitting ? (
                         <><Loader2 size={14} className="animate-spin" /> Envoi en cours…</>
-                      ) : totalAcompte === 0 ? (
+                      ) : finalAcompte === 0 ? (
                         <><CheckCircle size={13} /> Confirmer mon vol</>
                       ) : (
                         <><Mail size={13} /> Recevoir le lien de paiement</>
@@ -921,7 +974,7 @@ export default function VolSurMesurePage() {
                   </div>
 
                   <div className="text-left bg-secondary/40 rounded-xl p-4 space-y-3">
-                    {totalAcompte > 0 ? (
+                    {finalAcompte > 0 ? (
                       <>
                         <div className="flex items-start gap-2.5">
                           <Mail size={14} className="text-primary mt-0.5 shrink-0" />
@@ -932,7 +985,7 @@ export default function VolSurMesurePage() {
                         <div className="flex items-start gap-2.5">
                           <Lock size={14} className="text-primary mt-0.5 shrink-0" />
                           <p className="text-sm text-muted-foreground">
-                            Cliquez sur le bouton dans l&apos;email pour payer l&apos;acompte de <strong className="text-foreground">{totalAcompte} €</strong> via Stripe.
+                            Cliquez sur le bouton dans l&apos;email pour payer l&apos;acompte de <strong className="text-foreground">{finalAcompte} €</strong> via Stripe.
                           </p>
                         </div>
                       </>
@@ -964,7 +1017,7 @@ export default function VolSurMesurePage() {
             </div>
 
             {/* ══ Sidebar ══ */}
-            <div className="lg:w-72 xl:w-80 shrink-0 w-full" style={{ position: "sticky", top: CONTENT_PT - 8, alignSelf: "flex-start" }}>
+            <div className="hidden lg:block lg:w-80 xl:w-96 shrink-0 sticky top-36 self-start">
               <Sidebar />
             </div>
 

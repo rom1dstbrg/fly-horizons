@@ -3,7 +3,7 @@ import Image from "next/image";
 import { ChevronDown, Gift, Route, Lock, Mail, Package, BadgeCheck, Clock, MapPin, Users, Sparkles, PlaneTakeoff } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { FeaturedProducts } from "@/components/shop/FeaturedProducts";
-import { formatDuration } from "@/lib/vouchers";
+import { PackCard } from "@/components/shop/PackCard";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -39,7 +39,7 @@ export default async function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/35 to-black/65" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent" />
 
-        <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-4 pb-16 pt-[76px]">
+        <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-4 pb-16 pt-[48px] md:pt-[76px]">
           <div className="inline-flex items-center gap-2 bg-[#F2B705] rounded-full px-5 py-2 mb-8 shadow-[0_4px_20px_rgba(242,183,5,.4)]">
             <PlaneTakeoff size={13} className="text-[#113356]" />
             <span className="text-[#113356] text-xs font-bold tracking-[2.5px] uppercase">
@@ -72,6 +72,15 @@ export default async function HomePage() {
               <Route size={16} />
               Vol sur mesure
             </a>
+          </div>
+
+          <div className="mt-6 flex flex-col items-center gap-0.5">
+            <p className="text-sm text-white/80">
+              Utilisez le code{" "}
+              <span className="font-mono font-bold text-[#F2B705]">WELCOME2026</span>
+              {" "}pour −10%
+            </p>
+            <p className="text-[10px] italic text-white/35">valable une seule fois par compte.</p>
           </div>
         </div>
 
@@ -107,73 +116,29 @@ export default async function HomePage() {
 
       {/* ═══ NOS VOLS ═══ */}
       {(packs ?? []).length > 0 && (
-        <section id="nos-vols" className="py-20 bg-white">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <section id="nos-vols" className="py-16 bg-[#f5f5f7]">
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
-            <div className="text-center mb-12">
-              <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">Au départ de Charleroi (EBCI)</p>
-              <h2 className="text-4xl font-extrabold text-foreground">
-                Choisissez votre vol
+            <div className="text-center mb-10">
+              <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">
+                Au départ de Charleroi (EBCI)
+              </p>
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-foreground">
+                Choisissez votre expérience
               </h2>
-              <p className="text-muted-foreground text-base mt-3 max-w-md mx-auto">
+              <div className="w-10 h-0.5 bg-[#F2B705] mx-auto mt-4 mb-3 rounded-full" />
+              <p className="text-muted-foreground text-sm mt-0 max-w-md mx-auto">
                 Du vol découverte à l&apos;aventure prolongée — sélectionnez la durée qui vous convient.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {(packs ?? []).map((pack) => {
-                const duree = pack.voucher_duration_minutes ?? 60;
-                const image = pack.images?.[0]?.url ?? null;
-                return (
-                  <Link key={pack.id} href={`/vols/${pack.slug}`} className="group flex h-full">
-                    <div className="flex flex-col w-full rounded-2xl overflow-hidden border border-border bg-white shadow-sm hover:shadow-lg transition-all duration-300">
-
-                      {/* Visuel */}
-                      <div className="relative h-56 bg-[#0b2238] overflow-hidden shrink-0">
-                        {image ? (
-                          <Image
-                            src={image}
-                            alt={pack.title}
-                            fill
-                            className="object-cover transition-transform duration-500 group-hover:scale-105"
-                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                          />
-                        ) : (
-                          <div className="absolute inset-0 bg-gradient-to-br from-[#0b2238] to-[#113356] flex flex-col items-center justify-center gap-2">
-                            <span className="text-4xl font-black text-white leading-none">{formatDuration(duree)}</span>
-                            <span className="text-[#F2B705] text-xs font-semibold tracking-widest uppercase opacity-80">Vol privé</span>
-                          </div>
-                        )}
-                        <div className="absolute top-3 left-3">
-                          <span className="bg-[#F2B705] text-[#113356] text-xs font-bold px-2.5 py-1 rounded-full">
-                            {formatDuration(duree)}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Infos */}
-                      <div className="p-5 flex flex-col flex-1">
-                        <h3 className="font-bold text-foreground text-sm leading-snug mb-1.5 group-hover:text-[#113356] transition-colors">
-                          {pack.title}
-                        </h3>
-                        <p className="text-muted-foreground text-xs leading-relaxed line-clamp-2 flex-1">
-                          {pack.short_description ?? ""}
-                        </p>
-                        <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
-                          <span className="text-[#113356] font-black text-xl">{pack.price} €</span>
-                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#113356] bg-[#f5f8ff] border border-[#dce8ff] rounded-lg px-3 py-1.5 group-hover:bg-[#113356] group-hover:text-white group-hover:border-[#113356] transition-all">
-                            Aperçu
-                          </span>
-                        </div>
-                      </div>
-
-                    </div>
-                  </Link>
-                );
-              })}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+              {(packs ?? []).map((pack) => (
+                <PackCard key={pack.id} pack={pack} />
+              ))}
             </div>
 
-            <div className="mt-10 text-center">
+            <div className="mt-12 text-center">
               <p className="text-sm text-muted-foreground">
                 Vous avez un itinéraire précis en tête ?{" "}
                 <Link href="/vol-sur-mesure" className="text-[#113356] font-semibold hover:underline">

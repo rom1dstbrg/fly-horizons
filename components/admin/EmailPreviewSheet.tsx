@@ -129,7 +129,8 @@ export function EmailPreviewSheet({
             <iframe
               srcDoc={html}
               title="Aperçu email"
-              className="w-full h-full border-0 bg-white"
+              className="w-full h-full border-0"
+              style={{ colorScheme: "light" }}
             />
           )}
         </div>

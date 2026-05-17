@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { prenom, nom, email, telephone, duree, date, heure, voucher_code, voucher_id, poids_total, passengers } = body;
+    const { prenom, nom, email, telephone, duree, date, heure, voucher_code, voucher_id, poids_total, passengers, coupon_code } = body;
 
     if (!prenom || !nom || !email || !duree || !date || !heure) {
       return NextResponse.json({ error: "Champs obligatoires manquants" }, { status: 400 });
@@ -84,19 +84,44 @@ export async function POST(request: NextRequest) {
       ? 0
       : Math.round((prixHeure / 60) * billableMins);
 
-    const amountCents = Math.round(price * 100);
+    let amountCents = Math.round(price * 100);
 
     // Prix 0 : ne devrait pas arriver ici (le client appelle /submit), mais on couvre le cas
     if (amountCents <= 0) {
       return NextResponse.json({ error: "Montant invalide pour un paiement Stripe" }, { status: 400 });
     }
 
+    // Appliquer le code promo s'il y en a un
+    if (coupon_code) {
+      const { data: coupon } = await supabase
+        .from("coupons")
+        .select("*")
+        .eq("code", (coupon_code as string).toUpperCase().trim())
+        .eq("active", true)
+        .maybeSingle();
+
+      if (coupon &&
+          !(coupon.expires_at && new Date(coupon.expires_at) < new Date()) &&
+          !(coupon.max_uses && (coupon.usage_count ?? 0) >= coupon.max_uses)) {
+        const discountCents = coupon.type === "percentage"
+          ? Math.round(amountCents * coupon.value / 100)
+          : Math.min(Math.round(coupon.value * 100), amountCents);
+        amountCents = Math.max(0, amountCents - discountCents);
+        await supabase.rpc("increment_coupon_usage", { coupon_code: coupon.code });
+      }
+    }
+
+    if (amountCents <= 0) {
+      return NextResponse.json({ error: "Le montant après réduction est nul — utilisez le formulaire de réservation gratuit." }, { status: 400 });
+    }
+
     // Find or create client by email
-    const { data: existingClient } = await supabase
+    const { data: existingClients } = await supabase
       .from("clients")
       .select("id")
       .eq("email", email)
-      .maybeSingle();
+      .limit(1);
+    const existingClient = existingClients?.[0] ?? null;
 
     let clientId: string;
     if (existingClient) {
@@ -127,42 +152,59 @@ export async function POST(request: NextRequest) {
       .select()
       .single();
 
-    if (resaErr) return NextResponse.json({ error: "Erreur création réservation" }, { status: 500 });
+    if (resaErr) {
+      // Rollback voucher claim if reservation creation failed
+      if (resolvedVoucherId) {
+        await supabase.from("voucher_codes").update({ status: "unused" }).eq("id", resolvedVoucherId).eq("status", "reserved");
+      }
+      return NextResponse.json({ error: "Erreur création réservation" }, { status: 500 });
+    }
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
     const dateStr = new Date(date + "T12:00:00Z").toLocaleDateString("fr-BE", {
       day: "numeric", month: "long", year: "numeric",
     });
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      payment_method_types: ["card"],
-      customer_email: email,
-      locale: "fr",
-      expires_at: Math.floor(Date.now() / 1000) + 30 * 60, // 30 min — libère le voucher plus vite
-      line_items: [
-        {
-          price_data: {
-            currency: "eur",
-            product_data: {
-              name: `Vol Fly Horizons — ${dureeMins} min`,
-              description: `${dateStr} à ${heure} · ${prenom} ${nom}`,
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        payment_method_types: ["card"],
+        customer_email: email,
+        locale: "fr",
+        expires_at: Math.floor(Date.now() / 1000) + 30 * 60, // 30 min — libère le voucher plus vite
+        line_items: [
+          {
+            price_data: {
+              currency: "eur",
+              product_data: {
+                name: `Vol Fly Horizons — ${dureeMins} min`,
+                description: `${dateStr} à ${heure} · ${prenom} ${nom}`,
+              },
+              unit_amount: amountCents,
             },
-            unit_amount: amountCents,
+            quantity: 1,
           },
-          quantity: 1,
+        ],
+        metadata: {
+          type: "reservation",
+          reservationId: resa.id,
+          clientId,
+          voucherId: resolvedVoucherId ?? "",
+          voucherCode: voucher_code || "",
         },
-      ],
-      metadata: {
-        type: "reservation",
-        reservationId: resa.id,
-        clientId,
-        voucherId: resolvedVoucherId ?? "",
-        voucherCode: voucher_code || "",
-      },
-      success_url: `${siteUrl}/reservation/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${siteUrl}/reservation?cancelled=1`,
-    });
+        success_url: `${siteUrl}/reservation/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${siteUrl}/reservation?cancelled=1`,
+      });
+    } catch (stripeError) {
+      // Rollback: release voucher and delete orphan reservation
+      if (resolvedVoucherId) {
+        await supabase.from("voucher_codes").update({ status: "unused" }).eq("id", resolvedVoucherId).eq("status", "reserved");
+      }
+      await supabase.from("reservations").delete().eq("id", resa.id).eq("statut", "payment_pending");
+      console.error("Stripe session creation error:", stripeError);
+      return NextResponse.json({ error: "Erreur création session paiement" }, { status: 500 });
+    }
 
     return NextResponse.json({ url: session.url });
   } catch (error) {

@@ -14,6 +14,9 @@ const SUJETS = [
   "Autre",
 ];
 
+const inputCls = "w-full h-10 px-3 rounded-lg border border-border bg-input text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-muted-foreground/50";
+const labelCls = "block text-sm font-medium text-foreground mb-1.5";
+
 export function ContactForm() {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
@@ -32,44 +35,50 @@ export function ContactForm() {
     });
   }
 
-  const cls = "w-full h-10 px-3 rounded-xl border border-border bg-white text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#fbae17]/20 focus:border-[#fbae17] transition-all placeholder:text-muted-foreground/40";
-  const lbl = "block text-sm font-semibold text-foreground mb-2";
-  const req = <span className="text-muted-foreground font-normal"> *</span>;
-
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div>
-          <label className={lbl}>Nom complet{req}</label>
-          <input name="nom" required placeholder="Jean Dupont" className={cls} />
+          <label className={labelCls}>
+            Nom complet <span className="text-muted-foreground font-normal">*</span>
+          </label>
+          <input name="nom" required placeholder="Jean Dupont" className={inputCls} />
         </div>
         <div>
-          <label className={lbl}>Adresse email{req}</label>
-          <input name="email" type="email" required placeholder="jean@exemple.com" className={cls} />
+          <label className={labelCls}>
+            Adresse email <span className="text-muted-foreground font-normal">*</span>
+          </label>
+          <input name="email" type="email" required placeholder="jean@exemple.com" className={inputCls} />
         </div>
       </div>
 
       <div>
-        <label className={lbl}>Sujet{req}</label>
-        <select name="sujet" required defaultValue="" className={cls}>
+        <label className={labelCls}>
+          Sujet <span className="text-muted-foreground font-normal">*</span>
+        </label>
+        <select name="sujet" required defaultValue=""
+          className="w-full h-10 px-3 rounded-lg border border-border bg-input text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all">
           <option value="" disabled>Choisissez un sujet…</option>
           {SUJETS.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
       </div>
 
       <div>
-        <label className={lbl}>Message{req}</label>
+        <label className={labelCls}>
+          Message <span className="text-muted-foreground font-normal">*</span>
+        </label>
         <textarea
           name="message" required rows={6}
           placeholder="Décrivez votre demande en détail…"
-          className="w-full px-3 py-3 rounded-xl border border-border bg-white text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#fbae17]/20 focus:border-[#fbae17] transition-all resize-none placeholder:text-muted-foreground/40"
+          className="w-full px-3 py-2.5 rounded-lg border border-border bg-input text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all resize-none placeholder:text-muted-foreground/50"
         />
       </div>
 
       <button
-        type="submit" disabled={isPending}
-        className="w-full h-11 flex items-center justify-center gap-2 bg-[#113356] text-white rounded-xl font-bold text-sm hover:bg-[#0b2238] disabled:opacity-40 transition-all shadow-sm hover:shadow-md hover:-translate-y-px active:translate-y-0 cursor-pointer"
+        type="submit"
+        disabled={isPending}
+        className="w-full h-11 flex items-center justify-center gap-2 bg-primary text-black rounded-lg font-semibold text-sm hover:bg-[#e6a800] disabled:opacity-40 transition-all shadow-gold cursor-pointer"
       >
         {isPending
           ? <><Loader2 size={15} className="animate-spin" /> Envoi en cours…</>

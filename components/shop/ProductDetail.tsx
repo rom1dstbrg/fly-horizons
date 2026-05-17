@@ -277,7 +277,7 @@ export function ProductDetail({ product, relatedProducts = [], backHref, backLab
                 </h2>
               </div>
               <Link
-                href={isVoucher ? "/vouchers" : "/shop"}
+                href={isVoucher ? "/nos-offres" : "/shop"}
                 className="hidden sm:inline-flex text-sm text-primary hover:text-[#e6a800] font-medium transition-colors"
               >
                 Voir tout

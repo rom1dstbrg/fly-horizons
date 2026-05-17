@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ChevronLeft, Users, ShieldCheck, Headphones, MapPin, CalendarCheck, Info, Route } from "lucide-react";
 import { formatDuration } from "@/lib/vouchers";
 import { VolDetailClient } from "@/components/shop/VolDetailClient";
+import { VolImageGallery } from "@/components/shop/VolImageGallery";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -56,68 +57,37 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
   if (!vol) notFound();
 
   const duree = vol.voucher_duration_minutes ?? 60;
-  const image = vol.images?.[0]?.url ?? null;
+  const image = vol.images?.[0]?.url ?? null; // utilisé dans VolDetailClient (image_url)
 
   return (
     <main className="bg-[#f5f5f7]">
 
       {/* ── Navigation ── */}
       <div className="pt-[98px] px-4 sm:px-6">
-        <div className="max-w-6xl mx-auto pt-6">
-          <Link href="/packs" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+        <div className="max-w-6xl mx-auto pt-5">
+          <Link href="/nos-offres" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
             <ChevronLeft size={15} />
             Tous les vols
           </Link>
         </div>
       </div>
 
-      {/* ── Contenu principal ── */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+      {/* ── Hero ── */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-5 pb-10 lg:pb-14">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-6 lg:gap-14 items-start">
 
-          {/* Visuel */}
-          <div className="rounded-2xl overflow-hidden border border-border shadow-sm aspect-[4/3] relative bg-[#0b2238] lg:sticky lg:top-28">
-            {image ? (
-              <Image src={image} alt={vol.title} fill className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" priority />
-            ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-[#0b2238] to-[#113356] flex flex-col items-center justify-center gap-4">
-                <div className="inline-flex items-center gap-2 bg-[#F2B705]/15 border border-[#F2B705]/30 rounded-full px-4 py-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#F2B705]" />
-                  <span className="text-[#F2B705] text-xs font-bold tracking-[2px] uppercase">Vol privé · Fly Horizons</span>
-                </div>
-                <p className="text-white text-7xl font-black leading-none">{formatDuration(duree)}</p>
-                <p className="text-white/40 text-sm">Au départ de Charleroi (EBCI)</p>
-              </div>
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent pointer-events-none" />
-            <div className="absolute top-4 left-4">
-              <span className="bg-[#F2B705] text-[#113356] text-xs font-bold px-3 py-1.5 rounded-full">
-                {formatDuration(duree)}
-              </span>
-            </div>
-          </div>
-
-          {/* Infos */}
-          <div className="space-y-5">
-
-            <div>
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground leading-tight mb-3">
-                {vol.title}
-              </h1>
-              {vol.short_description && (
-                <p className="text-muted-foreground text-base leading-relaxed">
-                  {vol.short_description}
-                </p>
-              )}
-            </div>
-
-            {/* Réservation */}
-            <VolDetailClient price={vol.price} duree={duree} />
+          {/* ── Colonne gauche : galerie + ce qui est inclus ── */}
+          <div className="space-y-4">
+            <VolImageGallery
+              images={vol.images ?? []}
+              title={vol.title}
+              duree={duree}
+            />
 
             {/* Ce qui est inclus */}
             <div className="bg-white rounded-2xl border border-border p-5">
               <p className="text-xs font-bold text-foreground uppercase tracking-[2px] mb-4">Ce qui est inclus</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 {INCLUS.map(({ icon, label }) => (
                   <div key={label} className="flex items-center gap-2.5">
                     <div className="w-7 h-7 rounded-lg bg-[#f5f8ff] border border-[#dce8ff] flex items-center justify-center shrink-0">
@@ -128,6 +98,38 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
                 ))}
               </div>
             </div>
+          </div>
+
+          {/* ── Colonne droite : infos + CTA ── */}
+          <div className="space-y-6 lg:pt-1">
+
+            {/* Titre & description */}
+            <div>
+
+              <h1 className="text-[40px] sm:text-[50px] font-black text-[#0b2238] leading-[1.0] tracking-tight mb-4">
+                {vol.title}
+              </h1>
+
+              {vol.short_description && (
+                <p className="text-[#0b2238]/65 text-[15px] leading-relaxed mb-3">
+                  {vol.short_description}
+                </p>
+              )}
+
+              <p className="text-muted-foreground/55 text-[12px] leading-relaxed">
+                Au départ de Charleroi · EBCI · Date au choix
+              </p>
+            </div>
+
+            {/* Réservation / Achat cadeau */}
+            <VolDetailClient
+              id={vol.id}
+              slug={vol.slug}
+              title={vol.title}
+              price={vol.price}
+              duree={duree}
+              image_url={image}
+            />
 
           </div>
         </div>
@@ -154,7 +156,9 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
                             </div>
                         }
                         <div className="absolute top-2 left-2">
-                          <span className="bg-[#F2B705] text-[#113356] text-[10px] font-bold px-2 py-0.5 rounded-full">{formatDuration(d)}</span>
+                          <div className="inline-flex items-center gap-1 bg-black/40 backdrop-blur-md border border-white/15 rounded-lg px-2 py-1">
+                            <span className="text-[#F2B705] font-black text-[10px] leading-none">{formatDuration(d)}</span>
+                          </div>
                         </div>
                       </div>
                       <div className="p-4 flex flex-col justify-between flex-1">

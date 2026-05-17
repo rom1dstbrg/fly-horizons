@@ -19,6 +19,7 @@ import {
   LogOut,
   Menu,
   X,
+  ExternalLink,
 } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 
@@ -82,8 +83,30 @@ export function AdminSidebar() {
         })}
       </nav>
 
+      {/* External tools */}
+      <div className="px-3 py-3 border-t border-border space-y-1">
+        <a
+          href="https://dashboard.stripe.com/acct_1LMvw92UU7RkMsk7/dashboard"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+        >
+          <ExternalLink size={15} />
+          Stripe
+        </a>
+        <a
+          href="https://supabase.com/dashboard/project"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+        >
+          <ExternalLink size={15} />
+          Supabase
+        </a>
+      </div>
+
       {/* Logout */}
-      <div className="px-3 py-4 border-t border-border">
+      <div className="px-3 py-3 border-t border-border">
         <form action={logout}>
           <button
             type="submit"
