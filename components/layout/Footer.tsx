@@ -29,10 +29,12 @@ const SERVICES = [
 ];
 
 const PAGES = [
-  { href: "/contact", label: "Contact" },
-  { href: "/cgv",     label: "Conditions générales" },
-  { href: "/account", label: "Mon compte" },
-  { href: "/orders",  label: "Mes commandes" },
+  { href: "/contact",      label: "Contact" },
+  { href: "/faq",          label: "FAQ" },
+  { href: "/access-ebci",  label: "Plan d'accès" },
+  { href: "/cgv",          label: "Conditions générales" },
+  { href: "/account",      label: "Mon compte" },
+  { href: "/orders",       label: "Mes commandes" },
 ];
 
 const SOCIALS = [
@@ -52,7 +54,7 @@ const SOCIALS = [
 export function Footer() {
   const year = new Date().getFullYear();
   const lnk  = "text-sm text-white/45 hover:text-white transition-colors";
-  const hd   = "text-[10px] font-bold text-white/25 uppercase tracking-[2px] mb-4";
+  const hd   = "text-[10px] font-bold text-[#F2B705] uppercase tracking-[2px] mb-4";
 
   return (
     <footer className="bg-[#0b2238] border-t border-white/5 mt-auto">

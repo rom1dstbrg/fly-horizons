@@ -30,7 +30,9 @@ export async function GET(
     return NextResponse.redirect(new URL("/reservation?error=lien_invalide", siteUrl));
   }
 
-  // Already paid or cancelled
+  if (resa.statut === "annulee") {
+    return NextResponse.redirect(new URL("/reservation?error=reservation_annulee", siteUrl));
+  }
   if (resa.statut !== "payment_pending") {
     return NextResponse.redirect(new URL("/reservation/success", siteUrl));
   }

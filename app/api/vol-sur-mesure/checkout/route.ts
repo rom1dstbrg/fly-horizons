@@ -78,6 +78,7 @@ export async function POST(request: NextRequest) {
 
     // Appliquer le code promo s'il y en a un (sur le montant après voucher)
     let couponDiscountAmount = 0;
+    let appliedCouponCode: string | null = null;
     if (coupon_code && afterVoucher > 0) {
       const { data: coupon } = await supabase
         .from("coupons")
@@ -92,7 +93,8 @@ export async function POST(request: NextRequest) {
         couponDiscountAmount = coupon.type === "percentage"
           ? Math.round(afterVoucher * coupon.value / 100)
           : Math.min(coupon.value, afterVoucher);
-        await supabase.rpc("increment_coupon_usage", { coupon_code: coupon.code });
+        appliedCouponCode = coupon.code;
+        // increment_coupon_usage est différé au webhook checkout.session.completed
       }
     }
     const finalAcompte = Math.max(0, afterVoucher - couponDiscountAmount);
@@ -138,6 +140,7 @@ export async function POST(request: NextRequest) {
         taxes_escales: taxes,
         acompte: finalAcompte,
         voucher_code: voucher_code || null,
+        coupon_code: appliedCouponCode,
         payment_token: paymentToken,
       })
       .select()

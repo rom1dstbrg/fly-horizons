@@ -98,7 +98,7 @@ export default async function HomePage() {
               { icon: <Lock size={20} className="text-[#113356]" />, title: "Paiement sécurisé", desc: "Via Stripe — carte bancaire" },
               { icon: <Mail size={20} className="text-[#113356]" />, title: "Code par email", desc: "Voucher envoyé instantanément" },
               { icon: <Package size={20} className="text-[#113356]" />, title: "Livraison Belgique", desc: "Accessoires livrés partout" },
-              { icon: <BadgeCheck size={20} className="text-[#113356]" />, title: "Pilote certifié EASA", desc: "Sécurité & professionnalisme" },
+              { icon: <BadgeCheck size={20} className="text-[#113356]" />, title: "Pilote licencié CPL", desc: "Sécurité & professionnalisme" },
             ].map(({ icon, title, desc }) => (
               <div key={title} className="flex items-center gap-3.5">
                 <div className="w-10 h-10 rounded-xl bg-[#f5f8ff] border border-[#dce8ff] flex items-center justify-center shrink-0">
@@ -274,7 +274,7 @@ export default async function HomePage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link
-                  href="/packs"
+                  href="/nos-offres"
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#113356] text-white rounded-xl text-sm font-semibold hover:bg-[#0b2238] transition-colors"
                 >
                   <Gift size={14} />

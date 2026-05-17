@@ -20,13 +20,13 @@ export async function POST(request: NextRequest) {
 
     const supabase = createAdminClient();
 
-    // Claim atomique du voucher : l'UPDATE avec .eq("status","unused") garantit
-    // qu'une seule requête concurrente peut réussir (élimine le TOCTOU)
+    // Claim atomique du voucher : .eq("status","unused") garantit l'unicité (élimine TOCTOU).
+    // On marque "reserved" d'abord — passage à "used" après insertion réussie de la réservation.
     let voucherId: string | null = null;
     if (voucher_code) {
       const { data: claimed } = await supabase
         .from("voucher_codes")
-        .update({ status: "used", used_at: new Date().toISOString() })
+        .update({ status: "reserved" })
         .eq("code", voucher_code.toUpperCase().trim())
         .eq("status", "unused")
         .select("id")
@@ -76,7 +76,18 @@ export async function POST(request: NextRequest) {
       .select()
       .single();
 
-    if (resaErr) return NextResponse.json({ error: "Erreur création réservation" }, { status: 500 });
+    if (resaErr) {
+      // Rollback voucher claim so the code can be reused
+      if (voucherId) {
+        await supabase.from("voucher_codes").update({ status: "unused" }).eq("id", voucherId).eq("status", "reserved");
+      }
+      return NextResponse.json({ error: "Erreur création réservation" }, { status: 500 });
+    }
+
+    // Reservation persisted — finalize voucher consumption
+    if (voucherId) {
+      await supabase.from("voucher_codes").update({ status: "used", used_at: new Date().toISOString() }).eq("id", voucherId);
+    }
 
     // Email de confirmation au client
     const dateStr = new Date(date + "T12:00:00Z").toLocaleDateString("fr-BE", {

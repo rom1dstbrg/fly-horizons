@@ -254,9 +254,6 @@ export function ProductDetail({ product, relatedProducts = [], backHref, backLab
                   <p className="text-xs text-muted-foreground">
                     Livraison disponible en Belgique, France, Pays-Bas et Allemagne.
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    Paiement securise via Stripe.
-                  </p>
                 </>
               )}
             </div>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { ShoppingBag, User, Menu, X, Home, Route, Store, Mail, Ticket } from "lucide-react";
+import { ShoppingBag, User, Menu, X, Home, Route, Store, Mail, Ticket, HelpCircle } from "lucide-react";
 import { CartCount } from "@/components/shop/CartCount";
 import { createClient } from "@/lib/supabase/client";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
@@ -43,7 +43,7 @@ export function Header() {
       }`}
     >
       <div className="px-4 max-xs:px-3 md:px-5 lg:px-6">
-        <div className="flex items-center h-14 max-xs:h-12 md:h-[60px]">
+        <div className="flex items-center h-16 max-xs:h-14 md:h-[60px]">
 
           {/* Logo */}
           <Link href="/" className="shrink-0 flex items-center leading-none">
@@ -51,7 +51,7 @@ export function Header() {
               src="/logo-header.png"
               alt="Fly Horizons"
               width={160} height={40}
-              className="h-7 max-xs:h-[22px] md:h-8 w-auto object-contain"
+              className="h-8 max-xs:h-7 md:h-8 w-auto object-contain"
               priority unoptimized
             />
           </Link>
@@ -123,6 +123,10 @@ export function Header() {
             <Link href="/vol-sur-mesure" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
               <Route size={16} className="opacity-60 text-[#113356]" />
               Vol sur mesure
+            </Link>
+            <Link href="/faq" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
+              <HelpCircle size={16} className="opacity-60 text-[#113356]" />
+              FAQ
             </Link>
             <Link href="/contact" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
               <Mail size={16} className="opacity-60 text-[#113356]" />

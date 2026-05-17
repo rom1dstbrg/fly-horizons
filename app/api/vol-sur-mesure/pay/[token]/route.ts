@@ -31,6 +31,10 @@ export async function GET(
 
   const totalAcompte = resa.acompte ?? 0;
 
+  if (resa.statut === "annulee") {
+    return NextResponse.redirect(new URL("/vol-sur-mesure?error=reservation_annulee", siteUrl));
+  }
+
   // Already paid or covered by voucher
   if (totalAcompte <= 0 || resa.statut === "acompte_recu" || resa.statut === "vol_effectue" || resa.statut === "solde") {
     return NextResponse.redirect(new URL("/vol-sur-mesure/success", siteUrl));
@@ -87,6 +91,7 @@ export async function GET(
         clientId: resa.client_id,
         voucherId,
         voucherCode: resa.voucher_code || "",
+        couponCode: resa.coupon_code || "",
         paymentToken: token,
       },
       success_url: `${siteUrl}/vol-sur-mesure/success?session_id={CHECKOUT_SESSION_ID}`,

@@ -23,7 +23,7 @@ interface VolProduct {
   images?: { url: string }[];
 }
 interface VoucherInfo { code: string; duration_minutes: number; product_title: string; }
-interface CouponInfo { code: string; type: string; value: number; description: string; }
+interface CouponInfo { code: string; type: string; value: number; }
 interface FormState {
   product: VolProduct | null;
   date: string; heure: string;
@@ -127,7 +127,7 @@ export default function ReservationPage() {
                 } else if (!d.status || (d.status !== "expired" && d.status !== "used" && d.status !== "reserved")) {
                   fetch(`/api/promo/validate?code=${encodeURIComponent(cleaned)}`)
                     .then(r => r.json()).then(d2 => {
-                      if (d2.valid) setForm(f => ({ ...f, coupon: { code: d2.code, type: d2.type, value: d2.value, description: d2.description } }));
+                      if (d2.valid) setForm(f => ({ ...f, coupon: { code: d2.code, type: d2.type, value: d2.value } }));
                       else setCodeError(d2.error || "Code invalide.");
                     }).finally(() => setCodeLoading(false));
                 } else {
@@ -139,7 +139,7 @@ export default function ReservationPage() {
             setForm(f => ({ ...f, codeInput: cleaned }));
             fetch(`/api/promo/validate?code=${encodeURIComponent(cleaned)}`)
               .then(r => r.json()).then(d => {
-                if (d.valid) setForm(f => ({ ...f, coupon: { code: d.code, type: d.type, value: d.value, description: d.description } }));
+                if (d.valid) setForm(f => ({ ...f, coupon: { code: d.code, type: d.type, value: d.value } }));
                 else setCodeError(d.error || "Code invalide.");
               }).finally(() => setCodeLoading(false));
           }
@@ -202,7 +202,7 @@ export default function ReservationPage() {
       const r2 = await fetch(`/api/promo/validate?code=${encodeURIComponent(alnum)}`);
       const d2 = await r2.json();
       if (d2.valid) {
-        setForm(f => ({ ...f, coupon: { code: d2.code, type: d2.type, value: d2.value, description: d2.description } }));
+        setForm(f => ({ ...f, coupon: { code: d2.code, type: d2.type, value: d2.value } }));
       } else {
         setCodeError(d2.error || "Code invalide — vérifiez et réessayez.");
       }
@@ -562,7 +562,7 @@ export default function ReservationPage() {
                         <p className="text-sm font-semibold text-green-800 flex-1 min-w-0 truncate">
                           {form.voucher
                             ? `${form.voucher.product_title} · −${discount} €`
-                            : `${form.coupon!.code} · ${form.coupon!.description}`}
+                            : `${form.coupon!.code} · −${form.coupon!.type === "percentage" ? `${form.coupon!.value}%` : `${form.coupon!.value} €`}`}
                         </p>
                         <button type="button"
                           onClick={() => { setForm(f => ({ ...f, codeInput: "", voucher: null, coupon: null })); setCodeError(""); }}
@@ -607,10 +607,10 @@ export default function ReservationPage() {
                         className="mt-0.5 w-4 h-4 accent-[#113356] shrink-0 cursor-pointer" />
                       <span className="text-sm text-muted-foreground leading-relaxed">
                         J&apos;ai lu et j&apos;accepte les{" "}
-                        <a href="https://fly-horizons.com/cgp.html" target="_blank" rel="noopener noreferrer"
+                        <Link href="/cgv"
                           className="text-[#113356] underline underline-offset-2 font-semibold">
                           Conditions Générales de Participation
-                        </a>{" "}
+                        </Link>{" "}
                         et j&apos;autorise l&apos;utilisation de mes données personnelles pour le traitement de cette réservation.
                       </span>
                     </label>
@@ -726,7 +726,7 @@ export default function ReservationPage() {
                         <p className="text-xs font-semibold text-green-800 flex-1 min-w-0 truncate">
                           {form.voucher
                             ? `${form.voucher.product_title} · −${discount} €`
-                            : `${form.coupon!.code} · ${form.coupon!.description}`}
+                            : `${form.coupon!.code} · −${form.coupon!.type === "percentage" ? `${form.coupon!.value}%` : `${form.coupon!.value} €`}`}
                         </p>
                         <button type="button"
                           onClick={() => { setForm(f => ({ ...f, codeInput: "", voucher: null, coupon: null })); setCodeError(""); }}
@@ -783,10 +783,6 @@ export default function ReservationPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 px-1 mt-3">
-                  <Lock size={9} className="text-muted-foreground/50 shrink-0" />
-                  <p className="text-[10px] text-muted-foreground/60">Paiement sécurisé · Pilote EASA certifié</p>
-                </div>
 
                 {/* ── Durée supplémentaire — visible uniquement si un voucher est en jeu ── */}
                 {form.voucher && <div className="mt-4 rounded-2xl border border-[#dce8ff] bg-[#f5f8ff] p-4">

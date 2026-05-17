@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     // ── Vol sur mesure (acompte) ──────────────────────────────
     if (session.metadata?.type === "reservation_perso") {
-      const { reservationId, voucherId, voucherCode, paymentToken } = session.metadata;
+      const { reservationId, voucherId, voucherCode, couponCode, paymentToken } = session.metadata;
       if (reservationId) {
         await adminSupabase.from("reservations")
           .update({ statut: "acompte_recu", payment_token: null })
@@ -47,6 +47,9 @@ export async function POST(request: NextRequest) {
           .eq("statut", "en_attente"); // Garde idempotence — évite de rétrograder si déjà avancé
         if (voucherId) {
           await adminSupabase.from("voucher_codes").update({ status: "used", used_at: new Date().toISOString() }).eq("id", voucherId);
+        }
+        if (couponCode) {
+          await adminSupabase.rpc("increment_coupon_usage", { coupon_code: couponCode });
         }
         const { data: resa } = await adminSupabase.from("reservations").select("*, clients(*)").eq("id", reservationId).single();
         if (resa?.clients) {
@@ -78,7 +81,7 @@ export async function POST(request: NextRequest) {
 
     // ── Réservation standard ──────────────────────────────────
     if (session.metadata?.type === "reservation") {
-      const { reservationId, voucherId, voucherCode } = session.metadata;
+      const { reservationId, voucherId, voucherCode, couponCode } = session.metadata;
       if (reservationId) {
         await adminSupabase
           .from("reservations")
@@ -91,6 +94,10 @@ export async function POST(request: NextRequest) {
             .from("voucher_codes")
             .update({ status: "used", used_at: new Date().toISOString() })
             .eq("id", voucherId);
+        }
+
+        if (couponCode) {
+          await adminSupabase.rpc("increment_coupon_usage", { coupon_code: couponCode });
         }
 
         // Récupérer la réservation + client pour l'email
@@ -139,7 +146,7 @@ export async function POST(request: NextRequest) {
     const orderId = session.metadata?.orderId;
 
     if (!orderId) {
-      return NextResponse.json({ error: "OrderId manquant" }, { status: 400 });
+      return NextResponse.json({ received: true });
     }
 
     const { data: order } = await adminSupabase

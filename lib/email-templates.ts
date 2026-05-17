@@ -612,7 +612,7 @@ export function reservationConfirmationFreeEmail(p: ReservationConfirmationProps
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
       <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">A&eacute;roport de Charleroi (EBCI), Belgique</td></tr>
       <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Pr&eacute;sentez-vous <strong>15 minutes avant</strong> l&rsquo;heure du vol</td></tr>
-      <tr><td class="em-body" style="padding:8px 0;font-size:13px;color:#334155;">Questions &mdash; <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a></td></tr>
+      <tr><td class="em-body" style="padding:8px 0;font-size:13px;color:#334155;">Questions &mdash; <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a> &middot; <a href="${SITE_URL}/faq" style="color:#F2B705;font-weight:600;text-decoration:none;">FAQ</a></td></tr>
     </table>
 
     <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">
@@ -660,13 +660,15 @@ export function reservationPaymentConfirmationEmail(p: ReservationPaymentConfirm
       <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">A&eacute;roport de Charleroi (EBCI), Belgique</td></tr>
       <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Pr&eacute;sentez-vous <strong>15 minutes avant</strong> l&rsquo;heure du vol</td></tr>
       <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Casques audio fournis &mdash; aucun &eacute;quipement n&eacute;cessaire</td></tr>
-      <tr><td class="em-body" style="padding:8px 0;font-size:13px;color:#334155;">Questions &mdash; <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a></td></tr>
+      <tr><td class="em-body" style="padding:8px 0;font-size:13px;color:#334155;">Questions &mdash; <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a> &middot; <a href="${SITE_URL}/faq" style="color:#F2B705;font-weight:600;text-decoration:none;">FAQ</a></td></tr>
     </table>
 
     <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">
       Nous vous contacterons pour confirmer tous les d&eacute;tails. &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord &mdash;
       <strong class="em-dark" style="color:#0b2238;">L&rsquo;&eacute;quipe Fly Horizons</strong>
-    </p>`;
+    </p>
+
+    ${ctaButton(`${SITE_URL}/access-ebci`, "Plan d&rsquo;acc&egrave;s &#8594;")}`;
 
   return emailBase(body, "Paiement confirmé — Fly Horizons");
 }
@@ -713,7 +715,9 @@ export function volSurMesureAcompteEmail(p: VolSurMesureAcompteProps): string {
       <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a>.<br>
       &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord &mdash;
       <strong class="em-dark" style="color:#0b2238;">L&rsquo;&eacute;quipe Fly Horizons</strong>
-    </p>`;
+    </p>
+
+    ${ctaButton(`${SITE_URL}/access-ebci`, "Plan d&rsquo;acc&egrave;s &#8594;")}`;
 
   return emailBase(body, "Acompte reçu — Vol sur mesure Fly Horizons");
 }
@@ -745,7 +749,9 @@ export function reservationDateConfirmeeEmail(p: ReservationDateConfirmeeProps):
     <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">
       Questions ? R&eacute;pondez directement &agrave; cet email &mdash;
       <strong class="em-dark" style="color:#0b2238;">L&rsquo;&eacute;quipe Fly Horizons</strong>
-    </p>`;
+    </p>
+
+    ${ctaButton(`${SITE_URL}/access-ebci`, "Plan d&rsquo;acc&egrave;s &#8594;")}`;
 
   return emailBase(body, "Votre date de vol est confirmée — Fly Horizons");
 }
@@ -798,7 +804,9 @@ export function reservationHeureConfirmeeEmail(p: ReservationHeureConfirmeeProps
     <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">
       Beau temps et bon vol ! Rendez-vous &agrave; l&rsquo;a&eacute;roport &mdash;
       <strong class="em-dark" style="color:#0b2238;">L&rsquo;&eacute;quipe Fly Horizons</strong>
-    </p>`;
+    </p>
+
+    ${ctaButton(`${SITE_URL}/access-ebci`, "Plan d&rsquo;acc&egrave;s &#8594;")}`;
 
   return emailBase(body, "Votre créneau horaire est confirmé — Fly Horizons");
 }

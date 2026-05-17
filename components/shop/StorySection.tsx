@@ -60,7 +60,7 @@ export function StorySection() {
             </div>
             <div className="card-premium p-6 text-center space-y-2">
               <p className="text-4xl font-bold text-primary">SSL</p>
-              <p className="text-sm text-muted-foreground">Paiement securise</p>
+              <p className="text-sm text-muted-foreground">Donnees protegees</p>
             </div>
             <div className="card-premium p-6 text-center space-y-2">
               <p className="text-4xl font-bold text-primary">EU</p>

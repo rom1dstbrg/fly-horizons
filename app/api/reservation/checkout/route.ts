@@ -92,6 +92,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Appliquer le code promo s'il y en a un
+    // NB: increment_coupon_usage est différé au webhook checkout.session.completed
+    let appliedCouponCode: string | null = null;
     if (coupon_code) {
       const { data: coupon } = await supabase
         .from("coupons")
@@ -107,7 +109,7 @@ export async function POST(request: NextRequest) {
           ? Math.round(amountCents * coupon.value / 100)
           : Math.min(Math.round(coupon.value * 100), amountCents);
         amountCents = Math.max(0, amountCents - discountCents);
-        await supabase.rpc("increment_coupon_usage", { coupon_code: coupon.code });
+        appliedCouponCode = coupon.code;
       }
     }
 
@@ -147,6 +149,7 @@ export async function POST(request: NextRequest) {
         statut: "payment_pending",
         type_resa: "standard",
         voucher_code: voucher_code || null,
+        coupon_code: appliedCouponCode,
         poids_total: poids_total ? parseInt(poids_total) : null,
       })
       .select()
@@ -192,6 +195,7 @@ export async function POST(request: NextRequest) {
           clientId,
           voucherId: resolvedVoucherId ?? "",
           voucherCode: voucher_code || "",
+          couponCode: appliedCouponCode ?? "",
         },
         success_url: `${siteUrl}/reservation/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${siteUrl}/reservation?cancelled=1`,

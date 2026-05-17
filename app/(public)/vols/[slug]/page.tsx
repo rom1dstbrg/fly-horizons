@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 const INCLUS = [
   { icon: <Users size={15} className="text-[#113356]" />,         label: "Jusqu'à 3 passagers" },
-  { icon: <ShieldCheck size={15} className="text-[#113356]" />,   label: "Pilote certifié EASA" },
+  { icon: <ShieldCheck size={15} className="text-[#113356]" />,   label: "Briefing sécurité inclus" },
   { icon: <Headphones size={15} className="text-[#113356]" />,    label: "Casques audio inclus" },
   { icon: <MapPin size={15} className="text-[#113356]" />,        label: "Départ depuis Charleroi (EBCI)" },
   { icon: <CalendarCheck size={15} className="text-[#113356]" />, label: "Date au choix" },

@@ -84,7 +84,7 @@ export default async function OrdersPage() {
               </p>
             </div>
             <Link
-              href="/shop"
+              href="/nos-offres"
               className="inline-flex items-center gap-1 text-sm text-primary hover:text-gold-400 transition-colors"
             >
               Decouvrir la boutique
@@ -163,9 +163,11 @@ export default async function OrdersPage() {
                               <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${
                                 v.status === "unused"
                                   ? "bg-green-500/10 text-green-500 border-green-500/30"
+                                  : v.status === "reserved"
+                                  ? "bg-yellow-500/10 text-yellow-500 border-yellow-500/30"
                                   : "bg-muted text-muted-foreground border-border"
                               }`}>
-                                {v.status === "unused" ? "Disponible" : v.status === "used" ? "Utilisé" : "Expiré"}
+                                {v.status === "unused" ? "Disponible" : v.status === "used" ? "Utilisé" : v.status === "reserved" ? "En cours" : "Expiré"}
                               </span>
                               {v.status === "unused" && (
                                 <Link

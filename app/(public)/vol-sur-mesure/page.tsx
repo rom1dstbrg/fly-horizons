@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useRef, useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -23,7 +24,7 @@ interface VoucherInfo {
   product_title: string;
 }
 
-interface CouponInfo { code: string; type: string; value: number; description: string; }
+interface CouponInfo { code: string; type: string; value: number; }
 
 interface FormData {
   date: string;
@@ -212,7 +213,7 @@ export default function VolSurMesurePage() {
       const r2 = await fetch(`/api/promo/validate?code=${encodeURIComponent(alnum)}`);
       const d2 = await r2.json();
       if (d2.valid) {
-        setForm(f => ({ ...f, coupon: { code: d2.code, type: d2.type, value: d2.value, description: d2.description } }));
+        setForm(f => ({ ...f, coupon: { code: d2.code, type: d2.type, value: d2.value } }));
       } else {
         setCodeError(d2.error || "Code invalide — vérifiez et réessayez.");
       }
@@ -379,7 +380,7 @@ export default function VolSurMesurePage() {
                 <p className="text-xs font-semibold text-green-800 flex-1 min-w-0 truncate">
                   {form.voucher
                     ? `${form.voucher.product_title} · −${discount} €`
-                    : `${form.coupon!.code} · ${form.coupon!.description}`}
+                    : `${form.coupon!.code} · −${form.coupon!.type === "percentage" ? `${form.coupon!.value}%` : `${form.coupon!.value} €`}`}
                 </p>
                 <button type="button"
                   onClick={() => { setForm(f => ({ ...f, codeInput: "", voucher: null, coupon: null })); setCodeError(""); }}
@@ -880,7 +881,7 @@ export default function VolSurMesurePage() {
                         <p className="text-sm font-semibold text-green-800 flex-1 min-w-0 truncate">
                           {form.voucher
                             ? `${form.voucher.product_title} · −${discount} €`
-                            : `${form.coupon!.code} · ${form.coupon!.description}`}
+                            : `${form.coupon!.code} · −${form.coupon!.type === "percentage" ? `${form.coupon!.value}%` : `${form.coupon!.value} €`}`}
                         </p>
                         <button type="button"
                           onClick={() => { setForm(f => ({ ...f, codeInput: "", voucher: null, coupon: null })); setCodeError(""); }}
@@ -925,10 +926,10 @@ export default function VolSurMesurePage() {
                         className="mt-0.5 w-4 h-4 accent-[#113356] shrink-0 cursor-pointer" />
                       <span className="text-sm text-muted-foreground leading-relaxed">
                         J&apos;accepte les{" "}
-                        <a href="https://fly-horizons.com/cgp.html" target="_blank" rel="noopener noreferrer"
+                        <Link href="/cgv"
                           className="text-[#113356] underline underline-offset-2 font-semibold">
                           Conditions Générales de Participation
-                        </a>{" "}
+                        </Link>{" "}
                         et que mes données soient utilisées pour traiter ma réservation.
                       </span>
                     </label>

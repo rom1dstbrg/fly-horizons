@@ -190,9 +190,11 @@ export default async function AccountPage() {
                   day: "numeric", month: "long", year: "numeric",
                 });
                 const isPaid = !["en_attente", "payment_pending"].includes(r.statut);
-                const hasPaymentLink = r.payment_token && !isPaid;
-                const paymentUrl = `${siteUrl}/api/vol-sur-mesure/pay/${r.payment_token}`;
                 const isPerso = r.type_resa === "perso";
+                const hasPaymentLink = r.payment_token && !isPaid;
+                const paymentUrl = isPerso
+                  ? `${siteUrl}/api/vol-sur-mesure/pay/${r.payment_token}`
+                  : `${siteUrl}/api/reservation/pay/${r.payment_token}`;
 
                 return (
                   <div key={r.id} className="border border-border rounded-xl p-4 space-y-2">
@@ -352,9 +354,11 @@ export default async function AccountPage() {
                             <span className={`text-xs px-1.5 py-0.5 rounded-full border font-medium ${
                               v.status === "unused"
                                 ? "bg-green-500/10 text-green-500 border-green-500/30"
+                                : v.status === "reserved"
+                                ? "bg-yellow-500/10 text-yellow-500 border-yellow-500/30"
                                 : "bg-muted text-muted-foreground border-border"
                             }`}>
-                              {v.status === "unused" ? "Disponible" : v.status === "used" ? "Utilisé" : "Expiré"}
+                              {v.status === "unused" ? "Disponible" : v.status === "used" ? "Utilisé" : v.status === "reserved" ? "En cours" : "Expiré"}
                             </span>
                           </div>
                         ))}

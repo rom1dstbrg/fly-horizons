@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Mail, MapPin, Clock } from "lucide-react";
 import { ContactForm } from "@/components/shop/ContactForm";
 
@@ -26,7 +27,11 @@ export default function ContactPage() {
           {/* Formulaire — 1er sur mobile, 2e sur desktop */}
           <div className="lg:col-span-2 lg:order-2">
             <div className="card-premium p-6 sm:p-8">
-              <h2 className="font-semibold text-foreground mb-6">Envoyez-nous un message</h2>
+              <h2 className="font-semibold text-foreground mb-2">Envoyez-nous un message</h2>
+              <p className="text-xs text-muted-foreground mb-6">
+                Votre question est peut-être déjà répondue dans notre{" "}
+                <Link href="/faq" className="text-primary hover:text-gold-400 transition-colors font-medium">FAQ</Link>.
+              </p>
               <ContactForm />
             </div>
           </div>

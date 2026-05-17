@@ -55,7 +55,7 @@ export function VolDetailClient({ id, slug, title, price, duree, image_url }: Vo
 
         <p className="text-[10px] text-white/30 flex items-center gap-1.5">
           <Lock size={9} />
-          Paiement sécurisé via Stripe · Confirmation par email
+          Confirmation par email après réservation
         </p>
       </div>
 

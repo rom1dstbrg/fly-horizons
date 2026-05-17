@@ -29,7 +29,7 @@ export default function CartPage() {
               </p>
             </div>
             <Button asChild className="bg-primary text-primary-foreground hover:bg-gold-400 font-semibold">
-              <Link href="/shop">
+              <Link href="/nos-offres">
                 <ShoppingBag size={16} className="mr-2" />
                 Voir la boutique
               </Link>
@@ -47,7 +47,7 @@ export default function CartPage() {
         {/* Header */}
         <div className="mb-8">
           <Link
-            href="/shop"
+            href="/nos-offres"
             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors mb-4"
           >
             <ChevronLeft size={16} />
