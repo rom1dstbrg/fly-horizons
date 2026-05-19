@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ClientsClient } from "@/components/admin/ClientsClient";
+import { PageHeader } from "@/components/admin/PageHeader";
 
 export const metadata = { title: "Clients — Admin" };
 
@@ -66,12 +67,11 @@ export default async function ClientsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Clients</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Clients ayant effectué une réservation de vol (standard ou sur mesure)
-        </p>
-      </div>
+      <PageHeader
+        domain="clients"
+        title="Clients"
+        subtitle="Clients ayant effectué une réservation de vol (standard ou sur mesure)"
+      />
 
       <div className="grid grid-cols-3 gap-3">
         <div className="card-premium p-4 text-center">

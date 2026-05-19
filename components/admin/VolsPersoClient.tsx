@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { updateStatutReservationPerso, sendEmailConfirmation, updateReservationPersoFields } from "@/lib/actions/reservations";
+import { updateStatutReservationPerso, updateReservationPersoFields } from "@/lib/actions/reservations";
 import { deleteReservationPerso } from "@/lib/actions/delete";
 import { DeleteButton } from "@/components/admin/DeleteButton";
-import { MapPin, Mail, ChevronDown, ChevronUp, Loader2, Pencil, Check, X } from "lucide-react";
+import { MapPin, ChevronDown, ChevronUp, Loader2, Pencil, Check, X } from "lucide-react";
 
 const STATUTS = [
   { value: "en_attente",      label: "En attente",       color: "bg-yellow-100 text-yellow-700 border-yellow-200" },
@@ -48,20 +48,7 @@ export function VolsPersoClient({ reservations }: { reservations: Reservation[] 
   const [expanded, setExpanded] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [loadingId, setLoadingId] = useState<string | null>(null);
-  const [emailLoading, setEmailLoading] = useState<string | null>(null);
   const [messages, setMessages] = useState<Record<string, string>>({});
-
-  // Track which emails have been sent — initialize from DB timestamps
-  const [sentEmails, setSentEmails] = useState<Record<string, Set<"date" | "heure">>>(() => {
-    const init: Record<string, Set<"date" | "heure">> = {};
-    reservations.forEach(r => {
-      const s = new Set<"date" | "heure">();
-      if (r.date_confirmee_at) s.add("date");
-      if (r.heure_confirmee_at) s.add("heure");
-      if (s.size > 0) init[r.id] = s;
-    });
-    return init;
-  });
 
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -74,27 +61,16 @@ export function VolsPersoClient({ reservations }: { reservations: Reservation[] 
     setLoadingId(id);
     startTransition(async () => {
       const r = await updateStatutReservationPerso(id, statut);
-      if (r.error) setMessages(m => ({ ...m, [id]: r.error! }));
+      if (r.error) {
+        setMessages(m => ({ ...m, [id]: r.error! }));
+      } else {
+        const emailStatuts = ["date_confirmee", "heure_confirmee", "vol_effectue"];
+        const msg = emailStatuts.includes(statut) ? "Statut mis à jour — email envoyé ✓" : "Statut mis à jour ✓";
+        setMessages(m => ({ ...m, [id]: msg }));
+        setTimeout(() => setMessages(m => { const c = { ...m }; delete c[id]; return c; }), 3000);
+      }
       setLoadingId(null);
     });
-  }
-
-  async function sendEmail(id: string, type: "date" | "heure") {
-    const key = `${id}-${type}`;
-    setEmailLoading(key);
-    const r = await sendEmailConfirmation(id, type);
-    setEmailLoading(null);
-    if (r.error) {
-      setMessages(m => ({ ...m, [id]: r.error! }));
-    } else {
-      setSentEmails(prev => {
-        const s = new Set(prev[id] ?? []);
-        s.add(type);
-        return { ...prev, [id]: s };
-      });
-      setMessages(m => ({ ...m, [id]: "Email envoyé ✓" }));
-      setTimeout(() => setMessages(m => { const c = { ...m }; delete c[id]; return c; }), 3000);
-    }
   }
 
   function startEdit(r: Reservation) {
@@ -141,9 +117,6 @@ export function VolsPersoClient({ reservations }: { reservations: Reservation[] 
         });
         const isExpanded = expanded === r.id;
         const isEditing = editingId === r.id;
-        const sent = sentEmails[r.id] ?? new Set();
-        const dateSent = sent.has("date");
-        const heureSent = sent.has("heure");
 
         return (
           <div key={r.id} className="card-premium p-4">
@@ -200,7 +173,7 @@ export function VolsPersoClient({ reservations }: { reservations: Reservation[] 
                     <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
                       <MapPin size={11} /> Route
                     </p>
-                    <div className="bg-secondary/30 rounded-lg p-3 space-y-1 text-xs font-mono">
+                    <div className="bg-secondary/30 rounded-lg p-3 space-y-1 text-xs font-mono overflow-x-auto">
                       <p className="text-muted-foreground">✈ EBCI (départ)</p>
                       {r.waypoints.map((wp, i) => (
                         <p key={i} className="text-foreground pl-3">→ {wp.lat.toFixed(5)}, {wp.lng.toFixed(5)}</p>
@@ -327,38 +300,6 @@ export function VolsPersoClient({ reservations }: { reservations: Reservation[] 
                   ))}
                 </div>
 
-                {/* Emails */}
-                <div className="flex flex-wrap gap-2">
-                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider w-full flex items-center gap-1">
-                    <Mail size={10} /> Emails
-                  </p>
-                  <button
-                    onClick={() => sendEmail(r.id, "date")}
-                    disabled={emailLoading === `${r.id}-date`}
-                    className={[
-                      "text-xs px-3 py-1.5 rounded-lg border transition-colors flex items-center gap-1.5 disabled:opacity-50",
-                      dateSent
-                        ? "bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100"
-                        : "border-border text-muted-foreground hover:bg-secondary",
-                    ].join(" ")}
-                  >
-                    {emailLoading === `${r.id}-date` ? <Loader2 size={11} className="animate-spin" /> : <Mail size={11} />}
-                    Envoyer confirmation date
-                  </button>
-                  <button
-                    onClick={() => sendEmail(r.id, "heure")}
-                    disabled={emailLoading === `${r.id}-heure`}
-                    className={[
-                      "text-xs px-3 py-1.5 rounded-lg border transition-colors flex items-center gap-1.5 disabled:opacity-50",
-                      heureSent
-                        ? "bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100"
-                        : "border-border text-muted-foreground hover:bg-secondary",
-                    ].join(" ")}
-                  >
-                    {emailLoading === `${r.id}-heure` ? <Loader2 size={11} className="animate-spin" /> : <Mail size={11} />}
-                    Envoyer confirmation heure
-                  </button>
-                </div>
 
               </div>
             )}

@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { VouchersClient } from "@/components/admin/VouchersClient";
+import { PageHeader } from "@/components/admin/PageHeader";
 
 export const metadata = { title: "Vouchers — Admin" };
 
@@ -32,14 +33,11 @@ export default async function AdminVouchersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Vouchers de vol</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {total} code{total !== 1 ? "s" : ""} au total
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        domain="boutique"
+        title="Vouchers de vol"
+        subtitle={`${total} code${total !== 1 ? "s" : ""} au total`}
+      />
 
       <div className="grid grid-cols-3 gap-3">
         <div className="card-premium p-4 text-center">

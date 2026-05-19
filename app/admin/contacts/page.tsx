@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ContactsClient } from "@/components/admin/ContactsClient";
+import { PageHeader } from "@/components/admin/PageHeader";
 
 export const metadata = { title: "Messages — Admin" };
 
@@ -21,10 +22,11 @@ export default async function AdminContactsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Messages</h1>
-        <p className="text-muted-foreground text-sm mt-1">Formulaire de contact — répondez directement depuis cette page</p>
-      </div>
+      <PageHeader
+        domain="clients"
+        title="Messages"
+        subtitle="Formulaire de contact — répondez directement depuis cette page"
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

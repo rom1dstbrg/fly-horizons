@@ -7,8 +7,9 @@ import {
 import { PackCard } from "@/components/shop/PackCard";
 
 export const metadata = {
-  title: "Nos offres — Fly Horizons",
-  description: "Vol sur mesure : tracez votre propre itinéraire sur la carte, prix calculé en temps réel. Ou choisissez un bon cadeau de 30 à 120 minutes.",
+  title: "Nos offres de vol",
+  description:
+    "Baptêmes de l'air en avion léger depuis Charleroi — vols de 30 à 120 min ou sur mesure. Itinéraire libre, pilote CPL, jusqu'à 3 passagers. Réservez votre vol en Belgique.",
 };
 
 export default async function NosOffresPage() {

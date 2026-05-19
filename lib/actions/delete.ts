@@ -47,6 +47,7 @@ export async function deleteProduct(productId: string) {
     if (error) return { error: error.message };
 
     revalidatePath("/admin/products");
+    revalidatePath("/admin/boutique");
     revalidatePath("/shop");
     redirect("/admin/products");
   } catch (err: unknown) {
@@ -68,6 +69,7 @@ export async function deleteOrder(orderId: string) {
     if (error) return { error: error.message };
 
     revalidatePath("/admin/orders");
+    revalidatePath("/admin/boutique");
     revalidatePath("/admin");
     return { success: true };
   } catch {
@@ -85,6 +87,7 @@ export async function deleteReservationPerso(resaId: string) {
       .eq("id", resaId);
     if (error) return { error: error.message };
     revalidatePath("/admin/vols-sur-mesure");
+    revalidatePath("/admin/vols");
     return { success: true };
   } catch {
     return { error: "Erreur suppression" };
@@ -101,6 +104,7 @@ export async function deleteClient(clientId: string) {
     if (error) return { error: error.message };
     revalidatePath("/admin/clients");
     revalidatePath("/admin/reservations");
+    revalidatePath("/admin/vols");
     return { success: true };
   } catch {
     return { error: "Erreur suppression client" };
@@ -117,6 +121,7 @@ export async function deleteReservationStandard(resaId: string) {
       .eq("id", resaId);
     if (error) return { error: error.message };
     revalidatePath("/admin/reservations");
+    revalidatePath("/admin/vols");
     revalidatePath("/admin");
     return { success: true };
   } catch {
@@ -137,6 +142,7 @@ export async function deleteCoupon(couponId: string) {
     if (error) return { error: error.message };
 
     revalidatePath("/admin/coupons");
+    revalidatePath("/admin/boutique");
     return { success: true };
   } catch {
     return { error: "Erreur suppression coupon" };

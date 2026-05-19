@@ -28,6 +28,7 @@ export async function markVoucherUsed(voucherId: string) {
       .eq("status", "unused");
     if (error) return { error: error.message };
     revalidatePath("/admin/vouchers");
+    revalidatePath("/admin/boutique");
     return { success: true };
   } catch {
     return { error: "Non autorise" };
@@ -44,6 +45,7 @@ export async function markVoucherUnused(voucherId: string) {
       .eq("id", voucherId);
     if (error) return { error: error.message };
     revalidatePath("/admin/vouchers");
+    revalidatePath("/admin/boutique");
     return { success: true };
   } catch {
     return { error: "Non autorise" };
@@ -80,6 +82,7 @@ export async function createManualVoucher(formData: FormData) {
 
     if (error) return { error: error.message };
     revalidatePath("/admin/vouchers");
+    revalidatePath("/admin/boutique");
     return { success: true, code };
   } catch {
     return { error: "Erreur serveur" };
@@ -106,6 +109,7 @@ export async function updateVoucher(voucherId: string, data: {
       .eq("id", voucherId);
     if (error) return { error: error.message };
     revalidatePath("/admin/vouchers");
+    revalidatePath("/admin/boutique");
     return { success: true };
   } catch {
     return { error: "Non autorise" };
@@ -122,6 +126,7 @@ export async function deleteVoucher(voucherId: string) {
       .eq("id", voucherId);
     if (error) return { error: error.message };
     revalidatePath("/admin/vouchers");
+    revalidatePath("/admin/boutique");
     return { success: true };
   } catch {
     return { error: "Non autorise" };

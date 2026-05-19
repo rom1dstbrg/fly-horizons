@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ReservationsClient } from "@/components/admin/ReservationsClient";
+import { PageHeader } from "@/components/admin/PageHeader";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 
@@ -25,32 +26,35 @@ export default async function ReservationsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Réservations</h1>
-          <p className="text-muted-foreground text-sm mt-1">Réservations effectuées via la page /reserver (packs 30 / 60 / 90 / 120 min)</p>
-        </div>
-        <Link
-          href="/admin/reservations/new"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors shrink-0"
-        >
-          <Plus size={15} /> Nouvelle réservation
-        </Link>
-      </div>
+    <div className="space-y-5">
+      <PageHeader
+        domain="vols"
+        title="Réservations"
+        subtitle="Packs 30 / 60 / 90 / 120 min — réservés via /reservation"
+        action={
+          <Link
+            href="/admin/reservations/new"
+            className="inline-flex items-center gap-2 px-3 py-2 sm:px-4 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+          >
+            <Plus size={15} />
+            <span className="hidden sm:inline">Nouvelle réservation</span>
+            <span className="sm:hidden">Nouveau</span>
+          </Link>
+        }
+      />
 
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
         {[
-          { label: "Paiement en att.", value: byStatus.payment_pending, color: "text-orange-500" },
-          { label: "En attente",       value: byStatus.en_attente,      color: "text-yellow-600" },
-          { label: "Date confirmée",   value: byStatus.date_confirmee,  color: "text-blue-600" },
-          { label: "Heure confirmée",  value: byStatus.heure_confirmee, color: "text-green-600" },
-          { label: "Vol effectué",     value: byStatus.vol_effectue,    color: "text-purple-600" },
-          { label: "Annulées",         value: byStatus.annulee,         color: "text-red-500" },
+          { label: "Paiement att.", value: byStatus.payment_pending, color: "text-orange-500" },
+          { label: "En attente",    value: byStatus.en_attente,      color: "text-yellow-600" },
+          { label: "Date ✓",        value: byStatus.date_confirmee,  color: "text-blue-600" },
+          { label: "Heure ✓",       value: byStatus.heure_confirmee, color: "text-green-600" },
+          { label: "Effectués",     value: byStatus.vol_effectue,    color: "text-purple-600" },
+          { label: "Annulées",      value: byStatus.annulee,         color: "text-red-500" },
         ].map(({ label, value, color }) => (
           <div key={label} className="card-premium p-3 text-center">
             <p className={`text-xl font-bold ${color}`}>{value}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{label}</p>
           </div>
         ))}
       </div>

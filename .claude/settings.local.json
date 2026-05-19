@@ -24,7 +24,30 @@
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\romai\\\\Documents\\\\Projects\\\\shop_fly-horizons\" -Recurse -Force)",
       "Bash(Select-Object -First 50)",
       "Bash(xargs grep -l \"Stripe\\\\|stripe\")",
-      "Bash(npx supabase *)"
+      "Bash(npx supabase *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\romai\\\\Documents\\\\Projects\\\\shop_fly-horizons\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\romai\\\\Documents\\\\Projects\\\\shop_fly-horizons\" -Recurse -Directory -Depth 2)",
+      "Bash(Select-Object FullName)",
+      "Bash(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\romai\\\\Documents\\\\Projects\\\\shop_fly-horizons\\\\app\\\\api\\\\promo\\\\validate\")",
+      "Bash(Out-Null)",
+      "Bash(Write-Host \"done\")",
+      "Bash(Remove-Item *)",
+      "PowerShell(git add *)",
+      "PowerShell(git push *)",
+      "Bash(npm list *)",
+      "Bash(mkdir -p \"C:\\\\Users\\\\romai\\\\Documents\\\\Projects\\\\shop_fly-horizons\\\\app\\\\api\\\\pdf\\\\voucher\\\\[id]\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\romai\\\\Documents\\\\Projects\\\\shop_fly-horizons\\\\app\\\\api\\\\pdf\\\\flight\\\\[id]\")",
+      "Bash(npx tsx -e ' *)",
+      "Bash(npx tsx *)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(echo \"Exit: $?\")",
+      "Bash(git checkout *)",
+      "Bash(ls *)",
+      "Bash(xargs grep -l \"profile\\\\|auth\")",
+      "Bash(not exist *)",
+      "Bash(Select-Object -First 20)"
     ]
   }
 }

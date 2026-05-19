@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Search, Tag } from "lucide-react";
+import Link from "next/link";
+import { ChevronDown, ChevronUp, Search, Tag, ExternalLink } from "lucide-react";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 import { deleteClient } from "@/lib/actions/delete";
 
@@ -97,6 +98,13 @@ function ClientCard({ client }: { client: Client }) {
           className="flex items-center gap-1 shrink-0"
           onClick={e => e.stopPropagation()}
         >
+          <Link
+            href={`/admin/clients/${client.id}`}
+            className="p-1.5 text-muted-foreground hover:text-navy hover:bg-navy/5 rounded-md transition-colors"
+            title="Voir la fiche"
+          >
+            <ExternalLink size={14} />
+          </Link>
           <DeleteButton
             onDelete={() => deleteClient(client.id)}
             confirmMessage="Supprimer ?"

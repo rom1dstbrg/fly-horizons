@@ -414,7 +414,7 @@ export function VouchersClient({ vouchers, clients }: { vouchers: VoucherCode[];
         </div>
         <input value={search} onChange={(e) => setSearch(e.target.value)}
           placeholder="Code ou email…"
-          className="bg-input border border-border rounded-md px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary w-52" />
+          className="bg-input border border-border rounded-md px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary w-full sm:w-52" />
         <button onClick={() => setShowCreate(s => !s)}
           className={`ml-auto flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
             showCreate ? "bg-secondary text-foreground border border-border" : "bg-primary text-primary-foreground hover:bg-primary/90"
@@ -425,7 +425,9 @@ export function VouchersClient({ vouchers, clients }: { vouchers: VoucherCode[];
 
       {/* Table */}
       <div className="card-premium overflow-hidden">
-        <div className="flex flex-wrap items-center gap-x-4 px-5 py-2.5 border-b border-border bg-secondary/30">
+        <div className="overflow-x-auto">
+        <div className="min-w-[560px]">
+        <div className="flex items-center gap-x-4 px-5 py-2.5 border-b border-border bg-secondary/30">
           <span className="w-40 text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0">Code</span>
           <span className="w-28 text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0">Durée / Prix</span>
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0 w-20">Statut</span>
@@ -441,6 +443,8 @@ export function VouchersClient({ vouchers, clients }: { vouchers: VoucherCode[];
         ) : (
           filtered.map((v) => <VoucherRow key={v.id} voucher={v} />)
         )}
+        </div>
+        </div>
       </div>
     </div>
   );

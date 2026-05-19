@@ -12,15 +12,29 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const supabase = await createClient();
   const { data } = await supabase
     .from("products")
-    .select("title, short_description")
+    .select("title, short_description, price, images:product_images(url)")
     .eq("slug", slug)
     .eq("product_type", "voucher")
     .eq("active", true)
     .single();
   if (!data) return {};
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
+  const description =
+    data.short_description ??
+    `${data.title} — Baptême de l'air en avion léger depuis Charleroi (Belgique). Jusqu'à 3 passagers, itinéraire libre, pilote CPL licencié.`;
+  const imageUrl = (data.images as { url: string }[])?.[0]?.url ?? `${siteUrl}/piste.jpg`;
+
   return {
-    title: `${data.title} — Fly Horizons`,
-    description: data.short_description ?? undefined,
+    title: data.title,
+    description,
+    alternates: { canonical: `${siteUrl}/vols/${slug}` },
+    openGraph: {
+      title: `${data.title} | Fly Horizons`,
+      description,
+      url: `${siteUrl}/vols/${slug}`,
+      images: [{ url: imageUrl, alt: data.title }],
+    },
   };
 }
 
@@ -58,9 +72,33 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
 
   const duree = vol.voucher_duration_minutes ?? 60;
   const image = vol.images?.[0]?.url ?? null; // utilisé dans VolDetailClient (image_url)
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
+
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: vol.title,
+    description:
+      vol.short_description ??
+      `Baptême de l'air en avion léger depuis Charleroi (EBCI), Belgique. Durée : ${duree} minutes.`,
+    image: image ?? `${siteUrl}/piste.jpg`,
+    brand: { "@type": "Brand", name: "Fly Horizons" },
+    offers: {
+      "@type": "Offer",
+      url: `${siteUrl}/vols/${vol.slug}`,
+      priceCurrency: "EUR",
+      price: String(vol.price),
+      availability: "https://schema.org/InStock",
+      seller: { "@type": "Organization", name: "Fly Horizons" },
+    },
+  };
 
   return (
     <main className="bg-[#f5f5f7]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+      />
 
       {/* ── Navigation ── */}
       <div className="pt-[98px] px-4 sm:px-6">

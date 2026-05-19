@@ -59,6 +59,7 @@ export async function createCoupon(formData: FormData) {
     }
 
     revalidatePath("/admin/coupons");
+    revalidatePath("/admin/boutique");
     return { success: true };
   } catch {
     return { error: "Erreur serveur" };
@@ -88,6 +89,7 @@ export async function updateCoupon(couponId: string, data: {
     const { error } = await adminSupabase.from("coupons").update(update).eq("id", couponId);
     if (error) return { error: error.message };
     revalidatePath("/admin/coupons");
+    revalidatePath("/admin/boutique");
     return { success: true };
   } catch {
     return { error: "Non autorise" };
@@ -104,6 +106,7 @@ export async function toggleCouponActive(couponId: string, active: boolean) {
       .eq("id", couponId);
     if (error) return { error: error.message };
     revalidatePath("/admin/coupons");
+    revalidatePath("/admin/boutique");
     return { success: true };
   } catch {
     return { error: "Non autorise" };

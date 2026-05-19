@@ -45,6 +45,8 @@ interface Order {
   shipping_address: ShippingAddress;
   items: OrderItem[];
   voucher_codes: VoucherCode[];
+  customer_name?: string | null;
+  customer_email?: string | null;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
@@ -180,7 +182,7 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
             return (
               <div key={order.id} className="card-premium overflow-hidden">
                 {/* Header */}
-                <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-border bg-secondary/30">
+                <div className="flex items-center justify-between gap-3 px-3 sm:px-5 py-3 border-b border-border bg-secondary/30">
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="font-mono text-sm font-semibold text-foreground shrink-0">
                       #{shortId}
@@ -188,6 +190,20 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
                     <span className="text-xs text-muted-foreground hidden sm:block">
                       {date}
                     </span>
+                    {(order.customer_name || order.customer_email) && (
+                      <span className="hidden sm:flex items-center gap-1.5 min-w-0">
+                        {order.customer_name && (
+                          <span className="text-xs font-medium text-foreground truncate">
+                            {order.customer_name}
+                          </span>
+                        )}
+                        {order.customer_email && (
+                          <span className="text-xs text-muted-foreground truncate">
+                            {order.customer_name ? `(${order.customer_email})` : order.customer_email}
+                          </span>
+                        )}
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2.5 shrink-0">
                     <span
@@ -200,12 +216,12 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
                     </span>
                   </div>
                 </div>
-                <span className="text-xs text-muted-foreground sm:hidden block px-5 pt-2.5">
+                <span className="text-xs text-muted-foreground sm:hidden block px-3 pt-2.5">
                   {date}
                 </span>
 
                 {/* Body */}
-                <div className="p-5 grid sm:grid-cols-2 gap-5">
+                <div className="p-3 sm:p-5 grid sm:grid-cols-2 gap-4 sm:gap-5">
                   {/* Left */}
                   <div className="space-y-4">
                     {/* Address */}
@@ -238,9 +254,17 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
                           </p>
                         </div>
                       ) : (
-                        <p className="text-sm text-destructive">
-                          Adresse non renseignée
-                        </p>
+                        <div className="text-sm space-y-0.5">
+                          {order.customer_name && (
+                            <p className="font-medium text-foreground">{order.customer_name}</p>
+                          )}
+                          {order.customer_email && (
+                            <p className="text-primary text-xs">{order.customer_email}</p>
+                          )}
+                          {!order.customer_name && !order.customer_email && (
+                            <p className="text-destructive">Adresse non renseignée</p>
+                          )}
+                        </div>
                       )}
                     </div>
 

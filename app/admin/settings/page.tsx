@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ShippingSettingsForm } from "@/components/admin/ShippingSettingsForm";
 import { PrixVolForm } from "@/components/admin/PrixVolForm";
+import { PageHeader } from "@/components/admin/PageHeader";
 
 export const metadata = { title: "Parametres — Admin" };
 
@@ -23,10 +24,10 @@ export default async function AdminSettingsPage() {
 
   return (
     <div className="space-y-8 max-w-2xl">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Paramètres</h1>
-        <p className="text-muted-foreground text-sm mt-1">Configuration de la boutique et des vols</p>
-      </div>
+      <PageHeader
+        title="Paramètres"
+        subtitle="Configuration de la boutique et des vols"
+      />
 
       <PrixVolForm prixHeure={prixHeure} acomptePersoHeure={acomptePersoHeure} />
 

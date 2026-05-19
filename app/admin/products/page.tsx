@@ -4,6 +4,7 @@ import { Plus, Pencil, Ticket } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { formatDuration } from "@/lib/vouchers";
 import { ToggleProductActive } from "@/components/admin/ToggleProductActive";
+import { PageHeader } from "@/components/admin/PageHeader";
 
 export const metadata = { title: "Produits — Admin" };
 
@@ -132,27 +133,26 @@ export default async function AdminProductsPage() {
   return (
     <div className="space-y-8">
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Produits</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {physicalProducts.length} accessoire{physicalProducts.length !== 1 ? "s" : ""} · {voucherProducts.length} service{voucherProducts.length !== 1 ? "s" : ""}
-          </p>
-        </div>
-        <Link
-          href="/admin/products/new"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
-        >
-          <Plus size={16} />
-          Nouveau produit
-        </Link>
-      </div>
+      <PageHeader
+        title="Produits"
+        subtitle={`${physicalProducts.length} accessoire${physicalProducts.length !== 1 ? "s" : ""} · ${voucherProducts.length} service${voucherProducts.length !== 1 ? "s" : ""}`}
+        action={
+          <Link
+            href="/admin/products/new"
+            className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+          >
+            <Plus size={16} />
+            <span className="hidden sm:inline">Nouveau produit</span>
+            <span className="sm:hidden">Nouveau</span>
+          </Link>
+        }
+      />
 
       {/* Services / Vols */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <Ticket size={16} className="text-primary" />
-          <h2 className="text-base font-semibold text-foreground">
+          <Ticket size={15} className="text-[#113356]" />
+          <h2 className="text-sm font-semibold text-foreground">
             Services / Vols
           </h2>
           <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">

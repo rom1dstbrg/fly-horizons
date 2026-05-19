@@ -1,9 +1,59 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronDown, Gift, Route, Lock, Mail, Package, BadgeCheck, Clock, MapPin, Users, Sparkles, PlaneTakeoff } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { FeaturedProducts } from "@/components/shop/FeaturedProducts";
 import { PackCard } from "@/components/shop/PackCard";
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
+
+export const metadata: Metadata = {
+  title: {
+    absolute: "Fly Horizons — Baptême de l'air en Belgique | Vols privés depuis Charleroi",
+  },
+  description:
+    "Offrez ou vivez un baptême de l'air inoubliable en avion léger au départ de Charleroi (Belgique). Vols de 30 à 120 min, itinéraire libre, jusqu'à 3 passagers. Pilote CPL licencié.",
+  alternates: { canonical: siteUrl },
+  openGraph: {
+    title: "Fly Horizons — Baptême de l'air en Belgique | Vols privés depuis Charleroi",
+    description:
+      "Offrez ou vivez un baptême de l'air inoubliable en avion léger au départ de Charleroi (Belgique). Vols de 30 à 120 min, itinéraire libre.",
+    url: siteUrl,
+    images: [{ url: "/piste.jpg", width: 1200, height: 630, alt: "Fly Horizons — Baptême de l'air en Belgique" }],
+  },
+};
+
+const localBusinessSchema = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  name: "Fly Horizons",
+  description:
+    "Baptêmes de l'air et vols privés en avion léger depuis l'aéroport de Charleroi (EBCI), Belgique. Itinéraire 100 % libre, pilote CPL licencié, jusqu'à 3 passagers.",
+  url: siteUrl,
+  logo: "https://fly-horizons.com/logo-email.png",
+  image: `${siteUrl}/piste.jpg`,
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Charleroi",
+    addressCountry: "BE",
+  },
+  geo: {
+    "@type": "GeoCoordinates",
+    latitude: 50.4592,
+    longitude: 4.4528,
+  },
+  areaServed: { "@type": "Country", name: "Belgique" },
+  priceRange: "€€",
+  currenciesAccepted: "EUR",
+  paymentAccepted: "Carte bancaire",
+  openingHoursSpecification: {
+    "@type": "OpeningHoursSpecification",
+    dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+    opens: "00:00",
+    closes: "23:59",
+  },
+};
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -27,13 +77,21 @@ export default async function HomePage() {
 
   return (
     <main className="bg-background">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
+      />
 
       {/* ═══ HERO ═══ */}
       <section className="relative h-screen min-h-[580px] overflow-hidden">
         <video
           autoPlay loop muted playsInline
+          preload="auto"
+          poster="/piste.jpg"
           className="absolute inset-0 w-full h-full object-cover"
         >
+          {/* MP4 en premier — seul format supporté par Safari */}
+          <source src="/vol-rev.mp4" type="video/mp4" />
           <source src="/vol-rev%202.2.webm" type="video/webm" />
         </video>
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/35 to-black/65" />

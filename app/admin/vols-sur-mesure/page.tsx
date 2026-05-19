@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { VolsPersoClient } from "@/components/admin/VolsPersoClient";
+import { PageHeader } from "@/components/admin/PageHeader";
 
 export const metadata = { title: "Vols sur mesure — Admin" };
 
@@ -23,30 +24,30 @@ export default async function VolsSurMesurePage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Vols sur mesure</h1>
-        <p className="text-muted-foreground text-sm mt-1">Réservations personnalisées avec itinéraire tracé sur carte</p>
-      </div>
+    <div className="space-y-5">
+      <PageHeader
+        domain="vols"
+        title="Vols sur mesure"
+        subtitle="Itinéraires personnalisés tracés sur carte"
+      />
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
         {[
-          { label: "En attente",      value: byStatus.en_attente,      color: "text-yellow-600" },
-          { label: "Acompte reçu",    value: byStatus.acompte_recu,    color: "text-emerald-600" },
-          { label: "Date confirmée",  value: byStatus.date_confirmee,  color: "text-blue-600" },
-          { label: "Heure confirmée", value: byStatus.heure_confirmee, color: "text-green-600" },
-          { label: "Vol effectué",    value: byStatus.vol_effectue,    color: "text-purple-600" },
-          { label: "Annulées",        value: byStatus.annulee,         color: "text-red-500" },
+          { label: "En attente",   value: byStatus.en_attente,      color: "text-yellow-600" },
+          { label: "Acompte ✓",    value: byStatus.acompte_recu,    color: "text-emerald-600" },
+          { label: "Date ✓",       value: byStatus.date_confirmee,  color: "text-blue-600" },
+          { label: "Heure ✓",      value: byStatus.heure_confirmee, color: "text-green-600" },
+          { label: "Effectués",    value: byStatus.vol_effectue,    color: "text-purple-600" },
+          { label: "Annulées",     value: byStatus.annulee,         color: "text-red-500" },
         ].map(({ label, value, color }) => (
           <div key={label} className="card-premium p-3 text-center">
             <p className={`text-xl font-bold ${color}`}>{value}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{label}</p>
           </div>
         ))}
       </div>
 
-      <VolsPersoClient reservations={reservations ?? []} />
+      <VolsPersoClient reservations={all} />
     </div>
   );
 }

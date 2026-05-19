@@ -2,16 +2,31 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ShoppingBag, User, Menu, X, Home, Route, Store, Mail, Ticket, HelpCircle } from "lucide-react";
 import { CartCount } from "@/components/shop/CartCount";
 import { createClient } from "@/lib/supabase/client";
+import { useCartStore } from "@/store/cart";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 export function Header() {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  const cartTotal = useCartStore((s) => s.totalItems());
+  const [cartBump, setCartBump] = useState(false);
+  const prevCartTotal = useRef(cartTotal);
+
+  useEffect(() => {
+    if (cartTotal > prevCartTotal.current) {
+      setCartBump(true);
+      const t = setTimeout(() => setCartBump(false), 700);
+      prevCartTotal.current = cartTotal;
+      return () => clearTimeout(t);
+    }
+    prevCartTotal.current = cartTotal;
+  }, [cartTotal]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -88,7 +103,9 @@ export function Header() {
 
             {/* Panier desktop uniquement */}
             <Link href="/cart" className={`relative hidden md:flex ${iconLinkClass}`} aria-label="Panier">
-              <ShoppingBag size={19} />
+              <span className={`inline-flex${cartBump ? " animate-cart-bump" : ""}`}>
+                <ShoppingBag size={19} />
+              </span>
               <CartCount />
             </Link>
 
@@ -105,8 +122,12 @@ export function Header() {
       </div>
 
       {/* Menu mobile */}
-      {menuOpen && (
-        <div className="md:hidden border-t border-border rounded-b-2xl overflow-hidden bg-card">
+      <div
+        className={`md:hidden rounded-b-2xl overflow-hidden bg-card transition-[max-height,opacity] duration-300 ease-out ${
+          menuOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        <div className="border-t border-border">
           <nav className="px-3 py-3 flex flex-col gap-0.5">
             <Link href="/" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
               <Home size={16} className="opacity-60 text-[#113356]" />
@@ -137,7 +158,9 @@ export function Header() {
 
             {/* Panier + compte dans le menu mobile */}
             <Link href="/cart" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
-              <ShoppingBag size={16} className="opacity-60 text-[#113356]" />
+              <span className={`inline-flex${cartBump ? " animate-cart-bump" : ""}`}>
+                <ShoppingBag size={16} className="opacity-60 text-[#113356]" />
+              </span>
               <span className="flex-1">Panier</span>
               <CartCount />
             </Link>
@@ -147,7 +170,7 @@ export function Header() {
             </Link>
           </nav>
         </div>
-      )}
+      </div>
     </header>
   );
 }

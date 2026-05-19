@@ -31,6 +31,7 @@ export async function toggleProductActive(productId: string, active: boolean) {
 
     if (error) return { error: error.message };
     revalidatePath("/admin/products");
+    revalidatePath("/admin/boutique");
     return { success: true };
   } catch {
     return { error: "Non autorise" };
@@ -84,6 +85,7 @@ export async function createProduct(formData: FormData) {
     }
 
     revalidatePath("/admin/products");
+    revalidatePath("/admin/boutique");
     revalidatePath("/shop");
     redirect(`/admin/products/${product.id}`);
   } catch (err: unknown) {
@@ -132,6 +134,7 @@ export async function updateProduct(productId: string, formData: FormData) {
     if (error) return { error: error.message };
 
     revalidatePath("/admin/products");
+    revalidatePath("/admin/boutique");
     revalidatePath(`/admin/products/${productId}`);
     revalidatePath("/shop");
     return { success: true };
@@ -158,6 +161,7 @@ export async function deleteProductImage(imageId: string, imageUrl: string) {
     }
 
     revalidatePath("/admin/products");
+    revalidatePath("/admin/boutique");
     return { success: true };
   } catch {
     return { error: "Erreur suppression image" };

@@ -71,6 +71,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
     }
 
     revalidatePath("/admin/orders");
+    revalidatePath("/admin/boutique");
     revalidatePath("/admin");
     return { success: true };
   } catch {
