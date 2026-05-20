@@ -133,7 +133,7 @@ export function ReservationDrawer({
       if (r.error) { showFeedback("Erreur : " + r.error, false); return; }
       onStatusChange?.(reservation.id, statut);
       const emailStatuts = ["date_confirmee", "heure_confirmee", "vol_effectue"];
-      showFeedback(emailStatuts.includes(statut) ? "Statut mis à jour — email envoyé ✓" : "Statut mis à jour");
+      showFeedback(emailStatuts.includes(statut) ? "Statut mis à jour, email envoyé ✓" : "Statut mis à jour");
       setShowDateAlert(false);
       if ((statut === "date_confirmee" || statut === "heure_confirmee") && (savedRoute.trim() || localRoute.trim())) {
         setLocalRouteStatus("sent");
@@ -212,7 +212,7 @@ export function ReservationDrawer({
       const r = await resendRoute(reservation.id);
       if (r.error) { showFeedback("Erreur : " + r.error, false); return; }
       setLocalRouteStatus("sent");
-      showFeedback("Route renvoyée — email envoyé ✓");
+      showFeedback("Route renvoyée, email envoyé ✓");
     });
   }
 
@@ -550,7 +550,7 @@ export function ReservationDrawer({
                           className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50"
                         >
                           {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
-                          Confirmer la date — envoyer email
+                          Confirmer la date, envoyer l&apos;email
                         </button>
                         <button
                           onClick={() => changeStatut("heure_confirmee")}
@@ -558,7 +558,7 @@ export function ReservationDrawer({
                           className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors disabled:opacity-50"
                         >
                           {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
-                          Confirmer date + heure — envoyer email
+                          Confirmer date + heure, envoyer l&apos;email
                         </button>
                         {isStandard && !savedRoute.trim() && (
                           <p className="text-xs text-amber-600 flex items-center gap-1.5 px-1">
@@ -578,7 +578,7 @@ export function ReservationDrawer({
                           className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors disabled:opacity-50"
                         >
                           {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
-                          Confirmer l&apos;heure — envoyer email
+                          Confirmer l&apos;heure, envoyer l&apos;email
                         </button>
                         {isStandard && !savedRoute.trim() && (
                           <p className="text-xs text-amber-600 flex items-center gap-1.5 px-1">
@@ -621,7 +621,7 @@ export function ReservationDrawer({
                     {r.statut === "vol_effectue" && (
                       <div className="flex items-center gap-2.5 px-4 py-3 rounded-lg bg-purple-50 border border-purple-200">
                         <CheckCircle2 size={14} className="text-purple-600" />
-                        <span className="text-sm text-purple-700 font-medium">Vol effectué — dossier clôturé</span>
+                        <span className="text-sm text-purple-700 font-medium">Vol effectué, dossier clôturé</span>
                       </div>
                     )}
 
@@ -666,7 +666,7 @@ export function ReservationDrawer({
                         className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50"
                       >
                         {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
-                        Confirmer la date — envoyer email
+                        Confirmer la date, envoyer l&apos;email
                       </button>
                     )}
                   </div>

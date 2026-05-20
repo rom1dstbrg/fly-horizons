@@ -1,6 +1,10 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { routeFeedbackAdminEmail } from "@/lib/email-templates";
+import { resend, EMAIL_FROM } from "@/lib/resend";
+
+const ADMIN_EMAIL = "Romainpilot2003@gmail.com";
 
 export async function submitRouteResponse(
   token: string,
@@ -11,7 +15,7 @@ export async function submitRouteResponse(
 
   const { data: resa } = await supabase
     .from("reservations")
-    .select("id, date_vol, heure_vol, route_responded_at")
+    .select("id, date_vol, heure_vol, route_responded_at, clients(prenom, nom, email)")
     .eq("route_token", token)
     .single();
 
@@ -33,6 +37,34 @@ export async function submitRouteResponse(
       route_responded_at: new Date().toISOString(),
     })
     .eq("id", resa.id);
+
+  // Notifier l'admin
+  try {
+    const client = resa.clients as unknown as { prenom: string; nom: string; email: string };
+    const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
+      weekday: "long", day: "numeric", month: "long", year: "numeric",
+    });
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
+    const subjectLabel = type === "validated" ? "Itinéraire validé" : "Modification demandée";
+    await resend.emails.send({
+      from: EMAIL_FROM,
+      to: [ADMIN_EMAIL],
+      subject: `[Route] ${subjectLabel} — ${client.prenom} ${client.nom}`,
+      html: routeFeedbackAdminEmail({
+        clientPrenom: client.prenom,
+        clientNom: client.nom,
+        clientEmail: client.email,
+        resaId: resa.id,
+        dateStr,
+        type,
+        feedback: feedback?.trim() || null,
+        adminUrl: `${siteUrl}/admin/reservations/${resa.id}`,
+      }),
+    });
+  } catch (err) {
+    // L'email admin ne doit pas faire échouer la réponse du client
+    console.error("Route feedback admin email error:", err);
+  }
 
   return { success: true };
 }

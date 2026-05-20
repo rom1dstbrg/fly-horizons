@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { CheckCircle2, MessageSquare, AlertTriangle, Clock, Send, Loader2, MapPin } from "lucide-react";
 import { submitRouteResponse } from "@/lib/actions/route";
+import { formatDuration } from "@/lib/vouchers";
 
 interface Props {
   token: string;
@@ -58,7 +59,7 @@ export function RouteForm({ token, prenom, dateStr, duree, route, alreadyRespond
               Bonjour <span className="font-semibold text-foreground capitalize">{prenom}</span>,
             </p>
           )}
-          <p className="text-sm text-muted-foreground mt-1 capitalize">{dateStr} · {duree} min</p>
+          <p className="text-sm text-muted-foreground mt-1 capitalize">{dateStr} · {formatDuration(duree)}</p>
         </div>
 
         {/* Route card */}
@@ -79,7 +80,7 @@ export function RouteForm({ token, prenom, dateStr, duree, route, alreadyRespond
               </div>
               <div>
                 <p className="font-semibold text-foreground">Itinéraire validé !</p>
-                <p className="text-sm text-muted-foreground mt-0.5">Merci — nous vous attendons à Charleroi EBCI.</p>
+                <p className="text-sm text-muted-foreground mt-0.5">Merci, nous vous attendons à Charleroi EBCI.</p>
               </div>
             </div>
           </div>

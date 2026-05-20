@@ -61,7 +61,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground mb-0.5">Aérodrome de départ</p>
-                  <p className="text-sm font-semibold text-foreground">Charleroi — EBCI</p>
+                  <p className="text-sm font-semibold text-foreground">Charleroi, EBCI</p>
                   <p className="text-xs text-muted-foreground">Belgique</p>
                 </div>
               </div>
@@ -85,7 +85,7 @@ export default function ContactPage() {
                 pilote et fondateur de Fly Horizons. Il est en développement actif et évolue en permanence.
               </p>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Des imperfections peuvent survenir. Chaque bug signalé via ce formulaire est lu personnellement — votre retour compte vraiment et aide à améliorer l&apos;expérience pour tous.
+                Des imperfections peuvent survenir. Chaque bug signalé via ce formulaire est lu personnellement : votre retour compte vraiment et aide à améliorer l&apos;expérience pour tous.
               </p>
               <p className="text-xs text-primary font-medium">
                 Sujet : &ldquo;Bug ou problème technique&rdquo;

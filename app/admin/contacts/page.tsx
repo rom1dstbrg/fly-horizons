@@ -25,7 +25,7 @@ export default async function AdminContactsPage() {
       <PageHeader
         domain="clients"
         title="Messages"
-        subtitle="Formulaire de contact — répondez directement depuis cette page"
+        subtitle="Formulaire de contact : répondez directement depuis cette page"
       />
 
       {/* Stats */}

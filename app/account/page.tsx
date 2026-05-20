@@ -79,6 +79,9 @@ export default async function AccountPage() {
     acompte: number | null;
     distance_km: number | null;
     created_at: string;
+    route: string | null;
+    route_status: string | null;
+    route_token: string | null;
   }[] = [];
 
   if (user.email) {
@@ -93,7 +96,7 @@ export default async function AccountPage() {
       const { data: resas } = await adminSupabase
         .from("reservations")
         .select(
-          "id, date_vol, heure_vol, duree, passagers, statut, type_resa, payment_token, acompte, distance_km, created_at"
+          "id, date_vol, heure_vol, duree, passagers, statut, type_resa, payment_token, acompte, distance_km, created_at, route, route_status, route_token"
         )
         .in("client_id", clientIds)
         .order("date_vol", { ascending: false });

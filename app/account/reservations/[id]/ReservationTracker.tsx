@@ -14,6 +14,9 @@ import {
   Wifi,
   WifiOff,
   AlertTriangle,
+  MapPin,
+  CheckCircle,
+  Navigation,
 } from "lucide-react";
 import { formatDuration } from "@/lib/vouchers";
 
@@ -31,7 +34,17 @@ export interface ReservationData {
   acompte: number | null;
   distance_km: number | null;
   created_at: string;
+  route?: string | null;
+  route_status?: string | null;
+  route_token?: string | null;
+  route_feedback?: string | null;
 }
+
+const ROUTE_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  sent:                   { label: "En attente de votre validation", color: "text-amber-700 bg-amber-50 border-amber-200" },
+  validated:              { label: "Itinéraire validé ✓",            color: "text-green-700 bg-green-50 border-green-200" },
+  modification_requested: { label: "Modification demandée",          color: "text-red-700 bg-red-50 border-red-200" },
+};
 
 interface Props {
   reservation: ReservationData;
@@ -96,7 +109,7 @@ const STANDARD_TIMELINE = [
     key: "vol_effectue",
     label: "Vol effectué",
     desc: () => "À bientôt en l'air !",
-    doneDesc: () => "Vol effectué — Merci !",
+    doneDesc: () => "Vol effectué. Merci !",
   },
 ];
 
@@ -144,7 +157,7 @@ const PERSO_TIMELINE = [
     key: "vol_effectue",
     label: "Vol effectué",
     desc: () => "À bientôt en l'air !",
-    doneDesc: () => "Vol effectué — Merci !",
+    doneDesc: () => "Vol effectué. Merci !",
   },
 ];
 
@@ -430,6 +443,75 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* Route proposée */}
+        {resa.route && (
+          <div className="card-premium p-6 mt-5">
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-[#113356]/10 flex items-center justify-center shrink-0">
+                  <MapPin size={14} className="text-[#113356]" />
+                </div>
+                <p className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                  Itinéraire proposé
+                </p>
+              </div>
+              {resa.route_status && ROUTE_STATUS_CONFIG[resa.route_status] && (
+                <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${ROUTE_STATUS_CONFIG[resa.route_status].color}`}>
+                  {ROUTE_STATUS_CONFIG[resa.route_status].label}
+                </span>
+              )}
+            </div>
+
+            <p className="text-sm text-foreground whitespace-pre-line leading-relaxed">
+              {resa.route}
+            </p>
+
+            {resa.route_feedback && (
+              <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                <p className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider mb-1">Votre retour</p>
+                <p className="text-xs text-amber-700 leading-relaxed">{resa.route_feedback}</p>
+              </div>
+            )}
+
+            {resa.route_status === "sent" && resa.route_token && (
+              <div className="mt-4 pt-4 border-t border-border">
+                <Link
+                  href={`/vol/itineraire/${resa.route_token}`}
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-[#113356] text-white rounded-xl text-xs font-bold hover:bg-[#0b2238] transition-colors"
+                >
+                  Valider ou modifier la route →
+                </Link>
+              </div>
+            )}
+
+            {resa.route_status === "validated" && (
+              <div className="mt-4 pt-4 border-t border-border flex items-center gap-1.5 text-green-600 text-xs font-medium">
+                <CheckCircle size={13} />
+                Vous avez validé cet itinéraire
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Accès EBCI — visible dès que la date est confirmée */}
+        {["date_confirmee", "heure_confirmee", "vol_effectue"].includes(resa.statut) && (
+          <div className="card-premium p-5 mt-5 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-[#113356]/8 flex items-center justify-center shrink-0">
+              <Navigation size={16} className="text-[#113356]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground">Comment accéder à l&apos;aérodrome ?</p>
+              <p className="text-xs text-muted-foreground mt-0.5">GPS, parking, accueil : tout est détaillé sur notre page d&apos;accès.</p>
+            </div>
+            <Link
+              href="/access-ebci"
+              className="shrink-0 text-xs font-bold text-[#113356] hover:text-primary transition-colors"
+            >
+              Voir →
+            </Link>
           </div>
         )}
 

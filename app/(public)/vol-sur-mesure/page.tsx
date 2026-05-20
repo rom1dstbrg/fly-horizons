@@ -215,7 +215,7 @@ export default function VolSurMesurePage() {
       if (d2.valid) {
         setForm(f => ({ ...f, coupon: { code: d2.code, type: d2.type, value: d2.value } }));
       } else {
-        setCodeError(d2.error || "Code invalide — vérifiez et réessayez.");
+        setCodeError(d2.error || "Code invalide, vérifiez et réessayez.");
       }
     } catch { setCodeError("Erreur de connexion, veuillez réessayer."); }
     finally { setCodeLoading(false); }
@@ -646,7 +646,7 @@ export default function VolSurMesurePage() {
                           <Clock size={14} className="text-muted-foreground/40 shrink-0" />
                           <div>
                             <p className="text-sm font-semibold text-foreground capitalize">{formattedDate}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">Aucun créneau disponible — essayez une autre date</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">Aucun créneau disponible. Essayez une autre date.</p>
                           </div>
                         </div>
                       ) : (
@@ -746,7 +746,7 @@ export default function VolSurMesurePage() {
                             className="w-36 h-10 px-3 rounded-xl border border-border bg-white text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#fbae17]/20 focus:border-[#fbae17] transition-all placeholder:text-muted-foreground/40" />
                           <span className="text-sm text-muted-foreground">kg</span>
                         </div>
-                        <p className="mt-2 text-xs text-muted-foreground">Poids cumulé de tous les passagers — requis pour le calcul masse &amp; centrage (max {MAX_WEIGHT} kg).</p>
+                        <p className="mt-2 text-xs text-muted-foreground">Poids cumulé de tous les passagers, requis pour le calcul masse &amp; centrage (max {MAX_WEIGHT} kg).</p>
                         {weightWarn && (
                           <div className="mt-2.5 flex items-start gap-2.5 bg-amber-50 border border-amber-200 px-3.5 py-3 rounded-xl text-sm text-amber-800">
                             <AlertTriangle size={14} className="shrink-0 mt-0.5 text-amber-500" />
@@ -756,7 +756,7 @@ export default function VolSurMesurePage() {
                         {weightError && (
                           <div className="mt-2.5 flex items-start gap-2.5 bg-red-50 border border-red-200 px-3.5 py-3 rounded-xl text-sm text-red-800">
                             <AlertCircle size={14} className="shrink-0 mt-0.5 text-red-500" />
-                            <p>Poids trop élevé — le vol ne peut pas être effectué. Réduisez le nombre de passagers ou le chargement.</p>
+                            <p>Poids trop élevé. Le vol ne peut pas être effectué. Réduisez le nombre de passagers ou le chargement.</p>
                           </div>
                         )}
                       </div>

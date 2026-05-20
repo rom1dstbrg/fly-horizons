@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { reservation_id, note_globale, note_accueil, note_pilote, commentaire } = body;
+    const { reservation_id, note_globale, note_accueil, note_pilote, commentaire, points_amelioration } = body;
 
     if (
       !reservation_id ||
@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
       note_accueil,
       note_pilote,
       commentaire: commentaire?.trim() || null,
+      points_amelioration: points_amelioration?.trim() || null,
     });
 
     if (insertErr) {
@@ -78,6 +79,7 @@ export async function POST(request: NextRequest) {
         noteAccueil: note_accueil,
         notePilote: note_pilote,
         commentaire: commentaire?.trim() || null,
+        pointsAmelioration: points_amelioration?.trim() || null,
       }),
     });
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Star, Send, CheckCircle, AlertCircle } from "lucide-react";
+import { Star, Send, CheckCircle, AlertCircle, MessageSquare } from "lucide-react";
 
 interface Props {
   reservationId: string;
@@ -53,6 +53,7 @@ export default function SatisfactionForm({ reservationId, prenom, dateStr, duree
   const [noteAccueil, setNoteAccueil] = useState(0);
   const [notePilote, setNotePilote] = useState(0);
   const [commentaire, setCommentaire] = useState("");
+  const [pointsAmelioration, setPointsAmelioration] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -72,6 +73,7 @@ export default function SatisfactionForm({ reservationId, prenom, dateStr, duree
           note_accueil: noteAccueil,
           note_pilote: notePilote,
           commentaire,
+          points_amelioration: pointsAmelioration,
         }),
       });
       const data = await res.json();
@@ -95,10 +97,11 @@ export default function SatisfactionForm({ reservationId, prenom, dateStr, duree
         </div>
         <h2 className="text-xl font-bold text-foreground">Merci, {prenom} !</h2>
         <p className="text-muted-foreground text-sm leading-relaxed">
-          Votre avis a bien été transmis. Il nous aide à améliorer chaque vol.
+          Votre avis a bien été transmis, vos remarques incluses.<br />
+          Chaque retour, positif ou non, nous aide à nous améliorer.
         </p>
         <p className="text-xs text-muted-foreground pt-2">
-          À bientôt à bord &mdash; L&apos;équipe Fly Horizons
+          À bientôt à bord. L&apos;équipe Fly Horizons
         </p>
       </div>
     );
@@ -108,9 +111,18 @@ export default function SatisfactionForm({ reservationId, prenom, dateStr, duree
     <form onSubmit={handleSubmit} className="space-y-7">
       <div className="text-center">
         <p className="text-xs font-bold uppercase tracking-widest text-[#F2B705] mb-1">Fly Horizons</p>
-        <h1 className="text-2xl font-extrabold text-foreground mb-1">Votre avis</h1>
+        <h1 className="text-2xl font-extrabold text-foreground mb-1">Votre avis compte</h1>
         <p className="text-sm text-muted-foreground">
           Vol du {dateStr} &middot; {duree}
+        </p>
+      </div>
+
+      {/* Intro critique acceptée */}
+      <div className="flex items-start gap-3 bg-[#f5f8ff] border border-[#dce8ff] rounded-xl px-4 py-3.5">
+        <MessageSquare size={16} className="text-[#113356] shrink-0 mt-0.5" />
+        <p className="text-xs text-[#113356]/80 leading-relaxed">
+          <strong className="text-[#113356]">Nous accueillons toutes les remarques</strong>, bonnes comme mauvaises.
+          Votre honnêteté est précieuse : chaque retour nous aide à rendre chaque vol meilleur.
         </p>
       </div>
 
@@ -120,18 +132,42 @@ export default function SatisfactionForm({ reservationId, prenom, dateStr, duree
       <StarRating label="Qualité de l'accueil" value={noteAccueil} onChange={setNoteAccueil} />
       <StarRating label="Professionnalisme du pilote" value={notePilote} onChange={setNotePilote} />
 
+      <hr className="border-border" />
+
+      {/* Commentaire général */}
       <div className="space-y-2">
         <label htmlFor="commentaire" className="text-sm font-medium text-foreground">
-          Commentaire <span className="text-muted-foreground font-normal">(facultatif)</span>
+          Votre expérience globale{" "}
+          <span className="text-muted-foreground font-normal">(facultatif)</span>
         </label>
         <textarea
           id="commentaire"
-          rows={4}
+          rows={3}
           value={commentaire}
           onChange={(e) => setCommentaire(e.target.value)}
-          placeholder="Partagez votre expérience..."
+          placeholder="Comment s'est passé votre vol ? Ce qui vous a marqué..."
           maxLength={1000}
           className="w-full rounded-xl border border-border bg-secondary/30 px-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#F2B705]/50 resize-none"
+        />
+      </div>
+
+      {/* Points à améliorer */}
+      <div className="space-y-2">
+        <label htmlFor="points_amelioration" className="text-sm font-medium text-foreground">
+          Ce qu&apos;on pourrait améliorer{" "}
+          <span className="text-muted-foreground font-normal">(facultatif)</span>
+        </label>
+        <p className="text-xs text-muted-foreground -mt-1">
+          Aucun filtre. Si quelque chose n&apos;était pas parfait, dites-le nous franchement.
+        </p>
+        <textarea
+          id="points_amelioration"
+          rows={3}
+          value={pointsAmelioration}
+          onChange={(e) => setPointsAmelioration(e.target.value)}
+          placeholder="Par exemple : l'accueil à l'arrivée, la durée du briefing, la communication avant le vol..."
+          maxLength={1000}
+          className="w-full rounded-xl border border-amber-200 bg-amber-50/40 px-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-amber-300/50 resize-none"
         />
       </div>
 
@@ -156,6 +192,10 @@ export default function SatisfactionForm({ reservationId, prenom, dateStr, duree
           </>
         )}
       </button>
+
+      <p className="text-center text-xs text-muted-foreground">
+        Votre avis est lu personnellement par Romain.
+      </p>
     </form>
   );
 }

@@ -264,7 +264,7 @@ export function DispoClient({ plages, joursIndiv }: Props) {
 
         {plages.length === 0 && !showPlagForm ? (
           <div className="card-premium p-8 text-center">
-            <p className="text-sm text-muted-foreground">Aucune plage configurée — le calendrier sera vide.</p>
+            <p className="text-sm text-muted-foreground">Aucune plage configurée : le calendrier sera vide.</p>
           </div>
         ) : (
           <div className="card-premium overflow-hidden">

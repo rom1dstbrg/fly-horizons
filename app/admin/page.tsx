@@ -172,7 +172,7 @@ export default async function AdminDashboardPage() {
           <div className="flex items-center gap-3 px-5 py-3 border-b border-red-200/60 bg-red-500/5">
             <AlertTriangle size={15} className="text-red-500 shrink-0" />
             <p className="text-sm font-semibold text-red-700">
-              {urgentItems.length} élément{urgentItems.length > 1 ? "s" : ""} urgent{urgentItems.length > 1 ? "s" : ""} — action requise
+              {urgentItems.length} élément{urgentItems.length > 1 ? "s" : ""} urgent{urgentItems.length > 1 ? "s" : ""}, action requise
             </p>
           </div>
           <div className="px-5 py-3 space-y-2">
@@ -216,7 +216,7 @@ export default async function AdminDashboardPage() {
       ) : (
         <div className="rounded-xl border border-green-200 bg-green-50 px-5 py-3.5 flex items-center gap-3">
           <CheckCircle2 size={15} className="text-green-500 shrink-0" />
-          <p className="text-sm font-medium text-green-700">Tout est en ordre — aucune action requise</p>
+          <p className="text-sm font-medium text-green-700">Tout est en ordre, aucune action requise</p>
         </div>
       )}
 

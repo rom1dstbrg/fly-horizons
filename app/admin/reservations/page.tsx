@@ -30,7 +30,7 @@ export default async function ReservationsPage() {
       <PageHeader
         domain="vols"
         title="Réservations"
-        subtitle="Packs 30 / 60 / 90 / 120 min — réservés via /reservation"
+        subtitle="Packs 30 / 60 / 90 / 120 min, réservés via /reservation"
         action={
           <Link
             href="/admin/reservations/new"

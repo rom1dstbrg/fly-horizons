@@ -54,7 +54,7 @@ export default async function NosOffresPage() {
                 En temps réel.
               </h1>
               <p className="text-white/60 text-sm leading-relaxed mb-8 max-w-md">
-                Tracez votre itinéraire directement sur la carte — le prix s&apos;ajuste
+                Tracez votre itinéraire directement sur la carte : le prix s&apos;ajuste
                 instantanément à la distance. Aucune formule fixe, vous payez exactement
                 ce que vous volez.
               </p>
@@ -160,7 +160,7 @@ export default async function NosOffresPage() {
                 </div>
 
               </div>
-              <p className="text-center text-white/25 text-[10px] mt-2">Aperçu — les valeurs sont calculées en temps réel sur votre route</p>
+              <p className="text-center text-white/25 text-[10px] mt-2">Aperçu : les valeurs sont calculées en temps réel sur votre route</p>
             </div>
 
           </div>
@@ -190,7 +190,7 @@ export default async function NosOffresPage() {
           </h2>
           <div className="w-10 h-0.5 bg-[#F2B705] mx-auto mt-4 mb-3 rounded-full" />
           <p className="text-muted-foreground text-sm mt-0 max-w-lg mx-auto">
-            Choisissez votre durée de vol — 30, 60, 90 ou 120 minutes.
+            Choisissez votre durée de vol : 30, 60, 90 ou 120 minutes.
             La date se fixe quand vous êtes prêt.
           </p>
         </div>
@@ -212,7 +212,7 @@ export default async function NosOffresPage() {
         <div className="mt-6 bg-[#0b2238] rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             <p className="text-white font-bold text-sm">Vous ne savez pas encore combien de temps vous voulez voler ?</p>
-            <p className="text-white/50 text-xs mt-1">Tracez votre route — le prix et la durée se calculent automatiquement.</p>
+            <p className="text-white/50 text-xs mt-1">Tracez votre route : le prix et la durée se calculent automatiquement.</p>
           </div>
           <Link
             href="/vol-sur-mesure"

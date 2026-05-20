@@ -15,11 +15,11 @@ export default function OrderSuccessPage() {
 
           <div>
             <h1 className="text-2xl font-bold text-foreground mb-2">
-              Commande confirmee !
+              Commande confirmée !
             </h1>
             <p className="text-muted-foreground text-sm leading-relaxed">
               Merci pour votre commande. Vous recevrez un email de confirmation
-              avec tous les details.
+              avec tous les détails.
             </p>
           </div>
 

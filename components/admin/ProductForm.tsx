@@ -291,7 +291,7 @@ export function ProductForm({ product }: ProductFormProps) {
 
         {productType === "voucher" && (
           <p className="text-xs text-muted-foreground">
-            Les codes sont générés automatiquement à chaque achat — aucun stock à gérer.
+            Les codes sont générés automatiquement à chaque achat, aucun stock à gérer.
           </p>
         )}
       </div>

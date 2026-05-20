@@ -350,6 +350,7 @@ export async function createAdminReservation(data: {
           passengers: data.passagers,
           poids_total: data.poids_total ?? null,
           voucherCode: data.voucher_code?.toUpperCase().trim() || null,
+          reservationId: resa.id,
         }),
       });
     }

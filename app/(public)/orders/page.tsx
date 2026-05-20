@@ -129,7 +129,7 @@ export default async function OrdersPage() {
                       unit_price: number;
                     }) => (
                       <p key={item.id} className="text-sm text-muted-foreground">
-                        {item.title} x{item.quantity} — {formatPrice(item.unit_price * item.quantity)}
+                        {item.title} x{item.quantity}, {formatPrice(item.unit_price * item.quantity)}
                       </p>
                     ))}
                     {(order.items?.length ?? 0) > 3 && (

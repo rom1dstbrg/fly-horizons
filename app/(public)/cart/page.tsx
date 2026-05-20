@@ -95,7 +95,7 @@ export default function CartPage() {
                   </Link>
                   {item.product_type === "voucher" && (
                     <span className="inline-block text-[10px] font-semibold text-[#F2B705] bg-[#F2B705]/10 border border-[#F2B705]/20 rounded-full px-2 py-0.5 mt-1">
-                      Voucher — livraison par email
+                      Voucher : livraison par email
                     </span>
                   )}
                   <p className="text-primary font-bold mt-1">

@@ -80,7 +80,7 @@ export default function AccessEbciPage() {
         {/* Image aérienne */}
         <div className="card-premium overflow-hidden mb-6">
           <div className="bg-muted/40 border-b border-border px-4 py-2.5 flex items-center gap-2">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Vue aérienne — accès parking</span>
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Vue aérienne, accès parking</span>
           </div>
           <div className="relative">
             <Image
@@ -153,7 +153,7 @@ export default function AccessEbciPage() {
           <div className="mt-5 pt-4 border-t border-border flex items-start gap-2.5">
             <AlertTriangle size={13} className="text-primary mt-0.5 shrink-0" />
             <p className="text-xs text-muted-foreground">
-              Ne pas suivre les panneaux « Terminal passagers » — l&apos;aéroport (aviation légère) est un accès distinct, situé à l&apos;écart du terminal commercial.
+              Ne pas suivre les panneaux « Terminal passagers ». L&apos;aéroport aviation légère est un accès distinct, situé à l&apos;écart du terminal commercial.
             </p>
           </div>
         </div>
@@ -161,7 +161,7 @@ export default function AccessEbciPage() {
         {/* Image — point de rendez-vous au sol */}
         <div className="card-premium overflow-hidden mb-6">
           <div className="bg-muted/40 border-b border-border px-4 py-2.5 flex items-center gap-2">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Vue au sol — point de rendez-vous</span>
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Vue au sol, point de rendez-vous</span>
           </div>
           <Image
             src="/access-ebci-building.png"
@@ -174,7 +174,7 @@ export default function AccessEbciPage() {
           <div className="px-5 py-4 border-t border-border space-y-2">
             <p className="text-xs font-semibold text-foreground">En attendant votre vol</p>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Vous pouvez patienter devant le bâtiment ou entrer dans le terminal — il est accessible au public.
+              Vous pouvez patienter devant le bâtiment ou entrer dans le terminal, accessible au public.
               Vous y trouverez des <strong className="text-foreground">toilettes</strong> et un <strong className="text-foreground">distributeur de boissons</strong>.
             </p>
           </div>
@@ -206,7 +206,7 @@ export default function AccessEbciPage() {
                 2
               </div>
               <div>
-                <p className="text-sm font-medium text-foreground">Bus TEC ligne 68 / 68A — direction Aéroport</p>
+                <p className="text-sm font-medium text-foreground">Bus TEC ligne 68 / 68A, direction Aéroport</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   Depuis l&apos;arrêt <strong className="text-foreground">Charleroi-Sud</strong>, prenez le bus TEC ligne&nbsp;68 ou&nbsp;68A.
                   Descendre à l&apos;arrêt <strong className="text-foreground">Gosselies Aéroport</strong>.

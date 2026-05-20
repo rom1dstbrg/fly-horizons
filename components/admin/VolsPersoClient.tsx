@@ -65,7 +65,7 @@ export function VolsPersoClient({ reservations }: { reservations: Reservation[] 
         setMessages(m => ({ ...m, [id]: r.error! }));
       } else {
         const emailStatuts = ["date_confirmee", "heure_confirmee", "vol_effectue"];
-        const msg = emailStatuts.includes(statut) ? "Statut mis à jour — email envoyé ✓" : "Statut mis à jour ✓";
+        const msg = emailStatuts.includes(statut) ? "Statut mis à jour, email envoyé ✓" : "Statut mis à jour ✓";
         setMessages(m => ({ ...m, [id]: msg }));
         setTimeout(() => setMessages(m => { const c = { ...m }; delete c[id]; return c; }), 3000);
       }
@@ -179,7 +179,7 @@ export function VolsPersoClient({ reservations }: { reservations: Reservation[] 
                         <p key={i} className="text-foreground pl-3">→ {wp.lat.toFixed(5)}, {wp.lng.toFixed(5)}</p>
                       ))}
                       {(r.stopovers ?? []).map(so => (
-                        <p key={so.icao} className="text-[#F2B705] pl-3">⊕ {so.icao} — {so.nom} (+{so.taxe}€)</p>
+                        <p key={so.icao} className="text-[#F2B705] pl-3">⊕ {so.icao}, {so.nom} (+{so.taxe}€)</p>
                       ))}
                       <p className="text-muted-foreground">✈ EBCI (retour)</p>
                     </div>

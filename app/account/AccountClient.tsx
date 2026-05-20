@@ -72,6 +72,9 @@ interface Reservation {
   acompte: number | null;
   distance_km: number | null;
   created_at: string;
+  route?: string | null;
+  route_status?: string | null;
+  route_token?: string | null;
 }
 
 interface Address {
@@ -614,6 +617,28 @@ export function AccountClient({
                           </div>
                         </div>
 
+                        {/* Route proposée */}
+                        {resa.route && (
+                          <div className="flex items-start gap-2 pt-3 border-t border-border">
+                            <MapPin size={12} className="text-[#113356] shrink-0 mt-0.5" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs text-foreground leading-snug line-clamp-2">{resa.route}</p>
+                            </div>
+                            {resa.route_status === "validated" && (
+                              <CheckCircle size={12} className="text-green-500 shrink-0 mt-0.5" />
+                            )}
+                            {resa.route_status === "sent" && resa.route_token && (
+                              <Link
+                                href={`/vol/itineraire/${resa.route_token}`}
+                                className="text-[10px] font-bold text-amber-600 hover:text-amber-700 shrink-0 whitespace-nowrap"
+                                onClick={e => e.stopPropagation()}
+                              >
+                                Valider →
+                              </Link>
+                            )}
+                          </div>
+                        )}
+
                         {/* Lien de paiement acompte */}
                         {hasPaymentLink && (
                           <div className="flex items-center gap-2 pt-3 border-t border-border">
@@ -632,7 +657,7 @@ export function AccountClient({
                           <div className="flex items-center gap-2 pt-3 border-t border-border">
                             <CheckCircle size={13} className="text-green-500 shrink-0" />
                             <span className="text-xs text-green-600 font-medium">
-                              Acompte payé — {resa.acompte} €
+                              Acompte payé : {resa.acompte} €
                             </span>
                           </div>
                         )}
@@ -714,7 +739,7 @@ export function AccountClient({
                         <div className="space-y-1 mb-2">
                           {order.items?.slice(0, 3).map((item) => (
                             <p key={item.id} className="text-xs text-muted-foreground">
-                              {item.title} ×{item.quantity} —{" "}
+                              {item.title} ×{item.quantity},{" "}
                               {formatPrice(item.unit_price * item.quantity)}
                             </p>
                           ))}

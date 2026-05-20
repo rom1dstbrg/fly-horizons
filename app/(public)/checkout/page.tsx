@@ -266,7 +266,7 @@ export default function CheckoutPage() {
                     >
                       {shippingRates.map((rate) => (
                         <option key={rate.country_code} value={rate.country_code}>
-                          {rate.country_name} — {formatPrice(rate.rate_standard)}
+                          {rate.country_name}, {formatPrice(rate.rate_standard)}
                         </option>
                       ))}
                     </select>
@@ -300,7 +300,7 @@ export default function CheckoutPage() {
 
             <div className="hidden lg:flex items-center gap-2 text-muted-foreground px-1">
               <ShieldCheck size={14} />
-              <p className="text-xs">Paiement 100 % sécurisé — vos données sont chiffrées par Stripe</p>
+              <p className="text-xs">Paiement 100 % sécurisé : vos données sont chiffrées par Stripe</p>
             </div>
           </div>
 

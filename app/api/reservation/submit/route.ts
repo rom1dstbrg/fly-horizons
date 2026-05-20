@@ -108,6 +108,7 @@ export async function POST(request: NextRequest) {
         passengers: passengers ? parseInt(passengers) : 1,
         poids_total: poids_total ? parseInt(poids_total) : null,
         voucherCode: voucher_code?.toUpperCase().trim() || null,
+        reservationId: resa.id,
       }),
     });
 

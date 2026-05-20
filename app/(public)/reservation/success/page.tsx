@@ -1,41 +1,59 @@
 import Link from "next/link";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, CalendarDays, MapPin } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Réservation envoyée — Fly Horizons",
+};
 
 export default function ReservationSuccessPage() {
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4">
-      <div className="max-w-md w-full text-center">
-        <div className="flex justify-center mb-6">
-          <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center">
-            <CheckCircle className="text-green-500" size={40} />
+    <main className="min-h-screen bg-[#f5f5f7] flex items-center justify-center px-4 pt-[86px] pb-16">
+      <div className="max-w-md w-full bg-white rounded-2xl border border-border shadow-sm p-8 text-center">
+
+        <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+          <CheckCircle className="text-green-600" size={28} />
+        </div>
+
+        <h1 className="text-xl font-bold text-foreground mb-2">
+          Demande envoyée !
+        </h1>
+        <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
+          Votre demande de réservation a bien été reçue. Vous allez recevoir un email de confirmation.
+        </p>
+
+        <div className="bg-secondary/40 rounded-xl p-4 space-y-3 text-left mb-6">
+          <div className="flex items-start gap-2.5">
+            <CalendarDays size={14} className="text-[#113356] mt-0.5 shrink-0" />
+            <p className="text-xs text-muted-foreground">
+              Nous vous contacterons rapidement pour confirmer votre créneau. Suivez l&apos;avancement depuis votre compte.
+            </p>
+          </div>
+          <div className="flex items-start gap-2.5">
+            <MapPin size={14} className="text-[#113356] mt-0.5 shrink-0" />
+            <p className="text-xs text-muted-foreground">
+              Le vol part de l&apos;aéroport de Charleroi (EBCI). Arrivez 15 min avant l&apos;heure prévue.
+            </p>
           </div>
         </div>
 
-        <h1 className="text-2xl font-bold text-foreground mb-3">
-          Demande envoyée !
-        </h1>
-        <p className="text-muted-foreground mb-2 leading-relaxed">
-          Votre demande de réservation a bien été reçue. Vous allez recevoir un email de confirmation.
-        </p>
-        <p className="text-muted-foreground text-sm mb-8">
-          Nous vous contacterons rapidement pour confirmer votre vol.
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <div className="flex flex-col gap-3">
+          <Link
+            href="/account#reservations"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#113356] text-white rounded-xl text-sm font-semibold hover:bg-[#0b2238] transition-colors"
+          >
+            <CalendarDays size={15} />
+            Suivre ma réservation
+          </Link>
           <Link
             href="/"
-            className="inline-flex items-center justify-center px-6 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+            className="inline-flex items-center justify-center px-6 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:bg-secondary transition-colors"
           >
             Retour à l&apos;accueil
           </Link>
-          <a
-            href="https://fly-horizons.com"
-            className="inline-flex items-center justify-center px-6 py-2.5 rounded-lg border border-border text-sm font-medium hover:bg-secondary transition-colors"
-          >
-            fly-horizons.com
-          </a>
         </div>
+
       </div>
-    </div>
+    </main>
   );
 }

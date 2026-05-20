@@ -102,7 +102,7 @@ Délais indicatifs : 2 à 5 jours ouvrables selon le pays de destination. Les d�
 
 Réception : En cas de colis endommagé, le Client doit émettre des réserves auprès du livreur au moment de la réception et en informer Fly Horizons par e-mail dans les 48 heures.
 
-Les bons de vol et réservations de vol ne font l'objet d'aucune livraison physique — la confirmation est envoyée exclusivement par e-mail.`,
+Les bons de vol et réservations de vol ne font l'objet d'aucune livraison physique : la confirmation est envoyée exclusivement par e-mail.`,
   },
   {
     title: "9. Conditions de participation aux vols",
@@ -178,7 +178,7 @@ Inexactitude des données passager : Si le Client a fourni des informations inex
     title: "14. Protection des données personnelles (RGPD)",
     content: `Les données personnelles collectées lors d'une commande ou d'une réservation (nom, prénom, e-mail, téléphone, poids déclaré) sont utilisées exclusivement pour le traitement de la commande, la gestion de la réservation et la communication associée.
 
-Responsable du traitement : DESTANBERG Romain — info@fly-horizons.com
+Responsable du traitement : DESTANBERG Romain, info@fly-horizons.com
 
 Paiements : Les données bancaires sont traitées directement par Stripe et ne transitent pas par les serveurs de Fly Horizons.
 
@@ -214,7 +214,7 @@ export default function CgvPage() {
             Conditions Générales de Vente
           </h1>
           <p className="text-muted-foreground text-sm leading-relaxed mb-8">
-            Ces conditions régissent l&apos;ensemble des achats effectués sur fly-horizons.com —
+            Ces conditions régissent l&apos;ensemble des achats effectués sur fly-horizons.com :
             produits physiques, bons de vol et réservations de vol en partage de coûts.
           </p>
 

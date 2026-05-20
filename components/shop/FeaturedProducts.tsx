@@ -21,7 +21,7 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
               Portez les couleurs Fly Horizons
             </h2>
             <p className="text-muted-foreground text-sm mt-2 max-w-md">
-              Produits dérivés et accessoires aviation — pour les passionnés du ciel.
+              Produits dérivés et accessoires aviation, pour les passionnés du ciel.
             </p>
           </div>
           <Link

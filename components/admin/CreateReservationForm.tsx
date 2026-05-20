@@ -332,7 +332,7 @@ export function CreateReservationForm({ clients, prixHeure }: Props) {
             <div>
               <p className="text-sm font-medium text-foreground">Marquer comme confirmé (pas de paiement en ligne)</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                La réservation est directement en statut &quot;En attente&quot; — à utiliser si le client paie en espèces ou par virement.
+                La réservation est directement en statut &quot;En attente&quot;, à utiliser si le client paie en espèces ou par virement.
               </p>
             </div>
           </label>

@@ -47,7 +47,12 @@
       "Bash(ls *)",
       "Bash(xargs grep -l \"profile\\\\|auth\")",
       "Bash(not exist *)",
-      "Bash(Select-Object -First 20)"
+      "Bash(Select-Object -First 20)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(powershell *)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({k:d[k] for k in ['scripts','devDependencies','dependencies'] if k in d}, indent=2\\)\\)\")"
     ]
   }
 }

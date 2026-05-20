@@ -119,7 +119,7 @@ function emailBase(bodyContent: string, title: string): string {
               Fly Horizons &mdash; <a href="https://fly-horizons.com" style="color:#4e7096;text-decoration:none;">fly-horizons.com</a>
             </p>
             <p style="margin:0;font-size:11px;color:#2d4f6e;">
-              Une question ? R&eacute;pondez directement &agrave; cet email &mdash;
+              Une question ? &Eacute;crivez-nous :
               <a href="mailto:info@fly-horizons.com" style="color:#2d4f6e;text-decoration:none;">info@fly-horizons.com</a>
             </p>
           </td>
@@ -154,11 +154,39 @@ function ctaButton(href: string, text: string): string {
   </table>`;
 }
 
+function ctaButtons2(
+  btn1: { href: string; text: string },
+  btn2: { href: string; text: string }
+): string {
+  return `<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;">
+    <tr>
+      <td align="center">
+        <table cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="padding-right:10px;">
+              <a href="${esc(btn1.href)}" class="em-btn"
+                style="display:inline-block;background-color:#F2B705;color:#0b2238;font-size:13px;font-weight:800;padding:13px 24px;border-radius:10px;text-decoration:none;letter-spacing:0.02em;">
+                ${esc(btn1.text)}
+              </a>
+            </td>
+            <td>
+              <a href="${esc(btn2.href)}"
+                style="display:inline-block;background-color:#0b2238;color:#F2B705;font-size:13px;font-weight:800;padding:13px 24px;border-radius:10px;text-decoration:none;letter-spacing:0.02em;border:2px solid #F2B705;">
+                ${esc(btn2.text)}
+              </a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>`;
+}
+
 function infoRows(rows: Array<[string, string]>): string {
   return `<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
     ${rows.map(([k, v], i, arr) => `
     <tr>
-      <td class="em-muted" style="padding:11px 0;${i < arr.length - 1 ? "border-bottom:1px solid #f1f5f9;" : ""}font-size:13px;color:#64748b;">${esc(k)}</td>
+      <td class="em-muted" style="padding:11px 0;${i < arr.length - 1 ? "border-bottom:1px solid #f1f5f9;" : ""}font-size:13px;color:#64748b;">${k}</td>
       <td class="em-dark" style="padding:11px 0;${i < arr.length - 1 ? "border-bottom:1px solid #f1f5f9;" : ""}font-size:13px;font-weight:700;color:#0b2238;text-align:right;">${v}</td>
     </tr>`).join("")}
   </table>`;
@@ -397,7 +425,7 @@ export function voucherEmail(props: VoucherEmailProps): string {
               <td align="center">
                 <a href="${esc(reservationUrl)}" class="em-btn"
                   style="display:inline-block;background-color:#F2B705;color:#0b2238;font-size:13px;font-weight:800;padding:12px 28px;border-radius:8px;text-decoration:none;">
-                  R&eacute;server mon vol avec ce code
+                  Réserver mon vol avec ce code
                 </a>
               </td>
             </tr>
@@ -413,7 +441,7 @@ export function voucherEmail(props: VoucherEmailProps): string {
       ${codes.length > 1 ? "Vos vouchers sont pr&ecirc;ts !" : "Votre voucher est pr&ecirc;t !"}
     </h1>
     <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">
-      ${customerName ? `Merci ${esc(customerName)}, m` : "M"}erci pour votre achat.
+      ${customerName ? `Bonjour <strong style="color:#0b2238;">${esc(customerName)}</strong>, merci` : "Merci"} pour votre achat.
     </p>
 
     ${separator()}
@@ -423,13 +451,13 @@ export function voucherEmail(props: VoucherEmailProps): string {
     ${separator()}
 
     ${label("Comment utiliser votre bon de vol")}
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
       <tr>
         <td style="padding:9px 0;border-bottom:1px solid #f1f5f9;vertical-align:top;width:28px;">
           <span class="em-gold" style="font-size:13px;font-weight:800;color:#F2B705;">1.</span>
         </td>
         <td class="em-body" style="padding:9px 0 9px 10px;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;line-height:1.5;">
-          Cliquez sur le bouton ci-dessus &mdash; votre code sera automatiquement pr&eacute;-rempli
+          Cliquez sur le bouton ci-dessus : votre code sera automatiquement pr&eacute;-rempli
         </td>
       </tr>
       <tr>
@@ -437,7 +465,7 @@ export function voucherEmail(props: VoucherEmailProps): string {
           <span class="em-gold" style="font-size:13px;font-weight:800;color:#F2B705;">2.</span>
         </td>
         <td class="em-body" style="padding:9px 0 9px 10px;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;line-height:1.5;">
-          Choisissez votre date et cr&eacute;neau horaire
+          Choisissez votre date et votre cr&eacute;neau horaire
         </td>
       </tr>
       <tr>
@@ -445,14 +473,26 @@ export function voucherEmail(props: VoucherEmailProps): string {
           <span class="em-gold" style="font-size:13px;font-weight:800;color:#F2B705;">3.</span>
         </td>
         <td class="em-body" style="padding:9px 0 9px 10px;font-size:13px;color:#334155;line-height:1.5;">
-          Finalisez votre r&eacute;servation &mdash; le vol est couvert par votre bon
+          Finalisez votre r&eacute;servation, le vol est int&eacute;gralement couvert par votre bon
         </td>
       </tr>
     </table>
 
-    <p class="em-muted" style="margin:20px 0 0;font-size:12px;color:#94a3b8;text-align:center;">
-      Conservez cet email &mdash; votre code vous sera demand&eacute; lors de la r&eacute;servation.
-    </p>`;
+    ${separator()}
+    ${label("Bon &agrave; savoir")}
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+      <tr>
+        <td class="em-body" style="padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;line-height:1.6;">
+          Votre voucher couvre exactement la dur&eacute;e de vol indiqu&eacute;e sur le bon. Si vous souhaitez r&eacute;server un vol d&rsquo;une dur&eacute;e sup&eacute;rieure, il s&rsquo;applique comme bon de r&eacute;duction : son montant est d&eacute;duit du prix total et vous r&eacute;glez uniquement la diff&eacute;rence.
+        </td>
+      </tr>
+      <tr>
+        <td class="em-body" style="padding:9px 0;font-size:13px;color:#334155;line-height:1.6;">
+          En cas de perte de cet email, votre bon est disponible directement dans votre espace client :
+          <a href="${SITE_URL}/account" style="color:#F2B705;font-weight:600;text-decoration:none;">fly-horizons.com/account</a>
+        </td>
+      </tr>
+    </table>`;
 
   return emailBase(body, `Vos vouchers Fly Horizons — #${orderRef}`);
 }
@@ -494,10 +534,10 @@ export function volSurMesureQuoteEmail(props: VolSurMesureQuoteEmailProps): stri
     : [];
 
   const itineraireRows: Array<[string, string]> = [
-    ["Date souhait&eacute;e", `<strong style="text-transform:capitalize;">${esc(dateStr)}</strong>`],
-    ["Heure de d&eacute;part", esc(heure)],
-    ["D&eacute;part / retour", "Charleroi EBCI"],
-    ["Itin&eacute;raire", `~${dureMin} min &middot; ${distKm} km &middot; ${nbWaypoints} point${nbWaypoints > 1 ? "s" : ""}`],
+    ["Date souhaitée", `<strong style="text-transform:capitalize;">${esc(dateStr)}</strong>`],
+    ["Heure de départ", esc(heure)],
+    ["Départ / retour", "Charleroi EBCI"],
+    ["Itinéraire", `~${dureMin} min &middot; ${distKm} km &middot; ${nbWaypoints} point${nbWaypoints > 1 ? "s" : ""}`],
     ...stopoverRow,
   ];
 
@@ -514,21 +554,28 @@ export function volSurMesureQuoteEmail(props: VolSurMesureQuoteEmailProps): stri
       </tr>` : "";
 
   const ctaSection = paymentUrl
-    ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
-        <tr>
-          <td style="border:2px solid #F2B705;border-radius:12px;padding:28px 24px;text-align:center;">
-            <p class="em-muted" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.1em;">Acompte &agrave; r&eacute;gler</p>
-            <p class="em-dark" style="margin:0 0 20px;font-size:42px;font-weight:800;color:#0b2238;line-height:1;">${totalAcompte}&nbsp;&euro;</p>
-            <p class="em-muted" style="margin:0 0 20px;font-size:13px;color:#64748b;line-height:1.6;">Payez votre acompte pour confirmer votre r&eacute;servation.<br>Le solde sera r&eacute;gl&eacute; apr&egrave;s votre vol selon la dur&eacute;e r&eacute;elle.</p>
-            <a href="${esc(paymentUrl)}" class="em-btn"
-              style="display:inline-block;background-color:#F2B705;color:#0b2238;font-size:14px;font-weight:800;padding:14px 36px;border-radius:10px;text-decoration:none;">
-              Payer mon acompte &mdash; ${totalAcompte}&nbsp;&euro;
-            </a>
-            <p class="em-muted" style="margin:14px 0 0;font-size:11px;color:#94a3b8;">Paiement s&eacute;curis&eacute; par Stripe &mdash; carte bancaire</p>
-          </td>
-        </tr>
-      </table>`
-    : `${callout("Votre vol est enti&egrave;rement couvert par votre voucher &mdash; aucun paiement requis. Nous vous recontacterons sous 24&nbsp;h.")}`;
+    ? `${separator()}
+    ${label("Comment fonctionne l&rsquo;acompte ?")}
+    <p class="em-body" style="margin:0 0 12px;font-size:13px;color:#334155;line-height:1.7;">
+      Le temps de vol r&eacute;el peut varier selon la m&eacute;t&eacute;o, les instructions du contr&ocirc;le a&eacute;rien ou les contraintes op&eacute;rationnelles du jour. Pour tenir compte de ces variations, l&rsquo;acompte demand&eacute; est volontairement fix&eacute; au-dessus du montant final estim&eacute;.
+    </p>
+    <p class="em-body" style="margin:0 0 28px;font-size:13px;color:#334155;line-height:1.7;">
+      Apr&egrave;s votre vol, la dur&eacute;e r&eacute;elle est calcul&eacute;e et le montant d&eacute;finitif &eacute;tabli. Si l&rsquo;acompte vers&eacute; d&eacute;passe ce montant, la diff&eacute;rence vous est rembours&eacute;e sous 24&nbsp;h.
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+      <tr>
+        <td style="border:2px solid #F2B705;border-radius:12px;padding:28px 24px;text-align:center;">
+          <p class="em-muted" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.1em;">Acompte &agrave; r&eacute;gler</p>
+          <p class="em-dark" style="margin:0 0 20px;font-size:42px;font-weight:800;color:#0b2238;line-height:1;">${totalAcompte}&nbsp;&euro;</p>
+          <a href="${esc(paymentUrl)}" class="em-btn"
+            style="display:inline-block;background-color:#F2B705;color:#0b2238;font-size:14px;font-weight:800;padding:14px 36px;border-radius:10px;text-decoration:none;">
+            Payer mon acompte, ${totalAcompte}&nbsp;&euro;
+          </a>
+          <p class="em-muted" style="margin:14px 0 0;font-size:11px;color:#94a3b8;">Paiement s&eacute;curis&eacute; par Stripe, carte bancaire</p>
+        </td>
+      </tr>
+    </table>`
+    : `${callout("Votre vol est enti&egrave;rement couvert par votre voucher, aucun paiement requis. La dur&eacute;e r&eacute;elle du vol peut varier selon la m&eacute;t&eacute;o ou les contraintes a&eacute;riennes. Si la dur&eacute;e r&eacute;elle est inf&eacute;rieure &agrave; l&rsquo;estimation, aucun frais suppl&eacute;mentaire ne s&rsquo;applique. Fly Horizons vous recontactera sous 24&nbsp;h pour pr&eacute;ciser les d&eacute;tails de votre vol.")}`;
 
   const body = `
     <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Vol sur mesure</p>
@@ -565,7 +612,7 @@ export function volSurMesureQuoteEmail(props: VolSurMesureQuoteEmailProps): stri
     <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">
       Des questions ? R&eacute;pondez &agrave; cet email ou &eacute;crivez-nous &agrave;
       <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a>.<br>
-      &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord &mdash;
+      &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord,
       <strong class="em-dark" style="color:#0b2238;">L&rsquo;&eacute;quipe Fly Horizons</strong>
     </p>`;
 
@@ -583,41 +630,48 @@ export interface ReservationConfirmationProps {
   passengers?: number;
   poids_total?: number | null;
   voucherCode?: string | null;
+  reservationId?: string | null;
 }
 
 export function reservationConfirmationFreeEmail(p: ReservationConfirmationProps): string {
   const rows: Array<[string, string]> = [
-    ["Date", `<strong>${esc(p.dateStr)}</strong>`],
+    ["Date souhaitée", `<strong>${esc(p.dateStr)}</strong>`],
     ["Heure", `<strong>${esc(p.heure)}</strong>`],
-    ["Dur&eacute;e", `<strong>${p.duree} minutes</strong>`],
-    ["Lieu", "A&eacute;roport de Charleroi (EBCI)"],
+    ["Durée", `<strong>${fmtDuration(p.duree)}</strong>`],
+    ["Lieu", "Aéroport de Charleroi (EBCI)"],
   ];
   if (p.passengers) rows.push(["Passager(s)", `${p.passengers}`]);
   if (p.poids_total) rows.push(["Poids total", `${p.poids_total} kg`]);
   if (p.voucherCode) rows.push(["Voucher", `<span style="color:#16a34a;font-weight:600;">${esc(p.voucherCode)}</span>`]);
 
+  const trackingBtn = p.reservationId
+    ? ctaButton(`${SITE_URL}/account/reservations/${p.reservationId}`, "Suivre ma réservation →")
+    : "";
+
   const body = `
     <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">R&eacute;servation</p>
-    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">R&eacute;servation confirm&eacute;e</h1>
-    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">Bonjour <strong style="color:#0b2238;">${esc(p.prenom)}</strong>, votre vol est confirm&eacute;.</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Demande de vol re&ccedil;ue &#10003;</h1>
+    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">Bonjour <strong style="color:#0b2238;">${esc(p.prenom)}</strong>, votre demande a bien &eacute;t&eacute; enregistr&eacute;e.</p>
 
     ${separator()}
     ${label("D&eacute;tails du vol")}
     ${infoRows(rows)}
 
-    ${callout("Votre vol est enti&egrave;rement pris en charge par votre voucher &mdash; aucun paiement suppl&eacute;mentaire requis. Nous vous appellerons dans les prochains jours pour convenir de votre cr&eacute;neau. En cas de m&eacute;t&eacute;o d&eacute;favorable, nous reprogrammons ensemble sans aucun frais.")}
+    ${callout("Votre vol est enti&egrave;rement pris en charge par votre voucher, aucun paiement suppl&eacute;mentaire requis. Fly Horizons vous appellera dans les prochains jours pour convenir de votre cr&eacute;neau. En cas de m&eacute;t&eacute;o d&eacute;favorable, le vol est report&eacute; sans frais.")}
+
+    ${trackingBtn}
 
     ${separator()}
     ${label("Informations pratiques")}
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
-      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">A&eacute;roport de Charleroi (EBCI) &mdash; Rue des Fr&egrave;res Wright 8, Gosselies</td></tr>
-      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Pr&eacute;sentez-vous <strong>15 minutes avant</strong> le d&eacute;collage &mdash; Romain vous accueillera &agrave; l&rsquo;accueil</td></tr>
-      <tr><td class="em-body" style="padding:8px 0;font-size:13px;color:#334155;">Questions &mdash; <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a> &middot; <a href="${SITE_URL}/faq" style="color:#F2B705;font-weight:600;text-decoration:none;">FAQ</a></td></tr>
+      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">A&eacute;roport de Charleroi (EBCI), Rue des Fr&egrave;res Wright 8, Gosselies</td></tr>
+      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Pr&eacute;sentez-vous <strong>15 minutes avant</strong> le d&eacute;collage. Romain vous accueillera &agrave; l&rsquo;accueil.</td></tr>
+      <tr><td class="em-body" style="padding:8px 0;font-size:13px;color:#334155;">Questions : <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a> &middot; <a href="${SITE_URL}/faq" style="color:#F2B705;font-weight:600;text-decoration:none;">FAQ</a></td></tr>
     </table>
 
     <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">
-      &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord &mdash;
-      <strong class="em-dark" style="color:#0b2238;">Romain &mdash; Fly Horizons</strong>
+      &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord,
+      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
     </p>`;
 
   return emailBase(body, "Réservation confirmée — Fly Horizons");
@@ -633,8 +687,8 @@ export function reservationPaymentConfirmationEmail(p: ReservationPaymentConfirm
   const rows: Array<[string, string]> = [
     ["Date", `<strong>${esc(p.dateStr)}</strong>`],
     ["Heure", `<strong>${esc(p.heure)}</strong>`],
-    ["Dur&eacute;e", `<strong>${p.duree} minutes</strong>`],
-    ["Lieu", "A&eacute;roport de Charleroi (EBCI)"],
+    ["Durée", `<strong>${fmtDuration(p.duree)}</strong>`],
+    ["Lieu", "Aéroport de Charleroi (EBCI)"],
   ];
   if (p.passengers) rows.push(["Passager(s)", `${p.passengers}`]);
   if (p.poids_total) rows.push(["Poids total", `${p.poids_total} kg`]);
@@ -657,18 +711,23 @@ export function reservationPaymentConfirmationEmail(p: ReservationPaymentConfirm
     ${separator()}
     ${label("Informations pratiques")}
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
-      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">A&eacute;roport de Charleroi (EBCI) &mdash; Rue des Fr&egrave;res Wright 8, Gosselies</td></tr>
-      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Pr&eacute;sentez-vous <strong>15 minutes avant</strong> le d&eacute;collage &mdash; Romain vous accueillera &agrave; l&rsquo;accueil</td></tr>
-      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Casques audio fournis &mdash; habillez-vous confortablement, aucun &eacute;quipement sp&eacute;cifique n&eacute;cessaire</td></tr>
-      <tr><td class="em-body" style="padding:8px 0;font-size:13px;color:#334155;">Questions &mdash; <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a> &middot; <a href="${SITE_URL}/faq" style="color:#F2B705;font-weight:600;text-decoration:none;">FAQ</a></td></tr>
+      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">A&eacute;roport de Charleroi (EBCI), Rue des Fr&egrave;res Wright 8, Gosselies</td></tr>
+      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Pr&eacute;sentez-vous <strong>15 minutes avant</strong> le d&eacute;collage. Romain vous accueillera &agrave; l&rsquo;accueil.</td></tr>
+      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Casques audio fournis. Habillez-vous confortablement, aucun &eacute;quipement sp&eacute;cifique n&rsquo;est n&eacute;cessaire.</td></tr>
+      <tr><td class="em-body" style="padding:8px 0;font-size:13px;color:#334155;">Questions : <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a> &middot; <a href="${SITE_URL}/faq" style="color:#F2B705;font-weight:600;text-decoration:none;">FAQ</a></td></tr>
     </table>
 
     <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">
-      Nous vous contacterons dans les prochains jours pour convenir ensemble de votre cr&eacute;neau. Des questions d&rsquo;ici l&agrave;&nbsp;? R&eacute;pondez directement &agrave; cet email &mdash;
-      <strong class="em-dark" style="color:#0b2238;">Romain &mdash; Fly Horizons</strong>
+      Fly Horizons vous contactera dans les prochains jours pour convenir de votre cr&eacute;neau. Des questions d&rsquo;ici l&agrave; ? R&eacute;pondez directement &agrave; cet email,
+      <strong class="em-dark" style="color:#0b2238;">Romain vous r&eacute;pondra rapidement.</strong>
     </p>
 
-    ${ctaButton(`${SITE_URL}/access-ebci`, "Plan d'accès →")}`;
+    ${p.reservationId
+      ? ctaButtons2(
+          { href: `${SITE_URL}/account/reservations/${p.reservationId}`, text: "Suivre ma réservation" },
+          { href: `${SITE_URL}/access-ebci`, text: "Plan d'accès" }
+        )
+      : ctaButton(`${SITE_URL}/access-ebci`, "Plan d'accès")}`;
 
   return emailBase(body, "Paiement confirmé — Fly Horizons");
 }
@@ -683,14 +742,15 @@ export interface VolSurMesureAcompteProps {
   dureeEstimee: number;
   voucherCode?: string | null;
   montantPaye: number;
+  reservationId?: string | null;
 }
 
 export function volSurMesureAcompteEmail(p: VolSurMesureAcompteProps): string {
   const rows: Array<[string, string]> = [
-    ["Date souhait&eacute;e", `<strong style="text-transform:capitalize;">${esc(p.dateStr)}</strong>`],
+    ["Date souhaitée", `<strong style="text-transform:capitalize;">${esc(p.dateStr)}</strong>`],
     ["Heure", `<strong>${esc(p.heure)}</strong>`],
-    ["Dur&eacute;e estim&eacute;e", `~${p.dureeEstimee} minutes`],
-    ["D&eacute;part / retour", "Charleroi EBCI"],
+    ["Durée estimée", `~${fmtDuration(p.dureeEstimee)}`],
+    ["Départ / retour", "Charleroi EBCI"],
   ];
   if (p.voucherCode) rows.push(["Voucher", `<span style="color:#16a34a;font-weight:600;">${esc(p.voucherCode)}</span>`]);
 
@@ -708,15 +768,27 @@ export function volSurMesureAcompteEmail(p: VolSurMesureAcompteProps): string {
     ${label("Vol sur mesure")}
     ${infoRows(rows)}
 
-    ${callout("Nous vous rappellerons sous 24&nbsp;h pour affiner votre itin&eacute;raire et confirmer la date. Le solde est r&eacute;gl&eacute; apr&egrave;s le vol, selon la dur&eacute;e r&eacute;elle &mdash; jamais avant. En cas de m&eacute;t&eacute;o d&eacute;favorable, nous reprogrammons ensemble sans frais ni p&eacute;nalit&eacute;.")}
-
-    <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">
-      Des questions&nbsp;? R&eacute;pondez &agrave; cet email, je vous r&eacute;ponds rapidement.<br>
-      &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord &mdash;
-      <strong class="em-dark" style="color:#0b2238;">Romain &mdash; Fly Horizons</strong>
+    ${separator()}
+    ${label("Comment fonctionne l&rsquo;acompte ?")}
+    <p class="em-body" style="margin:0 0 12px;font-size:13px;color:#334155;line-height:1.7;">
+      Le temps de vol r&eacute;el peut varier selon la m&eacute;t&eacute;o, les instructions du contr&ocirc;le a&eacute;rien ou les contraintes op&eacute;rationnelles du jour. L&rsquo;acompte vers&eacute; est volontairement fix&eacute; au-dessus du montant final estim&eacute;.
+    </p>
+    <p class="em-body" style="margin:0 0 28px;font-size:13px;color:#334155;line-height:1.7;">
+      Apr&egrave;s votre vol, la dur&eacute;e r&eacute;elle est calcul&eacute;e et le montant d&eacute;finitif &eacute;tabli. Si l&rsquo;acompte d&eacute;passe ce montant, la diff&eacute;rence vous est rembours&eacute;e sous 24&nbsp;h. En cas de m&eacute;t&eacute;o d&eacute;favorable, le vol est report&eacute; sans frais ni p&eacute;nalit&eacute;.
     </p>
 
-    ${ctaButton(`${SITE_URL}/access-ebci`, "Plan d'accès →")}`;
+    <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">
+      Fly Horizons vous contactera sous 24&nbsp;h pour affiner votre itin&eacute;raire et confirmer votre date de vol. Des questions : r&eacute;pondez &agrave; cet email, Romain vous r&eacute;pondra rapidement.<br>
+      &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord,
+      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
+    </p>
+
+    ${p.reservationId
+      ? ctaButtons2(
+          { href: `${SITE_URL}/account/reservations/${p.reservationId}`, text: "Suivre ma réservation" },
+          { href: `${SITE_URL}/access-ebci`, text: "Plan d'accès" }
+        )
+      : ctaButton(`${SITE_URL}/access-ebci`, "Plan d'accès")}`;
 
   return emailBase(body, "Acompte reçu — Vol sur mesure Fly Horizons");
 }
@@ -751,18 +823,18 @@ export function reservationDateConfirmeeEmail(p: ReservationDateConfirmeeProps):
     ${separator()}
     ${label("D&eacute;tails")}
     ${infoRows([
-      ["Date confirm&eacute;e", `<strong style="text-transform:capitalize;">${esc(p.dateStr)}</strong>`],
-      ["Dur&eacute;e estim&eacute;e", `~${p.duree} minutes`],
-      ["Lieu", "A&eacute;roport de Charleroi (EBCI)"],
+      ["Date confirmée", `<strong style="text-transform:capitalize;">${esc(p.dateStr)}</strong>`],
+      ["Durée estimée", `~${fmtDuration(p.duree)}`],
+      ["Lieu", "Aéroport de Charleroi (EBCI)"],
     ])}
 
-    ${callout("Votre date est bloqu&eacute;e dans notre planning. Nous vous recontacterons quelques jours avant pour confirmer votre cr&eacute;neau horaire, en fonction de la m&eacute;t&eacute;o. Si les conditions ne permettent pas le vol ce jour-l&agrave;, nous reprogrammons ensemble &mdash; sans frais suppl&eacute;mentaires.")}
+    ${callout("Votre date est bloqu&eacute;e dans notre planning. Fly Horizons vous recontactera quelques jours avant pour confirmer votre cr&eacute;neau horaire, en fonction de la m&eacute;t&eacute;o. Si les conditions ne permettent pas le vol ce jour-l&agrave;, il sera report&eacute; sans frais suppl&eacute;mentaires.")}
 
     ${routeSection}
 
     <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">
-      Des questions&nbsp;? R&eacute;pondez directement &agrave; cet email &mdash; je suis l&agrave;.<br>
-      <strong class="em-dark" style="color:#0b2238;">Romain &mdash; Fly Horizons</strong>
+      Des questions ? R&eacute;pondez directement &agrave; cet email, Romain vous r&eacute;pondra rapidement.<br>
+      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
     </p>
 
     ${!p.route ? ctaButton(`${SITE_URL}/access-ebci`, "Plan d'accès →") : ""}`;
@@ -795,7 +867,7 @@ export function reservationHeureConfirmeeEmail(p: ReservationHeureConfirmeeProps
 
   const body = `
     <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Fly Horizons</p>
-    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">C&rsquo;est confirm&eacute; &mdash; &agrave; bient&ocirc;t !</h1>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">C&rsquo;est confirm&eacute;, &agrave; bient&ocirc;t !</h1>
     <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">Bonjour <strong style="color:#0b2238;">${esc(p.prenom)}</strong>, votre vol est planifi&eacute;.</p>
 
     ${separator()}
@@ -811,7 +883,7 @@ export function reservationHeureConfirmeeEmail(p: ReservationHeureConfirmeeProps
       </tr>
       <tr>
         <td class="em-muted" style="padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;">Dur&eacute;e estim&eacute;e</td>
-        <td class="em-dark" style="padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;font-weight:700;color:#0b2238;text-align:right;">~${p.duree} minutes</td>
+        <td class="em-dark" style="padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;font-weight:700;color:#0b2238;text-align:right;">~${fmtDuration(p.duree)}</td>
       </tr>
       <tr>
         <td class="em-muted" style="padding:11px 0;font-size:13px;color:#64748b;">D&eacute;part / retour</td>
@@ -824,16 +896,16 @@ export function reservationHeureConfirmeeEmail(p: ReservationHeureConfirmeeProps
     ${separator()}
     ${label("Informations pratiques")}
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
-      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">A&eacute;roport de Charleroi (EBCI) &mdash; Rue des Fr&egrave;res Wright 8, Gosselies</td></tr>
-      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Pr&eacute;sentez-vous <strong>15 minutes avant</strong> le d&eacute;collage &mdash; Romain vous accueillera &agrave; l&rsquo;accueil</td></tr>
-      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Casques audio fournis &mdash; habillez-vous confortablement, aucun &eacute;quipement sp&eacute;cifique n&eacute;cessaire</td></tr>
-      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Le vol se d&eacute;roule par beau temps &mdash; en cas de m&eacute;t&eacute;o d&eacute;favorable, vous serez contact&eacute; au plus t&ocirc;t</td></tr>
-      <tr><td class="em-body" style="padding:8px 0;font-size:13px;color:#334155;">Questions &mdash; <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a></td></tr>
+      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">A&eacute;roport de Charleroi (EBCI), Rue des Fr&egrave;res Wright 8, Gosselies</td></tr>
+      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Pr&eacute;sentez-vous <strong>15 minutes avant</strong> le d&eacute;collage. Romain vous accueillera &agrave; l&rsquo;accueil.</td></tr>
+      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Casques audio fournis. Habillez-vous confortablement, aucun &eacute;quipement sp&eacute;cifique n&rsquo;est n&eacute;cessaire.</td></tr>
+      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Le vol se d&eacute;roule par beau temps. En cas de m&eacute;t&eacute;o d&eacute;favorable, Fly Horizons vous contactera au plus t&ocirc;t.</td></tr>
+      <tr><td class="em-body" style="padding:8px 0;font-size:13px;color:#334155;">Questions : <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a></td></tr>
     </table>
 
     <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">
-      Beau temps et bon vol&nbsp;! Rendez-vous &agrave; l&rsquo;a&eacute;roport &mdash;
-      <strong class="em-dark" style="color:#0b2238;">Romain &mdash; Fly Horizons</strong>
+      Beau temps et bon vol ! Rendez-vous &agrave; l&rsquo;a&eacute;roport,
+      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
     </p>
 
     ${ctaButton(`${SITE_URL}/access-ebci`, "Plan d'accès →")}`;
@@ -952,9 +1024,9 @@ export interface ReservationPaymentInvitationProps {
 export function reservationPaymentInvitationEmail(p: ReservationPaymentInvitationProps): string {
   const rows: Array<[string, string]> = [
     ["Date", `<span style="text-transform:capitalize;">${esc(p.dateStr)}</span>`],
-    ["Heure de d&eacute;part", esc(p.heure)],
-    ["Dur&eacute;e du vol", `${p.duree} min`],
-    ["D&eacute;part / retour", "Charleroi EBCI"],
+    ["Heure de départ", esc(p.heure)],
+    ["Durée du vol", fmtDuration(p.duree)],
+    ["Départ / retour", "Charleroi EBCI"],
   ];
   if (p.voucherCode) rows.push(["Voucher", `<span style="color:#16a34a;font-weight:600;">${esc(p.voucherCode)}</span>`]);
 
@@ -976,9 +1048,9 @@ export function reservationPaymentInvitationEmail(p: ReservationPaymentInvitatio
           <p class="em-dark" style="margin:0 0 20px;font-size:42px;font-weight:800;color:#0b2238;line-height:1;">${p.montant}&nbsp;&euro;</p>
           <a href="${esc(p.paymentUrl)}" class="em-btn"
             style="display:inline-block;background-color:#F2B705;color:#0b2238;font-size:14px;font-weight:800;padding:14px 36px;border-radius:10px;text-decoration:none;">
-            Payer ma r&eacute;servation &mdash; ${p.montant}&nbsp;&euro;
+            Payer ma r&eacute;servation, ${p.montant}&nbsp;&euro;
           </a>
-          <p class="em-muted" style="margin:14px 0 0;font-size:11px;color:#94a3b8;">Paiement s&eacute;curis&eacute; par Stripe &mdash; carte bancaire</p>
+          <p class="em-muted" style="margin:14px 0 0;font-size:11px;color:#94a3b8;">Paiement s&eacute;curis&eacute; par Stripe, carte bancaire</p>
         </td>
       </tr>
     </table>
@@ -986,7 +1058,7 @@ export function reservationPaymentInvitationEmail(p: ReservationPaymentInvitatio
     <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">
       Des questions ? R&eacute;pondez &agrave; cet email ou &eacute;crivez-nous &agrave;
       <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a>.<br>
-      &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord &mdash;
+      &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord,
       <strong class="em-dark" style="color:#0b2238;">L&rsquo;&eacute;quipe Fly Horizons</strong>
     </p>`;
 
@@ -1008,15 +1080,15 @@ export function postVolEmail(p: PostVolEmailProps): string {
     <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Merci pour votre vol&nbsp;!</h1>
     <p class="em-body" style="margin:0 0 24px;font-size:14px;color:#334155;line-height:1.7;">
       Bonjour <strong style="color:#0b2238;">${esc(p.prenom)}</strong>,<br><br>
-      C&rsquo;est avec beaucoup de plaisir que je vous ai accompagn&eacute; lors de votre vol du <strong>${p.dateStr}</strong> (${fmtDuration(p.duree)}). Merci de nous avoir fait confiance pour ce moment &mdash; j&rsquo;esp&egrave;re sinc&egrave;rement que vous avez v&eacute;cu quelque chose d&rsquo;unique l&agrave;-haut&nbsp;!
+      C&rsquo;est avec beaucoup de plaisir que Romain vous a accompagn&eacute; lors de votre vol du <strong>${p.dateStr}</strong> (${fmtDuration(p.duree)}). Merci de votre confiance pour ce moment. Fly Horizons esp&egrave;re sinc&egrave;rement que vous avez v&eacute;cu quelque chose d&rsquo;unique l&agrave;-haut&nbsp;!
     </p>
     <p class="em-body" style="margin:0 0 4px;font-size:14px;color:#334155;line-height:1.7;">
-      Votre avis compte vraiment &mdash; il m&rsquo;aide &agrave; am&eacute;liorer chaque vol. L&rsquo;enqu&ecirc;te prend moins d&rsquo;une minute, et je lis chaque r&eacute;ponse personnellement.
+      Votre avis compte vraiment : il aide Fly Horizons &agrave; am&eacute;liorer chaque vol. L&rsquo;enqu&ecirc;te prend moins d&rsquo;une minute, et Romain lit chaque r&eacute;ponse personnellement.
     </p>
     ${ctaButton(p.surveyUrl, "Donner mon avis")}
     <p class="em-muted" style="margin:20px 0 0;font-size:13px;color:#334155;line-height:1.7;text-align:center;">
-      &Agrave; bient&ocirc;t &mdash;
-      <strong class="em-dark" style="color:#0b2238;">Romain &mdash; Fly Horizons</strong>
+      &Agrave; bient&ocirc;t,
+      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
     </p>`;
   return emailBase(body, "Merci pour votre vol — Fly Horizons");
 }
@@ -1032,6 +1104,7 @@ interface SatisfactionResultEmailProps {
   noteAccueil: number;
   notePilote: number;
   commentaire?: string | null;
+  pointsAmelioration?: string | null;
 }
 
 export function satisfactionResultEmail(p: SatisfactionResultEmailProps): string {
@@ -1042,10 +1115,10 @@ export function satisfactionResultEmail(p: SatisfactionResultEmailProps): string
     <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Nouvel avis re&ccedil;u</p>
     <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Enqu&ecirc;te de satisfaction</h1>
     <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">
-      <strong style="color:#0b2238;">${esc(p.prenom)} ${esc(p.nom)}</strong> &mdash; vol du ${p.dateStr} (${fmtDuration(p.duree)})
+      <strong style="color:#0b2238;">${esc(p.prenom)} ${esc(p.nom)}</strong>, vol du ${p.dateStr} (${fmtDuration(p.duree)})
     </p>
     ${separator()}
-    ${label("R&eacute;sultats")}
+    ${label("Notes")}
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
       <tr>
         <td class="em-muted" style="padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;">Note globale</td>
@@ -1060,7 +1133,8 @@ export function satisfactionResultEmail(p: SatisfactionResultEmailProps): string
         <td style="padding:11px 0;text-align:right;">${stars(p.notePilote)}</td>
       </tr>
     </table>
-    ${p.commentaire ? `${separator()}${label("Commentaire")}${callout(esc(p.commentaire))}` : ""}`;
+    ${p.commentaire ? `${separator()}${label("Exp&eacute;rience g&eacute;n&eacute;rale")}${callout(esc(p.commentaire))}` : ""}
+    ${p.pointsAmelioration ? `${separator()}${label("Points &agrave; am&eacute;liorer")}<p style="margin:0;padding:12px 16px;background:#fef3c7;border-left:3px solid #F2B705;border-radius:6px;font-size:13px;color:#334155;line-height:1.7;">${esc(p.pointsAmelioration)}</p>` : ""}`;
 
   return emailBase(body, `Satisfaction — ${p.prenom} ${p.nom}`);
 }
@@ -1079,13 +1153,13 @@ export function routeProposalEmail(p: RouteProposalEmailProps): string {
   const body = `
     <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Itin&eacute;raire de vol</p>
     <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Votre itin&eacute;raire de vol</h1>
-    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">Bonjour <strong style="color:#0b2238;">${esc(p.prenom)}</strong>, j&rsquo;ai pr&eacute;par&eacute; un itin&eacute;raire pour votre vol &mdash; regardez et dites-moi si cela vous convient&nbsp;!</p>
+    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">Bonjour <strong style="color:#0b2238;">${esc(p.prenom)}</strong>, voici l&rsquo;itin&eacute;raire de vol propos&eacute; par Romain. Regardez et indiquez-nous s&rsquo;il vous convient&nbsp;!</p>
 
     ${separator()}
     ${label("D&eacute;tails")}
     ${infoRows([
       ["Date", `<strong style="text-transform:capitalize;">${esc(p.dateStr)}</strong>`],
-      ["Dur&eacute;e estim&eacute;e", `~${p.duree} minutes`],
+      ["Durée estimée", `~${fmtDuration(p.duree)}`],
     ])}
 
     ${separator()}
@@ -1101,10 +1175,11 @@ export function routeProposalEmail(p: RouteProposalEmailProps): string {
 
     <p class="em-muted" style="margin:0 0 28px;font-size:12px;color:#94a3b8;text-align:center;">Ce lien est actif jusqu&rsquo;&agrave; 48&nbsp;h avant le vol. Pass&eacute; ce d&eacute;lai, r&eacute;pondez directement &agrave; cet email.</p>
 
+
     <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">
-      Des ajustements&nbsp;? Pas de souci &mdash; r&eacute;pondez &agrave; cet email ou utilisez le bouton ci-dessus.<br>
-      &Agrave; tr&egrave;s bient&ocirc;t &mdash;
-      <strong class="em-dark" style="color:#0b2238;">Romain &mdash; Fly Horizons</strong>
+      Des ajustements ? Pas de souci, r&eacute;pondez &agrave; cet email ou utilisez le bouton ci-dessus.<br>
+      &Agrave; tr&egrave;s bient&ocirc;t,
+      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
     </p>`;
 
   return emailBase(body, "Votre itinéraire de vol — Fly Horizons");
@@ -1165,14 +1240,14 @@ export function routeFeedbackAdminEmail(p: RouteFeedbackAdminEmailProps): string
       ["Client", `${esc(p.clientPrenom)} ${esc(p.clientNom)}`],
       ["Email", `<a href="mailto:${esc(p.clientEmail)}" style="color:#F2B705;font-weight:600;text-decoration:none;">${esc(p.clientEmail)}</a>`],
       ["Date du vol", `<span style="text-transform:capitalize;">${esc(p.dateStr)}</span>`],
-      ["R&eacute;ponse", isValidated
+      ["Réponse", isValidated
         ? `<span style="color:#16a34a;font-weight:700;">&#10003; Valid&eacute;</span>`
         : `<span style="color:#dc2626;font-weight:700;">Modification souhait&eacute;e</span>`],
     ])}
 
     ${!isValidated && p.feedback ? `${separator()}${label("Message du client")}<p class="em-body" style="margin:0 0 28px;font-size:13px;color:#334155;line-height:1.7;white-space:pre-wrap;border-left:3px solid #F2B705;padding:2px 0 2px 16px;">${esc(p.feedback)}</p>` : ""}
 
-    ${ctaButton(p.adminUrl, "Voir dans l&rsquo;admin &#8594;")}`;
+    ${ctaButton(p.adminUrl, "Voir dans l'admin →")}`;
 
   return emailBase(body, `Itinéraire ${isValidated ? "validé" : "— modification"} — ${p.clientPrenom} ${p.clientNom}`);
 }

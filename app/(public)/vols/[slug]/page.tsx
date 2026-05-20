@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { ChevronLeft, Users, ShieldCheck, Headphones, MapPin, CalendarCheck, Info, Route } from "lucide-react";
+import { ChevronLeft, Users, ShieldCheck, Headphones, MapPin, CalendarCheck, Route } from "lucide-react";
 import { formatDuration } from "@/lib/vouchers";
 import { VolDetailClient } from "@/components/shop/VolDetailClient";
 import { VolImageGallery } from "@/components/shop/VolImageGallery";
@@ -44,7 +44,30 @@ const INCLUS = [
   { icon: <Headphones size={15} className="text-[#113356]" />,    label: "Casques audio inclus" },
   { icon: <MapPin size={15} className="text-[#113356]" />,        label: "Départ depuis Charleroi (EBCI)" },
   { icon: <CalendarCheck size={15} className="text-[#113356]" />, label: "Date au choix" },
-  { icon: <Info size={15} className="text-[#113356]" />,          label: "Briefing de sécurité inclus" },
+  { icon: <Route size={15} className="text-[#113356]" />,         label: "Itinéraire personnalisé" },
+];
+
+const STEPS = [
+  {
+    num: 1,
+    title: "Réservation en ligne",
+    desc: "Choisissez votre durée et réglez en sécurité. Votre bon de réservation arrive immédiatement par email.",
+  },
+  {
+    num: 2,
+    title: "Le pilote trace la route",
+    desc: "Votre pilote vous contacte et propose un itinéraire adapté à la météo et à vos envies. Points de passage bienvenus.",
+  },
+  {
+    num: 3,
+    title: "Briefing & équipement",
+    desc: "Le jour J à Charleroi (EBCI) : briefing sécurité complet, casques audio fournis, toutes vos questions répondues.",
+  },
+  {
+    num: 4,
+    title: "À vous le ciel",
+    desc: "Décollage, montée, panorama. Votre pilote commente le vol tout au long du trajet. Profitez de chaque minute.",
+  },
 ];
 
 export default async function VolDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -173,6 +196,25 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
         </div>
       </div>
 
+      {/* ── Déroulé ── */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-10">
+        <div className="border-t border-border pt-8">
+          <p className="text-xs font-bold text-[#113356] uppercase tracking-[3px] mb-1">Comment ça se passe</p>
+          <h2 className="text-2xl font-extrabold text-foreground mb-6">De la réservation au vol</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {STEPS.map(({ num, title, desc }) => (
+              <div key={num} className="bg-white rounded-2xl border border-border p-5">
+                <div className="w-8 h-8 rounded-full bg-[#F2B705] flex items-center justify-center mb-3 shrink-0">
+                  <span className="font-black text-[#0b2238] text-sm leading-none">{num}</span>
+                </div>
+                <p className="font-bold text-foreground text-sm mb-1.5">{title}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* ── Autres durées ── */}
       {(autres ?? []).length > 0 && (
         <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-10">
@@ -220,7 +262,7 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             <p className="font-bold text-foreground text-sm">Vous avez un itinéraire précis en tête ?</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Tracez votre route sur la carte — durée et prix calculés en temps réel.</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Tracez votre route sur la carte : durée et prix calculés en temps réel.</p>
           </div>
           <Link href="/vol-sur-mesure" className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-[#f5f8ff] border border-[#dce8ff] text-[#113356] rounded-xl text-sm font-semibold hover:bg-[#113356] hover:text-white hover:border-[#113356] transition-all">
             <Route size={14} />

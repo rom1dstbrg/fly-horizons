@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
               dureeEstimee: resa.duree,
               voucherCode: voucherCode || null,
               montantPaye,
+              reservationId: reservationId,
             }),
           });
           await resend.emails.send({
@@ -128,6 +129,7 @@ export async function POST(request: NextRequest) {
               poids_total: resa.poids_total ?? null,
               voucherCode: voucherCode || null,
               montantPaye,
+              reservationId: reservationId,
             }),
           });
 

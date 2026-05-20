@@ -138,7 +138,7 @@ export function ProductDetail({ product, relatedProducts = [], backHref, backLab
               <div className="inline-flex items-center gap-1.5 bg-[#F2B705]/10 border border-[#F2B705]/30 rounded-full px-3 py-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#F2B705]" />
                 <span className="text-[#F2B705] text-xs font-semibold tracking-wider uppercase">
-                  Voucher — {formatDuration(product.voucher_duration_minutes ?? 60)}
+                  Voucher · {formatDuration(product.voucher_duration_minutes ?? 60)}
                 </span>
               </div>
             )}
@@ -181,7 +181,7 @@ export function ProductDetail({ product, relatedProducts = [], backHref, backLab
               <span className={`w-2 h-2 rounded-full ${isOutOfStock ? "bg-destructive" : "bg-green-500"}`} />
               <span className="text-sm text-muted-foreground">
                 {isVoucher
-                  ? "Disponible — livraison par email"
+                  ? "Disponible : livraison par email"
                   : isOutOfStock
                   ? "Rupture de stock"
                   : "En stock"}

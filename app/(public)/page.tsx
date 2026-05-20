@@ -153,7 +153,7 @@ export default async function HomePage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { icon: <Lock size={20} className="text-[#113356]" />, title: "Paiement sécurisé", desc: "Via Stripe — carte bancaire" },
+              { icon: <Lock size={20} className="text-[#113356]" />, title: "Paiement sécurisé", desc: "Via Stripe, carte bancaire" },
               { icon: <Mail size={20} className="text-[#113356]" />, title: "Code par email", desc: "Voucher envoyé instantanément" },
               { icon: <Package size={20} className="text-[#113356]" />, title: "Livraison Belgique", desc: "Accessoires livrés partout" },
               { icon: <BadgeCheck size={20} className="text-[#113356]" />, title: "Pilote licencié CPL", desc: "Sécurité & professionnalisme" },
@@ -186,7 +186,7 @@ export default async function HomePage() {
               </h2>
               <div className="w-10 h-0.5 bg-[#F2B705] mx-auto mt-4 mb-3 rounded-full" />
               <p className="text-muted-foreground text-sm mt-0 max-w-md mx-auto">
-                Du vol découverte à l&apos;aventure prolongée — sélectionnez la durée qui vous convient.
+                Du vol découverte à l&apos;aventure prolongée : sélectionnez la durée qui vous convient.
               </p>
             </div>
 
@@ -354,12 +354,12 @@ export default async function HomePage() {
                 {
                   icon: <MapPin size={20} className="text-[#113356]" />,
                   title: "Itinéraire 100 % libre",
-                  desc: "Vous placez vos points sur la carte. Namur, Bruxelles, la côte, les Ardennes… Vous décidez de chaque virage — pas de circuit imposé.",
+                  desc: "Vous placez vos points sur la carte. Namur, Bruxelles, la côte, les Ardennes… Vous décidez de chaque virage. Pas de circuit imposé.",
                 },
                 {
                   icon: <Clock size={20} className="text-[#113356]" />,
                   title: "Prix au plus juste",
-                  desc: "Vous payez le coût réel du vol, calculé à la minute. Aucune commission, aucun forfait opaque — juste ce que votre trajet coûte vraiment.",
+                  desc: "Vous payez le coût réel du vol, calculé à la minute. Aucune commission, aucun forfait opaque. Juste ce que votre trajet coûte vraiment.",
                 },
                 {
                   icon: <Users size={20} className="text-[#113356]" />,

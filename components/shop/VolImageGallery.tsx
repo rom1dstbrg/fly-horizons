@@ -22,9 +22,8 @@ export function VolImageGallery({ images, title, duree }: VolImageGalleryProps) 
             <p className="text-white/30 text-xs font-semibold uppercase tracking-[4px]">Vol privé · Au départ de Charleroi</p>
           </div>
           <div className="absolute top-5 left-5">
-            <div className="inline-flex items-center gap-1.5 bg-black/40 backdrop-blur-md border border-white/15 rounded-xl px-3 py-1.5">
-              <span className="text-[#F2B705] font-black text-[13px] leading-none">{formatDuration(duree)}</span>
-              <span className="text-white/50 text-[11px] leading-none">vol privé</span>
+            <div className="inline-flex items-center bg-black/40 backdrop-blur-md border border-white/15 rounded-xl px-4 py-2">
+              <span className="text-[#F2B705] font-black text-[20px] leading-none">{formatDuration(duree)}</span>
             </div>
           </div>
         </div>
@@ -49,9 +48,8 @@ export function VolImageGallery({ images, title, duree }: VolImageGalleryProps) 
 
         {/* Badge durée */}
         <div className="absolute top-5 left-5">
-          <div className="inline-flex items-center gap-1.5 bg-black/40 backdrop-blur-md border border-white/15 rounded-xl px-3 py-1.5">
-            <span className="text-[#F2B705] font-black text-[13px] leading-none">{formatDuration(duree)}</span>
-            <span className="text-white/50 text-[11px] leading-none">vol privé</span>
+          <div className="inline-flex items-center bg-black/40 backdrop-blur-md border border-white/15 rounded-xl px-4 py-2">
+            <span className="text-[#F2B705] font-black text-[20px] leading-none">{formatDuration(duree)}</span>
           </div>
         </div>
 

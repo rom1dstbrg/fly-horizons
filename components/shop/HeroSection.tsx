@@ -71,7 +71,7 @@ export function HeroSection() {
         <p className="mt-6 text-xs italic text-white/40">
           Première commande ? Utilisez le code{" "}
           <span className="font-mono not-italic text-white/55">WELCOME2026</span>
-          {" "}pour −10% — valable une seule fois par compte.
+          {" "}pour −10%, valable une seule fois par compte.
         </p>
       </div>
 

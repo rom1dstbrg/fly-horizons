@@ -278,7 +278,7 @@ export function ClientFiche({
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         Vol le {volDate}
-                        {r.heure_vol ? ` à ${r.heure_vol.slice(0, 5)}` : ""} — {r.duree} min
+                        {r.heure_vol ? ` à ${r.heure_vol.slice(0, 5)}` : ""}, {r.duree} min
                         {r.passagers ? ` · ${r.passagers} passager${r.passagers > 1 ? "s" : ""}` : ""}
                         {r.acompte ? ` · ${r.acompte} €` : ""}
                       </p>
@@ -298,13 +298,13 @@ export function ClientFiche({
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-medium text-foreground">Voucher — {v.product_title}</span>
+                        <span className="text-sm font-medium text-foreground">Voucher · {v.product_title}</span>
                         <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${statut.color}`}>
                           {statut.label}
                         </span>
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        Code <span className="font-mono font-semibold text-foreground">{v.code}</span> — {v.duration_minutes} min
+                        Code <span className="font-mono font-semibold text-foreground">{v.code}</span>, {v.duration_minutes} min
                         {v.prix ? ` · ${v.prix} €` : ""}
                         {v.used_at ? ` · Utilisé le ${new Date(v.used_at).toLocaleDateString("fr-BE", { day: "numeric", month: "short" })}` : ""}
                       </p>

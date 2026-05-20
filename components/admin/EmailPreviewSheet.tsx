@@ -69,7 +69,7 @@ export function EmailPreviewSheet({
         <SheetHeader className="px-5 py-4 border-b border-border shrink-0 gap-3">
           <div className="flex items-center justify-between gap-2">
             <SheetTitle className="text-base">
-              Aperçu email — <span className="font-mono text-primary">#{orderRef}</span>
+              Aperçu email : <span className="font-mono text-primary">#{orderRef}</span>
             </SheetTitle>
             {customerEmail && (
               <span className="text-xs text-muted-foreground truncate max-w-[200px]">
