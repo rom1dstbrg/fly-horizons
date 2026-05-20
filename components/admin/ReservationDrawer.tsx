@@ -35,6 +35,8 @@ export interface DrawerReservation {
   route_feedback?: string | null;
   report_requested_at?: string | null;
   report_reason?: string | null;
+  report_suggested_date?: string | null;
+  report_suggested_heure?: string | null;
   clients: {
     id: string;
     prenom: string;
@@ -315,6 +317,14 @@ export function ReservationDrawer({
                     <p className="text-xs text-amber-700 mt-0.5">
                       {new Date(r.report_requested_at).toLocaleDateString("fr-BE", { day: "numeric", month: "long" })} à {new Date(r.report_requested_at).toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit" })}
                     </p>
+                    {r.report_suggested_date && (
+                      <p className="text-xs text-amber-800 mt-1.5 font-semibold">
+                        Souhaitée : <span className="capitalize font-normal">
+                          {new Date(r.report_suggested_date + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long" })}
+                          {r.report_suggested_heure ? ` à ${r.report_suggested_heure}` : ""}
+                        </span>
+                      </p>
+                    )}
                     {r.report_reason && (
                       <p className="text-xs text-amber-700 mt-1.5 italic border-l-2 border-amber-400 pl-2">{r.report_reason}</p>
                     )}

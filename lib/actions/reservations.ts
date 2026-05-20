@@ -69,7 +69,7 @@ export async function updateStatutReservation(id: string, statut: string) {
             to: [client.email],
             replyTo: EMAIL_REPLY_TO,
             subject: "Fly Horizons — Votre date de vol est confirmée",
-            html: reservationDateConfirmeeEmail({ prenom: client.prenom, dateStr, duree: resa.duree, route, routeUrl }),
+            html: reservationDateConfirmeeEmail({ prenom: client.prenom, dateStr, duree: resa.duree, route, routeUrl, reservationId: id }),
           });
         } else if (statut === "heure_confirmee") {
           let routeUrl: string | null = null;
@@ -86,7 +86,7 @@ export async function updateStatutReservation(id: string, statut: string) {
             to: [client.email],
             replyTo: EMAIL_REPLY_TO,
             subject: "Fly Horizons — Votre créneau horaire est confirmé",
-            html: reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, route: resa.route, routeUrl }),
+            html: reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, route: resa.route, routeUrl, reservationId: id }),
           });
         } else {
           await resend.emails.send({
@@ -145,7 +145,7 @@ export async function updateStatutReservationPerso(id: string, statut: string) {
             to: [client.email],
             replyTo: EMAIL_REPLY_TO,
             subject: "Fly Horizons — Votre date de vol est confirmée",
-            html: reservationDateConfirmeeEmail({ prenom: client.prenom, dateStr, duree: resa.duree }),
+            html: reservationDateConfirmeeEmail({ prenom: client.prenom, dateStr, duree: resa.duree, reservationId: id }),
           });
         } else if (statut === "heure_confirmee") {
           await resend.emails.send({
@@ -153,7 +153,7 @@ export async function updateStatutReservationPerso(id: string, statut: string) {
             to: [client.email],
             replyTo: EMAIL_REPLY_TO,
             subject: "Fly Horizons — Votre créneau horaire est confirmé",
-            html: reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree }),
+            html: reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, reservationId: id }),
           });
         } else {
           await resend.emails.send({
@@ -198,8 +198,8 @@ export async function sendEmailConfirmation(id: string, type: "date" | "heure") 
       ? "Fly Horizons — Votre date de vol est confirmée"
       : "Fly Horizons — Votre créneau horaire est confirmé";
     const html = type === "date"
-      ? reservationDateConfirmeeEmail({ prenom: client.prenom, dateStr, duree: resa.duree })
-      : reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree });
+      ? reservationDateConfirmeeEmail({ prenom: client.prenom, dateStr, duree: resa.duree, reservationId: id })
+      : reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, reservationId: id });
     const { error: emailError } = await resend.emails.send({ from: EMAIL_FROM, to: [client.email], replyTo: EMAIL_REPLY_TO, subject, html });
     if (emailError) {
       console.error("Resend sendEmailConfirmation error:", emailError);
@@ -463,7 +463,12 @@ export async function updateReservationRoute(id: string, route: string) {
 
 // ── Demande de report self-service (client authentifié) ───────────────────────
 
-export async function requestDateReport(reservationId: string, reason: string) {
+export async function requestDateReport(
+  reservationId: string,
+  reason: string,
+  suggestedDate?: string | null,
+  suggestedHeure?: string | null,
+) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -498,6 +503,8 @@ export async function requestDateReport(reservationId: string, reason: string) {
       .update({
         report_requested_at: new Date().toISOString(),
         report_reason: reason.trim() || null,
+        report_suggested_date: suggestedDate || null,
+        report_suggested_heure: suggestedHeure || null,
       })
       .eq("id", reservationId);
 
@@ -520,6 +527,8 @@ export async function requestDateReport(reservationId: string, reason: string) {
           duree: resa.duree,
           reason: reason.trim() || null,
           adminUrl: `${siteUrl}/admin/reservations`,
+          suggestedDate: suggestedDate || null,
+          suggestedHeure: suggestedHeure || null,
         }),
       });
     } catch (emailErr) {

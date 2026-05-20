@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import {
   ArrowLeft,
   Check,
+  ChevronLeft,
+  ChevronRight,
   CreditCard,
   Clock,
   Users,
@@ -22,6 +24,10 @@ import {
 } from "lucide-react";
 import { formatDuration } from "@/lib/vouchers";
 import { requestDateReport } from "@/lib/actions/reservations";
+
+// ── Calendar constants ─────────────────────────────────────────────────────
+const MONTHS_FR = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+const DAYS_FR   = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -43,6 +49,8 @@ export interface ReservationData {
   route_feedback?: string | null;
   report_requested_at?: string | null;
   report_reason?: string | null;
+  report_suggested_date?: string | null;
+  report_suggested_heure?: string | null;
 }
 
 const ROUTE_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
@@ -193,6 +201,17 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
   const [reportError, setReportError] = useState("");
   const [isPendingReport, startReportTransition] = useTransition();
 
+  // Report calendar state
+  const today = new Date();
+  const [rCalYear,  setRCalYear]  = useState(today.getFullYear());
+  const [rCalMonth, setRCalMonth] = useState(today.getMonth() + 1);
+  const [rAvailDays,    setRAvailDays]    = useState<string[]>([]);
+  const [rCalLoading,   setRCalLoading]   = useState(false);
+  const [suggestedDate, setSuggestedDate] = useState("");
+  const [suggestedHeure, setSuggestedHeure] = useState("");
+  const [rSlots,        setRSlots]        = useState<string[]>([]);
+  const [rSlotsLoading, setRSlotsLoading] = useState(false);
+
   // Sync when server re-renders (router.refresh)
   useEffect(() => {
     setResa(initial);
@@ -248,18 +267,47 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
   const isPaid = !["payment_pending"].includes(resa.statut);
   const hasPaymentLink = resa.payment_token && !isPaid && !isCancelled;
 
+  // Calendar data fetching
+  const loadReportMonth = useCallback(async (y: number, m: number) => {
+    setRCalLoading(true);
+    try {
+      const r = await fetch(`/api/reservation/month?year=${y}&month=${m}&duree=${resa.duree}`);
+      const data = await r.json();
+      setRAvailDays(data.available ?? []);
+    } finally { setRCalLoading(false); }
+  }, [resa.duree]);
+
+  useEffect(() => {
+    if (showReportForm) loadReportMonth(rCalYear, rCalMonth);
+  }, [showReportForm, rCalYear, rCalMonth, loadReportMonth]);
+
+  useEffect(() => {
+    if (!suggestedDate) { setRSlots([]); return; }
+    setRSlotsLoading(true);
+    fetch(`/api/reservation/slots?date=${suggestedDate}&duree=${resa.duree}`)
+      .then(r => r.json())
+      .then(d => setRSlots(d.slots ?? []))
+      .finally(() => setRSlotsLoading(false));
+  }, [suggestedDate, resa.duree]);
+
   const canRequestReport = ["en_attente", "date_confirmee", "heure_confirmee"].includes(resa.statut) && !resa.report_requested_at;
   const alreadyRequested = !!resa.report_requested_at;
 
   function submitReport() {
     startReportTransition(async () => {
-      const result = await requestDateReport(resa.id, reportReason);
+      const result = await requestDateReport(resa.id, reportReason, suggestedDate || null, suggestedHeure || null);
       if (result.error) {
         setReportError(result.error);
         setReportStatus("error");
       } else {
         setReportStatus("success");
-        setResa(prev => ({ ...prev, report_requested_at: new Date().toISOString(), report_reason: reportReason.trim() || null }));
+        setResa(prev => ({
+          ...prev,
+          report_requested_at: new Date().toISOString(),
+          report_reason: reportReason.trim() || null,
+          report_suggested_date: suggestedDate || null,
+          report_suggested_heure: suggestedHeure || null,
+        }));
         setShowReportForm(false);
       }
     });
@@ -559,6 +607,14 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
                     <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 leading-relaxed">
                       Votre demande a bien été transmise. Romain vous recontactera pour convenir d&apos;une nouvelle date.
                     </p>
+                    {resa.report_suggested_date && (
+                      <p className="text-xs text-muted-foreground pl-1">
+                        Date souhaitée : <strong className="text-foreground capitalize">
+                          {new Date(resa.report_suggested_date + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long" })}
+                          {resa.report_suggested_heure ? ` à ${resa.report_suggested_heure}` : ""}
+                        </strong>
+                      </p>
+                    )}
                     {resa.report_reason && (
                       <p className="text-xs text-muted-foreground italic pl-1">&ldquo;{resa.report_reason}&rdquo;</p>
                     )}
@@ -577,18 +633,131 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
                     </button>
                   </div>
                 ) : (
-                  <div className="mt-2 space-y-3">
-                    <p className="text-xs text-muted-foreground">
-                      Expliquez la situation en quelques mots (facultatif).
-                    </p>
-                    <textarea
-                      value={reportReason}
-                      onChange={e => setReportReason(e.target.value)}
-                      rows={3}
-                      maxLength={500}
-                      placeholder="Raison du report, disponibilités souhaitées..."
-                      className="w-full rounded-xl border border-border bg-secondary/30 px-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-amber-300/50 resize-none"
-                    />
+                  <div className="mt-2 space-y-4">
+                    {/* ── Date suggérée (optionnel) ── */}
+                    <div>
+                      <p className="text-xs font-medium text-foreground mb-2">Nouvelle date souhaitée <span className="font-normal text-muted-foreground">(optionnel)</span></p>
+                      {/* Calendar header */}
+                      <div className="rounded-xl border border-border bg-secondary/20 p-3">
+                        <div className="flex items-center justify-between mb-3">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (rCalMonth === 1) { setRCalMonth(12); setRCalYear(y => y - 1); }
+                              else setRCalMonth(m => m - 1);
+                            }}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all border border-border"
+                          >
+                            <ChevronLeft size={13} />
+                          </button>
+                          <span className="text-xs font-bold text-foreground">
+                            {rCalLoading ? "…" : `${MONTHS_FR[rCalMonth - 1]} ${rCalYear}`}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (rCalMonth === 12) { setRCalMonth(1); setRCalYear(y => y + 1); }
+                              else setRCalMonth(m => m + 1);
+                            }}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all border border-border"
+                          >
+                            <ChevronRight size={13} />
+                          </button>
+                        </div>
+                        {/* Day labels */}
+                        <div className="grid grid-cols-7 mb-1">
+                          {DAYS_FR.map((d) => (
+                            <div key={d} className="h-6 flex items-center justify-center text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+                              {d}
+                            </div>
+                          ))}
+                        </div>
+                        {/* Day cells */}
+                        <div className={`grid grid-cols-7 gap-0.5 transition-opacity ${rCalLoading ? "opacity-40" : ""}`}>
+                          {(() => {
+                            const todayStr = new Date().toISOString().slice(0, 10);
+                            const firstDay = new Date(rCalYear, rCalMonth - 1, 1).getDay();
+                            const offset = firstDay === 0 ? 6 : firstDay - 1;
+                            const total = new Date(rCalYear, rCalMonth, 0).getDate();
+                            const cells: React.ReactNode[] = [];
+                            for (let i = 0; i < offset; i++) cells.push(<div key={`e${i}`} />);
+                            for (let d = 1; d <= total; d++) {
+                              const ds = `${rCalYear}-${String(rCalMonth).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+                              const isAvail = rAvailDays.includes(ds);
+                              const isSel = suggestedDate === ds;
+                              const isPast = ds <= todayStr;
+                              cells.push(
+                                <button
+                                  key={ds}
+                                  type="button"
+                                  disabled={!isAvail || isPast}
+                                  onClick={() => { setSuggestedDate(ds); setSuggestedHeure(""); }}
+                                  className={`h-7 w-full rounded-lg text-[11px] font-medium transition-all flex items-center justify-center
+                                    ${isSel ? "bg-amber-500 text-white font-bold" :
+                                      isAvail && !isPast ? "hover:bg-amber-50 hover:text-amber-800 text-foreground cursor-pointer" :
+                                      "text-muted-foreground/30 cursor-default"}`}
+                                >
+                                  {d}
+                                </button>
+                              );
+                            }
+                            return cells;
+                          })()}
+                        </div>
+                        {/* Clear selection */}
+                        {suggestedDate && (
+                          <button
+                            type="button"
+                            onClick={() => { setSuggestedDate(""); setSuggestedHeure(""); }}
+                            className="mt-2 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            Effacer la date
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* ── Créneaux horaires ── */}
+                    {suggestedDate && (
+                      <div>
+                        <p className="text-xs font-medium text-foreground mb-2">Créneau souhaité <span className="font-normal text-muted-foreground">(optionnel)</span></p>
+                        {rSlotsLoading ? (
+                          <p className="text-xs text-muted-foreground animate-pulse">Chargement des créneaux…</p>
+                        ) : rSlots.length === 0 ? (
+                          <p className="text-xs text-muted-foreground">Aucun créneau disponible ce jour-là.</p>
+                        ) : (
+                          <div className="flex flex-wrap gap-2">
+                            {rSlots.map(slot => (
+                              <button
+                                key={slot}
+                                type="button"
+                                onClick={() => setSuggestedHeure(prev => prev === slot ? "" : slot)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all
+                                  ${suggestedHeure === slot
+                                    ? "bg-amber-500 border-amber-500 text-white"
+                                    : "border-border text-foreground hover:border-amber-400 hover:bg-amber-50"}`}
+                              >
+                                {slot}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* ── Message (optionnel) ── */}
+                    <div>
+                      <p className="text-xs font-medium text-foreground mb-2">Message <span className="font-normal text-muted-foreground">(optionnel)</span></p>
+                      <textarea
+                        value={reportReason}
+                        onChange={e => setReportReason(e.target.value)}
+                        rows={3}
+                        maxLength={500}
+                        placeholder="Expliquez la situation en quelques mots..."
+                        className="w-full rounded-xl border border-border bg-secondary/30 px-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-amber-300/50 resize-none"
+                      />
+                    </div>
+
                     {reportStatus === "error" && (
                       <p className="text-xs text-destructive flex items-center gap-1.5">
                         <AlertTriangle size={12} />
