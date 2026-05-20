@@ -58,19 +58,6 @@ const THEMES: { title: string; items: FaqItem[] }[] = [
         a: "Il est recommandé d'annuler dès que possible en cas d'imprévu. La limite pour une annulation sans frais est fixée à 48 heures avant la date prévue. Les annulations de dernière minute causées par des circonstances indépendantes de votre volonté n'entraînent aucun frais.",
       },
       {
-        q: "Comment déplacer la date de mon vol ?",
-        a: (
-          <>
-            Connectez-vous à votre compte, rendez-vous dans{" "}
-            <Link href="/account#reservations" className="text-primary font-medium hover:underline">
-              Mes réservations
-            </Link>
-            , puis cliquez sur la réservation concernée. Vous y trouverez un bouton{" "}
-            <strong className="text-foreground">Demander un report</strong> : laissez un message si vous le souhaitez et validez. Romain vous recontacte pour convenir d&apos;une nouvelle date dans les meilleurs délais.
-          </>
-        ),
-      },
-      {
         q: "Comment fonctionne le paiement ?",
         a: "Un acompte est requis lors de la réservation. Le montant restant sera remboursé ou ajusté en fonction des éventuels frais, conformément aux Conditions Générales.",
       },

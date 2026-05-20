@@ -801,7 +801,6 @@ export interface ReservationDateConfirmeeProps {
   duree: number;
   route?: string | null;
   routeUrl?: string | null;
-  reservationId?: string | null;
 }
 
 export function reservationDateConfirmeeEmail(p: ReservationDateConfirmeeProps): string {
@@ -833,10 +832,6 @@ export function reservationDateConfirmeeEmail(p: ReservationDateConfirmeeProps):
 
     ${routeSection}
 
-    ${p.reservationId ? `<p class="em-muted" style="margin:0 0 24px;font-size:12px;color:#94a3b8;line-height:1.7;text-align:center;">
-      <a href="${SITE_URL}/account/reservations/${esc(p.reservationId)}" style="color:#94a3b8;text-decoration:underline;">Besoin de changer la date de votre vol ?</a>
-    </p>` : ""}
-
     <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">
       Des questions ? R&eacute;pondez directement &agrave; cet email, Romain vous r&eacute;pondra rapidement.<br>
       <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
@@ -856,7 +851,6 @@ export interface ReservationHeureConfirmeeProps {
   duree: number;
   route?: string | null;
   routeUrl?: string | null;
-  reservationId?: string | null;
 }
 
 export function reservationHeureConfirmeeEmail(p: ReservationHeureConfirmeeProps): string {
@@ -908,10 +902,6 @@ export function reservationHeureConfirmeeEmail(p: ReservationHeureConfirmeeProps
       <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Le vol se d&eacute;roule par beau temps. En cas de m&eacute;t&eacute;o d&eacute;favorable, Fly Horizons vous contactera au plus t&ocirc;t.</td></tr>
       <tr><td class="em-body" style="padding:8px 0;font-size:13px;color:#334155;">Questions : <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a></td></tr>
     </table>
-
-    ${p.reservationId ? `<p class="em-muted" style="margin:0 0 24px;font-size:12px;color:#94a3b8;line-height:1.7;text-align:center;">
-      <a href="${SITE_URL}/account/reservations/${esc(p.reservationId)}" style="color:#94a3b8;text-decoration:underline;">Besoin de changer la date de votre vol ?</a>
-    </p>` : ""}
 
     <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">
       Beau temps et bon vol ! Rendez-vous &agrave; l&rsquo;a&eacute;roport,
@@ -1260,62 +1250,4 @@ export function routeFeedbackAdminEmail(p: RouteFeedbackAdminEmailProps): string
     ${ctaButton(p.adminUrl, "Voir dans l'admin →")}`;
 
   return emailBase(body, `Itinéraire ${isValidated ? "validé" : "— modification"} — ${p.clientPrenom} ${p.clientNom}`);
-}
-
-// ── 19. Demande de report de date — notification admin ───────────────────────
-
-export interface ReportRequestAdminEmailProps {
-  clientPrenom: string;
-  clientNom: string;
-  clientEmail: string;
-  resaId: string;
-  dateStr: string;
-  duree: number;
-  reason: string | null;
-  adminUrl: string;
-  suggestedDate?: string | null;
-  suggestedHeure?: string | null;
-}
-
-export function reportRequestAdminEmail(p: ReportRequestAdminEmailProps): string {
-  const suggestedDateStr = p.suggestedDate
-    ? new Date(p.suggestedDate + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
-    : null;
-
-  const rows: [string, string][] = [
-    ["Client", `${esc(p.clientPrenom)} ${esc(p.clientNom)}`],
-    ["Email", `<a href="mailto:${esc(p.clientEmail)}" style="color:#F2B705;font-weight:600;text-decoration:none;">${esc(p.clientEmail)}</a>`],
-    ["Date du vol", `<span style="text-transform:capitalize;">${esc(p.dateStr)}</span>`],
-    ["Durée", fmtDuration(p.duree)],
-  ];
-  if (suggestedDateStr) {
-    const suggLabel = p.suggestedHeure
-      ? `${suggestedDateStr} &agrave; ${esc(p.suggestedHeure)}`
-      : suggestedDateStr;
-    rows.push(["Nouvelle date souhait&eacute;e", `<strong style="text-transform:capitalize;color:#0b2238;">${suggLabel}</strong>`]);
-  }
-
-  const body = `
-    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Report demand&eacute;</p>
-    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">
-      Demande de changement de date
-    </h1>
-    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">
-      <strong style="color:#0b2238;">${esc(p.clientPrenom)} ${esc(p.clientNom)}</strong> souhaite reporter son vol pr&eacute;vu le ${esc(p.dateStr)}.
-    </p>
-
-    ${separator()}
-    ${infoRows(rows)}
-
-    ${p.reason ? `${separator()}${label("Message du client")}<p class="em-body" style="margin:0 0 28px;font-size:13px;color:#334155;line-height:1.7;white-space:pre-wrap;border-left:3px solid #F2B705;padding:2px 0 2px 16px;">${esc(p.reason)}</p>` : ""}
-
-    <div style="background:#fff8e6;border:1px solid #fde68a;border-radius:12px;padding:16px 20px;margin:0 0 28px;">
-      <p style="margin:0;font-size:13px;color:#92400e;line-height:1.6;">
-        <strong style="color:#78350f;">Action requise</strong> : contactez le client pour convenir d&rsquo;une nouvelle date, puis mettez &agrave; jour la r&eacute;servation dans l&rsquo;admin.
-      </p>
-    </div>
-
-    ${ctaButton(p.adminUrl, "Voir la réservation →")}`;
-
-  return emailBase(body, `[Report] ${p.clientPrenom} ${p.clientNom} — vol du ${p.dateStr}`);
 }

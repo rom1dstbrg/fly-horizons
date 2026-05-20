@@ -24,7 +24,7 @@ export default async function ReservationTrackerPage({ params }: PageProps) {
   // Fetch reservation
   const { data: resa } = await adminSupabase
     .from("reservations")
-    .select("id, date_vol, heure_vol, duree, passagers, statut, type_resa, payment_token, acompte, distance_km, created_at, client_id, route, route_status, route_token, route_feedback, report_requested_at, report_reason, report_suggested_date, report_suggested_heure")
+    .select("id, date_vol, heure_vol, duree, passagers, statut, type_resa, payment_token, acompte, distance_km, created_at, client_id, route, route_status, route_token, route_feedback")
     .eq("id", id)
     .single();
 
@@ -64,10 +64,6 @@ export default async function ReservationTrackerPage({ params }: PageProps) {
         route_status: resa.route_status ?? null,
         route_token: resa.route_token ?? null,
         route_feedback: resa.route_feedback ?? null,
-        report_requested_at: resa.report_requested_at ?? null,
-        report_reason: resa.report_reason ?? null,
-        report_suggested_date: resa.report_suggested_date ?? null,
-        report_suggested_heure: resa.report_suggested_heure ?? null,
       }}
       siteUrl={siteUrl ?? "https://fly-horizons.com"}
     />
