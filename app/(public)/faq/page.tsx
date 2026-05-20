@@ -4,7 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown, Search, MessageCircle } from "lucide-react";
 
-const THEMES = [
+// La réponse peut être un texte simple ou un nœud JSX (pour inclure des liens)
+type FaqItem = { q: string; a: string | React.ReactNode };
+
+const THEMES: { title: string; items: FaqItem[] }[] = [
   {
     title: "Informations générales",
     items: [
@@ -53,6 +56,19 @@ const THEMES = [
       {
         q: "Puis-je annuler ou reporter mon vol ?",
         a: "Il est recommandé d'annuler dès que possible en cas d'imprévu. La limite pour une annulation sans frais est fixée à 48 heures avant la date prévue. Les annulations de dernière minute causées par des circonstances indépendantes de votre volonté n'entraînent aucun frais.",
+      },
+      {
+        q: "Comment déplacer la date de mon vol ?",
+        a: (
+          <>
+            Connectez-vous à votre compte, rendez-vous dans{" "}
+            <Link href="/account#reservations" className="text-primary font-medium hover:underline">
+              Mes réservations
+            </Link>
+            , puis cliquez sur la réservation concernée. Vous y trouverez un bouton{" "}
+            <strong className="text-foreground">Demander un report</strong> : laissez un message si vous le souhaitez et validez. Romain vous recontacte pour convenir d&apos;une nouvelle date dans les meilleurs délais.
+          </>
+        ),
       },
       {
         q: "Comment fonctionne le paiement ?",
@@ -104,9 +120,11 @@ export default function FaqPage() {
 
   const filtered = THEMES.map((theme) => ({
     ...theme,
-    items: theme.items.filter(
-      (item) => !query || item.q.toLowerCase().includes(query) || item.a.toLowerCase().includes(query)
-    ),
+    items: theme.items.filter((item) => {
+      if (!query) return true;
+      const aText = typeof item.a === "string" ? item.a.toLowerCase() : "";
+      return item.q.toLowerCase().includes(query) || aText.includes(query);
+    }),
   })).filter((theme) => theme.items.length > 0);
 
   function toggle(key: string) {
