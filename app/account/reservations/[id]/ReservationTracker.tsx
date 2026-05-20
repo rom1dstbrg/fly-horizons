@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -17,8 +17,11 @@ import {
   MapPin,
   CheckCircle,
   Navigation,
+  CalendarX,
+  Send,
 } from "lucide-react";
 import { formatDuration } from "@/lib/vouchers";
+import { requestDateReport } from "@/lib/actions/reservations";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -38,6 +41,8 @@ export interface ReservationData {
   route_status?: string | null;
   route_token?: string | null;
   route_feedback?: string | null;
+  report_requested_at?: string | null;
+  report_reason?: string | null;
 }
 
 const ROUTE_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
@@ -181,6 +186,13 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
   const [flashId, setFlashId] = useState<string | null>(null);
   const prevStatut = useRef(initial.statut);
 
+  // Report form state
+  const [showReportForm, setShowReportForm] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportStatus, setReportStatus] = useState<"idle" | "success" | "error">("idle");
+  const [reportError, setReportError] = useState("");
+  const [isPendingReport, startReportTransition] = useTransition();
+
   // Sync when server re-renders (router.refresh)
   useEffect(() => {
     setResa(initial);
@@ -235,6 +247,23 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
 
   const isPaid = !["payment_pending"].includes(resa.statut);
   const hasPaymentLink = resa.payment_token && !isPaid && !isCancelled;
+
+  const canRequestReport = ["en_attente", "date_confirmee", "heure_confirmee"].includes(resa.statut) && !resa.report_requested_at;
+  const alreadyRequested = !!resa.report_requested_at;
+
+  function submitReport() {
+    startReportTransition(async () => {
+      const result = await requestDateReport(resa.id, reportReason);
+      if (result.error) {
+        setReportError(result.error);
+        setReportStatus("error");
+      } else {
+        setReportStatus("success");
+        setResa(prev => ({ ...prev, report_requested_at: new Date().toISOString(), report_reason: reportReason.trim() || null }));
+        setShowReportForm(false);
+      }
+    });
+  }
   const paymentUrl = isPerso
     ? `${siteUrl}/api/vol-sur-mesure/pay/${resa.payment_token}`
     : `${siteUrl}/api/reservation/pay/${resa.payment_token}`;
@@ -512,6 +541,87 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
             >
               Voir →
             </Link>
+          </div>
+        )}
+
+        {/* Demande de report */}
+        {!isCancelled && resa.statut !== "vol_effectue" && (canRequestReport || alreadyRequested) && (
+          <div className="card-premium p-5 mt-5">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0">
+                <CalendarX size={16} className="text-amber-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground">Besoin de changer de date ?</p>
+
+                {alreadyRequested && reportStatus !== "error" ? (
+                  <div className="mt-2 space-y-1.5">
+                    <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 leading-relaxed">
+                      Votre demande a bien été transmise. Romain vous recontactera pour convenir d&apos;une nouvelle date.
+                    </p>
+                    {resa.report_reason && (
+                      <p className="text-xs text-muted-foreground italic pl-1">&ldquo;{resa.report_reason}&rdquo;</p>
+                    )}
+                  </div>
+                ) : !showReportForm ? (
+                  <div className="mt-1.5">
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Faites-nous savoir et Romain vous proposera une alternative dans les meilleurs délais.
+                    </p>
+                    <button
+                      onClick={() => setShowReportForm(true)}
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-3.5 py-2 rounded-xl hover:bg-amber-100 transition-colors"
+                    >
+                      <CalendarX size={13} />
+                      Demander un report
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mt-2 space-y-3">
+                    <p className="text-xs text-muted-foreground">
+                      Expliquez la situation en quelques mots (facultatif).
+                    </p>
+                    <textarea
+                      value={reportReason}
+                      onChange={e => setReportReason(e.target.value)}
+                      rows={3}
+                      maxLength={500}
+                      placeholder="Raison du report, disponibilités souhaitées..."
+                      className="w-full rounded-xl border border-border bg-secondary/30 px-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-amber-300/50 resize-none"
+                    />
+                    {reportStatus === "error" && (
+                      <p className="text-xs text-destructive flex items-center gap-1.5">
+                        <AlertTriangle size={12} />
+                        {reportError}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={submitReport}
+                        disabled={isPendingReport}
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0b2238] bg-[#F2B705] px-4 py-2.5 rounded-xl hover:bg-[#e6a800] transition-colors disabled:opacity-50"
+                      >
+                        {isPendingReport ? (
+                          <span className="animate-pulse">Envoi…</span>
+                        ) : (
+                          <>
+                            <Send size={12} />
+                            Envoyer la demande
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => { setShowReportForm(false); setReportStatus("idle"); }}
+                        disabled={isPendingReport}
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 

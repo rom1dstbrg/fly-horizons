@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationPaymentInvitationEmail, reservationConfirmationFreeEmail, postVolEmail, routeProposalEmail, customEmail } from "@/lib/email-templates";
+import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationPaymentInvitationEmail, reservationConfirmationFreeEmail, postVolEmail, routeProposalEmail, customEmail, reportRequestAdminEmail, fmtDuration } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 
 async function checkAdmin() {
@@ -457,6 +457,81 @@ export async function updateReservationRoute(id: string, route: string) {
     revalidatePath("/admin/vols");
     return { success: true };
   } catch {
+    return { error: "Erreur serveur" };
+  }
+}
+
+// ── Demande de report self-service (client authentifié) ───────────────────────
+
+export async function requestDateReport(reservationId: string, reason: string) {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: "Non authentifié" };
+
+    const adminSupabase = createAdminClient();
+
+    const { data: resa } = await adminSupabase
+      .from("reservations")
+      .select("id, statut, date_vol, duree, report_requested_at, clients(prenom, nom, email)")
+      .eq("id", reservationId)
+      .single();
+
+    if (!resa) return { error: "Réservation introuvable" };
+
+    const client = resa.clients as unknown as { prenom: string; nom: string; email: string };
+    if (client.email.toLowerCase() !== user.email!.toLowerCase()) {
+      return { error: "Non autorisé" };
+    }
+
+    const allowedStatuts = ["en_attente", "date_confirmee", "heure_confirmee"];
+    if (!allowedStatuts.includes(resa.statut)) {
+      return { error: "Ce vol est déjà effectué ou annulé" };
+    }
+
+    if (resa.report_requested_at) {
+      return { error: "Vous avez déjà soumis une demande de report pour ce vol" };
+    }
+
+    await adminSupabase
+      .from("reservations")
+      .update({
+        report_requested_at: new Date().toISOString(),
+        report_reason: reason.trim() || null,
+      })
+      .eq("id", reservationId);
+
+    const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
+      weekday: "long", day: "numeric", month: "long", year: "numeric",
+    });
+    const siteUrl = "https://fly-horizons.com";
+
+    try {
+      await resend.emails.send({
+        from: EMAIL_FROM,
+        to: ["Romainpilot2003@gmail.com"],
+        subject: `[Report demandé] ${client.prenom} ${client.nom} — ${resa.date_vol}`,
+        html: reportRequestAdminEmail({
+          clientPrenom: client.prenom,
+          clientNom: client.nom,
+          clientEmail: client.email,
+          resaId: resa.id,
+          dateStr,
+          duree: resa.duree,
+          reason: reason.trim() || null,
+          adminUrl: `${siteUrl}/admin/reservations`,
+        }),
+      });
+    } catch (emailErr) {
+      console.error("requestDateReport email error:", emailErr);
+    }
+
+    revalidatePath(`/account/reservations/${reservationId}`);
+    revalidatePath("/admin/reservations");
+
+    return { success: true };
+  } catch (e) {
+    console.error("requestDateReport error:", e);
     return { error: "Erreur serveur" };
   }
 }

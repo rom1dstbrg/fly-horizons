@@ -33,6 +33,8 @@ export interface DrawerReservation {
   route_token?: string | null;
   route_status?: string | null;
   route_feedback?: string | null;
+  report_requested_at?: string | null;
+  report_reason?: string | null;
   clients: {
     id: string;
     prenom: string;
@@ -303,6 +305,22 @@ export function ReservationDrawer({
 
             {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+
+              {/* Alerte report de date */}
+              {r.report_requested_at && (
+                <div className="flex items-start gap-3 bg-amber-50 border border-amber-300 rounded-xl px-4 py-3">
+                  <AlertTriangle size={14} className="text-amber-600 shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-amber-800">Demande de report</p>
+                    <p className="text-xs text-amber-700 mt-0.5">
+                      {new Date(r.report_requested_at).toLocaleDateString("fr-BE", { day: "numeric", month: "long" })} à {new Date(r.report_requested_at).toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                    {r.report_reason && (
+                      <p className="text-xs text-amber-700 mt-1.5 italic border-l-2 border-amber-400 pl-2">{r.report_reason}</p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Client */}
               <div className="bg-secondary/50 rounded-xl p-4 space-y-2.5">
