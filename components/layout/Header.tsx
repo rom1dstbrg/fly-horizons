@@ -77,9 +77,9 @@ export function Header() {
 
             {/* Nav desktop */}
             <nav className="hidden md:flex items-center gap-1 mr-2">
-              <Link href="/" className={navLinkClass}>Accueil</Link>
               <Link href="/nos-offres" className={navLinkClass}>Nos offres</Link>
               <Link href="/shop" className={navLinkClass}>Boutique</Link>
+              <Link href="/faq" className={navLinkClass}>FAQ</Link>
               <Link href="/contact" className={navLinkClass}>Contact</Link>
             </nav>
 

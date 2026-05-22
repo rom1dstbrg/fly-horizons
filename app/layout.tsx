@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import { SplashScreen } from "@/components/SplashScreen";
+import { ScrollToTop } from "@/components/ScrollToTop";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -82,6 +83,7 @@ export default function RootLayout({
   return (
     <html lang="fr" className={`${poppins.variable} h-full`}>
       <body className="min-h-full antialiased">
+        <ScrollToTop />
         <SplashScreen />
         {children}
         <script

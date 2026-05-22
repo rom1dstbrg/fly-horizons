@@ -182,7 +182,7 @@ export function AccountClient({
     ? window.location.origin
     : "https://fly-horizons.com";
 
-  const [activeSection, setActiveSection] = useState("apercu");
+  const [activeSection, setActiveSection] = useState<string>("apercu");
 
   // Profile edit
   const [editingProfile, setEditingProfile] = useState(false);
@@ -206,23 +206,28 @@ export function AccountClient({
     year: "numeric",
   });
 
-  // IntersectionObserver — scrollspy
+  // Scrollspy stable : scroll event + getBoundingClientRect
   useEffect(() => {
-    const ids = NAV_ITEMS.map((n) => n.id);
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-        if (visible.length > 0) setActiveSection(visible[0].target.id);
-      },
-      { rootMargin: "-15% 0px -65% 0px", threshold: [0, 0.1, 0.5] }
-    );
-    ids.forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
-    return () => observer.disconnect();
+    function onScroll() {
+      // Si on est proche du bas de la page, activer la dernière section
+      const nearBottom =
+        window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 80;
+      if (nearBottom) {
+        setActiveSection(NAV_ITEMS[NAV_ITEMS.length - 1].id);
+        return;
+      }
+
+      const threshold = 130;
+      let active: string = NAV_ITEMS[0].id;
+      for (const { id } of NAV_ITEMS) {
+        const el = document.getElementById(id);
+        if (el && el.getBoundingClientRect().top <= threshold) active = id;
+      }
+      setActiveSection(active);
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   function scrollTo(id: string) {
@@ -647,7 +652,7 @@ export function AccountClient({
                               href={paymentUrl}
                               className="text-xs font-semibold text-primary hover:text-[#e6a800] transition-colors"
                             >
-                              Payer l&apos;acompte{resa.acompte != null ? ` (${resa.acompte} €)` : ""} →
+                              {isPerso ? "Payer l'acompte" : "Finaliser le paiement"}{resa.acompte != null ? ` (${resa.acompte} €)` : ""} →
                             </Link>
                           </div>
                         )}
