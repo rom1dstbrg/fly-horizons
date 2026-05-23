@@ -91,7 +91,7 @@ export default async function HomePage() {
           className="absolute inset-0 w-full h-full object-cover"
         >
           {/* MP4 en premier — seul format supporté par Safari */}
-          <source src="/vol-rev.mp4" type="video/mp4" />
+          <source src="/vol-rev%202.2.mp4" type="video/mp4" />
           <source src="/vol-rev%202.2.webm" type="video/webm" />
         </video>
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/35 to-black/65" />

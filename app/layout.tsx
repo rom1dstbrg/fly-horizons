@@ -59,10 +59,9 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/icone.svg", type: "image/svg+xml", sizes: "any" },
-      { url: "/favicon.png", type: "image/png", sizes: "32x32" },
     ],
-    shortcut: "/favicon.png",
-    apple: "/apple-touch-icon.png",
+    shortcut: "/icone.svg",
+    apple: "/logo-email.png",
   },
 };
 
@@ -81,7 +80,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className={`${poppins.variable} h-full`}>
+    <html lang="fr" className={`${poppins.variable} h-full`} data-scroll-behavior="smooth">
       <body className="min-h-full antialiased">
         <ScrollToTop />
         <SplashScreen />

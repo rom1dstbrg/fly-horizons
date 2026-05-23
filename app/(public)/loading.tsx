@@ -8,6 +8,7 @@ export default function Loading() {
         alt="Fly Horizons"
         width={220}
         height={60}
+        style={{ width: "auto" }}
         priority
       />
       <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />

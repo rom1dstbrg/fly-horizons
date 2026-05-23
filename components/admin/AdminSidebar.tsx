@@ -99,6 +99,8 @@ function NavContentInner({ onClose }: { onClose?: () => void }) {
             width={140}
             height={36}
             className="h-9 w-auto object-contain"
+            style={{ width: "auto" }}
+            priority
             unoptimized
           />
         </Link>
@@ -257,6 +259,7 @@ export function AdminSidebar() {
             width={120}
             height={32}
             className="h-8 w-auto object-contain"
+            style={{ width: "auto" }}
             unoptimized
           />
         </Link>

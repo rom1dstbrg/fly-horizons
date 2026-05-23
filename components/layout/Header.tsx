@@ -67,6 +67,7 @@ export function Header() {
               alt="Fly Horizons"
               width={160} height={40}
               className="h-8 max-xs:h-7 md:h-8 w-auto object-contain"
+              style={{ width: "auto" }}
               priority unoptimized
             />
           </Link>
