@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { satisfactionResultEmail, fmtDuration } from "@/lib/email-templates";
-import { resend, EMAIL_FROM } from "@/lib/resend";
+import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { rateLimit, getIp } from "@/lib/rate-limit";
-
-const ADMIN_EMAIL = "Romainpilot2003@gmail.com";
 
 export async function POST(request: NextRequest) {
   const { allowed } = rateLimit(`satisfaction:${getIp(request)}`, 5, 60_000);
@@ -68,7 +66,8 @@ export async function POST(request: NextRequest) {
 
     await resend.emails.send({
       from: EMAIL_FROM,
-      to: [ADMIN_EMAIL],
+      to: [EMAIL_REPLY_TO],
+      replyTo: EMAIL_REPLY_TO,
       subject: `[Satisfaction] ${client.prenom} ${client.nom} — ${fmtDuration(resa.duree)} le ${resa.date_vol}`,
       html: satisfactionResultEmail({
         prenom: client.prenom,
