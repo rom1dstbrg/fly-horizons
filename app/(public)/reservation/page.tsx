@@ -90,6 +90,7 @@ export default function ReservationPage() {
   const [codeError,   setCodeError]   = useState("");
   const [submitting,   setSubmitting]   = useState(false);
   const [submitError,  setSubmitError]  = useState("");
+  const [payLaterSubmitting, setPayLaterSubmitting] = useState(false);
 
   // ── Data ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -233,6 +234,22 @@ export default function ReservationPage() {
     }
   }
 
+  async function handlePayLater() {
+    setPayLaterSubmitting(true); setSubmitError("");
+    const { price } = computePrice(form.product, form.voucher, form.coupon);
+    const payload = {
+      prenom: form.prenom, nom: form.nom, email: form.email, telephone: form.telephone,
+      duree, date: form.date, heure: form.heure,
+      passengers: form.passengers, poids_total: form.poids_total ? parseInt(form.poids_total) : null,
+      voucher_code: form.voucher?.code,
+      coupon_code: form.coupon?.code || undefined,
+    };
+    const r = await fetch("/api/reservation/pay-later", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, amount_cents: price * 100 }) });
+    const d = await r.json();
+    if (!r.ok) { setSubmitError(d.error || "Erreur."); setPayLaterSubmitting(false); return; }
+    router.push("/reservation/success?mode=pay-later");
+  }
+
   // ── Computed ─────────────────────────────────────────────────────
   const { price, discount, couponDiscount, full: prixPlein } = computePrice(form.product, form.voucher, form.coupon);
   const stepIndex = STEPS.findIndex(s => s.key === step);
@@ -248,7 +265,7 @@ export default function ReservationPage() {
   const ctaDisabled =
     step === "datetime" ? !form.date || !form.heure :
     step === "infos"    ? !form.prenom || !form.nom || !form.email || !form.poids_total || !form.passengers || weightError :
-                          !form.accept_cgp || submitting || codeLoading;
+                          !form.accept_cgp || submitting || payLaterSubmitting || codeLoading;
 
   async function handleCTA() {
     if (step === "datetime") { setStep("infos"); return; }
@@ -656,9 +673,24 @@ export default function ReservationPage() {
                     </span>
                     {!submitting && step !== "paiement" && <ChevronRight size={15} />}
                   </button>
+
+                  {/* Payer plus tard — uniquement si montant > 0 à l'étape paiement */}
                   {step === "paiement" && price > 0 && (
-                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                      <Lock size={9} /> Paiement sécurisé Stripe
+                    <button
+                      type="button"
+                      disabled={ctaDisabled}
+                      onClick={handlePayLater}
+                      className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-secondary text-muted-foreground rounded-xl text-sm font-medium transition-all duration-200 disabled:opacity-30 hover:bg-secondary/80 hover:text-foreground cursor-pointer border border-border"
+                    >
+                      {payLaterSubmitting && <Loader2 size={13} className="animate-spin" />}
+                      Payer plus tard
+                    </button>
+                  )}
+
+                  {step === "paiement" && price > 0 && (
+                    <p className="text-xs text-muted-foreground/70 flex items-center gap-1.5 text-right leading-tight">
+                      <AlertCircle size={10} className="shrink-0" />
+                      La date n&apos;est pas garantie sans paiement
                     </p>
                   )}
                 </div>

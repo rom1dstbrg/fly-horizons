@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronLeft, Lock, MapPin, Package, ShieldCheck, Tag, X } from "lucide-react";
+import { ChevronLeft, Lock, Mail, MapPin, Package, Pencil, Phone, ShieldCheck, Tag, User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,6 +50,7 @@ export default function CheckoutPage() {
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [shippingRates, setShippingRates] = useState<ShippingRateRow[]>([]);
   const [isVoucherOnlyDB, setIsVoucherOnlyDB] = useState<boolean | null>(null);
+  const [clientInfo, setClientInfo] = useState<{ full_name: string; email: string; phone: string | null } | null>(null);
 
   const isVoucherOnlyCart = items.length > 0 && items.every((i) => i.product_type === "voucher");
   const isVoucherOnly = isVoucherOnlyDB ?? isVoucherOnlyCart;
@@ -88,18 +89,32 @@ export default function CheckoutPage() {
 
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return;
-      const { data } = await supabase
-        .from("addresses")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("is_default", { ascending: false });
 
-      if (data && data.length > 0) {
-        setSavedAddresses(data);
-        const defaultAddr = data.find((a) => a.is_default) ?? data[0];
+      const [{ data: addresses }, { data: profile }] = await Promise.all([
+        supabase
+          .from("addresses")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("is_default", { ascending: false }),
+        supabase
+          .from("profiles")
+          .select("full_name, phone")
+          .eq("id", user.id)
+          .maybeSingle(),
+      ]);
+
+      if (addresses && addresses.length > 0) {
+        setSavedAddresses(addresses);
+        const defaultAddr = addresses.find((a) => a.is_default) ?? addresses[0];
         setSelectedAddressId(defaultAddr.id);
         setCountry(defaultAddr.country);
       }
+
+      setClientInfo({
+        full_name: profile?.full_name ?? user.user_metadata?.full_name ?? "",
+        email: user.email ?? "",
+        phone: profile?.phone ?? null,
+      });
     });
   }, [items.length, router]);
 
@@ -279,6 +294,43 @@ export default function CheckoutPage() {
                   </div>
                 </div>
               )
+            )}
+
+            {/* Informations du destinataire */}
+            {clientInfo && (
+              <div className="card-premium p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-semibold text-foreground flex items-center gap-2">
+                    <User size={16} className="text-primary" />
+                    Vos informations
+                  </h2>
+                  <Link
+                    href="/account"
+                    className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    <Pencil size={11} />
+                    Modifier
+                  </Link>
+                </div>
+                <div className="space-y-2.5">
+                  <div className="flex items-center gap-3">
+                    <User size={13} className="text-muted-foreground shrink-0" />
+                    <span className="text-sm text-foreground font-medium">
+                      {clientInfo.full_name || <span className="text-muted-foreground italic">Nom non renseigné</span>}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Mail size={13} className="text-muted-foreground shrink-0" />
+                    <span className="text-sm text-foreground">{clientInfo.email}</span>
+                  </div>
+                  {clientInfo.phone && (
+                    <div className="flex items-center gap-3">
+                      <Phone size={13} className="text-muted-foreground shrink-0" />
+                      <span className="text-sm text-foreground">{clientInfo.phone}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
 
             {/* Livraison par email — dès qu'il y a au moins un voucher */}

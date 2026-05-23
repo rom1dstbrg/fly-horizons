@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     description:
       "Offrez ou vivez un baptême de l'air inoubliable en avion léger au départ de Charleroi (Belgique). Vols de 30 à 120 min, itinéraire libre.",
     url: siteUrl,
-    images: [{ url: "/piste.jpg", width: 1200, height: 630, alt: "Fly Horizons — Baptême de l'air en Belgique" }],
+    images: [{ url: `${siteUrl}/piste.jpg`, width: 1200, height: 630, alt: "Fly Horizons — Baptême de l'air en Belgique" }],
   },
 };
 

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationPaymentInvitationEmail, reservationConfirmationFreeEmail, postVolEmail, routeProposalEmail, customEmail } from "@/lib/email-templates";
+import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationPaymentInvitationEmail, reservationConfirmationFreeEmail, postVolEmail, routeProposalEmail, customEmail, reservationPayLaterEmail } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 
 async function checkAdmin() {
@@ -442,6 +442,58 @@ export async function updateReservationPersoFields(id: string, fields: {
     await supabase.from("reservations").update(fields).eq("id", id);
     revalidatePath("/admin/vols-sur-mesure");
     revalidatePath("/admin/vols");
+    return { success: true };
+  } catch {
+    return { error: "Erreur serveur" };
+  }
+}
+
+// ── Renvoyer le lien de paiement (admin) ──────────────────────────────────────
+
+export async function resendPaymentLinkAdmin(id: string) {
+  try {
+    await checkAdmin();
+    const supabase = createAdminClient();
+
+    const { data: resa } = await supabase
+      .from("reservations")
+      .select("*, clients(*)")
+      .eq("id", id)
+      .single();
+
+    if (!resa?.payment_token) return { error: "Pas de lien de paiement pour cette réservation" };
+
+    const client = resa.clients as { prenom: string; nom: string; email: string } | null;
+    if (!client?.email) return { error: "Email client introuvable" };
+
+    const rawUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+    const siteUrl = rawUrl.startsWith("http://localhost") || rawUrl.startsWith("http://127")
+      ? rawUrl
+      : "https://fly-horizons.com";
+
+    const paymentUrl = `${siteUrl}/api/reservation/pay/${resa.payment_token}`;
+    const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
+      weekday: "long", day: "numeric", month: "long", year: "numeric",
+    });
+
+    await resend.emails.send({
+      from: EMAIL_FROM,
+      to: [client.email],
+      replyTo: EMAIL_REPLY_TO,
+      subject: "Votre réservation — Lien de paiement Fly Horizons",
+      html: reservationPayLaterEmail({
+        prenom: client.prenom,
+        nom: client.nom,
+        dateStr,
+        heure: resa.heure_vol ?? "—",
+        duree: resa.duree,
+        montant: resa.acompte ?? 0,
+        paymentUrl,
+        voucherCode: resa.voucher_code ?? null,
+        accountUrl: `${siteUrl}/account#reservations`,
+      }),
+    });
+
     return { success: true };
   } catch {
     return { error: "Erreur serveur" };

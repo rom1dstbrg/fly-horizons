@@ -68,9 +68,9 @@ const STATUS_RANK: Record<string, number> = {
 const STANDARD_TIMELINE = [
   {
     key: "payment_pending",
-    label: "Paiement de l'acompte",
+    label: "Confirmation du paiement",
     desc: () => "En attente de votre paiement",
-    doneDesc: () => "Acompte reçu",
+    doneDesc: () => "Paiement reçu",
   },
   {
     key: "en_attente",
@@ -323,9 +323,9 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
             <div className="mt-4 pt-4 border-t border-border flex items-center gap-3">
               <CreditCard size={15} className="text-primary shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-foreground">Acompte requis</p>
+                <p className="text-xs font-medium text-foreground">{isPerso ? "Acompte requis" : "Paiement requis"}</p>
                 <p className="text-xs text-muted-foreground">
-                  Réglez l&apos;acompte pour confirmer votre vol
+                  {isPerso ? "Réglez l’acompte pour confirmer votre vol" : "Réglez le montant pour confirmer votre réservation"}
                 </p>
               </div>
               <Link

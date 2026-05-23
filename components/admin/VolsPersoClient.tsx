@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { updateStatutReservationPerso, updateReservationPersoFields } from "@/lib/actions/reservations";
 import { deleteReservationPerso } from "@/lib/actions/delete";
 import { DeleteButton } from "@/components/admin/DeleteButton";
-import { MapPin, ChevronDown, ChevronUp, Loader2, Pencil, Check, X } from "lucide-react";
+import { MapPin, ChevronDown, ChevronUp, Loader2, Pencil, Check, X, Zap, Wind } from "lucide-react";
 
 const STATUTS = [
   { value: "en_attente",      label: "En attente",       color: "bg-yellow-100 text-yellow-700 border-yellow-200" },
@@ -15,7 +15,7 @@ const STATUTS = [
   { value: "annulee",         label: "Annulée",          color: "bg-red-100 text-red-700 border-red-200" },
 ];
 
-type Waypoint = { lat: number; lng: number };
+type Waypoint = { lat: number; lng: number; nom?: string };
 type Stopover = { icao: string; nom: string; taxe: number };
 type Reservation = {
   id: string;
@@ -27,6 +27,7 @@ type Reservation = {
   statut: string;
   acompte: number | null;
   distance_km: number | null;
+  style_vol: "rapide" | "vues" | null;
   waypoints: Waypoint[] | null;
   stopovers: Stopover[] | null;
   taxes_escales: number | null;
@@ -118,6 +119,8 @@ export function VolsPersoClient({ reservations }: { reservations: Reservation[] 
         const isExpanded = expanded === r.id;
         const isEditing = editingId === r.id;
 
+        const styleVol = r.style_vol;
+
         return (
           <div key={r.id} className="card-premium p-4">
             {/* Header row */}
@@ -133,12 +136,22 @@ export function VolsPersoClient({ reservations }: { reservations: Reservation[] 
                   <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${statut.color}`}>
                     {statut.label}
                   </span>
+                  {styleVol === "rapide" && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                      <Zap size={9} /> Itinéraire direct
+                    </span>
+                  )}
+                  {styleVol === "vues" && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+                      <Wind size={9} /> Parcours pittoresque
+                    </span>
+                  )}
                 </div>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
                   <p className="text-xs text-muted-foreground">{dateStr}{r.heure_vol ? ` · ${r.heure_vol}` : ""}</p>
                   <p className="text-xs text-muted-foreground">~{r.duree} min · {r.distance_km ? `${r.distance_km} km` : "dist. inconnue"}</p>
                   {r.acompte != null && <p className="text-xs text-primary font-semibold">Acompte : {r.acompte} €</p>}
-                  {r.waypoints && <p className="text-xs text-muted-foreground">{r.waypoints.length} point{r.waypoints.length > 1 ? "s" : ""}</p>}
+                  {r.waypoints && <p className="text-xs text-muted-foreground">{r.waypoints.length} lieu{r.waypoints.length > 1 ? "x" : ""}</p>}
                 </div>
                 {client && (
                   <p className="text-xs text-muted-foreground mt-0.5">{client.email}{client.telephone ? ` · ${client.telephone}` : ""}</p>
@@ -176,7 +189,10 @@ export function VolsPersoClient({ reservations }: { reservations: Reservation[] 
                     <div className="bg-secondary/30 rounded-lg p-3 space-y-1 text-xs font-mono overflow-x-auto">
                       <p className="text-muted-foreground">✈ EBCI (départ)</p>
                       {r.waypoints.map((wp, i) => (
-                        <p key={i} className="text-foreground pl-3">→ {wp.lat.toFixed(5)}, {wp.lng.toFixed(5)}</p>
+                        <p key={i} className="text-foreground pl-3">
+                          → {wp.nom ?? `${wp.lat.toFixed(5)}, ${wp.lng.toFixed(5)}`}
+                          {wp.nom && <span className="text-muted-foreground ml-2">({wp.lat.toFixed(4)}, {wp.lng.toFixed(4)})</span>}
+                        </p>
                       ))}
                       {(r.stopovers ?? []).map(so => (
                         <p key={so.icao} className="text-[#F2B705] pl-3">⊕ {so.icao}, {so.nom} (+{so.taxe}€)</p>
@@ -264,6 +280,31 @@ export function VolsPersoClient({ reservations }: { reservations: Reservation[] 
                         </div>
                       ))}
                     </div>
+
+                    {/* Style de vol */}
+                    {r.style_vol && (
+                      <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-semibold ${
+                        r.style_vol === "rapide"
+                          ? "bg-blue-50 border-blue-200 text-blue-800"
+                          : "bg-purple-50 border-purple-200 text-purple-800"
+                      }`}>
+                        {r.style_vol === "rapide"
+                          ? <Zap size={15} />
+                          : <Wind size={15} />
+                        }
+                        <div>
+                          <p className="font-bold">
+                            {r.style_vol === "rapide" ? "Itinéraire direct" : "Parcours pittoresque"}
+                          </p>
+                          <p className="text-xs font-normal opacity-70 mt-0.5">
+                            {r.style_vol === "rapide"
+                              ? "Le client souhaite le trajet le plus court entre les lieux."
+                              : "Le client préfère une route plus ample — tu peux ajouter des détours."
+                            }
+                          </p>
+                        </div>
+                      </div>
+                    )}
 
                     {r.commentaire && (
                       <div>

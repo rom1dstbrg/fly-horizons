@@ -54,7 +54,17 @@
       "Bash(powershell *)",
       "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({k:d[k] for k in ['scripts','devDependencies','dependencies'] if k in d}, indent=2\\)\\)\")",
       "Bash(git commit -m 'feat: self-service date report request for clients *)",
-      "Bash(git commit -m 'feat: add FAQ entry for date rescheduling with link to account *)"
+      "Bash(git commit -m 'feat: add FAQ entry for date rescheduling with link to account *)",
+      "Bash(Select-Object -First 30)",
+      "Bash(Format-Table FullName)",
+      "Bash(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\romai\\\\Documents\\\\Projects\\\\shop_fly-horizons\\\\app\\\\\\(public\\)\\\\guide\")",
+      "PowerShell(New-Item *)",
+      "PowerShell(Rename-Item *)",
+      "PowerShell(Remove-Item *)",
+      "Bash(grep -v \"^$\")",
+      "Bash(git show *)",
+      "Read(//tmp/**)",
+      "Bash(python -c ' *)"
     ]
   }
 }

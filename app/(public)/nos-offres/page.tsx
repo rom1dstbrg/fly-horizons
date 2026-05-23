@@ -6,10 +6,20 @@ import {
 } from "lucide-react";
 import { PackCard } from "@/components/shop/PackCard";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
+
 export const metadata = {
-  title: "Nos offres de vol",
+  title: "Baptême de l'air en Belgique | Vols 30 à 120 min | Fly Horizons",
   description:
     "Baptêmes de l'air en avion léger depuis Charleroi — vols de 30 à 120 min ou sur mesure. Itinéraire libre, pilote CPL, jusqu'à 3 passagers. Réservez votre vol en Belgique.",
+  alternates: { canonical: `${siteUrl}/nos-offres` },
+  openGraph: {
+    title: "Baptême de l'air en Belgique | Vols 30 à 120 min | Fly Horizons",
+    description:
+      "Baptêmes de l'air en avion léger depuis Charleroi — vols de 30 à 120 min ou sur mesure. Itinéraire libre, pilote CPL, jusqu'à 3 passagers.",
+    url: `${siteUrl}/nos-offres`,
+    images: [{ url: `${siteUrl}/piste.jpg`, width: 1200, height: 630, alt: "Baptême de l'air — Fly Horizons Charleroi" }],
+  },
 };
 
 export default async function NosOffresPage() {

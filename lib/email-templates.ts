@@ -506,7 +506,8 @@ export interface VolSurMesureQuoteEmailProps {
   heure: string;
   dureMin: number;
   distKm: number;
-  nbWaypoints: number;
+  waypoints: Array<{ lat: number; lng: number; nom: string }>;
+  styleVol: string | null;
   stopovers: Array<{ icao: string; nom: string; taxe: number }>;
   prixEstime: number;
   discount: number;
@@ -520,7 +521,7 @@ export interface VolSurMesureQuoteEmailProps {
 
 export function volSurMesureQuoteEmail(props: VolSurMesureQuoteEmailProps): string {
   const {
-    prenom, date, heure, dureMin, distKm, nbWaypoints, stopovers,
+    prenom, date, heure, dureMin, distKm, waypoints, styleVol, stopovers,
     prixEstime, discount, prixBillable, acompte, taxesEscales, totalAcompte,
     voucherCode, paymentUrl,
   } = props;
@@ -533,13 +534,80 @@ export function volSurMesureQuoteEmail(props: VolSurMesureQuoteEmailProps): stri
     ? [["Escale(s)", stopovers.map(s => s.icao).join(", ")]]
     : [];
 
+  const styleRow: Array<[string, string]> = styleVol
+    ? [["Style de vol", `<strong>${esc(styleVol)}</strong>`]]
+    : [];
+
   const itineraireRows: Array<[string, string]> = [
     ["Date souhaitée", `<strong style="text-transform:capitalize;">${esc(dateStr)}</strong>`],
     ["Heure de départ", esc(heure)],
     ["Départ / retour", "Charleroi EBCI"],
-    ["Itinéraire", `~${dureMin} min &middot; ${distKm} km &middot; ${nbWaypoints} point${nbWaypoints > 1 ? "s" : ""}`],
+    ["Durée estimée", `~${dureMin}&nbsp;min &middot; ${distKm}&nbsp;km`],
+    ...styleRow,
     ...stopoverRow,
   ];
+
+  // ── Route timeline ─────────────────────────────────────────────
+  const CONNECTOR = `
+    <tr>
+      <td width="44" align="center" style="padding:2px 0;">
+        <div style="width:2px;height:14px;background-color:#F2B705;margin:0 auto;border-radius:1px;"></div>
+      </td>
+      <td></td>
+    </tr>`;
+
+  const ebciRow = (lbl: string) => `
+    <tr>
+      <td width="44" align="center" valign="middle" style="padding-bottom:2px;">
+        <div style="width:34px;height:34px;background-color:#0b2238;border-radius:50%;line-height:34px;text-align:center;font-size:16px;color:#F2B705;margin:0 auto;">&#9992;</div>
+      </td>
+      <td valign="middle" style="padding-left:10px;padding-bottom:2px;">
+        <span style="font-size:13px;font-weight:700;color:#0b2238;">Charleroi EBCI</span>&nbsp;
+        <span style="font-size:11px;color:#94a3b8;">${lbl}</span>
+      </td>
+    </tr>`;
+
+  const poiRow = (n: number, nom: string) => `
+    <tr>
+      <td width="44" align="center" valign="middle" style="padding-bottom:2px;">
+        <div style="width:34px;height:34px;background-color:#F2B705;border-radius:50%;line-height:34px;text-align:center;font-size:13px;font-weight:800;color:#0b2238;margin:0 auto;">${n}</div>
+      </td>
+      <td valign="middle" style="padding-left:10px;padding-bottom:2px;">
+        <span style="font-size:13px;font-weight:700;color:#0b2238;">${esc(nom)}</span>&nbsp;
+        <span style="font-size:11px;color:#94a3b8;">&asymp;&nbsp;2&nbsp;min d&rsquo;observation</span>
+      </td>
+    </tr>`;
+
+  const routeRows = waypoints.length > 0
+    ? [
+        ebciRow("D&eacute;part"),
+        ...waypoints.flatMap((wp, i) => [CONNECTOR, poiRow(i + 1, wp.nom)]),
+        CONNECTOR,
+        ebciRow("Retour"),
+      ].join("")
+    : `<tr><td colspan="2" style="font-size:13px;color:#94a3b8;font-style:italic;padding:8px 0;">Aucun lieu d&eacute;fini</td></tr>`;
+
+  // Lien Google Maps multi-étapes
+  const EBCI = "50.4592,4.4538";
+  const mapsUrl = waypoints.length > 0
+    ? `https://www.google.com/maps/dir/${EBCI}/${waypoints.map(w => `${w.lat},${w.lng}`).join("/")}/${EBCI}`
+    : null;
+
+  const routeSection = `
+    ${separator()}
+    ${label("Lieux &agrave; survoler")}
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:${mapsUrl ? "16px" : "28px"};">
+      ${routeRows}
+    </table>
+    ${mapsUrl ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+      <tr>
+        <td align="center">
+          <a href="${esc(mapsUrl)}" style="display:inline-block;background-color:#0b2238;color:#F2B705;font-size:12px;font-weight:700;padding:10px 24px;border-radius:8px;text-decoration:none;border:2px solid #F2B705;letter-spacing:0.04em;">
+            &#9992;&nbsp; Voir le trac&eacute; sur Google Maps &rarr;
+          </a>
+        </td>
+      </tr>
+    </table>` : ""}`;
 
   const voucherRow = discount > 0
     ? `<tr>
@@ -585,6 +653,8 @@ export function volSurMesureQuoteEmail(props: VolSurMesureQuoteEmailProps): stri
     ${separator()}
     ${label("Itin&eacute;raire")}
     ${infoRows(itineraireRows)}
+
+    ${routeSection}
 
     ${separator()}
     ${label("D&eacute;tail du prix")}
@@ -1051,6 +1121,87 @@ export function reservationPaymentInvitationEmail(p: ReservationPaymentInvitatio
             Payer ma r&eacute;servation, ${p.montant}&nbsp;&euro;
           </a>
           <p class="em-muted" style="margin:14px 0 0;font-size:11px;color:#94a3b8;">Paiement s&eacute;curis&eacute; par Stripe, carte bancaire</p>
+        </td>
+      </tr>
+    </table>
+
+    <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">
+      Des questions ? R&eacute;pondez &agrave; cet email ou &eacute;crivez-nous &agrave;
+      <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a>.<br>
+      &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord,
+      <strong class="em-dark" style="color:#0b2238;">L&rsquo;&eacute;quipe Fly Horizons</strong>
+    </p>`;
+
+  return emailBase(body, `Votre réservation — ${p.dateStr}`);
+}
+
+// ── 14b. Invitation au paiement — flux client "payer plus tard" ───────────────
+
+export interface ReservationPayLaterEmailProps {
+  prenom: string;
+  nom: string;
+  dateStr: string;
+  heure: string;
+  duree: number;
+  montant: number;
+  paymentUrl: string;
+  accountUrl: string;
+  voucherCode?: string | null;
+}
+
+export function reservationPayLaterEmail(p: ReservationPayLaterEmailProps): string {
+  const rows: Array<[string, string]> = [
+    ["Date", `<span style="text-transform:capitalize;">${esc(p.dateStr)}</span>`],
+    ["Heure de départ", esc(p.heure)],
+    ["Durée du vol", fmtDuration(p.duree)],
+    ["Départ / retour", "Charleroi EBCI"],
+  ];
+  if (p.voucherCode) rows.push(["Voucher", `<span style="color:#16a34a;font-weight:600;">${esc(p.voucherCode)}</span>`]);
+
+  const body = `
+    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">R&eacute;servation de vol</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Votre demande est enregistr&eacute;e</h1>
+    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">Bonjour <strong style="color:#0b2238;">${esc(p.prenom)} ${esc(p.nom)}</strong>, votre demande de r&eacute;servation a bien &eacute;t&eacute; re&ccedil;ue. Pour confirmer votre vol, r&eacute;glez le montant ci-dessous.</p>
+
+    ${separator()}
+    ${label("D&eacute;tails du vol")}
+    ${infoRows(rows)}
+
+    ${separator()}
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+      <tr>
+        <td style="background-color:#fff8ed;border:1.5px solid #f59e0b;border-radius:10px;padding:14px 18px;">
+          <p style="margin:0;font-size:13px;color:#92400e;line-height:1.6;">
+            <strong style="color:#b45309;">&#9888;&#65039; Cr&eacute;neau non garanti</strong><br>
+            Votre date et cr&eacute;neau horaire ne sont <strong>pas r&eacute;serv&eacute;s</strong> tant que le paiement n&rsquo;a pas &eacute;t&eacute; re&ccedil;u. En cas de paiement tardif, le cr&eacute;neau pourrait ne plus &ecirc;tre disponible.
+          </p>
+        </td>
+      </tr>
+    </table>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+      <tr>
+        <td style="border:2px solid #F2B705;border-radius:12px;padding:28px 24px;text-align:center;">
+          <p class="em-muted" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.1em;">Montant &agrave; r&eacute;gler</p>
+          <p class="em-dark" style="margin:0 0 20px;font-size:42px;font-weight:800;color:#0b2238;line-height:1;">${p.montant}&nbsp;&euro;</p>
+          <a href="${esc(p.paymentUrl)}" class="em-btn"
+            style="display:inline-block;background-color:#F2B705;color:#0b2238;font-size:14px;font-weight:800;padding:14px 36px;border-radius:10px;text-decoration:none;">
+            Payer ma r&eacute;servation, ${p.montant}&nbsp;&euro;
+          </a>
+          <p class="em-muted" style="margin:14px 0 0;font-size:11px;color:#94a3b8;">Paiement s&eacute;curis&eacute; par Stripe, carte bancaire</p>
+        </td>
+      </tr>
+    </table>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+      <tr>
+        <td style="background-color:#f1f5f9;border-radius:10px;padding:14px 18px;">
+          <p style="margin:0;font-size:12px;color:#475569;line-height:1.7;">
+            Vous pouvez retrouver ce lien de paiement &agrave; tout moment depuis votre
+            <a href="${esc(p.accountUrl)}" style="color:#F2B705;font-weight:700;text-decoration:none;">espace personnel</a>
+            sur fly-horizons.com, dans la section <strong>Mon compte</strong> ou <strong>Mes r&eacute;servations</strong>.
+          </p>
         </td>
       </tr>
     </table>

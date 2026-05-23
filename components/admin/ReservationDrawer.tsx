@@ -6,6 +6,7 @@ import {
   X, User, Phone, Mail, Calendar, Clock, Users, Weight,
   Ticket, CreditCard, CheckCircle2, XCircle, ChevronRight,
   Loader2, Send, Pencil, Check, MapPin, RefreshCw, AlertTriangle,
+  Copy, ExternalLink,
 } from "lucide-react";
 import {
   updateStatutReservation,
@@ -15,6 +16,7 @@ import {
   updateReservationFields,
   resendRoute,
   sendCustomEmail,
+  resendPaymentLinkAdmin,
 } from "@/lib/actions/reservations";
 
 export interface DrawerReservation {
@@ -28,6 +30,7 @@ export interface DrawerReservation {
   type_resa: string;
   voucher_code: string | null;
   acompte: number | null;
+  payment_token: string | null;
   created_at: string;
   route?: string | null;
   route_token?: string | null;
@@ -100,6 +103,7 @@ export function ReservationDrawer({
   const [emailOpen, setEmailOpen] = useState(false);
   const [emailSubject, setEmailSubject] = useState("");
   const [emailBody, setEmailBody] = useState("");
+  const [linkCopied, setLinkCopied] = useState(false);
 
   // Reset when drawer opens with new reservation
   useEffect(() => {
@@ -213,6 +217,27 @@ export function ReservationDrawer({
       if (r.error) { showFeedback("Erreur : " + r.error, false); return; }
       setLocalRouteStatus("sent");
       showFeedback("Route renvoyée, email envoyé ✓");
+    });
+  }
+
+  // ── Renvoyer lien de paiement ─────────────────────────────────────────────
+
+  function doResendPaymentLink() {
+    if (!reservation) return;
+    startTransition(async () => {
+      const r = await resendPaymentLinkAdmin(reservation.id);
+      if (r.error) { showFeedback("Erreur : " + r.error, false); return; }
+      showFeedback("Email de paiement renvoyé ✓");
+    });
+  }
+
+  function copyPaymentLink() {
+    if (!reservation?.payment_token) return;
+    const rawUrl = typeof window !== "undefined" ? window.location.origin : "https://fly-horizons.com";
+    const url = `${rawUrl}/api/reservation/pay/${reservation.payment_token}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
     });
   }
 
@@ -647,16 +672,58 @@ export function ReservationDrawer({
                       </button>
                     )}
 
-                    {/* Perso-specific statuses */}
+                    {/* payment_pending — lien + actions */}
                     {r.statut === "payment_pending" && (
-                      <button
-                        onClick={() => changeStatut("en_attente")}
-                        disabled={isPending}
-                        className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-navy text-white text-sm font-semibold hover:bg-navy-dk transition-colors disabled:opacity-50"
-                      >
-                        <Check size={14} />
-                        Marquer paiement reçu
-                      </button>
+                      <div className="space-y-2">
+                        {/* Bloc lien de paiement */}
+                        {r.payment_token && (
+                          <div className="bg-orange-50 border border-orange-200 rounded-xl p-3.5 space-y-2.5">
+                            <p className="text-[10px] font-bold text-orange-800 uppercase tracking-wider">Lien de paiement</p>
+                            <div className="flex items-center gap-2">
+                              <code className="flex-1 min-w-0 text-[10px] font-mono text-orange-900 bg-white border border-orange-200 rounded-lg px-2.5 py-1.5 truncate">
+                                /api/reservation/pay/{r.payment_token.slice(0, 12)}…
+                              </code>
+                              <button
+                                type="button"
+                                onClick={copyPaymentLink}
+                                title="Copier le lien"
+                                className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white border border-orange-200 text-xs font-semibold text-orange-700 hover:bg-orange-100 transition-colors"
+                              >
+                                {linkCopied ? <Check size={11} className="text-green-600" /> : <Copy size={11} />}
+                                {linkCopied ? "Copié" : "Copier"}
+                              </button>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={doResendPaymentLink}
+                                disabled={isPending}
+                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors disabled:opacity-50"
+                              >
+                                {isPending ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}
+                                Renvoyer l&apos;email de paiement
+                              </button>
+                              <a
+                                href={`/api/reservation/pay/${r.payment_token}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 px-2.5 py-2 rounded-lg bg-white border border-orange-200 text-xs text-orange-700 hover:bg-orange-100 transition-colors"
+                                title="Ouvrir le lien"
+                              >
+                                <ExternalLink size={11} />
+                              </a>
+                            </div>
+                          </div>
+                        )}
+                        <button
+                          onClick={() => changeStatut("en_attente")}
+                          disabled={isPending}
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-navy text-white text-sm font-semibold hover:bg-navy-dk transition-colors disabled:opacity-50"
+                        >
+                          <Check size={14} />
+                          Marquer paiement reçu
+                        </button>
+                      </div>
                     )}
 
                     {r.statut === "acompte_recu" && (

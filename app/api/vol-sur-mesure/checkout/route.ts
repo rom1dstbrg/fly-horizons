@@ -5,6 +5,25 @@ import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { randomUUID } from "crypto";
 import { rateLimit, getIp } from "@/lib/rate-limit";
 
+// ── Reverse geocoding via Nominatim (pour les points GPS cliqués sans nom) ──
+async function reverseGeocode(lat: number, lng: number): Promise<string> {
+  try {
+    const r = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=14&accept-language=fr`,
+      { headers: { "User-Agent": "FlyHorizons/1.0 (info@fly-horizons.com)" } }
+    );
+    if (!r.ok) return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    const d = await r.json();
+    const a = d.address ?? {};
+    return (
+      a.village ?? a.town ?? a.city_district ?? a.city ??
+      a.municipality ?? a.county ?? `${lat.toFixed(4)}, ${lng.toFixed(4)}`
+    );
+  } catch {
+    return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+  }
+}
+
 export async function POST(request: NextRequest) {
   const { allowed } = rateLimit(`vsm-checkout:${getIp(request)}`, 5, 60_000);
   if (!allowed) {
@@ -16,9 +35,11 @@ export async function POST(request: NextRequest) {
     const {
       prenom, nom, email, telephone,
       date, heure, passagers, poids_total, commentaire,
+      style_vol,
       waypoints, stopovers, distKm, dureMin, taxesEscales,
       voucher_code, voucher_id, coupon_code,
     } = body;
+    const styleLabel = style_vol === "rapide" ? "Itinéraire direct" : style_vol === "vues" ? "Parcours pittoresque" : null;
 
     if (!prenom || !nom || !email || !date || !heure) {
       return NextResponse.json({ error: "Champs obligatoires manquants" }, { status: 400 });
@@ -132,6 +153,7 @@ export async function POST(request: NextRequest) {
         passagers: parseInt(passagers) || 1,
         poids_total: poids_total ? parseInt(poids_total) : null,
         commentaire: commentaire || null,
+        style_vol: style_vol ?? null,
         statut: "en_attente",
         type_resa: "perso",
         waypoints: waypoints?.length ? waypoints : null,
@@ -165,6 +187,18 @@ export async function POST(request: NextRequest) {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
     const paymentUrl = paymentToken ? `${siteUrl}/api/vol-sur-mesure/pay/${paymentToken}` : null;
 
+    // Enrichir les noms des waypoints (points GPS cliqués → village le plus proche)
+    const rawWaypoints: Array<{ lat: number; lng: number; nom?: string }> = waypoints ?? [];
+    const enrichedWaypoints: Array<{ lat: number; lng: number; nom: string }> = [];
+    for (const wp of rawWaypoints) {
+      const needsGeocode = !wp.nom || /^lieu\s*\d+$/i.test(wp.nom.trim());
+      enrichedWaypoints.push({
+        lat: wp.lat,
+        lng: wp.lng,
+        nom: needsGeocode ? await reverseGeocode(wp.lat, wp.lng) : (wp.nom as string),
+      });
+    }
+
     // Send quote email to client
     // acompteForEmail = acompte après déduction voucher, avant taxes (pour le tableau de l'email)
     const acompteForEmail = Math.max(0, acompte - discount);
@@ -176,7 +210,8 @@ export async function POST(request: NextRequest) {
       heure,
       dureMin: effectiveDureMin,
       distKm: distKm ?? 0,
-      nbWaypoints: waypoints?.length ?? 0,
+      waypoints: enrichedWaypoints,
+      styleVol: styleLabel,
       stopovers: stopovers ?? [],
       prixEstime,
       discount,
@@ -200,6 +235,7 @@ export async function POST(request: NextRequest) {
         <ul>
           <li>Date : ${dateStr} à ${heure}</li>
           <li>Durée estimée : ~${effectiveDureMin} min · ${distKm ?? "?"} km</li>
+          ${styleLabel ? `<li><strong>Style de vol : ${styleLabel}</strong></li>` : ""}
           <li>Acompte : ${finalAcompte} €${discount > 0 ? ` (voucher −${discount} €)` : ""}${couponDiscountAmount > 0 ? ` (code promo −${couponDiscountAmount} €)` : ""}</li>
           <li>Réservation : ${resa.id}</li>
         </ul>

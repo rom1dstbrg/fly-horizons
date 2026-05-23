@@ -102,7 +102,7 @@ export async function sendVoucherEmail(params: {
   return send(to, `Vos vouchers Fly Horizons — #${orderRef}`, html);
 }
 
-type SendVolSurMesureQuoteParams = Omit<VolSurMesureQuoteEmailProps, never> & { to: string };
+type SendVolSurMesureQuoteParams = VolSurMesureQuoteEmailProps & { to: string };
 
 export async function sendVolSurMesureQuote(params: SendVolSurMesureQuoteParams) {
   const { to, ...rest } = params;
