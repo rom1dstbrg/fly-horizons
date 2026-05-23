@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { prenom, nom, email, telephone, duree, date, heure, voucher_code, voucher_id, poids_total, passengers, coupon_code } = body;
+    const { prenom, nom, email, telephone, duree, date, heure, voucher_code, voucher_id, poids_total, passengers, coupon_code, commentaire } = body;
 
     if (!prenom || !nom || !email || !duree || !date || !heure) {
       return NextResponse.json({ error: "Champs obligatoires manquants" }, { status: 400 });
@@ -178,6 +178,7 @@ export async function POST(request: NextRequest) {
         voucher_code: voucher_code || null,
         coupon_code: appliedCouponCode,
         poids_total: poids_total ? parseInt(poids_total) : null,
+        commentaire: commentaire || null,
       })
       .select()
       .single();

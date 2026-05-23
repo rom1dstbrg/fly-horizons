@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { prenom, nom, email, telephone, duree, date, heure, voucher_code, poids_total, passengers } = body;
+    const { prenom, nom, email, telephone, duree, date, heure, voucher_code, poids_total, passengers, commentaire } = body;
 
     if (!prenom || !nom || !email || !duree || !date || !heure) {
       return NextResponse.json({ error: "Champs obligatoires manquants" }, { status: 400 });
@@ -72,6 +72,7 @@ export async function POST(request: NextRequest) {
         type_resa: "standard",
         voucher_code: voucher_code?.toUpperCase().trim() || null,
         poids_total: poids_total ? parseInt(poids_total) : null,
+        commentaire: commentaire || null,
       })
       .select()
       .single();
@@ -129,6 +130,7 @@ export async function POST(request: NextRequest) {
   <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Passagers</td><td>${passagersCount}</td></tr>
   ${poids_total ? `<tr><td style="padding:4px 12px 4px 0;color:#64748b;">Poids total</td><td>${poids_total} kg</td></tr>` : ""}
   ${voucher_code ? `<tr><td style="padding:4px 12px 4px 0;color:#64748b;">Voucher</td><td style="color:#16a34a;font-weight:600;">${voucher_code.toUpperCase().trim()} ✓</td></tr>` : ""}
+  ${commentaire ? `<tr><td style="padding:4px 12px 4px 0;color:#64748b;vertical-align:top;">Remarque</td><td style="font-style:italic;">${commentaire}</td></tr>` : ""}
 </table>`,
     });
 

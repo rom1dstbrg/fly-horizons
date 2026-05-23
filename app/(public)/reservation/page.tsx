@@ -28,7 +28,7 @@ interface FormState {
   product: VolProduct | null;
   date: string; heure: string;
   prenom: string; nom: string; email: string; telephone: string;
-  passengers: number; poids_total: string;
+  passengers: number; poids_total: string; commentaire: string;
   codeInput: string;
   voucher: VoucherInfo | null;
   coupon: CouponInfo | null;
@@ -74,7 +74,7 @@ export default function ReservationPage() {
   const [form, setForm] = useState<FormState>({
     product: null, date: "", heure: "",
     prenom: "", nom: "", email: "", telephone: "",
-    passengers: 0, poids_total: "",
+    passengers: 0, poids_total: "", commentaire: "",
     codeInput: "", voucher: null, coupon: null,
     accept_cgp: false,
   });
@@ -220,6 +220,7 @@ export default function ReservationPage() {
       passengers: form.passengers, poids_total: form.poids_total ? parseInt(form.poids_total) : null,
       voucher_code: form.voucher?.code,
       coupon_code: form.coupon?.code || undefined,
+      commentaire: form.commentaire || undefined,
     };
     if (price === 0) {
       const r = await fetch("/api/reservation/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
@@ -243,6 +244,7 @@ export default function ReservationPage() {
       passengers: form.passengers, poids_total: form.poids_total ? parseInt(form.poids_total) : null,
       voucher_code: form.voucher?.code,
       coupon_code: form.coupon?.code || undefined,
+      commentaire: form.commentaire || undefined,
     };
     const r = await fetch("/api/reservation/pay-later", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, amount_cents: price * 100 }) });
     const d = await r.json();
@@ -505,6 +507,21 @@ export default function ReservationPage() {
                             <p>Poids trop élevé. Le vol ne peut pas être effectué. Réduisez le nombre de passagers ou le chargement.</p>
                           </div>
                         )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-foreground mb-2">
+                          Remarque <span className="text-muted-foreground font-normal">(facultatif)</span>
+                        </label>
+                        <textarea
+                          value={form.commentaire}
+                          onChange={e => setForm(f => ({ ...f, commentaire: e.target.value }))}
+                          placeholder="Occasion spéciale, demande particulière, informations utiles pour le pilote…"
+                          rows={3}
+                          maxLength={500}
+                          className="w-full px-3 py-2.5 rounded-xl border border-border bg-white text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#fbae17]/20 focus:border-[#fbae17] transition-all placeholder:text-muted-foreground/40 resize-none"
+                        />
+                        <p className="mt-1 text-xs text-muted-foreground text-right">{form.commentaire.length}/500</p>
                       </div>
                     </div>
                   </div>
