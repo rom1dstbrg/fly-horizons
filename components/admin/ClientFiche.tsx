@@ -7,22 +7,10 @@ import {
   Phone, Mail, Calendar, Pencil, Check, X, Loader2,
 } from "lucide-react";
 import { updateClient } from "@/lib/actions/clients";
+import { AdminBadge, STATUT_RESA, STATUT_PERSO, STATUT_VOUCHER } from "@/components/admin/ui/AdminBadge";
 
-const RESA_STATUTS: Record<string, { label: string; color: string }> = {
-  payment_pending:  { label: "Paiement att.",  color: "bg-orange-100 text-orange-700 border-orange-200" },
-  en_attente:       { label: "En attente",      color: "bg-yellow-100 text-yellow-700 border-yellow-200" },
-  date_confirmee:   { label: "Date confirmée",  color: "bg-blue-100 text-blue-700 border-blue-200" },
-  heure_confirmee:  { label: "Heure confirmée", color: "bg-green-100 text-green-700 border-green-200" },
-  vol_effectue:     { label: "Vol effectué",    color: "bg-purple-100 text-purple-700 border-purple-200" },
-  annulee:          { label: "Annulée",         color: "bg-red-100 text-red-700 border-red-200" },
-  acompte_recu:     { label: "Acompte reçu",    color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-};
-
-const VOUCHER_STATUTS: Record<string, { label: string; color: string }> = {
-  unused:  { label: "Disponible", color: "bg-green-100 text-green-700 border-green-200" },
-  used:    { label: "Utilisé",    color: "bg-gray-100 text-gray-500 border-gray-200" },
-  expired: { label: "Expiré",     color: "bg-red-100 text-red-700 border-red-200" },
-};
+// Map fusionné : couvre standard (payment_pending…) + perso (acompte_recu…)
+const RESA_MAP = { ...STATUT_RESA, ...STATUT_PERSO };
 
 interface Reservation {
   id: string;
@@ -258,7 +246,7 @@ export function ClientFiche({
 
               if (item.type === "reservation") {
                 const r = item.data;
-                const statut = RESA_STATUTS[r.statut] ?? { label: r.statut, color: "bg-gray-100 text-gray-600 border-gray-200" };
+                const statut = RESA_MAP[r.statut] ?? { label: r.statut, variant: "secondary" as const };
                 const volDate = new Date(r.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
                   weekday: "short", day: "numeric", month: "short", year: "numeric",
                 });
@@ -272,9 +260,7 @@ export function ClientFiche({
                         <span className="text-sm font-medium text-foreground">
                           {r.type_resa === "standard" ? "Réservation standard" : "Vol sur mesure"}
                         </span>
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${statut.color}`}>
-                          {statut.label}
-                        </span>
+                        <AdminBadge variant={statut.variant} label={statut.label} />
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         Vol le {volDate}
@@ -290,7 +276,7 @@ export function ClientFiche({
 
               if (item.type === "voucher") {
                 const v = item.data;
-                const statut = VOUCHER_STATUTS[v.status] ?? VOUCHER_STATUTS.expired;
+                const statut = STATUT_VOUCHER[v.status] ?? { label: v.status, variant: "secondary" as const };
                 return (
                   <div key={`v-${v.id}`} className="flex items-start gap-4 px-5 py-4 hover:bg-secondary/20 transition-colors">
                     <div className="mt-0.5 w-7 h-7 rounded-full bg-violet-100 border border-violet-200 flex items-center justify-center shrink-0">
@@ -299,9 +285,7 @@ export function ClientFiche({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-medium text-foreground">Voucher · {v.product_title}</span>
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${statut.color}`}>
-                          {statut.label}
-                        </span>
+                        <AdminBadge variant={statut.variant} label={statut.label} />
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         Code <span className="font-mono font-semibold text-foreground">{v.code}</span>, {v.duration_minutes} min

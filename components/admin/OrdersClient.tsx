@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { formatPrice } from "@/lib/utils";
 import { OrderStatusSelect } from "@/components/admin/OrderStatusSelect";
-import { DeleteOrderButton } from "@/components/admin/DeleteOrderButton";
 import { BpostSheet } from "@/components/admin/BpostSheet";
 import { EmailPreviewSheet } from "@/components/admin/EmailPreviewSheet";
+import { deleteOrder } from "@/lib/actions/delete";
+import { AdminBadge, STATUT_ORDER, STATUT_VOUCHER } from "@/components/admin/ui/AdminBadge";
+import { AdminRowActions } from "@/components/admin/ui/AdminRowActions";
 import { MapPin, Package, Mail, Ticket, Copy, Check } from "lucide-react";
 
 interface OrderItem {
@@ -49,16 +51,6 @@ interface Order {
   customer_email?: string | null;
 }
 
-const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
-  pending:    { label: "En attente", className: "bg-yellow-500/10 text-yellow-500 border-yellow-500/30" },
-  paid:       { label: "Payée",      className: "bg-blue-500/10 text-blue-500 border-blue-500/30" },
-  processing: { label: "En cours",   className: "bg-indigo-500/10 text-indigo-400 border-indigo-500/30" },
-  shipped:    { label: "Expédiée",   className: "bg-purple-500/10 text-purple-400 border-purple-500/30" },
-  delivered:  { label: "Livrée",     className: "bg-green-500/10 text-green-500 border-green-500/30" },
-  cancelled:  { label: "Annulée",    className: "bg-red-500/10 text-red-400 border-red-500/30" },
-  refunded:   { label: "Remboursée", className: "bg-muted text-muted-foreground border-border" },
-};
-
 const TABS = [
   { key: "all",         label: "Toutes",    statuses: null },
   { key: "to_process",  label: "À traiter", statuses: ["paid", "pending"] },
@@ -88,10 +80,17 @@ function CopyCode({ code }: { code: string }) {
   );
 }
 
-export function OrdersClient({ orders }: { orders: Order[] }) {
+export function OrdersClient({ orders: initial }: { orders: Order[] }) {
+  const [orders, setOrders] = useState<Order[]>(initial);
   const [activeTab, setActiveTab] = useState("all");
   const [bpostOrder, setBpostOrder] = useState<Order | null>(null);
   const [previewOrder, setPreviewOrder] = useState<Order | null>(null);
+
+  async function handleDelete(id: string) {
+    const result = await deleteOrder(id);
+    if (!result?.error) setOrders(prev => prev.filter(o => o.id !== id));
+    return result;
+  }
 
   const filtered = activeTab === "all"
     ? orders
@@ -131,7 +130,7 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
         </button>
       </div>
 
-      {/* Filter tabs */}
+      {/* Onglets */}
       <div className="flex gap-1 flex-wrap">
         {TABS.map((tab) => {
           const count =
@@ -158,7 +157,7 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
         })}
       </div>
 
-      {/* List */}
+      {/* Liste */}
       {filtered.length === 0 ? (
         <div className="card-premium p-12 text-center">
           <p className="text-muted-foreground">Aucune commande dans cette catégorie.</p>
@@ -167,16 +166,12 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
         <div className="space-y-3">
           {filtered.map((order) => {
             const date = new Date(order.created_at).toLocaleDateString("fr-BE", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
+              day: "numeric", month: "short", year: "numeric",
+              hour: "2-digit", minute: "2-digit",
             });
             const address = order.shipping_address;
             const hasAddress = !!(address?.line1 || address?.city);
-            const statusCfg =
-              STATUS_CONFIG[order.status] ?? STATUS_CONFIG.pending;
+            const statusCfg = STATUT_ORDER[order.status] ?? { label: order.status, variant: "secondary" as const };
             const shortId = order.id.slice(0, 8).toUpperCase();
 
             return (
@@ -187,9 +182,7 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
                     <span className="font-mono text-sm font-semibold text-foreground shrink-0">
                       #{shortId}
                     </span>
-                    <span className="text-xs text-muted-foreground hidden sm:block">
-                      {date}
-                    </span>
+                    <span className="text-xs text-muted-foreground hidden sm:block">{date}</span>
                     {(order.customer_name || order.customer_email) && (
                       <span className="hidden sm:flex items-center gap-1.5 min-w-0">
                         {order.customer_name && (
@@ -206,25 +199,17 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
                     )}
                   </div>
                   <div className="flex items-center gap-2.5 shrink-0">
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded-full border font-medium ${statusCfg.className}`}
-                    >
-                      {statusCfg.label}
-                    </span>
-                    <span className="font-bold text-primary text-sm">
-                      {formatPrice(order.total)}
-                    </span>
+                    <AdminBadge variant={statusCfg.variant} label={statusCfg.label} />
+                    <span className="font-bold text-primary text-sm">{formatPrice(order.total)}</span>
                   </div>
                 </div>
-                <span className="text-xs text-muted-foreground sm:hidden block px-3 pt-2.5">
-                  {date}
-                </span>
+                <span className="text-xs text-muted-foreground sm:hidden block px-3 pt-2.5">{date}</span>
 
                 {/* Body */}
                 <div className="p-3 sm:p-5 grid sm:grid-cols-2 gap-4 sm:gap-5">
-                  {/* Left */}
+                  {/* Colonne gauche */}
                   <div className="space-y-4">
-                    {/* Address */}
+                    {/* Adresse */}
                     <div>
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1">
                         <MapPin size={10} />
@@ -233,23 +218,15 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
                       {hasAddress ? (
                         <div className="text-sm space-y-0.5">
                           {address.full_name && (
-                            <p className="font-medium text-foreground">
-                              {address.full_name}
-                            </p>
+                            <p className="font-medium text-foreground">{address.full_name}</p>
                           )}
                           {address.email && (
                             <p className="text-primary text-xs">{address.email}</p>
                           )}
-                          {address.line1 && (
-                            <p className="text-muted-foreground">{address.line1}</p>
-                          )}
-                          {address.line2 && (
-                            <p className="text-muted-foreground">{address.line2}</p>
-                          )}
+                          {address.line1 && <p className="text-muted-foreground">{address.line1}</p>}
+                          {address.line2 && <p className="text-muted-foreground">{address.line2}</p>}
                           <p className="text-muted-foreground">
-                            {[address.postal_code, address.city]
-                              .filter(Boolean)
-                              .join(" ")}
+                            {[address.postal_code, address.city].filter(Boolean).join(" ")}
                             {address.country && `, ${address.country}`}
                           </p>
                         </div>
@@ -268,7 +245,7 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
                       )}
                     </div>
 
-                    {/* Items */}
+                    {/* Articles */}
                     <div>
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
                         Articles
@@ -287,7 +264,7 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
                       </div>
                     </div>
 
-                    {/* Voucher codes */}
+                    {/* Vouchers */}
                     {order.voucher_codes?.length > 0 && (
                       <div>
                         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1">
@@ -296,23 +273,17 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
                         </p>
                         <div className="space-y-1.5">
                           {order.voucher_codes.map((vc) => {
-                            const statusLabel = vc.status === "used" ? "Utilisé" : vc.status === "expired" ? "Expiré" : "Disponible";
-                            const statusClass = vc.status === "used"
-                              ? "bg-muted text-muted-foreground border-border"
-                              : vc.status === "expired"
-                              ? "bg-red-500/10 text-red-400 border-red-500/30"
-                              : "bg-green-500/10 text-green-500 border-green-500/30";
+                            const vCfg = STATUT_VOUCHER[vc.status] ?? { label: vc.status, variant: "secondary" as const };
+                            const dureH = Math.floor(vc.duration_minutes / 60);
+                            const dureM = vc.duration_minutes % 60;
+                            const dureStr = dureH > 0
+                              ? `${dureH}h${dureM > 0 ? dureM.toString().padStart(2, "0") : ""}`
+                              : `${dureM} min`;
                             return (
                               <div key={vc.id} className="flex items-center gap-2 flex-wrap">
                                 <CopyCode code={vc.code} />
-                                <span className="text-xs text-muted-foreground">
-                                  {vc.duration_minutes < 60
-                                    ? `${vc.duration_minutes} min`
-                                    : `${Math.floor(vc.duration_minutes / 60)}h${vc.duration_minutes % 60 > 0 ? (vc.duration_minutes % 60).toString().padStart(2, "0") : ""}`}
-                                </span>
-                                <span className={`text-xs px-1.5 py-0.5 rounded-full border font-medium ${statusClass}`}>
-                                  {statusLabel}
-                                </span>
+                                <span className="text-xs text-muted-foreground">{dureStr}</span>
+                                <AdminBadge variant={vCfg.variant} label={vCfg.label} />
                               </div>
                             );
                           })}
@@ -321,30 +292,23 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
                     )}
                   </div>
 
-                  {/* Right */}
+                  {/* Colonne droite */}
                   <div className="flex flex-col justify-between gap-4">
-                    {/* Totals */}
+                    {/* Totaux */}
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Sous-total</span>
-                        <span className="text-foreground tabular-nums">
-                          {formatPrice(order.subtotal)}
-                        </span>
+                        <span className="text-foreground tabular-nums">{formatPrice(order.subtotal)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Livraison</span>
-                        <span className="text-foreground tabular-nums">
-                          {formatPrice(order.shipping_cost)}
-                        </span>
+                        <span className="text-foreground tabular-nums">{formatPrice(order.shipping_cost)}</span>
                       </div>
                       {order.discount_amount > 0 && (
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">
-                            Remise
-                            {order.coupon_code && (
-                              <span className="ml-1 font-mono text-xs">
-                                ({order.coupon_code})
-                              </span>
+                            Remise{order.coupon_code && (
+                              <span className="ml-1 font-mono text-xs">({order.coupon_code})</span>
                             )}
                           </span>
                           <span className="text-green-500 tabular-nums">
@@ -354,9 +318,7 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
                       )}
                       <div className="flex justify-between text-sm font-semibold pt-1.5 border-t border-border">
                         <span className="text-foreground">Total</span>
-                        <span className="text-primary tabular-nums">
-                          {formatPrice(order.total)}
-                        </span>
+                        <span className="text-primary tabular-nums">{formatPrice(order.total)}</span>
                       </div>
                     </div>
 
@@ -366,26 +328,24 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
                         orderId={order.id}
                         currentStatus={order.status}
                       />
-                      <button
-                        type="button"
-                        onClick={() => setBpostOrder(order)}
-                        disabled={!hasAddress}
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border border-border text-foreground hover:border-primary hover:text-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                        title="Préparer étiquette bpost"
-                      >
-                        <Package size={13} />
-                        bpost
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPreviewOrder(order)}
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border border-border text-foreground hover:border-primary hover:text-primary transition-colors"
-                        title="Aperçu des emails"
-                      >
-                        <Mail size={13} />
-                        Emails
-                      </button>
-                      <DeleteOrderButton orderId={order.id} />
+                      <AdminRowActions
+                        extra={[
+                          {
+                            icon: Package,
+                            label: "bpost",
+                            onClick: () => setBpostOrder(order),
+                            disabled: !hasAddress,
+                            title: "Préparer étiquette bpost",
+                          },
+                          {
+                            icon: Mail,
+                            label: "Emails",
+                            onClick: () => setPreviewOrder(order),
+                            title: "Aperçu des emails",
+                          },
+                        ]}
+                        onDelete={() => handleDelete(order.id)}
+                      />
                     </div>
                   </div>
                 </div>
@@ -395,7 +355,7 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
         </div>
       )}
 
-      {/* Email preview panel */}
+      {/* Panneau email */}
       {previewOrder && (
         <EmailPreviewSheet
           open={!!previewOrder}
@@ -406,13 +366,11 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
         />
       )}
 
-      {/* bpost panel */}
+      {/* Panneau bpost */}
       {bpostOrder && (
         <BpostSheet
           open={!!bpostOrder}
-          onOpenChange={(open) => {
-            if (!open) setBpostOrder(null);
-          }}
+          onOpenChange={(open) => { if (!open) setBpostOrder(null); }}
           orderRef={bpostOrder.id.slice(0, 8).toUpperCase()}
           address={bpostOrder.shipping_address}
           items={bpostOrder.items ?? []}

@@ -9,6 +9,7 @@ import { ReservationDrawer, type DrawerReservation } from "@/components/admin/Re
 import { ReservationsClient } from "@/components/admin/ReservationsClient";
 import { VolsPersoClient } from "@/components/admin/VolsPersoClient";
 import { DispoClient } from "@/components/admin/DispoClient";
+import { StopoversAdmin } from "@/components/admin/StopoversAdmin";
 import { Layers, CalendarDays, CalendarCheck, Route, Clock, Plane } from "lucide-react";
 
 type Reservation = DrawerReservation;
@@ -121,7 +122,10 @@ export function VolsHub({
           <ReservationsClient reservations={resaStd as never} />
         )}
         {tab === "sur-mesure" && (
-          <VolsPersoClient reservations={resaPerso as never} />
+          <div className="space-y-4">
+            <StopoversAdmin />
+            <VolsPersoClient reservations={resaPerso as never} />
+          </div>
         )}
         {tab === "disponibilites" && (
           <DispoClient plages={plages as never} joursIndiv={joursIndiv as never} />

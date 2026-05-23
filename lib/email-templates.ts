@@ -506,7 +506,7 @@ export interface VolSurMesureQuoteEmailProps {
   heure: string;
   dureMin: number;
   distKm: number;
-  waypoints: Array<{ lat: number; lng: number; nom: string }>;
+  reservationId?: string | null;
   styleVol: string | null;
   stopovers: Array<{ icao: string; nom: string; taxe: number }>;
   prixEstime: number;
@@ -521,7 +521,7 @@ export interface VolSurMesureQuoteEmailProps {
 
 export function volSurMesureQuoteEmail(props: VolSurMesureQuoteEmailProps): string {
   const {
-    prenom, date, heure, dureMin, distKm, waypoints, styleVol, stopovers,
+    prenom, date, heure, dureMin, distKm, reservationId, styleVol, stopovers,
     prixEstime, discount, prixBillable, acompte, taxesEscales, totalAcompte,
     voucherCode, paymentUrl,
   } = props;
@@ -546,68 +546,6 @@ export function volSurMesureQuoteEmail(props: VolSurMesureQuoteEmailProps): stri
     ...styleRow,
     ...stopoverRow,
   ];
-
-  // ── Route timeline ─────────────────────────────────────────────
-  const CONNECTOR = `
-    <tr>
-      <td width="44" align="center" style="padding:2px 0;">
-        <div style="width:2px;height:14px;background-color:#F2B705;margin:0 auto;border-radius:1px;"></div>
-      </td>
-      <td></td>
-    </tr>`;
-
-  const ebciRow = (lbl: string) => `
-    <tr>
-      <td width="44" align="center" valign="middle" style="padding-bottom:2px;">
-        <div style="width:34px;height:34px;background-color:#0b2238;border-radius:50%;line-height:34px;text-align:center;font-size:16px;color:#F2B705;margin:0 auto;">&#9992;</div>
-      </td>
-      <td valign="middle" style="padding-left:10px;padding-bottom:2px;">
-        <span style="font-size:13px;font-weight:700;color:#0b2238;">Charleroi EBCI</span>&nbsp;
-        <span style="font-size:11px;color:#94a3b8;">${lbl}</span>
-      </td>
-    </tr>`;
-
-  const poiRow = (n: number, nom: string) => `
-    <tr>
-      <td width="44" align="center" valign="middle" style="padding-bottom:2px;">
-        <div style="width:34px;height:34px;background-color:#F2B705;border-radius:50%;line-height:34px;text-align:center;font-size:13px;font-weight:800;color:#0b2238;margin:0 auto;">${n}</div>
-      </td>
-      <td valign="middle" style="padding-left:10px;padding-bottom:2px;">
-        <span style="font-size:13px;font-weight:700;color:#0b2238;">${esc(nom)}</span>&nbsp;
-        <span style="font-size:11px;color:#94a3b8;">&asymp;&nbsp;2&nbsp;min d&rsquo;observation</span>
-      </td>
-    </tr>`;
-
-  const routeRows = waypoints.length > 0
-    ? [
-        ebciRow("D&eacute;part"),
-        ...waypoints.flatMap((wp, i) => [CONNECTOR, poiRow(i + 1, wp.nom)]),
-        CONNECTOR,
-        ebciRow("Retour"),
-      ].join("")
-    : `<tr><td colspan="2" style="font-size:13px;color:#94a3b8;font-style:italic;padding:8px 0;">Aucun lieu d&eacute;fini</td></tr>`;
-
-  // Lien Google Maps multi-étapes
-  const EBCI = "50.4592,4.4538";
-  const mapsUrl = waypoints.length > 0
-    ? `https://www.google.com/maps/dir/${EBCI}/${waypoints.map(w => `${w.lat},${w.lng}`).join("/")}/${EBCI}`
-    : null;
-
-  const routeSection = `
-    ${separator()}
-    ${label("Lieux &agrave; survoler")}
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:${mapsUrl ? "16px" : "28px"};">
-      ${routeRows}
-    </table>
-    ${mapsUrl ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
-      <tr>
-        <td align="center">
-          <a href="${esc(mapsUrl)}" style="display:inline-block;background-color:#0b2238;color:#F2B705;font-size:12px;font-weight:700;padding:10px 24px;border-radius:8px;text-decoration:none;border:2px solid #F2B705;letter-spacing:0.04em;">
-            &#9992;&nbsp; Voir le trac&eacute; sur Google Maps &rarr;
-          </a>
-        </td>
-      </tr>
-    </table>` : ""}`;
 
   const voucherRow = discount > 0
     ? `<tr>
@@ -653,8 +591,7 @@ export function volSurMesureQuoteEmail(props: VolSurMesureQuoteEmailProps): stri
     ${separator()}
     ${label("Itin&eacute;raire")}
     ${infoRows(itineraireRows)}
-
-    ${routeSection}
+    ${reservationId ? ctaButton(`${SITE_URL}/account/reservations/${reservationId}`, "Voir mon itinéraire →") : ""}
 
     ${separator()}
     ${label("D&eacute;tail du prix")}
@@ -1146,6 +1083,7 @@ export interface ReservationPayLaterEmailProps {
   montant: number;
   paymentUrl: string;
   accountUrl: string;
+  deadlineStr: string;   // ex : "vendredi 30 mai 2025 à 14:00"
   voucherCode?: string | null;
 }
 
@@ -1155,13 +1093,14 @@ export function reservationPayLaterEmail(p: ReservationPayLaterEmailProps): stri
     ["Heure de départ", esc(p.heure)],
     ["Durée du vol", fmtDuration(p.duree)],
     ["Départ / retour", "Charleroi EBCI"],
+    ["Paiement avant le", `<strong style="color:#b45309;">${esc(p.deadlineStr)}</strong>`],
   ];
   if (p.voucherCode) rows.push(["Voucher", `<span style="color:#16a34a;font-weight:600;">${esc(p.voucherCode)}</span>`]);
 
   const body = `
     <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">R&eacute;servation de vol</p>
-    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Votre demande est enregistr&eacute;e</h1>
-    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">Bonjour <strong style="color:#0b2238;">${esc(p.prenom)} ${esc(p.nom)}</strong>, votre demande de r&eacute;servation a bien &eacute;t&eacute; re&ccedil;ue. Pour confirmer votre vol, r&eacute;glez le montant ci-dessous.</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Votre cr&eacute;neau est r&eacute;serv&eacute;&nbsp;!</h1>
+    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">Bonjour <strong style="color:#0b2238;">${esc(p.prenom)} ${esc(p.nom)}</strong>, votre cr&eacute;neau est bloqu&eacute; pour vous. R&eacute;glez le montant ci-dessous avant la date limite pour confirmer votre vol.</p>
 
     ${separator()}
     ${label("D&eacute;tails du vol")}
@@ -1173,8 +1112,8 @@ export function reservationPayLaterEmail(p: ReservationPayLaterEmailProps): stri
       <tr>
         <td style="background-color:#fff8ed;border:1.5px solid #f59e0b;border-radius:10px;padding:14px 18px;">
           <p style="margin:0;font-size:13px;color:#92400e;line-height:1.6;">
-            <strong style="color:#b45309;">&#9888;&#65039; Cr&eacute;neau non garanti</strong><br>
-            Votre date et cr&eacute;neau horaire ne sont <strong>pas r&eacute;serv&eacute;s</strong> tant que le paiement n&rsquo;a pas &eacute;t&eacute; re&ccedil;u. En cas de paiement tardif, le cr&eacute;neau pourrait ne plus &ecirc;tre disponible.
+            <strong style="color:#b45309;">&#8987; Paiement requis avant le ${esc(p.deadlineStr)}</strong><br>
+            Pass&eacute; ce d&eacute;lai, votre cr&eacute;neau sera lib&eacute;r&eacute; et la r&eacute;servation automatiquement annul&eacute;e.
           </p>
         </td>
       </tr>
@@ -1200,7 +1139,7 @@ export function reservationPayLaterEmail(p: ReservationPayLaterEmailProps): stri
           <p style="margin:0;font-size:12px;color:#475569;line-height:1.7;">
             Vous pouvez retrouver ce lien de paiement &agrave; tout moment depuis votre
             <a href="${esc(p.accountUrl)}" style="color:#F2B705;font-weight:700;text-decoration:none;">espace personnel</a>
-            sur fly-horizons.com, dans la section <strong>Mon compte</strong> ou <strong>Mes r&eacute;servations</strong>.
+            sur fly-horizons.com, dans la section <strong>Mes r&eacute;servations</strong>.
           </p>
         </td>
       </tr>
@@ -1214,6 +1153,135 @@ export function reservationPayLaterEmail(p: ReservationPayLaterEmailProps): stri
     </p>`;
 
   return emailBase(body, `Votre réservation — ${p.dateStr}`);
+}
+
+// ── 14c. Rappel de paiement — T-72h (deadline T-48h) ─────────────────────────
+
+export interface ReservationPaymentReminderEmailProps {
+  prenom: string;
+  nom: string;
+  dateStr: string;   // ex : "dimanche 1 juin 2025"
+  heure: string;     // ex : "14:00"
+  duree: number;
+  montant: number;
+  paymentUrl: string;
+  deadlineStr: string; // ex : "vendredi 30 mai 2025 à 14:00"
+}
+
+export function reservationPaymentReminderEmail(p: ReservationPaymentReminderEmailProps): string {
+  const rows: Array<[string, string]> = [
+    ["Date", `<span style="text-transform:capitalize;">${esc(p.dateStr)}</span>`],
+    ["Heure de départ", esc(p.heure)],
+    ["Durée du vol", fmtDuration(p.duree)],
+    ["Départ / retour", "Charleroi EBCI"],
+  ];
+
+  const body = `
+    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Rappel de paiement</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Votre vol n&rsquo;est pas encore confirm&eacute;&nbsp;!</h1>
+    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">Bonjour <strong style="color:#0b2238;">${esc(p.prenom)} ${esc(p.nom)}</strong>, votre r&eacute;servation du <strong style="color:#0b2238;text-transform:capitalize;">${esc(p.dateStr)}</strong> est toujours en attente de paiement.</p>
+
+    ${separator()}
+    ${label("D&eacute;tails du vol")}
+    ${infoRows(rows)}
+
+    ${separator()}
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+      <tr>
+        <td style="background-color:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:14px 18px;">
+          <p style="margin:0;font-size:13px;color:#991b1b;line-height:1.6;">
+            <strong>&#9888;&#65039; Votre lien de paiement expire le ${esc(p.deadlineStr)}.</strong><br>
+            Pass&eacute; ce d&eacute;lai, votre r&eacute;servation sera automatiquement annul&eacute;e et le cr&eacute;neau remis en vente.
+          </p>
+        </td>
+      </tr>
+    </table>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+      <tr>
+        <td style="border:2px solid #F2B705;border-radius:12px;padding:28px 24px;text-align:center;">
+          <p class="em-muted" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.1em;">Montant &agrave; r&eacute;gler</p>
+          <p class="em-dark" style="margin:0 0 20px;font-size:42px;font-weight:800;color:#0b2238;line-height:1;">${p.montant}&nbsp;&euro;</p>
+          <a href="${esc(p.paymentUrl)}" class="em-btn"
+            style="display:inline-block;background-color:#F2B705;color:#0b2238;font-size:14px;font-weight:800;padding:14px 36px;border-radius:10px;text-decoration:none;">
+            Payer maintenant, ${p.montant}&nbsp;&euro;
+          </a>
+          <p class="em-muted" style="margin:14px 0 0;font-size:11px;color:#94a3b8;">Paiement s&eacute;curis&eacute; par Stripe, carte bancaire</p>
+        </td>
+      </tr>
+    </table>
+
+    <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">
+      Des questions ? R&eacute;pondez &agrave; cet email ou &eacute;crivez-nous &agrave;
+      <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a>.<br>
+      &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord,
+      <strong class="em-dark" style="color:#0b2238;">L&rsquo;&eacute;quipe Fly Horizons</strong>
+    </p>`;
+
+  return emailBase(body, `Rappel — Confirmez votre vol du ${p.dateStr}`);
+}
+
+// ── 14d. Annulation automatique — délai de paiement dépassé ──────────────────
+
+export interface ReservationAutoAnnuleeEmailProps {
+  prenom: string;
+  nom: string;
+  dateStr: string;   // ex : "dimanche 1 juin 2025"
+  heure: string;
+  duree: number;
+  bookingUrl: string; // lien pour réserver à nouveau
+}
+
+export function reservationAutoAnnuleeEmail(p: ReservationAutoAnnuleeEmailProps): string {
+  const rows: Array<[string, string]> = [
+    ["Date", `<span style="text-transform:capitalize;">${esc(p.dateStr)}</span>`],
+    ["Heure de départ", esc(p.heure)],
+    ["Durée du vol", fmtDuration(p.duree)],
+    ["Départ / retour", "Charleroi EBCI"],
+  ];
+
+  const body = `
+    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">R&eacute;servation annul&eacute;e</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Votre r&eacute;servation a &eacute;t&eacute; annul&eacute;e</h1>
+    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">Bonjour <strong style="color:#0b2238;">${esc(p.prenom)} ${esc(p.nom)}</strong>, votre r&eacute;servation du <strong style="color:#0b2238;text-transform:capitalize;">${esc(p.dateStr)}</strong> a &eacute;t&eacute; annul&eacute;e automatiquement car le paiement n&rsquo;a pas &eacute;t&eacute; re&ccedil;u avant la date limite.</p>
+
+    ${separator()}
+    ${label("R&eacute;servation annul&eacute;e")}
+    ${infoRows(rows)}
+
+    ${separator()}
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+      <tr>
+        <td style="background-color:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:14px 18px;">
+          <p style="margin:0;font-size:13px;color:#991b1b;line-height:1.6;">
+            Le cr&eacute;neau a &eacute;t&eacute; remis en vente. Aucun montant n&rsquo;a &eacute;t&eacute; pr&eacute;lev&eacute;.
+          </p>
+        </td>
+      </tr>
+    </table>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+      <tr>
+        <td style="text-align:center;padding:8px 0;">
+          <p class="em-muted" style="margin:0 0 16px;font-size:13px;color:#64748b;">Vous souhaitez tout de m&ecirc;me voler&nbsp;? Effectuez une nouvelle r&eacute;servation directement sur notre site.</p>
+          <a href="${esc(p.bookingUrl)}" class="em-btn"
+            style="display:inline-block;background-color:#0b2238;color:#ffffff;font-size:14px;font-weight:800;padding:14px 36px;border-radius:10px;text-decoration:none;">
+            R&eacute;server &agrave; nouveau
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">
+      Une question ? R&eacute;pondez &agrave; cet email ou contactez-nous &agrave;
+      <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a>.<br>
+      Bonne journ&eacute;e,
+      <strong class="em-dark" style="color:#0b2238;">L&rsquo;&eacute;quipe Fly Horizons</strong>
+    </p>`;
+
+  return emailBase(body, `Réservation annulée — ${p.dateStr}`);
 }
 
 // ── 15. Post-vol — remerciement + lien enquête ────────────────────────────────

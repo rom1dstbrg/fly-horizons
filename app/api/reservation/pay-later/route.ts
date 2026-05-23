@@ -117,6 +117,31 @@ export async function POST(request: NextRequest) {
       if (cliErr) return NextResponse.json({ error: "Erreur création client" }, { status: 500 });
     }
 
+    // ── Vérification finale de disponibilité du créneau ─────────────
+    const { data: conflicts } = await supabase
+      .from("reservations")
+      .select("id, heure_vol, duree")
+      .eq("date_vol", date)
+      .neq("statut", "annulee");
+
+    const newStart = parseInt(heure.slice(0, 2)) * 60 + parseInt(heure.slice(3, 5));
+    const newEnd   = newStart + dureeMins;
+
+    const taken = (conflicts ?? []).some(r => {
+      if (!r.heure_vol) return false;
+      const [rh, rm] = r.heure_vol.split(":").map(Number);
+      const rStart = rh * 60 + rm;
+      const rEnd   = rStart + r.duree + 30;
+      return newEnd + 30 > rStart && newStart < rEnd;
+    });
+
+    if (taken) {
+      if (voucherId) {
+        await supabase.from("voucher_codes").update({ status: "unused" }).eq("id", voucherId).eq("status", "reserved");
+      }
+      return NextResponse.json({ error: "Ce créneau vient d'être réservé. Veuillez en choisir un autre." }, { status: 409 });
+    }
+
     // ── Token de paiement ────────────────────────────────────────────
     const payment_token = crypto.randomUUID();
 
@@ -161,6 +186,14 @@ export async function POST(request: NextRequest) {
       weekday: "long", day: "numeric", month: "long", year: "numeric",
     });
 
+    // Deadline = vol - 48h (affiché dans l'email)
+    const flightTime = new Date(`${date}T${heure}:00+02:00`).getTime();
+    const deadlineStr = new Date(flightTime - 48 * 60 * 60 * 1000).toLocaleString("fr-BE", {
+      timeZone: "Europe/Brussels",
+      weekday: "long", day: "numeric", month: "long", year: "numeric",
+      hour: "2-digit", minute: "2-digit",
+    });
+
     await resend.emails.send({
       from: EMAIL_FROM,
       to: [email],
@@ -174,6 +207,7 @@ export async function POST(request: NextRequest) {
         duree: dureeMins,
         montant: finalPrice,
         paymentUrl,
+        deadlineStr,
         voucherCode: resolvedVoucherCode,
         accountUrl: `${siteUrl}/account#reservations`,
       }),

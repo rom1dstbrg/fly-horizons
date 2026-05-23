@@ -4,7 +4,8 @@ import { useState, useTransition } from "react";
 import { updateCoupon } from "@/lib/actions/coupons";
 import { deleteCoupon } from "@/lib/actions/delete";
 import { ToggleCouponActive } from "@/components/admin/ToggleCouponActive";
-import { Pencil, Trash2, Check, X, Loader2 } from "lucide-react";
+import { AdminRowActions } from "@/components/admin/ui/AdminRowActions";
+import { Check, Loader2 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 
 interface Coupon {
@@ -114,7 +115,7 @@ function EditCouponForm({ coupon, onClose }: { coupon: Coupon; onClose: () => vo
           </button>
           <button type="button" onClick={onClose}
             className="px-3 h-8 rounded-lg border border-border text-xs text-muted-foreground hover:bg-secondary transition-colors">
-            <X size={12} />
+            Annuler
           </button>
         </div>
       </form>
@@ -124,14 +125,6 @@ function EditCouponForm({ coupon, onClose }: { coupon: Coupon; onClose: () => vo
 
 function CouponRow({ coupon }: { coupon: Coupon }) {
   const [editing, setEditing] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [isPending, startTransition] = useTransition();
-
-  function handleDelete() {
-    startTransition(async () => {
-      await deleteCoupon(coupon.id);
-    });
-  }
 
   const usageLabel = coupon.max_uses
     ? `${coupon.usage_count}/${coupon.max_uses}`
@@ -169,28 +162,11 @@ function CouponRow({ coupon }: { coupon: Coupon }) {
           <ToggleCouponActive couponId={coupon.id} active={coupon.active} />
         </td>
         <td className="px-4 py-3">
-          <div className="flex items-center justify-end gap-1">
-            <button onClick={() => { setEditing(e => !e); setConfirmDelete(false); }} title="Modifier"
-              className={`p-1.5 rounded-md border transition-colors ${editing ? "border-primary text-primary bg-primary/5" : "border-border text-muted-foreground hover:text-foreground hover:border-primary/40"}`}>
-              <Pencil size={13} />
-            </button>
-            {confirmDelete ? (
-              <>
-                <button onClick={handleDelete} disabled={isPending}
-                  className="px-2 py-1 rounded bg-destructive text-destructive-foreground text-xs font-medium hover:bg-destructive/90 disabled:opacity-50">
-                  {isPending ? <Loader2 size={11} className="animate-spin" /> : "Oui"}
-                </button>
-                <button onClick={() => setConfirmDelete(false)}
-                  className="px-2 py-1 rounded border border-border text-xs text-muted-foreground hover:bg-secondary">
-                  Non
-                </button>
-              </>
-            ) : (
-              <button onClick={() => { setConfirmDelete(true); setEditing(false); }} title="Supprimer"
-                className="p-1.5 rounded-md border border-border text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors">
-                <Trash2 size={13} />
-              </button>
-            )}
+          <div className="flex justify-end">
+            <AdminRowActions
+              onEdit={() => setEditing(e => !e)}
+              onDelete={() => deleteCoupon(coupon.id)}
+            />
           </div>
         </td>
       </tr>

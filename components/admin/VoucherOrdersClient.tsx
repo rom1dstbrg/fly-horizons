@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { formatPrice } from "@/lib/utils";
 import { OrderStatusSelect } from "@/components/admin/OrderStatusSelect";
-import { DeleteOrderButton } from "@/components/admin/DeleteOrderButton";
 import { EmailPreviewSheet } from "@/components/admin/EmailPreviewSheet";
+import { deleteOrder } from "@/lib/actions/delete";
+import { AdminBadge, STATUT_ORDER, STATUT_VOUCHER } from "@/components/admin/ui/AdminBadge";
+import { AdminRowActions } from "@/components/admin/ui/AdminRowActions";
 import { Mail, Ticket, Copy, Check } from "lucide-react";
 
 interface VoucherCode {
@@ -37,22 +39,6 @@ interface VoucherOrder {
   customer_email?: string | null;
 }
 
-const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
-  pending:    { label: "En attente", className: "bg-yellow-500/10 text-yellow-500 border-yellow-500/30" },
-  paid:       { label: "Payée",      className: "bg-blue-500/10 text-blue-500 border-blue-500/30" },
-  processing: { label: "En cours",   className: "bg-indigo-500/10 text-indigo-400 border-indigo-500/30" },
-  shipped:    { label: "Expédiée",   className: "bg-purple-500/10 text-purple-400 border-purple-500/30" },
-  delivered:  { label: "Livrée",     className: "bg-green-500/10 text-green-500 border-green-500/30" },
-  cancelled:  { label: "Annulée",    className: "bg-red-500/10 text-red-400 border-red-500/30" },
-  refunded:   { label: "Remboursée", className: "bg-muted text-muted-foreground border-border" },
-};
-
-const SCODE_STATUS: Record<string, { label: string; className: string }> = {
-  unused:  { label: "Disponible", className: "bg-green-500/10 text-green-600 border-green-500/30" },
-  used:    { label: "Utilisé",    className: "bg-muted text-muted-foreground border-border" },
-  expired: { label: "Expiré",     className: "bg-red-500/10 text-red-400 border-red-500/30" },
-};
-
 function CopyCode({ code }: { code: string }) {
   const [copied, setCopied] = useState(false);
   function handleCopy() {
@@ -74,8 +60,15 @@ function CopyCode({ code }: { code: string }) {
   );
 }
 
-export function VoucherOrdersClient({ orders }: { orders: VoucherOrder[] }) {
+export function VoucherOrdersClient({ orders: initial }: { orders: VoucherOrder[] }) {
+  const [orders, setOrders] = useState<VoucherOrder[]>(initial);
   const [previewOrder, setPreviewOrder] = useState<VoucherOrder | null>(null);
+
+  async function handleDelete(id: string) {
+    const result = await deleteOrder(id);
+    if (!result?.error) setOrders(prev => prev.filter(o => o.id !== id));
+    return result;
+  }
 
   if (orders.length === 0) {
     return (
@@ -93,7 +86,7 @@ export function VoucherOrdersClient({ orders }: { orders: VoucherOrder[] }) {
             day: "numeric", month: "short", year: "numeric",
             hour: "2-digit", minute: "2-digit",
           });
-          const statusCfg = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.pending;
+          const statusCfg = STATUT_ORDER[order.status] ?? { label: order.status, variant: "secondary" as const };
           const shortId = order.id.slice(0, 8).toUpperCase();
 
           return (
@@ -121,9 +114,7 @@ export function VoucherOrdersClient({ orders }: { orders: VoucherOrder[] }) {
                   )}
                 </div>
                 <div className="flex items-center gap-2.5 shrink-0">
-                  <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${statusCfg.className}`}>
-                    {statusCfg.label}
-                  </span>
+                  <AdminBadge variant={statusCfg.variant} label={statusCfg.label} />
                   <span className="font-bold text-primary text-sm">{formatPrice(order.total)}</span>
                 </div>
               </div>
@@ -131,7 +122,7 @@ export function VoucherOrdersClient({ orders }: { orders: VoucherOrder[] }) {
 
               {/* Body */}
               <div className="p-3 sm:p-5 grid sm:grid-cols-2 gap-4 sm:gap-5">
-                {/* Left — voucher codes */}
+                {/* Gauche — codes */}
                 <div className="space-y-4">
                   <div>
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
@@ -155,7 +146,7 @@ export function VoucherOrdersClient({ orders }: { orders: VoucherOrder[] }) {
                       </p>
                       <div className="space-y-2">
                         {order.voucher_codes.map((vc) => {
-                          const sc = SCODE_STATUS[vc.status] ?? SCODE_STATUS.unused;
+                          const vCfg = STATUT_VOUCHER[vc.status] ?? { label: vc.status, variant: "secondary" as const };
                           const dur = vc.duration_minutes < 60
                             ? `${vc.duration_minutes} min`
                             : `${Math.floor(vc.duration_minutes / 60)}h${vc.duration_minutes % 60 > 0 ? (vc.duration_minutes % 60).toString().padStart(2, "0") : ""}`;
@@ -163,9 +154,7 @@ export function VoucherOrdersClient({ orders }: { orders: VoucherOrder[] }) {
                             <div key={vc.id} className="flex items-center gap-2 flex-wrap">
                               <CopyCode code={vc.code} />
                               <span className="text-xs text-muted-foreground">{dur}</span>
-                              <span className={`text-xs px-1.5 py-0.5 rounded-full border font-medium ${sc.className}`}>
-                                {sc.label}
-                              </span>
+                              <AdminBadge variant={vCfg.variant} label={vCfg.label} />
                             </div>
                           );
                         })}
@@ -174,7 +163,7 @@ export function VoucherOrdersClient({ orders }: { orders: VoucherOrder[] }) {
                   )}
                 </div>
 
-                {/* Right — totals + actions */}
+                {/* Droite — totaux + actions */}
                 <div className="flex flex-col justify-between gap-4">
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-sm">
@@ -184,8 +173,7 @@ export function VoucherOrdersClient({ orders }: { orders: VoucherOrder[] }) {
                     {order.discount_amount > 0 && (
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">
-                          Remise
-                          {order.coupon_code && (
+                          Remise{order.coupon_code && (
                             <span className="ml-1 font-mono text-xs">({order.coupon_code})</span>
                           )}
                         </span>
@@ -200,16 +188,17 @@ export function VoucherOrdersClient({ orders }: { orders: VoucherOrder[] }) {
 
                   <div className="flex items-center gap-2 flex-wrap">
                     <OrderStatusSelect orderId={order.id} currentStatus={order.status} />
-                    <button
-                      type="button"
-                      onClick={() => setPreviewOrder(order)}
-                      className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border border-border text-foreground hover:border-primary hover:text-primary transition-colors"
-                      title="Aperçu des emails"
-                    >
-                      <Mail size={13} />
-                      Emails
-                    </button>
-                    <DeleteOrderButton orderId={order.id} />
+                    <AdminRowActions
+                      extra={[
+                        {
+                          icon: Mail,
+                          label: "Emails",
+                          onClick: () => setPreviewOrder(order),
+                          title: "Aperçu des emails",
+                        },
+                      ]}
+                      onDelete={() => handleDelete(order.id)}
+                    />
                   </div>
                 </div>
               </div>

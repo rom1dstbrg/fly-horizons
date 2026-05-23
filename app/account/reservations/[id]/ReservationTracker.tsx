@@ -17,6 +17,7 @@ import {
   MapPin,
   CheckCircle,
   Navigation,
+  Map,
 } from "lucide-react";
 import { formatDuration } from "@/lib/vouchers";
 
@@ -38,6 +39,7 @@ export interface ReservationData {
   route_status?: string | null;
   route_token?: string | null;
   route_feedback?: string | null;
+  waypoints?: Array<{ lat: number; lng: number; nom: string }> | null;
 }
 
 const ROUTE_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
@@ -496,6 +498,85 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
             )}
           </div>
         )}
+
+        {/* Waypoints — vol sur mesure uniquement */}
+        {isPerso && resa.waypoints && resa.waypoints.length > 0 && (() => {
+          const wps = resa.waypoints!;
+          const mapsUrl = `https://www.google.com/maps/dir/50.4592,4.4538/${wps.map(w => `${w.lat},${w.lng}`).join("/")}/50.4592,4.4538`;
+          return (
+            <div className="card-premium p-6 mt-5">
+              <div className="flex items-center gap-2 mb-5">
+                <div className="w-7 h-7 rounded-lg bg-[#113356]/10 flex items-center justify-center shrink-0">
+                  <MapPin size={14} className="text-[#113356]" />
+                </div>
+                <p className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                  Lieux à survoler
+                </p>
+              </div>
+
+              <ol className="space-y-0">
+                {/* Départ EBCI */}
+                <li className="flex gap-3">
+                  <div className="flex flex-col items-center">
+                    <div className="w-8 h-8 rounded-full bg-[#113356] flex items-center justify-center shrink-0 text-[#F2B705] text-base leading-none">✈</div>
+                    <div className="w-px flex-1 bg-[#F2B705]/40 my-1 min-h-[24px]" />
+                  </div>
+                  <div className="pb-4 pt-1">
+                    <p className="text-sm font-semibold text-foreground">Charleroi EBCI</p>
+                    <p className="text-xs text-muted-foreground">Départ</p>
+                  </div>
+                </li>
+
+                {wps.map((wp, i) => {
+                  const isLastWp = i === wps.length - 1;
+                  return (
+                    <li key={i} className="flex gap-3">
+                      <div className="flex flex-col items-center">
+                        <div className="w-8 h-8 rounded-full bg-[#F2B705] flex items-center justify-center shrink-0 text-[#113356] text-sm font-bold leading-none">{i + 1}</div>
+                        {!isLastWp && <div className="w-px flex-1 bg-[#F2B705]/40 my-1 min-h-[24px]" />}
+                        {isLastWp && <div className="w-px flex-1 bg-[#F2B705]/40 my-1 min-h-[24px]" />}
+                      </div>
+                      <div className="pb-4 pt-1">
+                        <p className="text-sm font-semibold text-foreground">{wp.nom}</p>
+                        <p className="text-xs text-muted-foreground">≈ 2 min d&apos;observation</p>
+                      </div>
+                    </li>
+                  );
+                })}
+
+                {/* Retour EBCI */}
+                <li className="flex gap-3">
+                  <div className="flex flex-col items-center">
+                    <div className="w-8 h-8 rounded-full bg-[#113356] flex items-center justify-center shrink-0 text-[#F2B705] text-base leading-none">✈</div>
+                  </div>
+                  <div className="pt-1">
+                    <p className="text-sm font-semibold text-foreground">Charleroi EBCI</p>
+                    <p className="text-xs text-muted-foreground">Retour</p>
+                  </div>
+                </li>
+              </ol>
+
+              <div className="mt-5 pt-4 border-t border-border flex flex-wrap gap-2">
+                <Link
+                  href={`/account/reservations/${resa.id}/carte`}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#F2B705] text-[#113356] rounded-xl text-xs font-bold hover:bg-[#e6a800] transition-colors"
+                >
+                  <Map size={12} />
+                  Carte interactive
+                </Link>
+                <a
+                  href={mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#113356] text-white rounded-xl text-xs font-bold hover:bg-[#0b2238] transition-colors"
+                >
+                  <MapPin size={12} />
+                  Google Maps
+                </a>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Accès EBCI — visible dès que la date est confirmée */}
         {["date_confirmee", "heure_confirmee", "vol_effectue"].includes(resa.statut) && (

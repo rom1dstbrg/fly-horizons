@@ -8,7 +8,7 @@ import {
   MapPin, Clock, Search, Trash2, ChevronRight, ChevronLeft,
   Check, CheckCircle, Loader2, AlertCircle, AlertTriangle,
   Mail, Lock, Eye, Zap, PlaneTakeoff, X, Info,
-  Navigation, Star,
+  Navigation, Star, Plus,
 } from "lucide-react";
 import type {
   AdventureRouteData, AdventureMapHandle, POI, StyleMode,
@@ -21,6 +21,15 @@ const LeafletMapAdventure = dynamic(
 
 // ── Types ─────────────────────────────────────────────────────
 type FlowStep = "build" | "reserve" | "done";
+
+interface Stopover {
+  id: string;
+  icao: string;
+  nom: string;
+  taxe: number;
+  lat?: number | null;
+  lng?: number | null;
+}
 
 interface NominatimResult {
   place_id: number;
@@ -141,9 +150,16 @@ export default function VolSurMesurePage() {
   const [submitting,  setSubmitting]  = useState(false);
   const [submitError, setSubmitError] = useState("");
 
+  // ── Escales
+  const [availableStops, setAvailableStops] = useState<Stopover[]>([]);
+  const [selectedStops,  setSelectedStops]  = useState<Stopover[]>([]);
+  const [stopsOpen,      setStopsOpen]      = useState(false);
+
   // ── Price calc
-  const prixEstime  = route.totalMin > 0 ? Math.round((prixHeure  / 60) * route.totalMin) : 0;
-  const acompte     = route.totalMin > 0 ? Math.round((acompteH   / 60) * route.totalMin) : 0;
+  const prixEstime        = route.totalMin > 0 ? Math.round((prixHeure / 60) * route.totalMin) : 0;
+  const acompte           = route.totalMin > 0 ? Math.round((acompteH  / 60) * route.totalMin) : 0;
+  const taxesEscalesTotal = selectedStops.reduce((acc, s) => acc + s.taxe, 0);
+  const totalAcompte      = acompte + taxesEscalesTotal;
   const weightKg    = parseInt(form.poids_total) || 0;
   const weightWarn  = weightKg > MAX_WEIGHT && weightKg <= ERROR_KG;
   const weightError = weightKg > ERROR_KG;
@@ -161,6 +177,16 @@ export default function VolSurMesurePage() {
           if (key === "prix_heure")         setPrixHeure(parseFloat(value));
           if (key === "acompte_perso_heure") setAcompteH(parseFloat(value));
         });
+      });
+    sb.from("stopovers").select("id, icao, nom, taxe, lat, lng").eq("actif", true).order("nom")
+      .then(({ data, error }) => {
+        if (error) {
+          // Colonnes lat/lng peut-être absentes → fallback sans coordonnées
+          sb.from("stopovers").select("id, icao, nom, taxe").eq("actif", true).order("nom")
+            .then(({ data: d2 }) => setAvailableStops((d2 ?? []) as Stopover[]));
+        } else {
+          setAvailableStops((data ?? []) as Stopover[]);
+        }
       });
     sb.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
@@ -257,6 +283,28 @@ export default function VolSurMesurePage() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  function addStop(s: Stopover) {
+    setSelectedStops(prev => prev.some(x => x.id === s.id) ? prev : [...prev, s]);
+    // Add to Leaflet route if coordinates are available
+    if (s.lat != null && s.lng != null) {
+      mapRef.current?.addPOI({ id: `stop-${s.id}`, lat: s.lat, lng: s.lng, nom: s.nom });
+    }
+    setStopsOpen(false);
+  }
+  function removeStop(id: string) {
+    setSelectedStops(prev => prev.filter(x => x.id !== id));
+    mapRef.current?.removePOI(`stop-${id}`);
+  }
+
+  // Reverse-sync: if the user removes a stopover POI directly from the map, unselect it
+  useEffect(() => {
+    const routePOIIds = new Set(route.pois.map(p => p.id));
+    setSelectedStops(prev =>
+      prev.filter(s => s.lat == null || s.lng == null || routePOIIds.has(`stop-${s.id}`))
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [route.pois]);
+
   function addSearchResult(r: NominatimResult) {
     const poi: POI = {
       id:  `nom-${r.place_id}`,
@@ -291,10 +339,10 @@ export default function VolSurMesurePage() {
           commentaire: fullComment,
           style_vol:    styleMode,
           waypoints:    route.pois.map(p => ({ lat: p.lat, lng: p.lng, nom: p.nom })),
-          stopovers:    [],
+          stopovers:    selectedStops.map(s => ({ icao: s.icao, nom: s.nom, taxe: s.taxe, lat: s.lat ?? null, lng: s.lng ?? null })),
           distKm:       route.distKm,
           dureMin:      route.totalMin,
-          taxesEscales: 0,
+          taxesEscales: taxesEscalesTotal,
           voucher_code: null, voucher_id: null, coupon_code: null,
         }),
       });
@@ -396,6 +444,58 @@ export default function VolSurMesurePage() {
           </div>
         </div>
 
+        {/* Escales — toujours visible */}
+        <div className="px-5 py-4 border-b border-white/10">
+          <div className="flex items-center justify-between mb-2.5">
+            <p className="text-[9px] font-black text-white/40 uppercase tracking-[2px]">Escales</p>
+            {availableStops.some(s => !selectedStops.find(ss => ss.id === s.id)) && (
+              <button type="button" onClick={() => setStopsOpen(v => !v)}
+                className="flex items-center gap-1 text-[10px] font-bold text-[#fbae17] hover:text-white transition-colors cursor-pointer">
+                <Plus size={9} />Ajouter
+              </button>
+            )}
+          </div>
+
+          {/* Selected */}
+          {selectedStops.length > 0 && (
+            <div className="space-y-1.5 mb-2">
+              {selectedStops.map(s => (
+                <div key={s.id} className="flex items-center gap-2 bg-white/5 rounded-lg px-2.5 py-1.5">
+                  <span className="font-mono text-[10px] font-bold text-[#fbae17] shrink-0">{s.icao}</span>
+                  <span className="flex-1 text-[11px] text-white/70 truncate">{s.nom}</span>
+                  {s.taxe > 0 && <span className="text-[10px] text-[#fbae17] font-bold shrink-0">+{s.taxe}€</span>}
+                  <button type="button" onClick={() => removeStop(s.id)}
+                    className="text-white/30 hover:text-red-400 transition-colors cursor-pointer shrink-0">
+                    <X size={10} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {availableStops.length === 0 ? (
+            <p className="text-[11px] text-white/20 italic">Aucune escale disponible</p>
+          ) : selectedStops.length === 0 && !stopsOpen ? (
+            <p className="text-[11px] text-white/25 italic">Aucune escale</p>
+          ) : null}
+
+          {/* Picker */}
+          {stopsOpen && availableStops.length > 0 && (
+            <div className="rounded-xl overflow-hidden border border-white/10">
+              {availableStops
+                .filter(s => !selectedStops.find(ss => ss.id === s.id))
+                .map((s, i, arr) => (
+                  <button key={s.id} type="button" onClick={() => addStop(s)}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-white/10 text-left transition-colors cursor-pointer ${i < arr.length - 1 ? "border-b border-white/8" : ""}`}>
+                    <span className="font-mono text-[10px] font-bold text-[#fbae17] shrink-0 w-11">{s.icao}</span>
+                    <span className="flex-1 text-[11px] text-white/80 truncate">{s.nom}</span>
+                    {s.taxe > 0 && <span className="text-[10px] text-white/50 shrink-0">+{s.taxe}€</span>}
+                  </button>
+                ))}
+            </div>
+          )}
+        </div>
+
         {/* Style */}
         <div className="px-5 py-4">
           <p className="text-[9px] font-black text-white/40 uppercase tracking-[2px] mb-3">Objectif de votre vol</p>
@@ -422,6 +522,12 @@ export default function VolSurMesurePage() {
         {/* CTA */}
         {showCTA && (
           <div className="px-5 pb-5">
+            {taxesEscalesTotal > 0 && acompte > 0 && (
+              <div className="flex items-center justify-between mb-3 px-3 py-2 bg-white/5 rounded-xl text-[11px]">
+                <span className="text-white/50">Acompte + taxes escales</span>
+                <span className="font-bold text-[#fbae17]">{totalAcompte}&thinsp;€</span>
+              </div>
+            )}
             <button type="button"
               disabled={route.pois.length === 0}
               onClick={() => { setFlowStep("reserve"); loadMonth(calYear, calMonth); }}
@@ -466,10 +572,28 @@ export default function VolSurMesurePage() {
               <span className="font-semibold text-xs text-right">{v}</span>
             </div>
           ))}
-          {acompte > 0 && (
-            <div className="pt-2.5 border-t border-border flex items-center justify-between">
-              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Acompte</span>
-              <span className="text-2xl font-black text-[#113356]">{acompte} €</span>
+          {selectedStops.length > 0 && (
+            <div className="pt-2.5 border-t border-border space-y-1.5">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Escales</p>
+              {selectedStops.map(s => (
+                <div key={s.id} className="flex items-center justify-between gap-2">
+                  <span className="text-xs text-muted-foreground font-mono">{s.icao}</span>
+                  <span className="text-xs font-semibold text-foreground truncate flex-1 text-right">{s.taxe > 0 ? `+${s.taxe} €` : "—"}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {totalAcompte > 0 && (
+            <div className="pt-2.5 border-t border-border">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Acompte</span>
+                <span className="text-2xl font-black text-[#113356]">{totalAcompte}&thinsp;€</span>
+              </div>
+              {taxesEscalesTotal > 0 && (
+                <p className="text-[10px] text-muted-foreground text-right mt-0.5">
+                  vol {acompte}€ + taxes {taxesEscalesTotal}€
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -869,6 +993,65 @@ export default function VolSurMesurePage() {
                   </div>
                 </div>
               </div>
+
+              {/* Escales (mobile + desktop) */}
+              {availableStops.length > 0 && (
+                <div className="bg-white rounded-2xl border border-border overflow-hidden" style={{ boxShadow: "var(--sh-sm)" }}>
+                  <div className="bg-gradient-to-r from-[#0b2238] to-[#113356] px-5 py-3.5 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[#fbae17]">✈</span>
+                      <h2 className="text-sm font-extrabold text-white">
+                        Escale(s)&nbsp;<span className="font-normal opacity-60">(optionnel)</span>
+                      </h2>
+                    </div>
+                    {selectedStops.length > 0 && (
+                      <span className="text-[10px] bg-[#fbae17]/20 text-[#fbae17] font-bold px-2 py-0.5 rounded-full">
+                        {selectedStops.length} sélectionnée{selectedStops.length > 1 ? "s" : ""}
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-5">
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Ajoutez un atterrissage intermédiaire dans un aérodrome. Les taxes d&apos;atterrissage s&apos;appliquent en sus.
+                    </p>
+                    {/* Selected stops */}
+                    {selectedStops.length > 0 && (
+                      <div className="space-y-2 mb-3">
+                        {selectedStops.map(s => (
+                          <div key={s.id} className="flex items-center gap-2.5 py-2 px-3 bg-secondary rounded-xl border border-border">
+                            <span className="font-mono text-xs font-bold text-[#113356] shrink-0">{s.icao}</span>
+                            <span className="flex-1 text-xs text-foreground truncate">{s.nom}</span>
+                            {s.taxe > 0 && <span className="text-xs font-bold text-[#113356] shrink-0">+{s.taxe}&thinsp;€</span>}
+                            <button type="button" onClick={() => removeStop(s.id)}
+                              className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer shrink-0">
+                              <X size={12} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {/* Available stop chips */}
+                    {availableStops.some(s => !selectedStops.find(ss => ss.id === s.id)) && (
+                      <div className="flex flex-wrap gap-2">
+                        {availableStops
+                          .filter(s => !selectedStops.find(ss => ss.id === s.id))
+                          .map(s => (
+                            <button key={s.id} type="button" onClick={() => addStop(s)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-white text-xs font-medium hover:border-[#fbae17] hover:text-[#0b2238] transition-all cursor-pointer">
+                              <Plus size={10} className="text-[#fbae17]" />
+                              <span className="font-mono font-bold">{s.icao}</span>
+                              <span className="text-muted-foreground truncate max-w-[110px]">{s.nom.split(" ")[0]}</span>
+                              {s.taxe > 0 && <span className="text-muted-foreground">+{s.taxe}€</span>}
+                            </button>
+                          ))}
+                      </div>
+                    )}
+                    {selectedStops.length === availableStops.length && (
+                      <p className="text-xs text-muted-foreground italic">Toutes les escales disponibles ont été ajoutées.</p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* 3. Coordonnées */}
               <div className="bg-white rounded-2xl border border-border overflow-hidden" style={{ boxShadow: "var(--sh-sm)" }}>

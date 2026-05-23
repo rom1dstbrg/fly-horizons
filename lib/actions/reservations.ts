@@ -476,6 +476,15 @@ export async function resendPaymentLinkAdmin(id: string) {
       weekday: "long", day: "numeric", month: "long", year: "numeric",
     });
 
+    // Deadline = vol - 48h
+    const heure = (resa.heure_vol ?? "00:00").slice(0, 5);
+    const flightTime = new Date(`${resa.date_vol}T${heure}:00+02:00`).getTime();
+    const deadlineStr = new Date(flightTime - 48 * 60 * 60 * 1000).toLocaleString("fr-BE", {
+      timeZone: "Europe/Brussels",
+      weekday: "long", day: "numeric", month: "long", year: "numeric",
+      hour: "2-digit", minute: "2-digit",
+    });
+
     await resend.emails.send({
       from: EMAIL_FROM,
       to: [client.email],
@@ -489,6 +498,7 @@ export async function resendPaymentLinkAdmin(id: string) {
         duree: resa.duree,
         montant: resa.acompte ?? 0,
         paymentUrl,
+        deadlineStr,
         voucherCode: resa.voucher_code ?? null,
         accountUrl: `${siteUrl}/account#reservations`,
       }),

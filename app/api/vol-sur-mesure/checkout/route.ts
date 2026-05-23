@@ -199,6 +199,11 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Sauvegarder les waypoints enrichis (noms résolus) dans la réservation
+    if (enrichedWaypoints.length > 0) {
+      await supabase.from("reservations").update({ waypoints: enrichedWaypoints }).eq("id", resa.id);
+    }
+
     // Send quote email to client
     // acompteForEmail = acompte après déduction voucher, avant taxes (pour le tableau de l'email)
     const acompteForEmail = Math.max(0, acompte - discount);
@@ -210,7 +215,7 @@ export async function POST(request: NextRequest) {
       heure,
       dureMin: effectiveDureMin,
       distKm: distKm ?? 0,
-      waypoints: enrichedWaypoints,
+      reservationId: resa.id,
       styleVol: styleLabel,
       stopovers: stopovers ?? [],
       prixEstime,

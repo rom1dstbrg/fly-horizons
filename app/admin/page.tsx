@@ -4,7 +4,7 @@ import {
   AlertTriangle, AlertCircle, CheckCircle2, Clock, Plane,
   ArrowRight, CalendarCheck, Route, MessageSquare, Ticket,
   ShoppingCart, Users, TrendingUp, Package, Plus,
-  CalendarDays, Tag, ChevronRight, CreditCard,
+  CalendarDays, Tag, ChevronRight, CreditCard, ExternalLink,
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 
@@ -491,6 +491,32 @@ export default async function AdminDashboardPage() {
             <Link href="/admin/clients" className="mt-3 text-xs text-muted-foreground hover:text-navy flex items-center gap-1 transition-colors">
               Voir les fiches clients <ArrowRight size={11} />
             </Link>
+          </div>
+
+          {/* Services externes */}
+          <div>
+            <SectionTitle>Services</SectionTitle>
+            <div className="bg-card rounded-xl border border-border overflow-hidden">
+              {[
+                { href: "https://supabase.com/dashboard", label: "Supabase", sub: "Base de données" },
+                { href: "https://resend.com",             label: "Resend",   sub: "Emails transactionnels" },
+                { href: "https://app.netlify.com/teams/rom1dstbrg/projects", label: "Netlify", sub: "Déploiement" },
+              ].map(({ href, label, sub }, idx, arr) => (
+                <a
+                  key={href}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`flex items-center gap-3 px-4 py-3 hover:bg-secondary/50 transition-colors ${idx < arr.length - 1 ? "border-b border-border" : ""}`}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground">{label}</p>
+                    <p className="text-xs text-muted-foreground">{sub}</p>
+                  </div>
+                  <ExternalLink size={13} className="text-muted-foreground/40 shrink-0" />
+                </a>
+              ))}
+            </div>
           </div>
 
         </div>

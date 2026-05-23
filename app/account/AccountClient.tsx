@@ -178,9 +178,6 @@ export function AccountClient({
   reservations,
 }: AccountClientProps) {
   const router = useRouter();
-  const siteUrl = typeof window !== "undefined"
-    ? window.location.origin
-    : "https://fly-horizons.com";
 
   const [activeSection, setActiveSection] = useState<string>("apercu");
 
@@ -572,8 +569,8 @@ export function AccountClient({
                     const isPerso = resa.type_resa === "perso";
                     const hasPaymentLink = resa.payment_token && !isPaid;
                     const paymentUrl = isPerso
-                      ? `${siteUrl}/api/vol-sur-mesure/pay/${resa.payment_token}`
-                      : `${siteUrl}/api/reservation/pay/${resa.payment_token}`;
+                      ? `/api/vol-sur-mesure/pay/${resa.payment_token}`
+                      : `/api/reservation/pay/${resa.payment_token}`;
 
                     return (
                       <div

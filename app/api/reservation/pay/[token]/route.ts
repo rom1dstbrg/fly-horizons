@@ -37,6 +37,23 @@ export async function GET(
     return NextResponse.redirect(new URL("/reservation/success", siteUrl));
   }
 
+  // ── Vérification de la deadline : T-48h avant le vol ────────────────
+  // Si le vol est dans moins de 48h, on annule la réservation et on redirige.
+  // Le cron fait normalement ce travail, mais le pay-link est une 2ème ligne de défense.
+  const heure = (resa.heure_vol ?? "00:00").slice(0, 5);
+  const flightTime = new Date(`${resa.date_vol}T${heure}:00+02:00`).getTime();
+  const hoursUntilFlight = (flightTime - Date.now()) / (1000 * 60 * 60);
+
+  if (hoursUntilFlight < 48) {
+    // Annuler silencieusement (le créneau est libéré)
+    await supabase
+      .from("reservations")
+      .update({ statut: "annulee", payment_token: null })
+      .eq("id", resa.id)
+      .eq("statut", "payment_pending");
+    return NextResponse.redirect(new URL("/reservation?error=lien_paiement_expire", siteUrl));
+  }
+
   const montant = resa.acompte ?? 0;
   if (montant <= 0) {
     // Free reservation — mark as en_attente and redirect to success

@@ -286,7 +286,7 @@ export async function POST(request: NextRequest) {
 
   if (event.type === "checkout.session.expired") {
     const session = event.data.object as Stripe.Checkout.Session;
-    const { orderId, voucherId, reservationId, type } = session.metadata ?? {};
+    const { orderId, voucherId, reservationId, type, paymentToken } = session.metadata ?? {};
 
     // Release any voucher that was atomically reserved for this session
     if (voucherId) {
@@ -306,13 +306,25 @@ export async function POST(request: NextRequest) {
         .eq("status", "pending");
     }
 
-    // Cancel pending reservation (standard or perso)
-    if (reservationId && (type === "reservation" || type === "reservation_perso")) {
+    // Cancel pending reservation — conditions séparées par type et par flux :
+    // - standard, checkout direct (pas de paymentToken) : annuler immédiatement à l'expiration
+    //   (le client avait 30 min devant lui au moment du checkout)
+    // - standard, pay-later (paymentToken présent) : NE PAS annuler ici — le cron gère la
+    //   deadline à T-48h avant le vol ; le client peut recliquer son lien autant de fois qu'il veut
+    // - perso : en_attente → annulee (acompte_recu = déjà payée, ne pas toucher)
+    if (reservationId && type === "reservation" && !paymentToken) {
       await adminSupabase
         .from("reservations")
         .update({ statut: "annulee" })
         .eq("id", reservationId)
-        .in("statut", ["payment_pending", "en_attente"]);
+        .eq("statut", "payment_pending");
+    }
+    if (reservationId && type === "reservation_perso") {
+      await adminSupabase
+        .from("reservations")
+        .update({ statut: "annulee" })
+        .eq("id", reservationId)
+        .eq("statut", "en_attente");
     }
   }
 

@@ -137,6 +137,33 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // ── Vérification finale de disponibilité du créneau ─────────────────
+    // Recheck serveur-side juste avant d'insérer : évite la race condition
+    // si deux utilisateurs soumettent le même créneau en même temps.
+    const { data: conflicts } = await supabase
+      .from("reservations")
+      .select("id, heure_vol, duree")
+      .eq("date_vol", date)
+      .neq("statut", "annulee");
+
+    const newStart = parseInt(heure.replace(":", "").slice(0, 2)) * 60 + parseInt(heure.slice(3, 5));
+    const newEnd   = newStart + dureeMins;
+
+    const taken = (conflicts ?? []).some(r => {
+      if (!r.heure_vol) return false;
+      const [rh, rm] = r.heure_vol.split(":").map(Number);
+      const rStart = rh * 60 + rm;
+      const rEnd   = rStart + r.duree + 30; // +30 min de tampon (identique à calcSlots)
+      return newEnd + 30 > rStart && newStart < rEnd;
+    });
+
+    if (taken) {
+      if (resolvedVoucherId) {
+        await supabase.from("voucher_codes").update({ status: "unused" }).eq("id", resolvedVoucherId).eq("status", "reserved");
+      }
+      return NextResponse.json({ error: "Ce créneau vient d'être réservé. Veuillez en choisir un autre." }, { status: 409 });
+    }
+
     // Créer la réservation en attente de paiement
     const { data: resa, error: resaErr } = await supabase
       .from("reservations")

@@ -18,6 +18,10 @@ import {
   sendCustomEmail,
   resendPaymentLinkAdmin,
 } from "@/lib/actions/reservations";
+import { AdminBadge, STATUT_RESA, STATUT_PERSO } from "@/components/admin/ui/AdminBadge";
+
+// Map fusionné : couvre standard + perso
+const STATUT_MAP = { ...STATUT_RESA, ...STATUT_PERSO };
 
 export interface DrawerReservation {
   id: string;
@@ -45,16 +49,6 @@ export interface DrawerReservation {
   } | null;
 }
 
-const STATUT_CONFIG: Record<string, { label: string; color: string }> = {
-  payment_pending: { label: "Paiement en attente", color: "bg-orange-50 text-orange-700 border-orange-200" },
-  en_attente:      { label: "En attente",          color: "bg-yellow-50 text-yellow-700 border-yellow-200" },
-  date_confirmee:  { label: "Date confirmée",      color: "bg-blue-50 text-blue-700 border-blue-200"   },
-  heure_confirmee: { label: "Heure confirmée",     color: "bg-green-50 text-green-700 border-green-200" },
-  vol_effectue:    { label: "Vol effectué",        color: "bg-purple-50 text-purple-700 border-purple-200" },
-  annulee:         { label: "Annulée",             color: "bg-red-50 text-red-600 border-red-200"   },
-  acompte_recu:    { label: "Acompte reçu",        color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  en_attente_perso:{ label: "Devis en attente",    color: "bg-yellow-50 text-yellow-700 border-yellow-200" },
-};
 
 const ROUTE_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   sent:                   { label: "En attente de validation", color: "bg-amber-50 text-amber-700 border-amber-200" },
@@ -266,7 +260,7 @@ export function ReservationDrawer({
   // ── Render ─────────────────────────────────────────────────────────────────
 
   const r = reservation;
-  const statut = r ? (STATUT_CONFIG[r.statut] ?? STATUT_CONFIG.en_attente) : null;
+  const statut = r ? (STATUT_MAP[r.statut] ?? { label: r.statut, variant: "secondary" as const }) : null;
   const dateLabel = r
     ? new Date(r.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
         weekday: "long", day: "numeric", month: "long", year: "numeric",
@@ -294,9 +288,7 @@ export function ReservationDrawer({
             <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
               <div className="min-w-0">
                 <div className="flex items-center gap-2.5 mb-1">
-                  <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${statut?.color}`}>
-                    {statut?.label}
-                  </span>
+                  {statut && <AdminBadge variant={statut.variant} label={statut.label} />}
                   <span className="text-xs text-muted-foreground font-mono">
                     #{r.id.slice(0, 8).toUpperCase()}
                   </span>

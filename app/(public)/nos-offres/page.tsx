@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import {
-  Clock, Users, MapPin, Route, CalendarCheck,
+  Clock, Users, MapPin, Route,
   Zap, Shuffle, PlaneTakeoff, ArrowRight, MousePointerClick,
 } from "lucide-react";
 import { PackCard } from "@/components/shop/PackCard";
@@ -240,27 +240,18 @@ export default async function NosOffresPage() {
       ══════════════════════════════════════════ */}
       <div className="border-t border-border bg-white">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 py-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex flex-wrap justify-center sm:justify-start gap-6">
-              {[
-                { icon: <Users size={14} className="text-[#113356]" />, text: "Jusqu'à 3 passagers" },
-                { icon: <MapPin size={14} className="text-[#113356]" />, text: "Depuis Charleroi (EBCI)" },
-                { icon: <Clock size={14} className="text-[#113356]" />, text: "Durées de 30 min à 2 h+" },
-                { icon: <Route size={14} className="text-[#113356]" />, text: "Itinéraire flexible" },
-              ].map(({ icon, text }) => (
-                <div key={text} className="flex items-center gap-2 text-sm text-muted-foreground">
-                  {icon}
-                  {text}
-                </div>
-              ))}
-            </div>
-            <Link
-              href="/reservation"
-              className="shrink-0 inline-flex items-center gap-2 px-4 py-2 bg-[#f5f8ff] border border-[#dce8ff] text-[#113356] rounded-xl text-xs font-bold hover:bg-[#113356] hover:text-white hover:border-[#113356] transition-all"
-            >
-              <CalendarCheck size={13} />
-              Réserver un créneau fixe
-            </Link>
+          <div className="flex flex-wrap justify-center gap-6">
+            {[
+              { icon: <Users size={14} className="text-[#113356]" />, text: "Jusqu'à 3 passagers" },
+              { icon: <MapPin size={14} className="text-[#113356]" />, text: "Depuis Charleroi (EBCI)" },
+              { icon: <Clock size={14} className="text-[#113356]" />, text: "Durées de 30 min à 2 h+" },
+              { icon: <Route size={14} className="text-[#113356]" />, text: "Itinéraire flexible" },
+            ].map(({ icon, text }) => (
+              <div key={text} className="flex items-center gap-2 text-sm text-muted-foreground">
+                {icon}
+                {text}
+              </div>
+            ))}
           </div>
         </div>
       </div>

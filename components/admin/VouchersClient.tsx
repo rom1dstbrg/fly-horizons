@@ -6,11 +6,9 @@ import {
   createManualVoucher, updateVoucher, deleteVoucher,
 } from "@/lib/actions/vouchers";
 import { formatDuration } from "@/lib/vouchers";
-import {
-  Check, RotateCcw, Copy, Plus, Pencil, X,
-  Loader2, ChevronDown, ChevronUp, Users,
-} from "lucide-react";
-import { DeleteButton } from "@/components/admin/DeleteButton";
+import { Check, RotateCcw, Copy, Plus, Loader2, Users } from "lucide-react";
+import { AdminBadge, STATUT_VOUCHER } from "@/components/admin/ui/AdminBadge";
+import { AdminRowActions } from "@/components/admin/ui/AdminRowActions";
 
 interface VoucherCode {
   id: string;
@@ -25,12 +23,6 @@ interface VoucherCode {
   expires_at: string | null;
   created_at: string;
 }
-
-const STATUS_CONFIG = {
-  unused:  { label: "Disponible", className: "bg-green-500/10 text-green-600 border-green-500/30" },
-  used:    { label: "Utilisé",    className: "bg-muted text-muted-foreground border-border" },
-  expired: { label: "Expiré",     className: "bg-red-500/10 text-red-400 border-red-500/30" },
-};
 
 const TABS = [
   { key: "all",    label: "Tous" },
@@ -114,7 +106,6 @@ function CreateVoucherForm({ onClose, clients }: { onClose: () => void; clients:
     e.preventDefault();
     setError(""); setCreated(null);
     const formData = new FormData(e.currentTarget);
-    // Override with controlled values
     formData.set("recipient_name", recipientName);
     formData.set("recipient_email", recipientEmail);
     startTransition(async () => {
@@ -132,7 +123,7 @@ function CreateVoucherForm({ onClose, clients }: { onClose: () => void; clients:
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-foreground">Nouveau voucher</h3>
         <button onClick={onClose} className="p-1 rounded hover:bg-secondary transition-colors text-muted-foreground">
-          <X size={16} />
+          ✕
         </button>
       </div>
 
@@ -166,7 +157,6 @@ function CreateVoucherForm({ onClose, clients }: { onClose: () => void; clients:
           </div>
         </div>
 
-        {/* Recipient — client picker or manual */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <ClientPicker
             clients={clients}
@@ -174,22 +164,13 @@ function CreateVoucherForm({ onClose, clients }: { onClose: () => void; clients:
           />
           <div>
             <label className="block text-xs font-medium text-muted-foreground mb-1.5">Nom destinataire</label>
-            <input
-              value={recipientName}
-              onChange={e => setRecipientName(e.target.value)}
-              placeholder="Jean Dupont"
-              className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
+            <input value={recipientName} onChange={e => setRecipientName(e.target.value)} placeholder="Jean Dupont"
+              className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
           </div>
           <div>
             <label className="block text-xs font-medium text-muted-foreground mb-1.5">Email destinataire</label>
-            <input
-              value={recipientEmail}
-              onChange={e => setRecipientEmail(e.target.value)}
-              type="email"
-              placeholder="jean@exemple.com"
-              className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
+            <input value={recipientEmail} onChange={e => setRecipientEmail(e.target.value)} type="email" placeholder="jean@exemple.com"
+              className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
           </div>
         </div>
 
@@ -295,7 +276,7 @@ function EditVoucherForm({ voucher, onClose }: { voucher: VoucherCode; onClose: 
 function VoucherRow({ voucher }: { voucher: VoucherCode }) {
   const [isPending, startTransition] = useTransition();
   const [editing, setEditing] = useState(false);
-  const statusCfg = STATUS_CONFIG[voucher.status] ?? STATUS_CONFIG.unused;
+  const statusCfg = STATUT_VOUCHER[voucher.status] ?? { label: voucher.status, variant: "secondary" as const };
   const date = new Date(voucher.created_at).toLocaleDateString("fr-BE", { day: "numeric", month: "short", year: "numeric" });
   const usedDate = voucher.used_at
     ? new Date(voucher.used_at).toLocaleDateString("fr-BE", { day: "numeric", month: "short" })
@@ -316,7 +297,7 @@ function VoucherRow({ voucher }: { voucher: VoucherCode }) {
           <CopyCode code={voucher.code} />
         </div>
 
-        {/* Duration + prix */}
+        {/* Durée + prix */}
         <div className="w-28 shrink-0">
           <span className="text-sm font-medium text-foreground">{formatDuration(voucher.duration_minutes)}</span>
           {voucher.prix != null && (
@@ -324,19 +305,17 @@ function VoucherRow({ voucher }: { voucher: VoucherCode }) {
           )}
         </div>
 
-        {/* Status */}
+        {/* Statut */}
         <div className="shrink-0">
-          <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${statusCfg.className}`}>
-            {statusCfg.label}
-          </span>
+          <AdminBadge variant={statusCfg.variant} label={statusCfg.label} />
         </div>
 
-        {/* Recipient */}
+        {/* Destinataire */}
         <div className="min-w-0 flex-1">
           {voucher.recipient_email ? (
             <p className="text-sm text-muted-foreground truncate">{voucher.recipient_email}</p>
           ) : (
-            <p className="text-xs text-muted-foreground/40 italic">—</p>
+            <p className="text-xs text-muted-foreground/40 italic">Non renseigné</p>
           )}
           {voucher.recipient_name && (
             <p className="text-xs text-muted-foreground/70">{voucher.recipient_name}</p>
@@ -350,25 +329,19 @@ function VoucherRow({ voucher }: { voucher: VoucherCode }) {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-1 shrink-0">
-          {/* Toggle used/unused */}
-          {voucher.status !== "expired" && (
-            <button onClick={toggle} disabled={isPending}
-              title={voucher.status === "unused" ? "Marquer utilisé" : "Remettre disponible"}
-              className="p-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors disabled:opacity-50">
-              {voucher.status === "unused" ? <Check size={14} /> : <RotateCcw size={14} />}
-            </button>
-          )}
-          {/* Edit */}
-          <button onClick={() => setEditing(e => !e)}
-            title="Modifier"
-            className={`p-1.5 rounded-md border transition-colors ${editing ? "border-primary text-primary bg-primary/5" : "border-border text-muted-foreground hover:text-foreground hover:border-primary/40"}`}>
-            {editing ? <ChevronUp size={14} /> : <Pencil size={14} />}
-          </button>
-          {/* Delete */}
-          <DeleteButton
+        <div className="shrink-0">
+          <AdminRowActions
+            onEdit={() => setEditing(e => !e)}
             onDelete={() => deleteVoucher(voucher.id)}
-            confirmMessage="Confirmer ?"
+            extra={voucher.status !== "expired" ? [
+              {
+                icon: voucher.status === "unused" ? Check : RotateCcw,
+                label: voucher.status === "unused" ? "Utiliser" : "Rétablir",
+                onClick: toggle,
+                disabled: isPending,
+                title: voucher.status === "unused" ? "Marquer comme utilisé" : "Remettre disponible",
+              },
+            ] : []}
           />
         </div>
       </div>
@@ -396,7 +369,7 @@ export function VouchersClient({ vouchers, clients }: { vouchers: VoucherCode[];
     <div className="space-y-4">
       {showCreate && <CreateVoucherForm onClose={() => setShowCreate(false)} clients={clients} />}
 
-      {/* Filters + actions */}
+      {/* Filtres + actions */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="flex gap-1">
           {TABS.map((t) => {
@@ -426,24 +399,24 @@ export function VouchersClient({ vouchers, clients }: { vouchers: VoucherCode[];
       {/* Table */}
       <div className="card-premium overflow-hidden">
         <div className="overflow-x-auto">
-        <div className="min-w-[560px]">
-        <div className="flex items-center gap-x-4 px-5 py-2.5 border-b border-border bg-secondary/30">
-          <span className="w-40 text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0">Code</span>
-          <span className="w-28 text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0">Durée / Prix</span>
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0 w-20">Statut</span>
-          <span className="flex-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Destinataire</span>
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0">Date</span>
-          <span className="w-24 shrink-0" />
-        </div>
+          <div className="min-w-[560px]">
+            <div className="flex items-center gap-x-4 px-5 py-2.5 border-b border-border bg-secondary/30">
+              <span className="w-40 text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0">Code</span>
+              <span className="w-28 text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0">Durée / Prix</span>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0 w-20">Statut</span>
+              <span className="flex-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Destinataire</span>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0">Date</span>
+              <span className="w-32 shrink-0" />
+            </div>
 
-        {filtered.length === 0 ? (
-          <div className="p-8 text-center">
-            <p className="text-sm text-muted-foreground">Aucun voucher correspondant.</p>
+            {filtered.length === 0 ? (
+              <div className="p-8 text-center">
+                <p className="text-sm text-muted-foreground">Aucun voucher correspondant.</p>
+              </div>
+            ) : (
+              filtered.map((v) => <VoucherRow key={v.id} voucher={v} />)
+            )}
           </div>
-        ) : (
-          filtered.map((v) => <VoucherRow key={v.id} voucher={v} />)
-        )}
-        </div>
         </div>
       </div>
     </div>

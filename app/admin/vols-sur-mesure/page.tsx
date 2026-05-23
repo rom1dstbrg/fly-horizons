@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { VolsPersoClient } from "@/components/admin/VolsPersoClient";
+import { StopoversAdmin } from "@/components/admin/StopoversAdmin";
 import { PageHeader } from "@/components/admin/PageHeader";
 
 export const metadata = { title: "Vols sur mesure — Admin" };
@@ -7,11 +8,17 @@ export const metadata = { title: "Vols sur mesure — Admin" };
 export default async function VolsSurMesurePage() {
   const supabase = createAdminClient();
 
-  const { data: reservations } = await supabase
-    .from("reservations")
-    .select("*, clients(*)")
-    .eq("type_resa", "perso")
-    .order("created_at", { ascending: false });
+  const [{ data: reservations }, { data: stopovers }] = await Promise.all([
+    supabase
+      .from("reservations")
+      .select("*, clients(*)")
+      .eq("type_resa", "perso")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("stopovers")
+      .select("id, icao, nom, taxe, actif, lat, lng")
+      .order("nom"),
+  ]);
 
   const all = reservations ?? [];
   const byStatus = {
@@ -47,6 +54,7 @@ export default async function VolsSurMesurePage() {
         ))}
       </div>
 
+      <StopoversAdmin initialData={stopovers ?? []} />
       <VolsPersoClient reservations={all} />
     </div>
   );
