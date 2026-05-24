@@ -8,7 +8,7 @@ import {
   MapPin, Clock, Search, Trash2, ChevronRight, ChevronLeft,
   Check, CheckCircle, Loader2, AlertCircle, AlertTriangle,
   Mail, Lock, Eye, Zap, PlaneTakeoff, X, Info,
-  Navigation, Star, Plus,
+  Navigation, Star, Plus, CalendarDays, CloudRain,
 } from "lucide-react";
 import type {
   AdventureRouteData, AdventureMapHandle, POI, StyleMode,
@@ -1184,44 +1184,119 @@ export default function VolSurMesurePage() {
 
       {/* ══════════════════════ STEP 3 : DONE ══════════════════════ */}
       {flowStep === "done" && (
-        <div className="max-w-lg mx-auto px-4 py-16 text-center">
-          <div className="bg-white rounded-2xl border border-border p-8 space-y-6" style={{ boxShadow: "var(--sh-sm)" }}>
-            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
-              <CheckCircle size={30} className="text-green-500" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-black text-foreground">Votre aventure est réservée ✈</h1>
-              <p className="text-muted-foreground text-sm mt-2 leading-relaxed">
-                Un email de confirmation a été envoyé à <strong className="text-foreground">{form.email}</strong>.
-              </p>
-            </div>
+        <div className="max-w-lg mx-auto px-4 py-12 pb-16">
+          <div className="space-y-4">
 
-            <div className="text-left bg-secondary/40 rounded-xl p-5 space-y-3.5">
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[2px] mb-1">Prochaines étapes</p>
-              {[
-                { icon: <Mail size={14} className="text-primary mt-0.5 shrink-0" />, text: "Confirmation envoyée, vérifiez votre boîte email." },
-                { icon: <Lock size={14} className="text-primary mt-0.5 shrink-0" />, text: acompte > 0 ? `Lien de paiement de l'acompte (${acompte} €) envoyé par email.` : "Votre vol est entièrement couvert." },
-                { icon: <Check size={14} className="text-green-600 mt-0.5 shrink-0" />, text: "Nos pilotes vérifieront météo, faisabilité & disponibilité." },
-                { icon: <MapPin size={14} className="text-primary mt-0.5 shrink-0" />, text: "Nous vous recontactons sous 24h pour confirmer tous les détails." },
-              ].map(({ icon, text }, i) => (
-                <div key={i} className="flex items-start gap-2.5">
-                  {icon}
-                  <p className="text-sm text-muted-foreground leading-relaxed">{text}</p>
+            {/* Étapes */}
+            <div className="bg-white rounded-2xl border border-border p-5" style={{ boxShadow: "var(--sh-sm)" }}>
+
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                  <CheckCircle className="text-green-600" size={16} />
                 </div>
-              ))}
+                <div>
+                  <p className="text-sm font-bold text-foreground">Votre aventure est réservée !</p>
+                  <p className="text-[10px] text-muted-foreground">Email envoyé à {form.email}</p>
+                </div>
+              </div>
+
+              {acompte > 0 && (
+                <div className="mb-4 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                  <div className="flex items-start gap-2.5">
+                    <Lock size={13} className="text-amber-600 mt-0.5 shrink-0" />
+                    <p className="text-xs text-amber-800 leading-relaxed">
+                      Un <strong>lien de paiement de l&apos;acompte ({acompte}&thinsp;€)</strong> vous a été envoyé par email. Le créneau sera confirmé dès réception.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-0">
+                {[
+                  {
+                    num: 1, done: true,
+                    title: "Demande envoyée",
+                    desc: "Votre itinéraire et vos informations ont bien été enregistrés.",
+                  },
+                  {
+                    num: 2, done: false,
+                    title: "Romain analyse votre route",
+                    desc: "Dans les 24 h, Romain étudie la faisabilité de votre itinéraire. Si certaines zones ne peuvent pas être survolées (espace aérien, restrictions), il vous en informe et propose des alternatives.",
+                  },
+                  {
+                    num: 3, done: false,
+                    title: "Validation de l'itinéraire",
+                    desc: "Vous recevez la route définitive par email. Vous pouvez demander des ajustements avant de donner votre accord.",
+                  },
+                  {
+                    num: 4, done: false,
+                    title: "À vous le ciel",
+                    desc: "Présentez-vous 15 min avant à Charleroi (EBCI). Briefing sécurité, casques audio fournis.",
+                  },
+                ].map(({ num, done, title, desc }, i, arr) => (
+                  <div key={num} className="flex gap-3">
+                    <div className="flex flex-col items-center">
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${done ? "bg-green-500" : "bg-[#F2B705]"}`}>
+                        {done
+                          ? <CheckCircle size={13} className="text-white" />
+                          : <span className="font-black text-[#0b2238] text-xs leading-none">{num}</span>}
+                      </div>
+                      {i < arr.length - 1 && (
+                        <div className="w-px bg-border mt-1" style={{ height: 28 }} />
+                      )}
+                    </div>
+                    <div className="pb-4">
+                      <p className={`text-sm font-bold ${done ? "text-green-700" : "text-foreground"}`}>{title}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3">
-              <a href="/"
-                className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#113356] text-white rounded-xl text-sm font-bold hover:bg-[#0b2238] shadow-sm transition-all">
-                Retour à l&apos;accueil
+            {/* Infos pratiques */}
+            <div className="bg-white rounded-2xl border border-border p-5 space-y-3" style={{ boxShadow: "var(--sh-sm)" }}>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px]">Informations pratiques</p>
+              <div className="flex items-start gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-[#f5f8ff] border border-[#dce8ff] flex items-center justify-center shrink-0">
+                  <MapPin size={13} className="text-[#113356]" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-foreground">Aéroport de Charleroi (EBCI)</p>
+                  <p className="text-xs text-muted-foreground">Rue des Frères Wright 8, Gosselies · Arrivez 15 min avant</p>
+                </div>
+              </div>
+              <a
+                href="/access-ebci"
+                className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-[#f5f8ff] border border-[#dce8ff] text-[#113356] rounded-xl text-xs font-semibold hover:bg-[#113356] hover:text-white hover:border-[#113356] transition-all"
+              >
+                <MapPin size={12} />
+                Plan d&apos;accès à l&apos;aéroport
+              </a>
+              <div className="flex items-start gap-2.5 pt-2 border-t border-border">
+                <div className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
+                  <CloudRain size={13} className="text-blue-500" />
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  <strong className="text-foreground">Météo :</strong> si les conditions ne permettent pas de voler, le vol est reporté sans frais. Romain décide jusqu&apos;à 2 h avant.
+                </p>
+              </div>
+            </div>
+
+            {/* CTAs */}
+            <div className="flex flex-col gap-3">
+              <a href="/account#reservations"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#113356] text-white rounded-xl text-sm font-semibold hover:bg-[#0b2238] transition-colors">
+                <CalendarDays size={15} />
+                Suivre ma réservation
               </a>
               <button type="button"
                 onClick={() => { setFlowStep("build"); setRoute({ pois: [], distKm: 0, transitMin: 0, obsMin: 0, totalMin: 0 }); setForm(f => ({ ...f, date: "", heure: "", commentaire: "" })); mapRef.current?.clearAll(); }}
-                className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-white border border-border text-foreground rounded-xl text-sm font-bold hover:bg-muted transition-all">
+                className="inline-flex items-center justify-center px-6 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:bg-secondary transition-colors cursor-pointer">
                 Modifier mon vol
               </button>
             </div>
+
           </div>
         </div>
       )}

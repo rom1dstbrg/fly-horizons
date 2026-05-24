@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CheckCircle, CalendarDays, MapPin, Clock, AlertTriangle, CloudRain, Users, ExternalLink } from "lucide-react";
+import { CheckCircle, CalendarDays, MapPin, Clock, AlertTriangle, CloudRain, Users, ExternalLink, Route } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -26,8 +26,14 @@ const STEPS_NORMAL = [
   {
     num: 3,
     done: false,
+    title: "Romain vous propose un itinéraire",
+    desc: "Une route est tracée en fonction de vos envies et de la météo. Vous la recevez par email et pouvez demander des ajustements.",
+  },
+  {
+    num: 4,
+    done: false,
     title: "À vous le ciel",
-    desc: "Présentez-vous 15 min avant à l'aéroport de Charleroi (EBCI). Briefing sécurité, casques audio fournis.",
+    desc: "Présentez-vous 15 min avant à Charleroi (EBCI). Briefing sécurité, casques audio fournis.",
   },
 ];
 
@@ -47,8 +53,14 @@ const STEPS_PAY_LATER = [
   {
     num: 3,
     done: false,
+    title: "Romain confirme et prépare votre vol",
+    desc: "Une fois le paiement reçu, Romain valide votre créneau et vous envoie une proposition d'itinéraire à approuver.",
+  },
+  {
+    num: 4,
+    done: false,
     title: "À vous le ciel",
-    desc: "Présentez-vous 15 min avant à l'aéroport de Charleroi (EBCI). Briefing sécurité, casques audio fournis.",
+    desc: "Présentez-vous 15 min avant à Charleroi (EBCI). Briefing sécurité, casques audio fournis.",
   },
 ];
 
@@ -62,38 +74,34 @@ export default async function ReservationSuccessPage({ searchParams }: Props) {
     <main className="min-h-screen bg-[#f5f5f7] flex items-center justify-center px-4 pt-[86px] pb-16">
       <div className="max-w-lg w-full space-y-4">
 
-        {/* ── Header ── */}
-        <div className="bg-white rounded-2xl border border-border shadow-sm p-8 text-center">
-          <div className={`w-14 h-14 rounded-full ${isPayLater ? "bg-amber-100" : "bg-green-100"} flex items-center justify-center mx-auto mb-4`}>
-            {isPayLater
-              ? <Clock className="text-amber-600" size={28} />
-              : <CheckCircle className="text-green-600" size={28} />}
+        {/* ── Étapes suivantes ── */}
+        <div className="bg-white rounded-2xl border border-border shadow-sm p-5">
+
+          <div className="flex items-center gap-2.5 mb-4">
+            <div className={`w-8 h-8 rounded-full ${isPayLater ? "bg-amber-100" : "bg-green-100"} flex items-center justify-center shrink-0`}>
+              {isPayLater
+                ? <Clock className="text-amber-600" size={16} />
+                : <CheckCircle className="text-green-600" size={16} />}
+            </div>
+            <div>
+              <p className="text-sm font-bold text-foreground">
+                {isPayLater ? "Demande enregistrée !" : "Demande envoyée !"}
+              </p>
+              <p className="text-[10px] text-muted-foreground">Voici ce qui se passe ensuite</p>
+            </div>
           </div>
 
-          <h1 className="text-xl font-bold text-foreground mb-2">
-            {isPayLater ? "Demande enregistrée !" : "Demande envoyée !"}
-          </h1>
-          <p className="text-muted-foreground text-sm leading-relaxed">
-            {isPayLater
-              ? "Votre demande a été reçue. Réglez via le lien dans votre email pour confirmer le créneau."
-              : "Votre demande a bien été reçue. Un email de confirmation vient d'être envoyé."}
-          </p>
-
           {isPayLater && (
-            <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-left">
+            <div className="mb-4 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
               <div className="flex items-start gap-2.5">
-                <AlertTriangle size={14} className="text-amber-600 mt-0.5 shrink-0" />
+                <AlertTriangle size={13} className="text-amber-600 mt-0.5 shrink-0" />
                 <p className="text-xs text-amber-800 leading-relaxed">
                   <strong>Créneau non garanti.</strong> Votre date ne sera confirmée qu&apos;après réception du paiement. Passé le délai, le créneau sera libéré automatiquement.
                 </p>
               </div>
             </div>
           )}
-        </div>
 
-        {/* ── Étapes suivantes ── */}
-        <div className="bg-white rounded-2xl border border-border shadow-sm p-5">
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px] mb-4">La suite</p>
           <div className="space-y-0">
             {steps.map(({ num, done, title, desc }, i) => (
               <div key={num} className="flex gap-3">
@@ -104,7 +112,7 @@ export default async function ReservationSuccessPage({ searchParams }: Props) {
                       : <span className="font-black text-[#0b2238] text-xs leading-none">{num}</span>}
                   </div>
                   {i < steps.length - 1 && (
-                    <div className="w-px bg-border mt-1 mb-0" style={{ height: 28 }} />
+                    <div className="w-px bg-border mt-1" style={{ height: 28 }} />
                   )}
                 </div>
                 <div className="pb-4">
@@ -143,7 +151,7 @@ export default async function ReservationSuccessPage({ searchParams }: Props) {
               <CloudRain size={13} className="text-blue-500" />
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              <strong className="text-foreground">Météo :</strong> en cas de conditions défavorables, le vol est reporté sans frais ni pénalité. Romain vous recontacte pour fixer une nouvelle date.
+              <strong className="text-foreground">Météo :</strong> en cas de conditions défavorables, le vol est reporté sans frais. Romain vous recontacte pour fixer une nouvelle date.
             </p>
           </div>
 
