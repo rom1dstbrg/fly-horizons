@@ -74,7 +74,14 @@
       "Bash(awk 'f && /^export function [a-z]/{exit} /export function volSurMesureQuoteEmail/{f=1} f' lib/email-templates.ts)",
       "Bash(python3)",
       "Bash(grep -v \"^[0-9]*:  *//\")",
-      "Bash(git reset *)"
+      "Bash(git reset *)",
+      "Bash(git commit -m 'fix: restore commentaire field on reservation form and API routes *)",
+      "Bash(git commit -m 'fix: warnings LCP, aspect ratio, scroll-behavior, favicons, video MP4 source *)",
+      "Bash(git commit -m 'fix: satisfaction email envoyé à info@fly-horizons.com au lieu de gmail *)",
+      "Bash(netlify --version)",
+      "Bash(netlify sites:list)",
+      "Bash(netlify api *)",
+      "Bash(python3 -c \"import sys,json; deploys=json.load\\(sys.stdin\\); [print\\(f'{d[\\\\\"id\\\\\"]} {d[\\\\\"state\\\\\"]} {d[\\\\\"created_at\\\\\"][:10]} {d.get\\(\\\\\"title\\\\\",\\\\\"\\\\\"\\)[:50]}'\\) for d in deploys]\")"
     ]
   }
 }

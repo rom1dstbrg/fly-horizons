@@ -18,6 +18,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Champs obligatoires manquants" }, { status: 400 });
     }
 
+    // Règle J-2 : minimum 48h d'avance
+    const todayMidnight = new Date();
+    todayMidnight.setHours(0, 0, 0, 0);
+    const minBookable = new Date(todayMidnight);
+    minBookable.setDate(minBookable.getDate() + 2);
+    if (new Date(date + "T12:00:00Z") < minBookable) {
+      return NextResponse.json(
+        { error: "Les réservations sont possibles uniquement 48h à l'avance minimum (J-2)." },
+        { status: 400 },
+      );
+    }
+
     const supabase = createAdminClient();
 
     // Claim atomique du voucher : .eq("status","unused") garantit l'unicité (élimine TOCTOU).

@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     absolute: "Fly Horizons — Baptême de l'air en Belgique | Vols privés depuis Charleroi",
   },
   description:
-    "Offrez ou vivez un baptême de l'air inoubliable en avion léger au départ de Charleroi (Belgique). Vols de 30 à 120 min, itinéraire libre, jusqu'à 3 passagers. Pilote CPL licencié.",
+    "Offrez ou vivez un baptême de l'air inoubliable en avion léger au départ de Charleroi (Belgique). Vols de 30 à 120 min, itinéraire libre, jusqu'à 3 passagers.",
   alternates: { canonical: siteUrl },
   openGraph: {
     title: "Fly Horizons — Baptême de l'air en Belgique | Vols privés depuis Charleroi",
@@ -29,7 +29,7 @@ const localBusinessSchema = {
   "@type": "LocalBusiness",
   name: "Fly Horizons",
   description:
-    "Baptêmes de l'air et vols privés en avion léger depuis l'aéroport de Charleroi (EBCI), Belgique. Itinéraire 100 % libre, pilote CPL licencié, jusqu'à 3 passagers.",
+    "Baptêmes de l'air et vols privés en avion léger depuis l'aéroport de Charleroi (EBCI), Belgique. Itinéraire 100 % libre, jusqu'à 3 passagers.",
   url: siteUrl,
   logo: "https://fly-horizons.com/logo-email.png",
   image: `${siteUrl}/piste.jpg`,
@@ -156,7 +156,7 @@ export default async function HomePage() {
               { icon: <Lock size={20} className="text-[#113356]" />, title: "Paiement sécurisé", desc: "Via Stripe, carte bancaire" },
               { icon: <Mail size={20} className="text-[#113356]" />, title: "Code par email", desc: "Voucher envoyé instantanément" },
               { icon: <Package size={20} className="text-[#113356]" />, title: "Livraison Belgique", desc: "Accessoires livrés partout" },
-              { icon: <BadgeCheck size={20} className="text-[#113356]" />, title: "Pilote licencié CPL", desc: "Sécurité & professionnalisme" },
+              { icon: <BadgeCheck size={20} className="text-[#113356]" />, title: "Pilote qualifié", desc: "Sécurité & professionnalisme" },
             ].map(({ icon, title, desc }) => (
               <div key={title} className="flex items-center gap-3.5">
                 <div className="w-10 h-10 rounded-xl bg-[#f5f8ff] border border-[#dce8ff] flex items-center justify-center shrink-0">

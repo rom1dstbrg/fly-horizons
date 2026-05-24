@@ -65,6 +65,9 @@ export async function GET(request: NextRequest) {
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  // Règle J-2 : minimum 48h d'avance
+  const minBookable = new Date(today);
+  minBookable.setDate(minBookable.getDate() + 2);
   const daysInMonth = new Date(y, m, 0).getDate();
   const available: string[] = [];
   const unavailable: string[] = [];
@@ -72,7 +75,8 @@ export async function GET(request: NextRequest) {
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
     const date = new Date(dateStr + "T12:00:00Z");
-    if (date < today) continue;
+    if (date < today) continue;                            // passé : masquer
+    if (date < minBookable) { unavailable.push(dateStr); continue; } // J+0/J+1 : indisponible
 
     const jsDay = date.getDay();
     const resasDuJour = resasByDate[dateStr] ?? [];

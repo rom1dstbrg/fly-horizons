@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     template: "%s | Fly Horizons",
   },
   description:
-    "Baptême de l'air et vols privés en avion léger depuis Charleroi (Belgique). Pilote CPL licencié, jusqu'à 3 passagers, itinéraire 100 % libre. Réservez votre expérience unique.",
+    "Baptême de l'air et vols privés en avion léger depuis Charleroi (Belgique). Jusqu'à 3 passagers, itinéraire 100 % libre. Réservez votre expérience unique.",
   metadataBase: new URL(siteUrl),
   keywords: [
     "baptême de l'air Belgique",
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     siteName: "Fly Horizons",
     title: "Fly Horizons — Baptême de l'air en Belgique",
     description:
-      "Baptême de l'air et vols privés en avion léger depuis Charleroi. Pilote CPL licencié, jusqu'à 3 passagers, itinéraire 100 % libre.",
+      "Baptême de l'air et vols privés en avion léger depuis Charleroi. Jusqu'à 3 passagers, itinéraire 100 % libre.",
     images: [
       {
         url: "/piste.jpg",
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Fly Horizons — Baptême de l'air en Belgique",
     description:
-      "Vols privés en avion léger depuis Charleroi. Itinéraire libre, pilote CPL licencié.",
+      "Vols privés en avion léger depuis Charleroi. Itinéraire libre, jusqu'à 3 passagers.",
     images: ["/piste.jpg"],
   },
   icons: {

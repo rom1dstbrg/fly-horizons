@@ -80,6 +80,10 @@ export default function ReservationPage() {
   });
 
   const today = new Date();
+  // Règle J-2 : les 2 prochains jours (aujourd'hui + demain) sont non réservables
+  const minBookableDate = new Date(today);
+  minBookableDate.setHours(0, 0, 0, 0);
+  minBookableDate.setDate(minBookableDate.getDate() + 2);
   const [calYear,  setCalYear]  = useState(today.getFullYear());
   const [calMonth, setCalMonth] = useState(today.getMonth() + 1);
   const [availDays,    setAvailDays]    = useState<string[]>([]);
@@ -290,7 +294,8 @@ export default function ReservationPage() {
       const ds      = `${calYear}-${String(calMonth).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
       const isAvail = availDays.includes(ds);
       const isSel   = form.date === ds;
-      const isPast  = new Date(ds + "T12:00:00Z") < today;
+      // isPast couvre aussi J+0/J+1 (règle J-2)
+      const isPast  = new Date(ds + "T12:00:00Z") < minBookableDate;
       cells.push(
         <button key={d} type="button" disabled={!isAvail || isPast}
           onClick={() => setForm(f => ({ ...f, date: ds, heure: "" }))}

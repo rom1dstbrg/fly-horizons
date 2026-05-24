@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
   const description =
     data.short_description ??
-    `${data.title} — Baptême de l'air en avion léger depuis Charleroi (Belgique). Jusqu'à 3 passagers, itinéraire libre, pilote CPL licencié.`;
+    `${data.title} — Baptême de l'air en avion léger depuis Charleroi (Belgique). Jusqu'à 3 passagers, itinéraire libre.`;
   const imageUrl = (data.images as { url: string }[])?.[0]?.url ?? `${siteUrl}/piste.jpg`;
 
   return {

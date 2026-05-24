@@ -43,6 +43,15 @@ export async function GET(request: NextRequest) {
   if (isNaN(dureeMins) || dureeMins < 1)
     return NextResponse.json({ error: "Durée invalide" }, { status: 400 });
 
+  // Règle J-2 : minimum 48h d'avance
+  const todayMidnight = new Date();
+  todayMidnight.setHours(0, 0, 0, 0);
+  const minBookable = new Date(todayMidnight);
+  minBookable.setDate(minBookable.getDate() + 2);
+  if (new Date(date + "T12:00:00Z") < minBookable) {
+    return NextResponse.json({ slots: [] });
+  }
+
   const supabase = createAdminClient();
   const jsDay = new Date(date + "T12:00:00Z").getDay();
 

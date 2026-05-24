@@ -26,6 +26,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Durée invalide" }, { status: 400 });
     }
 
+    // Règle J-2 : minimum 48h d'avance
+    const todayMidnight = new Date();
+    todayMidnight.setHours(0, 0, 0, 0);
+    const minBookable = new Date(todayMidnight);
+    minBookable.setDate(minBookable.getDate() + 2);
+    if (new Date(date + "T12:00:00Z") < minBookable) {
+      return NextResponse.json(
+        { error: "Les réservations sont possibles uniquement 48h à l'avance minimum (J-2)." },
+        { status: 400 },
+      );
+    }
+
     const supabase = createAdminClient();
 
     // Récupérer le prix depuis la DB — jamais depuis le client

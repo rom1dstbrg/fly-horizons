@@ -124,8 +124,8 @@ const THEMES: Theme[] = [
       },
       {
         q: "Combien de temps à l'avance faut-il réserver ?",
-        aText: "Il n'y a pas de délai minimum. Vous réservez selon les créneaux disponibles dans le calendrier. En période chargée (printemps, été), il est conseillé de réserver plusieurs semaines à l'avance pour avoir le choix des dates.",
-        a: "Il n'y a pas de délai minimum. Vous réservez selon les créneaux disponibles dans le calendrier. En période chargée (printemps, été), il est conseillé de réserver plusieurs semaines à l'avance pour avoir le choix des dates.",
+        aText: "Les réservations sont possibles jusqu'à 48 heures avant le vol au minimum. En dessous de ce délai, le calendrier n'affiche plus de créneaux disponibles. Pour une demande de dernière minute, rendez-vous sur la page Contact : nous répondrons le plus rapidement possible. En période chargée (printemps, été), il est conseillé de réserver plusieurs semaines à l'avance pour avoir le choix des dates.",
+        a: <>Les réservations sont possibles jusqu&apos;à 48 heures avant le vol au minimum. En dessous de ce délai, le calendrier n&apos;affiche plus de créneaux disponibles. Pour une demande de dernière minute, rendez-vous sur la <Link href="/contact" className="text-primary font-semibold hover:text-gold-400 transition-colors">page Contact</Link> : nous répondrons le plus rapidement possible. En période chargée (printemps, été), il est conseillé de réserver plusieurs semaines à l&apos;avance pour avoir le choix des dates.</>,
       },
     ],
   },
