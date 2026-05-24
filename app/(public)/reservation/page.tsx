@@ -358,14 +358,28 @@ export default function ReservationPage() {
               {step === "datetime" && (
                 <>
                 {/* Encart météo */}
-                <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 flex items-start gap-3 mb-4">
-                  <div className="w-7 h-7 rounded-lg bg-white border border-blue-200 flex items-center justify-center shrink-0">
-                    <CloudRain size={13} className="text-blue-500" />
+                <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 mb-4">
+                  <div className="flex items-start gap-3 mb-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-white border border-blue-200 flex items-center justify-center shrink-0">
+                      <CloudRain size={13} className="text-blue-500" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-blue-900">Météo &amp; annulation — à lire avant de choisir votre date</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs font-bold text-blue-900 mb-0.5">Annulation &amp; météo</p>
-                    <p className="text-xs text-blue-800/70 leading-relaxed">Annulation gratuite jusqu&apos;à <strong>48 h avant</strong> le vol. En cas de météo défavorable, le créneau est reporté sans frais ni pénalité.</p>
-                  </div>
+                  <ul className="space-y-1.5 pl-1">
+                    {[
+                      "Annulation gratuite jusqu'à 48 h avant le vol.",
+                      "Si la météo ne permet pas de voler en sécurité, le vol est reporté sans frais ni pénalité.",
+                      "C'est le pilote qui décide, jusqu'à 2 h avant le départ — pas en fonction de la météo chez vous, mais des conditions réelles à l'aéroport (vent, visibilité, nuages bas).",
+                      "Un nouveau créneau vous sera proposé dès que possible.",
+                    ].map((t) => (
+                      <li key={t} className="flex items-start gap-2 text-xs text-blue-800/70 leading-relaxed">
+                        <span className="text-blue-400 shrink-0 mt-0.5">·</span>
+                        {t}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
                 <div className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
 

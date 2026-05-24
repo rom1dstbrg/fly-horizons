@@ -182,6 +182,26 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
               </p>
             </div>
 
+            {/* Bon à savoir */}
+            <div className="bg-[#f5f8ff] border border-[#dce8ff] rounded-2xl p-5">
+              <p className="text-xs font-bold text-[#113356] uppercase tracking-[2px] mb-3">Bon à savoir avant de réserver</p>
+              <ul className="space-y-2">
+                {[
+                  { e: "🥾", t: "Chaussures fermées obligatoires pour monter à bord" },
+                  { e: "🧥", t: "Habillez-vous selon la météo — pull conseillé en toute saison" },
+                  { e: "👜", t: "Pas de bagages volumineux · appareil photo bienvenu" },
+                  { e: "👥", t: "Maximum 3 passagers · poids total max 178 kg" },
+                  { e: "🚫", t: "Évitez l'alcool dans les heures précédant le vol" },
+                  { e: "☁️", t: "Vol reporté sans frais si météo défavorable (décision du pilote, jusqu'à 2 h avant)" },
+                ].map(({ e, t }) => (
+                  <li key={t} className="flex items-start gap-2.5 text-xs text-[#113356]/70 leading-relaxed">
+                    <span className="shrink-0">{e}</span>
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
             {/* Réservation / Achat cadeau */}
             <VolDetailClient
               id={vol.id}

@@ -907,9 +907,20 @@ export default function VolSurMesurePage() {
                     <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full border-2 border-border" />Disponible</span>
                     <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-muted" />Indisponible</span>
                   </div>
-                  <p className="text-[11px] text-muted-foreground mt-3 flex items-center gap-1.5">
-                    <Info size={10} className="shrink-0" />La météo sera confirmée avant le vol.
-                  </p>
+                  <div className="mt-3 bg-blue-50 border border-blue-100 rounded-xl px-3.5 py-2.5">
+                    <p className="text-[10px] font-bold text-blue-900 mb-1">Météo — comment ça fonctionne ?</p>
+                    <ul className="space-y-1">
+                      {[
+                        "Annulation gratuite jusqu'à 48 h avant.",
+                        "Si la météo ne permet pas de voler, le vol est reporté sans frais.",
+                        "C'est le pilote qui décide, jusqu'à 2 h avant — selon les conditions réelles à l'aéroport, pas chez vous.",
+                      ].map(t => (
+                        <li key={t} className="flex items-start gap-1.5 text-[10px] text-blue-800/70 leading-relaxed">
+                          <span className="text-blue-400 shrink-0">·</span>{t}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
 
                 {form.date && (
@@ -1097,6 +1108,26 @@ export default function VolSurMesurePage() {
                     <p className="text-[10px] text-muted-foreground">{form.commentaire.length} / 300</p>
                   </div>
                 </div>
+              </div>
+
+              {/* Bon à savoir */}
+              <div className="bg-[#f5f8ff] border border-[#dce8ff] rounded-2xl p-5">
+                <p className="text-[10px] font-bold text-[#113356] uppercase tracking-[2px] mb-3">Bon à savoir avant de réserver</p>
+                <ul className="space-y-2">
+                  {[
+                    { e: "🥾", t: "Chaussures fermées obligatoires pour monter à bord" },
+                    { e: "🧥", t: "Habillez-vous selon la météo — pull conseillé en toute saison" },
+                    { e: "👜", t: "Pas de bagages volumineux · appareil photo bienvenu" },
+                    { e: "👥", t: "Maximum 3 passagers · poids total max 178 kg" },
+                    { e: "🚫", t: "Évitez l'alcool dans les heures précédant le vol" },
+                    { e: "☁️", t: "Vol reporté sans frais si météo défavorable (décision du pilote, jusqu'à 2 h avant)" },
+                  ].map(({ e, t }) => (
+                    <li key={t} className="flex items-start gap-2 text-xs text-[#113356]/70 leading-relaxed">
+                      <span className="shrink-0">{e}</span>
+                      {t}
+                    </li>
+                  ))}
+                </ul>
               </div>
 
               {/* CGP */}
