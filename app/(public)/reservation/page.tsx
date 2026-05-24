@@ -357,30 +357,6 @@ export default function ReservationPage() {
               {/* ─ Step 2 ─ */}
               {step === "datetime" && (
                 <>
-                {/* Encart météo */}
-                <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 mb-4">
-                  <div className="flex items-start gap-3 mb-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-white border border-blue-200 flex items-center justify-center shrink-0">
-                      <CloudRain size={13} className="text-blue-500" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-blue-900">Météo &amp; annulation — à lire avant de choisir votre date</p>
-                    </div>
-                  </div>
-                  <ul className="space-y-1.5 pl-1">
-                    {[
-                      "Annulation gratuite jusqu'à 48 h avant le vol.",
-                      "Si la météo ne permet pas de voler en sécurité, le vol est reporté sans frais ni pénalité.",
-                      "C'est le pilote qui décide, jusqu'à 2 h avant le départ — pas en fonction de la météo chez vous, mais des conditions réelles à l'aéroport (vent, visibilité, nuages bas).",
-                      "Un nouveau créneau vous sera proposé dès que possible.",
-                    ].map((t) => (
-                      <li key={t} className="flex items-start gap-2 text-xs text-blue-800/70 leading-relaxed">
-                        <span className="text-blue-400 shrink-0 mt-0.5">·</span>
-                        {t}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
                 <div className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
 
                   {/* Calendrier */}
@@ -665,20 +641,20 @@ export default function ReservationPage() {
                   </div>
 
                   {/* Politique d'annulation */}
-                  <div className="rounded-2xl border border-[#dce8ff] bg-[#f5f8ff] p-5">
-                    <p className="font-bold text-[#113356] text-xs uppercase tracking-wider mb-3">Annulation, météo &amp; passagers</p>
+                  <div className="rounded-2xl border border-blue-100 bg-blue-50 p-5">
+                    <p className="font-bold text-blue-900 text-xs uppercase tracking-wider mb-3">Annulation, météo &amp; passagers</p>
                     <div className="space-y-2.5">
                       <div className="flex items-start gap-2.5">
                         <CheckCircle size={12} className="text-green-500 shrink-0 mt-0.5" />
-                        <p className="text-xs text-[#113356]/80 leading-relaxed">Annulation gratuite jusqu&apos;à <strong>48 h avant</strong> le vol.</p>
+                        <p className="text-xs text-blue-800/80 leading-relaxed">Annulation gratuite jusqu&apos;à <strong>48 h avant</strong> le vol.</p>
                       </div>
                       <div className="flex items-start gap-2.5">
                         <CloudRain size={12} className="text-blue-400 shrink-0 mt-0.5" />
-                        <p className="text-xs text-[#113356]/80 leading-relaxed">En cas de météo défavorable, le vol est reporté sans frais ni pénalité.</p>
+                        <p className="text-xs text-blue-800/80 leading-relaxed">En cas de météo défavorable, le vol est reporté sans frais. <strong>C&apos;est le pilote qui décide, jusqu&apos;à 2 h avant le départ</strong>, selon les conditions réelles à l&apos;aéroport — pas en fonction de la météo à votre domicile.</p>
                       </div>
                       <div className="flex items-start gap-2.5">
-                        <Users size={12} className="text-[#113356] shrink-0 mt-0.5" />
-                        <p className="text-xs text-[#113356]/80 leading-relaxed">Maximum <strong>3 passagers</strong> par vol (avion léger privé), sans exception.</p>
+                        <Users size={12} className="text-blue-500 shrink-0 mt-0.5" />
+                        <p className="text-xs text-blue-800/80 leading-relaxed">Maximum <strong>3 passagers</strong> par vol (avion léger privé), sans exception.</p>
                       </div>
                     </div>
                   </div>
