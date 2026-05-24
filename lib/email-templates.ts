@@ -666,20 +666,27 @@ export function reservationConfirmationFreeEmail(p: ReservationConfirmationProps
 
     ${callout("Votre vol est enti&egrave;rement pris en charge par votre voucher, aucun paiement suppl&eacute;mentaire requis. Fly Horizons vous appellera dans les prochains jours pour convenir de votre cr&eacute;neau. En cas de m&eacute;t&eacute;o d&eacute;favorable, le vol est report&eacute; sans frais.")}
 
-    ${trackingBtn}
-
     ${separator()}
     ${label("Informations pratiques")}
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
       <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">A&eacute;roport de Charleroi (EBCI), Rue des Fr&egrave;res Wright 8, Gosselies</td></tr>
       <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Pr&eacute;sentez-vous <strong>15 minutes avant</strong> le d&eacute;collage. Romain vous accueillera &agrave; l&rsquo;accueil.</td></tr>
+      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">&#128101; <strong>Maximum 3 passagers</strong> par vol (avion l&eacute;ger priv&eacute;), sans exception.</td></tr>
+      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">&#9925; En cas de m&eacute;t&eacute;o d&eacute;favorable, le vol est report&eacute; sans frais ni p&eacute;nalit&eacute;.</td></tr>
       <tr><td class="em-body" style="padding:8px 0;font-size:13px;color:#334155;">Questions : <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a> &middot; <a href="${SITE_URL}/faq" style="color:#F2B705;font-weight:600;text-decoration:none;">FAQ</a></td></tr>
     </table>
 
     <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">
       &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord,
       <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
-    </p>`;
+    </p>
+
+    ${p.reservationId
+      ? ctaButtons2(
+          { href: `${SITE_URL}/account/reservations/${p.reservationId}`, text: "Suivre ma réservation" },
+          { href: `${SITE_URL}/access-ebci`, text: "Plan d'accès" }
+        )
+      : ctaButton(`${SITE_URL}/access-ebci`, "Plan d'accès →")}`;
 
   return emailBase(body, "Réservation confirmée — Fly Horizons");
 }
@@ -721,6 +728,8 @@ export function reservationPaymentConfirmationEmail(p: ReservationPaymentConfirm
       <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">A&eacute;roport de Charleroi (EBCI), Rue des Fr&egrave;res Wright 8, Gosselies</td></tr>
       <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Pr&eacute;sentez-vous <strong>15 minutes avant</strong> le d&eacute;collage. Romain vous accueillera &agrave; l&rsquo;accueil.</td></tr>
       <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Casques audio fournis. Habillez-vous confortablement, aucun &eacute;quipement sp&eacute;cifique n&rsquo;est n&eacute;cessaire.</td></tr>
+      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">&#128101; <strong>Maximum 3 passagers</strong> par vol (avion l&eacute;ger priv&eacute;), sans exception.</td></tr>
+      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">&#9925; En cas de m&eacute;t&eacute;o d&eacute;favorable, le vol est report&eacute; sans frais ni p&eacute;nalit&eacute;.</td></tr>
       <tr><td class="em-body" style="padding:8px 0;font-size:13px;color:#334155;">Questions : <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a> &middot; <a href="${SITE_URL}/faq" style="color:#F2B705;font-weight:600;text-decoration:none;">FAQ</a></td></tr>
     </table>
 
