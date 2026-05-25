@@ -135,18 +135,40 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
 
       {/* ── Hero ── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-5 pb-10 lg:pb-14">
+        {/*
+          Ordre mobile : titre → image → CTA → inclus
+          Desktop      : col gauche = image + inclus | col droite = titre + CTA
+          Technique    : order-N contrôle l'empilement mobile ;
+                         lg:col-start + lg:row-start gèrent le placement desktop
+                         (le placement explicite ignore la propriété order).
+        */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-6 lg:gap-14 items-start">
 
-          {/* ── Colonne gauche : galerie + ce qui est inclus ── */}
-          <div className="space-y-4">
+          {/* ── 1 · Titre — mobile: 1er ; desktop: col droite ligne 1 ── */}
+          <div className="order-1 lg:col-start-2 lg:row-start-1 space-y-3 lg:pt-1">
+            <h1 className="text-[40px] sm:text-[50px] font-black text-[#0b2238] leading-[1.0] tracking-tight">
+              {vol.title}
+            </h1>
+            {/* Description desktop uniquement — sur mobile elle apparaît après l'image (order-3) */}
+            {vol.short_description && (
+              <p className="hidden lg:block text-[#0b2238]/65 text-[15px] leading-relaxed">
+                {vol.short_description}
+              </p>
+            )}
+            <p className="hidden lg:block text-muted-foreground/55 text-[12px] leading-relaxed">
+              Au départ de Charleroi · EBCI · Date au choix
+            </p>
+          </div>
+
+          {/* ── 2 · Galerie — mobile: 2e ; desktop: col gauche, s'étend sur 2 lignes ── */}
+          <div className="order-2 lg:col-start-1 lg:row-start-1 lg:row-span-2 space-y-4">
             <VolImageGallery
               images={vol.images ?? []}
               title={vol.title}
               duree={duree}
             />
-
-            {/* Ce qui est inclus */}
-            <div className="bg-white rounded-2xl border border-border p-5">
+            {/* Ce qui est inclus — desktop uniquement (même colonne que la galerie) */}
+            <div className="hidden lg:block bg-white rounded-2xl border border-border p-5">
               <p className="text-xs font-bold text-foreground uppercase tracking-[2px] mb-4">Ce qui est inclus</p>
               <div className="grid grid-cols-2 gap-3">
                 {INCLUS.map(({ icon, label }) => (
@@ -161,28 +183,20 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
             </div>
           </div>
 
-          {/* ── Colonne droite : infos + CTA ── */}
-          <div className="space-y-6 lg:pt-1">
-
-            {/* Titre & description */}
-            <div>
-
-              <h1 className="text-[40px] sm:text-[50px] font-black text-[#0b2238] leading-[1.0] tracking-tight mb-4">
-                {vol.title}
-              </h1>
-
-              {vol.short_description && (
-                <p className="text-[#0b2238]/65 text-[15px] leading-relaxed mb-3">
-                  {vol.short_description}
-                </p>
-              )}
-
-              <p className="text-muted-foreground/55 text-[12px] leading-relaxed">
-                Au départ de Charleroi · EBCI · Date au choix
+          {/* ── 3 · Description — mobile uniquement, sous l'image ── */}
+          <div className="order-3 lg:hidden space-y-1">
+            {vol.short_description && (
+              <p className="text-[#0b2238]/65 text-[15px] leading-relaxed">
+                {vol.short_description}
               </p>
-            </div>
+            )}
+            <p className="text-muted-foreground/55 text-[12px] leading-relaxed">
+              Au départ de Charleroi · EBCI · Date au choix
+            </p>
+          </div>
 
-            {/* Réservation / Achat cadeau */}
+          {/* ── 4 · CTA — mobile: 4e ; desktop: col droite ligne 2 ── */}
+          <div className="order-4 lg:col-start-2 lg:row-start-2">
             <VolDetailClient
               id={vol.id}
               slug={vol.slug}
@@ -191,8 +205,23 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
               duree={duree}
               image_url={image}
             />
-
           </div>
+
+          {/* ── 5 · Ce qui est inclus — mobile uniquement, après le CTA ── */}
+          <div className="order-5 lg:hidden bg-white rounded-2xl border border-border p-5">
+            <p className="text-xs font-bold text-foreground uppercase tracking-[2px] mb-4">Ce qui est inclus</p>
+            <div className="grid grid-cols-2 gap-3">
+              {INCLUS.map(({ icon, label }) => (
+                <div key={label} className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-[#f5f8ff] border border-[#dce8ff] flex items-center justify-center shrink-0">
+                    {icon}
+                  </div>
+                  <span className="text-xs text-foreground">{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
       </div>
 

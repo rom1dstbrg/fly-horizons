@@ -139,6 +139,12 @@ const ORDER_STATUS: Record<string, { label: string; color: string }> = {
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
+function formatHeure(h: string | null | undefined): string {
+  if (!h) return "En attente";
+  const [hh, mm] = h.split(":");
+  return `${hh}h${mm}`;
+}
+
 function getInitials(name: string): string {
   return name
     .trim()
@@ -620,7 +626,7 @@ export function AccountClient({
                             {resa.heure_vol && (
                               <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                                 <Clock size={11} className="opacity-60" />
-                                {resa.heure_vol}
+                                {formatHeure(resa.heure_vol)}
                               </p>
                             )}
                           </div>
@@ -637,22 +643,30 @@ export function AccountClient({
 
                         {/* Route proposée */}
                         {resa.route && (
-                          <div className="flex items-start gap-2 pt-3 border-t border-border">
+                          <div className="mt-3 flex items-start gap-2">
                             <MapPin size={12} className="text-[#113356] shrink-0 mt-0.5" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs text-foreground leading-snug line-clamp-2">{resa.route}</p>
+                            <div className="flex-1 min-w-0 space-y-0.5">
+                              <p className="text-[10px] font-bold text-[#113356] uppercase tracking-wider">
+                                Itinéraire proposé
+                              </p>
+                              <p className="text-xs text-foreground leading-snug">{resa.route}</p>
+                              {resa.route_status === "sent" && resa.route_token && (
+                                <Link
+                                  href={`/vol/itineraire/${resa.route_token}`}
+                                  className="inline-flex items-center gap-1 pt-0.5 text-[10px] font-bold text-amber-600 hover:text-amber-700 transition-colors"
+                                  onClick={e => e.stopPropagation()}
+                                >
+                                  Valider ou modifier →
+                                </Link>
+                              )}
+                              {resa.route_status === "modification_requested" && (
+                                <span className="inline-flex items-center gap-1 pt-0.5 text-[10px] font-semibold text-orange-600">
+                                  Modification en cours de traitement
+                                </span>
+                              )}
                             </div>
                             {resa.route_status === "validated" && (
-                              <CheckCircle size={12} className="text-green-500 shrink-0 mt-0.5" />
-                            )}
-                            {resa.route_status === "sent" && resa.route_token && (
-                              <Link
-                                href={`/vol/itineraire/${resa.route_token}`}
-                                className="text-[10px] font-bold text-amber-600 hover:text-amber-700 shrink-0 whitespace-nowrap"
-                                onClick={e => e.stopPropagation()}
-                              >
-                                Valider →
-                              </Link>
+                              <CheckCircle size={13} className="text-green-500 shrink-0 mt-0.5" />
                             )}
                           </div>
                         )}
@@ -685,7 +699,7 @@ export function AccountClient({
                           const canReschedule =
                             !["annulee", "vol_effectue", "payment_pending"].includes(resa.statut) &&
                             (new Date(resa.date_vol + "T23:59:59Z").getTime() - Date.now()) > 48 * 60 * 60 * 1000;
-                          const hasBorder = hasPaymentLink || (isPaid && resa.acompte != null);
+                          const hasBorder = hasPaymentLink || (isPaid && resa.acompte != null) || !!resa.route;
                           return (
                             <div className={`flex items-center justify-between gap-3 flex-wrap ${hasBorder ? "mt-2" : "pt-3 border-t border-border mt-0"}`}>
                               {canReschedule ? (

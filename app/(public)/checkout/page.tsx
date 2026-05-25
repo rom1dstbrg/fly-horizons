@@ -51,6 +51,7 @@ export default function CheckoutPage() {
   const [shippingRates, setShippingRates] = useState<ShippingRateRow[]>([]);
   const [isVoucherOnlyDB, setIsVoucherOnlyDB] = useState<boolean | null>(null);
   const [clientInfo, setClientInfo] = useState<{ full_name: string; email: string; phone: string | null } | null>(null);
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState<number>(0);
 
   const isVoucherOnlyCart = items.length > 0 && items.every((i) => i.product_type === "voucher");
   const isVoucherOnly = isVoucherOnlyDB ?? isVoucherOnlyCart;
@@ -87,6 +88,18 @@ export default function CheckoutPage() {
         if (data && data.length > 0) setShippingRates(data);
       });
 
+    supabase
+      .from("settings")
+      .select("key, value")
+      .eq("key", "free_shipping_threshold")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.value) {
+          const parsed = parseFloat(data.value);
+          if (!isNaN(parsed)) setFreeShippingThreshold(parsed);
+        }
+      });
+
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return;
 
@@ -119,11 +132,11 @@ export default function CheckoutPage() {
   }, [items.length, router]);
 
   const subtotal = totalPrice();
-  const shippingRate = isVoucherOnly ? null : shippingRates.find(r => r.country_code === country);
-  const shipping = isVoucherOnly ? 0 : (shippingRate?.rate_standard ?? 4.95);
-
   const voucherSubtotal = items.filter(i => i.product_type === "voucher").reduce((s, i) => s + i.price * i.quantity, 0);
   const physicalSubtotal = items.filter(i => i.product_type !== "voucher").reduce((s, i) => s + i.price * i.quantity, 0);
+  const shippingRate = isVoucherOnly ? null : shippingRates.find(r => r.country_code === country);
+  const freeShippingApplied = !isVoucherOnly && freeShippingThreshold > 0 && physicalSubtotal >= freeShippingThreshold;
+  const shipping = isVoucherOnly ? 0 : freeShippingApplied ? 0 : (shippingRate?.rate_standard ?? 4.95);
   const applicableSubtotal = coupon?.applies_to === "voucher" ? voucherSubtotal
     : coupon?.applies_to === "physical" ? physicalSubtotal
     : subtotal;
@@ -439,6 +452,11 @@ export default function CheckoutPage() {
                 {isVoucherOnly ? (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Livraison</span>
+                    <span className="text-green-500 font-medium">Gratuite</span>
+                  </div>
+                ) : freeShippingApplied ? (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Livraison <span className="text-xs">(produits physiques)</span></span>
                     <span className="text-green-500 font-medium">Gratuite</span>
                   </div>
                 ) : (

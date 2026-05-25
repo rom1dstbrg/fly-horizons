@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  ShoppingCart, Plane, Package, Ticket, Tag, Pencil, Plus,
+  ShoppingCart, Package, Ticket, Tag, Pencil, Plus,
 } from "lucide-react";
 import { OrdersClient } from "./OrdersClient";
 import { VoucherOrdersClient } from "./VoucherOrdersClient";
@@ -28,11 +28,10 @@ type Product = {
 };
 
 const TABS = [
-  { key: "commandes",    label: "Commandes",    icon: ShoppingCart },
-  { key: "vols-achetes", label: "Vols achetés", icon: Plane },
-  { key: "produits",     label: "Produits",     icon: Package },
-  { key: "vouchers",     label: "Vouchers",     icon: Ticket },
-  { key: "coupons",      label: "Coupons",      icon: Tag },
+  { key: "commandes", label: "Commandes", icon: ShoppingCart },
+  { key: "produits",  label: "Produits",  icon: Package },
+  { key: "vouchers",  label: "Vouchers",  icon: Ticket },
+  { key: "coupons",   label: "Coupons",   icon: Tag },
 ];
 
 function ProductTable({ products, showStock }: { products: Product[]; showStock: boolean }) {
@@ -123,6 +122,7 @@ export function BoutiqueHub({
   clients,
   coupons,
   stats,
+  prixHeure60,
 }: {
   physicalOrders: unknown[];
   voucherOrders: unknown[];
@@ -138,6 +138,7 @@ export function BoutiqueHub({
     vouchersDispos: number;
     coupons: number;
   };
+  prixHeure60?: number | null;
 }) {
   const router = useRouter();
   const tab = useSearchParams().get("tab") ?? "commandes";
@@ -150,10 +151,9 @@ export function BoutiqueHub({
   return (
     <div className="space-y-5">
       {/* Stats bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { label: "Commandes",       value: stats.commandes,       color: "text-blue-600" },
-          { label: "Vols achetés",    value: stats.volsAchetes,     color: "text-navy" },
           { label: "Produits actifs", value: stats.produitsActifs,  color: "text-green-600" },
           { label: "Vouchers dispos", value: stats.vouchersDispos,  color: "text-emerald-600" },
           { label: "Coupons",         value: stats.coupons,         color: "text-purple-600" },
@@ -199,16 +199,6 @@ export function BoutiqueHub({
           )
         )}
 
-        {tab === "vols-achetes" && (
-          voucherOrders.length === 0 ? (
-            <div className="bg-card rounded-xl border border-border p-12 text-center">
-              <p className="text-muted-foreground">Aucune commande de vol pour le moment.</p>
-            </div>
-          ) : (
-            <VoucherOrdersClient orders={voucherOrders as never} />
-          )
-        )}
-
         {tab === "produits" && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -237,7 +227,7 @@ export function BoutiqueHub({
         )}
 
         {tab === "vouchers" && (
-          <VouchersClient vouchers={vouchers as never} clients={clients as never} />
+          <VouchersClient vouchers={vouchers as never} clients={clients as never} prixHeure60={prixHeure60} />
         )}
 
         {tab === "coupons" && (

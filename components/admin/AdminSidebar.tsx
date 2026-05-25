@@ -6,10 +6,11 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import {
   LayoutDashboard, Users, MessageSquare, Settings, LogOut,
-  Menu, X, ExternalLink, Plane, ShoppingBag, Search, ChevronRight,
-  Layers, CalendarDays, CalendarCheck, Route, Clock,
+  Menu, X, ExternalLink, ShoppingBag, Search, ChevronRight,
+  CalendarCheck, Route, Clock,
   ShoppingCart, Package, Ticket, Tag,
 } from "lucide-react";
+import { PremiumPlaneIcon } from "@/components/admin/PremiumPlaneIcon";
 import { logout } from "@/lib/actions/auth";
 
 type NavItem  = { label: string; href: string; icon: React.ElementType; tab?: string };
@@ -20,11 +21,9 @@ type NavEntry = NavLink | NavGroup;
 const NAVIGATION: NavEntry[] = [
   { type: "link",  id: "dashboard", icon: LayoutDashboard, label: "Vue globale", href: "/admin", exact: true },
   {
-    type: "group", id: "vols", icon: Plane, label: "Activité Vols", activePrefix: "/admin/vols",
+    type: "group", id: "vols", icon: PremiumPlaneIcon, label: "Activité Vols", activePrefix: "/admin/vols",
     items: [
-      { label: "Pipeline",       href: "/admin/vols",                    icon: Layers,        tab: "pipeline" },
-      { label: "Calendrier",     href: "/admin/vols?tab=calendrier",     icon: CalendarDays,  tab: "calendrier" },
-      { label: "Réservations",   href: "/admin/vols?tab=reservations",   icon: CalendarCheck, tab: "reservations" },
+      { label: "Réservations",   href: "/admin/vols",                    icon: CalendarCheck, tab: "reservations" },
       { label: "Sur mesure",     href: "/admin/vols?tab=sur-mesure",     icon: Route,         tab: "sur-mesure" },
       { label: "Disponibilités", href: "/admin/vols?tab=disponibilites", icon: Clock,         tab: "disponibilites" },
     ],
@@ -32,11 +31,10 @@ const NAVIGATION: NavEntry[] = [
   {
     type: "group", id: "boutique", icon: ShoppingBag, label: "Boutique", activePrefix: "/admin/boutique",
     items: [
-      { label: "Commandes",    href: "/admin/boutique",                      icon: ShoppingCart, tab: "commandes" },
-      { label: "Vols achetés", href: "/admin/boutique?tab=vols-achetes",     icon: Plane,        tab: "vols-achetes" },
-      { label: "Produits",     href: "/admin/boutique?tab=produits",         icon: Package,      tab: "produits" },
-      { label: "Vouchers",     href: "/admin/boutique?tab=vouchers",         icon: Ticket,       tab: "vouchers" },
-      { label: "Coupons",      href: "/admin/boutique?tab=coupons",          icon: Tag,          tab: "coupons" },
+      { label: "Commandes", href: "/admin/boutique",              icon: ShoppingCart, tab: "commandes" },
+      { label: "Produits",  href: "/admin/boutique?tab=produits", icon: Package,      tab: "produits" },
+      { label: "Vouchers",  href: "/admin/boutique?tab=vouchers", icon: Ticket,       tab: "vouchers" },
+      { label: "Coupons",   href: "/admin/boutique?tab=coupons",  icon: Tag,          tab: "coupons" },
     ],
   },
   { type: "link", id: "clients",        icon: Users,         label: "Clients",        href: "/admin/clients" },
@@ -80,7 +78,7 @@ function NavContentInner({ onClose }: { onClose?: () => void }) {
     const base = groupPrefix; // e.g. "/admin/vols" or "/admin/boutique"
     if (pathname !== base) return false;
     const defaultTabs: Record<string, string> = {
-      "/admin/vols": "pipeline",
+      "/admin/vols": "reservations",
       "/admin/boutique": "commandes",
     };
     const activeTab = currentTab ?? defaultTabs[base] ?? "";
@@ -197,23 +195,24 @@ function NavContentInner({ onClose }: { onClose?: () => void }) {
 
       {/* External tools */}
       <div className="px-2.5 pt-2 pb-1 border-t border-border shrink-0">
-        <p className="px-3 mb-1 text-[9px] font-bold text-muted-foreground/40 uppercase tracking-[1.5px]">Outils</p>
-        <a
-          href="https://dashboard.stripe.com/acct_1LMvw92UU7RkMsk7/dashboard"
-          target="_blank" rel="noopener noreferrer"
-          className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs text-muted-foreground/60 hover:text-muted-foreground hover:bg-secondary transition-all"
-        >
-          <ExternalLink size={11} className="shrink-0" />
-          Stripe Dashboard
-        </a>
-        <a
-          href="https://supabase.com/dashboard/project"
-          target="_blank" rel="noopener noreferrer"
-          className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs text-muted-foreground/60 hover:text-muted-foreground hover:bg-secondary transition-all"
-        >
-          <ExternalLink size={11} className="shrink-0" />
-          Supabase
-        </a>
+        <p className="px-3 mb-1.5 text-[9px] font-bold text-muted-foreground/40 uppercase tracking-[1.5px]">Outils</p>
+        {[
+          { href: "https://app.netlify.com/teams/rom1dstbrg/projects", label: "Netlify" },
+          { href: "https://supabase.com/dashboard",                    label: "Supabase" },
+          { href: "https://resend.com",                                label: "Resend" },
+          { href: "https://dashboard.stripe.com/acct_1LMvw92UU7RkMsk7/dashboard", label: "Stripe" },
+        ].map(({ href, label }) => (
+          <a
+            key={href}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
+          >
+            <ExternalLink size={11} className="shrink-0 text-muted-foreground/50" />
+            {label}
+          </a>
+        ))}
       </div>
 
       {/* Logout */}

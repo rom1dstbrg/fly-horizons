@@ -321,14 +321,6 @@ export default function VolSurMesurePage() {
   async function handleSubmit() {
     setSubmitting(true); setSubmitError("");
     try {
-      const poiNames    = route.pois.map((p, i) => `${i + 1}. ${p.nom}`).join(" | ");
-      const styleLabel  = styleMode === "rapide" ? "Itinéraire direct" : "Parcours pittoresque";
-      const fullComment = [
-        `Lieux : ${poiNames}`,
-        `Style : ${styleLabel}`,
-        form.commentaire,
-      ].filter(Boolean).join("\n");
-
       const r = await fetch("/api/vol-sur-mesure/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -336,7 +328,7 @@ export default function VolSurMesurePage() {
           prenom: form.prenom, nom: form.nom, email: form.email, telephone: form.telephone,
           date: form.date, heure: form.heure,
           passagers: form.passagers, poids_total: form.poids_total,
-          commentaire: fullComment,
+          commentaire: form.commentaire.trim() || null,
           style_vol:    styleMode,
           waypoints:    route.pois.map(p => ({ lat: p.lat, lng: p.lng, nom: p.nom })),
           stopovers:    selectedStops.map(s => ({ icao: s.icao, nom: s.nom, taxe: s.taxe, lat: s.lat ?? null, lng: s.lng ?? null })),

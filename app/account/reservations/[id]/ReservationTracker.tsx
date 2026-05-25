@@ -107,8 +107,8 @@ const STANDARD_TIMELINE = [
   {
     key: "heure_confirmee",
     label: "Créneau horaire confirmé",
-    desc: (r: ReservationData) => r.heure_vol ?? "En attente",
-    doneDesc: (r: ReservationData) => r.heure_vol,
+    desc: (r: ReservationData) => formatHeure(r.heure_vol),
+    doneDesc: (r: ReservationData) => formatHeure(r.heure_vol),
   },
   {
     key: "vol_effectue",
@@ -155,8 +155,8 @@ const PERSO_TIMELINE = [
   {
     key: "heure_confirmee",
     label: "Créneau horaire confirmé",
-    desc: (r: ReservationData) => r.heure_vol ?? "En attente",
-    doneDesc: (r: ReservationData) => r.heure_vol,
+    desc: (r: ReservationData) => formatHeure(r.heure_vol),
+    doneDesc: (r: ReservationData) => formatHeure(r.heure_vol),
   },
   {
     key: "vol_effectue",
@@ -167,6 +167,12 @@ const PERSO_TIMELINE = [
 ];
 
 // ── Helper ─────────────────────────────────────────────────────────────────
+
+function formatHeure(h: string | null | undefined): string {
+  if (!h) return "En attente";
+  const [hh, mm] = h.split(":");
+  return `${hh}h${mm}`;
+}
 
 function formatDate(dateStr: string) {
   return new Date(dateStr + "T12:00:00Z").toLocaleDateString("fr-BE", {
@@ -304,7 +310,7 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
                 {resa.heure_vol && (
                   <span className="text-sm text-muted-foreground flex items-center gap-1">
                     <Calendar size={13} className="opacity-60" />
-                    {resa.heure_vol}
+                    {formatHeure(resa.heure_vol)}
                   </span>
                 )}
               </div>
@@ -487,19 +493,22 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
               )}
             </div>
 
-            <p className="text-sm text-foreground whitespace-pre-line leading-relaxed">
-              {resa.route}
-            </p>
+            {/* Texte de route dans une box — évite l'effet sandwich entre deux séparateurs */}
+            <div className="bg-[#f5f8ff] border border-[#dce8ff] rounded-xl px-4 py-3">
+              <p className="text-sm text-[#0b2238] whitespace-pre-line leading-relaxed">
+                {resa.route}
+              </p>
+            </div>
 
             {resa.route_feedback && (
-              <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-3">
+              <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl p-3">
                 <p className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider mb-1">Votre retour</p>
                 <p className="text-xs text-amber-700 leading-relaxed">{resa.route_feedback}</p>
               </div>
             )}
 
             {resa.route_status === "sent" && resa.route_token && (
-              <div className="mt-4 pt-4 border-t border-border">
+              <div className="mt-4">
                 <Link
                   href={`/vol/itineraire/${resa.route_token}`}
                   className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-[#113356] text-white rounded-xl text-xs font-bold hover:bg-[#0b2238] transition-colors"
@@ -510,7 +519,7 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
             )}
 
             {resa.route_status === "validated" && (
-              <div className="mt-4 pt-4 border-t border-border flex items-center gap-1.5 text-green-600 text-xs font-medium">
+              <div className="mt-4 flex items-center gap-1.5 text-green-600 text-xs font-medium">
                 <CheckCircle size={13} />
                 Vous avez validé cet itinéraire
               </div>

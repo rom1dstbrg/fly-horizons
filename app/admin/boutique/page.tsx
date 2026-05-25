@@ -15,6 +15,7 @@ export default async function BoutiquePage() {
     { data: allProducts },
     { data: rawClients },
     { data: coupons },
+    { data: crmSettings },
   ] = await Promise.all([
     db.from("orders").select("*, items:order_items(id, title, quantity, unit_price)").order("created_at", { ascending: false }),
     db.from("voucher_codes").select("id, code, order_id, product_title, duration_minutes, status"),
@@ -22,7 +23,12 @@ export default async function BoutiquePage() {
     db.from("products").select("*, images:product_images(*)").order("created_at", { ascending: false }),
     db.from("clients").select("id, prenom, nom, email").order("nom"),
     db.from("coupons").select("*").order("created_at", { ascending: false }),
+    db.from("crm_settings").select("key, value").in("key", ["prix_heure"]),
   ]);
+
+  const prixHeure60 = parseFloat(
+    (crmSettings ?? []).find((s: { key: string; value: string }) => s.key === "prix_heure")?.value ?? "0"
+  ) || null;
 
   // Group voucher codes by order
   const vouchersByOrder: Record<string, { id: string; code: string; product_title: string; duration_minutes: number; status: string }[]> = {};
@@ -110,6 +116,7 @@ export default async function BoutiquePage() {
           clients={clients}
           coupons={coupons ?? []}
           stats={stats}
+          prixHeure60={prixHeure60}
         />
       </Suspense>
     </div>

@@ -446,6 +446,7 @@ export async function updateReservationPersoFields(id: string, fields: {
   poids_total?: number | null;
   commentaire?: string | null;
   acompte?: number | null;
+  duree?: number;
 }) {
   try {
     await checkAdmin();
