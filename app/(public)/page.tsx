@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronDown, Gift, Route, Lock, Mail, Package, BadgeCheck, Clock, MapPin, Users, Sparkles, PlaneTakeoff } from "lucide-react";
+import { ChevronDown, Gift, Route, Lock, Mail, Package, BadgeCheck, Clock, PlaneTakeoff, Zap, ArrowRight, MousePointerClick } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { FeaturedProducts } from "@/components/shop/FeaturedProducts";
 import { PackCard } from "@/components/shop/PackCard";
@@ -210,107 +210,180 @@ export default async function HomePage() {
       )}
 
       {/* ═══ VOL SUR MESURE ═══ */}
-      <section id="vol-sur-mesure" className="bg-[#0b2238] py-20 overflow-hidden">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <section id="vol-sur-mesure" className="bg-[#0b2238] pt-20 pb-0 overflow-hidden relative">
 
-            {/* Texte */}
+        {/* Fond décoratif */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#F2B705]/5 rounded-full -translate-y-1/2 translate-x-1/4" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#113356]/60 rounded-full translate-y-1/2 -translate-x-1/4" />
+        </div>
+
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
+
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 bg-[#F2B705]/15 border border-[#F2B705]/30 text-[#F2B705] text-[10px] font-black tracking-[3px] uppercase px-3 py-1.5 rounded-full mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#F2B705] animate-pulse" />
+            Exclusivité Fly Horizons
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-12 items-center pb-12">
+
+            {/* Texte gauche */}
             <div>
-              <span className="inline-flex items-center gap-2 text-[#F2B705] text-xs font-bold tracking-[3px] uppercase mb-5">
-                <Sparkles size={11} className="fill-[#F2B705]" /> Exclusivité Fly Horizons
-              </span>
-              <h2 className="text-4xl sm:text-5xl font-extrabold text-white leading-tight mb-5">
-                Votre itinéraire,<br />
-                <span className="text-[#F2B705]">tracé par vous.</span>
+              <h2 className="text-4xl sm:text-5xl font-black text-white leading-[1.1] mb-4">
+                Volez où vous voulez.<br />
+                <span className="text-[#F2B705]">Payez ce que vous volez.</span>
               </h2>
-              <p className="text-white/60 text-base leading-relaxed mb-8 max-w-md">
-                Placez vos points sur la carte et l&apos;algorithme calcule votre route optimale en temps réel au départ de Charleroi.
+              <p className="text-white/60 text-sm leading-relaxed mb-7 max-w-md">
+                Pas de forfait à la minute. Tracez votre itinéraire sur la carte interactive
+                et voyez le prix s&apos;ajuster en direct, kilomètre par kilomètre.
               </p>
 
-              <div className="space-y-5 mb-10">
+              {/* Features horizontales */}
+              <div className="space-y-2.5 mb-8">
                 {[
                   {
-                    n: "01",
-                    title: "Tracez votre route",
-                    desc: "Cliquez sur la carte pour ajouter des étapes. Namur, Bruxelles, la côte, les Ardennes…",
+                    icon: <MousePointerClick size={14} />,
+                    title: "Itinéraire 100 % libre",
+                    desc: "Namur, Bruxelles, la côte, les Ardennes... n'importe quelle destination en Belgique et au-delà.",
                   },
                   {
-                    n: "02",
-                    title: "Visualisez votre vol en direct",
-                    desc: "L'algorithme optimise le parcours et calcule la durée instantanément.",
+                    icon: <Zap size={14} />,
+                    title: "Prix calculé en direct, au km",
+                    desc: "Vous voyez le montant évoluer avant de confirmer quoi que ce soit. Zéro surprise.",
                   },
                   {
-                    n: "03",
-                    title: "Recevez votre confirmation",
-                    desc: "Un email récapitulatif avec tous les détails de votre vol vous est envoyé.",
+                    icon: <PlaneTakeoff size={14} />,
+                    title: "Romain valide votre route sous 24 h",
+                    desc: "Il vérifie la faisabilité de l'espace aérien et vous confirme avec possibilité d'ajuster.",
                   },
-                ].map(({ n, title, desc }) => (
-                  <div key={n} className="flex gap-4">
-                    <div className="w-9 h-9 rounded-full bg-[#F2B705]/15 border border-[#F2B705]/30 flex items-center justify-center shrink-0 text-[#F2B705] text-xs font-black">
-                      {n}
+                ].map(({ icon, title, desc }) => (
+                  <div key={title} className="flex items-start gap-3.5 bg-white/6 border border-white/10 rounded-xl px-4 py-3.5">
+                    <div className="w-8 h-8 rounded-xl bg-[#F2B705]/15 border border-[#F2B705]/25 flex items-center justify-center text-[#F2B705] shrink-0 mt-0.5">
+                      {icon}
                     </div>
                     <div>
-                      <p className="text-white font-semibold text-sm">{title}</p>
-                      <p className="text-white/50 text-sm mt-0.5">{desc}</p>
+                      <p className="text-white text-xs font-semibold leading-snug">{title}</p>
+                      <p className="text-white/45 text-[11px] leading-relaxed mt-0.5">{desc}</p>
                     </div>
                   </div>
                 ))}
               </div>
 
-              <Link
-                href="/vol-sur-mesure"
-                className="inline-flex items-center gap-2 px-7 py-3.5 bg-[#F2B705] text-[#113356] rounded-xl font-bold text-sm hover:bg-[#e6a800] transition-all shadow-[0_6px_24px_rgba(242,183,5,.25)] hover:-translate-y-0.5"
-              >
-                <Route size={16} />
-                Créer mon vol sur mesure
-              </Link>
-            </div>
-
-            {/* Illustration carte */}
-            <div className="hidden lg:flex items-center justify-center">
-              <div className="relative w-full max-w-[420px]">
-                <div className="bg-[#0d2d47] border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
-                  <div className="absolute top-4 right-4 bg-[#F2B705] text-[#113356] text-[10px] font-black px-2.5 py-1 rounded-full z-10">
-                    LIVE
-                  </div>
-                  <div className="p-4 pb-0">
-                    <svg viewBox="0 0 420 240" xmlns="http://www.w3.org/2000/svg" className="w-full rounded-xl overflow-hidden">
-                      <rect width="420" height="240" fill="#1a3f5c" rx="10"/>
-                      <line x1="0" y1="80" x2="420" y2="80" stroke="#ffffff08" strokeWidth="1"/>
-                      <line x1="0" y1="160" x2="420" y2="160" stroke="#ffffff08" strokeWidth="1"/>
-                      <line x1="140" y1="0" x2="140" y2="240" stroke="#ffffff08" strokeWidth="1"/>
-                      <line x1="280" y1="0" x2="280" y2="240" stroke="#ffffff08" strokeWidth="1"/>
-                      <polyline points="210,120 100,75 65,155 175,200 310,170 360,85 210,120"
-                        stroke="#F2B705" strokeWidth="2.5" fill="none" strokeDasharray="9,5" strokeLinecap="round" opacity="0.9"/>
-                      <circle cx="210" cy="120" r="12" fill="#113356" stroke="#F2B705" strokeWidth="2.5"/>
-                      <text x="210" y="125" textAnchor="middle" fontSize="10" fill="#F2B705" fontFamily="sans-serif">✈</text>
-                      {([
-                        [100, 75], [65, 155], [175, 200], [310, 170], [360, 85]
-                      ] as [number, number][]).map(([cx, cy], i) => (
-                        <g key={i}>
-                          <circle cx={cx} cy={cy} r="9" fill="#F2B705" stroke="white" strokeWidth="1.5"/>
-                          <text x={cx} y={cy + 4} textAnchor="middle" fontSize="8" fill="#113356" fontFamily="sans-serif" fontWeight="bold">{i + 1}</text>
-                        </g>
-                      ))}
-                    </svg>
-                  </div>
-                  <div className="flex divide-x divide-white/10 border-t border-white/10">
-                    {[
-                      { label: "Distance", value: "312 km" },
-                      { label: "Durée", value: "~101 min" },
-                      { label: "Étapes", value: "5 points" },
-                    ].map(({ label, value }) => (
-                      <div key={label} className="flex-1 px-4 py-3 text-center">
-                        <p className="text-[10px] text-white/40 uppercase tracking-wider">{label}</p>
-                        <p className="text-sm font-bold text-white mt-0.5">{value}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              {/* CTA */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link
+                  href="/vol-sur-mesure"
+                  className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 bg-[#F2B705] text-[#113356] rounded-xl text-sm font-black hover:bg-[#e6a800] transition-colors shadow-lg shadow-[#F2B705]/20"
+                >
+                  <Route size={16} />
+                  Créer mon vol sur mesure
+                  <ArrowRight size={15} />
+                </Link>
+                <p className="flex items-center gap-1.5 text-white/35 text-xs self-center">
+                  <Clock size={12} />
+                  Aucun paiement immédiat
+                </p>
               </div>
             </div>
 
+            {/* Visuel droite — aperçu devis interactif */}
+            <div className="hidden lg:flex flex-col gap-3">
+
+              {/* Carte principale */}
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+
+                {/* En-tête carte */}
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest">Aperçu de route</p>
+                  <div className="flex items-center gap-1.5 bg-black/40 border border-white/10 rounded-full px-2 py-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                    <span className="text-white/60 text-[9px] font-bold tracking-wider">EN DIRECT</span>
+                  </div>
+                </div>
+
+                {/* Miniature carte */}
+                <div className="relative rounded-xl overflow-hidden mb-4" style={{ height: 190 }}>
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#0d3a6e] via-[#0b2238] to-[#061624]" />
+                  <svg className="absolute inset-0 w-full h-full opacity-10" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <pattern id="grid-vsm" width="40" height="40" patternUnits="userSpaceOnUse">
+                        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#F2B705" strokeWidth="0.5"/>
+                      </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#grid-vsm)" />
+                  </svg>
+                  <svg className="absolute inset-0 w-full h-full" viewBox="0 0 380 190" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M 62,150 L 138,46 L 286,74 L 264,146 Z" fill="none" stroke="#F2B705" strokeWidth="4" strokeLinejoin="round" opacity="0.12" strokeLinecap="round"/>
+                    <path d="M 62,150 L 138,46 L 286,74 L 264,146 Z" fill="none" stroke="#F2B705" strokeWidth="1.5" strokeDasharray="8 4" strokeLinejoin="round" opacity="0.9" strokeLinecap="round"/>
+                    <polygon points="0,-3 6,0 0,3" fill="#F2B705" opacity="0.7" transform="translate(102,96) rotate(-65)"/>
+                    <polygon points="0,-3 6,0 0,3" fill="#F2B705" opacity="0.7" transform="translate(218,59) rotate(8)"/>
+                    <polygon points="0,-3 6,0 0,3" fill="#F2B705" opacity="0.7" transform="translate(274,116) rotate(97)"/>
+                    <polygon points="0,-3 6,0 0,3" fill="#F2B705" opacity="0.7" transform="translate(148,153) rotate(192)"/>
+                    <circle cx="138" cy="46" r="8" fill="#F2B705"/>
+                    <text x="138" y="50" textAnchor="middle" fill="#113356" fontSize="7.5" fontWeight="800">1</text>
+                    <rect x="149" y="39" width="42" height="12" rx="2.5" fill="#0b2238" opacity="0.92"/>
+                    <text x="170" y="48.5" textAnchor="middle" fill="#F2B705" fontSize="7" fontWeight="700">Namur</text>
+                    <circle cx="286" cy="74" r="8" fill="#F2B705"/>
+                    <text x="286" y="78" textAnchor="middle" fill="#113356" fontSize="7.5" fontWeight="800">2</text>
+                    <rect x="297" y="67" width="54" height="12" rx="2.5" fill="#0b2238" opacity="0.92"/>
+                    <text x="324" y="76.5" textAnchor="middle" fill="#F2B705" fontSize="7" fontWeight="700">Bruxelles</text>
+                    <circle cx="264" cy="146" r="8" fill="#F2B705"/>
+                    <text x="264" y="150" textAnchor="middle" fill="#113356" fontSize="7.5" fontWeight="800">3</text>
+                    <rect x="275" y="139" width="36" height="12" rx="2.5" fill="#0b2238" opacity="0.92"/>
+                    <text x="293" y="148.5" textAnchor="middle" fill="#F2B705" fontSize="7" fontWeight="700">Wavre</text>
+                    <circle cx="62" cy="150" r="11" fill="#113356" stroke="#F2B705" strokeWidth="2.5"/>
+                    <text x="62" y="154" textAnchor="middle" fill="#F2B705" fontSize="9">✈</text>
+                    <rect x="76" y="142" width="80" height="12" rx="2.5" fill="#0b2238" opacity="0.92"/>
+                    <text x="116" y="151.5" textAnchor="middle" fill="#F2B705" fontSize="7" fontWeight="700">CRL · Charleroi</text>
+                  </svg>
+                </div>
+
+                {/* Tableau de segments */}
+                <div className="space-y-1.5 mb-3">
+                  {[
+                    { label: "CRL → Namur", km: "86 km", dur: "28 min" },
+                    { label: "+ Bruxelles", km: "98 km", dur: "+32 min" },
+                    { label: "+ Wavre → CRL", km: "45 km", dur: "+34 min" },
+                  ].map(({ label, km, dur }) => (
+                    <div key={label} className="flex items-center justify-between py-1 border-b border-white/8 last:border-0">
+                      <div className="flex items-center gap-2">
+                        <span className="w-1 h-1 rounded-full bg-[#F2B705]/50 shrink-0" />
+                        <span className="text-white/50 text-[10.5px]">{label}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-white/30 text-[9.5px]">{km}</span>
+                        <span className="text-white/45 text-[10.5px] font-medium w-14 text-right">{dur}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Total */}
+                <div className="flex items-center justify-between pt-2 border-t border-white/12">
+                  <div>
+                    <p className="text-white/35 text-[10px] leading-tight">229 km au total</p>
+                    <p className="text-white/35 text-[10px] leading-tight">3 passagers</p>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-[#F2B705]/10 border border-[#F2B705]/20 rounded-lg px-2.5 py-1.5">
+                    <Zap size={10} className="text-[#F2B705]" />
+                    <span className="text-[#F2B705] text-[10px] font-bold">~94 min calculées</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <p className="text-center text-white/20 text-[9px]">Aperçu illustratif — les valeurs sont calculées sur votre vraie route</p>
+            </div>
+
           </div>
+        </div>
+
+        {/* Vague de transition */}
+        <div className="relative h-12 overflow-hidden">
+          <svg viewBox="0 0 1440 48" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,48 L0,24 Q360,0 720,24 Q1080,48 1440,24 L1440,48 Z" fill="#f5f5f7"/>
+          </svg>
         </div>
       </section>
 

@@ -73,6 +73,9 @@ export default function ContactPage() {
                 <div>
                   <p className="text-xs text-muted-foreground mb-0.5">Délai de réponse</p>
                   <p className="text-sm font-semibold text-foreground">Sous 48 h ouvrables</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                    Chaque message est lu personnellement et reçoit une vraie réponse, pas une réponse automatique.
+                  </p>
                 </div>
               </div>
             </div>

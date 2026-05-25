@@ -23,8 +23,10 @@ import {
   CreditCard,
   CheckCircle,
   LayoutDashboard,
+  RotateCcw,
 } from "lucide-react";
 import { logout, updateProfile, changePassword } from "@/lib/actions/auth";
+import { generateClientRescheduleToken } from "@/lib/actions/reservations";
 import { AddressBook } from "@/components/account/AddressBook";
 import { formatPrice } from "@/lib/utils";
 import { formatDuration } from "@/lib/vouchers";
@@ -195,6 +197,9 @@ export function AccountClient({
   const [showPw, setShowPw] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
+  // Reschedule
+  const [reschedulingId, setReschedulingId] = useState<string | null>(null);
+
   // Derived
   const allVouchers = Object.values(vouchersByOrder).flat();
   const activeVouchers = allVouchers.filter((v) => v.status === "unused").length;
@@ -268,6 +273,17 @@ export function AccountClient({
     } else {
       toast.success("Mot de passe modifié avec succès");
       setPwForm({ password: "", confirm: "" });
+    }
+  }
+
+  async function handleReschedule(reservationId: string) {
+    setReschedulingId(reservationId);
+    const result = await generateClientRescheduleToken(reservationId);
+    setReschedulingId(null);
+    if (result.error) {
+      toast.error(result.error);
+    } else if (result.token) {
+      router.push(`/reservation/reporter/${result.token}`);
     }
   }
 
@@ -664,15 +680,36 @@ export function AccountClient({
                           </div>
                         )}
 
-                        {/* Lien suivi */}
-                        <div className={`flex justify-end ${hasPaymentLink || (isPaid && resa.acompte != null) ? "mt-2" : "pt-3 border-t border-border mt-0"}`}>
-                          <Link
-                            href={`/account/reservations/${resa.id}`}
-                            className="text-xs font-medium text-[#113356] hover:text-primary transition-colors"
-                          >
-                            Suivre la réservation →
-                          </Link>
-                        </div>
+                        {/* Lien suivi + reporter */}
+                        {(() => {
+                          const canReschedule =
+                            !["annulee", "vol_effectue", "payment_pending"].includes(resa.statut) &&
+                            (new Date(resa.date_vol + "T23:59:59Z").getTime() - Date.now()) > 48 * 60 * 60 * 1000;
+                          const hasBorder = hasPaymentLink || (isPaid && resa.acompte != null);
+                          return (
+                            <div className={`flex items-center justify-between gap-3 flex-wrap ${hasBorder ? "mt-2" : "pt-3 border-t border-border mt-0"}`}>
+                              {canReschedule ? (
+                                <button
+                                  type="button"
+                                  onClick={() => handleReschedule(resa.id)}
+                                  disabled={reschedulingId === resa.id}
+                                  className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                                >
+                                  {reschedulingId === resa.id
+                                    ? <Loader2 size={11} className="animate-spin" />
+                                    : <RotateCcw size={11} />}
+                                  Reporter mon vol
+                                </button>
+                              ) : <div />}
+                              <Link
+                                href={`/account/reservations/${resa.id}`}
+                                className="text-xs font-medium text-[#113356] hover:text-primary transition-colors"
+                              >
+                                Suivre la réservation →
+                              </Link>
+                            </div>
+                          );
+                        })()}
                       </div>
                     );
                   })}

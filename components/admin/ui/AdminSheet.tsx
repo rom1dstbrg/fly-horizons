@@ -12,6 +12,7 @@ interface AdminSheetProps {
   children: React.ReactNode;
   footer?: React.ReactNode;
   width?: string;
+  bodyClassName?: string;
 }
 
 export function AdminSheet({
@@ -22,6 +23,7 @@ export function AdminSheet({
   children,
   footer,
   width = "w-[480px]",
+  bodyClassName,
 }: AdminSheetProps) {
   // Fermeture au clavier
   useEffect(() => {
@@ -58,6 +60,7 @@ export function AdminSheet({
               width,
               "max-w-full bg-card border-l border-border",
               "z-50 flex flex-col shadow-2xl",
+              "transition-[width] duration-200 ease-in-out",
             ].join(" ")}
           >
             {/* Header */}
@@ -79,7 +82,7 @@ export function AdminSheet({
             </div>
 
             {/* Body */}
-            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+            <div className={bodyClassName ?? "flex-1 overflow-y-auto px-6 py-5 space-y-5"}>
               {children}
             </div>
 

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import {
-  Clock, Users, MapPin, Route,
-  Zap, Shuffle, PlaneTakeoff, ArrowRight, MousePointerClick,
+  Clock, Route, Zap, PlaneTakeoff, ArrowRight, MousePointerClick,
+  Check, EuroIcon, Users, MapPin,
 } from "lucide-react";
 import { PackCard } from "@/components/shop/PackCard";
 
@@ -54,38 +54,81 @@ export default async function NosOffresPage() {
             Exclusivité Fly Horizons
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-12 items-end pb-12">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start pb-12">
 
             {/* Texte gauche */}
             <div>
               <h1 className="text-4xl sm:text-5xl font-black text-white leading-[1.1] mb-4">
-                Votre route.<br />
-                <span className="text-[#F2B705]">Votre prix.</span><br />
-                En temps réel.
+                Vous choisissez<br />
+                où vous allez.<br />
+                <span className="text-[#F2B705]">On calcule le reste.</span>
               </h1>
-              <p className="text-white/60 text-sm leading-relaxed mb-8 max-w-md">
-                Tracez votre itinéraire directement sur la carte : le prix s&apos;ajuste
-                instantanément à la distance. Aucune formule fixe, vous payez exactement
-                ce que vous volez.
+              <p className="text-white/60 text-sm leading-relaxed mb-6 max-w-md">
+                Contrairement aux vols à durée fixe, ici c&apos;est votre itinéraire qui
+                détermine le prix. Tracez votre route sur la carte : durée et tarif s&apos;affichent
+                instantanément, au kilomètre près.
               </p>
 
-              {/* Features */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
+              {/* Différenciation vs packs */}
+              <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 mb-7 flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-[#F2B705]/20 border border-[#F2B705]/30 flex items-center justify-center shrink-0 mt-0.5">
+                  <Zap size={11} className="text-[#F2B705]" />
+                </div>
+                <p className="text-white/70 text-xs leading-relaxed">
+                  <span className="text-white font-semibold">Pas de minuterie. Pas de formule fixe.</span>{" "}
+                  Vous volez 52 minutes ? Vous payez 52 minutes. L&apos;algorithme optimise
+                  automatiquement la route pour que chaque km compte.
+                </p>
+              </div>
+
+              {/* 3 étapes */}
+              <div className="space-y-3 mb-8">
                 {[
-                  { icon: <MousePointerClick size={14} />, title: "Carte interactive", desc: "Cliquez pour placer vos destinations" },
-                  { icon: <Shuffle size={14} />, title: "Route optimisée", desc: "Algorithme qui réduit la distance auto" },
-                  { icon: <Zap size={14} />, title: "Prix instantané", desc: "Calculé au km, sans surprise" },
-                  { icon: <PlaneTakeoff size={14} />, title: "Escales possibles", desc: "Namur, Le Touquet, Middelzeeland…" },
-                ].map(({ icon, title, desc }) => (
-                  <div key={title} className="flex items-start gap-3 bg-white/6 border border-white/10 rounded-xl px-3.5 py-3">
-                    <div className="w-7 h-7 rounded-lg bg-[#F2B705]/15 border border-[#F2B705]/25 flex items-center justify-center text-[#F2B705] shrink-0 mt-0.5">
-                      {icon}
+                  {
+                    n: "1",
+                    icon: <MousePointerClick size={13} />,
+                    title: "Cliquez sur la carte pour placer vos destinations",
+                    desc: "Namur, Bruxelles, la côte, les Ardennes, un château, une ferme… n&apos;importe où en Belgique et au-delà.",
+                  },
+                  {
+                    n: "2",
+                    icon: <Zap size={13} />,
+                    title: "Durée et prix s'affichent en temps réel",
+                    desc: "L&apos;algorithme calcule la route optimale à chaque ajout. Vous voyez le coût évoluer avant de confirmer quoi que ce soit.",
+                  },
+                  {
+                    n: "3",
+                    icon: <PlaneTakeoff size={13} />,
+                    title: "Romain valide votre itinéraire sous 24 h",
+                    desc: "Il vérifie la faisabilité (espaces aériens, restrictions) et vous envoie la route définitive avec possibilité d&apos;ajustement.",
+                  },
+                ].map(({ n, icon, title, desc }) => (
+                  <div key={n} className="flex gap-3.5">
+                    <div className="flex flex-col items-center shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-[#F2B705]/15 border border-[#F2B705]/30 flex items-center justify-center text-[#F2B705]">
+                        {icon}
+                      </div>
+                      {n !== "3" && <div className="w-px flex-1 bg-white/10 mt-1.5 min-h-[20px]" />}
                     </div>
-                    <div>
-                      <p className="text-white text-xs font-semibold leading-snug">{title}</p>
-                      <p className="text-white/45 text-[11px] leading-relaxed mt-0.5">{desc}</p>
+                    <div className="pb-3">
+                      <p className="text-white text-sm font-semibold leading-snug mb-0.5">{title}</p>
+                      <p className="text-white/45 text-[11px] leading-relaxed" dangerouslySetInnerHTML={{ __html: desc }} />
                     </div>
                   </div>
+                ))}
+              </div>
+
+              {/* Tags */}
+              <div className="flex flex-wrap gap-2 mb-7">
+                {[
+                  { icon: <Users size={10} />, label: "Jusqu'à 3 passagers" },
+                  { icon: <EuroIcon size={10} />, label: "Prix au km, sans surprise" },
+                  { icon: <PlaneTakeoff size={10} />, label: "Escales possibles" },
+                  { icon: <Clock size={10} />, label: "Annulation gratuite 48 h avant" },
+                ].map(({ icon, label }) => (
+                  <span key={label} className="inline-flex items-center gap-1.5 bg-white/6 border border-white/10 text-white/60 text-[11px] font-medium px-2.5 py-1 rounded-full">
+                    {icon}{label}
+                  </span>
                 ))}
               </div>
 
@@ -106,71 +149,97 @@ export default async function NosOffresPage() {
               </div>
             </div>
 
-            {/* Visuel droite — aperçu stylisé */}
-            <div className="hidden lg:block relative self-end">
-              <div className="relative bg-white/5 border border-white/10 rounded-2xl overflow-hidden" style={{ height: 320 }}>
+            {/* Visuel droite — aperçu carte interactive */}
+            <div className="hidden lg:flex flex-col gap-3 self-start pt-2">
+
+              {/* Fenêtre carte */}
+              <div className="relative bg-white/5 border border-white/10 rounded-2xl overflow-hidden" style={{ height: 340 }}>
 
                 {/* Fond carte */}
                 <div className="absolute inset-0 bg-gradient-to-br from-[#0d3a6e] via-[#0b2238] to-[#061624]" />
 
-                {/* Grille décorative */}
+                {/* Grille */}
                 <svg className="absolute inset-0 w-full h-full opacity-10" xmlns="http://www.w3.org/2000/svg">
                   <defs>
-                    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <pattern id="grid-no" width="40" height="40" patternUnits="userSpaceOnUse">
                       <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#F2B705" strokeWidth="0.5"/>
                     </pattern>
                   </defs>
-                  <rect width="100%" height="100%" fill="url(#grid)" />
+                  <rect width="100%" height="100%" fill="url(#grid-no)" />
                 </svg>
 
-                {/* Circuit — boucle fermée avec flèche directionnelle */}
-                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 320" xmlns="http://www.w3.org/2000/svg">
-                  {/* Ombre de la route */}
-                  <path d="M 80,252 L 170,78 L 318,112 L 295,248 Z" fill="none" stroke="#F2B705" strokeWidth="5" strokeLinejoin="round" opacity="0.15" strokeLinecap="round"/>
-                  {/* Route principale */}
-                  <path d="M 80,252 L 170,78 L 318,112 L 295,248 Z" fill="none" stroke="#F2B705" strokeWidth="2" strokeDasharray="10 5" strokeLinejoin="round" opacity="0.9" strokeLinecap="round"/>
+                {/* Route */}
+                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 340" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M 75,270 L 155,90 L 310,125 L 285,265 Z" fill="none" stroke="#F2B705" strokeWidth="5" strokeLinejoin="round" opacity="0.12" strokeLinecap="round"/>
+                  <path d="M 75,270 L 155,90 L 310,125 L 285,265 Z" fill="none" stroke="#F2B705" strokeWidth="2" strokeDasharray="10 5" strokeLinejoin="round" opacity="0.85" strokeLinecap="round"/>
+                  <polygon points="0,-4 7,0 0,4" fill="#F2B705" opacity="0.65" transform="translate(118,177) rotate(-64)"/>
+                  <polygon points="0,-4 7,0 0,4" fill="#F2B705" opacity="0.65" transform="translate(240,107) rotate(8)"/>
+                  <polygon points="0,-4 7,0 0,4" fill="#F2B705" opacity="0.65" transform="translate(296,212) rotate(94)"/>
+                  <polygon points="0,-4 7,0 0,4" fill="#F2B705" opacity="0.65" transform="translate(168,272) rotate(188)"/>
 
-                  {/* Flèches directionnelles sur la route (sens du vol) */}
-                  <polygon points="0,-4 7,0 0,4" fill="#F2B705" opacity="0.7" transform="translate(128,162) rotate(-64)"/>
-                  <polygon points="0,-4 7,0 0,4" fill="#F2B705" opacity="0.7" transform="translate(248,95) rotate(6)"/>
-                  <polygon points="0,-4 7,0 0,4" fill="#F2B705" opacity="0.7" transform="translate(305,200) rotate(96)"/>
-                  <polygon points="0,-4 7,0 0,4" fill="#F2B705" opacity="0.7" transform="translate(175,256) rotate(192)"/>
+                  {/* Waypoint 1 — Namur */}
+                  <circle cx="155" cy="90" r="10" fill="#F2B705"/>
+                  <text x="155" y="94" textAnchor="middle" fill="#113356" fontSize="9" fontWeight="800">1</text>
+                  <rect x="168" y="82" width="46" height="14" rx="3" fill="#0b2238" opacity="0.9"/>
+                  <text x="191" y="92" textAnchor="middle" fill="#F2B705" fontSize="8" fontWeight="700">Namur</text>
 
-                  {/* Waypoints intermédiaires */}
-                  <circle cx="170" cy="78" r="9" fill="#F2B705"/>
-                  <text x="170" y="82" textAnchor="middle" fill="#113356" fontSize="9" fontWeight="800">1</text>
+                  {/* Waypoint 2 — Bruxelles */}
+                  <circle cx="310" cy="125" r="10" fill="#F2B705"/>
+                  <text x="310" y="129" textAnchor="middle" fill="#113356" fontSize="9" fontWeight="800">2</text>
+                  <rect x="323" y="117" width="56" height="14" rx="3" fill="#0b2238" opacity="0.9"/>
+                  <text x="351" y="127" textAnchor="middle" fill="#F2B705" fontSize="8" fontWeight="700">Bruxelles</text>
 
-                  <circle cx="318" cy="112" r="9" fill="#F2B705"/>
-                  <text x="318" y="116" textAnchor="middle" fill="#113356" fontSize="9" fontWeight="800">2</text>
+                  {/* Waypoint 3 — Wavre */}
+                  <circle cx="285" cy="265" r="10" fill="#F2B705"/>
+                  <text x="285" y="269" textAnchor="middle" fill="#113356" fontSize="9" fontWeight="800">3</text>
+                  <rect x="298" y="257" width="38" height="14" rx="3" fill="#0b2238" opacity="0.9"/>
+                  <text x="317" y="267" textAnchor="middle" fill="#F2B705" fontSize="8" fontWeight="700">Wavre</text>
 
-                  <circle cx="295" cy="248" r="9" fill="#F2B705"/>
-                  <text x="295" y="252" textAnchor="middle" fill="#113356" fontSize="9" fontWeight="800">3</text>
+                  {/* CRL */}
+                  <circle cx="75" cy="270" r="14" fill="#113356" stroke="#F2B705" strokeWidth="3"/>
+                  <text x="75" y="274" textAnchor="middle" fill="#F2B705" fontSize="12">✈</text>
+                  <rect x="92" y="259" width="90" height="13" rx="3" fill="#0b2238" opacity="0.9"/>
+                  <text x="137" y="269" textAnchor="middle" fill="#F2B705" fontSize="8" fontWeight="700">CRL · Charleroi</text>
+                  <text x="137" y="279" textAnchor="middle" fill="white" fontSize="7" opacity="0.45">Départ &amp; Retour</text>
 
-                  {/* Point de départ/arrivée CRL */}
-                  <circle cx="80" cy="252" r="13" fill="#113356" stroke="#F2B705" strokeWidth="3"/>
-                  {/* Icône avion miniature */}
-                  <text x="80" y="256" textAnchor="middle" fill="#F2B705" fontSize="11">✈</text>
-
-                  {/* Label CRL */}
-                  <rect x="96" y="240" width="96" height="16" rx="3" fill="#0b2238" opacity="0.85"/>
-                  <text x="144" y="252" textAnchor="middle" fill="#F2B705" fontSize="9" fontWeight="700">CRL · Charleroi-Sud</text>
-                  <text x="144" y="263" textAnchor="middle" fill="white" fontSize="7.5" opacity="0.5">Départ &amp; Retour</text>
+                  {/* Curseur clique */}
+                  <circle cx="310" cy="125" r="18" fill="none" stroke="#F2B705" strokeWidth="1.5" opacity="0.35"/>
+                  <circle cx="310" cy="125" r="25" fill="none" stroke="#F2B705" strokeWidth="0.8" opacity="0.15"/>
                 </svg>
 
                 {/* Pill durée */}
-                <div className="absolute top-4 left-4 bg-[#0b2238]/90 border border-white/10 rounded-xl px-3 py-2 backdrop-blur-sm">
-                  <p className="text-white/50 text-[10px] font-bold uppercase tracking-widest">Durée estimée</p>
-                  <p className="text-white text-xl font-black leading-none">~94 <span className="text-sm font-semibold text-white/60">min</span></p>
+                <div className="absolute top-3 left-3 bg-[#0b2238]/90 border border-white/10 rounded-xl px-3 py-2 backdrop-blur-sm">
+                  <p className="text-white/45 text-[9px] font-bold uppercase tracking-widest leading-none mb-1">Durée estimée</p>
+                  <p className="text-white text-lg font-black leading-none">~94 <span className="text-xs font-semibold text-white/55">min</span></p>
                 </div>
 
                 {/* Pill prix */}
-                <div className="absolute top-4 right-4 bg-[#F2B705] rounded-xl px-3 py-2">
-                  <p className="text-[#113356] text-[10px] font-bold uppercase tracking-widest">Prix estimé</p>
-                  <p className="text-[#113356] text-xl font-black leading-none">397 <span className="text-sm font-semibold opacity-70">€</span></p>
+                <div className="absolute top-3 right-3 bg-[#F2B705] rounded-xl px-3 py-2">
+                  <p className="text-[#113356] text-[9px] font-bold uppercase tracking-widest leading-none mb-1">Prix estimé</p>
+                  <p className="text-[#113356] text-lg font-black leading-none">397 <span className="text-xs font-semibold opacity-65">€</span></p>
                 </div>
 
+                {/* Badge LIVE */}
+                <div className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-black/50 border border-white/10 rounded-full px-2.5 py-1 backdrop-blur-sm">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                  <span className="text-white/70 text-[9px] font-bold tracking-wider">CALCUL EN DIRECT</span>
+                </div>
               </div>
-              <p className="text-center text-white/25 text-[10px] mt-2">Aperçu : les valeurs sont calculées en temps réel sur votre route</p>
+
+              {/* Légende étapes */}
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { icon: <MousePointerClick size={11} />, label: "Cliquez pour ajouter" },
+                  { icon: <Zap size={11} />, label: "Prix mis à jour" },
+                  { icon: <Check size={11} />, label: "Route optimisée" },
+                ].map(({ icon, label }) => (
+                  <div key={label} className="flex flex-col items-center gap-1.5 bg-white/4 border border-white/8 rounded-xl py-2.5 px-2">
+                    <span className="text-[#F2B705]">{icon}</span>
+                    <p className="text-white/45 text-[9px] text-center leading-tight">{label}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-center text-white/20 text-[9px]">Aperçu illustratif — les valeurs sont calculées sur votre vraie route</p>
             </div>
 
           </div>

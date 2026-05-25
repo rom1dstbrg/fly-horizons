@@ -18,8 +18,11 @@ import {
   CheckCircle,
   Navigation,
   Map,
+  RotateCcw,
+  Loader2,
 } from "lucide-react";
 import { formatDuration } from "@/lib/vouchers";
+import { generateClientRescheduleToken } from "@/lib/actions/reservations";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -182,6 +185,7 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
   const [liveStatus, setLiveStatus] = useState<"connecting" | "live" | "offline">("connecting");
   const [flashId, setFlashId] = useState<string | null>(null);
   const prevStatut = useRef(initial.statut);
+  const [rescheduling, setRescheduling] = useState(false);
 
   // Sync when server re-renders (router.refresh)
   useEffect(() => {
@@ -229,6 +233,21 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
       clearInterval(interval);
     };
   }, [resa.id, router]);
+
+  async function handleReschedule() {
+    setRescheduling(true);
+    const result = await generateClientRescheduleToken(resa.id);
+    setRescheduling(false);
+    if ("error" in result && result.error) {
+      alert(result.error);
+    } else if ("token" in result && result.token) {
+      router.push(`/reservation/reporter/${result.token}`);
+    }
+  }
+
+  const canReschedule =
+    !["annulee", "vol_effectue", "payment_pending"].includes(resa.statut) &&
+    (new Date(resa.date_vol + "T23:59:59Z").getTime() - Date.now()) > 48 * 60 * 60 * 1000;
 
   const isPerso = resa.type_resa === "perso";
   const isCancelled = resa.statut === "annulee";
@@ -594,6 +613,28 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
             >
               Voir →
             </Link>
+          </div>
+        )}
+
+        {/* Reporter mon vol */}
+        {canReschedule && (
+          <div className="card-premium p-5 mt-5 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0">
+              <RotateCcw size={16} className="text-amber-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground">Besoin de reporter votre vol ?</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Vous pouvez choisir une nouvelle date jusqu&apos;à 48 h avant le décollage, sans frais.</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleReschedule}
+              disabled={rescheduling}
+              className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500 text-white text-xs font-bold hover:bg-amber-600 transition-colors disabled:opacity-50"
+            >
+              {rescheduling ? <Loader2 size={12} className="animate-spin" /> : <RotateCcw size={12} />}
+              Reporter
+            </button>
           </div>
         )}
 

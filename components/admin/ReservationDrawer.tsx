@@ -6,7 +6,7 @@ import {
   X, User, Phone, Mail, Calendar, Clock, Users, Weight,
   Ticket, CreditCard, CheckCircle2, XCircle, ChevronRight,
   Loader2, Send, Pencil, Check, MapPin, RefreshCw, AlertTriangle,
-  Copy, ExternalLink,
+  Copy, ExternalLink, Sparkles, RotateCcw,
 } from "lucide-react";
 import {
   updateStatutReservation,
@@ -17,6 +17,7 @@ import {
   resendRoute,
   sendCustomEmail,
   resendPaymentLinkAdmin,
+  sendRescheduleInvite,
 } from "@/lib/actions/reservations";
 import { AdminBadge, STATUT_RESA, STATUT_PERSO } from "@/components/admin/ui/AdminBadge";
 
@@ -49,6 +50,69 @@ export interface DrawerReservation {
   } | null;
 }
 
+
+// ── Templates email prêts à l'emploi ──────────────────────────────────────────
+type EmailTemplate = { label: string; subject: (dateStr: string) => string; body: (prenom: string, dateStr: string) => string };
+const EMAIL_TEMPLATES: EmailTemplate[] = [
+  {
+    label: "☁️ Report météo",
+    subject: (dateStr) => `Fly Horizons — Votre vol du ${dateStr}`,
+    body: (prenom, dateStr) =>
+`Bonjour ${prenom},
+
+J'ai suivi les prévisions pour le ${dateStr} et les conditions ne permettent malheureusement pas de voler en sécurité. Je préfère reporter plutôt que de vous faire prendre des risques ou de vous faire passer une mauvaise expérience.
+
+Votre acompte est bien conservé, aucun frais ne vous est facturé.
+
+Je vous contacterai dès qu'une nouvelle date se libère. N'hésitez pas à me donner vos prochaines disponibilités pour que je puisse vous proposer quelque chose rapidement.
+
+À très vite,
+Romain`,
+  },
+  {
+    label: "✈️ Vol maintenu",
+    subject: (dateStr) => `Fly Horizons — Vol confirmé pour le ${dateStr}`,
+    body: (prenom, dateStr) =>
+`Bonjour ${prenom},
+
+Bonne nouvelle, j'ai vérifié la météo pour le ${dateStr} et tout est au vert. Le vol est bien maintenu comme prévu.
+
+Rendez-vous à l'aéroport de Charleroi (EBCI) 15 minutes avant l'heure convenue. N'hésitez pas si vous avez une question avant votre arrivée.
+
+À très bientôt,
+Romain`,
+  },
+  {
+    label: "🗺️ Zone restreinte",
+    subject: (dateStr) => `Fly Horizons — Votre itinéraire du ${dateStr}`,
+    body: (prenom) =>
+`Bonjour ${prenom},
+
+J'ai analysé votre itinéraire en détail. Une partie de la route que vous m'avez demandée traverse une zone d'espace aérien contrôlé que je ne peux pas survoler sans autorisation spéciale pour ce type de vol.
+
+Je vous propose de contourner cette zone par [à compléter], ce qui donnera un résultat très similaire. Le reste de votre itinéraire est tout à fait réalisable.
+
+Dites-moi si cette alternative vous convient ou si vous préférez qu'on en parle, je reste disponible pour ajuster.
+
+À bientôt,
+Romain`,
+  },
+  {
+    label: "⏰ Rappel J-1",
+    subject: () => `Fly Horizons — Votre vol est demain`,
+    body: (prenom) =>
+`Bonjour ${prenom},
+
+Je vous confirme votre vol prévu demain. Quelques rappels pour que tout se passe au mieux.
+
+Présentez-vous à l'aéroport de Charleroi (EBCI) 15 minutes avant l'heure prévue. Portez des chaussures fermées, c'est indispensable pour circuler sur la piste. Un pull ou une veste légère est conseillé même en été, il fait généralement plus frais en altitude.
+
+Si vous avez une question de dernière minute, répondez directement à cet email.
+
+À demain,
+Romain`,
+  },
+];
 
 const ROUTE_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   sent:                   { label: "En attente de validation", color: "bg-amber-50 text-amber-700 border-amber-200" },
@@ -97,6 +161,7 @@ export function ReservationDrawer({
   const [emailOpen, setEmailOpen] = useState(false);
   const [emailSubject, setEmailSubject] = useState("");
   const [emailBody, setEmailBody] = useState("");
+  const [includeReschedule, setIncludeReschedule] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
 
   // Reset when drawer opens with new reservation
@@ -235,6 +300,17 @@ export function ReservationDrawer({
     });
   }
 
+  // ── Proposer un report ────────────────────────────────────────────────────
+
+  function doSendRescheduleInvite() {
+    if (!reservation) return;
+    startTransition(async () => {
+      const r = await sendRescheduleInvite(reservation.id);
+      if (r.error) { showFeedback("Erreur : " + r.error, false); return; }
+      showFeedback("Email de report envoyé au client ✓");
+    });
+  }
+
   // ── Custom email ───────────────────────────────────────────────────────────
 
   function openEmailComposer() {
@@ -247,13 +323,22 @@ export function ReservationDrawer({
     setEmailOpen(true);
   }
 
+  function applyTemplate(tpl: typeof EMAIL_TEMPLATES[number]) {
+    if (!reservation) return;
+    const prenom = reservation.clients?.prenom ?? "";
+    setEmailSubject(tpl.subject(dateLabel));
+    setEmailBody(tpl.body(prenom, dateLabel));
+    setEmailOpen(true);
+  }
+
   function sendEmail_custom() {
     if (!reservation) return;
     startTransition(async () => {
-      const r = await sendCustomEmail(reservation.id, emailSubject, emailBody);
+      const r = await sendCustomEmail(reservation.id, emailSubject, emailBody, includeReschedule);
       if (r.error) { showFeedback("Erreur : " + r.error, false); return; }
       showFeedback("Email envoyé ✓");
       setEmailOpen(false);
+      setIncludeReschedule(false);
     });
   }
 
@@ -280,7 +365,7 @@ export function ReservationDrawer({
           />
 
           <motion.aside
-            className="fixed right-0 top-0 bottom-0 w-full max-w-lg bg-card border-l border-border shadow-[−8px_0_40px_rgba(17,51,86,.12)] z-50 flex flex-col"
+            className={`fixed right-0 top-0 bottom-0 w-full bg-card border-l border-border shadow-[−8px_0_40px_rgba(17,51,86,.12)] z-50 flex flex-col transition-[max-width] duration-200 ease-in-out ${emailOpen ? "max-w-2xl" : "max-w-lg"}`}
             initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
           >
@@ -318,7 +403,8 @@ export function ReservationDrawer({
               )}
             </AnimatePresence>
 
-            {/* Scrollable content */}
+            {/* Contenu normal — masqué quand le compositeur email est ouvert */}
+            {!emailOpen && (
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
 
               {/* Client */}
@@ -644,6 +730,17 @@ export function ReservationDrawer({
 
                     {r.statut !== "annulee" && r.statut !== "vol_effectue" && (
                       <button
+                        onClick={doSendRescheduleInvite}
+                        disabled={isPending}
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-amber-200 text-sm text-amber-600 hover:bg-amber-50 transition-colors disabled:opacity-50"
+                      >
+                        {isPending ? <Loader2 size={14} className="animate-spin" /> : <RotateCcw size={14} />}
+                        Proposer un report
+                      </button>
+                    )}
+
+                    {r.statut !== "annulee" && r.statut !== "vol_effectue" && (
+                      <button
                         onClick={() => changeStatut("annulee")}
                         disabled={isPending}
                         className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-red-200 text-sm text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
@@ -735,58 +832,102 @@ export function ReservationDrawer({
               {/* Free email */}
               <div>
                 <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[1.5px] mb-2">Email libre</p>
-                {emailOpen ? (
-                  <div className="space-y-2.5 bg-secondary/40 rounded-xl p-3.5 border border-border">
-                    <div>
-                      <p className="text-[10px] text-muted-foreground mb-1">À</p>
-                      <p className="text-xs text-foreground font-medium">{r.clients?.email}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-muted-foreground mb-1">Sujet</p>
-                      <input
-                        autoFocus
-                        value={emailSubject}
-                        onChange={e => setEmailSubject(e.target.value)}
-                        className="w-full h-8 px-2.5 rounded-lg border border-input bg-background text-xs focus:outline-none focus:ring-1 focus:ring-navy/30"
-                      />
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-muted-foreground mb-1">Message</p>
-                      <textarea
-                        value={emailBody}
-                        onChange={e => setEmailBody(e.target.value)}
-                        rows={6}
-                        className="w-full px-2.5 py-2 rounded-lg border border-input bg-background text-xs resize-none focus:outline-none focus:ring-1 focus:ring-navy/30"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
+                <div className="mb-2">
+                  <p className="text-[10px] text-muted-foreground/60 flex items-center gap-1 mb-1.5">
+                    <Sparkles size={9} />
+                    Templates rapides
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {EMAIL_TEMPLATES.map((tpl, idx) => (
                       <button
-                        onClick={sendEmail_custom}
-                        disabled={isPending || !emailSubject.trim() || !emailBody.trim()}
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-navy text-white text-xs font-semibold hover:bg-navy/90 transition-colors disabled:opacity-50"
+                        key={tpl.label}
+                        disabled={isPending}
+                        onClick={() => {
+                          if (idx === 0) {
+                            applyTemplate(tpl);
+                            setIncludeReschedule(true);
+                          } else {
+                            applyTemplate(tpl);
+                            setIncludeReschedule(false);
+                          }
+                        }}
+                        className="text-[11px] px-2.5 py-1 rounded-lg border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-50"
                       >
-                        {isPending ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
-                        Envoyer
+                        {tpl.label}
                       </button>
-                      <button
-                        onClick={() => setEmailOpen(false)}
-                        className="px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-secondary transition-colors"
-                      >
-                        Annuler
-                      </button>
-                    </div>
+                    ))}
                   </div>
-                ) : (
-                  <button
-                    onClick={openEmailComposer}
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-                  >
-                    <Send size={14} />
-                    Composer un email…
-                  </button>
-                )}
+                </div>
+                <button
+                  onClick={openEmailComposer}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                >
+                  <Send size={14} />
+                  Composer un email…
+                </button>
               </div>
             </div>
+            )} {/* fin !emailOpen */}
+
+            {/* Compositeur email plein-écran — occupe toute la hauteur du drawer */}
+            {emailOpen && (
+              <div className="flex-1 flex flex-col min-h-0 px-5 py-4 gap-3">
+                <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[1.5px] shrink-0">Email libre</p>
+                <div className="shrink-0">
+                  <p className="text-[10px] text-muted-foreground mb-1">À</p>
+                  <p className="text-xs text-foreground font-medium">{r.clients?.email}</p>
+                </div>
+                <div className="shrink-0">
+                  <p className="text-[10px] text-muted-foreground mb-1">Sujet</p>
+                  <input
+                    autoFocus
+                    value={emailSubject}
+                    onChange={e => setEmailSubject(e.target.value)}
+                    className="w-full h-8 px-2.5 rounded-lg border border-input bg-background text-xs focus:outline-none focus:ring-1 focus:ring-navy/30"
+                  />
+                </div>
+                <div className="flex-1 min-h-0 flex flex-col">
+                  <p className="text-[10px] text-muted-foreground mb-1">Message</p>
+                  <textarea
+                    value={emailBody}
+                    onChange={e => setEmailBody(e.target.value)}
+                    className="flex-1 min-h-0 w-full px-2.5 py-2 rounded-lg border border-input bg-background text-xs resize-none focus:outline-none focus:ring-1 focus:ring-navy/30"
+                  />
+                </div>
+                {/* Badge lien de report */}
+                <div className="shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIncludeReschedule(v => !v)}
+                    className={[
+                      "flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors w-full",
+                      includeReschedule
+                        ? "border-amber-300 bg-amber-50 text-amber-700"
+                        : "border-border text-muted-foreground hover:bg-secondary",
+                    ].join(" ")}
+                  >
+                    <RotateCcw size={11} className={includeReschedule ? "text-amber-600" : ""} />
+                    {includeReschedule ? "Lien de report inclus dans l'email ✓" : "Ajouter un lien de report"}
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={sendEmail_custom}
+                    disabled={isPending || !emailSubject.trim() || !emailBody.trim()}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-navy text-white text-xs font-semibold hover:bg-navy/90 transition-colors disabled:opacity-50"
+                  >
+                    {isPending ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
+                    Envoyer
+                  </button>
+                  <button
+                    onClick={() => { setEmailOpen(false); setIncludeReschedule(false); }}
+                    className="px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-secondary transition-colors"
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Footer */}
             <div className="px-5 py-3 border-t border-border shrink-0">

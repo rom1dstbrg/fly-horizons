@@ -848,12 +848,18 @@ export function reservationDateConfirmeeEmail(p: ReservationDateConfirmeeProps):
 
     ${routeSection}
 
-    <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">
+    <p class="em-body" style="margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;">
       Des questions ? R&eacute;pondez directement &agrave; cet email, Romain vous r&eacute;pondra rapidement.<br>
       <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
     </p>
 
-    ${!p.route ? ctaButton(`${SITE_URL}/access-ebci`, "Plan d'accès →") : ""}`;
+    ${!p.route ? ctaButton(`${SITE_URL}/access-ebci`, "Plan d'accès →") : ""}
+
+    ${separator()}
+    <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;text-align:center;">
+      Besoin de reporter votre vol ? Vous pouvez choisir une nouvelle date jusqu&rsquo;&agrave; 48&nbsp;h avant le d&eacute;collage depuis
+      <a href="${SITE_URL}/account#reservations" style="color:#F2B705;font-weight:600;text-decoration:none;">votre espace client</a>.
+    </p>`;
 
   return emailBase(body, "Votre date de vol est confirmée — Fly Horizons");
 }
@@ -919,12 +925,18 @@ export function reservationHeureConfirmeeEmail(p: ReservationHeureConfirmeeProps
       <tr><td class="em-body" style="padding:8px 0;font-size:13px;color:#334155;">Questions : <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a></td></tr>
     </table>
 
-    <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">
+    <p class="em-body" style="margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;">
       Beau temps et bon vol ! Rendez-vous &agrave; l&rsquo;a&eacute;roport,
       <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
     </p>
 
-    ${ctaButton(`${SITE_URL}/access-ebci`, "Plan d'accès →")}`;
+    ${ctaButton(`${SITE_URL}/access-ebci`, "Plan d'accès →")}
+
+    ${separator()}
+    <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;text-align:center;">
+      Emp&ecirc;chement de derni&egrave;re minute ? Vous pouvez reporter votre vol jusqu&rsquo;&agrave; 48&nbsp;h avant le d&eacute;collage depuis
+      <a href="${SITE_URL}/account#reservations" style="color:#F2B705;font-weight:600;text-decoration:none;">votre espace client</a>.
+    </p>`;
 
   return emailBase(body, "Votre créneau horaire est confirmé — Fly Horizons");
 }
@@ -1415,7 +1427,7 @@ export function routeProposalEmail(p: RouteProposalEmailProps): string {
 
 // ── 19. Email libre stylisé ───────────────────────────────────────────────────
 
-export function customEmail({ subject, body }: { subject: string; body: string }): string {
+export function customEmail({ subject, body, rescheduleUrl }: { subject: string; body: string; rescheduleUrl?: string | null }): string {
   const paragraphs = body
     .split("\n")
     .map(line =>
@@ -1425,11 +1437,19 @@ export function customEmail({ subject, body }: { subject: string; body: string }
     )
     .join("");
 
+  const rescheduleBlock = rescheduleUrl ? `
+    ${separator()}
+    ${ctaButton(rescheduleUrl, "Choisir une nouvelle date")}
+    <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;text-align:center;">
+      Ce lien vous permet de choisir votre nouvelle date en quelques secondes.
+    </p>` : "";
+
   const emailBody = `
     <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Fly Horizons</p>
     <h1 class="em-dark" style="margin:0 0 28px;font-size:20px;font-weight:800;color:#0b2238;">${esc(subject)}</h1>
     ${separator()}
     <div style="margin-bottom:28px;">${paragraphs}</div>
+    ${rescheduleBlock}
     ${separator()}
     <p class="em-muted" style="margin:0;font-size:13px;color:#64748b;text-align:center;">
       L&rsquo;&eacute;quipe Fly Horizons &mdash;
@@ -1478,4 +1498,71 @@ export function routeFeedbackAdminEmail(p: RouteFeedbackAdminEmailProps): string
     ${ctaButton(p.adminUrl, "Voir dans l'admin →")}`;
 
   return emailBase(body, `Itinéraire ${isValidated ? "validé" : "— modification"} — ${p.clientPrenom} ${p.clientNom}`);
+}
+
+// ── 19. Invitation à reporter un vol ─────────────────────────────────────────
+
+export function rescheduleInviteEmail(p: {
+  prenom: string;
+  dateStr: string;
+  duree: number;
+  rescheduleUrl: string;
+}): string {
+  const body = `
+    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Fly Horizons</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Votre vol est report&eacute;</h1>
+    <p class="em-body" style="margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;">
+      Bonjour ${esc(p.prenom)},
+    </p>
+    ${separator()}
+    <p class="em-body" style="margin:0 0 16px;font-size:14px;color:#334155;line-height:1.7;">
+      Votre vol du <strong style="color:#0b2238;">${esc(p.dateStr)}</strong> (${esc(fmtDuration(p.duree))}) ne peut pas avoir lieu comme pr&eacute;vu. Nous sommes d&eacute;sol&eacute;s pour ce contretemps.
+    </p>
+    <p class="em-body" style="margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;">
+      Votre acompte est bien conserv&eacute;. Choisissez simplement une nouvelle date qui vous convient en cliquant ci-dessous. Le lien est valable 30 jours.
+    </p>
+    ${ctaButton(p.rescheduleUrl, "Choisir une nouvelle date")}
+    ${separator()}
+    <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;text-align:center;">
+      Une question ? R&eacute;pondez directement &agrave; cet email ou &eacute;crivez-nous &agrave;
+      <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a>
+    </p>`;
+
+  return emailBase(body, "Votre vol est reporté — Fly Horizons");
+}
+
+// ── 20. Confirmation de report ────────────────────────────────────────────────
+
+export function rescheduleConfirmationEmail(p: {
+  prenom: string;
+  oldDateStr: string;
+  newDateStr: string;
+  duree: number;
+  accountUrl: string;
+}): string {
+  const body = `
+    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Fly Horizons</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Report confirm&eacute;</h1>
+    <p class="em-body" style="margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;">
+      Bonjour ${esc(p.prenom)},
+    </p>
+    ${separator()}
+    <p class="em-body" style="margin:0 0 16px;font-size:14px;color:#334155;line-height:1.7;">
+      Votre vol a bien &eacute;t&eacute; report&eacute;. Voici le r&eacute;capitulatif du changement.
+    </p>
+    ${infoRows([
+      ["Ancienne date", `<span style="text-transform:capitalize;text-decoration:line-through;color:#94a3b8;">${esc(p.oldDateStr)}</span>`],
+      ["Nouvelle date", `<span style="text-transform:capitalize;color:#16a34a;font-weight:700;">${esc(p.newDateStr)}</span>`],
+      ["Dur&eacute;e", esc(fmtDuration(p.duree))],
+    ])}
+    <p class="em-body" style="margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;">
+      Nous confirmerons l'heure exacte dans les jours pr&eacute;c&eacute;dant le vol. Votre acompte reste acquis.
+    </p>
+    ${ctaButton(p.accountUrl, "Voir ma réservation")}
+    ${separator()}
+    <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;text-align:center;">
+      Une question ? R&eacute;pondez directement &agrave; cet email.
+    </p>`;
+
+  return emailBase(body, "Votre report est confirmé — Fly Horizons");
 }

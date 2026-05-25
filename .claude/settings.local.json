@@ -81,7 +81,12 @@
       "Bash(netlify --version)",
       "Bash(netlify sites:list)",
       "Bash(netlify api *)",
-      "Bash(python3 -c \"import sys,json; deploys=json.load\\(sys.stdin\\); [print\\(f'{d[\\\\\"id\\\\\"]} {d[\\\\\"state\\\\\"]} {d[\\\\\"created_at\\\\\"][:10]} {d.get\\(\\\\\"title\\\\\",\\\\\"\\\\\"\\)[:50]}'\\) for d in deploys]\")"
+      "Bash(python3 -c \"import sys,json; deploys=json.load\\(sys.stdin\\); [print\\(f'{d[\\\\\"id\\\\\"]} {d[\\\\\"state\\\\\"]} {d[\\\\\"created_at\\\\\"][:10]} {d.get\\(\\\\\"title\\\\\",\\\\\"\\\\\"\\)[:50]}'\\) for d in deploys]\")",
+      "PowerShell(public *)",
+      "Bash(xargs grep -l \"month\\\\|heure_vol\\\\|time\\\\|slot\")",
+      "Bash(xargs grep -l \"heure_vol\\\\|heures\\\\|time_slot\\\\|SLOTS\\\\|heures_disponibles\")",
+      "Bash(xargs grep -l \"vol-sur-mesure\\\\|vol_sur_mesure\\\\|sur mesure\\\\|VolSurMesure\")",
+      "Bash(git commit -m 'feat: report de vol, sidebar VSM scrollable, sections vol-sur-mesure redesign *)"
     ]
   }
 }

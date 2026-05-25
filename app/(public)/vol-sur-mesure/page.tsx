@@ -820,24 +820,37 @@ export default function VolSurMesurePage() {
             </div>
 
             {/* Right sidebar */}
-            <div className="hidden lg:flex flex-col w-[340px] xl:w-[380px] shrink-0 overflow-y-auto bg-white border-l border-border">
-              <div className="p-4 flex flex-col gap-3 min-h-full">
-                <FlightSummaryCard showCTA />
-                {/* Trust badges */}
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  {[
-                    { icon: <Lock size={12} />, label: "Liberté totale", sub: "Volez où vous voulez" },
-                    { icon: <Navigation size={12} />, label: "Ajusté par nos pilotes", sub: "Sécurité & météo" },
-                    { icon: <Info size={12} />, label: "Assistance 7/7", sub: "Questions ? On répond" },
-                  ].map(({ icon, label, sub }) => (
-                    <div key={label} className="bg-white rounded-xl p-2.5 border border-border">
-                      <div className="text-[#fbae17] flex justify-center mb-1">{icon}</div>
-                      <p className="text-[9px] font-bold text-foreground leading-tight">{label}</p>
-                      <p className="text-[9px] text-muted-foreground leading-tight mt-0.5">{sub}</p>
-                    </div>
-                  ))}
-                </div>
+            <div className="hidden lg:flex flex-col w-[340px] xl:w-[380px] shrink-0 bg-[#f5f5f7] border-l border-border overflow-hidden">
+
+              {/* Zone scrollable */}
+              <div className="flex-1 min-h-0 overflow-y-auto p-4">
+                <FlightSummaryCard showCTA={false} />
               </div>
+
+              {/* CTA — épinglé en bas */}
+              <div className="shrink-0 px-4 py-4 bg-white border-t border-border">
+                {taxesEscalesTotal > 0 && acompte > 0 && (
+                  <div className="flex items-center justify-between mb-3 text-xs text-muted-foreground">
+                    <span>Acompte + taxes escales</span>
+                    <span className="font-bold text-[#0b2238]">{totalAcompte}&thinsp;€</span>
+                  </div>
+                )}
+                <button type="button"
+                  disabled={route.pois.length === 0}
+                  onClick={() => { setFlowStep("reserve"); loadMonth(calYear, calMonth); }}
+                  className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-[#fbae17] text-[#0b2238] text-sm font-extrabold disabled:opacity-30 hover:brightness-105 transition-all shadow-md cursor-pointer">
+                  Continuer ma réservation <ChevronRight size={15} />
+                </button>
+                <p className="text-center text-[10px] text-muted-foreground/60 mt-2">
+                  <Lock size={9} className="inline mr-1" />Paiement sécurisé · aucun débit immédiat
+                </p>
+                {route.pois.length === 0 && (
+                  <p className="text-center text-[10px] text-muted-foreground/50 mt-1">
+                    Ajoutez au moins un lieu pour continuer
+                  </p>
+                )}
+              </div>
+
             </div>
           </div>
 

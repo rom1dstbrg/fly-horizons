@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationPaymentInvitationEmail, reservationConfirmationFreeEmail, postVolEmail, routeProposalEmail, customEmail, reservationPayLaterEmail } from "@/lib/email-templates";
+import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationPaymentInvitationEmail, reservationConfirmationFreeEmail, postVolEmail, routeProposalEmail, customEmail, reservationPayLaterEmail, rescheduleInviteEmail, rescheduleConfirmationEmail } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 
 async function checkAdmin() {
@@ -382,7 +382,7 @@ export async function updateReservationDateHeure(id: string, fields: {
   }
 }
 
-export async function sendCustomEmail(id: string, subject: string, body: string) {
+export async function sendCustomEmail(id: string, subject: string, body: string, withReschedule = false) {
   try {
     await checkAdmin();
     const supabase = createAdminClient();
@@ -393,12 +393,23 @@ export async function sendCustomEmail(id: string, subject: string, body: string)
       .single();
     if (!resa) return { error: "Réservation introuvable" };
     const client = resa.clients as { email: string; prenom: string; nom: string };
+
+    let rescheduleUrl: string | null = null;
+    if (withReschedule) {
+      const rawUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+      const siteUrl = rawUrl.startsWith("http://localhost") || rawUrl.startsWith("http://127")
+        ? rawUrl : "https://fly-horizons.com";
+      const token = crypto.randomUUID();
+      await supabase.from("reservations").update({ reschedule_token: token }).eq("id", id);
+      rescheduleUrl = `${siteUrl}/reservation/reporter/${token}`;
+    }
+
     const { error: emailError } = await resend.emails.send({
       from: EMAIL_FROM,
       to: [client.email],
       replyTo: EMAIL_REPLY_TO,
       subject,
-      html: customEmail({ subject, body }),
+      html: customEmail({ subject, body, rescheduleUrl }),
     });
     if (emailError) {
       console.error("sendCustomEmail error:", emailError);
@@ -563,6 +574,194 @@ export async function resendRoute(id: string) {
     revalidatePath("/admin/vols");
     return { success: true };
   } catch {
+    return { error: "Erreur serveur" };
+  }
+}
+
+// ── Report de vol : générer un lien et envoyer l'email (admin) ────────────────
+
+export async function sendRescheduleInvite(id: string) {
+  try {
+    await checkAdmin();
+    const supabase = createAdminClient();
+
+    const { data: resa } = await supabase
+      .from("reservations")
+      .select("*, clients(*)")
+      .eq("id", id)
+      .single();
+
+    if (!resa) return { error: "Réservation introuvable" };
+    if (["annulee", "vol_effectue"].includes(resa.statut)) {
+      return { error: "Impossible de reporter ce vol" };
+    }
+
+    const client = resa.clients as { prenom: string; nom: string; email: string } | null;
+    if (!client?.email) return { error: "Email client introuvable" };
+
+    const rawUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+    const siteUrl = rawUrl.startsWith("http://localhost") || rawUrl.startsWith("http://127")
+      ? rawUrl : "https://fly-horizons.com";
+
+    const token = crypto.randomUUID();
+    await supabase.from("reservations").update({ reschedule_token: token }).eq("id", id);
+
+    const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
+      weekday: "long", day: "numeric", month: "long", year: "numeric",
+    });
+
+    await resend.emails.send({
+      from: EMAIL_FROM,
+      to: [client.email],
+      replyTo: EMAIL_REPLY_TO,
+      subject: "Fly Horizons — Votre vol est reporté",
+      html: rescheduleInviteEmail({
+        prenom: client.prenom,
+        dateStr,
+        duree: resa.duree,
+        rescheduleUrl: `${siteUrl}/reservation/reporter/${token}`,
+      }),
+    });
+
+    revalidatePath("/admin/reservations");
+    revalidatePath("/admin/vols-sur-mesure");
+    revalidatePath("/admin/vols");
+    return { success: true };
+  } catch (e) {
+    console.error("sendRescheduleInvite error:", e);
+    return { error: "Erreur serveur" };
+  }
+}
+
+// ── Report de vol : traitement du choix de date par le client (public) ────────
+
+export async function rescheduleReservation(token: string, newDate: string, newHeure: string) {
+  try {
+    const supabase = createAdminClient();
+
+    const { data: resa } = await supabase
+      .from("reservations")
+      .select("*, clients(*)")
+      .eq("reschedule_token", token)
+      .single();
+
+    if (!resa) return { error: "Lien invalide ou expiré" };
+    if (["annulee", "vol_effectue"].includes(resa.statut)) {
+      return { error: "Ce vol ne peut plus être reporté" };
+    }
+
+    // Valider que la nouvelle date est au moins J+2
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const minDate = new Date(today);
+    minDate.setDate(minDate.getDate() + 2);
+    const pickedDate = new Date(newDate + "T12:00:00Z");
+    if (pickedDate < minDate) return { error: "La date doit être au moins 48 h à l'avance" };
+    if (!newHeure) return { error: "Veuillez sélectionner un créneau horaire" };
+
+    const client = resa.clients as { prenom: string; nom: string; email: string } | null;
+    if (!client?.email) return { error: "Email client introuvable" };
+
+    const rawUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+    const siteUrl = rawUrl.startsWith("http://localhost") || rawUrl.startsWith("http://127")
+      ? rawUrl : "https://fly-horizons.com";
+
+    const oldDateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
+      weekday: "long", day: "numeric", month: "long", year: "numeric",
+    });
+    const newDateStr = new Date(newDate + "T12:00:00Z").toLocaleDateString("fr-BE", {
+      weekday: "long", day: "numeric", month: "long", year: "numeric",
+    });
+    const newDateTimeStr = `${newDateStr} à ${newHeure}`;
+
+    const newStatut = resa.type_resa === "perso" ? "acompte_recu" : "date_confirmee";
+
+    await supabase.from("reservations").update({
+      date_vol: newDate,
+      heure_vol: newHeure,
+      statut: newStatut,
+      reschedule_token: null,
+    }).eq("id", resa.id);
+
+    // Email de confirmation au client
+    await resend.emails.send({
+      from: EMAIL_FROM,
+      to: [client.email],
+      replyTo: EMAIL_REPLY_TO,
+      subject: "Fly Horizons — Votre report est confirmé",
+      html: rescheduleConfirmationEmail({
+        prenom: client.prenom,
+        oldDateStr,
+        newDateStr: newDateTimeStr,
+        duree: resa.duree,
+        accountUrl: `${siteUrl}/account#reservations`,
+      }),
+    });
+
+    // Notification admin
+    await resend.emails.send({
+      from: EMAIL_FROM,
+      to: ["info@fly-horizons.com"],
+      replyTo: EMAIL_REPLY_TO,
+      subject: `Report vol — ${client.prenom} ${client.nom} : ${newDateTimeStr}`,
+      html: customEmail({
+        subject: `Report vol — ${client.prenom} ${client.nom}`,
+        body: `${client.prenom} ${client.nom} a reporté son vol.\n\nAncienne date : ${oldDateStr}\nNouvelle date : ${newDateTimeStr}\nDurée : ${resa.duree} min`,
+      }),
+    });
+
+    revalidatePath("/admin/reservations");
+    revalidatePath("/admin/vols-sur-mesure");
+    revalidatePath("/admin/vols");
+    revalidatePath("/account");
+    return { success: true, newDateStr: newDateTimeStr };
+  } catch (e) {
+    console.error("rescheduleReservation error:", e);
+    return { error: "Erreur serveur" };
+  }
+}
+
+// ── Report de vol : générer un token depuis le compte client ──────────────────
+
+export async function generateClientRescheduleToken(reservationId: string) {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: "Non authentifié" };
+
+    const adminSupa = createAdminClient();
+    const { data: client } = await adminSupa
+      .from("clients")
+      .select("id")
+      .eq("email", user.email!)
+      .maybeSingle();
+
+    if (!client) return { error: "Client introuvable" };
+
+    const { data: resa } = await adminSupa
+      .from("reservations")
+      .select("id, date_vol, statut")
+      .eq("id", reservationId)
+      .eq("client_id", client.id)
+      .single();
+
+    if (!resa) return { error: "Réservation introuvable" };
+    if (["annulee", "vol_effectue", "payment_pending"].includes(resa.statut)) {
+      return { error: "Ce vol ne peut pas être reporté" };
+    }
+
+    // Règle 48h pour le client
+    const now = new Date();
+    const flightDate = new Date(resa.date_vol + "T23:59:59Z");
+    const diffH = (flightDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+    if (diffH < 48) return { error: "Le délai de 48 h est dépassé" };
+
+    const token = crypto.randomUUID();
+    await adminSupa.from("reservations").update({ reschedule_token: token }).eq("id", reservationId);
+
+    return { success: true, token };
+  } catch (e) {
+    console.error("generateClientRescheduleToken error:", e);
     return { error: "Erreur serveur" };
   }
 }
