@@ -31,7 +31,7 @@ export default function CartPage() {
             <Button asChild className="bg-primary text-primary-foreground hover:bg-gold-400 font-semibold">
               <Link href="/nos-offres">
                 <ShoppingBag size={16} className="mr-2" />
-                Voir la boutique
+                Voir nos vols
               </Link>
             </Button>
           </div>

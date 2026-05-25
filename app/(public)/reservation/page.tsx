@@ -260,7 +260,7 @@ export default function ReservationPage() {
   const { price, discount, couponDiscount, full: prixPlein } = computePrice(form.product, form.voucher, form.coupon);
   const stepIndex = STEPS.findIndex(s => s.key === step);
 
-  const MAX_WEIGHT  = 178;
+  const MAX_WEIGHT  = 190;
   const weightKg    = parseInt(form.poids_total) || 0;
   const weightWarn  = weightKg > MAX_WEIGHT && weightKg <= MAX_WEIGHT + 60;
   const weightError = weightKg > MAX_WEIGHT + 60;
@@ -357,6 +357,14 @@ export default function ReservationPage() {
               {/* ─ Step 2 ─ */}
               {step === "datetime" && (
                 <>
+                {/* Avertissement poids — visible avant de choisir une date */}
+                <div className="mb-4 flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                  <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />
+                  <p className="text-xs text-amber-800 leading-relaxed">
+                    <span className="font-semibold">Limite de poids : 190 kg total passagers.</span>{" "}
+                    Vérifiez ce critère avant de choisir votre créneau — le poids vous sera demandé à l&apos;étape suivante.
+                  </p>
+                </div>
                 <div className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
 
                   {/* Calendrier */}
@@ -553,7 +561,7 @@ export default function ReservationPage() {
                       <div className="shrink-0">
                         <div className="inline-flex items-center gap-1.5 bg-black/40 backdrop-blur-md border border-white/15 rounded-xl px-3 py-1.5">
                           <span className="text-[#F2B705] font-black text-[13px] leading-none">{formatDuration(duree)}</span>
-                          <span className="text-white/50 text-[11px] leading-none">vol privé</span>
+                          <span className="text-white/50 text-[11px] leading-none">avion léger</span>
                         </div>
                       </div>
                     </div>
@@ -669,7 +677,7 @@ export default function ReservationPage() {
                         J&apos;ai lu et j&apos;accepte les{" "}
                         <Link href="/cgv"
                           className="text-[#113356] underline underline-offset-2 font-semibold">
-                          Conditions Générales de Participation
+                          Conditions Générales de Vente et de Participation
                         </Link>{" "}
                         et j&apos;autorise l&apos;utilisation de mes données personnelles pour le traitement de cette réservation.
                       </span>
@@ -711,7 +719,7 @@ export default function ReservationPage() {
                     {!submitting && step !== "paiement" && <ChevronRight size={15} />}
                   </button>
 
-                  {/* Payer plus tard — uniquement si montant > 0 à l'étape paiement */}
+                  {/* Recevoir un lien de paiement — uniquement si montant > 0 à l'étape paiement */}
                   {step === "paiement" && price > 0 && (
                     <button
                       type="button"
@@ -720,14 +728,14 @@ export default function ReservationPage() {
                       className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-secondary text-muted-foreground rounded-xl text-sm font-medium transition-all duration-200 disabled:opacity-30 hover:bg-secondary/80 hover:text-foreground cursor-pointer border border-border"
                     >
                       {payLaterSubmitting && <Loader2 size={13} className="animate-spin" />}
-                      Payer plus tard
+                      Recevoir un lien de paiement par email
                     </button>
                   )}
 
                   {step === "paiement" && price > 0 && (
-                    <p className="text-xs text-muted-foreground/70 flex items-center gap-1.5 text-right leading-tight">
-                      <AlertCircle size={10} className="shrink-0" />
-                      La date n&apos;est pas garantie sans paiement
+                    <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 flex items-start gap-1.5 text-right leading-snug max-w-xs">
+                      <AlertTriangle size={11} className="shrink-0 mt-0.5" />
+                      <span>Sans paiement immédiat, le créneau n&apos;est <strong>pas sécurisé</strong>. Un autre client peut le réserver entre-temps.</span>
                     </p>
                   )}
                 </div>
@@ -755,7 +763,7 @@ export default function ReservationPage() {
                       <div className="absolute bottom-3 left-4">
                         <div className="inline-flex items-center gap-1.5 bg-black/40 backdrop-blur-md border border-white/15 rounded-xl px-3 py-1.5">
                           <span className="text-[#F2B705] font-black text-[13px] leading-none">{formatDuration(form.product.voucher_duration_minutes)}</span>
-                          <span className="text-white/50 text-[11px] leading-none">vol privé</span>
+                          <span className="text-white/50 text-[11px] leading-none">avion léger</span>
                         </div>
                       </div>
                     </div>
@@ -769,7 +777,7 @@ export default function ReservationPage() {
                         {!form.product.images?.[0]?.url && (
                           <div className="inline-flex items-center gap-1.5 bg-black/40 backdrop-blur-md border border-white/15 rounded-xl px-3 py-1.5 shrink-0">
                             <span className="text-[#F2B705] font-black text-[13px] leading-none">{formatDuration(form.product.voucher_duration_minutes)}</span>
-                            <span className="text-white/50 text-[11px] leading-none">vol privé</span>
+                            <span className="text-white/50 text-[11px] leading-none">avion léger</span>
                           </div>
                         )}
                       </div>

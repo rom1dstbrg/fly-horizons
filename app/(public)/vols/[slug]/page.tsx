@@ -2,10 +2,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { ChevronLeft, Users, ShieldCheck, Headphones, MapPin, CalendarCheck, Route } from "lucide-react";
+import { ChevronLeft, Users, ShieldCheck, Headphones, MapPin, CalendarCheck, Route, Plane } from "lucide-react";
 import { formatDuration } from "@/lib/vouchers";
 import { VolDetailClient } from "@/components/shop/VolDetailClient";
 import { VolImageGallery } from "@/components/shop/VolImageGallery";
+import PilotCard from "@/components/shop/PilotCard";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -45,6 +46,7 @@ const INCLUS = [
   { icon: <MapPin size={15} className="text-[#113356]" />,        label: "Départ depuis Charleroi (EBCI)" },
   { icon: <CalendarCheck size={15} className="text-[#113356]" />, label: "Date au choix" },
   { icon: <Route size={15} className="text-[#113356]" />,         label: "Itinéraire personnalisé" },
+  { icon: <Plane size={15} className="text-[#113356]" />,         label: "DA40 TDI · Avion de l'école" },
 ];
 
 const STEPS = [
@@ -243,6 +245,9 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
           </div>
         </div>
       </div>
+
+      {/* ── Votre pilote ── */}
+      <PilotCard />
 
       {/* ── Autres durées ── */}
       {(autres ?? []).length > 0 && (

@@ -29,13 +29,19 @@ const SYNONYMS: Record<string, string[]> = {
   age:         ["enfant", "mineur", "ans", "bebe", "jeune"],
   casque:      ["bruit", "son", "oreilles", "antibruit"],
   creneau:     ["date", "heure", "disponibilite", "calendrier"],
-  confirme:    ["confirmation", "valide", "accepte"],
   secure:      ["garantie", "reserve", "bloque"],
   chaussures:  ["tenue", "vetements", "habits", "porter", "apporter", "shoes"],
   bagage:      ["sac", "valise", "apporter", "bagages", "affaires"],
   alcool:      ["boisson", "boire", "alcoolise"],
   enceinte:    ["grossesse", "bebe", "medical", "medicale", "condition", "sante", "handicap"],
   retard:      ["tarde", "tardive", "absent", "noshow", "arriver"],
+  refuser:     ["refuse", "accepte", "valider", "itineraire", "mesure", "modifier"],
+  altitude:    ["hauteur", "metres", "haut", "vertige", "peur", "monter"],
+  assurance:   ["assure", "couvert", "sinistre", "accident", "responsabilite"],
+  hobbs:       ["compteur", "temps", "reel", "minute", "calcul", "prix"],
+  pays:        ["frontiere", "france", "allemagne", "paysbas", "angleterre", "etranger", "international"],
+  confirme:    ["confirmation", "valide", "accepte", "delai", "combien"],
+  frais:       ["supplement", "fraisup", "sup", "depas", "extra"],
 };
 
 function normalize(str: string): string {
@@ -120,7 +126,7 @@ const THEMES: Theme[] = [
       {
         q: "Puis-je réserver pour quelqu'un d'autre ?",
         aText: "Oui. Vous pouvez réserver au nom d'une autre personne, ou lui offrir un bon cadeau qu'elle utilisera elle-même pour choisir sa date. Le bon cadeau est la solution la plus flexible : le bénéficiaire réserve quand il le souhaite.",
-        a: <>Oui. Vous pouvez réserver directement au nom d'une autre personne, ou lui offrir un <Link href="/shop" className="text-primary font-semibold hover:text-gold-400 transition-colors">bon cadeau</Link> qu'elle utilisera elle-même pour choisir sa date.</>,
+        a: <>Oui. Vous pouvez réserver directement au nom d'une autre personne, ou lui offrir un <Link href="/nos-offres" className="text-primary font-semibold hover:text-gold-400 transition-colors">bon cadeau</Link> qu'elle utilisera elle-même pour choisir sa date.</>,
       },
       {
         q: "Puis-je réserver pour une occasion spéciale ?",
@@ -131,6 +137,11 @@ const THEMES: Theme[] = [
         q: "Combien de temps à l'avance faut-il réserver ?",
         aText: "Les réservations sont possibles jusqu'à 48 heures avant le vol au minimum. En dessous de ce délai, le calendrier n'affiche plus de créneaux disponibles. Pour une demande de dernière minute, rendez-vous sur la page Contact : nous répondrons le plus rapidement possible. En période chargée (printemps, été), il est conseillé de réserver plusieurs semaines à l'avance pour avoir le choix des dates.",
         a: <>Les réservations sont possibles jusqu&apos;à 48 heures avant le vol au minimum. En dessous de ce délai, le calendrier n&apos;affiche plus de créneaux disponibles. Pour une demande de dernière minute, rendez-vous sur la <Link href="/contact" className="text-primary font-semibold hover:text-gold-400 transition-colors">page Contact</Link> : nous répondrons le plus rapidement possible. En période chargée (printemps, été), il est conseillé de réserver plusieurs semaines à l&apos;avance pour avoir le choix des dates.</>,
+      },
+      {
+        q: "Mon itinéraire vol sur mesure peut-il être refusé ou modifié ?",
+        aText: "Un itinéraire peut être refusé ou adapté pour des raisons de sécurité, de météo ou de réglementation d'espace aérien (zones interdites, trafic contrôlé). Dans ce cas, le pilote propose une alternative adaptée avant le vol. Si aucune solution ne convient, la réservation est annulée et l'acompte remboursé intégralement. Pour les zones ou destinations importantes pour vous, signalez-les à la réservation : le pilote vérifiera la faisabilité en amont.",
+        a: <>Un itinéraire peut être refusé ou adapté pour des raisons de sécurité, de météo ou de réglementation d&apos;espace aérien (zones interdites, trafic contrôlé). Dans ce cas, le pilote propose une alternative avant le vol. Si aucune solution ne convient, la réservation est annulée et l&apos;acompte remboursé intégralement. Pour les destinations importantes pour vous, signalez-les à la <Link href="/contact" className="text-primary font-semibold hover:text-gold-400 transition-colors">réservation</Link> : le pilote vérifiera la faisabilité en amont.</>,
       },
     ],
   },
@@ -156,8 +167,8 @@ const THEMES: Theme[] = [
       },
       {
         q: "Y a-t-il des frais supplémentaires après le vol ?",
-        aText: "Oui, si la durée réelle du vol dépasse la durée réservée. Le solde est calculé à la minute selon le tarif horaire communiqué avant la réservation. À l'inverse, si le vol est plus court que prévu, le montant correspondant est remboursé.",
-        a: "Oui, si la durée réelle du vol dépasse la durée réservée. Le solde est calculé à la minute selon le tarif horaire communiqué avant la réservation. À l'inverse, si le vol est plus court que prévu, le montant correspondant est remboursé.",
+        aText: "Le prix final est calculé à partir du compteur HOBBS de l'avion (temps moteur réel). Formule : tarif horaire ÷ 60 × minutes réelles. Si le vol est plus court que la durée réservée, la différence vous est remboursée sous 24 heures. Si le vol est plus long, le supplément vous est facturé dans les mêmes délais. Aucune surprise : le tarif horaire est communiqué avant la réservation.",
+        a: "Le prix final est calculé à partir du compteur HOBBS de l'avion (temps moteur réel). Formule : tarif horaire ÷ 60 × minutes réelles. Si le vol est plus court que la durée réservée, la différence vous est remboursée sous 24 heures. Si le vol est plus long, le supplément vous est facturé dans les mêmes délais. Aucune surprise : le tarif horaire est communiqué avant la réservation.",
       },
       {
         q: "Un bon cadeau peut-il couvrir l'acompte en totalité ?",
@@ -173,8 +184,8 @@ const THEMES: Theme[] = [
     items: [
       {
         q: "Comment acheter un bon cadeau ?",
-        aText: "Rendez-vous sur la boutique, choisissez la durée de vol souhaitée (30, 60, 90 ou 120 minutes) et payez via Stripe. Le code est envoyé par email dans les minutes qui suivent, au format XXXX-XXXX-XXXX-XXXX. Vous pouvez le transmettre par email ou l'imprimer.",
-        a: <>Rendez-vous sur la <Link href="/shop" className="text-primary font-semibold hover:text-gold-400 transition-colors">boutique</Link>, choisissez la durée souhaitée et payez via Stripe. Le code arrive par email dans les minutes qui suivent, au format <span className="font-mono font-bold text-foreground">XXXX-XXXX-XXXX-XXXX</span>. Vous pouvez le transmettre ou l'imprimer.</>,
+        aText: "Rendez-vous sur Nos offres, choisissez la durée de vol souhaitée (30, 60, 90 ou 120 minutes) et payez via Stripe. Le code est envoyé par email dans les minutes qui suivent, au format XXXX-XXXX-XXXX-XXXX. Vous pouvez le transmettre par email ou l'imprimer.",
+        a: <>Rendez-vous sur <Link href="/nos-offres" className="text-primary font-semibold hover:text-gold-400 transition-colors">Nos offres</Link>, choisissez la durée souhaitée et payez via Stripe. Le code arrive par email dans les minutes qui suivent, au format <span className="font-mono font-bold text-foreground">XXXX-XXXX-XXXX-XXXX</span>. Vous pouvez le transmettre ou l'imprimer.</>,
       },
       {
         q: "Comment le bénéficiaire utilise-t-il le bon cadeau ?",
@@ -210,8 +221,8 @@ const THEMES: Theme[] = [
       },
       {
         q: "Puis-je annuler ou reporter mon vol ?",
-        aText: "Oui. L'annulation est sans frais jusqu'à 48 heures avant le vol. En deçà, des frais peuvent s'appliquer sauf circonstance indépendante de votre volonté. Pour reporter votre vol, connectez-vous à votre espace client ou contactez-nous.",
-        a: <>Oui. L'annulation est sans frais jusqu'à 48 heures avant le vol. En deçà, des frais peuvent s'appliquer sauf circonstance indépendante de votre volonté. Pour reporter votre vol, connectez-vous à votre <Link href="/account" className="text-primary font-semibold hover:text-gold-400 transition-colors">espace client</Link> ou <Link href="/contact" className="text-primary font-semibold hover:text-gold-400 transition-colors">contactez-nous</Link>.</>,
+        aText: "Oui. Annulation sans frais jusqu'à 48 heures avant le vol. En deçà de 48 heures, des frais de replanning pouvant aller jusqu'à 50 € peuvent s'appliquer pour couvrir les démarches administratives. En cas d'absence sans prévenir (no-show), l'acompte est conservé et aucun remboursement n'est effectué. Pour reporter votre vol, connectez-vous à votre espace client : un lien de report vous sera proposé.",
+        a: <>Annulation sans frais jusqu'à 48 heures avant le vol. En deçà, des frais de replanning jusqu'à 50 € peuvent s'appliquer. En cas d'absence sans prévenir, l'acompte est conservé. Pour reporter, connectez-vous à votre <Link href="/account" className="text-primary font-semibold hover:text-gold-400 transition-colors">espace client</Link> ou <Link href="/contact" className="text-primary font-semibold hover:text-gold-400 transition-colors">contactez-nous</Link>.</>,
       },
       {
         q: "Combien de temps avant le vol dois-je arriver ?",
@@ -243,6 +254,16 @@ const THEMES: Theme[] = [
         aText: "L'heure précise est confirmée par le pilote dans les jours qui précèdent le vol, en fonction des conditions météo et du trafic. Vous recevez la confirmation par email et via votre espace client.",
         a: "L'heure précise est confirmée par le pilote dans les jours qui précèdent le vol, en fonction des conditions météo et du trafic. Vous recevez la confirmation par email et via votre espace client.",
       },
+      {
+        q: "Dans quel délai ma réservation est-elle confirmée ?",
+        aText: "La réservation est validée dans un délai maximum de 48 heures après réception de l'acompte — en pratique, souvent en 2 à 4 heures. Vous recevez un email de confirmation dès que le pilote a vérifié la disponibilité et les conditions de vol.",
+        a: "La réservation est validée dans un délai maximum de 48 heures après réception de l'acompte — en pratique, souvent en 2 à 4 heures. Vous recevez un email de confirmation dès que le pilote a validé la disponibilité.",
+      },
+      {
+        q: "Peut-on voler dans d'autres pays que la Belgique ?",
+        aText: "Oui. Les vols peuvent s'étendre à la France, l'Allemagne, les Pays-Bas et le Royaume-Uni — dans les limites de l'espace aérien autorisé et selon les conditions météo. Signalez votre destination souhaitée lors de la réservation ou via le formulaire de contact : le pilote vérifie la faisabilité et les autorisations nécessaires.",
+        a: <>Oui. Les vols peuvent s&apos;étendre à la France, l&apos;Allemagne, les Pays-Bas et le Royaume-Uni, dans les limites autorisées. Signalez votre destination lors de la réservation ou via le <Link href="/contact" className="text-primary font-semibold hover:text-gold-400 transition-colors">formulaire de contact</Link> : le pilote vérifie la faisabilité.</>,
+      },
     ],
   },
   {
@@ -257,8 +278,8 @@ const THEMES: Theme[] = [
       },
       {
         q: "Y a-t-il une limite de poids ?",
-        aText: "Oui. Le poids total des passagers ne peut pas dépasser 178 kg. Au-delà, le vol n'est pas réalisable pour des raisons de sécurité et de centrage. C'est pourquoi le poids total est demandé lors de la réservation.",
-        a: "Oui. Le poids total des passagers ne peut pas dépasser 178 kg. Au-delà, le vol n'est pas réalisable pour des raisons de sécurité et de centrage. C'est pourquoi le poids total est demandé lors de la réservation.",
+        aText: "Oui. Le poids total des passagers ne peut pas dépasser 190 kg. Au-delà, le vol n'est pas réalisable pour des raisons de sécurité et de centrage (calcul masse & centrage de l'avion). C'est pourquoi le poids total est demandé lors de la réservation.",
+        a: "Oui. Le poids total des passagers ne peut pas dépasser 190 kg. Au-delà, le vol n'est pas réalisable pour des raisons de sécurité et de centrage (calcul masse & centrage de l'avion). C'est pourquoi le poids total est demandé lors de la réservation.",
       },
       {
         q: "Y a-t-il un âge minimum pour voler ?",
@@ -279,6 +300,16 @@ const THEMES: Theme[] = [
         q: "Puis-je toucher les commandes de l'avion ?",
         aText: "Oui, en phase de croisière et sous supervision du pilote. Vous sentez les réponses réelles de l'avion : tangage, roulis, gouverne de direction.",
         a: "Oui, en phase de croisière et sous supervision du pilote. Vous sentez les réponses réelles de l'avion : tangage, roulis, gouverne de direction.",
+      },
+      {
+        q: "À quelle altitude vole-t-on ? Est-ce impressionnant ?",
+        aText: "Les vols se déroulent généralement entre 300 et 1 500 mètres d'altitude selon l'itinéraire et la météo. L'avion est un appareil léger à cockpit vitré : la vue est panoramique et très différente d'un avion de ligne. Certains passagers ressentent une légère appréhension au décollage, qui disparaît très vite en vol. Le pilote commente tout au long du trajet et peut adapter l'altitude si vous le demandez.",
+        a: "Les vols se déroulent généralement entre 300 et 1 500 mètres d'altitude selon l'itinéraire et la météo. L'avion est un appareil léger à cockpit vitré : la vue est panoramique. Certains passagers ressentent une légère appréhension au décollage, qui disparaît très vite. Le pilote commente tout au long du trajet et peut adapter l'altitude si vous le demandez.",
+      },
+      {
+        q: "Les passagers sont-ils assurés pendant le vol ?",
+        aText: "Oui. L'avion utilisé (DA40 TDI) appartient à Air Academy New CAG (ATO-005, EBCI), école d'aviation certifiée. L'assurance de l'école couvre tous les occupants à bord. Ce vol est organisé dans le cadre du partage de frais réglementé par le règlement européen NCO.GEN.104 (aviation légère non commerciale). Pour toute question sur les garanties, contactez-nous avant de réserver.",
+        a: <>Oui. L&apos;avion utilisé (DA40 TDI) appartient à Air Academy New CAG (ATO-005, EBCI), école d&apos;aviation certifiée. L&apos;assurance de l&apos;école couvre tous les occupants à bord. Ce vol est organisé dans le cadre du partage de frais réglementé par le règlement européen NCO.GEN.104 (aviation légère non commerciale). Pour toute question, <Link href="/contact" className="text-primary font-semibold hover:text-gold-400 transition-colors">contactez-nous</Link> avant de réserver.</>,
       },
       {
         q: "Peut-on prendre des photos et des vidéos pendant le vol ?",
@@ -476,7 +507,7 @@ export default function FaqPage() {
           </div>
           <div className="flex-1 text-center sm:text-left">
             <p className="text-sm font-semibold text-foreground">Vous ne trouvez pas votre réponse ?</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Notre équipe vous répond sous 48 h.</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Romain vous répond personnellement sous 48 h.</p>
           </div>
           <Link
             href="/contact"

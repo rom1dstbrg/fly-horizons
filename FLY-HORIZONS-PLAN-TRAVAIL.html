@@ -1,0 +1,1682 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fly Horizons — Plan de travail complet</title>
+<style>
+  /* ── Reset & base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:   #0b2238;
+    --blue:   #113356;
+    --gold:   #F2B705;
+    --red:    #dc2626;
+    --orange: #ea580c;
+    --yellow: #ca8a04;
+    --green:  #16a34a;
+    --gray50: #f8fafc;
+    --gray100:#f1f5f9;
+    --gray200:#e2e8f0;
+    --gray400:#94a3b8;
+    --gray600:#475569;
+    --gray800:#1e293b;
+    --radius: 10px;
+    --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+
+  body {
+    font-family: var(--font);
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--gray800);
+    background: #fff;
+    padding: 40px 50px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  /* ── Print ── */
+  @media print {
+    body { padding: 20px 30px; font-size: 11.5px; }
+    .no-print { display: none !important; }
+    .page-break { page-break-before: always; }
+    .avoid-break { page-break-inside: avoid; }
+    h2 { page-break-before: always; }
+    h2:first-of-type { page-break-before: avoid; }
+  }
+
+  /* ── Cover ── */
+  .cover {
+    border: 3px solid var(--navy);
+    border-radius: 16px;
+    padding: 48px 48px 40px;
+    margin-bottom: 48px;
+    background: var(--navy);
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; right: -40px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(242,183,5,0.12);
+  }
+  .cover-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 12px;
+  }
+  .cover h1 {
+    font-size: 28px;
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+  .cover h1 span { color: var(--gold); }
+  .cover-meta {
+    display: flex;
+    gap: 24px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+  .cover-badge {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .cover-badge span { color: var(--gold); font-weight: 800; }
+
+  /* ── Section titles ── */
+  h2 {
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--navy);
+    margin: 40px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--gold);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h2 .num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--gold);
+    color: var(--navy);
+    font-size: 13px;
+    font-weight: 900;
+    flex-shrink: 0;
+  }
+
+  h3 {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--blue);
+    margin: 20px 0 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+
+  /* ── Summary boxes ── */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 24px 0;
+  }
+  .summary-card {
+    border-radius: var(--radius);
+    padding: 16px;
+    text-align: center;
+    border: 1px solid;
+  }
+  .summary-card.c { background: #fef2f2; border-color: #fecaca; }
+  .summary-card.i { background: #fff7ed; border-color: #fed7aa; }
+  .summary-card.m { background: #fefce8; border-color: #fde68a; }
+  .summary-card.b { background: #f0fdf4; border-color: #bbf7d0; }
+  .summary-card .big { font-size: 28px; font-weight: 900; display: block; line-height: 1; }
+  .summary-card.c .big { color: var(--red); }
+  .summary-card.i .big { color: var(--orange); }
+  .summary-card.m .big { color: var(--yellow); }
+  .summary-card.b .big { color: var(--green); }
+  .summary-card .label { font-size: 11px; font-weight: 600; margin-top: 4px; color: var(--gray600); }
+
+  /* ── Content box ── */
+  .content-box {
+    background: #fff5cc;
+    border: 1px solid #f5d730;
+    border-left: 4px solid var(--gold);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin: 16px 0;
+  }
+  .content-box h4 {
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #7c5e00;
+    margin-bottom: 10px;
+  }
+
+  /* ── Task card ── */
+  .task {
+    border: 1px solid var(--gray200);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 10px;
+    background: white;
+  }
+  .task-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--gray50);
+    border-bottom: 1px solid var(--gray200);
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .badge.critique { background: #fef2f2; color: var(--red); border: 1px solid #fecaca; }
+  .badge.important { background: #fff7ed; color: var(--orange); border: 1px solid #fed7aa; }
+  .badge.mineur { background: #fefce8; color: var(--yellow); border: 1px solid #fde68a; }
+  .badge.info { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+
+  .task-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gray800);
+    flex: 1;
+  }
+  .task-body {
+    padding: 12px 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .task-body.full { grid-template-columns: 1fr; }
+  .task-field label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--gray400);
+    margin-bottom: 3px;
+  }
+  .task-field p {
+    font-size: 12px;
+    color: var(--gray600);
+    line-height: 1.5;
+  }
+  .task-field code {
+    background: var(--gray100);
+    border: 1px solid var(--gray200);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 11px;
+    color: var(--blue);
+  }
+
+  .checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--gray600);
+  }
+  .checkbox::before {
+    content: '';
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 2px solid var(--gray200);
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  /* ── File list ── */
+  .file-list {
+    background: var(--gray50);
+    border: 1px solid var(--gray200);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin: 8px 0;
+  }
+  .file-list h4 {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--gray400);
+    margin-bottom: 8px;
+  }
+  .file-item {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 11.5px;
+    margin-bottom: 4px;
+    color: var(--gray600);
+  }
+  .file-item code {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 11px;
+    color: var(--blue);
+    background: white;
+    border: 1px solid var(--gray200);
+    border-radius: 3px;
+    padding: 1px 5px;
+    flex-shrink: 0;
+  }
+
+  /* ── Phase header ── */
+  .phase-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--navy);
+    color: white;
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin: 32px 0 16px;
+  }
+  .phase-num {
+    font-size: 32px;
+    font-weight: 900;
+    color: var(--gold);
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .phase-info { flex: 1; }
+  .phase-info h3 {
+    font-size: 15px;
+    font-weight: 900;
+    color: white;
+    margin: 0 0 2px;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .phase-info p {
+    font-size: 11px;
+    color: rgba(255,255,255,0.55);
+    margin: 0;
+  }
+  .phase-tags {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+  .phase-tag {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--gold);
+    background: rgba(242,183,5,0.15);
+    border: 1px solid rgba(242,183,5,0.3);
+    border-radius: 6px;
+    padding: 2px 8px;
+    white-space: nowrap;
+  }
+
+  /* ── Divider ── */
+  hr { border: none; border-top: 1px solid var(--gray200); margin: 24px 0; }
+
+  /* ── Table ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin: 12px 0;
+  }
+  th {
+    background: var(--navy);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 8px 12px;
+    text-align: left;
+  }
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--gray200);
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: var(--gray50); }
+  td code {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 10.5px;
+    background: var(--gray100);
+    border: 1px solid var(--gray200);
+    border-radius: 3px;
+    padding: 1px 5px;
+    color: var(--blue);
+  }
+  td .c { color: var(--red); font-weight: 700; }
+  td .i { color: var(--orange); font-weight: 700; }
+  td .m { color: var(--yellow); font-weight: 700; }
+
+  /* ── Timeline ── */
+  .timeline {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin: 24px 0;
+    border: 1px solid var(--gray200);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .tl-phase {
+    padding: 16px 14px;
+    border-right: 1px solid var(--gray200);
+    position: relative;
+  }
+  .tl-phase:last-child { border-right: none; }
+  .tl-phase.p1 { background: #fef9ec; }
+  .tl-phase.p2 { background: #f0f4ff; }
+  .tl-phase.p3 { background: #f0fdf4; }
+  .tl-phase.p4 { background: var(--gray50); }
+  .tl-num { font-size: 22px; font-weight: 900; color: var(--gray200); line-height: 1; }
+  .tl-phase.p1 .tl-num { color: #f5d730; }
+  .tl-phase.p2 .tl-num { color: #93c5fd; }
+  .tl-phase.p3 .tl-num { color: #86efac; }
+  .tl-title { font-size: 12px; font-weight: 800; color: var(--gray800); margin: 4px 0; }
+  .tl-time { font-size: 10px; color: var(--gray400); font-weight: 600; }
+  .tl-items { margin-top: 8px; }
+  .tl-item { font-size: 10.5px; color: var(--gray600); padding: 2px 0; }
+  .tl-item::before { content: '→ '; color: var(--gray400); }
+  .tl-block {
+    margin-top: 8px;
+    background: rgba(255,255,255,0.7);
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 10px;
+    color: var(--orange);
+    font-weight: 700;
+  }
+
+  /* ── Note box ── */
+  .note {
+    background: var(--gray50);
+    border: 1px solid var(--gray200);
+    border-left: 3px solid var(--blue);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin: 12px 0;
+    font-size: 12px;
+    color: var(--gray600);
+  }
+  .note strong { color: var(--gray800); }
+
+  /* ── Warning ── */
+  .warning {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-left: 3px solid var(--orange);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin: 12px 0;
+    font-size: 12px;
+    color: #7c2d12;
+  }
+
+  /* ── Print button ── */
+  .print-btn {
+    position: fixed;
+    top: 20px; right: 20px;
+    background: var(--navy);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 20px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(11,34,56,0.3);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 100;
+  }
+  .print-btn:hover { background: #113356; }
+
+  /* ── Checklist ── */
+  .checklist { margin: 8px 0; }
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 5px 0;
+    font-size: 12px;
+    color: var(--gray600);
+    border-bottom: 1px solid var(--gray100);
+  }
+  .check-item:last-child { border-bottom: none; }
+  .check-box {
+    width: 16px; height: 16px;
+    border: 2px solid var(--gray200);
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .check-label { flex: 1; line-height: 1.4; }
+  .check-label strong { color: var(--gray800); }
+
+  /* ── Rule ── */
+  .rule {
+    background: var(--navy);
+    color: white;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-block;
+    margin-bottom: 8px;
+  }
+  .rule.gold { background: var(--gold); color: var(--navy); }
+
+  /* ── Footer ── */
+  .doc-footer {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 2px solid var(--gray200);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: var(--gray400);
+  }
+  .doc-footer strong { color: var(--navy); }
+</style>
+</head>
+<body>
+
+<button class="print-btn no-print" onclick="window.print()">
+  🖨️ Enregistrer en PDF
+</button>
+
+<!-- ════════════════════════════════
+     COVER
+════════════════════════════════ -->
+<div class="cover avoid-break">
+  <p class="cover-label">✈ Fly Horizons · Document interne</p>
+  <h1>Plan de travail complet<br /><span>UX & Conversion</span></h1>
+  <p style="color:rgba(255,255,255,0.6); font-size:13px; margin-top:8px; max-width:520px;">
+    Basé sur l'audit UX complet du site fly-horizons.com. Chaque tâche est classée par priorité,
+    phase d'exécution et dépendances. Suivre l'ordre évite de casser le site et maximise l'impact
+    à chaque étape.
+  </p>
+  <div class="cover-meta">
+    <div class="cover-badge">Date : <span>Mai 2026</span></div>
+    <div class="cover-badge">Phases : <span>4</span></div>
+    <div class="cover-badge">Tâches totales : <span>32</span></div>
+    <div class="cover-badge">Critiques : <span>5</span></div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════
+     RÉSUMÉ
+════════════════════════════════ -->
+<h2>Résumé & chiffres clés</h2>
+
+<div class="summary-grid">
+  <div class="summary-card c">
+    <span class="big">5</span>
+    <div class="label">🔴 Critiques<br/>bloquent les conversions</div>
+  </div>
+  <div class="summary-card i">
+    <span class="big">8</span>
+    <div class="label">🟠 Importants<br/>font hésiter ou fuir</div>
+  </div>
+  <div class="summary-card m">
+    <span class="big">7</span>
+    <div class="label">🟡 Mineurs<br/>dégradent l'expérience</div>
+  </div>
+  <div class="summary-card b">
+    <span class="big">12</span>
+    <div class="label">📋 Contenu<br/>à fournir par Romain</div>
+  </div>
+</div>
+
+<div class="timeline avoid-break">
+  <div class="tl-phase p1">
+    <div class="tl-num">1</div>
+    <div class="tl-title">Corrections immédiates</div>
+    <div class="tl-time">1-2 jours · Zéro contenu requis</div>
+    <div class="tl-items">
+      <div class="tl-item">Textes & formulations</div>
+      <div class="tl-item">Navigation desktop</div>
+      <div class="tl-item">Tunnel réservation</div>
+      <div class="tl-item">FAQ nouvelles entrées</div>
+      <div class="tl-item">Mobile vol sur mesure</div>
+    </div>
+  </div>
+  <div class="tl-phase p2">
+    <div class="tl-num">2</div>
+    <div class="tl-title">Confiance & conversion</div>
+    <div class="tl-time">2-3 jours · Contenu Romain requis</div>
+    <div class="tl-items">
+      <div class="tl-item">Section "Votre pilote"</div>
+      <div class="tl-item">Assurance passagers</div>
+      <div class="tl-item">Photo avion</div>
+      <div class="tl-item">Barre de confiance</div>
+    </div>
+    <div class="tl-block">⚠ Attend contenu</div>
+  </div>
+  <div class="tl-phase p3">
+    <div class="tl-num">3</div>
+    <div class="tl-title">Preuve sociale & cadeau</div>
+    <div class="tl-time">2-3 jours · Témoignages requis</div>
+    <div class="tl-items">
+      <div class="tl-item">Bloc témoignages</div>
+      <div class="tl-item">Parcours cadeau</div>
+      <div class="tl-item">Section anxieux</div>
+    </div>
+    <div class="tl-block">⚠ Attend témoignages</div>
+  </div>
+  <div class="tl-phase p4">
+    <div class="tl-num">4</div>
+    <div class="tl-title">Finitions</div>
+    <div class="tl-time">1 jour · Après phases 1-3</div>
+    <div class="tl-items">
+      <div class="tl-item">Calendrier mobile</div>
+      <div class="tl-item">CGP page manquante</div>
+      <div class="tl-item">Bouton "Modifier vol"</div>
+      <div class="tl-item">Délai pay-later email</div>
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  <strong>Règle d'or :</strong> ne jamais toucher à la logique de paiement (API Stripe, API réservation, webhooks)
+  sans avoir testé en local d'abord. Toutes les phases 1 et 4 sont 100% sans risque — elles ne touchent qu'au front-end et aux textes.
+</div>
+
+
+<!-- ════════════════════════════════
+     CONTENU REQUIS
+════════════════════════════════ -->
+<h2 class="page-break"><span class="num">0</span>Ce que Romain doit fournir — AVANT Phase 2</h2>
+
+<p style="color:var(--gray600); font-size:12px; margin-bottom:16px;">
+  Ces éléments bloquent les phases 2 et 3. Plus tôt tu les fournis, plus tôt on code les changements à fort impact.
+  La phase 1 peut commencer immédiatement sans rien de tout ça.
+</p>
+
+<div class="content-box avoid-break">
+  <h4>📸 Visuels (priorité absolue)</h4>
+  <div class="checklist">
+    <div class="check-item">
+      <div class="check-box"></div>
+      <div class="check-label"><strong>Photo de toi</strong> — cadrage mi-corps ou portrait, en contexte avion ou fond neutre. Une seule suffit, mais elle doit être bonne. C'est la photo qui va s'afficher partout dans le funnel.</div>
+    </div>
+    <div class="check-item">
+      <div class="check-box"></div>
+      <div class="check-label"><strong>Photo de l'avion extérieur</strong> — avion entier, fond clair ou ciel bleu. Propre, bien éclairée.</div>
+    </div>
+    <div class="check-item">
+      <div class="check-box"></div>
+      <div class="check-label"><strong>Photo de l'intérieur</strong> — cockpit + sièges passagers. Donne une idée du confort et de la taille.</div>
+    </div>
+    <div class="check-item">
+      <div class="check-box"></div>
+      <div class="check-label"><strong>2-3 photos de vols réalisés</strong> — vue du sol depuis les airs, passagers à bord si accord. Pour la section témoignages et les fiches vol.</div>
+    </div>
+  </div>
+</div>
+
+<div class="content-box avoid-break">
+  <h4>📝 Textes & informations</h4>
+  <div class="checklist">
+    <div class="check-item">
+      <div class="check-box"></div>
+      <div class="check-label"><strong>Ta bio courte</strong> (5-8 lignes) : depuis quand tu pilotes, heures de vol totales, pourquoi tu as créé Fly Horizons, ce que tu veux que les passagers ressentent.</div>
+    </div>
+    <div class="check-item">
+      <div class="check-box"></div>
+      <div class="check-label"><strong>Modèle de l'avion</strong> (ex : Cessna 172, PA-28 Cherokee…) et immatriculation si tu veux la mettre. Altitude typique de vol (ex : "entre 500 et 1 500 m").</div>
+    </div>
+    <div class="check-item">
+      <div class="check-box"></div>
+      <div class="check-label"><strong>Nom de ton assurance RC passagers</strong> — juste le nom de la compagnie et la mention "couverture passagers incluse" suffit pour le site.</div>
+    </div>
+    <div class="check-item">
+      <div class="check-box"></div>
+      <div class="check-label"><strong>Numéro d'entreprise BCE</strong> (si tu en as un). Sinon, ton statut exact (indépendant, personne physique, etc.).</div>
+    </div>
+    <div class="check-item">
+      <div class="check-box"></div>
+      <div class="check-label"><strong>Décision : téléphone visible ou non ?</strong> Si oui, quel numéro. Si non, on optimise l'email à la place.</div>
+    </div>
+  </div>
+</div>
+
+<div class="content-box avoid-break">
+  <h4>💬 Témoignages clients (pour Phase 3)</h4>
+  <div class="checklist">
+    <div class="check-item">
+      <div class="check-box"></div>
+      <div class="check-label"><strong>3 à 5 témoignages</strong> de clients existants. Format : prénom, ville, note /5, 2-3 lignes de texte. Idéalement un d'une personne qui avait peur de voler.</div>
+    </div>
+    <div class="check-item">
+      <div class="check-box"></div>
+      <div class="check-label"><strong>Accord des clients</strong> pour publication. Pas de nom complet obligatoire, prénom + ville suffit.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════
+     PHASE 1
+════════════════════════════════ -->
+<div class="page-break">
+<div class="phase-header">
+  <div class="phase-num">P1</div>
+  <div class="phase-info">
+    <h3>Corrections immédiates</h3>
+    <p>100% code, zéro contenu requis · Peut commencer maintenant · Sans risque pour le site</p>
+  </div>
+  <div class="phase-tags">
+    <span class="phase-tag">1-2 jours</span>
+    <span class="phase-tag">14 tâches</span>
+  </div>
+</div>
+
+<h3>P1-A · Navigation & Structure</h3>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge critique">Critique</span>
+    <span class="task-title">P1-A1 — Ajouter "Vol sur mesure" dans la navigation desktop</span>
+  </div>
+  <div class="task-body">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>La nav desktop n'a pas de lien direct vers le vol sur mesure alors que c'est une offre phare. Le mobile l'a, pas le desktop.</p>
+    </div>
+    <div class="task-field">
+      <label>Action</label>
+      <p>Ajouter <code>&lt;Link href="/vol-sur-mesure"&gt;</code> entre "Nos offres" et "Boutique" dans la nav desktop.</p>
+    </div>
+    <div class="task-field">
+      <label>Fichier</label>
+      <p><code>components/layout/Header.tsx</code> · ligne ~81</p>
+    </div>
+    <div class="task-field">
+      <label>Risque</label>
+      <p>Nul. Ajout de lien simple.</p>
+    </div>
+  </div>
+</div>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge important">Important</span>
+    <span class="task-title">P1-A2 — Renommer "Boutique" → "Accessoires" dans le nav</span>
+  </div>
+  <div class="task-body">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>Un client cadeau clique "Boutique" en cherchant les bons cadeaux. Il voit des accessoires et pense que les vols ne se vendent pas en ligne.</p>
+    </div>
+    <div class="task-field">
+      <label>Action</label>
+      <p>Changer le label dans le Header desktop ET mobile. Le href reste <code>/shop</code>, seul le texte change.</p>
+    </div>
+    <div class="task-field">
+      <label>Fichier</label>
+      <p><code>components/layout/Header.tsx</code> · lignes ~82 et ~141</p>
+    </div>
+    <div class="task-field">
+      <label>Risque</label>
+      <p>Nul. Changement de label uniquement.</p>
+    </div>
+  </div>
+</div>
+
+<h3>P1-B · Textes & formulations problématiques</h3>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge critique">Critique</span>
+    <span class="task-title">P1-B1 — Supprimer "développement actif, imperfections peuvent survenir" de la page Contact</span>
+  </div>
+  <div class="task-body">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>Cette phrase tue la crédibilité premium. Aucun service payant sérieux ne dit ça à ses clients.</p>
+    </div>
+    <div class="task-field">
+      <label>Action</label>
+      <p>Supprimer le bloc entier "À propos de ce site" ou le remplacer par : <em>"Fly Horizons évolue pour améliorer votre expérience. Un retour à nous partager ? Votre message est lu personnellement."</em></p>
+    </div>
+    <div class="task-field">
+      <label>Fichier</label>
+      <p><code>app/(public)/contact/page.tsx</code> · lignes ~83-96</p>
+    </div>
+    <div class="task-field">
+      <label>Risque</label>
+      <p>Nul.</p>
+    </div>
+  </div>
+</div>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge mineur">Mineur</span>
+    <span class="task-title">P1-B2 — "Notre équipe" → "Romain" dans la FAQ</span>
+  </div>
+  <div class="task-body">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>La FAQ dit "notre équipe vous répond sous 48h" mais la page contact dit que c'est Romain seul. Incohérence qui nuit à la crédibilité.</p>
+    </div>
+    <div class="task-field">
+      <label>Action</label>
+      <p>Changer "Notre équipe vous répond sous 48 h." → "Romain vous répond sous 48 h." dans le CTA bas de FAQ et dans la colonne Contact.</p>
+    </div>
+    <div class="task-field">
+      <label>Fichiers</label>
+      <p><code>app/(public)/faq/page.tsx</code> · ligne ~479<br /><code>app/(public)/contact/page.tsx</code> · ligne ~77</p>
+    </div>
+    <div class="task-field">
+      <label>Risque</label>
+      <p>Nul.</p>
+    </div>
+  </div>
+</div>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge mineur">Mineur</span>
+    <span class="task-title">P1-B3 — Reformuler "Survolez le monde" et "Exclusivité Fly Horizons"</span>
+  </div>
+  <div class="task-body">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>"Survolez le monde" est une hyperbole (c'est la Belgique). "Exclusivité Fly Horizons" ne veut rien dire sur le site de Fly Horizons.</p>
+    </div>
+    <div class="task-field">
+      <label>Action</label>
+      <p>H1 hero : "Survolez la Belgique à votre façon." ou "Survolez vos horizons à votre façon."<br />Badge VSM : "Prix calculé au km · Unique en Belgique" ou simplement supprimer le badge et garder juste la section.</p>
+    </div>
+    <div class="task-field">
+      <label>Fichiers</label>
+      <p><code>app/(public)/page.tsx</code> · lignes ~108-110, ~224<br /><code>app/(public)/nos-offres/page.tsx</code> · ligne ~53</p>
+    </div>
+    <div class="task-field">
+      <label>Risque</label>
+      <p>Nul.</p>
+    </div>
+  </div>
+</div>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge important">Important</span>
+    <span class="task-title">P1-B4 — Retirer ou clarifier "À partir de" sur les PackCards</span>
+  </div>
+  <div class="task-body">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>"À partir de" implique une variation de prix. Si le prix est fixe, c'est trompeur. Si des frais peuvent s'ajouter (vol plus long), il faut le dire clairement.</p>
+    </div>
+    <div class="task-field">
+      <label>Action</label>
+      <p>Option A : Retirer "À partir de" et afficher juste le prix. Option B : garder "À partir de" et ajouter une micro-note "(hors dépassement de durée)". Décision à prendre.</p>
+    </div>
+    <div class="task-field">
+      <label>Fichier</label>
+      <p><code>components/shop/PackCard.tsx</code> · lignes ~85-88</p>
+    </div>
+    <div class="task-field">
+      <label>Risque</label>
+      <p>Nul.</p>
+    </div>
+  </div>
+</div>
+
+<h3>P1-C · Tunnel de réservation (corrections sans risque)</h3>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge critique">Critique</span>
+    <span class="task-title">P1-C1 — Renommer "Payer plus tard" + ajouter modale de confirmation</span>
+  </div>
+  <div class="task-body full">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>Le bouton "Payer plus tard" est trop neutre. Des clients choisissent cette option en pensant "prendre le temps" et perdent leur créneau. L'avertissement en micro-texte est ignoré.</p>
+    </div>
+    <div class="task-field">
+      <label>Action (3 sous-tâches)</label>
+      <p>
+        1. Renommer le bouton : <strong>"Réserver sans payer — créneau non garanti"</strong><br />
+        2. Ajouter une modale de confirmation quand on clique : <em>"⚠ Attention : sans paiement, votre créneau du [date] à [heure] n'est pas bloqué. Un autre client peut le prendre avant vous. Voulez-vous continuer sans payer ?"</em> avec deux boutons : "Revenir et payer" (primaire) et "Continuer sans payer" (secondaire, texte seulement).<br />
+        3. Sur la page success pay-later : ajouter une deadline visible ("Votre lien de paiement est valable 48h — après ce délai, le créneau sera libéré automatiquement.").
+      </p>
+    </div>
+    <div class="task-field">
+      <label>Fichiers</label>
+      <p>
+        <code>app/(public)/reservation/page.tsx</code> · lignes ~715-732 (bouton pay-later + avertissement)<br />
+        <code>app/(public)/reservation/success/page.tsx</code> · lignes ~94-103 (bloc pay-later warning)
+      </p>
+    </div>
+    <div class="task-field">
+      <label>Risque</label>
+      <p>Nul sur la logique. La modale est purement front-end, ne touche pas à l'API.</p>
+    </div>
+  </div>
+</div>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge important">Important</span>
+    <span class="task-title">P1-C2 — Corriger le lien CGP/CGV dans les deux formulaires</span>
+  </div>
+  <div class="task-body">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>Le formulaire dit "Conditions Générales de Participation" mais pointe vers <code>/cgv</code> (CGV). Les CGV mentionnent que CGP ≠ CGV. Le client accepte potentiellement le mauvais document.</p>
+    </div>
+    <div class="task-field">
+      <label>Action</label>
+      <p>Deux options : soit vérifier que CGV = CGP (alors changer le label en "CGV & CGP") ; soit créer la page <code>/cgp</code> et corriger le lien. À vérifier avec Romain d'abord.</p>
+    </div>
+    <div class="task-field">
+      <label>Fichiers</label>
+      <p><code>app/(public)/reservation/page.tsx</code> · ligne ~670<br /><code>app/(public)/vol-sur-mesure/page.tsx</code> · ligne ~1125</p>
+    </div>
+    <div class="task-field">
+      <label>Risque</label>
+      <p>Nul. Changement de texte/lien.</p>
+    </div>
+  </div>
+</div>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge important">Important</span>
+    <span class="task-title">P1-C3 — Avertissement poids 178kg visible AVANT le calendrier</span>
+  </div>
+  <div class="task-body">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>Le client choisit sa date et son heure, remplit ses coordonnées, puis découvre au step 2 que le poids dépasse 178kg et que le vol est impossible. Perte de 10 min et frustration.</p>
+    </div>
+    <div class="task-field">
+      <label>Action</label>
+      <p>Ajouter sur la fiche vol (<code>/vols/[slug]</code>) dans la section "Ce qui est inclus" ou "Comment ça se passe" : <em>"Poids total passagers max : 178 kg."</em><br />
+      Et ajouter dans la page <code>/nos-offres</code> sous les packs : une ligne info discrète.</p>
+    </div>
+    <div class="task-field">
+      <label>Fichiers</label>
+      <p><code>app/(public)/vols/[slug]/page.tsx</code> · section INCLUS (~ligne 41)<br /><code>app/(public)/nos-offres/page.tsx</code> · sous la grille de packs</p>
+    </div>
+    <div class="task-field">
+      <label>Risque</label>
+      <p>Nul.</p>
+    </div>
+  </div>
+</div>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge important">Important</span>
+    <span class="task-title">P1-C4 — Avertissement règle J-2 (48h min) visible avant le tunnel</span>
+  </div>
+  <div class="task-body">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>Le client qui veut réserver pour demain le découvre seulement en voyant le calendrier entièrement grisé. Pas d'explication donnée.</p>
+    </div>
+    <div class="task-field">
+      <label>Action</label>
+      <p>Sur la fiche vol, sous le CTA de réservation : <em>"Réservation possible jusqu'à 48h avant le vol. Pour une demande urgente, contactez-nous directement."</em></p>
+    </div>
+    <div class="task-field">
+      <label>Fichier</label>
+      <p><code>components/shop/VolDetailClient.tsx</code> (composant CTA de la fiche vol)</p>
+    </div>
+    <div class="task-field">
+      <label>Risque</label>
+      <p>Nul.</p>
+    </div>
+  </div>
+</div>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge mineur">Mineur</span>
+    <span class="task-title">P1-C5 — Améliorer le texte d'explication du champ "poids total"</span>
+  </div>
+  <div class="task-body">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>Le client pressé voit "Poids total des passagers (requis)" sans comprendre pourquoi on lui demande ça.</p>
+    </div>
+    <div class="task-field">
+      <label>Action</label>
+      <p>Remplacer le sous-texte actuel par : <em>"Requis pour vérifier la capacité de l'avion (max 178 kg). Vos données ne sont pas partagées."</em></p>
+    </div>
+    <div class="task-field">
+      <label>Fichier</label>
+      <p><code>app/(public)/reservation/page.tsx</code> · ligne ~504<br /><code>app/(public)/vol-sur-mesure/page.tsx</code> · ligne ~996</p>
+    </div>
+    <div class="task-field">
+      <label>Risque</label>
+      <p>Nul.</p>
+    </div>
+  </div>
+</div>
+
+<h3>P1-D · FAQ — nouvelles entrées</h3>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge important">Important</span>
+    <span class="task-title">P1-D1 — Ajouter 3 nouvelles questions FAQ (sans contenu spécifique requis)</span>
+  </div>
+  <div class="task-body full">
+    <div class="task-field">
+      <label>Questions à ajouter dans le thème "Avant le vol"</label>
+      <p>
+        <strong>Q1 :</strong> "Pourquoi me demandez-vous le poids de mes passagers ?" → Réponse : l'avion léger a une capacité max de 178kg passagers, ce chiffre est nécessaire pour la sécurité du vol (masse & centrage). Les données ne sont pas partagées.<br /><br />
+        <strong>Q2 :</strong> "Que se passe-t-il si mon itinéraire sur mesure est refusé ?" → Réponse : si une zone n'est pas accessible, Romain le signale sous 24h avec une alternative. Si aucune alternative ne convient, l'acompte est remboursé intégralement.<br /><br />
+        <strong>Q3 :</strong> "Puis-je réserver pour demain ?" → Réponse : les réservations en ligne sont possibles jusqu'à 48h avant le vol. Pour une demande urgente, contactez-nous directement via le formulaire.
+      </p>
+    </div>
+    <div class="task-field">
+      <label>Fichier</label>
+      <p><code>app/(public)/faq/page.tsx</code> · section THEMES, thème "avant-le-vol"</p>
+    </div>
+  </div>
+</div>
+
+<h3>P1-E · Mobile — vol sur mesure</h3>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge important">Important</span>
+    <span class="task-title">P1-E1 — Afficher le prix estimé dans la barre de stats mobile</span>
+  </div>
+  <div class="task-body">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>Sur mobile, la sidebar avec le prix estimé est cachée (<code>hidden lg:flex</code>). L'utilisateur mobile dessine sa route sans jamais voir le prix avant de cliquer "Continuer".</p>
+    </div>
+    <div class="task-field">
+      <label>Action</label>
+      <p>Dans la barre de stats mobile (déjà présente), ajouter un élément "Prix estimé" avec la valeur <code>prixEstime</code> quand elle est > 0. Ou afficher le prix dans le texte du bouton fixe : "Continuer — ~{prixEstime} €".</p>
+    </div>
+    <div class="task-field">
+      <label>Fichier</label>
+      <p><code>app/(public)/vol-sur-mesure/page.tsx</code> · ligne ~792 (stats bar) et ~850 (bouton mobile fixe)</p>
+    </div>
+    <div class="task-field">
+      <label>Risque</label>
+      <p>Nul. Affichage de données déjà calculées.</p>
+    </div>
+  </div>
+</div>
+</div>
+
+
+<!-- ════════════════════════════════
+     PHASE 2
+════════════════════════════════ -->
+<div class="page-break">
+<div class="phase-header">
+  <div class="phase-num">P2</div>
+  <div class="phase-info">
+    <h3>Confiance & Conversion</h3>
+    <p>Contenu de Romain requis · Impact maximum sur la conversion · Ne pas commencer sans les éléments de la Section 0</p>
+  </div>
+  <div class="phase-tags">
+    <span class="phase-tag">2-3 jours</span>
+    <span class="phase-tag">8 tâches</span>
+  </div>
+</div>
+
+<div class="warning">
+  ⚠ <strong>Bloquer ces tâches jusqu'à réception du contenu.</strong> Coder des placeholders vides est contre-productif — une section "Votre pilote" sans photo ni bio est pire que pas de section du tout.
+</div>
+
+<h3>P2-A · Section "Votre pilote" (impact conversion #1)</h3>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge critique">Critique</span>
+    <span class="task-title">P2-A1 — Créer le composant "Votre pilote" et l'intégrer sur la homepage et la fiche vol</span>
+  </div>
+  <div class="task-body full">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>Aucune photo ni bio du pilote nulle part dans le funnel. Le client doit mettre sa vie entre les mains d'un inconnu sans visage.</p>
+    </div>
+    <div class="task-field">
+      <label>Contenu requis</label>
+      <p>Photo de Romain · Heures de vol · Années de pratique · Phrase personnelle · Licence CPL</p>
+    </div>
+    <div class="task-field">
+      <label>Nouveau composant</label>
+      <p><code>components/shop/PilotCard.tsx</code> — réutilisable sur homepage et fiche vol.</p>
+    </div>
+    <div class="task-field">
+      <label>Intégration homepage</label>
+      <p><code>app/(public)/page.tsx</code> — ajouter après la trust bar, avant les packs. Ou entre les packs et la section VSM.</p>
+    </div>
+    <div class="task-field">
+      <label>Intégration fiche vol</label>
+      <p><code>app/(public)/vols/[slug]/page.tsx</code> — ajouter après la section "De la réservation au vol".</p>
+    </div>
+    <div class="task-field">
+      <label>Contenu du composant</label>
+      <p>Photo ronde ou rectangulaire de Romain · Nom complet · "Pilote CPL · X heures de vol" · Phrase de présentation · Badge assurance passagers incluse</p>
+    </div>
+  </div>
+</div>
+
+<h3>P2-B · Assurance & Confiance légale</h3>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge critique">Critique</span>
+    <span class="task-title">P2-B1 — Mention assurance passagers dans la barre de confiance et la FAQ</span>
+  </div>
+  <div class="task-body">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>L'assurance passagers n'est mentionnée nulle part sur le site. Pour un anxieux ou un méfiant, c'est une raison de ne pas réserver.</p>
+    </div>
+    <div class="task-field">
+      <label>Action</label>
+      <p>1. Remplacer "Pilote qualifié · Sécurité & professionnalisme" dans la trust bar par deux éléments : "Pilote CPL · X heures de vol" ET "Assurance passagers incluse".<br />
+      2. Ajouter une question FAQ "Suis-je assuré pendant le vol ?" avec réponse complète.</p>
+    </div>
+    <div class="task-field">
+      <label>Fichiers</label>
+      <p><code>app/(public)/page.tsx</code> · trust bar lignes ~155-173<br /><code>app/(public)/faq/page.tsx</code> · thème "a-bord"</p>
+    </div>
+    <div class="task-field">
+      <label>Contenu requis</label>
+      <p>Nom de la compagnie d'assurance RC passagers</p>
+    </div>
+  </div>
+</div>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge important">Important</span>
+    <span class="task-title">P2-B2 — Expliquer le cost-sharing en langage humain (FAQ)</span>
+  </div>
+  <div class="task-body">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>Le site appelle ça "vol privé" mais les CGV révèlent que c'est du cost-sharing (NCO.GEN.104). Un client méfiant qui lit les CGV peut se sentir trompé. L'explication légale reste cachée.</p>
+    </div>
+    <div class="task-field">
+      <label>Action</label>
+      <p>Ajouter dans la FAQ (nouveau thème "Sécurité & légalité" ou dans "Réservation") : <em>"Est-ce légal ? Comment ça fonctionne légalement ?"</em> Réponse en langage simple sur le partage de coûts EASA, sans jargon.</p>
+    </div>
+    <div class="task-field">
+      <label>Fichier</label>
+      <p><code>app/(public)/faq/page.tsx</code></p>
+    </div>
+    <div class="task-field">
+      <label>Contenu requis</label>
+      <p>Validation par Romain de la formulation pour qu'elle soit exacte légalement</p>
+    </div>
+  </div>
+</div>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge important">Important</span>
+    <span class="task-title">P2-B3 — Numéro BCE + mentions légales dans le footer</span>
+  </div>
+  <div class="task-body">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>Aucun numéro d'entreprise visible. Un client méfiant ne peut pas vérifier que c'est une structure légale.</p>
+    </div>
+    <div class="task-field">
+      <label>Action</label>
+      <p>Ajouter dans le footer : "© 2026 Fly Horizons · DESTANBERG Romain · BCE [numéro] · info@fly-horizons.com". Si pas de BCE, indiquer le statut (personne physique indépendante, etc.).</p>
+    </div>
+    <div class="task-field">
+      <label>Fichier</label>
+      <p><code>components/layout/Footer.tsx</code></p>
+    </div>
+    <div class="task-field">
+      <label>Contenu requis</label>
+      <p>Numéro BCE ou statut exact de Romain</p>
+    </div>
+  </div>
+</div>
+
+<h3>P2-C · Photos de l'avion</h3>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge important">Important</span>
+    <span class="task-title">P2-C1 — Intégrer les photos de l'avion réel sur les fiches vol</span>
+  </div>
+  <div class="task-body">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>La galerie des fiches vol (<code>VolImageGallery</code>) affiche déjà des images si elles existent en base. Il suffit d'uploader les photos de l'avion réel et de les associer aux produits.</p>
+    </div>
+    <div class="task-field">
+      <label>Action</label>
+      <p>Ajouter les photos (extérieur + intérieur) via l'admin Supabase (<code>product_images</code> table). Pas de code requis si le composant galerie est déjà fonctionnel.</p>
+    </div>
+    <div class="task-field">
+      <label>Fichier (si ajustement nécessaire)</label>
+      <p><code>components/shop/VolImageGallery.tsx</code></p>
+    </div>
+    <div class="task-field">
+      <label>Contenu requis</label>
+      <p>Photos de l'avion (extérieur + intérieur)</p>
+    </div>
+  </div>
+</div>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge important">Important</span>
+    <span class="task-title">P2-C2 — Ajouter info sur l'avion dans la section "Ce qui est inclus"</span>
+  </div>
+  <div class="task-body">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>Le modèle de l'avion n'est mentionné nulle part. Pour un client premium ou méfiant, c'est une information attendue.</p>
+    </div>
+    <div class="task-field">
+      <label>Action</label>
+      <p>Ajouter dans la liste INCLUS de la fiche vol : "[Modèle avion] · certifié EASA" avec l'icône avion. Et une ligne "Altitude de croisière : X à Y mètres".</p>
+    </div>
+    <div class="task-field">
+      <label>Fichier</label>
+      <p><code>app/(public)/vols/[slug]/page.tsx</code> · tableau INCLUS lignes ~41-48</p>
+    </div>
+    <div class="task-field">
+      <label>Contenu requis</label>
+      <p>Modèle d'avion · Altitude typique de vol</p>
+    </div>
+  </div>
+</div>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge important">Important</span>
+    <span class="task-title">P2-C3 — Décision téléphone : l'afficher ou non dans Contact & FAQ</span>
+  </div>
+  <div class="task-body">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>Pas de numéro de téléphone visible. Pour une activité physique avec un inconnu, c'est un signal de sérieux. Si Romain ne veut pas le mettre, il faut au moins compenser.</p>
+    </div>
+    <div class="task-field">
+      <label>Action si OUI téléphone</label>
+      <p>Ajouter dans la page Contact et dans la trust bar. Éventuellement aussi dans le footer.</p>
+    </div>
+    <div class="task-field">
+      <label>Action si NON téléphone</label>
+      <p>Ajouter "WhatsApp" ou renforcer "Réponse garantie sous 24h ouvrables" avec engagement plus fort. Envisager un chat simple.</p>
+    </div>
+    <div class="task-field">
+      <label>Fichier</label>
+      <p><code>app/(public)/contact/page.tsx</code> · <code>components/layout/Footer.tsx</code></p>
+    </div>
+  </div>
+</div>
+</div>
+
+
+<!-- ════════════════════════════════
+     PHASE 3
+════════════════════════════════ -->
+<div class="page-break">
+<div class="phase-header">
+  <div class="phase-num">P3</div>
+  <div class="phase-info">
+    <h3>Preuve sociale & Parcours cadeau</h3>
+    <p>Témoignages requis · Décisions UX sur le parcours cadeau · Impact fort sur la conversion cadeau</p>
+  </div>
+  <div class="phase-tags">
+    <span class="phase-tag">2-3 jours</span>
+    <span class="phase-tag">6 tâches</span>
+  </div>
+</div>
+
+<h3>P3-A · Témoignages clients</h3>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge critique">Critique</span>
+    <span class="task-title">P3-A1 — Créer le bloc témoignages sur la homepage</span>
+  </div>
+  <div class="task-body full">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>Zéro preuve sociale sur tout le site. Premier facteur de conversion manquant pour un achat à 100-400 €.</p>
+    </div>
+    <div class="task-field">
+      <label>Contenu requis</label>
+      <p>3 à 5 témoignages : prénom, ville, note /5, 2-3 lignes de texte. Idéalement un d'un client qui avait peur de voler et qui a adoré (pour le profil anxieux).</p>
+    </div>
+    <div class="task-field">
+      <label>Nouveau composant</label>
+      <p><code>components/shop/Testimonials.tsx</code> — grille de 3 cards avec étoiles, prénom, ville, citation.</p>
+    </div>
+    <div class="task-field">
+      <label>Intégration</label>
+      <p><code>app/(public)/page.tsx</code> — entre la section packs et la section vol sur mesure. C'est le bon emplacement : le client a vu les offres, maintenant il cherche la preuve que ça marche.</p>
+    </div>
+    <div class="task-field">
+      <label>Intégration fiche vol</label>
+      <p><code>app/(public)/vols/[slug]/page.tsx</code> — 1 ou 2 témoignages pertinents après "De la réservation au vol".</p>
+    </div>
+  </div>
+</div>
+
+<h3>P3-B · Parcours cadeau</h3>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge important">Important</span>
+    <span class="task-title">P3-B1 — Ajouter un CTA "Offrir en cadeau" distinct sur la homepage et dans la nav</span>
+  </div>
+  <div class="task-body">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>Le client cadeau ne voit aucun parcours dédié. Il arrive sur le site, voit "Réserver un vol" et ne comprend pas que ça peut s'offrir sans choisir une date.</p>
+    </div>
+    <div class="task-field">
+      <label>Action</label>
+      <p>Dans le hero : ajouter un 3e CTA "Offrir en cadeau →" (texte seulement, style discret) sous les deux boutons principaux. Dans la nav : ajouter "Offrir" ou "Bons cadeaux" quelque part (dropdown sous "Nos offres" ou lien séparé).</p>
+    </div>
+    <div class="task-field">
+      <label>Fichiers</label>
+      <p><code>app/(public)/page.tsx</code> · section hero CTAs<br /><code>components/layout/Header.tsx</code></p>
+    </div>
+    <div class="task-field">
+      <label>Risque</label>
+      <p>Faible. Ajout de liens seulement.</p>
+    </div>
+  </div>
+</div>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge important">Important</span>
+    <span class="task-title">P3-B2 — Afficher la validité 12 mois du bon cadeau AVANT l'achat</span>
+  </div>
+  <div class="task-body">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>La validité de 12 mois est mentionnée seulement dans les CGV. Un client cadeau a besoin de cette info AVANT de payer pour être rassuré.</p>
+    </div>
+    <div class="task-field">
+      <label>Action</label>
+      <p>Sur les PackCards (version "Offrir") et sur la page panier : ajouter "Valable 12 mois · Le bénéficiaire choisit sa date." sous le prix.</p>
+    </div>
+    <div class="task-field">
+      <label>Fichiers</label>
+      <p><code>components/shop/PackCard.tsx</code> · version PackBuyCard<br /><code>app/(public)/cart/page.tsx</code></p>
+    </div>
+    <div class="task-field">
+      <label>Risque</label>
+      <p>Nul.</p>
+    </div>
+  </div>
+</div>
+
+<h3>P3-C · Section client anxieux</h3>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge important">Important</span>
+    <span class="task-title">P3-C1 — Ajouter une section ou des éléments rassurants pour les clients anxieux</span>
+  </div>
+  <div class="task-body full">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>Un client qui a peur de voler trouve sur le site une vidéo immersive d'avion en vol et "avion léger" partout. Aucun élément ne le rassure spécifiquement.</p>
+    </div>
+    <div class="task-field">
+      <label>Action (3 sous-tâches)</label>
+      <p>
+        1. Ajouter dans la FAQ (thème "À bord") : "J'ai peur de voler, est-ce que c'est adapté pour moi ?" avec une réponse douce, rassurante, honnête.<br />
+        2. Ajouter l'altitude typique de vol dans la fiche vol (ex: "On vole entre X et Y mètres d'altitude, à [vitesse] km/h").<br />
+        3. Si un témoignage d'anxieux converti est disponible (Phase 3-A), le mettre en avant sur la fiche vol avec un label "J'avais peur de voler…".
+      </p>
+    </div>
+    <div class="task-field">
+      <label>Fichiers</label>
+      <p><code>app/(public)/faq/page.tsx</code><br /><code>app/(public)/vols/[slug]/page.tsx</code></p>
+    </div>
+    <div class="task-field">
+      <label>Contenu requis</label>
+      <p>Altitude typique · Vitesse approximative · Témoignage anxieux si disponible</p>
+    </div>
+  </div>
+</div>
+</div>
+
+
+<!-- ════════════════════════════════
+     PHASE 4
+════════════════════════════════ -->
+<div class="page-break">
+<div class="phase-header">
+  <div class="phase-num">P4</div>
+  <div class="phase-info">
+    <h3>Finitions & Corrections techniques mineures</h3>
+    <p>Après phases 1-3 · Aucun contenu requis · Impact limité mais propre</p>
+  </div>
+  <div class="phase-tags">
+    <span class="phase-tag">1 jour</span>
+    <span class="phase-tag">4 tâches</span>
+  </div>
+</div>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge mineur">Mineur</span>
+    <span class="task-title">P4-1 — Améliorer la distinction visuelle calendrier (disponible vs indisponible)</span>
+  </div>
+  <div class="task-body">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>Sur mobile, la différence visuelle entre un jour disponible et indisponible est difficile à percevoir. Problème d'accessibilité.</p>
+    </div>
+    <div class="task-field">
+      <label>Action</label>
+      <p>Ajouter un fond vert très pâle (<code>bg-green-50</code>) sur les jours disponibles non sélectionnés pour les distinguer clairement des jours grisés.</p>
+    </div>
+    <div class="task-field">
+      <label>Fichiers</label>
+      <p><code>app/(public)/reservation/page.tsx</code> · fonction renderCalendar()<br /><code>app/(public)/vol-sur-mesure/page.tsx</code> · fonction renderCalendar()</p>
+    </div>
+    <div class="task-field">
+      <label>Risque</label>
+      <p>Nul. CSS uniquement.</p>
+    </div>
+  </div>
+</div>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge important">Important</span>
+    <span class="task-title">P4-2 — Vérifier et créer la page /cgp si elle est distincte de /cgv</span>
+  </div>
+  <div class="task-body">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>Les CGV mentionnent un lien <code>fly-horizons.com/cgp.html</code> pour les Conditions Générales de Participation. Cette page n'existe pas comme route Next.js. Le lien est mort.</p>
+    </div>
+    <div class="task-field">
+      <label>Action</label>
+      <p>Vérifier avec Romain si CGP = CGV (même document). Si oui : harmoniser les labels. Si non : créer <code>app/(public)/cgp/page.tsx</code> avec le contenu CGP.</p>
+    </div>
+    <div class="task-field">
+      <label>Fichier</label>
+      <p>Nouveau : <code>app/(public)/cgp/page.tsx</code> si nécessaire</p>
+    </div>
+    <div class="task-field">
+      <label>Contenu requis</label>
+      <p>Décision de Romain sur CGP vs CGV</p>
+    </div>
+  </div>
+</div>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge mineur">Mineur</span>
+    <span class="task-title">P4-3 — Renommer "Modifier mon vol" → "Créer un nouveau vol" (vol sur mesure done)</span>
+  </div>
+  <div class="task-body">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>Sur la page de confirmation du vol sur mesure (step "done"), le bouton "Modifier mon vol" remet à zéro toute la carte. Ce n'est pas "modifier", c'est "recommencer".</p>
+    </div>
+    <div class="task-field">
+      <label>Action</label>
+      <p>Changer le label en "Créer un nouveau vol" ou "Dessiner un autre itinéraire".</p>
+    </div>
+    <div class="task-field">
+      <label>Fichier</label>
+      <p><code>app/(public)/vol-sur-mesure/page.tsx</code> · ligne ~1299</p>
+    </div>
+    <div class="task-field">
+      <label>Risque</label>
+      <p>Nul.</p>
+    </div>
+  </div>
+</div>
+
+<div class="task avoid-break">
+  <div class="task-header">
+    <span class="badge mineur">Mineur</span>
+    <span class="task-title">P4-4 — Ajouter le modèle d'avion et l'info altitude dans la FAQ "À bord"</span>
+  </div>
+  <div class="task-body">
+    <div class="task-field">
+      <label>Problème</label>
+      <p>Aucune mention du modèle d'avion ni de l'altitude de vol dans la FAQ. Questions très fréquentes des premiers visiteurs.</p>
+    </div>
+    <div class="task-field">
+      <label>Action</label>
+      <p>Ajouter dans le thème "À bord" : "Quel avion utilisez-vous ?" et "À quelle altitude vole-t-on ?" avec des réponses précises.</p>
+    </div>
+    <div class="task-field">
+      <label>Fichier</label>
+      <p><code>app/(public)/faq/page.tsx</code> · thème "a-bord"</p>
+    </div>
+    <div class="task-field">
+      <label>Contenu requis</label>
+      <p>Modèle avion · Altitude typique</p>
+    </div>
+  </div>
+</div>
+</div>
+
+
+<!-- ════════════════════════════════
+     RÉCAP PAR FICHIER
+════════════════════════════════ -->
+<h2 class="page-break"><span class="num">R</span>Récapitulatif — Fichiers touchés</h2>
+
+<p style="color:var(--gray600); font-size:12px; margin-bottom:14px;">
+  Vue globale pour s'organiser et éviter les conflits. Les fichiers sont ordonnés par phase et fréquence de modification.
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Fichier</th>
+      <th>Phase(s)</th>
+      <th>Tâches</th>
+      <th>Risque</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>components/layout/Header.tsx</code></td>
+      <td>P1, P3</td>
+      <td>Ajouter "Vol sur mesure" nav desktop · Renommer "Boutique" → "Accessoires" · CTA cadeau éventuel</td>
+      <td style="color:var(--green)">Nul</td>
+    </tr>
+    <tr>
+      <td><code>app/(public)/contact/page.tsx</code></td>
+      <td>P1, P2</td>
+      <td>Supprimer phrase "développement actif" · Corriger "notre équipe" · Ajouter téléphone si décidé</td>
+      <td style="color:var(--green)">Nul</td>
+    </tr>
+    <tr>
+      <td><code>app/(public)/faq/page.tsx</code></td>
+      <td>P1, P2, P4</td>
+      <td>Corriger "Notre équipe" · 3 nouvelles Q · Assurance · Cost-sharing · Avion · Altitude · Anxieux</td>
+      <td style="color:var(--green)">Nul</td>
+    </tr>
+    <tr>
+      <td><code>app/(public)/page.tsx</code></td>
+      <td>P1, P2, P3</td>
+      <td>Reformuler H1 · Barre confiance mise à jour · Section pilote · Bloc témoignages · CTA cadeau</td>
+      <td style="color:var(--green)">Nul</td>
+    </tr>
+    <tr>
+      <td><code>app/(public)/vols/[slug]/page.tsx</code></td>
+      <td>P1, P2, P3</td>
+      <td>Poids max visible · J-2 avertissement · INCLUS ajout avion+altitude · Section pilote · Témoignages</td>
+      <td style="color:var(--green)">Nul</td>
+    </tr>
+    <tr>
+      <td><code>app/(public)/nos-offres/page.tsx</code></td>
+      <td>P1</td>
+      <td>Reformuler "Exclusivité Fly Horizons" · Avertissement poids sous les packs</td>
+      <td style="color:var(--green)">Nul</td>
+    </tr>
+    <tr>
+      <td><code>app/(public)/reservation/page.tsx</code></td>
+      <td>P1, P4</td>
+      <td>Corriger lien CGP/CGV · Renommer "Payer plus tard" + modale · Texte poids · Calendrier couleurs</td>
+      <td style="color:orange"><span class="i">Faible</span> (modale)</td>
+    </tr>
+    <tr>
+      <td><code>app/(public)/reservation/success/page.tsx</code></td>
+      <td>P1</td>
+      <td>Ajouter deadline pay-later visible</td>
+      <td style="color:var(--green)">Nul</td>
+    </tr>
+    <tr>
+      <td><code>app/(public)/vol-sur-mesure/page.tsx</code></td>
+      <td>P1, P4</td>
+      <td>Corriger lien CGP/CGV · Prix dans stats bar mobile · Renommer "Modifier mon vol"</td>
+      <td style="color:var(--green)">Nul</td>
+    </tr>
+    <tr>
+      <td><code>components/shop/PackCard.tsx</code></td>
+      <td>P1, P3</td>
+      <td>Retirer/clarifier "À partir de" · Ajouter validité 12 mois sur PackBuyCard</td>
+      <td style="color:var(--green)">Nul</td>
+    </tr>
+    <tr>
+      <td><code>components/layout/Footer.tsx</code></td>
+      <td>P2</td>
+      <td>Ajouter numéro BCE + mentions légales</td>
+      <td style="color:var(--green)">Nul</td>
+    </tr>
+    <tr>
+      <td><code>components/shop/PilotCard.tsx</code></td>
+      <td>P2</td>
+      <td>Nouveau composant à créer · Photo + bio + licence + assurance</td>
+      <td style="color:var(--green)">Nul</td>
+    </tr>
+    <tr>
+      <td><code>components/shop/Testimonials.tsx</code></td>
+      <td>P3</td>
+      <td>Nouveau composant à créer · 3-5 témoignages clients</td>
+      <td style="color:var(--green)">Nul</td>
+    </tr>
+    <tr>
+      <td><code>components/shop/VolDetailClient.tsx</code></td>
+      <td>P1</td>
+      <td>Ajouter message règle J-2 sous le CTA réservation</td>
+      <td style="color:var(--green)">Nul</td>
+    </tr>
+    <tr>
+      <td><code>app/(public)/cart/page.tsx</code></td>
+      <td>P3</td>
+      <td>Ajouter validité 12 mois pour les vouchers dans le panier</td>
+      <td style="color:var(--green)">Nul</td>
+    </tr>
+    <tr>
+      <td><code>app/(public)/cgp/page.tsx</code></td>
+      <td>P4</td>
+      <td>Créer si CGP ≠ CGV (décision Romain)</td>
+      <td style="color:var(--green)">Nul</td>
+    </tr>
+  </tbody>
+</table>
+
+
+<!-- ════════════════════════════════
+     RÈGLES DE TRAVAIL
+════════════════════════════════ -->
+<h2><span class="num">⚙</span>Règles de travail pour ne pas casser le site</h2>
+
+<div class="note avoid-break">
+  <strong>Règle 1 — Ordre des phases.</strong>
+  Ne jamais commencer Phase 2 sans avoir reçu le contenu de Romain (photos, bio, assurance). Une section vide ou avec un placeholder est pire que pas de section.
+</div>
+
+<div class="note avoid-break">
+  <strong>Règle 2 — Ne jamais toucher aux fichiers API.</strong>
+  Les routes <code>app/api/*</code> ne font pas partie de ce plan. Aucune modification de la logique de paiement, de réservation, ou de validation. Tout le travail est front-end.
+</div>
+
+<div class="note avoid-break">
+  <strong>Règle 3 — Tâches P1 en premier, toujours.</strong>
+  Les tâches Phase 1 ne dépendent de rien et ne risquent rien. Les faire en priorité donne des résultats visibles immédiatement et libère du temps pour attendre le contenu Phase 2.
+</div>
+
+<div class="note avoid-break">
+  <strong>Règle 4 — Un fichier à la fois.</strong>
+  Traiter les tâches fichier par fichier (pas thème par thème). Ça évite d'ouvrir le même fichier plusieurs fois et réduit les risques de conflits.
+</div>
+
+<div class="warning avoid-break">
+  <strong>Ordre recommandé dans Phase 1 :</strong>
+  <code>Header.tsx</code> → <code>contact/page.tsx</code> → <code>faq/page.tsx</code> → <code>nos-offres/page.tsx</code> → <code>page.tsx</code> (homepage) → <code>vols/[slug]/page.tsx</code> → <code>reservation/page.tsx</code> → <code>reservation/success/page.tsx</code> → <code>vol-sur-mesure/page.tsx</code> → <code>PackCard.tsx</code>
+</div>
+
+
+<!-- ════════════════════════════════
+     FOOTER
+════════════════════════════════ -->
+<div class="doc-footer">
+  <div>
+    <strong>Fly Horizons</strong> · Plan UX & Conversion · Mai 2026
+  </div>
+  <div>
+    Phase 1 : démarrage immédiat ·
+    Phase 2 : après contenu Romain ·
+    Phase 3 : après témoignages ·
+    Phase 4 : finitions
+  </div>
+</div>
+
+</body>
+</html>

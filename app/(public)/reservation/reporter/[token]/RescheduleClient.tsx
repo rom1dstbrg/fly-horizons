@@ -145,7 +145,7 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
               <div className="shrink-0">
                 <div className="inline-flex items-center gap-1.5 bg-black/40 backdrop-blur-md border border-white/15 rounded-xl px-3 py-1.5">
                   <span className="text-[#F2B705] font-black text-[13px] leading-none">{duree < 60 ? `${duree} min` : `${Math.floor(duree/60)}h${duree%60 > 0 ? String(duree%60).padStart(2,"0") : ""}`}</span>
-                  <span className="text-white/50 text-[11px] leading-none">vol privé</span>
+                  <span className="text-white/50 text-[11px] leading-none">avion léger</span>
                 </div>
               </div>
             </div>

@@ -56,7 +56,7 @@ export function PackCard({ pack }: { pack: PackBase }) {
           <div className="absolute top-4 left-4">
             <div className="inline-flex items-center gap-1.5 bg-black/40 backdrop-blur-md border border-white/15 rounded-xl px-3 py-1.5">
               <span className="text-[#F2B705] font-black text-[13px] leading-none">{formatDuration(duree)}</span>
-              <span className="text-white/50 text-[11px] leading-none">vol privé</span>
+              <span className="text-white/50 text-[11px] leading-none">avion léger</span>
             </div>
           </div>
         </div>
@@ -83,7 +83,7 @@ export function PackCard({ pack }: { pack: PackBase }) {
           <div className="pt-4 mt-4 border-t border-border/50 space-y-3">
             <div>
               <p className="text-[10px] font-semibold text-[#F2B705] uppercase tracking-[2px] mb-1">
-                À partir de
+                Prix
               </p>
               <div className="flex items-baseline gap-0.5">
                 <span className="text-[#0b2238] font-black text-[26px] leading-none">{pack.price}</span>
@@ -158,7 +158,7 @@ export function PackBuyCard({ pack }: { pack: PackBase }) {
         <div className="absolute top-3.5 left-3.5">
           <div className="inline-flex items-center gap-1.5 bg-black/40 backdrop-blur-md border border-white/15 rounded-xl px-3 py-1.5">
             <span className="text-[#F2B705] font-black text-[13px] leading-none">{formatDuration(duree)}</span>
-            <span className="text-white/50 text-[11px] leading-none">vol privé</span>
+            <span className="text-white/50 text-[11px] leading-none">avion léger</span>
           </div>
         </div>
       </div>
@@ -187,6 +187,10 @@ export function PackBuyCard({ pack }: { pack: PackBase }) {
               <span className="text-muted-foreground text-[13px] font-medium ml-0.5">€</span>
             </div>
           </div>
+
+          <p className="text-[10px] text-muted-foreground/60 text-center">
+            ✓ Valable 12 mois · Transférable librement
+          </p>
 
           <button
             onClick={handleAdd}

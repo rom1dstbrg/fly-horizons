@@ -4,7 +4,7 @@ import { ContactForm } from "@/components/shop/ContactForm";
 
 export const metadata = {
   title: "Contact — Fly Horizons",
-  description: "Une question ? Un problème ? Contactez l'équipe Fly Horizons.",
+  description: "Une question sur votre réservation ou votre vol ? Contactez Romain, fondateur de Fly Horizons. Réponse personnelle sous 48 h.",
 };
 
 export default function ContactPage() {
@@ -81,17 +81,14 @@ export default function ContactPage() {
             </div>
 
             <div className="card-premium p-5 border-l-2 border-primary space-y-2">
-              <p className="text-xs font-semibold text-foreground">À propos de ce site</p>
+              <p className="text-xs font-semibold text-foreground">Une approche personnelle</p>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Ce site est développé et maintenu par{" "}
-                <span className="text-foreground font-medium">Romain DESTANBERG</span>,
-                pilote et fondateur de Fly Horizons. Il est en développement actif et évolue en permanence.
+                Votre message est lu et répondu par{" "}
+                <span className="text-foreground font-medium">Romain</span>,
+                fondateur et pilote. Pas de support externalisé, pas de réponse automatique.
               </p>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Des imperfections peuvent survenir. Chaque bug signalé via ce formulaire est lu personnellement : votre retour compte vraiment et aide à améliorer l&apos;expérience pour tous.
-              </p>
-              <p className="text-xs text-primary font-medium">
-                Sujet : &ldquo;Bug ou problème technique&rdquo;
+                Chaque vol est organisé avec soin. Si vous avez la moindre question avant ou après votre réservation, n&apos;hésitez pas.
               </p>
             </div>
 

@@ -848,6 +848,16 @@ export default function VolSurMesurePage() {
 
           {/* Mobile CTA */}
           <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-border px-4 py-3 z-40">
+            {route.pois.length > 0 && prixEstime > 0 && (
+              <div className="flex items-center justify-between mb-2 px-1">
+                <span className="text-xs text-muted-foreground">
+                  ≈ {route.totalMin} min · {route.distKm} km
+                </span>
+                <span className="text-sm font-black text-[#113356]">
+                  Estimé : {prixEstime} €
+                </span>
+              </div>
+            )}
             <button type="button"
               disabled={route.pois.length === 0}
               onClick={() => { setFlowStep("reserve"); loadMonth(calYear, calMonth); }}
@@ -868,7 +878,7 @@ export default function VolSurMesurePage() {
           <button type="button" onClick={() => setFlowStep("build")}
             className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer group mb-6">
             <ChevronLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
-            Modifier mon vol
+            Modifier l&apos;itinéraire
           </button>
 
           <div className="flex flex-col lg:flex-row gap-6 items-start">
@@ -1298,7 +1308,7 @@ export default function VolSurMesurePage() {
               <button type="button"
                 onClick={() => { setFlowStep("build"); setRoute({ pois: [], distKm: 0, transitMin: 0, obsMin: 0, totalMin: 0 }); setForm(f => ({ ...f, date: "", heure: "", commentaire: "" })); mapRef.current?.clearAll(); }}
                 className="inline-flex items-center justify-center px-6 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:bg-secondary transition-colors cursor-pointer">
-                Modifier mon vol
+                Créer un nouveau vol
               </button>
             </div>
 

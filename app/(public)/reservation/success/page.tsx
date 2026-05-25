@@ -47,8 +47,8 @@ const STEPS_PAY_LATER = [
   {
     num: 2,
     done: false,
-    title: "Réglez pour confirmer",
-    desc: "Utilisez le lien de paiement envoyé par email pour bloquer votre créneau. Sans paiement, la date n'est pas garantie.",
+    title: "Réglez dans les 24 h pour confirmer",
+    desc: "Ouvrez le lien de paiement reçu par email et réglez l'acompte. Votre créneau n'est sécurisé qu'après paiement — les disponibilités peuvent évoluer.",
   },
   {
     num: 3,
@@ -96,7 +96,7 @@ export default async function ReservationSuccessPage({ searchParams }: Props) {
               <div className="flex items-start gap-2.5">
                 <AlertTriangle size={13} className="text-amber-600 mt-0.5 shrink-0" />
                 <p className="text-xs text-amber-800 leading-relaxed">
-                  <strong>Créneau non garanti.</strong> Votre date ne sera confirmée qu&apos;après réception du paiement. Passé le délai, le créneau sera libéré automatiquement.
+                  <strong>Créneau non garanti.</strong> Votre date ne sera confirmée qu&apos;après réception du paiement. Réglez <strong>dans les 24 h</strong> via le lien reçu par email — au-delà, le créneau peut être attribué à un autre client.
                 </p>
               </div>
             </div>

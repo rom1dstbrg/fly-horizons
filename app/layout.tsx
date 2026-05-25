@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     "baptême de l'air Belgique",
     "baptême de l'air Charleroi",
     "vol en avion Belgique",
-    "vol privé Charleroi",
+    "vol avion léger Charleroi",
     "vol avion léger Belgique",
     "vol découverte Belgique",
     "cadeau vol avion Belgique",

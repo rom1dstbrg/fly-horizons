@@ -48,11 +48,10 @@ export default async function NosOffresPage() {
 
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
 
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-[#F2B705]/15 border border-[#F2B705]/30 text-[#F2B705] text-[10px] font-black tracking-[3px] uppercase px-3 py-1.5 rounded-full mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#F2B705] animate-pulse" />
-            Exclusivité Fly Horizons
-          </div>
+          {/* Eyebrow label */}
+          <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-6">
+            Vol sur mesure
+          </p>
 
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start pb-12">
 
@@ -88,19 +87,19 @@ export default async function NosOffresPage() {
                     n: "1",
                     icon: <MousePointerClick size={13} />,
                     title: "Cliquez sur la carte pour placer vos destinations",
-                    desc: "Namur, Bruxelles, la côte, les Ardennes, un château, une ferme… n&apos;importe où en Belgique et au-delà.",
+                    desc: "Namur, Bruxelles, la côte, les Ardennes, un château, une ferme… n'importe où en Belgique et au-delà.",
                   },
                   {
                     n: "2",
                     icon: <Zap size={13} />,
                     title: "Durée et prix s'affichent en temps réel",
-                    desc: "L&apos;algorithme calcule la route optimale à chaque ajout. Vous voyez le coût évoluer avant de confirmer quoi que ce soit.",
+                    desc: "L'algorithme calcule la route optimale à chaque ajout. Vous voyez le coût évoluer avant de confirmer quoi que ce soit.",
                   },
                   {
                     n: "3",
                     icon: <PlaneTakeoff size={13} />,
                     title: "Romain valide votre itinéraire sous 24 h",
-                    desc: "Il vérifie la faisabilité (espaces aériens, restrictions) et vous envoie la route définitive avec possibilité d&apos;ajustement.",
+                    desc: "Il vérifie la faisabilité (espaces aériens, restrictions) et vous envoie la route définitive avec possibilité d'ajustement.",
                   },
                 ].map(({ n, icon, title, desc }) => (
                   <div key={n} className="flex gap-3.5">
@@ -112,7 +111,7 @@ export default async function NosOffresPage() {
                     </div>
                     <div className="pb-3">
                       <p className="text-white text-sm font-semibold leading-snug mb-0.5">{title}</p>
-                      <p className="text-white/45 text-[11px] leading-relaxed" dangerouslySetInnerHTML={{ __html: desc }} />
+                      <p className="text-white/45 text-[11px] leading-relaxed">{desc}</p>
                     </div>
                   </div>
                 ))}
@@ -305,7 +304,7 @@ export default async function NosOffresPage() {
       </div>
 
       {/* ══════════════════════════════════════════
-          Réservation directe
+          Réassurance
       ══════════════════════════════════════════ */}
       <div className="border-t border-border bg-white">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 py-6">

@@ -394,8 +394,8 @@ export default function GuidePage() {
                   {
                     n: "01", Icon: Store,
                     title: "Achetez le bon en ligne",
-                    desc: "Rendez-vous sur la boutique, choisissez la durée de vol souhaitée et payez via Stripe. Le code arrive par email dans les minutes qui suivent.",
-                    cta: { label: "Voir la boutique", href: "/shop" },
+                    desc: "Rendez-vous sur Nos offres, choisissez la durée de vol souhaitée et payez via Stripe. Le code arrive par email dans les minutes qui suivent.",
+                    cta: { label: "Voir nos offres", href: "/nos-offres" },
                   },
                   {
                     n: "02", Icon: Gift,

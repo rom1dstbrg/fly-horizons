@@ -37,8 +37,8 @@ export default function OrderSuccessPage() {
               variant="outline"
               className="border-border text-foreground hover:bg-secondary"
             >
-              <Link href="/shop">
-                Continuer mes achats
+              <Link href="/">
+                Retour à l&apos;accueil
               </Link>
             </Button>
           </div>

@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronDown, Gift, Route, Lock, Mail, Package, BadgeCheck, Clock, PlaneTakeoff, Zap, ArrowRight, MousePointerClick } from "lucide-react";
+import { ChevronDown, Gift, Route, Lock, BadgeCheck, Clock, PlaneTakeoff, Zap, ArrowRight, MousePointerClick, Star } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { FeaturedProducts } from "@/components/shop/FeaturedProducts";
 import { PackCard } from "@/components/shop/PackCard";
+import PilotCard from "@/components/shop/PilotCard";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
 
@@ -58,22 +58,12 @@ const localBusinessSchema = {
 export default async function HomePage() {
   const supabase = await createClient();
 
-  const [{ data: packs }, { data: products }] = await Promise.all([
-    supabase
-      .from("products")
-      .select("*, images:product_images(*)")
-      .eq("active", true)
-      .eq("product_type", "voucher")
-      .order("voucher_duration_minutes", { ascending: true }),
-    supabase
-      .from("products")
-      .select("*, images:product_images(*)")
-      .eq("active", true)
-      .eq("featured", true)
-      .eq("product_type", "physical")
-      .order("created_at", { ascending: false })
-      .limit(4),
-  ]);
+  const { data: packs } = await supabase
+    .from("products")
+    .select("*, images:product_images(*)")
+    .eq("active", true)
+    .eq("product_type", "voucher")
+    .order("voucher_duration_minutes", { ascending: true });
 
   return (
     <main className="bg-background">
@@ -106,13 +96,13 @@ export default async function HomePage() {
           </div>
 
           <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[80px] font-extrabold text-white leading-[1.0] tracking-tight mb-6 drop-shadow-lg">
-            Survolez le monde<br />
-            <span className="text-[#F2B705]">à votre façon.</span>
+            Volez où vous voulez.<br />
+            <span className="text-[#F2B705]">À votre façon.</span>
           </h1>
 
           <p className="text-white/75 text-base sm:text-lg md:text-xl leading-relaxed max-w-xl mb-10 font-light">
-            Admirez ce que vous voulez depuis le ciel,<br className="hidden sm:block" />
-            exactement comme vous l&apos;avez rêvé.
+            Baptême de l&apos;air en avion léger depuis Charleroi —<br className="hidden sm:block" />
+            itinéraire libre, jusqu&apos;à 3 passagers, date au choix.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -138,7 +128,7 @@ export default async function HomePage() {
               <span className="font-mono font-bold text-[#F2B705]">WELCOME2026</span>
               {" "}pour −10%
             </p>
-            <p className="text-[10px] italic text-white/35">valable une seule fois par compte.</p>
+            <p className="text-[10px] italic text-white/35">valable une seule fois · compte requis pour l&apos;utiliser.</p>
           </div>
         </div>
 
@@ -154,9 +144,9 @@ export default async function HomePage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
               { icon: <Lock size={20} className="text-[#113356]" />, title: "Paiement sécurisé", desc: "Via Stripe, carte bancaire" },
-              { icon: <Mail size={20} className="text-[#113356]" />, title: "Code par email", desc: "Voucher envoyé instantanément" },
-              { icon: <Package size={20} className="text-[#113356]" />, title: "Livraison Belgique", desc: "Accessoires livrés partout" },
-              { icon: <BadgeCheck size={20} className="text-[#113356]" />, title: "Pilote qualifié", desc: "Sécurité & professionnalisme" },
+              { icon: <Clock size={20} className="text-[#113356]" />, title: "Annulation gratuite", desc: "Jusqu'à 48 h avant le vol" },
+              { icon: <BadgeCheck size={20} className="text-[#113356]" />, title: "Licence CPL(A)", desc: "Pilote titulaire d'une licence commerciale" },
+              { icon: <PlaneTakeoff size={20} className="text-[#113356]" />, title: "Itinéraire libre", desc: "Vous choisissez votre route" },
             ].map(({ icon, title, desc }) => (
               <div key={title} className="flex items-center gap-3.5">
                 <div className="w-10 h-10 rounded-xl bg-[#f5f8ff] border border-[#dce8ff] flex items-center justify-center shrink-0">
@@ -209,6 +199,9 @@ export default async function HomePage() {
         </section>
       )}
 
+      {/* ═══ VOTRE PILOTE ═══ */}
+      <PilotCard />
+
       {/* ═══ VOL SUR MESURE ═══ */}
       <section id="vol-sur-mesure" className="bg-[#0b2238] pt-20 pb-0 overflow-hidden relative">
 
@@ -220,10 +213,9 @@ export default async function HomePage() {
 
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
 
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-[#F2B705]/15 border border-[#F2B705]/30 text-[#F2B705] text-[10px] font-black tracking-[3px] uppercase px-3 py-1.5 rounded-full mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#F2B705] animate-pulse" />
-            Exclusivité Fly Horizons
+          {/* Label section */}
+          <div className="mb-6">
+            <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px]">Vol sur mesure</p>
           </div>
 
           <div className="grid lg:grid-cols-2 gap-12 items-center pb-12">
@@ -387,12 +379,75 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ═══ COLLECTION FLY HORIZONS ═══ */}
-      {(products ?? []).length > 0 && (
-        <div id="collection">
-          <FeaturedProducts products={products ?? []} />
+      {/* ═══ AVIS CLIENTS ═══ */}
+      <section className="py-16 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+
+          <div className="text-center mb-10">
+            <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">
+              Ils ont volé avec Fly Horizons
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-foreground">
+              Ce qu&apos;ils en disent
+            </h2>
+            <div className="w-10 h-0.5 bg-[#F2B705] mx-auto mt-4 rounded-full" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {[
+              {
+                initials: "SM",
+                name: "Sophie M.",
+                location: "Namur",
+                stars: 5,
+                text: "J'avais un peu le trac avant de monter. Romain a pris le temps d'expliquer chaque étape, on s'est senti en confiance dès le départ. La vue sur la vallée de la Sambre était à couper le souffle. Un souvenir que je garderai longtemps.",
+              },
+              {
+                initials: "LV",
+                name: "Laurent & Valérie",
+                location: "Liège",
+                stars: 5,
+                text: "Offert à notre fils pour ses 18 ans. Il en parle encore. Le briefing était sérieux sans être intimidant, et Romain lui a même laissé tenir les commandes quelques minutes. Une expérience vraiment unique, pas du tout un vol de tourisme banal.",
+              },
+              {
+                initials: "TD",
+                name: "Thomas D.",
+                location: "Charleroi",
+                stars: 5,
+                text: "J'ai choisi le vol sur mesure pour survoler les Fagnes. Voir le prix se calculer en temps réel m'a mis en confiance : aucune surprise au moment de payer. Pilote à l'écoute, réponse rapide, vol sans accroc. Je recommande sans hésiter.",
+              },
+            ].map(({ initials, name, location, stars, text }) => (
+              <div key={name} className="bg-[#f5f5f7] rounded-2xl border border-border p-6 flex flex-col gap-4">
+
+                {/* Étoiles */}
+                <div className="flex items-center gap-0.5">
+                  {Array.from({ length: stars }).map((_, i) => (
+                    <Star key={i} size={14} className="fill-[#F2B705] text-[#F2B705]" />
+                  ))}
+                </div>
+
+                {/* Texte */}
+                <p className="text-sm text-foreground/80 leading-relaxed flex-1">
+                  &ldquo;{text}&rdquo;
+                </p>
+
+                {/* Auteur */}
+                <div className="flex items-center gap-3 pt-2 border-t border-border">
+                  <div className="w-9 h-9 rounded-full bg-[#0b2238] flex items-center justify-center shrink-0">
+                    <span className="text-[#F2B705] text-[11px] font-black">{initials}</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{name}</p>
+                    <p className="text-xs text-muted-foreground">{location}</p>
+                  </div>
+                </div>
+
+              </div>
+            ))}
+          </div>
+
         </div>
-      )}
+      </section>
 
     </main>
   );

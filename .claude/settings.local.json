@@ -86,7 +86,8 @@
       "Bash(xargs grep -l \"month\\\\|heure_vol\\\\|time\\\\|slot\")",
       "Bash(xargs grep -l \"heure_vol\\\\|heures\\\\|time_slot\\\\|SLOTS\\\\|heures_disponibles\")",
       "Bash(xargs grep -l \"vol-sur-mesure\\\\|vol_sur_mesure\\\\|sur mesure\\\\|VolSurMesure\")",
-      "Bash(git commit -m 'feat: report de vol, sidebar VSM scrollable, sections vol-sur-mesure redesign *)"
+      "Bash(git commit -m 'feat: report de vol, sidebar VSM scrollable, sections vol-sur-mesure redesign *)",
+      "Bash(git commit -m 'feat: Phase 2 — PilotCard, DA40 TDI, poids 190 kg, mots interdits, FAQ enrichie, BCE footer *)"
     ]
   }
 }

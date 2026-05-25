@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
-import { ShoppingBag, User, Menu, X, Home, Route, Store, Mail, Ticket, HelpCircle } from "lucide-react";
+import { ShoppingBag, User, Menu, X, Home, Route, Mail, Ticket, HelpCircle } from "lucide-react";
 import { CartCount } from "@/components/shop/CartCount";
 import { createClient } from "@/lib/supabase/client";
 import { useCartStore } from "@/store/cart";
@@ -79,7 +79,7 @@ export function Header() {
             {/* Nav desktop */}
             <nav className="hidden md:flex items-center gap-1 mr-2">
               <Link href="/nos-offres" className={navLinkClass}>Nos offres</Link>
-              <Link href="/shop" className={navLinkClass}>Boutique</Link>
+              <Link href="/vol-sur-mesure" className={navLinkClass}>Vol sur mesure</Link>
               <Link href="/faq" className={navLinkClass}>FAQ</Link>
               <Link href="/contact" className={navLinkClass}>Contact</Link>
             </nav>
@@ -137,10 +137,6 @@ export function Header() {
             <Link href="/nos-offres" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
               <Ticket size={16} className="opacity-60 text-[#113356]" />
               Nos offres
-            </Link>
-            <Link href="/shop" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
-              <Store size={16} className="opacity-60 text-[#113356]" />
-              Boutique
             </Link>
             <Link href="/vol-sur-mesure" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
               <Route size={16} className="opacity-60 text-[#113356]" />
