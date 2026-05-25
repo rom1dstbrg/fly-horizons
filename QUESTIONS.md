@@ -1,9 +1,10 @@
 # Questions en suspens — répondre avant de reprendre
 
 ## Décisions confirmées (ne pas retoucher)
-- **M-3** — Le badge "Exclusivité Fly Horizons" : retiré, remplacé par eyebrow "Vol sur mesure". ✅ Romain préfère ça.
+- **M-3** — Badge "Exclusivité Fly Horizons" : retiré, remplacé par eyebrow "Vol sur mesure". ✅ Romain préfère ça.
 - **M-2** — Je/Nous : hybride confirmé. "Nous" = Fly Horizons comme service. "Je"/"Romain" = interactions perso, emails, bio pilote. ✅
-- **I-2** — Alerte poids : s'affiche au-dessus du calendrier mais ne bloque PAS la réservation. ✅ Déjà implémenté correctement.
+- **I-2** — Alerte poids : s'affiche avant le calendrier mais **ne bloque pas** la réservation. ✅ Déjà implémenté correctement.
+- **I-4** — Boutique : page `/shop` existe toujours mais n'est plus accessible depuis aucun lien public. ✅
 
 ---
 
@@ -18,34 +19,79 @@
 ---
 
 ### 2. BCE — disponible quand ?
-> Juste besoin du numéro d'entreprise belge. À ajouter dans le footer quand obtenu.
+> Juste besoin du numéro d'entreprise belge pour le footer. À ajouter dès obtenu.
 
 **Réponse :**
 
 ---
 
 ### 3. Photos du DA40 TDI — tu peux les uploader ?
-> Pas de code requis. Juste uploader extérieur + intérieur via l'admin Supabase dans `product_images` et les associer aux produits. La galerie les affiche automatiquement.
+> Pas de code requis. Uploader extérieur + intérieur via Supabase admin dans `product_images`. La galerie les affiche automatiquement.
 
 **Réponse :**
 
 ---
 
 ### 4. CGP vs CGV — même document ?
-> Le formulaire de réservation dit actuellement "Conditions Générales de Vente et de Participation" et pointe vers `/cgv`. Est-ce que ce document couvre aussi les CGP ou faut-il une page séparée `/cgp` ?
+> Le formulaire dit "Conditions Générales de Vente et de Participation" et pointe vers `/cgv`. Est-ce que ce document couvre aussi les CGP ou faut-il une page `/cgp` séparée ?
 
 **Réponse :**
 
 ---
 
 ### 5. Vrais témoignages — tu peux en collecter ?
-> 3 suffiront. Format : prénom + initiale nom, ville, 2-3 lignes libres. Idéalement un d'une personne qui avait peur de voler. Les placeholders actuels (Sophie M., Laurent & Valérie, Thomas D.) seront remplacés.
+> 3 suffiront. Prénom + initiale, ville, 2-3 lignes. Idéalement un d'une personne qui avait peur de voler. Les 3 placeholders actuels seront remplacés.
 
 **Réponse :**
 
 ---
 
-### 6. Photos galerie — à intégrer sur le site ?
-> `public/gallery/` contient 11 photos (1.png→9.png + 10.jpg + 11.jpg). Tu veux les mettre quelque part ? (page dédiée ? section homepage ? fiche vol ?)
+### 6. Photos galerie (public/gallery/ — 11 photos) — où les mettre ?
+> Option A : section galerie sur la homepage
+> Option B : intégrées aux fiches vol
+> Option C : page dédiée `/galerie`
+> Option D : rien pour l'instant
+
+**Réponse :**
+
+---
+
+### 7. Page "À propos" / "Qui suis-je" — à créer ?
+> PilotCard est sur la homepage mais pas accessible depuis la nav. Le client méfiant ne peut pas "vérifier" qui est Romain en cherchant une page dédiée. Faut-il une page `/about` ou `/romain` avec la bio complète, la licence, l'avion, et un lien depuis le header ?
+
+**Réponse :**
+
+---
+
+### 8. Explication HOBBS dans le tunnel de réservation — visible ou FAQ uniquement ?
+> L'explication "prix calculé à la minute, différence remboursée sous 24h" est dans la FAQ. Faut-il aussi l'afficher dans le step 3 (récapitulatif paiement), sous le prix total, pour que le client ne soit pas surpris si le montant final diffère légèrement ?
+
+**Réponse :**
+
+---
+
+### 9. FAQ "J'ai peur de voler" — je l'écris seul ou tu veux relire le texte d'abord ?
+> C'est la question pour le profil anxieux. Je peux l'écrire dans le ton de Fly Horizons (rassurant, honnête, humain) sans que tu aies à fournir de contenu. Ou tu préfères me donner ta version ?
+
+**Réponse :**
+
+---
+
+### 10. Altitude et vitesse — à confirmer
+> La FAQ dit "300 à 1 500 mètres" pour l'altitude. C'est correct pour le DA40 TDI sur tes itinéraires typiques ? Et tu veux mentionner la vitesse de croisière quelque part (environ 180-200 km/h) ou c'est inutile ?
+
+**Réponse :**
+
+---
+
+### 11. Cost-sharing "sans but lucratif" — explication proactive ou FAQ uniquement ?
+> Tu m'avais dit que le but c'est "offrir l'accès à l'aviation à prix bas, sans but lucratif". C'est expliqué dans la FAQ (NCO.GEN.104) mais nulle part ailleurs de façon proactive. Est-ce qu'on ajoute une section ou un encart quelque part (nos-offres ? fiche vol ?) pour expliquer ça clairement aux clients méfiants, sans jargon ?
+
+**Réponse :**
+
+---
+
+### 12. Emails transactionnels (Resend) — à auditer pour Je/Nous et mots interdits ?
+> On a nettoyé toutes les pages publiques. Mais les emails envoyés aux clients (confirmation réservation, lien paiement, report de vol...) n'ont pas été vérifiés. Ils utilisent peut-être encore "vol privé" ou un mauvais ton. À faire dans une prochaine session ?
 
 **Réponse :**
