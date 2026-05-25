@@ -199,9 +199,6 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* ═══ VOTRE PILOTE ═══ */}
-      <PilotCard />
-
       {/* ═══ VOL SUR MESURE ═══ */}
       <section id="vol-sur-mesure" className="bg-[#0b2238] pt-20 pb-0 overflow-hidden relative">
 
@@ -378,6 +375,9 @@ export default async function HomePage() {
           </svg>
         </div>
       </section>
+
+      {/* ═══ VOTRE PILOTE ═══ */}
+      <PilotCard />
 
       {/* ═══ AVIS CLIENTS ═══ */}
       <section className="py-16 bg-white">

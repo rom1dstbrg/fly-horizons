@@ -143,14 +143,9 @@ export function Footer() {
 
         {/* ── Barre de bas ── */}
         <div className="pt-5 max-xs:pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 max-xs:gap-2">
-          <div className="flex flex-col items-center sm:items-start gap-0.5">
-            <p className="text-xs text-white/25">
-              © {year} Fly Horizons — DESTANBERG Romain. Tous droits réservés.
-            </p>
-            <p className="text-xs text-white/15">
-              BCE : en cours d&apos;enregistrement &middot; Belgique
-            </p>
-          </div>
+          <p className="text-xs text-white/25">
+            © {year} Fly Horizons — DESTANBERG Romain. Tous droits réservés.
+          </p>
           <div className="flex items-center gap-4 text-xs text-white/25">
             <div className="flex items-center gap-3">
               <Link href="/cgv" className="hover:text-white/60 transition-colors">Conditions générales</Link>
