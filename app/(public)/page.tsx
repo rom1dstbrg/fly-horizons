@@ -101,7 +101,8 @@ export default async function HomePage() {
           </h1>
 
           <p className="text-white/75 text-base sm:text-lg md:text-xl leading-relaxed max-w-xl mb-10 font-light">
-            Baptême de l&apos;air en avion léger depuis Charleroi,<br className="hidden sm:block" />
+            Baptême de l&apos;air en avion léger depuis Charleroi,{" "}
+            <br className="hidden sm:block" />
             itinéraire libre, jusqu&apos;à 3 passagers, date au choix.
           </p>
 
@@ -426,10 +427,6 @@ export default async function HomePage() {
             ))}
           </div>
 
-          {/* Placeholder note */}
-          <p className="mt-12 text-center text-muted-foreground/30 text-xs">
-            Témoignages recueillis après les vols, à remplacer par les vrais avis dès qu&apos;ils sont disponibles.
-          </p>
 
         </div>
       </section>

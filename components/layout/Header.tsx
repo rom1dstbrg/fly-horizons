@@ -53,7 +53,7 @@ export function Header() {
 
   return (
     <header
-      className={`fixed top-2 max-xs:top-1.5 md:top-3.5 inset-x-3 max-xs:inset-x-2.5 md:inset-x-4 mx-auto max-w-[1300px] z-50 rounded-2xl bg-card border border-border transition-shadow duration-300 ${
+      className={`fixed top-2 max-xs:top-1.5 md:top-3.5 inset-x-3 max-xs:inset-x-2.5 md:inset-x-4 mx-auto max-w-[1300px] z-[800] rounded-2xl bg-card border border-border transition-shadow duration-300 ${
         scrolled ? "shadow-premium-lg" : "shadow-premium"
       }`}
     >

@@ -9,7 +9,7 @@ import {
   Check, CheckCircle, Loader2, AlertCircle, AlertTriangle,
   Mail, Lock, Eye, Zap, PlaneTakeoff, X, Info,
   Navigation, Star, Plus, CalendarDays, CloudRain,
-  ArrowRight, ShieldCheck,
+  ArrowRight, ShieldCheck, Monitor,
 } from "lucide-react";
 import type {
   AdventureRouteData, AdventureMapHandle, POI, StyleMode,
@@ -729,7 +729,7 @@ export default function VolSurMesurePage() {
             <div className="flex flex-col flex-1 min-w-0 gap-3">
 
               {/* Card 1 — Carte */}
-              <div className="flex-1 min-h-0 relative rounded-2xl overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.10)] border border-black/6">
+              <div className="flex-1 min-h-0 relative rounded-2xl overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.10)] border border-black/6" style={{ isolation: "isolate" }}>
                   {popupVisible && route.pois.length === 0 && (
                     <div className="absolute inset-0 flex items-center justify-center z-[500] bg-black/20 backdrop-blur-sm p-4">
                       <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-sm w-full shadow-2xl border border-border pointer-events-auto text-center">
@@ -761,6 +761,16 @@ export default function VolSurMesurePage() {
                               {p}
                             </div>
                           ))}
+                        </div>
+
+                        {/* Notice ordinateur recommandé */}
+                        <div className="flex items-start gap-2.5 bg-[#f5f8ff] border border-[#dce8ff] rounded-xl px-3.5 py-2.5 mb-5 text-left">
+                          <Monitor size={14} className="text-[#113356] shrink-0 mt-0.5" />
+                          <p className="text-[11px] text-[#113356]/65 leading-relaxed">
+                            Pour une expérience optimale, utiliser un{" "}
+                            <span className="font-semibold text-[#113356]">ordinateur</span>{" "}
+                            est recommandé — le système de traçage est complexe.
+                          </p>
                         </div>
 
                         {/* CTA */}
