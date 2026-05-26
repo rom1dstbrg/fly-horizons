@@ -91,7 +91,8 @@
       "Bash(git commit -m 'fix: PilotCard redesign fond clair, déplacé après vol-sur-mesure, retiré de /vols/[slug], INCLUS DA40, BCE supprimé *)",
       "Bash(git commit -m 'docs: mise à jour plan de travail HTML — avancement P1 100%, P2 75%, tasks restantes *)",
       "Bash(git commit -m 'docs: QUESTIONS.md — décisions en suspens pour prochaine session *)",
-      "Bash(git commit -m 'docs: QUESTIONS.md — 12 questions \\(6 manquaient\\) *)"
+      "Bash(git commit -m 'docs: QUESTIONS.md — 12 questions \\(6 manquaient\\) *)",
+      "Bash(git commit -m 'fix: quick wins batch — 48h warning, HOBBS step3, FAQ altitude/peur de voler, 24h contact, mots interdits *)"
     ]
   }
 }

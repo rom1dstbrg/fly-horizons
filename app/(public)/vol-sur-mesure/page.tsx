@@ -1133,8 +1133,12 @@ export default function VolSurMesurePage() {
                     className="mt-0.5 w-4 h-4 accent-[#113356] shrink-0 cursor-pointer" />
                   <span className="text-sm text-muted-foreground leading-relaxed">
                     J&apos;accepte les{" "}
-                    <Link href="/cgv" className="text-[#113356] underline underline-offset-2 font-semibold">
+                    <Link href="/cgp" className="text-[#113356] underline underline-offset-2 font-semibold">
                       Conditions Générales de Participation
+                    </Link>{" "}
+                    et les{" "}
+                    <Link href="/cgv" className="text-[#113356] underline underline-offset-2 font-semibold">
+                      Conditions Générales de Vente
                     </Link>{" "}
                     et que mes données soient utilisées pour traiter ma réservation.
                   </span>

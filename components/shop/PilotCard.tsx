@@ -1,5 +1,6 @@
 import Image from "next/image";
-import { BadgeCheck, Plane, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { BadgeCheck, Plane, ShieldCheck, ArrowRight } from "lucide-react";
 
 export default function PilotCard() {
   return (
@@ -48,7 +49,7 @@ export default function PilotCard() {
               <div className="flex flex-wrap gap-2">
                 <div className="inline-flex items-center gap-1.5 bg-[#f5f5f7] border border-border rounded-lg px-3 py-1.5">
                   <BadgeCheck size={13} className="text-[#0b2238] shrink-0" />
-                  <span className="text-[#0b2238] text-[11px] font-semibold">Licence CPL(A)</span>
+                  <span className="text-[#0b2238] text-[11px] font-semibold">Pilote certifié CPL(A)</span>
                 </div>
                 <div className="inline-flex items-center gap-1.5 bg-[#f5f5f7] border border-border rounded-lg px-3 py-1.5">
                   <Plane size={13} className="text-[#0b2238] shrink-0" />
@@ -59,6 +60,14 @@ export default function PilotCard() {
                   <span className="text-[#0b2238] text-[11px] font-semibold">Assuré Air Academy New CAG</span>
                 </div>
               </div>
+
+              <Link
+                href="/about"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#113356] hover:text-[#F2B705] transition-colors"
+              >
+                En savoir plus sur Romain et Fly Horizons
+                <ArrowRight size={12} />
+              </Link>
 
             </div>
           </div>

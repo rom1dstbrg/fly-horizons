@@ -30,7 +30,7 @@ Elles couvrent trois catégories d'achats :
 
 En passant commande sur le site, le Client reconnaît avoir pris connaissance des présentes CGV et les accepte sans réserve. Les CGV applicables sont celles en vigueur au moment de la passation de la commande.
 
-Les présentes CGV se distinguent des Conditions Générales de Participation (CGP) accessibles sur fly-horizons.com/cgp.html, qui régissent les règles de sécurité et de comportement à bord lors des vols.`,
+Les présentes CGV se distinguent des Conditions Générales de Participation (CGP) accessibles sur fly-horizons.com/cgp, qui régissent les règles de sécurité et de comportement à bord lors des vols.`,
   },
   {
     title: "3. Produits physiques — Boutique",
@@ -106,7 +106,7 @@ Les bons de vol et réservations de vol ne font l'objet d'aucune livraison physi
   },
   {
     title: "9. Conditions de participation aux vols",
-    content: `Tout passager souhaitant participer à un vol doit répondre aux conditions suivantes. Ces conditions sont également détaillées dans les Conditions Générales de Participation disponibles sur fly-horizons.com/cgp.html.
+    content: `Tout passager souhaitant participer à un vol doit répondre aux conditions suivantes. Ces conditions sont également détaillées dans les Conditions Générales de Participation disponibles sur fly-horizons.com/cgp.
 
 Santé : Le passager doit être en bonne santé générale. Toute affection pouvant être aggravée par le vol (problèmes cardiaques, épilepsie, claustrophobie sévère, etc.) doit être signalée avant la réservation. Fly Horizons se réserve le droit de refuser un passager dont l'état de santé pourrait constituer un risque.
 
@@ -114,7 +114,7 @@ Alcool et substances : Il est strictement interdit de se présenter au vol sous 
 
 Mineurs : Les passagers mineurs doivent être accompagnés d'un parent ou tuteur légal, qui doit être présent et donner son accord explicite. Un mineur ne peut embarquer seul.
 
-Masse totale passagers : L'aéronef utilisé impose une limite de masse totale passagers de 178 kg (pilote non inclus). Cette limite est stricte pour des raisons de sécurité aéronautique. Le Client est tenu de déclarer le poids de chaque passager lors de la réservation. En cas de dépassement constaté le jour du vol, Fly Horizons se réserve le droit de refuser l'embarquement sans remboursement, le Client ayant fourni des informations inexactes.
+Masse totale passagers : L'aéronef utilisé impose une limite de masse totale passagers de 190 kg (pilote non inclus). Cette limite est stricte pour des raisons de sécurité aéronautique. Le Client est tenu de déclarer le poids de chaque passager lors de la réservation. En cas de dépassement constaté le jour du vol, Fly Horizons se réserve le droit de refuser l'embarquement sans remboursement, le Client ayant fourni des informations inexactes.
 
 Nombre de passagers : Maximum 3 passagers par vol, sous réserve de la contrainte de masse ci-dessus.
 

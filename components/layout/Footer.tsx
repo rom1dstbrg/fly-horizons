@@ -28,6 +28,7 @@ const SERVICES = [
 ];
 
 const PAGES = [
+  { href: "/about",        label: "À propos" },
   { href: "/contact",      label: "Contact" },
   { href: "/faq",          label: "FAQ" },
   { href: "/access-ebci",  label: "Plan d'accès" },
