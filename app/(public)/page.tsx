@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronDown, Gift, Route, Lock, BadgeCheck, Clock, PlaneTakeoff, Zap, ArrowRight, MousePointerClick, Star } from "lucide-react";
+import { ChevronDown, Gift, Route, Lock, BadgeCheck, Clock, PlaneTakeoff, Zap, ArrowRight, MousePointerClick } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { PackCard } from "@/components/shop/PackCard";
 import PilotCard from "@/components/shop/PilotCard";
@@ -368,124 +368,122 @@ export default async function HomePage() {
           </div>
         </div>
 
-        {/* Vague de transition */}
-        <div className="relative h-12 overflow-hidden">
-          <svg viewBox="0 0 1440 48" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0,48 L0,24 Q360,0 720,24 Q1080,48 1440,24 L1440,48 Z" fill="#f5f5f7"/>
-          </svg>
-        </div>
       </section>
 
       {/* ═══ VOTRE PILOTE ═══ */}
       <PilotCard />
 
       {/* ═══ GALERIE ═══ */}
-      <section className="py-14 bg-white border-t border-border">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-8">
-            <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">
+      <section className="bg-[#0b2238] py-16 sm:py-20 border-t border-white/10">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+
+          <div className="mb-10">
+            <p className="text-[#F2B705] text-[10px] font-bold tracking-[3px] uppercase mb-2">
               En images
             </p>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground">
+            <h2 className="text-white text-2xl sm:text-3xl font-extrabold">
               L&apos;expérience Fly Horizons
             </h2>
-            <div className="w-10 h-0.5 bg-[#F2B705] mx-auto mt-3 rounded-full" />
           </div>
-          <div className="columns-2 sm:columns-3 lg:columns-4 gap-3 space-y-3">
+
+          {/* Layout asymétrique : grande photo gauche + grille 2×2 droite */}
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_0.75fr] gap-3">
+
+            {/* Photo héro */}
+            <div className="overflow-hidden rounded-2xl aspect-[4/3] md:aspect-auto md:row-span-2 relative group">
+              <Image
+                src="/gallery/1.png"
+                alt="Vol en avion léger au-dessus de la Belgique"
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                sizes="(max-width: 768px) 100vw, 55vw"
+              />
+            </div>
+
+            {/* Grille 2×2 */}
             {[
-              { src: "/gallery/1.png",  alt: "Vol en avion léger au-dessus de la Belgique" },
-              { src: "/gallery/2.png",  alt: "Cockpit Diamond DA40 — vue panoramique" },
-              { src: "/gallery/3.png",  alt: "Paysage vu du ciel depuis Charleroi" },
-              { src: "/gallery/4.png",  alt: "Décollage depuis Charleroi EBCI" },
-              { src: "/gallery/5.png",  alt: "Passagers à bord — vol Fly Horizons" },
-              { src: "/gallery/6.png",  alt: "Vue aérienne en Belgique" },
+              { src: "/gallery/2.png",  alt: "Cockpit DA40 — vue panoramique" },
+              { src: "/gallery/3.png",  alt: "Paysage vu du ciel" },
               { src: "/gallery/7.png",  alt: "Horizon depuis le cockpit" },
-              { src: "/gallery/8.png",  alt: "Nuages et paysage belge vu du ciel" },
               { src: "/gallery/9.png",  alt: "Vol au coucher du soleil" },
-              { src: "/gallery/10.jpg", alt: "À bord du Diamond DA40" },
-              { src: "/gallery/11.jpg", alt: "Fly Horizons — vols depuis Charleroi" },
             ].map(({ src, alt }) => (
-              <div key={src} className="break-inside-avoid overflow-hidden rounded-xl border border-border shadow-sm">
+              <div key={src} className="overflow-hidden rounded-2xl aspect-[4/3] relative group">
                 <Image
                   src={src}
                   alt={alt}
-                  width={400}
-                  height={300}
-                  className="w-full h-auto object-cover hover:scale-[1.02] transition-transform duration-300"
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                  sizes="(max-width: 768px) 50vw, 22vw"
                 />
               </div>
             ))}
+
           </div>
+
+          {/* Citation */}
+          <p className="mt-6 text-white/35 text-sm italic text-center">
+            Le sol s&apos;éloigne. La Belgique s&apos;étend. C&apos;est ça, Fly Horizons.
+          </p>
+
         </div>
       </section>
 
       {/* ═══ AVIS CLIENTS ═══ */}
-      <section className="py-16 bg-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+      <section className="bg-[#0b2238] py-16 sm:py-20 border-t border-white/10">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
 
-          <div className="text-center mb-10">
-            <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">
+          <div className="text-center mb-14">
+            <p className="text-[#F2B705] text-[10px] font-bold tracking-[3px] uppercase mb-3">
               Ils ont volé avec Fly Horizons
             </p>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-foreground">
+            <h2 className="text-white text-3xl sm:text-4xl font-extrabold">
               Ce qu&apos;ils en disent
             </h2>
             <div className="w-10 h-0.5 bg-[#F2B705] mx-auto mt-4 rounded-full" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12">
             {[
               {
-                initials: "SM",
                 name: "Sophie M.",
                 location: "Namur",
-                stars: 5,
                 text: "J'avais un peu le trac avant de monter. Romain a pris le temps d'expliquer chaque étape, on s'est senti en confiance dès le départ. La vue sur la vallée de la Sambre était à couper le souffle. Un souvenir que je garderai longtemps.",
               },
               {
-                initials: "LV",
                 name: "Laurent & Valérie",
                 location: "Liège",
-                stars: 5,
                 text: "Offert à notre fils pour ses 18 ans. Il en parle encore. Le briefing était sérieux sans être intimidant, et Romain lui a même laissé tenir les commandes quelques minutes. Une expérience vraiment unique, pas du tout un vol de tourisme banal.",
               },
               {
-                initials: "TD",
                 name: "Thomas D.",
                 location: "Charleroi",
-                stars: 5,
                 text: "J'ai choisi le vol sur mesure pour survoler les Fagnes. Voir le prix se calculer en temps réel m'a mis en confiance : aucune surprise au moment de payer. Pilote à l'écoute, réponse rapide, vol sans accroc. Je recommande sans hésiter.",
               },
-            ].map(({ initials, name, location, stars, text }) => (
-              <div key={name} className="bg-[#f5f5f7] rounded-2xl border border-border p-6 flex flex-col gap-4">
+            ].map(({ name, location, text }) => (
+              <div key={name} className="flex flex-col gap-4">
 
-                {/* Étoiles */}
-                <div className="flex items-center gap-0.5">
-                  {Array.from({ length: stars }).map((_, i) => (
-                    <Star key={i} size={14} className="fill-[#F2B705] text-[#F2B705]" />
-                  ))}
-                </div>
+                {/* Guillemet décoratif */}
+                <span className="text-[#F2B705] text-7xl font-black leading-none select-none -mb-2">&ldquo;</span>
 
                 {/* Texte */}
-                <p className="text-sm text-foreground/80 leading-relaxed flex-1">
-                  &ldquo;{text}&rdquo;
+                <p className="text-white/70 text-sm leading-relaxed flex-1">
+                  {text}
                 </p>
 
                 {/* Auteur */}
-                <div className="flex items-center gap-3 pt-2 border-t border-border">
-                  <div className="w-9 h-9 rounded-full bg-[#0b2238] flex items-center justify-center shrink-0">
-                    <span className="text-[#F2B705] text-[11px] font-black">{initials}</span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">{name}</p>
-                    <p className="text-xs text-muted-foreground">{location}</p>
-                  </div>
+                <div className="pt-5 border-t border-white/12">
+                  <p className="text-white font-bold text-sm">{name}</p>
+                  <p className="text-[#F2B705] text-xs font-semibold tracking-wide mt-0.5">{location}</p>
                 </div>
 
               </div>
             ))}
           </div>
+
+          {/* Placeholder note */}
+          <p className="mt-12 text-center text-white/20 text-xs">
+            Témoignages recueillis après les vols — à remplacer par les vrais avis dès qu&apos;ils sont disponibles.
+          </p>
 
         </div>
       </section>
