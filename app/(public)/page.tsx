@@ -374,14 +374,14 @@ export default async function HomePage() {
       <PilotCard />
 
       {/* ═══ GALERIE ═══ */}
-      <section className="bg-[#0b2238] py-16 sm:py-20 border-t border-white/10">
+      <section className="bg-[#f5f8ff] py-16 sm:py-20 border-t border-[#dce8ff]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
 
           <div className="mb-10">
             <p className="text-[#F2B705] text-[10px] font-bold tracking-[3px] uppercase mb-2">
               En images
             </p>
-            <h2 className="text-white text-2xl sm:text-3xl font-extrabold">
+            <h2 className="text-[#0b2238] text-2xl sm:text-3xl font-extrabold">
               L&apos;expérience Fly Horizons
             </h2>
           </div>
@@ -421,7 +421,7 @@ export default async function HomePage() {
           </div>
 
           {/* Citation */}
-          <p className="mt-6 text-white/35 text-sm italic text-center">
+          <p className="mt-6 text-muted-foreground/50 text-sm italic text-center">
             Le sol s&apos;éloigne. La Belgique s&apos;étend. C&apos;est ça, Fly Horizons.
           </p>
 
@@ -429,14 +429,14 @@ export default async function HomePage() {
       </section>
 
       {/* ═══ AVIS CLIENTS ═══ */}
-      <section className="bg-[#0b2238] py-16 sm:py-20 border-t border-white/10">
+      <section className="bg-white py-16 sm:py-20 border-t border-border">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
 
           <div className="text-center mb-14">
             <p className="text-[#F2B705] text-[10px] font-bold tracking-[3px] uppercase mb-3">
               Ils ont volé avec Fly Horizons
             </p>
-            <h2 className="text-white text-3xl sm:text-4xl font-extrabold">
+            <h2 className="text-[#0b2238] text-3xl sm:text-4xl font-extrabold">
               Ce qu&apos;ils en disent
             </h2>
             <div className="w-10 h-0.5 bg-[#F2B705] mx-auto mt-4 rounded-full" />
@@ -466,13 +466,13 @@ export default async function HomePage() {
                 <span className="text-[#F2B705] text-7xl font-black leading-none select-none -mb-2">&ldquo;</span>
 
                 {/* Texte */}
-                <p className="text-white/70 text-sm leading-relaxed flex-1">
+                <p className="text-foreground/65 text-sm leading-relaxed flex-1">
                   {text}
                 </p>
 
                 {/* Auteur */}
-                <div className="pt-5 border-t border-white/12">
-                  <p className="text-white font-bold text-sm">{name}</p>
+                <div className="pt-5 border-t border-border">
+                  <p className="text-[#0b2238] font-bold text-sm">{name}</p>
                   <p className="text-[#F2B705] text-xs font-semibold tracking-wide mt-0.5">{location}</p>
                 </div>
 
@@ -481,7 +481,7 @@ export default async function HomePage() {
           </div>
 
           {/* Placeholder note */}
-          <p className="mt-12 text-center text-white/20 text-xs">
+          <p className="mt-12 text-center text-muted-foreground/30 text-xs">
             Témoignages recueillis après les vols — à remplacer par les vrais avis dès qu&apos;ils sont disponibles.
           </p>
 
