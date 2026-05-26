@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BadgeCheck, Plane, ShieldCheck, ArrowRight } from "lucide-react";
+import { Plane, ShieldCheck, ArrowRight } from "lucide-react";
 
 export default function PilotCard() {
   return (
@@ -48,12 +48,8 @@ export default function PilotCard() {
               {/* Badges */}
               <div className="flex flex-wrap gap-2">
                 <div className="inline-flex items-center gap-1.5 bg-[#f5f5f7] border border-border rounded-lg px-3 py-1.5">
-                  <BadgeCheck size={13} className="text-[#0b2238] shrink-0" />
-                  <span className="text-[#0b2238] text-[11px] font-semibold">Pilote certifié CPL(A)</span>
-                </div>
-                <div className="inline-flex items-center gap-1.5 bg-[#f5f5f7] border border-border rounded-lg px-3 py-1.5">
                   <Plane size={13} className="text-[#0b2238] shrink-0" />
-                  <span className="text-[#0b2238] text-[11px] font-semibold">DA40 TDI · Charleroi EBCI</span>
+                  <span className="text-[#0b2238] text-[11px] font-semibold">Diamond DA40 · Charleroi EBCI</span>
                 </div>
                 <div className="inline-flex items-center gap-1.5 bg-[#f5f5f7] border border-border rounded-lg px-3 py-1.5">
                   <ShieldCheck size={13} className="text-[#0b2238] shrink-0" />

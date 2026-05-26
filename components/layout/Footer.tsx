@@ -32,7 +32,7 @@ const PAGES = [
   { href: "/contact",      label: "Contact" },
   { href: "/faq",          label: "FAQ" },
   { href: "/access-ebci",  label: "Plan d'accès" },
-  { href: "/cgv",          label: "Conditions générales" },
+  { href: "/cgp",          label: "Conditions générales" },
   { href: "/account",      label: "Mon compte" },
   { href: "/orders",       label: "Mes commandes" },
 ];
@@ -152,7 +152,7 @@ export function Footer() {
           </p>
           <div className="flex items-center gap-4 text-xs text-white/25">
             <div className="flex items-center gap-3">
-              <Link href="/cgv" className="hover:text-white/60 transition-colors">Conditions générales</Link>
+              <Link href="/cgp" className="hover:text-white/60 transition-colors">Conditions générales</Link>
               <span>·</span>
               <Link href="/contact" className="hover:text-white/60 transition-colors">Contact</Link>
             </div>

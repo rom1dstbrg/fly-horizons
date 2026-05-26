@@ -145,7 +145,7 @@ export default async function HomePage() {
             {[
               { icon: <Lock size={20} className="text-[#113356]" />, title: "Paiement sécurisé", desc: "Via Stripe, carte bancaire" },
               { icon: <Clock size={20} className="text-[#113356]" />, title: "Annulation gratuite", desc: "Jusqu'à 48 h avant le vol" },
-              { icon: <BadgeCheck size={20} className="text-[#113356]" />, title: "Licence CPL(A)", desc: "Pilote titulaire d'une licence commerciale" },
+              { icon: <BadgeCheck size={20} className="text-[#113356]" />, title: "Passagers assurés", desc: "Couverture Air Academy New CAG" },
               { icon: <PlaneTakeoff size={20} className="text-[#113356]" />, title: "Itinéraire libre", desc: "Vous choisissez votre route" },
             ].map(({ icon, title, desc }) => (
               <div key={title} className="flex items-center gap-3.5">

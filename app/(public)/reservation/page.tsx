@@ -260,17 +260,18 @@ export default function ReservationPage() {
   const { price, discount, couponDiscount, full: prixPlein } = computePrice(form.product, form.voucher, form.coupon);
   const stepIndex = STEPS.findIndex(s => s.key === step);
 
-  const MAX_WEIGHT  = 190;
-  const weightKg    = parseInt(form.poids_total) || 0;
-  const weightWarn  = weightKg > MAX_WEIGHT && weightKg <= MAX_WEIGHT + 60;
-  const weightError = weightKg > MAX_WEIGHT + 60;
+  const MAX_WEIGHT   = 190;
+  const CRIT_WEIGHT  = 220;
+  const weightKg     = parseInt(form.poids_total) || 0;
+  const weightWarn   = weightKg > MAX_WEIGHT && weightKg < CRIT_WEIGHT;
+  const weightCrit   = weightKg >= CRIT_WEIGHT;
   const formattedDate = form.date
     ? new Date(form.date + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long" })
     : null;
 
   const ctaDisabled =
     step === "datetime" ? !form.date || !form.heure :
-    step === "infos"    ? !form.prenom || !form.nom || !form.email || !form.poids_total || !form.passengers || weightError :
+    step === "infos"    ? !form.prenom || !form.nom || !form.email || !form.poids_total || !form.passengers :
                           !form.accept_cgp || submitting || payLaterSubmitting || codeLoading;
 
   async function handleCTA() {
@@ -510,16 +511,16 @@ export default function ReservationPage() {
                           <span className="text-sm text-muted-foreground">kg</span>
                         </div>
                         <p className="mt-2 text-xs text-muted-foreground">Total passagers, requis pour le calcul masse &amp; centrage (max {MAX_WEIGHT} kg).</p>
-                        {weightWarn && (
+                        {weightWarn && !weightCrit && (
                           <div className="mt-2.5 flex items-start gap-2.5 bg-amber-50 border border-amber-200 px-3.5 py-3 rounded-xl text-sm text-amber-800">
                             <AlertTriangle size={14} className="shrink-0 mt-0.5 text-amber-500" />
-                            <p>Le poids total dépasse la limite de {MAX_WEIGHT} kg. Le vol pourrait ne pas être possible dans ces conditions.</p>
+                            <p>Le poids total dépasse la limite recommandée de {MAX_WEIGHT} kg. Vous pouvez continuer votre réservation, mais Romain vérifiera la faisabilité selon la configuration du vol.</p>
                           </div>
                         )}
-                        {weightError && (
+                        {weightCrit && (
                           <div className="mt-2.5 flex items-start gap-2.5 bg-red-50 border border-red-200 px-3.5 py-3 rounded-xl text-sm text-red-800">
                             <AlertCircle size={14} className="shrink-0 mt-0.5 text-red-500" />
-                            <p>Poids trop élevé. Le vol ne peut pas être effectué. Réduisez le nombre de passagers ou le chargement.</p>
+                            <p>Le poids total est très élevé ({CRIT_WEIGHT} kg+). Vous pouvez continuer, mais le vol dépendra des conditions exactes. Romain vous contactera pour confirmer la faisabilité.</p>
                           </div>
                         )}
                       </div>
@@ -691,11 +692,6 @@ export default function ReservationPage() {
                         <Link href="/cgp"
                           className="text-[#113356] underline underline-offset-2 font-semibold">
                           Conditions Générales de Participation
-                        </Link>{" "}
-                        et les{" "}
-                        <Link href="/cgv"
-                          className="text-[#113356] underline underline-offset-2 font-semibold">
-                          Conditions Générales de Vente
                         </Link>{" "}
                         et j&apos;autorise l&apos;utilisation de mes données personnelles pour le traitement de cette réservation.
                       </span>

@@ -56,8 +56,8 @@ interface FormData {
 const DEPART_NOM = "Charleroi EBCI";
 const MONTHS_FR  = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 const DAYS_FR    = ["L","M","M","J","V","S","D"];
-const MAX_WEIGHT = 178;
-const ERROR_KG   = MAX_WEIGHT + 60;
+const MAX_WEIGHT  = 190;
+const CRIT_WEIGHT = 220;
 
 const STYLE_OPTIONS: { key: StyleMode; icon: React.ReactNode; label: string; sub: string }[] = [
   { key: "rapide", icon: <Zap size={14} />, label: "Itinéraire direct",    sub: "Trajet le plus court, virages légèrement lissés" },
@@ -161,8 +161,8 @@ export default function VolSurMesurePage() {
   const taxesEscalesTotal = selectedStops.reduce((acc, s) => acc + s.taxe, 0);
   const totalAcompte      = acompte + taxesEscalesTotal;
   const weightKg    = parseInt(form.poids_total) || 0;
-  const weightWarn  = weightKg > MAX_WEIGHT && weightKg <= ERROR_KG;
-  const weightError = weightKg > ERROR_KG;
+  const weightWarn  = weightKg > MAX_WEIGHT && weightKg < CRIT_WEIGHT;
+  const weightCrit  = weightKg >= CRIT_WEIGHT;
   const formattedDate = form.date
     ? new Date(form.date + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long" })
     : null;
@@ -1004,16 +1004,16 @@ export default function VolSurMesurePage() {
                       <span className="text-sm text-muted-foreground">kg</span>
                     </div>
                     <p className="mt-2 text-xs text-muted-foreground">Utilisé uniquement pour préparer l&apos;équilibrage de l&apos;avion.</p>
-                    {weightWarn && (
+                    {weightWarn && !weightCrit && (
                       <div className="mt-2.5 flex items-start gap-2.5 bg-amber-50 border border-amber-200 px-3.5 py-3 rounded-xl text-sm text-amber-800">
                         <AlertTriangle size={14} className="shrink-0 mt-0.5 text-amber-500" />
-                        <p>Le poids dépasse la limite recommandée de {MAX_WEIGHT} kg.</p>
+                        <p>Le poids dépasse la limite recommandée de {MAX_WEIGHT} kg. Vous pouvez continuer votre demande, Romain vérifiera la faisabilité avant de vous envoyer le lien de paiement.</p>
                       </div>
                     )}
-                    {weightError && (
+                    {weightCrit && (
                       <div className="mt-2.5 flex items-start gap-2.5 bg-red-50 border border-red-200 px-3.5 py-3 rounded-xl text-sm text-red-800">
                         <AlertCircle size={14} className="shrink-0 mt-0.5 text-red-500" />
-                        <p>Poids trop élevé : le vol ne peut pas être effectué dans ces conditions.</p>
+                        <p>Le poids total est très élevé ({CRIT_WEIGHT} kg+). Vous pouvez continuer, mais Romain vous contactera pour confirmer la faisabilité avant toute suite.</p>
                       </div>
                     )}
                   </div>
@@ -1136,10 +1136,6 @@ export default function VolSurMesurePage() {
                     <Link href="/cgp" className="text-[#113356] underline underline-offset-2 font-semibold">
                       Conditions Générales de Participation
                     </Link>{" "}
-                    et les{" "}
-                    <Link href="/cgv" className="text-[#113356] underline underline-offset-2 font-semibold">
-                      Conditions Générales de Vente
-                    </Link>{" "}
                     et que mes données soient utilisées pour traiter ma réservation.
                   </span>
                 </label>
@@ -1154,7 +1150,7 @@ export default function VolSurMesurePage() {
               {/* Mobile CTA */}
               <div className="lg:hidden">
                 <button type="button"
-                  disabled={!form.date || !form.heure || !form.prenom || !form.nom || !form.email || !form.poids_total || weightError || !form.accept_cgp || submitting}
+                  disabled={!form.date || !form.heure || !form.prenom || !form.nom || !form.email || !form.poids_total || !form.accept_cgp || submitting}
                   onClick={handleSubmit}
                   className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-[#fbae17] text-[#0b2238] text-sm font-extrabold disabled:opacity-40 transition-all cursor-pointer">
                   {submitting
@@ -1170,7 +1166,7 @@ export default function VolSurMesurePage() {
               <ReserveSummary />
 
               <button type="button"
-                disabled={!form.date || !form.heure || !form.prenom || !form.nom || !form.email || !form.poids_total || weightError || !form.accept_cgp || submitting}
+                disabled={!form.date || !form.heure || !form.prenom || !form.nom || !form.email || !form.poids_total || !form.accept_cgp || submitting}
                 onClick={handleSubmit}
                 className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-[#fbae17] text-[#0b2238] text-sm font-extrabold disabled:opacity-40 hover:brightness-105 transition-all shadow-lg cursor-pointer">
                 {submitting
@@ -1186,7 +1182,7 @@ export default function VolSurMesurePage() {
               <div className="bg-white rounded-xl border border-border p-4 space-y-1.5 text-xs text-muted-foreground">
                 {[
                   { ok: !!form.date && !!form.heure, label: "Date & heure sélectionnées" },
-                  { ok: !!form.poids_total && !weightError, label: "Poids renseigné" },
+                  { ok: !!form.poids_total, label: "Poids renseigné" },
                   { ok: !!form.prenom && !!form.nom && !!form.email, label: "Coordonnées complètes" },
                   { ok: form.accept_cgp, label: "CGP acceptées" },
                 ].map(({ ok, label }) => (

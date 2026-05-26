@@ -53,18 +53,20 @@
 
 ### A. Section galerie légère sur la homepage (Q6)
 > 11 photos dans `public/gallery/`. Section compacte, pas trop grande.
-
+ok
 ### B. CTA cadeau dans le hero (P3-B1)
-> Lien discret "Offrir en cadeau →" sous les 2 CTA principaux du hero.
+> Lien discret "Offrir en cadeau →" sous les 2 CTA principaux du hero. 
+on ne va pas faire ça. sinon trop de boutons.
 
 ### C. Validité 12 mois dans le panier (P3-B2)
 > Ajouter "Valable 12 mois · Transférable librement" dans `cart/page.tsx` pour les vouchers.
-
+ok
 ### D. Calendrier mobile — distinction visuelle (P4-1)
 > Fond vert pâle sur les jours disponibles non sélectionnés.
-
+ok
 ### E. Photos DA40 — upload Supabase (P2-C1)
 > Pas de code requis. Voir guide question 3 ci-dessus.
-
+je vais plutot les mettre dans le dossier public (da-40-1.webp, da-40-2.webp, da-40-3.jpg)
 ### F. Vrais témoignages (P3-A2)
 > Quand disponibles, remplacer les 3 placeholders dans `app/(public)/page.tsx` tableau `.map()`.
+je le ferai plus tard. donc on fera plus tard 

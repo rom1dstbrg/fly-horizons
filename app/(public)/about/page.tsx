@@ -73,7 +73,7 @@ export default function AboutPage() {
                 </div>
                 <div className="inline-flex items-center gap-1.5 bg-[#f5f5f7] border border-border rounded-lg px-3 py-1.5">
                   <Plane size={13} className="text-[#0b2238] shrink-0" />
-                  <span className="text-[#0b2238] text-[11px] font-semibold">DA40 TDI · Charleroi EBCI</span>
+                  <span className="text-[#0b2238] text-[11px] font-semibold">Diamond DA40 · Charleroi EBCI</span>
                 </div>
                 <div className="inline-flex items-center gap-1.5 bg-[#f5f5f7] border border-border rounded-lg px-3 py-1.5">
                   <ShieldCheck size={13} className="text-[#0b2238] shrink-0" />
@@ -100,7 +100,7 @@ export default function AboutPage() {
               <h3 className="text-[#0b2238] font-extrabold text-base">L&apos;avion</h3>
             </div>
             <p className="text-muted-foreground text-sm leading-relaxed mb-4">
-              Le <strong className="text-foreground">DA40 TDI</strong> est un avion léger 4 places, reconnu pour sa stabilité, son cockpit vitré panoramique et son confort en vol.
+              Le <strong className="text-foreground">Diamond DA40</strong> est un avion léger 4 places, reconnu pour sa stabilité, son cockpit vitré panoramique et son confort en vol.
             </p>
             <ul className="space-y-2">
               {[
