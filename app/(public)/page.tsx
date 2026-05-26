@@ -373,43 +373,6 @@ export default async function HomePage() {
       {/* ═══ VOTRE PILOTE ═══ */}
       <PilotCard />
 
-      {/* ═══ GALERIE ═══ */}
-      <section className="bg-[#f5f8ff] py-10 border-t border-[#dce8ff] overflow-hidden">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-
-          {/* Titre inline compact */}
-          <div className="flex items-center gap-5 mb-5">
-            <div className="shrink-0">
-              <p className="text-[#F2B705] text-[10px] font-bold tracking-[3px] uppercase leading-none mb-1">En images</p>
-              <h2 className="text-[#0b2238] text-lg font-extrabold leading-tight">L&apos;expérience Fly Horizons</h2>
-            </div>
-            <div className="flex-1 h-px bg-[#dce8ff]" />
-          </div>
-
-          {/* Strip horizontal — hauteur fixe, scroll sur mobile */}
-          <div className="flex gap-3 overflow-x-auto pb-1 -mr-4 pr-4 sm:-mr-6 sm:pr-6">
-            {[
-              { src: "/gallery/1.png",  alt: "Vol au-dessus de la Belgique" },
-              { src: "/gallery/2.png",  alt: "Cockpit DA40 — vue panoramique" },
-              { src: "/gallery/3.png",  alt: "Paysage vu du ciel" },
-              { src: "/gallery/7.png",  alt: "Horizon depuis le cockpit" },
-              { src: "/gallery/9.png",  alt: "Vol au coucher du soleil" },
-              { src: "/gallery/10.jpg", alt: "À bord du DA40" },
-            ].map(({ src, alt }) => (
-              <div key={src} className="relative h-48 w-72 shrink-0 rounded-2xl overflow-hidden group">
-                <Image
-                  src={src}
-                  alt={alt}
-                  fill
-                  className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                  sizes="288px"
-                />
-              </div>
-            ))}
-          </div>
-
-        </div>
-      </section>
 
       {/* ═══ AVIS CLIENTS ═══ */}
       <section className="bg-white py-16 sm:py-20 border-t border-border">
