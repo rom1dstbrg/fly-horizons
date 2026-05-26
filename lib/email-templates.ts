@@ -620,7 +620,7 @@ export function volSurMesureQuoteEmail(props: VolSurMesureQuoteEmailProps): stri
       Des questions ? R&eacute;pondez &agrave; cet email ou &eacute;crivez-nous &agrave;
       <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a>.<br>
       &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord,
-      <strong class="em-dark" style="color:#0b2238;">L&rsquo;&eacute;quipe Fly Horizons</strong>
+      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
     </p>`;
 
   return emailBase(body, `Votre vol sur mesure — ${dateStr}`);
@@ -671,7 +671,7 @@ export function reservationConfirmationFreeEmail(p: ReservationConfirmationProps
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
       <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">A&eacute;roport de Charleroi (EBCI), Rue des Fr&egrave;res Wright 8, Gosselies</td></tr>
       <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Pr&eacute;sentez-vous <strong>15 minutes avant</strong> le d&eacute;collage. Romain vous accueillera &agrave; l&rsquo;accueil.</td></tr>
-      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">&#128101; <strong>Maximum 3 passagers</strong> par vol (avion l&eacute;ger priv&eacute;), sans exception.</td></tr>
+      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">&#128101; <strong>Maximum 3 passagers</strong> par vol (avion l&eacute;ger), sans exception.</td></tr>
       <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">&#9925; En cas de m&eacute;t&eacute;o d&eacute;favorable, le vol est report&eacute; sans frais ni p&eacute;nalit&eacute;.</td></tr>
       <tr><td class="em-body" style="padding:8px 0;font-size:13px;color:#334155;">Questions : <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a> &middot; <a href="${SITE_URL}/faq" style="color:#F2B705;font-weight:600;text-decoration:none;">FAQ</a></td></tr>
     </table>
@@ -728,7 +728,7 @@ export function reservationPaymentConfirmationEmail(p: ReservationPaymentConfirm
       <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">A&eacute;roport de Charleroi (EBCI), Rue des Fr&egrave;res Wright 8, Gosselies</td></tr>
       <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Pr&eacute;sentez-vous <strong>15 minutes avant</strong> le d&eacute;collage. Romain vous accueillera &agrave; l&rsquo;accueil.</td></tr>
       <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Casques audio fournis. Habillez-vous confortablement, aucun &eacute;quipement sp&eacute;cifique n&rsquo;est n&eacute;cessaire.</td></tr>
-      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">&#128101; <strong>Maximum 3 passagers</strong> par vol (avion l&eacute;ger priv&eacute;), sans exception.</td></tr>
+      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">&#128101; <strong>Maximum 3 passagers</strong> par vol (avion l&eacute;ger), sans exception.</td></tr>
       <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">&#9925; En cas de m&eacute;t&eacute;o d&eacute;favorable, le vol est report&eacute; sans frais ni p&eacute;nalit&eacute;.</td></tr>
       <tr><td class="em-body" style="padding:8px 0;font-size:13px;color:#334155;">Questions : <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a> &middot; <a href="${SITE_URL}/faq" style="color:#F2B705;font-weight:600;text-decoration:none;">FAQ</a></td></tr>
     </table>
@@ -983,7 +983,7 @@ export function contactAcknowledgmentEmail({ nom, sujet, message }: ContactAckno
   const body = `
     <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Contact</p>
     <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Message bien re&ccedil;u</h1>
-    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">Nous vous r&eacute;pondrons sous 48&nbsp;h ouvrables.</p>
+    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">Nous vous r&eacute;pondrons sous 24&nbsp;h.</p>
 
     ${separator()}
 
@@ -999,7 +999,7 @@ export function contactAcknowledgmentEmail({ nom, sujet, message }: ContactAckno
     ${separator()}
 
     <p class="em-body" style="margin:0;font-size:14px;color:#334155;text-align:center;">
-      <strong class="em-dark" style="color:#0b2238;">L&rsquo;&eacute;quipe Fly Horizons</strong>
+      <strong class="em-dark" style="color:#0b2238;">Fly Horizons</strong>
     </p>`;
 
   return emailBase(body, "Votre message a été reçu — Fly Horizons");
@@ -1023,14 +1023,14 @@ export function contactReplyEmail({ nom, sujet, reponse }: ContactReplyProps): s
     ${separator()}
 
     <p class="em-body" style="margin:0 0 16px;font-size:14px;color:#334155;">Bonjour <strong style="color:#0b2238;">${esc(nom)}</strong>,</p>
-    <p class="em-body" style="margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;">Voici notre r&eacute;ponse &agrave; votre demande :</p>
+    <p class="em-body" style="margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;">Voici ma r&eacute;ponse &agrave; votre demande :</p>
 
     <p class="em-body" style="margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;white-space:pre-wrap;border-left:3px solid #F2B705;padding:2px 0 2px 16px;">${esc(reponse)}</p>
 
     ${ctaButton(`${SITE_URL}/contact`, "Nous recontacter")}
 
     <p class="em-muted" style="margin:24px 0 0;font-size:14px;color:#334155;text-align:center;">
-      <strong class="em-dark" style="color:#0b2238;">L&rsquo;&eacute;quipe Fly Horizons</strong>
+      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
     </p>`;
 
   return emailBase(body, `Réponse de Fly Horizons — ${sujet}`);
@@ -1087,7 +1087,7 @@ export function reservationPaymentInvitationEmail(p: ReservationPaymentInvitatio
       Des questions ? R&eacute;pondez &agrave; cet email ou &eacute;crivez-nous &agrave;
       <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a>.<br>
       &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord,
-      <strong class="em-dark" style="color:#0b2238;">L&rsquo;&eacute;quipe Fly Horizons</strong>
+      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
     </p>`;
 
   return emailBase(body, `Votre réservation — ${p.dateStr}`);
@@ -1170,7 +1170,7 @@ export function reservationPayLaterEmail(p: ReservationPayLaterEmailProps): stri
       Des questions ? R&eacute;pondez &agrave; cet email ou &eacute;crivez-nous &agrave;
       <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a>.<br>
       &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord,
-      <strong class="em-dark" style="color:#0b2238;">L&rsquo;&eacute;quipe Fly Horizons</strong>
+      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
     </p>`;
 
   return emailBase(body, `Votre réservation — ${p.dateStr}`);
@@ -1237,7 +1237,7 @@ export function reservationPaymentReminderEmail(p: ReservationPaymentReminderEma
       Des questions ? R&eacute;pondez &agrave; cet email ou &eacute;crivez-nous &agrave;
       <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a>.<br>
       &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord,
-      <strong class="em-dark" style="color:#0b2238;">L&rsquo;&eacute;quipe Fly Horizons</strong>
+      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
     </p>`;
 
   return emailBase(body, `Rappel — Confirmez votre vol du ${p.dateStr}`);
@@ -1299,7 +1299,7 @@ export function reservationAutoAnnuleeEmail(p: ReservationAutoAnnuleeEmailProps)
       Une question ? R&eacute;pondez &agrave; cet email ou contactez-nous &agrave;
       <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a>.<br>
       Bonne journ&eacute;e,
-      <strong class="em-dark" style="color:#0b2238;">L&rsquo;&eacute;quipe Fly Horizons</strong>
+      <strong class="em-dark" style="color:#0b2238;">Fly Horizons</strong>
     </p>`;
 
   return emailBase(body, `Réservation annulée — ${p.dateStr}`);
@@ -1452,7 +1452,7 @@ export function customEmail({ subject, body, rescheduleUrl }: { subject: string;
     ${rescheduleBlock}
     ${separator()}
     <p class="em-muted" style="margin:0;font-size:13px;color:#64748b;text-align:center;">
-      L&rsquo;&eacute;quipe Fly Horizons &mdash;
+      Fly Horizons &mdash;
       <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a>
     </p>`;
 
