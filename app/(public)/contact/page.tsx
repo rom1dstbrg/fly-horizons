@@ -4,7 +4,7 @@ import { ContactForm } from "@/components/shop/ContactForm";
 
 export const metadata = {
   title: "Contact — Fly Horizons",
-  description: "Une question sur votre réservation ou votre vol ? Contactez Romain, fondateur de Fly Horizons. Réponse personnelle sous 48 h.",
+  description: "Une question sur votre réservation ou votre vol ? Contactez Romain, fondateur de Fly Horizons. Réponse personnelle sous 24 h.",
 };
 
 export default function ContactPage() {
@@ -18,7 +18,7 @@ export default function ContactPage() {
           <h1 className="text-3xl font-bold text-foreground">Contactez-nous</h1>
           <p className="text-muted-foreground text-sm mt-2 max-w-lg">
             Une question, un problème ou envie d&apos;en savoir plus ?
-            Écrivez-nous, nous vous répondons sous 48&nbsp;h.
+            Écrivez-nous — Romain vous répond personnellement sous 24&nbsp;h.
           </p>
         </div>
 
@@ -72,9 +72,9 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground mb-0.5">Délai de réponse</p>
-                  <p className="text-sm font-semibold text-foreground">Sous 48 h ouvrables</p>
+                  <p className="text-sm font-semibold text-foreground">Sous 24 h</p>
                   <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                    Chaque message est lu personnellement et reçoit une vraie réponse, pas une réponse automatique.
+                    Chaque message est lu et répondu personnellement par Romain. Pas de réponse automatique, pas de support externalisé.
                   </p>
                 </div>
               </div>

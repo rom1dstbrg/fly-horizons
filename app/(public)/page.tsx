@@ -10,13 +10,13 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
 
 export const metadata: Metadata = {
   title: {
-    absolute: "Fly Horizons — Baptême de l'air en Belgique | Vols privés depuis Charleroi",
+    absolute: "Fly Horizons — Baptême de l'air en Belgique | Vols en avion léger depuis Charleroi",
   },
   description:
     "Offrez ou vivez un baptême de l'air inoubliable en avion léger au départ de Charleroi (Belgique). Vols de 30 à 120 min, itinéraire libre, jusqu'à 3 passagers.",
   alternates: { canonical: siteUrl },
   openGraph: {
-    title: "Fly Horizons — Baptême de l'air en Belgique | Vols privés depuis Charleroi",
+    title: "Fly Horizons — Baptême de l'air en Belgique | Vols en avion léger depuis Charleroi",
     description:
       "Offrez ou vivez un baptême de l'air inoubliable en avion léger au départ de Charleroi (Belgique). Vols de 30 à 120 min, itinéraire libre.",
     url: siteUrl,
@@ -29,7 +29,7 @@ const localBusinessSchema = {
   "@type": "LocalBusiness",
   name: "Fly Horizons",
   description:
-    "Baptêmes de l'air et vols privés en avion léger depuis l'aéroport de Charleroi (EBCI), Belgique. Itinéraire 100 % libre, jusqu'à 3 passagers.",
+    "Baptêmes de l'air et vols en avion léger depuis l'aéroport de Charleroi (EBCI), Belgique. Itinéraire 100 % libre, jusqu'à 3 passagers.",
   url: siteUrl,
   logo: "https://fly-horizons.com/logo-email.png",
   image: `${siteUrl}/piste.jpg`,
@@ -91,7 +91,7 @@ export default async function HomePage() {
           <div className="inline-flex items-center gap-2 bg-[#F2B705] rounded-full px-5 py-2 mb-8 shadow-[0_4px_20px_rgba(242,183,5,.4)]">
             <PlaneTakeoff size={13} className="text-[#113356]" />
             <span className="text-[#113356] text-xs font-bold tracking-[2.5px] uppercase">
-              Vols privés en avion léger
+              Vols en avion léger
             </span>
           </div>
 

@@ -303,8 +303,13 @@ const THEMES: Theme[] = [
       },
       {
         q: "À quelle altitude vole-t-on ? Est-ce impressionnant ?",
-        aText: "Les vols se déroulent généralement entre 300 et 1 500 mètres d'altitude selon l'itinéraire et la météo. L'avion est un appareil léger à cockpit vitré : la vue est panoramique et très différente d'un avion de ligne. Certains passagers ressentent une légère appréhension au décollage, qui disparaît très vite en vol. Le pilote commente tout au long du trajet et peut adapter l'altitude si vous le demandez.",
-        a: "Les vols se déroulent généralement entre 300 et 1 500 mètres d'altitude selon l'itinéraire et la météo. L'avion est un appareil léger à cockpit vitré : la vue est panoramique. Certains passagers ressentent une légère appréhension au décollage, qui disparaît très vite. Le pilote commente tout au long du trajet et peut adapter l'altitude si vous le demandez.",
+        aText: "Les vols se déroulent généralement entre 2 000 et 3 000 ft d'altitude, soit environ 600 à 1 000 m, selon l'itinéraire et la météo. À titre de comparaison, un avion de ligne vole à 10 000 m : ici, vous volez bas et vous voyez vraiment le sol défiler sous vous. L'avion vole à environ 120 kt (220 km/h), une allure fluide et agréable. L'avion est un DA40 TDI à cockpit vitré : la vue est panoramique, à 360°. Certains passagers ressentent une légère appréhension au décollage, qui disparaît très vite en vol. Le pilote commente tout au long du trajet et peut adapter l'altitude si vous le demandez.",
+        a: "Les vols se déroulent généralement entre 2 000 et 3 000 ft d'altitude (environ 600 à 1 000 m), selon l'itinéraire et la météo. À titre de comparaison, un avion de ligne vole à 10 000 m : ici, vous volez bas et voyez vraiment le sol. L'avion croise à 120 kt (220 km/h), une allure douce et agréable. Le DA40 TDI est un appareil à cockpit vitré : vue panoramique à 360°. Certains passagers ressentent une légère appréhension au décollage — elle disparaît très vite. Le pilote commente tout au long du trajet et peut adapter l'altitude si vous le demandez.",
+      },
+      {
+        q: "J'ai peur de voler, est-ce fait pour moi ?",
+        aText: "C'est une préoccupation très courante, et Romain l'entend souvent. Ce que vous ressentez est parfaitement normal : beaucoup de passagers montent à bord avec une certaine appréhension, et la grande majorité repart surpris de s'être sentis à l'aise dès les premières minutes. La différence avec un vol commercial : vous n'êtes pas enfermé dans une cabine. Vous êtes dans le cockpit, vous voyez ce que fait le pilote, vous comprenez ce qui se passe. Ce sentiment de transparence change tout. Les vols se déroulent à altitude modérée (600 à 1 000 m), à allure douce, loin des turbulences des altitudes commerciales. Si vous avez envie de redescendre ou si vous vous sentez mal à l'aise, vous le dites. Si vous avez le moindre doute, contactez-nous avant de réserver : Romain vous répond directement et prend le temps de vous expliquer.",
+        a: <>C&apos;est une préoccupation très courante, et Romain l&apos;entend souvent. Ce que vous ressentez est parfaitement normal : beaucoup de passagers montent à bord avec une certaine appréhension, et la grande majorité repart surpris de s&apos;être sentis à l&apos;aise dès les premières minutes.<br /><br />La différence avec un vol commercial : vous n&apos;êtes pas enfermé dans une cabine. Vous êtes dans le cockpit, vous voyez ce que fait le pilote, vous comprenez ce qui se passe — ce sentiment de transparence change tout. Les vols se déroulent à altitude modérée (600 à 1 000 m), à allure douce, loin des turbulences des altitudes commerciales.<br /><br />Si vous ressentez un inconfort pendant le vol, vous le dites et on s&apos;adapte. Si vous avez le moindre doute avant de réserver, <Link href="/contact" className="text-primary font-semibold hover:text-gold-400 transition-colors">contactez-nous</Link> : Romain vous répond directement.</>,
       },
       {
         q: "Les passagers sont-ils assurés pendant le vol ?",
@@ -507,7 +512,7 @@ export default function FaqPage() {
           </div>
           <div className="flex-1 text-center sm:text-left">
             <p className="text-sm font-semibold text-foreground">Vous ne trouvez pas votre réponse ?</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Romain vous répond personnellement sous 48 h.</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Romain vous répond personnellement sous 24 h.</p>
           </div>
           <Link
             href="/contact"

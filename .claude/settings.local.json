@@ -88,7 +88,10 @@
       "Bash(xargs grep -l \"vol-sur-mesure\\\\|vol_sur_mesure\\\\|sur mesure\\\\|VolSurMesure\")",
       "Bash(git commit -m 'feat: report de vol, sidebar VSM scrollable, sections vol-sur-mesure redesign *)",
       "Bash(git commit -m 'feat: Phase 2 — PilotCard, DA40 TDI, poids 190 kg, mots interdits, FAQ enrichie, BCE footer *)",
-      "Bash(git commit -m 'fix: PilotCard redesign fond clair, déplacé après vol-sur-mesure, retiré de /vols/[slug], INCLUS DA40, BCE supprimé *)"
+      "Bash(git commit -m 'fix: PilotCard redesign fond clair, déplacé après vol-sur-mesure, retiré de /vols/[slug], INCLUS DA40, BCE supprimé *)",
+      "Bash(git commit -m 'docs: mise à jour plan de travail HTML — avancement P1 100%, P2 75%, tasks restantes *)",
+      "Bash(git commit -m 'docs: QUESTIONS.md — décisions en suspens pour prochaine session *)",
+      "Bash(git commit -m 'docs: QUESTIONS.md — 12 questions \\(6 manquaient\\) *)"
     ]
   }
 }

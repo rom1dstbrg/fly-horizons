@@ -75,7 +75,7 @@ export function Footer() {
             </Link>
 
             <p className="text-white/45 text-sm leading-relaxed max-w-xs mt-4 max-xs:mt-3 max-xs:text-xs">
-              Des vols privés en avion léger, tracés par vous, payés à la minute.
+              Des vols en avion léger, tracés par vous, payés à la minute réelle.
             </p>
 
             {/* Réseaux sociaux */}
@@ -132,9 +132,12 @@ export function Footer() {
                   <p className="text-xs text-white/25 mt-0.5">EBCI, Belgique</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2.5">
-                <Clock size={13} className="text-[#fbae17] shrink-0" />
-                <p className="text-sm text-white/45">7j/7 sur réservation</p>
+              <div className="flex items-start gap-2.5">
+                <Clock size={13} className="text-[#fbae17] shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm text-white/45">7j/7 sur réservation</p>
+                  <p className="text-xs text-white/25 mt-0.5">Réponse email sous 24 h</p>
+                </div>
               </div>
             </div>
           </div>

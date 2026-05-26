@@ -594,9 +594,22 @@ export default function ReservationPage() {
                         <p className="text-xs text-muted-foreground">Par avion · jusqu&apos;à 3 passagers</p>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[2px] mb-0.5">Total</p>
+                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[2px] mb-0.5">Acompte</p>
                         <p className={`text-3xl font-black tabular-nums ${price === 0 ? "text-green-600" : "text-[#113356]"}`}>
                           {price === 0 ? "Gratuit" : `${price} €`}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Note HOBBS */}
+                    <div className="px-6 pb-5">
+                      <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 flex items-start gap-2.5">
+                        <AlertTriangle size={11} className="text-amber-500 shrink-0 mt-0.5" />
+                        <p className="text-[11px] text-amber-800/80 leading-relaxed">
+                          <strong className="text-amber-900">Prix calculé à la minute réelle.</strong>{" "}
+                          Après le vol, l&apos;avion dispose d&apos;un compteur (HOBBS) qui mesure le temps exact passé en vol.
+                          Si votre vol dure moins que prévu, la différence vous est <strong>remboursée sous 24 h</strong>.
+                          S&apos;il dure un peu plus, un petit complément vous est facturé dans le même délai. En pratique, l&apos;écart reste minime.
                         </p>
                       </div>
                     </div>
@@ -662,7 +675,7 @@ export default function ReservationPage() {
                       </div>
                       <div className="flex items-start gap-2.5">
                         <Users size={12} className="text-blue-500 shrink-0 mt-0.5" />
-                        <p className="text-xs text-blue-800/80 leading-relaxed">Maximum <strong>3 passagers</strong> par vol (avion léger privé), sans exception.</p>
+                        <p className="text-xs text-blue-800/80 leading-relaxed">Maximum <strong>3 passagers</strong> par vol (avion léger), sans exception.</p>
                       </div>
                     </div>
                   </div>

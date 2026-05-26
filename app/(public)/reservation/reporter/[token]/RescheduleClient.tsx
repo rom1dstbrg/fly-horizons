@@ -136,7 +136,7 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
             <div className="bg-[#0b2238] px-6 py-6 flex items-start justify-between gap-4">
               <div>
                 <p className="text-[#fbae17] text-[9px] font-black tracking-[3px] uppercase mb-3">Fly Horizons</p>
-                <h2 className="text-white text-base font-extrabold leading-snug">Vol privé · report</h2>
+                <h2 className="text-white text-base font-extrabold leading-snug">Report de vol</h2>
                 <div className="mt-2 space-y-0.5">
                   <p className="text-white/40 text-xs line-through capitalize">{currentDateFormatted}</p>
                   <p className="text-green-400 text-sm font-bold capitalize">{selectedFormatted} à {selectedHeure}</p>

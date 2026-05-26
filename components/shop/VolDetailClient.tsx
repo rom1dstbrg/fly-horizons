@@ -53,6 +53,11 @@ export function VolDetailClient({ id, slug, title, price, duree, image_url }: Vo
           Réserver une date
         </Link>
 
+        <p className="text-[10px] text-white/45 leading-relaxed">
+          Réservation possible jusqu'à <strong className="text-white/60">48 h avant le vol</strong>.
+          Pour une demande urgente, <Link href="/contact" className="underline underline-offset-2 hover:text-white/70 transition-colors">contactez-nous</Link>.
+        </p>
+
         <p className="text-[10px] text-white/30 flex items-center gap-1.5">
           <Lock size={9} />
           Confirmation par email après réservation

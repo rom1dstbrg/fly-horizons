@@ -106,7 +106,7 @@ export default function VolSurMesureSuccessPage() {
               <Users size={13} className="text-[#113356]" />
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              <strong className="text-foreground">Passagers :</strong> maximum 3 passagers par vol (avion léger privé), sans exception.
+              <strong className="text-foreground">Passagers :</strong> maximum 3 passagers par vol (avion léger), sans exception.
             </p>
           </div>
         </div>
