@@ -77,7 +77,7 @@ export function VolImageGallery({ images, title, duree }: VolImageGalleryProps) 
             >
               <Image
                 src={img.url}
-                alt={`${title} — vue ${i + 1}`}
+                alt={`${title}, vue ${i + 1}`}
                 fill
                 className="object-cover"
                 sizes="64px"

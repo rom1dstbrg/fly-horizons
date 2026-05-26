@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { CgvAccordion } from "@/components/shop/CgvAccordion";
 
 export const metadata: Metadata = {
-  title: "Conditions Générales de Participation — Fly Horizons",
+  title: "Conditions Générales de Participation · Fly Horizons",
   description:
     "Conditions générales de participation et de vente applicables aux vols et achats effectués sur fly-horizons.com. Sécurité, paiement, annulation, RGPD.",
 };
@@ -18,21 +18,21 @@ Site web : fly-horizons.com
 
 Fly Horizons est une initiative de partage de coûts aéronautiques exercée conformément au règlement EASA (EU) No 965/2012, article NCO.GEN.104.
 
-IMPORTANT — Nature non commerciale des vols : Les vols proposés sur ce site ne constituent PAS un service de transport aérien commercial. Il s'agit exclusivement de vols en partage de coûts (cost-sharing) au sens de la réglementation européenne. Le paiement effectué par les passagers couvre uniquement leur quote-part des frais directs du vol (carburant, location de l'aéronef, redevances aéroportuaires). Le pilote supporte sa propre part proportionnelle des coûts et ne perçoit aucune rémunération pour ses services de pilotage.`,
+IMPORTANT. Nature non commerciale des vols : Les vols proposés sur ce site ne constituent PAS un service de transport aérien commercial. Il s'agit exclusivement de vols en partage de coûts (cost-sharing) au sens de la réglementation européenne. Le paiement effectué par les passagers couvre uniquement leur quote-part des frais directs du vol (carburant, location de l'aéronef, redevances aéroportuaires). Le pilote supporte sa propre part proportionnelle des coûts et ne perçoit aucune rémunération pour ses services de pilotage.`,
   },
   {
     title: "2. Champ d'application",
     content: `Les présentes Conditions Générales de Participation (CGP) s'appliquent à tout achat et à toute participation effectués sur fly-horizons.com par toute personne physique non professionnelle (ci-après « le Client »).
 
 Elles couvrent trois catégories d'achats :
-— Produits physiques (accessoires aéronautiques et articles de la boutique)
-— Bons de vol (vouchers cadeaux pour une expérience de vol en partage de coûts)
-— Réservations de vol (packs 30 / 60 / 90 / 120 min ou vol sur mesure)
+- Produits physiques (accessoires aéronautiques et articles de la boutique)
+- Bons de vol (vouchers cadeaux pour une expérience de vol en partage de coûts)
+- Réservations de vol (packs 30 / 60 / 90 / 120 min ou vol sur mesure)
 
 En passant commande sur le site, le Client reconnaît avoir pris connaissance des présentes CGP et les accepte sans réserve. Les CGP applicables sont celles en vigueur au moment de la passation de la commande.`,
   },
   {
-    title: "3. Produits physiques — Boutique",
+    title: "3. Produits physiques : Boutique",
     content: `La boutique propose des accessoires aéronautiques et articles dérivés (ci-après « produits »). Les produits disponibles sont ceux affichés sur le site au moment de la consultation.
 
 Les visuels et photographies des produits ont une valeur illustrative et ne sont pas contractuels. Fly Horizons s'efforce de les reproduire aussi fidèlement que possible.
@@ -58,7 +58,7 @@ Perte ou vol : Fly Horizons ne peut être tenu responsable de la perte, du vol o
 Droit de rétractation sur les bons de vol : Le Client dispose d'un droit de rétractation de 14 jours calendaires à compter de l'achat, à condition que le bon de vol n'ait pas encore été utilisé pour initier une réservation. Pour exercer ce droit, le Client envoie un e-mail à info@fly-horizons.com.`,
   },
   {
-    title: "5. Réservations de vol — Packs standards",
+    title: "5. Réservations de vol : Packs standards",
     content: `Les packs de vol (30, 60, 90 ou 120 minutes) permettent de réserver un créneau de vol sur le calendrier disponible, au départ de l'aéroport de Charleroi (EBCI).
 
 Processus de réservation : Le Client choisit sa durée de vol, une date et un horaire disponibles, renseigne ses informations personnelles et procède au paiement ou utilise un bon de vol couvrant le montant total.
@@ -164,7 +164,7 @@ Force majeure : Fly Horizons ne peut être tenu responsable de l'inexécution de
 Inexactitude des données passager : Si le Client a fourni des informations inexactes (notamment concernant le poids des passagers), Fly Horizons est déchargé de toute responsabilité liée aux conséquences de cette inexactitude.`,
   },
   {
-    title: "13. Livraison — Produits physiques",
+    title: "13. Livraison : Produits physiques",
     content: `Les produits physiques sont expédiés par bpost vers les pays suivants : Belgique, France, Pays-Bas, Allemagne. Les frais de livraison sont calculés et affichés lors de la finalisation de la commande.
 
 Délais indicatifs : 2 à 5 jours ouvrables selon le pays de destination. Les délais sont donnés à titre indicatif et peuvent varier. Fly Horizons ne saurait être tenu responsable des retards imputables au transporteur.
@@ -239,7 +239,7 @@ export default function CgpPage() {
           {/* Avertissement partage de coûts */}
           <div className="mt-4 p-4 bg-primary/5 border border-primary/20 rounded-xl">
             <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">
-              Activité de partage de coûts — NCO.GEN.104
+              Activité de partage de coûts, NCO.GEN.104
             </p>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Les vols Fly Horizons sont des vols en partage de coûts au sens du règlement EASA NCO.GEN.104.

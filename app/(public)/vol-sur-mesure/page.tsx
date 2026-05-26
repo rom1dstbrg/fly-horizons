@@ -9,6 +9,7 @@ import {
   Check, CheckCircle, Loader2, AlertCircle, AlertTriangle,
   Mail, Lock, Eye, Zap, PlaneTakeoff, X, Info,
   Navigation, Star, Plus, CalendarDays, CloudRain,
+  ArrowRight, ShieldCheck,
 } from "lucide-react";
 import type {
   AdventureRouteData, AdventureMapHandle, POI, StyleMode,
@@ -60,8 +61,8 @@ const MAX_WEIGHT  = 190;
 const CRIT_WEIGHT = 220;
 
 const STYLE_OPTIONS: { key: StyleMode; icon: React.ReactNode; label: string; sub: string }[] = [
-  { key: "rapide", icon: <Zap size={14} />, label: "Itinéraire direct",    sub: "Trajet le plus court, virages légèrement lissés" },
-  { key: "vues",   icon: <Eye size={14} />, label: "Parcours pittoresque", sub: "Virages plus amples pour profiter du paysage" },
+  { key: "vues",   icon: <Eye size={14} />, label: "Vue panoramique",      sub: "Paysages & points d'intérêt" },
+  { key: "rapide", icon: <Zap size={14} />, label: "Itinéraire équilibré", sub: "Distance et temps optimisés" },
 ];
 
 // ── Page ──────────────────────────────────────────────────────
@@ -83,22 +84,31 @@ export default function VolSurMesurePage() {
   const [searchLoading,  setSearchLoading]  = useState(false);
   const [searchOpen,     setSearchOpen]     = useState(false);
   const [searchFocused,  setSearchFocused]  = useState(false);
-  const searchRef = useRef<HTMLDivElement>(null);
+  const [searchPulse,    setSearchPulse]    = useState(false);
+  const searchRef      = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // ── Popup d'accueil (stocké en localStorage)
-  // null = pas encore vérifié (évite le flash au premier render)
-  const [popupDismissed, setPopupDismissed] = useState<boolean | null>(null);
-  useEffect(() => {
-    setPopupDismissed(localStorage.getItem("vsm-welcome") === "1");
-  }, []);
-  function dismissPopup() {
-    localStorage.setItem("vsm-welcome", "1");
-    setPopupDismissed(true);
+  function focusSearch() {
+    // Flash visible + focus immédiat sur la barre de recherche
+    setSearchPulse(true);
+    setSearchFocused(true);
+    searchInputRef.current?.focus();
+    setTimeout(() => setSearchPulse(false), 1400);
   }
+
+  // ── Popup d'accueil (session uniquement — réapparaît à chaque visite)
+  const [popupVisible, setPopupVisible] = useState(true);
 
   // ── Scroll vers le haut à chaque changement d'étape
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [flowStep]);
+
+  // ── Lorsqu'on revient sur "build", la carte (CSS hidden → visible) doit recalculer sa taille
+  useEffect(() => {
+    if (flowStep === "build") {
+      mapRef.current?.invalidateSize();
+    }
   }, [flowStep]);
 
   // ── Calendar / slots
@@ -409,7 +419,7 @@ export default function VolSurMesurePage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-white truncate">{poi.nom}</p>
-                    <p className="text-[10px] text-white/35">≈ 2 min d&apos;observation</p>
+                    <p className="text-[10px] text-white/35">≈ {styleMode === "vues" ? 6 : 4} min observation</p>
                   </div>
                   <button
                     onClick={() => mapRef.current?.removePOI(poi.id)}
@@ -588,6 +598,19 @@ export default function VolSurMesurePage() {
               )}
             </div>
           )}
+          {/* Réassurance */}
+          <div className="pt-2.5 border-t border-border space-y-1.5">
+            {[
+              "Itinéraire sauvegardé",
+              "Vos points sont conservés",
+              "Paiement plus tard possible",
+            ].map(t => (
+              <div key={t} className="flex items-center gap-2 text-xs text-green-700">
+                <CheckCircle size={11} className="text-green-500 shrink-0" />
+                {t}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -601,40 +624,36 @@ export default function VolSurMesurePage() {
       <div className="h-[84px]" />
 
       {/* ══════════════════════ STEP 1 : BUILD ══════════════════════ */}
-      {flowStep === "build" && (
-        <div className="flex flex-col" style={{ height: "calc(100vh - 84px)" }}>
+      {/* Toujours monté (CSS hidden) pour préserver les POIs Leaflet au retour */}
+      {/* pb-[72px] lg:pb-0 : espace pour la barre CTA fixe sur mobile */}
+      <div className={flowStep === "build" ? "flex flex-col pb-[72px] lg:pb-0" : "hidden"} style={{ height: "calc(100vh - 84px)" }}>
 
-          {/* Sub-header : mobile = 2 lignes, desktop = 1 ligne */}
-          <div ref={searchRef} className="bg-white border-b border-border px-4 sm:px-6 py-2.5 space-y-2 sm:space-y-0">
-
-            {/* Ligne 1 : titre + barre desktop + Tout effacer */}
-            <div className="flex items-center gap-3">
-
-              {/* Titre */}
-              <h1 className="text-sm sm:text-base font-black text-[#0b2238] shrink-0 whitespace-nowrap">
-                Dessinez votre aventure
-              </h1>
-
-              {/* Barre de recherche — visible desktop seulement */}
-              <div className="relative flex-1 min-w-0 hidden sm:block">
+          {/* Sub-header : recherche + style de vol (mobile) */}
+          <div ref={searchRef} className="bg-white border-b border-border px-4 pt-2.5 pb-2">
+            {/* Ligne recherche */}
+            <div className="w-full max-w-[820px] mx-auto flex items-center gap-2">
+              <div className="relative flex-1 min-w-0">
                 <div className={[
                   "flex items-center gap-2.5 h-10 rounded-xl px-3.5 transition-all border-2",
-                  searchFocused || searchOpen
-                    ? "bg-white border-[#fbae17] shadow-[0_0_0_3px_rgba(251,174,23,0.12)]"
-                    : "bg-[#f8f8fa] border-[#fbae17]/35 hover:border-[#fbae17]/65",
+                  searchPulse
+                    ? "bg-white border-[#fbae17] shadow-[0_0_0_6px_rgba(251,174,23,0.30)] animate-pulse"
+                    : searchFocused || searchOpen
+                    ? "bg-white border-[#fbae17] shadow-[0_0_0_4px_rgba(251,174,23,0.15)]"
+                    : "bg-white border-[#cdd5e0] shadow-sm hover:border-[#fbae17]/70",
                 ].join(" ")}>
                   {searchLoading
                     ? <Loader2 size={14} className="text-[#fbae17] animate-spin shrink-0" />
-                    : <Search   size={14} className="text-[#fbae17] shrink-0" />
+                    : <Search   size={14} className="text-[#6b7280] shrink-0" />
                   }
                   <input
+                    ref={searchInputRef}
                     type="text"
                     value={searchQ}
                     onChange={e => setSearchQ(e.target.value)}
                     onFocus={() => { setSearchFocused(true); if (searchResults.length > 0) setSearchOpen(true); }}
                     onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
-                    placeholder="Rechercher un lieu, une ville, un monument…"
-                    className="flex-1 bg-transparent text-sm font-medium text-foreground placeholder:text-muted-foreground/50 outline-none min-w-0"
+                    placeholder="Ajouter un point de survol : ville, château, lac, monument…"
+                    className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/55 outline-none min-w-0"
                     autoComplete="off"
                   />
                   {searchQ && (
@@ -645,7 +664,7 @@ export default function VolSurMesurePage() {
                   )}
                 </div>
 
-                {/* Dropdown desktop */}
+                {/* Dropdown */}
                 {searchOpen && searchResults.length > 0 && (
                   <div className="absolute top-full left-0 right-0 bg-white border border-border rounded-xl shadow-2xl z-[600] overflow-hidden mt-1.5">
                     <div className="px-4 py-2 border-b border-border bg-muted/30">
@@ -679,104 +698,83 @@ export default function VolSurMesurePage() {
               {route.pois.length > 0 && (
                 <button type="button"
                   onClick={() => mapRef.current?.clearAll()}
-                  className="flex items-center gap-1.5 h-9 px-3 rounded-lg border border-border text-xs font-semibold text-muted-foreground hover:text-destructive hover:border-destructive/30 transition-colors cursor-pointer shrink-0">
-                  <Trash2 size={12} /> Tout effacer
+                  className="flex items-center gap-1.5 h-10 px-3 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:text-destructive hover:border-destructive/30 transition-colors cursor-pointer shrink-0">
+                  <Trash2 size={12} />
+                  <span className="hidden sm:block">Tout effacer</span>
                 </button>
               )}
             </div>
 
-            {/* Ligne 2 mobile : barre de recherche pleine largeur */}
-            <div className="sm:hidden flex items-center gap-2">
-              <div className="relative flex-1 min-w-0">
-                <div className={[
-                  "flex items-center gap-2.5 h-10 rounded-xl px-3.5 transition-all border-2",
-                  searchFocused || searchOpen
-                    ? "bg-white border-[#fbae17] shadow-[0_0_0_3px_rgba(251,174,23,0.12)]"
-                    : "bg-[#f8f8fa] border-[#fbae17]/35 hover:border-[#fbae17]/65",
-                ].join(" ")}>
-                  {searchLoading
-                    ? <Loader2 size={14} className="text-[#fbae17] animate-spin shrink-0" />
-                    : <Search   size={14} className="text-[#fbae17] shrink-0" />
-                  }
-                  <input
-                    type="text"
-                    value={searchQ}
-                    onChange={e => setSearchQ(e.target.value)}
-                    onFocus={() => { setSearchFocused(true); if (searchResults.length > 0) setSearchOpen(true); }}
-                    onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
-                    placeholder="Rechercher un lieu…"
-                    className="flex-1 bg-transparent text-sm font-medium text-foreground placeholder:text-muted-foreground/50 outline-none min-w-0"
-                    autoComplete="off"
-                  />
-                  {searchQ && (
-                    <button onClick={() => { setSearchQ(""); setSearchOpen(false); }}
-                      className="text-muted-foreground hover:text-foreground cursor-pointer shrink-0">
-                      <X size={13} />
-                    </button>
-                  )}
-                </div>
-
-                {/* Dropdown mobile */}
-                {searchOpen && searchResults.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 bg-white border border-border rounded-xl shadow-2xl z-[600] overflow-hidden mt-1.5">
-                    <div className="px-4 py-2 border-b border-border bg-muted/30">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                        {searchResults.length} résultat{searchResults.length > 1 ? "s" : ""}
-                      </p>
-                    </div>
-                    {searchResults.map(r => (
-                      <button key={r.place_id} type="button"
-                        onClick={() => addSearchResult(r)}
-                        className="w-full flex items-start gap-3 px-4 py-3 hover:bg-[#fbae17]/5 text-left transition-colors border-b border-border last:border-0 cursor-pointer group">
-                        <div className="w-7 h-7 rounded-lg bg-[#0b2238] flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-[#fbae17] transition-colors">
-                          <MapPin size={12} className="text-[#fbae17] group-hover:text-[#0b2238]" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-bold text-foreground truncate">{r.display_name.split(",")[0]}</p>
-                          <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-                            {r.display_name.split(",").slice(1, 3).join(", ").trim()}
-                          </p>
-                        </div>
-                        <span className="text-[10px] text-[#fbae17] font-bold shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                          Ajouter
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+            {/* Mobile — style de vol (mini-toggle sous la recherche) */}
+            <div className="lg:hidden flex gap-2 mt-2 w-full max-w-[820px] mx-auto">
+              {STYLE_OPTIONS.map(o => (
+                <button key={o.key} type="button"
+                  onClick={() => setStyleMode(o.key)}
+                  className={[
+                    "flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] font-bold border transition-all cursor-pointer",
+                    styleMode === o.key
+                      ? "bg-[#0b2238] text-[#F2B705] border-[#0b2238]"
+                      : "bg-white text-muted-foreground border-border",
+                  ].join(" ")}>
+                  <span className={styleMode === o.key ? "text-[#F2B705]" : "text-muted-foreground"}>{o.icon}</span>
+                  {o.label}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Main area */}
-          <div className="flex flex-1 min-h-0">
-            {/* Left: map + stats */}
-            <div className="flex flex-col flex-1 min-w-0">
+          {/* Main area — fond blanc */}
+          <div className="flex-1 min-h-0 bg-white p-3 flex gap-3 overflow-hidden">
+            {/* Left: carte + instructions */}
+            <div className="flex flex-col flex-1 min-w-0 gap-3">
 
-              {/* Map — espace sur tous les bords + coins tous arrondis */}
-              <div className="flex-1 min-h-0 p-2 lg:p-2.5">
-                <div className="relative h-full isolate rounded-2xl overflow-hidden shadow-sm border border-border/30">
-                  {route.pois.length === 0 && !searchFocused && popupDismissed === false && (
-                    <div className="absolute inset-0 flex items-center justify-center z-[500]">
-                      <div className="bg-white/80 backdrop-blur-md rounded-2xl px-8 py-6 text-center max-w-xs border border-border shadow-xl pointer-events-auto">
-                        <div className="w-12 h-12 rounded-full bg-[#0b2238] flex items-center justify-center mx-auto mb-3">
-                          <Search size={20} className="text-[#fbae17]" />
+              {/* Card 1 — Carte */}
+              <div className="flex-1 min-h-0 relative rounded-2xl overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.10)] border border-black/6">
+                  {popupVisible && route.pois.length === 0 && (
+                    <div className="absolute inset-0 flex items-center justify-center z-[500] bg-black/20 backdrop-blur-sm p-4">
+                      <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-sm w-full shadow-2xl border border-border pointer-events-auto text-center">
+
+                        {/* Icône */}
+                        <div className="w-14 h-14 rounded-2xl bg-[#0b2238] flex items-center justify-center mx-auto mb-5">
+                          <Navigation size={22} className="text-[#F2B705]" />
                         </div>
-                        <p className="text-[#0b2238] font-black text-base mb-1">Où souhaitez-vous aller ?</p>
-                        <p className="text-foreground/60 text-xs leading-relaxed">
-                          Utilisez la <span className="text-[#fbae17] font-bold">barre de recherche</span> pour trouver un lieu à survoler,
-                          ou touchez directement la carte.
+
+                        {/* Titre */}
+                        <p className="text-[#F2B705] text-[10px] font-bold tracking-[3px] uppercase mb-2">Vol sur mesure</p>
+                        <h2 className="text-[#0b2238] text-xl font-extrabold leading-snug mb-3">
+                          Dessinez votre propre aventure
+                        </h2>
+                        <p className="text-foreground/60 text-sm leading-relaxed mb-5">
+                          Ajoutez les lieux à survoler sur la carte. On calcule
+                          l&apos;itinéraire, la durée et le prix en temps réel.
                         </p>
-                        <div className="mt-3 flex items-center gap-1.5 justify-center text-muted-foreground text-[10px]">
-                          <Navigation size={10} className="text-[#fbae17]" />
-                          Départ et retour depuis Charleroi EBCI
+
+                        {/* Points */}
+                        <div className="flex flex-col gap-2 mb-6 text-left">
+                          {[
+                            "Jusqu'à 3 passagers à bord",
+                            "Prix calculé à la minute réelle",
+                            "Annulation gratuite jusqu'à 48h",
+                          ].map(p => (
+                            <div key={p} className="flex items-center gap-2.5 text-sm text-foreground/65">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#F2B705] shrink-0" />
+                              {p}
+                            </div>
+                          ))}
                         </div>
+
+                        {/* CTA */}
                         <button
                           type="button"
-                          onClick={dismissPopup}
-                          className="mt-4 w-full py-2 rounded-xl bg-[#0b2238] text-white text-xs font-bold hover:bg-[#113356] transition-colors cursor-pointer">
-                          Compris
+                          onClick={() => setPopupVisible(false)}
+                          className="w-full py-3 rounded-xl bg-[#0b2238] text-white text-sm font-bold hover:bg-[#113356] transition-colors cursor-pointer"
+                        >
+                          Compris, tracer ma route
                         </button>
+                        <p className="mt-3 text-[10px] text-muted-foreground/50 flex items-center gap-1 justify-center">
+                          <Lock size={9} className="shrink-0" />Aucun paiement à cette étape
+                        </p>
+
                       </div>
                     </div>
                   )}
@@ -785,42 +783,237 @@ export default function VolSurMesurePage() {
                     styleMode={styleMode}
                     onRouteChange={setRoute}
                   />
-                </div>
+
+                  {/* ── Légende ── */}
+                  <div className="absolute bottom-5 left-3 z-[400] pointer-events-none">
+                    <div className="bg-[#0b2238]/88 backdrop-blur-sm border border-white/12 rounded-xl px-3 py-2.5 space-y-1.5">
+                      <p className="text-[#F2B705] text-[7px] font-black tracking-[2px] uppercase mb-2 leading-none">Légende</p>
+                      {[
+                        {
+                          icon: <span className="w-3 h-3 rounded-sm shrink-0 border border-dashed border-red-400" style={{ background: "rgba(239,68,68,0.45)" }} />,
+                          label: "Zone interdite (EBR)",
+                        },
+                        {
+                          icon: <span className="w-3 h-3 rounded-full shrink-0 bg-[#F2B705] flex items-center justify-center text-[6px] font-black text-[#113356]">1</span>,
+                          label: "Lieu à survoler",
+                        },
+                        {
+                          icon: <span className="w-3 h-3 rounded-[3px] shrink-0 bg-[#113356] border border-[#F2B705] flex items-center justify-center text-[7px]">✈</span>,
+                          label: "Escale",
+                        },
+                        {
+                          icon: <span className="w-3 h-3 rounded-full shrink-0 bg-[#F2B705] flex items-center justify-center"><PlaneTakeoff size={7} className="text-[#0b2238]" /></span>,
+                          label: "Charleroi EBCI",
+                        },
+                      ].map(({ icon, label }) => (
+                        <div key={label} className="flex items-center gap-2">
+                          <div className="flex items-center justify-center w-3 h-3 shrink-0">{icon}</div>
+                          <span className="text-white/60 text-[9px] font-medium whitespace-nowrap">{label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
               </div>
 
-              {/* Stats bar */}
-              <div className="bg-white border-t border-border px-4 py-2.5 flex items-center gap-1 overflow-x-auto">
+              {/* Card 3 — Instructions ── */}
+              <div className="hidden lg:grid grid-cols-3 divide-x divide-border rounded-xl bg-white shadow-sm border border-border/50 shrink-0">
                 {[
-                  { icon: <Clock    size={13} className="text-[#fbae17]" />, label: "Temps de vol",        value: route.totalMin  > 0 ? `≈ ${route.totalMin} min`  : "—" },
-                  { icon: <MapPin   size={13} className="text-[#fbae17]" />, label: "Distance totale",     value: route.distKm    > 0 ? `${route.distKm} km`        : "—" },
-                  { icon: <Eye      size={13} className="text-[#fbae17]" />, label: "Temps aux sites",     value: route.obsMin    > 0 ? `≈ ${route.obsMin} min`    : "—" },
-                  { icon: <Star     size={13} className="text-[#fbae17]" />, label: "Expérience",          value: "Excellente visibilité" },
-                  { icon: <PlaneTakeoff size={13} className="text-[#fbae17]" />, label: "Passagers", value: "Jusqu'à 3" },
-                ].map(({ icon, label, value }, i) => (
-                  <div key={i} className={`flex items-center gap-2 px-3 py-1 shrink-0 ${i > 0 ? "border-l border-border" : ""}`}>
-                    {icon}
+                  { n: 1, title: "Tracez votre itinéraire",   desc: "Cliquez sur la carte pour ajouter vos points de passage." },
+                  { n: 2, title: "Découvrez le prix estimé",  desc: "Le prix se met à jour en temps réel en fonction de votre parcours." },
+                  { n: 3, title: "Réservez votre expérience", desc: "Validez votre itinéraire et réglez votre acompte en ligne." },
+                ].map(({ n, title, desc }) => (
+                  <div key={n} className="flex items-start gap-3 px-5 py-3.5">
+                    <div className="w-6 h-6 rounded-full bg-[#0b2238] text-white flex items-center justify-center text-[11px] font-black shrink-0 mt-0.5">{n}</div>
                     <div>
-                      <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-semibold leading-none">{label}</p>
-                      <p className="text-xs font-bold text-foreground mt-0.5">{value}</p>
+                      <p className="text-[11px] font-bold text-[#0b2238]">{title}</p>
+                      <p className="text-[10px] text-muted-foreground leading-relaxed mt-0.5">{desc}</p>
                     </div>
                   </div>
                 ))}
-                <p className="ml-auto text-[10px] text-muted-foreground/50 shrink-0 hidden lg:block">
-                  Estimations indicatives selon les conditions réelles.
-                </p>
               </div>
             </div>
 
-            {/* Right sidebar */}
-            <div className="hidden lg:flex flex-col w-[340px] xl:w-[380px] shrink-0 bg-[#f5f5f7] border-l border-border overflow-hidden">
+            {/* Card 2 — Sidebar droite */}
+            <div className="hidden lg:flex flex-col w-[360px] xl:w-[400px] shrink-0 rounded-2xl bg-white shadow-[0_2px_16px_rgba(0,0,0,0.10)] border border-black/6 overflow-hidden">
 
               {/* Zone scrollable */}
-              <div className="flex-1 min-h-0 overflow-y-auto p-4">
-                <FlightSummaryCard showCTA={false} />
+              <div className="flex-1 min-h-0 overflow-y-auto">
+
+                {/* En-tête */}
+                <div className="px-6 pt-6 pb-5 border-b border-border">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-9 h-9 rounded-xl bg-[#0b2238] flex items-center justify-center shrink-0">
+                      <PlaneTakeoff size={16} className="text-[#F2B705]" />
+                    </div>
+                    <h2 className="text-xl font-black text-[#0b2238] leading-tight">Votre expérience</h2>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Créez votre itinéraire et découvrez le prix estimé en temps réel.
+                  </p>
+                </div>
+
+                {/* Stats — 3 colonnes */}
+                <div className="grid grid-cols-3 divide-x divide-border border-b border-border">
+                  {[
+                    { icon: <Clock size={9} />,  label: "TEMPS ESTIMÉ",
+                      main: route.totalMin > 0
+                        ? (route.totalMin >= 60 ? `${Math.floor(route.totalMin / 60)}h${String(route.totalMin % 60).padStart(2, "0")}` : `${route.totalMin}`)
+                        : "—",
+                      sub: route.totalMin >= 60 ? "heures" : route.totalMin > 0 ? "minutes" : "",
+                    },
+                    { icon: <MapPin size={9} />, label: "DISTANCE",
+                      main: route.distKm > 0 ? `${route.distKm}` : "—",
+                      sub: route.distKm > 0 ? "km" : "",
+                    },
+                    { icon: <Star size={9} />,   label: "PRIX ESTIMÉ",
+                      main: prixEstime > 0 ? `${prixEstime}` : "—",
+                      sub: prixEstime > 0 ? "€" : "",
+                    },
+                  ].map(({ icon, label, main, sub }) => (
+                    <div key={label} className="py-4 px-2.5 text-center">
+                      <p className="flex items-center justify-center gap-1 text-[7px] font-bold text-muted-foreground/70 uppercase tracking-[1.5px] mb-2">
+                        {icon}{label}
+                      </p>
+                      <p className="text-2xl font-black text-[#0b2238] leading-none">{main}</p>
+                      {sub && <p className="text-[10px] text-muted-foreground mt-1">{sub}</p>}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Votre parcours — timeline */}
+                <div className="px-5 py-4 border-b border-border">
+                  <h3 className="text-[9px] font-black text-foreground/40 uppercase tracking-[2px] mb-3">Votre parcours</h3>
+                  <div className="space-y-1.5">
+
+                    {/* Départ */}
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-3 h-3 rounded-full bg-[#F2B705] shrink-0 ring-4 ring-[#F2B705]/15" />
+                      <div className="flex-1 flex items-center justify-between bg-[#0b2238] rounded-xl px-3.5 py-2.5">
+                        <span className="text-xs font-bold text-white">Charleroi (EBCI)</span>
+                        <span className="text-[9px] font-bold text-[#F2B705] uppercase tracking-wide">Départ</span>
+                      </div>
+                    </div>
+
+                    {route.pois.length === 0 ? (
+                      <div className="flex items-center gap-2.5 py-1">
+                        <div className="w-3 h-3 rounded-full bg-border shrink-0" />
+                        <p className="text-[11px] text-muted-foreground italic">Ajoutez des lieux sur la carte…</p>
+                      </div>
+                    ) : (
+                      route.pois.map(poi => (
+                        <div key={poi.id} className="flex items-center gap-2.5">
+                          <div className="w-3 h-3 rounded-full bg-white border-2 border-muted-foreground/30 shrink-0" />
+                          <div className="flex-1 flex items-center justify-between bg-[#0b2238] rounded-xl px-3.5 py-2.5">
+                            <span className="text-xs font-bold text-white truncate flex-1 min-w-0 mr-2">{poi.nom}</span>
+                            <button
+                              onClick={() => mapRef.current?.removePOI(poi.id)}
+                              className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/8 hover:bg-red-500/20 text-white/35 hover:text-red-400 transition-all cursor-pointer border border-white/10 hover:border-red-400/30">
+                              <X size={12} />
+                              <span className="text-[9px] font-bold hidden xl:block">Retirer</span>
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+
+                    {/* Arrivée */}
+                    {route.pois.length > 0 && (
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-3 h-3 rounded-full bg-[#F2B705] shrink-0 ring-4 ring-[#F2B705]/15" />
+                        <div className="flex-1 flex items-center justify-between bg-[#0b2238] rounded-xl px-3.5 py-2.5">
+                          <span className="text-xs font-bold text-white">Charleroi (EBCI)</span>
+                          <span className="text-[9px] font-bold text-[#F2B705] uppercase tracking-wide">Arrivée</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Escales */}
+                {availableStops.length > 0 && (
+                  <div className="px-5 py-4 border-b border-border">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-[9px] font-black text-foreground/40 uppercase tracking-[2px]">Escales</h3>
+                      {availableStops.some(s => !selectedStops.find(ss => ss.id === s.id)) && (
+                        <button type="button" onClick={() => setStopsOpen(v => !v)}
+                          className="flex items-center gap-1.5 text-[10px] font-bold text-[#fbae17] hover:text-white transition-colors cursor-pointer bg-[#fbae17]/10 hover:bg-[#fbae17]/20 px-2.5 py-1 rounded-lg">
+                          <Plus size={9} />Ajouter une escale
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Sélectionnées */}
+                    {selectedStops.length > 0 && (
+                      <div className="space-y-1.5 mb-2">
+                        {selectedStops.map(s => (
+                          <div key={s.id} className="flex items-center gap-2 bg-secondary rounded-lg px-2.5 py-1.5 border border-border">
+                            <span className="font-mono text-[10px] font-bold text-[#0b2238] shrink-0">{s.icao}</span>
+                            <span className="flex-1 text-[11px] text-foreground/70 truncate">{s.nom}</span>
+                            {s.taxe > 0 && <span className="text-[10px] font-bold text-[#0b2238] shrink-0">+{s.taxe}€</span>}
+                            <button type="button" onClick={() => removeStop(s.id)}
+                              className="text-muted-foreground/40 hover:text-destructive transition-colors cursor-pointer shrink-0">
+                              <X size={10} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {selectedStops.length === 0 && !stopsOpen && (
+                      <p className="text-[11px] text-muted-foreground italic">Aucune escale</p>
+                    )}
+
+                    {/* Picker */}
+                    {stopsOpen && (
+                      <div className="rounded-xl overflow-hidden border border-border mt-2">
+                        {availableStops
+                          .filter(s => !selectedStops.find(ss => ss.id === s.id))
+                          .map((s, i, arr) => (
+                            <button key={s.id} type="button" onClick={() => addStop(s)}
+                              className={`w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-[#fbae17]/5 text-left transition-colors cursor-pointer ${i < arr.length - 1 ? "border-b border-border" : ""}`}>
+                              <span className="font-mono text-[10px] font-bold text-[#0b2238] shrink-0 w-11">{s.icao}</span>
+                              <span className="flex-1 text-[11px] text-foreground/80 truncate">{s.nom}</span>
+                              {s.taxe > 0 && <span className="text-[10px] text-muted-foreground shrink-0">+{s.taxe}€</span>}
+                            </button>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Style de vol */}
+                <div className="px-5 py-4 border-b border-border">
+                  <h3 className="text-[9px] font-black text-foreground/40 uppercase tracking-[2px] mb-3">Style de vol</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {STYLE_OPTIONS.map(o => (
+                      <button key={o.key} type="button" onClick={() => setStyleMode(o.key)}
+                        className={[
+                          "flex flex-col items-start gap-1.5 px-3 py-3 rounded-xl border-2 text-left transition-all cursor-pointer",
+                          styleMode === o.key
+                            ? "border-[#F2B705] bg-[#fffbeb]"
+                            : "border-border bg-white hover:border-[#F2B705]/50",
+                        ].join(" ")}>
+                        <span className={styleMode === o.key ? "text-[#F2B705]" : "text-muted-foreground"}>{o.icon}</span>
+                        <p className={`text-[11px] font-bold leading-tight ${styleMode === o.key ? "text-[#0b2238]" : "text-foreground"}`}>{o.label}</p>
+                        <p className="text-[9px] text-muted-foreground leading-snug">{o.sub}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Notice légale */}
+                <div className="px-5 py-4 flex items-start gap-2.5">
+                  <ShieldCheck size={13} className="text-muted-foreground/40 shrink-0 mt-0.5" />
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    Vol réalisé dans le cadre du partage des coûts. Assurance passagers incluse.
+                  </p>
+                </div>
+
               </div>
 
-              {/* CTA — épinglé en bas */}
-              <div className="shrink-0 px-4 py-4 bg-white border-t border-border">
+              {/* CTA épinglé */}
+              <div className="shrink-0 px-5 py-5 bg-white border-t border-border">
                 {taxesEscalesTotal > 0 && acompte > 0 && (
                   <div className="flex items-center justify-between mb-3 text-xs text-muted-foreground">
                     <span>Acompte + taxes escales</span>
@@ -830,14 +1023,14 @@ export default function VolSurMesurePage() {
                 <button type="button"
                   disabled={route.pois.length === 0}
                   onClick={() => { setFlowStep("reserve"); loadMonth(calYear, calMonth); }}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-[#fbae17] text-[#0b2238] text-sm font-extrabold disabled:opacity-30 hover:brightness-105 transition-all shadow-md cursor-pointer">
-                  Continuer ma réservation <ChevronRight size={15} />
+                  className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-[#F2B705] text-[#0b2238] text-[15px] font-extrabold disabled:opacity-30 hover:brightness-105 transition-all cursor-pointer">
+                  Continuer ma réservation <ArrowRight size={16} />
                 </button>
-                <p className="text-center text-[10px] text-muted-foreground/60 mt-2">
-                  <Lock size={9} className="inline mr-1" />Paiement sécurisé · aucun débit immédiat
+                <p className="text-center text-[10px] text-muted-foreground/50 mt-3 flex items-center gap-1 justify-center">
+                  <Lock size={9} className="shrink-0" />Paiement sécurisé par Stripe
                 </p>
                 {route.pois.length === 0 && (
-                  <p className="text-center text-[10px] text-muted-foreground/50 mt-1">
+                  <p className="text-center text-[10px] text-muted-foreground/40 mt-1">
                     Ajoutez au moins un lieu pour continuer
                   </p>
                 )}
@@ -847,43 +1040,100 @@ export default function VolSurMesurePage() {
           </div>
 
           {/* Mobile CTA */}
-          <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-border px-4 py-3 z-40">
-            {route.pois.length > 0 && prixEstime > 0 && (
-              <div className="flex items-center justify-between mb-2 px-1">
-                <span className="text-xs text-muted-foreground">
-                  ≈ {route.totalMin} min · {route.distKm} km
-                </span>
-                <span className="text-sm font-black text-[#113356]">
-                  Estimé : {prixEstime} €
-                </span>
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-border px-4 pt-2.5 pb-4 z-40">
+            {route.pois.length > 0 && (
+              <div className="flex items-center justify-between mb-2.5">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-xs font-bold text-[#0b2238] shrink-0">
+                    {route.pois.length} lieu{route.pois.length > 1 ? "x" : ""}
+                  </span>
+                  {route.totalMin > 0 && (
+                    <span className="text-xs text-muted-foreground truncate">
+                      · ≈{route.totalMin} min · {route.distKm} km
+                    </span>
+                  )}
+                </div>
+                {prixEstime > 0 && (
+                  <span className="text-sm font-black text-[#0b2238] shrink-0">{prixEstime}&thinsp;€</span>
+                )}
               </div>
             )}
             <button type="button"
               disabled={route.pois.length === 0}
               onClick={() => { setFlowStep("reserve"); loadMonth(calYear, calMonth); }}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-[#0b2238] text-white text-sm font-extrabold disabled:opacity-40 cursor-pointer">
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-[#F2B705] text-[#0b2238] text-sm font-extrabold disabled:opacity-40 disabled:bg-[#0b2238] disabled:text-white cursor-pointer transition-all">
               {route.pois.length === 0
-                ? "Ajoutez au moins un lieu"
+                ? "Ajoutez un lieu sur la carte"
                 : <>Continuer ma réservation <ChevronRight size={15} /></>
               }
             </button>
           </div>
         </div>
-      )}
 
       {/* ══════════════════════ STEP 2 : RESERVE ══════════════════════ */}
       {flowStep === "reserve" && (
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-6">
-          {/* Back */}
-          <button type="button" onClick={() => setFlowStep("build")}
-            className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer group mb-6">
-            <ChevronLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
-            Modifier l&apos;itinéraire
-          </button>
+
+          {/* ── Bande de navigation + récap de route ─────────────────── */}
+          <div className="flex items-center gap-3 mb-6">
+            <button type="button" onClick={() => setFlowStep("build")}
+              className="flex items-center gap-2 text-sm font-bold text-[#0b2238] hover:text-[#113356] cursor-pointer group shrink-0">
+              <div className="w-9 h-9 rounded-xl border-2 border-[#0b2238]/15 flex items-center justify-center group-hover:bg-[#0b2238] group-hover:border-[#0b2238] transition-all">
+                <ChevronLeft size={15} className="text-[#0b2238] group-hover:text-white transition-colors" />
+              </div>
+              <span className="hidden sm:block">Modifier l&apos;itinéraire</span>
+            </button>
+
+            {/* Récap route */}
+            <div className="flex-1 min-w-0 flex items-center gap-3 bg-[#0b2238] rounded-2xl px-4 py-2.5 overflow-hidden">
+              <PlaneTakeoff size={13} className="text-[#F2B705] shrink-0" />
+              <div className="flex items-center gap-1.5 text-xs text-white/60 flex-1 min-w-0 overflow-hidden">
+                <span className="text-white font-bold shrink-0">Charleroi</span>
+                {route.pois.map(p => (
+                  <span key={p.id} className="flex items-center gap-1.5 shrink-0">
+                    <ArrowRight size={9} className="text-white/30" />
+                    <span className="text-white/75 font-medium hidden sm:block truncate max-w-[120px]">{p.nom}</span>
+                  </span>
+                ))}
+                <ArrowRight size={9} className="text-white/30 shrink-0" />
+                <span className="text-white font-bold shrink-0">Charleroi</span>
+              </div>
+              <div className="flex items-center gap-3 shrink-0 border-l border-white/10 pl-3">
+                {route.totalMin > 0 && <span className="text-[#F2B705] font-black text-sm">≈{route.totalMin}&thinsp;min</span>}
+                {prixEstime > 0 && <span className="text-white/50 text-xs font-semibold">{prixEstime}&thinsp;€</span>}
+              </div>
+            </div>
+          </div>
 
           <div className="flex flex-col lg:flex-row gap-6 items-start">
             {/* ── FORM ── */}
             <div className="flex-1 min-w-0 space-y-4">
+
+              {/* Mobile — récap du vol (sidebar invisible sur mobile) */}
+              <div className="lg:hidden bg-[#0b2238] rounded-2xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <p className="text-[8px] font-black text-white/35 uppercase tracking-[2.5px] mb-1">Votre vol</p>
+                    <p className="text-white font-black text-2xl leading-none">
+                      {route.totalMin > 0 ? `≈ ${route.totalMin}` : "—"}
+                      {route.totalMin > 0 && <span className="text-base font-bold ml-1">min</span>}
+                    </p>
+                  </div>
+                  {prixEstime > 0 && (
+                    <div className="text-right">
+                      <p className="text-[8px] font-black text-white/35 uppercase tracking-[2.5px] mb-1">Prix estimé</p>
+                      <p className="text-[#F2B705] font-black text-2xl leading-none">{prixEstime}&thinsp;€</p>
+                    </div>
+                  )}
+                </div>
+                {route.pois.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-2.5 border-t border-white/10">
+                    {route.pois.map(p => (
+                      <span key={p.id} className="bg-white/10 text-white/70 text-[10px] font-semibold px-2.5 py-1 rounded-lg">{p.nom}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {/* 1. Date & heure */}
               <div className="bg-white rounded-2xl border border-border overflow-hidden" style={{ boxShadow: "var(--sh-sm)" }}>
@@ -922,16 +1172,18 @@ export default function VolSurMesurePage() {
                     <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full border-2 border-border" />Disponible</span>
                     <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-muted" />Indisponible</span>
                   </div>
-                  <div className="mt-3 bg-blue-50 border border-blue-100 rounded-xl px-3.5 py-2.5">
-                    <p className="text-[10px] font-bold text-blue-900 mb-1">Météo — comment ça fonctionne ?</p>
+                  <div className="mt-3 bg-[#0b2238]/4 border border-[#0b2238]/8 rounded-xl px-3.5 py-2.5">
+                    <p className="text-[10px] font-bold text-[#0b2238] mb-1.5 flex items-center gap-1.5">
+                      <CloudRain size={10} className="text-[#F2B705]" />Météo : comment ça fonctionne ?
+                    </p>
                     <ul className="space-y-1">
                       {[
                         "Annulation gratuite jusqu'à 48 h avant.",
                         "Si la météo ne permet pas de voler, le vol est reporté sans frais.",
-                        "C'est le pilote qui décide, jusqu'à 2 h avant — selon les conditions réelles à l'aéroport, pas chez vous.",
+                        "C'est le pilote qui décide, jusqu'à 2 h avant, selon les conditions réelles à l'aéroport, pas chez vous.",
                       ].map(t => (
-                        <li key={t} className="flex items-start gap-1.5 text-[10px] text-blue-800/70 leading-relaxed">
-                          <span className="text-blue-400 shrink-0">·</span>{t}
+                        <li key={t} className="flex items-start gap-1.5 text-[10px] text-[#0b2238]/55 leading-relaxed">
+                          <span className="text-[#F2B705] shrink-0 font-black mt-0.5">·</span>{t}
                         </li>
                       ))}
                     </ul>
@@ -1020,14 +1272,14 @@ export default function VolSurMesurePage() {
                 </div>
               </div>
 
-              {/* Escales (mobile + desktop) */}
+              {/* 3. Escales */}
               {availableStops.length > 0 && (
                 <div className="bg-white rounded-2xl border border-border overflow-hidden" style={{ boxShadow: "var(--sh-sm)" }}>
                   <div className="bg-gradient-to-r from-[#0b2238] to-[#113356] px-5 py-3.5 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[#fbae17]">✈</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-[#fbae17] shrink-0">3</div>
                       <h2 className="text-sm font-extrabold text-white">
-                        Escale(s)&nbsp;<span className="font-normal opacity-60">(optionnel)</span>
+                        Escales&nbsp;<span className="font-normal opacity-60">(optionnel)</span>
                       </h2>
                     </div>
                     {selectedStops.length > 0 && (
@@ -1079,10 +1331,10 @@ export default function VolSurMesurePage() {
                 </div>
               )}
 
-              {/* 3. Coordonnées */}
+              {/* 4. Coordonnées */}
               <div className="bg-white rounded-2xl border border-border overflow-hidden" style={{ boxShadow: "var(--sh-sm)" }}>
                 <div className="bg-gradient-to-r from-[#0b2238] to-[#113356] px-5 py-3.5 flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-[#fbae17]">3</div>
+                  <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-[#fbae17]">4</div>
                   <div className="flex items-center gap-2">
                     <Mail size={13} className="text-[#fbae17]" />
                     <h2 className="text-sm font-extrabold text-white">Vos coordonnées</h2>
@@ -1102,17 +1354,17 @@ export default function VolSurMesurePage() {
                 </div>
               </div>
 
-              {/* 4. Remarques */}
+              {/* 5. Message pilote */}
               <div className="bg-white rounded-2xl border border-border overflow-hidden" style={{ boxShadow: "var(--sh-sm)" }}>
                 <div className="bg-gradient-to-r from-[#0b2238] to-[#113356] px-5 py-3.5 flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-[#fbae17]">4</div>
+                  <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-[#fbae17]">5</div>
                   <div className="flex items-center gap-2">
                     <Mail size={13} className="text-[#fbae17]" />
                     <h2 className="text-sm font-extrabold text-white">Un mot pour nos pilotes ? <span className="font-normal opacity-60">(optionnel)</span></h2>
                   </div>
                 </div>
                 <div className="p-5">
-                  <textarea value={form.commentaire} rows={4} maxLength={300}
+                  <textarea value={form.commentaire} rows={3} maxLength={300}
                     onChange={e => setForm(f => ({ ...f, commentaire: e.target.value }))}
                     className="w-full px-3 py-3 rounded-xl border border-border bg-white text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#fbae17]/20 focus:border-[#fbae17] transition-all resize-none placeholder:text-muted-foreground/40"
                     placeholder={"Ex : « C'est un anniversaire », « On aimerait faire un passage spécial », « C'est une surprise »…"} />
@@ -1126,14 +1378,17 @@ export default function VolSurMesurePage() {
               </div>
 
               {/* CGP */}
-              <div className="bg-white rounded-2xl border border-border p-5">
+              <div className={`rounded-2xl border-2 p-5 transition-all ${form.accept_cgp ? "bg-[#0b2238]/4 border-[#0b2238]/20" : "bg-white border-border"}`}>
                 <label className="flex items-start gap-3.5 cursor-pointer">
-                  <input type="checkbox" checked={form.accept_cgp}
-                    onChange={e => setForm(f => ({ ...f, accept_cgp: e.target.checked }))}
-                    className="mt-0.5 w-4 h-4 accent-[#113356] shrink-0 cursor-pointer" />
-                  <span className="text-sm text-muted-foreground leading-relaxed">
+                  <div className={`mt-0.5 w-5 h-5 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all ${form.accept_cgp ? "bg-[#0b2238] border-[#0b2238]" : "border-border bg-white"}`}>
+                    {form.accept_cgp && <Check size={11} className="text-[#F2B705]" />}
+                    <input type="checkbox" checked={form.accept_cgp}
+                      onChange={e => setForm(f => ({ ...f, accept_cgp: e.target.checked }))}
+                      className="sr-only" />
+                  </div>
+                  <span className="text-sm text-foreground/70 leading-relaxed">
                     J&apos;accepte les{" "}
-                    <Link href="/cgp" className="text-[#113356] underline underline-offset-2 font-semibold">
+                    <Link href="/cgp" className="text-[#0b2238] underline underline-offset-2 font-semibold hover:text-[#F2B705] transition-colors">
                       Conditions Générales de Participation
                     </Link>{" "}
                     et que mes données soient utilisées pour traiter ma réservation.
@@ -1178,19 +1433,24 @@ export default function VolSurMesurePage() {
                 <Lock size={9} className="inline mr-1" />Paiement sécurisé, aucun débit immédiat
               </p>
 
-              {/* Validation hints */}
-              <div className="bg-white rounded-xl border border-border p-4 space-y-1.5 text-xs text-muted-foreground">
-                {[
-                  { ok: !!form.date && !!form.heure, label: "Date & heure sélectionnées" },
-                  { ok: !!form.poids_total, label: "Poids renseigné" },
-                  { ok: !!form.prenom && !!form.nom && !!form.email, label: "Coordonnées complètes" },
-                  { ok: form.accept_cgp, label: "CGP acceptées" },
-                ].map(({ ok, label }) => (
-                  <div key={label} className={`flex items-center gap-2 ${ok ? "text-green-700" : ""}`}>
-                    <CheckCircle size={11} className={ok ? "text-green-500" : "text-muted-foreground/30"} />
-                    {label}
-                  </div>
-                ))}
+              {/* Validation checklist */}
+              <div className="bg-[#0b2238] rounded-2xl p-4">
+                <p className="text-[8px] font-black text-white/35 uppercase tracking-[2.5px] mb-3">Checklist</p>
+                <div className="space-y-2">
+                  {[
+                    { ok: !!form.date && !!form.heure, label: "Date & heure sélectionnées" },
+                    { ok: !!form.poids_total,          label: "Poids renseigné" },
+                    { ok: !!form.prenom && !!form.nom && !!form.email, label: "Coordonnées complètes" },
+                    { ok: form.accept_cgp,             label: "CGP acceptées" },
+                  ].map(({ ok, label }) => (
+                    <div key={label} className={`flex items-center gap-2.5 text-xs transition-colors ${ok ? "text-[#F2B705]" : "text-white/25"}`}>
+                      <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 border transition-all ${ok ? "border-[#F2B705]/50 bg-[#F2B705]/10" : "border-white/10 bg-white/5"}`}>
+                        <CheckCircle size={9} className={ok ? "text-[#F2B705]" : "text-white/15"} />
+                      </div>
+                      {label}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

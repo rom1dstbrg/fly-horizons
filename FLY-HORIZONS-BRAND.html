@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fly Horizons — Charte de marque</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+
+/* ─── Reset & base ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy-dk: #0b2238;
+  --navy:    #113356;
+  --gold:    #F2B705;
+  --gold-lt: rgba(242,183,5,.12);
+  --bg:      #f6f8fc;
+  --fg:      #1e2535;
+  --muted:   #64748b;
+  --border:  #e0e5ef;
+  --white:   #ffffff;
+  --r:       12px;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Layout ─── */
+.page { max-width: 900px; margin: 0 auto; padding: 0 24px 80px; }
+.section { margin-bottom: 72px; }
+.section-title {
+  font-size: 10px; font-weight: 700; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--gold);
+  margin-bottom: 6px;
+}
+.section-heading {
+  font-size: 26px; font-weight: 800; color: var(--navy-dk);
+  margin-bottom: 4px;
+}
+.section-sub {
+  font-size: 13px; color: var(--muted); margin-bottom: 32px;
+}
+.divider {
+  width: 40px; height: 2px; background: var(--gold);
+  border-radius: 2px; margin: 10px 0 32px;
+}
+.card {
+  background: var(--white); border-radius: var(--r);
+  border: 1px solid var(--border); padding: 28px;
+  box-shadow: 0 2px 14px rgba(17,51,86,.07);
+}
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+label-sm {
+  font-size: 10px; font-weight: 600; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--muted);
+}
+p { font-size: 13.5px; color: var(--muted); line-height: 1.7; }
+
+/* ─── COUVERTURE ─── */
+.cover {
+  background: var(--navy-dk);
+  min-height: 380px;
+  display: flex; flex-direction: column;
+  justify-content: flex-end;
+  padding: 56px 48px 52px;
+  margin-bottom: 64px;
+  position: relative;
+  overflow: hidden;
+}
+.cover::before {
+  content: '';
+  position: absolute; top: -120px; right: -80px;
+  width: 420px; height: 420px;
+  border-radius: 50%;
+  background: rgba(242,183,5,.07);
+}
+.cover::after {
+  content: '';
+  position: absolute; bottom: -80px; left: 60px;
+  width: 260px; height: 260px;
+  border-radius: 50%;
+  background: rgba(17,51,86,.5);
+}
+.cover-eyebrow {
+  font-size: 10px; font-weight: 700; letter-spacing: .25em;
+  text-transform: uppercase; color: var(--gold);
+  margin-bottom: 14px; position: relative; z-index: 1;
+}
+.cover-title {
+  font-size: 52px; font-weight: 800; color: white;
+  line-height: 1.05; position: relative; z-index: 1;
+}
+.cover-title span { color: var(--gold); }
+.cover-sub {
+  font-size: 14px; color: rgba(255,255,255,.45);
+  margin-top: 12px; font-weight: 400;
+  position: relative; z-index: 1;
+}
+.cover-meta {
+  position: absolute; top: 48px; right: 48px;
+  font-size: 11px; color: rgba(255,255,255,.25);
+  text-align: right; font-weight: 400; z-index: 1;
+}
+
+/* ─── COULEURS ─── */
+.swatch-primary {
+  height: 100px; border-radius: var(--r) var(--r) 0 0;
+  display: flex; align-items: flex-end;
+  padding: 10px 14px;
+}
+.swatch-row {
+  display: flex; gap: 8px; margin-top: 8px;
+}
+.swatch-sm {
+  flex: 1; height: 36px; border-radius: 6px;
+}
+.swatch-info {
+  background: var(--white); border: 1px solid var(--border);
+  border-top: none; border-radius: 0 0 var(--r) var(--r);
+  padding: 12px 14px;
+}
+.swatch-name { font-size: 12px; font-weight: 700; color: var(--fg); }
+.swatch-hex  { font-size: 11px; color: var(--muted); font-family: monospace; }
+.swatch-use  { font-size: 10px; color: var(--muted); margin-top: 4px; }
+
+/* ─── TYPO ─── */
+.type-sample {
+  border-bottom: 1px solid var(--border);
+  padding: 18px 0;
+  display: flex; align-items: baseline; gap: 20px;
+}
+.type-sample:last-child { border-bottom: none; }
+.type-label {
+  width: 160px; shrink: 0;
+  font-size: 10px; font-weight: 600; color: var(--muted);
+  letter-spacing: .08em; text-transform: uppercase; line-height: 1;
+  padding-top: 4px;
+}
+.type-specimen { flex: 1; color: var(--navy-dk); }
+
+/* ─── LOGO ─── */
+.logo-box {
+  display: flex; align-items: center; justify-content: center;
+  height: 120px; border-radius: var(--r);
+  border: 1px solid var(--border);
+}
+.logo-text {
+  font-size: 28px; font-weight: 800; letter-spacing: -.02em;
+  line-height: 1;
+}
+.logo-text .fly { color: var(--navy-dk); }
+.logo-text .horizons { color: var(--gold); }
+.logo-tag {
+  font-size: 8px; font-weight: 600; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--muted);
+  text-align: center; margin-top: 5px;
+}
+
+/* ─── TAGLINE ─── */
+.tagline-block {
+  background: var(--navy-dk); border-radius: var(--r);
+  padding: 32px 36px; position: relative; overflow: hidden;
+}
+.tagline-block::before {
+  content: '\201C';
+  position: absolute; top: -10px; left: 24px;
+  font-size: 120px; font-weight: 800;
+  color: rgba(242,183,5,.08); line-height: 1;
+  font-family: Georgia, serif;
+}
+.tagline-main {
+  font-size: 28px; font-weight: 800; color: white;
+  position: relative; z-index: 1;
+}
+.tagline-main span { color: var(--gold); }
+.tagline-sub {
+  font-size: 12px; color: rgba(255,255,255,.40);
+  margin-top: 8px; font-weight: 400; position: relative; z-index: 1;
+}
+.tagline-alt {
+  background: white; border-radius: var(--r);
+  border: 1px solid var(--border); padding: 20px 24px;
+}
+.tagline-alt-label {
+  font-size: 9px; font-weight: 700; letter-spacing: .15em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
+}
+.tagline-alt-text {
+  font-size: 15px; font-weight: 700; color: var(--navy-dk);
+}
+.tagline-alt-text em { color: var(--gold); font-style: normal; }
+
+/* ─── BOUTONS ─── */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700; border: none; cursor: pointer;
+  transition: all .2s; text-decoration: none;
+}
+.btn-primary {
+  background: var(--gold); color: var(--navy);
+  padding: 12px 24px; border-radius: 10px; font-size: 13px;
+}
+.btn-secondary {
+  background: var(--navy-dk); color: white;
+  padding: 12px 24px; border-radius: 10px; font-size: 13px;
+}
+.btn-outline {
+  background: transparent; color: var(--navy-dk);
+  padding: 11px 24px; border-radius: 10px; font-size: 13px;
+  border: 2px solid var(--border);
+}
+.btn-ghost {
+  background: transparent; color: var(--gold);
+  padding: 0; font-size: 12px;
+}
+.btn-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+
+/* ─── BADGES ─── */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10px; font-weight: 600; border-radius: 6px;
+  padding: 5px 10px; font-family: 'Poppins', sans-serif;
+}
+.badge-navy  { background: rgba(11,34,56,.08); color: var(--navy-dk); border: 1px solid rgba(11,34,56,.12); }
+.badge-gold  { background: var(--gold-lt); color: #8a6400; border: 1px solid rgba(242,183,5,.25); }
+.badge-light { background: #f0f5ff; color: var(--navy); border: 1px solid #dce8ff; }
+.badge-white { background: rgba(255,255,255,.08); color: rgba(255,255,255,.8); border: 1px solid rgba(255,255,255,.14); }
+.badge-row   { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ─── VOIX ─── */
+.voice-rule {
+  display: flex; gap: 16px; padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.voice-rule:last-child { border: none; }
+.voice-icon {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; flex-shrink: 0; margin-top: 1px;
+}
+.voice-ok   { background: #d1fae5; color: #065f46; }
+.voice-no   { background: #fee2e2; color: #991b1b; }
+.voice-title { font-size: 12px; font-weight: 700; color: var(--fg); margin-bottom: 2px; }
+.voice-desc  { font-size: 12px; color: var(--muted); }
+
+/* ─── DONT ─── */
+.word-no {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;
+  border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 600;
+  text-decoration: line-through;
+}
+.word-yes {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7;
+  border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 600;
+}
+.word-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+
+/* ─── LEGAL ─── */
+.legal-row {
+  display: flex; gap: 12px; padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.legal-row:last-child { border: none; }
+.legal-key { width: 180px; flex-shrink: 0; font-weight: 600; color: var(--fg); }
+.legal-val { color: var(--muted); }
+
+/* ─── ESPACEMENT ─── */
+.spacing-row { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.spacing-swatch {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.spacing-bar {
+  background: var(--gold-lt); border: 1px solid rgba(242,183,5,.3);
+  border-radius: 4px; width: 36px;
+}
+.spacing-label { font-size: 10px; color: var(--muted); font-weight: 600; }
+
+/* ─── GRADIENT DECO ─── */
+.bg-navy-section {
+  background: var(--navy-dk);
+  border-radius: var(--r); padding: 28px;
+}
+
+/* ─── Séparateur visuel entre grandes parties ─── */
+.part-header {
+  background: var(--navy-dk);
+  color: white; padding: 14px 24px;
+  border-radius: var(--r);
+  font-size: 11px; font-weight: 700; letter-spacing: .15em;
+  text-transform: uppercase; margin-bottom: 32px;
+  display: flex; align-items: center; gap: 10px;
+}
+.part-num {
+  background: var(--gold); color: var(--navy);
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 800; flex-shrink: 0;
+}
+
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     COUVERTURE
+══════════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-meta">
+    Charte de marque v1.0<br />
+    Fly Horizons — fly-horizons.com<br />
+    Mai 2026
+  </div>
+  <p class="cover-eyebrow">Document de référence interne</p>
+  <h1 class="cover-title">Fly <span>Horizons</span><br />Brand Guide</h1>
+  <p class="cover-sub">Identité visuelle · Voix de marque · Identité juridique</p>
+</div>
+
+<div class="page">
+
+
+<!-- ══════════════════════════════════════════════════
+     01 — IDENTITÉ DE MARQUE
+══════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="part-header"><span class="part-num">1</span> Identité de marque</div>
+
+  <div class="section-title">Nom & positionnement</div>
+  <h2 class="section-heading">Fly Horizons</h2>
+  <div class="divider"></div>
+  <p style="max-width:600px; margin-bottom:32px;">
+    Fly Horizons est une initiative de vols en partage de coûts aéronautiques opérée depuis
+    l'aéroport de Charleroi (EBCI), Belgique. Le concept repose sur le règlement européen EASA
+    <strong style="color:#1e2535;">NCO.GEN.104</strong> : les passagers contribuent aux frais
+    directs du vol (carburant, location de l'aéronef, redevances). Il ne s'agit pas d'un
+    service de transport aérien commercial.
+  </p>
+
+  <!-- Logo -->
+  <div class="grid-2" style="margin-bottom:24px;">
+    <div>
+      <p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Sur fond clair</p>
+      <div class="logo-box" style="background:white;">
+        <div>
+          <div class="logo-text">
+            <span class="fly">FLY </span><span class="horizons">HORIZONS</span>
+          </div>
+          <div class="logo-tag">Vols en partage de coûts · Charleroi EBCI</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Sur fond sombre</p>
+      <div class="logo-box" style="background:var(--navy-dk); border-color:rgba(255,255,255,.1);">
+        <div>
+          <div class="logo-text">
+            <span style="color:white;">FLY </span><span class="horizons">HORIZONS</span>
+          </div>
+          <div class="logo-tag" style="color:rgba(255,255,255,.35);">Vols en partage de coûts · Charleroi EBCI</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="background:#fff8e1; border-color:rgba(242,183,5,.3); margin-bottom:8px;">
+    <p style="font-size:11px; color:#8a6400;">
+      ⚠️ <strong>Note :</strong> En l'absence d'un fichier logo vectoriel (SVG/PDF), le nom typographié
+      "FLY HORIZONS" en Poppins 800 fait office de logo officiel. Dès qu'un fichier vectoriel existe,
+      le remplacer dans ce document et sur toutes les surfaces de communication.
+    </p>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     02 — TAGLINE
+══════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="part-header"><span class="part-num">2</span> Tagline & accroche</div>
+
+  <!-- Tagline proposé -->
+  <div class="section-title">Tagline principal — proposition</div>
+  <div class="divider"></div>
+
+  <div class="tagline-block" style="margin-bottom:16px;">
+    <div class="tagline-main">L&rsquo;horizon est <span>à vous.</span></div>
+    <div class="tagline-sub">Court, évocateur, ancré dans le nom de marque. Universellement compréhensible.</div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:32px; gap:12px;">
+    <div class="tagline-alt">
+      <div class="tagline-alt-label">Variante longue (sous-titre, hero)</div>
+      <div class="tagline-alt-text">Le ciel, <em>sans intermédiaire.</em></div>
+    </div>
+    <div class="tagline-alt">
+      <div class="tagline-alt-label">Variante descriptive (SEO, meta)</div>
+      <div class="tagline-alt-text">Baptême de l'air en Belgique — <em>vols depuis Charleroi.</em></div>
+    </div>
+  </div>
+
+  <!-- Déjà utilisé sur le site -->
+  <div class="section-title">Accroche sections (déjà en place)</div>
+  <div class="divider"></div>
+  <div class="card">
+    <div style="display:flex; flex-direction:column; gap:12px;">
+      <div class="voice-rule" style="padding-top:0;">
+        <div>
+          <div class="voice-title">Hero — Vol sur mesure</div>
+          <div class="voice-desc" style="font-size:14px; font-weight:700; color:var(--navy-dk);">
+            Volez où vous voulez.<br /><span style="color:var(--gold);">Payez ce que vous volez.</span>
+          </div>
+        </div>
+      </div>
+      <div class="voice-rule">
+        <div>
+          <div class="voice-title">Email — Confirmation de réservation</div>
+          <div class="voice-desc">"On se retrouve bientôt dans le cockpit." — Romain</div>
+        </div>
+      </div>
+      <div class="voice-rule">
+        <div>
+          <div class="voice-title">Galerie / ambiance</div>
+          <div class="voice-desc">Le sol s'éloigne. La Belgique s'étend. C'est ça, Fly Horizons.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     03 — COULEURS
+══════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="part-header"><span class="part-num">3</span> Palette de couleurs</div>
+
+  <!-- Couleurs primaires -->
+  <div class="section-title">Couleurs primaires</div>
+  <div class="divider"></div>
+  <div class="grid-4" style="margin-bottom:32px;">
+
+    <div>
+      <div class="swatch-primary" style="background:#0b2238;">
+        <span style="font-size:10px;color:rgba(255,255,255,.5);font-weight:600;">Navy Foncé</span>
+      </div>
+      <div class="swatch-info">
+        <div class="swatch-name">Navy Dark</div>
+        <div class="swatch-hex">#0b2238</div>
+        <div class="swatch-use">Fonds sections, header, footer, photos</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="swatch-primary" style="background:#113356;">
+        <span style="font-size:10px;color:rgba(255,255,255,.5);font-weight:600;">Navy</span>
+      </div>
+      <div class="swatch-info">
+        <div class="swatch-name">Navy</div>
+        <div class="swatch-hex">#113356</div>
+        <div class="swatch-use">Titres, liens, textes forts sur fond clair</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="swatch-primary" style="background:#F2B705;">
+        <span style="font-size:10px;color:rgba(11,34,56,.6);font-weight:600;">Or</span>
+      </div>
+      <div class="swatch-info">
+        <div class="swatch-name">Gold</div>
+        <div class="swatch-hex">#F2B705</div>
+        <div class="swatch-use">CTA primaire, eyebrows, accents, icônes</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="swatch-primary" style="background:#f6f8fc; border:1px solid #e0e5ef; border-bottom:none;">
+        <span style="font-size:10px;color:var(--muted);font-weight:600;">Fond</span>
+      </div>
+      <div class="swatch-info">
+        <div class="swatch-name">Background</div>
+        <div class="swatch-hex">#f6f8fc</div>
+        <div class="swatch-use">Fond global, sections alternées légères</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Couleurs secondaires -->
+  <div class="section-title">Couleurs secondaires & sémantiques</div>
+  <div class="divider"></div>
+  <div class="grid-3" style="margin-bottom:32px;">
+
+    <div class="card">
+      <div class="swatch-row" style="margin-bottom:10px;">
+        <div class="swatch-sm" style="background:#f0f5ff;border:1px solid #dce8ff;"></div>
+        <div class="swatch-sm" style="background:#dce8ff;"></div>
+        <div class="swatch-sm" style="background:#bfcfef;"></div>
+      </div>
+      <div class="swatch-name">Bleu Pâle</div>
+      <div class="swatch-hex">#f5f8ff · #f0f5ff · #dce8ff</div>
+      <div class="swatch-use">Sections alternées, badges, fonds légers</div>
+    </div>
+
+    <div class="card">
+      <div class="swatch-row" style="margin-bottom:10px;">
+        <div class="swatch-sm" style="background:#1e2535;"></div>
+        <div class="swatch-sm" style="background:#64748b;"></div>
+        <div class="swatch-sm" style="background:#e0e5ef;"></div>
+      </div>
+      <div class="swatch-name">Neutres</div>
+      <div class="swatch-hex">#1e2535 · #64748b · #e0e5ef</div>
+      <div class="swatch-use">Texte corps, texte muted, bordures</div>
+    </div>
+
+    <div class="card">
+      <div class="swatch-row" style="margin-bottom:10px;">
+        <div class="swatch-sm" style="background:#d1fae5;"></div>
+        <div class="swatch-sm" style="background:#fef3c7;"></div>
+        <div class="swatch-sm" style="background:#fee2e2;"></div>
+      </div>
+      <div class="swatch-name">États système</div>
+      <div class="swatch-hex">Succès · Avertissement · Erreur</div>
+      <div class="swatch-use">Alertes, confirmations, erreurs formulaire</div>
+    </div>
+
+  </div>
+
+  <!-- Règles d'usage -->
+  <div class="card">
+    <div class="voice-title" style="margin-bottom:16px; font-size:13px;">Règles d'utilisation des couleurs</div>
+    <div class="voice-rule" style="padding-top:0;">
+      <div class="voice-icon voice-ok">✓</div>
+      <div>
+        <div class="voice-title">Gold sur fond navy</div>
+        <div class="voice-desc">Contraste maximum, lecture parfaite. Usage privilégié pour les CTA et eyebrows.</div>
+      </div>
+    </div>
+    <div class="voice-rule">
+      <div class="voice-icon voice-ok">✓</div>
+      <div>
+        <div class="voice-title">Blanc sur navy-dk</div>
+        <div class="voice-desc">Textes corps sur sections sombres. Opacité 70-75% pour les textes secondaires.</div>
+      </div>
+    </div>
+    <div class="voice-rule">
+      <div class="voice-icon voice-no">✗</div>
+      <div>
+        <div class="voice-title">Gold sur blanc pur en grande taille</div>
+        <div class="voice-desc">Contraste insuffisant pour les textes de corps. Réserver le gold aux titres décoratifs et icônes uniquement.</div>
+      </div>
+    </div>
+    <div class="voice-rule">
+      <div class="voice-icon voice-no">✗</div>
+      <div>
+        <div class="voice-title">Fond rouge, vert, orange comme couleur de section</div>
+        <div class="voice-desc">Ces teintes n'appartiennent pas à la palette Fly Horizons. Les réserver aux seuls états d'alerte système.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     04 — TYPOGRAPHIE
+══════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="part-header"><span class="part-num">4</span> Typographie</div>
+
+  <div class="section-title">Police unique</div>
+  <h2 class="section-heading">Poppins</h2>
+  <div class="divider"></div>
+  <p style="margin-bottom:32px;">
+    Google Fonts — licence libre (OFL 1.1). Utilisée exclusivement du poids 300 au 800.
+    Aucune autre police ne doit apparaître sur les surfaces Fly Horizons.
+  </p>
+
+  <!-- Hiérarchie -->
+  <div class="card" style="margin-bottom:24px;">
+
+    <div class="type-sample" style="padding-top:0;">
+      <div class="type-label">H1 / Cover<br />800 · 48-52px</div>
+      <div class="type-specimen" style="font-size:44px; font-weight:800; line-height:1.05;">Fly Horizons</div>
+    </div>
+
+    <div class="type-sample">
+      <div class="type-label">H1 page<br />800 · 36-42px</div>
+      <div class="type-specimen" style="font-size:36px; font-weight:800; line-height:1.1;">Votre horizon commence ici</div>
+    </div>
+
+    <div class="type-sample">
+      <div class="type-label">H2 section<br />800 · 26-32px</div>
+      <div class="type-specimen" style="font-size:28px; font-weight:800;">Diamond DA40</div>
+    </div>
+
+    <div class="type-sample">
+      <div class="type-label">H3 sous-titre<br />700 · 16-18px</div>
+      <div class="type-specimen" style="font-size:17px; font-weight:700;">L'approche Fly Horizons</div>
+    </div>
+
+    <div class="type-sample">
+      <div class="type-label">Eyebrow<br />700 · 10px · +.2em</div>
+      <div class="type-specimen" style="font-size:10px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:#F2B705;">Au départ de Charleroi (EBCI)</div>
+    </div>
+
+    <div class="type-sample">
+      <div class="type-label">Corps texte<br />400 · 13-14px</div>
+      <div class="type-specimen" style="font-size:13.5px; font-weight:400; color:var(--muted); max-width:480px;">
+        Fly Horizons est né d'une envie simple : partager la sensation de l'aviation avec ceux qui n'ont jamais eu l'occasion d'y accéder.
+      </div>
+    </div>
+
+    <div class="type-sample">
+      <div class="type-label">Label / badge<br />600 · 10-11px</div>
+      <div class="type-specimen" style="font-size:11px; font-weight:600;">Diamond DA40 · Charleroi EBCI</div>
+    </div>
+
+    <div class="type-sample">
+      <div class="type-label">Bouton<br />700 · 13px</div>
+      <div class="type-specimen" style="font-size:13px; font-weight:700;">Réserver mon vol →</div>
+    </div>
+
+  </div>
+
+  <div class="card" style="background:var(--navy-dk); border:none;">
+    <p style="font-size:10px; font-weight:700; letter-spacing:.15em; text-transform:uppercase; color:var(--gold); margin-bottom:12px;">Règles typographiques</p>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <div style="font-size:12px; color:rgba(255,255,255,.65);">✓ &nbsp;Pas de tirets cadratins (—) dans les textes. Utiliser les tirets simples ( - ) ou les virgules.</div>
+      <div style="font-size:12px; color:rgba(255,255,255,.65);">✓ &nbsp;Ponctuation naturelle : virgule, point, deux-points. Pas de point d'exclamation en excès.</div>
+      <div style="font-size:12px; color:rgba(255,255,255,.65);">✓ &nbsp;Guillemets français : « texte » ou "texte" (apostrophes typographiques).</div>
+      <div style="font-size:12px; color:rgba(255,255,255,.65);">✗ &nbsp;Pas de TOUT EN MAJUSCULES sur des blocs de texte longs.</div>
+      <div style="font-size:12px; color:rgba(255,255,255,.65);">✗ &nbsp;Pas d'italique pour mettre en valeur — utiliser font-weight:700 ou la couleur gold.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     05 — COMPOSANTS
+══════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="part-header"><span class="part-num">5</span> Composants UI</div>
+
+  <!-- Boutons -->
+  <div class="section-title">Boutons</div>
+  <div class="divider"></div>
+  <div class="card" style="margin-bottom:24px;">
+    <div class="btn-row" style="margin-bottom:16px;">
+      <a class="btn btn-primary">Réserver mon vol →</a>
+      <a class="btn btn-secondary">Voir nos offres</a>
+      <a class="btn btn-outline">Contacter Romain →</a>
+      <a class="btn btn-ghost">En savoir plus →</a>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px; margin-top:12px; border-top:1px solid var(--border); padding-top:12px;">
+      <div style="font-size:10px; color:var(--muted);">
+        <strong style="color:var(--fg); display:block; margin-bottom:3px;">Primaire</strong>
+        Gold · Navy text · shadow-gold<br>CTA principal unique par section
+      </div>
+      <div style="font-size:10px; color:var(--muted);">
+        <strong style="color:var(--fg); display:block; margin-bottom:3px;">Secondaire</strong>
+        Navy-dk · Blanc · CTA navigation
+      </div>
+      <div style="font-size:10px; color:var(--muted);">
+        <strong style="color:var(--fg); display:block; margin-bottom:3px;">Outline</strong>
+        Fond blanc · Bordure · Actions secondaires
+      </div>
+      <div style="font-size:10px; color:var(--muted);">
+        <strong style="color:var(--fg); display:block; margin-bottom:3px;">Ghost</strong>
+        Texte gold · Liens dans le contenu
+      </div>
+    </div>
+  </div>
+
+  <!-- Badges -->
+  <div class="section-title">Badges & étiquettes</div>
+  <div class="divider"></div>
+  <div class="card" style="margin-bottom:16px;">
+    <div class="badge-row" style="margin-bottom:16px;">
+      <span class="badge badge-navy">✈ Diamond DA40 · EBCI</span>
+      <span class="badge badge-gold">Vol sur mesure</span>
+      <span class="badge badge-light">Passagers assurés</span>
+      <span class="badge badge-navy">7 ans de passion</span>
+      <span class="badge badge-gold">NCO.GEN.104</span>
+    </div>
+    <div class="badge-row" style="background:var(--navy-dk); margin:-28px; margin-top:0; padding:20px 28px; border-radius:0 0 12px 12px;">
+      <span class="badge badge-white">✈ Diamond DA40 · EBCI</span>
+      <span class="badge badge-white">Assuré Air Academy</span>
+      <span class="badge badge-gold" style="background:rgba(242,183,5,.15); color:var(--gold); border-color:rgba(242,183,5,.3);">Pilote certifié CPL(A)</span>
+    </div>
+  </div>
+
+  <!-- Espacement -->
+  <div class="section-title" style="margin-top:32px;">Rayons (border-radius)</div>
+  <div class="divider"></div>
+  <div class="card">
+    <div class="spacing-row">
+      <div class="spacing-swatch">
+        <div style="width:36px; height:36px; background:var(--navy-dk); border-radius:6px;"></div>
+        <div class="spacing-label">sm · 6px<br>badges</div>
+      </div>
+      <div class="spacing-swatch">
+        <div style="width:52px; height:52px; background:var(--navy-dk); border-radius:10px;"></div>
+        <div class="spacing-label">md · 10px<br>boutons</div>
+      </div>
+      <div class="spacing-swatch">
+        <div style="width:70px; height:60px; background:var(--navy-dk); border-radius:14px;"></div>
+        <div class="spacing-label">lg · 14px<br>inputs, cards</div>
+      </div>
+      <div class="spacing-swatch">
+        <div style="width:80px; height:70px; background:var(--navy-dk); border-radius:20px;"></div>
+        <div class="spacing-label">xl · 20px<br>grandes cards</div>
+      </div>
+      <div class="spacing-swatch">
+        <div style="width:90px; height:80px; background:var(--navy-dk); border-radius:28px;"></div>
+        <div class="spacing-label">2xl · 28px<br>sections, photos</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     06 — VOIX DE MARQUE
+══════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="part-header"><span class="part-num">6</span> Voix & ton de marque</div>
+
+  <!-- Pronoms -->
+  <div class="section-title">Qui parle ?</div>
+  <div class="divider"></div>
+  <div class="card" style="margin-bottom:24px;">
+    <div class="voice-rule" style="padding-top:0;">
+      <div class="voice-icon voice-ok">✓</div>
+      <div>
+        <div class="voice-title">"Nous" = Fly Horizons comme service</div>
+        <div class="voice-desc">Textes du site, descriptions de pages, FAQ institutionnelle.<br>
+        Ex. : "Nous proposons des vols depuis Charleroi." · "Nos vols sont en partage de coûts."</div>
+      </div>
+    </div>
+    <div class="voice-rule">
+      <div class="voice-icon voice-ok">✓</div>
+      <div>
+        <div class="voice-title">"Je" / "Romain" = interactions personnelles</div>
+        <div class="voice-desc">Emails transactionnels, bio pilote, messages directs, contact.<br>
+        Ex. : "Je vous réponds sous 24 h." · "Romain vous confirme votre réservation."</div>
+      </div>
+    </div>
+    <div class="voice-rule">
+      <div class="voice-icon voice-no">✗</div>
+      <div>
+        <div class="voice-title">Mélanger sans cohérence</div>
+        <div class="voice-desc">Éviter de passer de "nous" à "je" dans un même paragraphe sans logique claire.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mots interdits -->
+  <div class="section-title">Mots interdits (public)</div>
+  <div class="divider"></div>
+  <div class="card" style="margin-bottom:24px;">
+    <div class="word-row">
+      <span class="word-no">vol privé</span>
+      <span class="word-no">luxe</span>
+      <span class="word-no">premium</span>
+      <span class="word-no">exclusif</span>
+      <span class="word-no">VIP</span>
+      <span class="word-no">haut de gamme</span>
+      <span class="word-no">jet privé</span>
+      <span class="word-no">DA40 TDI</span>
+    </div>
+    <p style="font-size:12px; color:var(--muted);">
+      Ces termes sont soit inexacts sur le plan réglementaire (vol privé ≠ cost-sharing),
+      soit contraires au positionnement accessible de Fly Horizons, soit une dénomination
+      commerciale non autorisée (DA40 TDI = marque Diamond Aircraft).
+    </p>
+  </div>
+
+  <!-- Mots autorisés -->
+  <div class="section-title">Vocabulaire autorisé & recommandé</div>
+  <div class="divider"></div>
+  <div class="card" style="margin-bottom:24px;">
+    <div class="word-row">
+      <span class="word-yes">vol en partage de coûts</span>
+      <span class="word-yes">cost-sharing</span>
+      <span class="word-yes">baptême de l'air</span>
+      <span class="word-yes">Diamond DA40</span>
+      <span class="word-yes">avion léger</span>
+      <span class="word-yes">vol sur mesure</span>
+      <span class="word-yes">vol découverte</span>
+      <span class="word-yes">itinéraire libre</span>
+    </div>
+  </div>
+
+  <!-- Ton -->
+  <div class="section-title">Ton & personnalité</div>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="card">
+      <p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">Ce que Fly Horizons est</p>
+      <div class="voice-rule" style="padding-top:0;">
+        <div><div class="voice-title">Humain et direct</div><div class="voice-desc">On parle à la personne, pas au consommateur.</div></div>
+      </div>
+      <div class="voice-rule">
+        <div><div class="voice-title">Transparent</div><div class="voice-desc">On explique le coût, la réglementation, les contraintes.</div></div>
+      </div>
+      <div class="voice-rule">
+        <div><div class="voice-title">Passionné sans se vanter</div><div class="voice-desc">La passion s'exprime par les faits, pas les superlatifs.</div></div>
+      </div>
+      <div class="voice-rule">
+        <div><div class="voice-title">Accessible</div><div class="voice-desc">Pas de jargon aviation non expliqué. Tout le monde comprend.</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#991b1b;margin-bottom:12px;">Ce que Fly Horizons n'est pas</p>
+      <div class="voice-rule" style="padding-top:0;">
+        <div><div class="voice-title">Prétentieux</div><div class="voice-desc">Pas de "expérience unique" ou "inégalable" sans preuve.</div></div>
+      </div>
+      <div class="voice-rule">
+        <div><div class="voice-title">Commercial à outrance</div><div class="voice-desc">Pas de "offre limitée", "commandez maintenant", urgence factice.</div></div>
+      </div>
+      <div class="voice-rule">
+        <div><div class="voice-title">Distant et institutionnel</div><div class="voice-desc">Ce n'est pas une compagnie aérienne. C'est un pilote, une conversation.</div></div>
+      </div>
+      <div class="voice-rule">
+        <div><div class="voice-title">Flou sur le cadre légal</div><div class="voice-desc">NCO.GEN.104 est toujours mentionné quand c'est pertinent.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     07 — IDENTITÉ JURIDIQUE
+══════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="part-header"><span class="part-num">7</span> Identité juridique & légale</div>
+
+  <div class="section-title">Mentions légales officielles</div>
+  <div class="divider"></div>
+  <div class="card" style="margin-bottom:24px;">
+
+    <div class="legal-row" style="padding-top:0;">
+      <div class="legal-key">Exploitant</div>
+      <div class="legal-val">DESTANBERG Romain</div>
+    </div>
+    <div class="legal-row">
+      <div class="legal-key">Marque</div>
+      <div class="legal-val">Fly Horizons</div>
+    </div>
+    <div class="legal-row">
+      <div class="legal-key">Site web</div>
+      <div class="legal-val">fly-horizons.com</div>
+    </div>
+    <div class="legal-row">
+      <div class="legal-key">Email de contact</div>
+      <div class="legal-val">info@fly-horizons.com</div>
+    </div>
+    <div class="legal-row">
+      <div class="legal-key">Base opérationnelle</div>
+      <div class="legal-val">Aéroport de Charleroi — Brussels South (EBCI), Belgique</div>
+    </div>
+    <div class="legal-row">
+      <div class="legal-key">Cadre réglementaire</div>
+      <div class="legal-val">Règlement EASA (EU) No 965/2012, article NCO.GEN.104 — vols en partage de coûts</div>
+    </div>
+    <div class="legal-row">
+      <div class="legal-key">Propriétaire de l'aéronef</div>
+      <div class="legal-val">Air Academy New CAG (ATO-005, EBCI)</div>
+    </div>
+    <div class="legal-row">
+      <div class="legal-key">Aéronef</div>
+      <div class="legal-val">Diamond DA40 (avion léger 4 places)</div>
+    </div>
+    <div class="legal-row">
+      <div class="legal-key">Droit applicable</div>
+      <div class="legal-val">Droit belge — Code de droit économique (CDE/WER)</div>
+    </div>
+    <div class="legal-row">
+      <div class="legal-key">Paiement en ligne</div>
+      <div class="legal-val">Stripe (stripe.com) — PCI-DSS conforme</div>
+    </div>
+    <div class="legal-row">
+      <div class="legal-key">Emails transactionnels</div>
+      <div class="legal-val">Resend (resend.com)</div>
+    </div>
+    <div class="legal-row">
+      <div class="legal-key">Hébergement</div>
+      <div class="legal-val">Netlify (app.netlify.com)</div>
+    </div>
+    <div class="legal-row">
+      <div class="legal-key">Données personnelles</div>
+      <div class="legal-val">RGPD — Règlement (UE) 2016/679 + loi belge du 30 juillet 2018.<br>
+        Autorité de contrôle : APD (www.autoriteprotectiondonnees.be)</div>
+    </div>
+
+  </div>
+
+  <div class="card" style="background:#fff8e1; border-color:rgba(242,183,5,.3);">
+    <p style="font-size:11px; color:#8a6400; margin-bottom:8px;">
+      <strong>⚠️ À mettre à jour dès que disponible :</strong>
+    </p>
+    <div class="legal-row" style="padding-top:0;">
+      <div class="legal-key">Numéro BCE / TVA</div>
+      <div class="legal-val" style="color:#b45309;">Non encore attribué — à compléter lors de l'enregistrement.</div>
+    </div>
+    <div class="legal-row">
+      <div class="legal-key">Forme juridique</div>
+      <div class="legal-val" style="color:#b45309;">Personne physique / indépendant — à préciser selon statut définitif.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     08 — RYTHME DES PAGES
+══════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="part-header"><span class="part-num">8</span> Rythme visuel des pages</div>
+
+  <div class="section-title">Principe d'alternance des fonds</div>
+  <div class="divider"></div>
+  <p style="margin-bottom:24px; max-width:580px;">
+    Les pages Fly Horizons alternent entre sections sombres (navy) et claires (blanc, bleu pâle).
+    Ne jamais mettre plus de 2 sections de même teinte consécutivement.
+    Le navy est réservé aux moments forts (hero, feature section, approche).
+  </p>
+
+  <div class="card">
+    <div style="display:flex; flex-direction:column; gap:0;">
+      <div style="background:var(--navy-dk); color:rgba(255,255,255,.7); padding:10px 16px; font-size:12px; font-weight:600; border-radius:8px 8px 0 0;">
+        ████ NAVY — Hero / Intro / Romain
+      </div>
+      <div style="background:#f6f8fc; color:var(--muted); padding:10px 16px; font-size:12px; border:1px solid var(--border); border-top:none;">
+        □□□□ BLANC ou GRIS CLAIR — Confiance / Packs / Avion
+      </div>
+      <div style="background:var(--navy-dk); color:rgba(255,255,255,.7); padding:10px 16px; font-size:12px; font-weight:600;">
+        ████ NAVY — Section feature (Vol sur mesure / Approche)
+      </div>
+      <div style="background:white; color:var(--muted); padding:10px 16px; font-size:12px; border:1px solid var(--border); border-top:none;">
+        □□□□ BLANC — Pilote / Avis
+      </div>
+      <div style="background:#f0f5ff; color:var(--muted); padding:10px 16px; font-size:12px; border:1px solid var(--border); border-top:none;">
+        ▒▒▒▒ BLEU PÂLE #f5f8ff — Sections de transition (Où on vole, FAQ)
+      </div>
+      <div style="background:var(--navy-dk); color:rgba(255,255,255,.7); padding:10px 16px; font-size:12px; font-weight:600; border-radius:0 0 8px 8px;">
+        ████ NAVY — Footer
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     FIN
+══════════════════════════════════════════════════ -->
+<div style="text-align:center; padding-top:32px; border-top:1px solid var(--border);">
+  <div style="font-size:10px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:var(--gold); margin-bottom:6px;">Fly Horizons</div>
+  <div style="font-size:11px; color:var(--muted);">Charte de marque v1.0 — Mai 2026 — Document interne</div>
+  <div style="font-size:11px; color:var(--muted);">fly-horizons.com · info@fly-horizons.com · DESTANBERG Romain</div>
+</div>
+
+</div><!-- /page -->
+</body>
+</html>

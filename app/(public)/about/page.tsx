@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "À propos — Fly Horizons",
+  title: "À propos · Fly Horizons",
   description:
     "Découvrez Romain DESTANBERG, fondateur et pilote de Fly Horizons. Vols en avion léger depuis Charleroi, dans un cadre de partage de frais accessible à tous.",
   alternates: { canonical: "https://fly-horizons.com/about" },
@@ -35,7 +35,7 @@ export default function AboutPage() {
                   Romain<br />DESTANBERG
                 </h1>
                 <p className="text-white/40 text-sm mt-2">
-                  Fondateur &amp; Pilote — Fly Horizons
+                  Fondateur &amp; Pilote, Fly Horizons
                 </p>
               </div>
 
@@ -43,7 +43,7 @@ export default function AboutPage() {
                 <p>
                   Depuis que j&apos;ai découvert ce que c&apos;était de voir le sol s&apos;éloigner à sept ans,
                   je n&apos;ai jamais vraiment atterri. Cette passion pour l&apos;aviation, je l&apos;ai
-                  construite année après année — et depuis 7 ans, je la vis pleinement.
+                  construite année après année. Depuis 7 ans, je la vis pleinement.
                 </p>
                 <p>
                   Fly Horizons est né d&apos;une envie simple : partager cette sensation avec ceux qui
@@ -76,7 +76,7 @@ export default function AboutPage() {
               <div className="relative w-72 sm:w-80 md:w-full max-w-sm aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl">
                 <Image
                   src="/photo-pilote.jpg"
-                  alt="Romain DESTANBERG — Fondateur & Pilote Fly Horizons"
+                  alt="Romain DESTANBERG, Fondateur & Pilote Fly Horizons"
                   fill
                   className="object-cover object-top"
                   sizes="(max-width: 768px) 320px, 440px"
@@ -115,7 +115,7 @@ export default function AboutPage() {
 
               <ul className="space-y-3 mb-8">
                 {[
-                  "Cockpit vitré — vue à 360°",
+                  "Cockpit vitré, vue à 360°",
                   "Jusqu'à 3 passagers à bord",
                   "Vitesse de croisière : 120 kt (220 km/h)",
                   "Altitude typique : 600 à 1 000 m",
@@ -142,7 +142,7 @@ export default function AboutPage() {
                 <p className="text-foreground/65 text-sm leading-relaxed">
                   Les vols sont organisés dans le cadre du partage de frais réglementé par{" "}
                   <strong className="text-foreground">NCO.GEN.104</strong>. Vous participez aux frais
-                  réels du vol — rien de plus.
+                  réels du vol, rien de plus.
                 </p>
               </div>
             </div>
@@ -152,7 +152,7 @@ export default function AboutPage() {
               <div className="relative aspect-[16/9] rounded-2xl overflow-hidden shadow-sm">
                 <Image
                   src="/da-40-1.webp"
-                  alt="Diamond DA40 — vue extérieure"
+                  alt="Diamond DA40, vue extérieure"
                   fill
                   className="object-cover hover:scale-[1.02] transition-transform duration-300"
                   sizes="(max-width: 768px) 100vw, 500px"
@@ -162,7 +162,7 @@ export default function AboutPage() {
                 <div className="relative aspect-square rounded-2xl overflow-hidden shadow-sm">
                   <Image
                     src="/da-40-2.webp"
-                    alt="Diamond DA40 — cockpit"
+                    alt="Diamond DA40, cockpit"
                     fill
                     className="object-cover hover:scale-[1.02] transition-transform duration-300"
                     sizes="240px"
@@ -171,7 +171,7 @@ export default function AboutPage() {
                 <div className="relative aspect-square rounded-2xl overflow-hidden shadow-sm">
                   <Image
                     src="/da-40-3.jpg"
-                    alt="Diamond DA40 — à bord"
+                    alt="Diamond DA40, à bord"
                     fill
                     className="object-cover hover:scale-[1.02] transition-transform duration-300"
                     sizes="240px"
@@ -211,7 +211,7 @@ export default function AboutPage() {
             <p>
               C&apos;est ce qui rend l&apos;aviation accessible. Pas de marge commerciale cachée,
               pas de &laquo;&nbsp;tarif découverte&nbsp;&raquo; gonflé. Le prix affiché correspond
-              à la réalité du vol — calculé à la minute réelle après atterrissage.
+              à la réalité du vol, calculé à la minute réelle après atterrissage.
             </p>
             <p>
               L&apos;objectif : que chacun puisse vivre cette expérience au moins une fois, peu
@@ -244,7 +244,7 @@ export default function AboutPage() {
               Les vols partent de l&apos;aéroport de{" "}
               <strong className="text-foreground">Brussels South Charleroi (EBCI)</strong>.
               Les itinéraires peuvent s&apos;étendre à la Belgique, la France, l&apos;Allemagne,
-              les Pays-Bas et le Royaume-Uni — selon les autorisations et la météo.
+              les Pays-Bas et le Royaume-Uni, selon les autorisations et la météo.
             </p>
             <p>
               Vous dessinez votre route sur la carte, nous vérifions la faisabilité. Les destinations

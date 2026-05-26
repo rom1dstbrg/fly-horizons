@@ -144,7 +144,7 @@ export default function RouteMapLeaflet({ waypoints }: Props) {
     });
     L.marker([DEPART.lat, DEPART.lng], { icon: departIcon, interactive: false })
       .addTo(map)
-      .bindTooltip("Charleroi EBCI — Départ & Retour", { direction: "top" });
+      .bindTooltip("Charleroi EBCI · Départ & Retour", { direction: "top" });
 
     // Optimized route
     const pts = waypoints.map(w => ({ lat: w.lat, lng: w.lng }));

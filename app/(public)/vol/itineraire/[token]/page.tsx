@@ -4,7 +4,7 @@ import { RouteForm } from "./RouteForm";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Itinéraire de vol — Fly Horizons",
+  title: "Itinéraire de vol · Fly Horizons",
 };
 
 interface PageProps {

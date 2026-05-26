@@ -248,7 +248,7 @@ const LeafletMapRestricted = forwardRef<MapHandle, Props>(({ onRouteChange, onZo
     // Marqueur de départ fixe
     L.marker([DEPART.lat, DEPART.lng], { icon: departIcon(), interactive: false })
       .addTo(map)
-      .bindTooltip("Charleroi EBCI — Départ & Retour", { direction: "top" });
+      .bindTooltip("Charleroi EBCI · Départ & Retour", { direction: "top" });
 
     mapRef.current = map;
 
@@ -275,7 +275,7 @@ const LeafletMapRestricted = forwardRef<MapHandle, Props>(({ onRouteChange, onZo
       const n = waypointsRef.current.filter(e2 => e2.groupId === "custom").length + 1;
       const marker = L.marker([lat, lng], { icon: customIcon(n), draggable: true })
         .addTo(map)
-        .bindTooltip(`Point ${n} — cliquer pour supprimer`, { direction: "top" });
+        .bindTooltip(`Point ${n} · cliquer pour supprimer`, { direction: "top" });
 
       const entry: WaypointEntry = { lat, lng, nom: `Point personnalisé ${n}`, marker, groupId: "custom" };
       waypointsRef.current.push(entry);

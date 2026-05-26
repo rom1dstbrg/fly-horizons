@@ -253,7 +253,7 @@ const LeafletMapComp = forwardRef<LeafletMapHandle, Props>(({ stopovers, routeMo
     stopovers.forEach(so => {
       soMarkersRef.current[so.icao] = L.marker([so.lat, so.lng], { icon: soIcon(so.icao) })
         .addTo(map)
-        .bindTooltip(`${so.nom} — +${so.taxe} € taxe d'escale`, { direction: "top" });
+        .bindTooltip(`${so.nom} · +${so.taxe} € taxe d'escale`, { direction: "top" });
     });
     redraw();
   }, [stopovers]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -304,7 +304,7 @@ const LeafletMapComp = forwardRef<LeafletMapHandle, Props>(({ stopovers, routeMo
     // Fixed departure/return marker
     L.marker([DEPART.lat, DEPART.lng], { icon: departIcon(), interactive: false })
       .addTo(map)
-      .bindTooltip("Charleroi EBCI — Départ & Retour", { permanent: false, direction: "top" });
+      .bindTooltip("Charleroi EBCI · Départ & Retour", { permanent: false, direction: "top" });
 
     mapRef.current = map;
 
@@ -312,7 +312,7 @@ const LeafletMapComp = forwardRef<LeafletMapHandle, Props>(({ stopovers, routeMo
     stopoversRef.current.forEach(so => {
       soMarkersRef.current[so.icao] = L.marker([so.lat, so.lng], { icon: soIcon(so.icao) })
         .addTo(map)
-        .bindTooltip(`${so.nom} — +${so.taxe} € taxe d'escale`, { direction: "top" });
+        .bindTooltip(`${so.nom} · +${so.taxe} € taxe d'escale`, { direction: "top" });
     });
 
     // Click → add waypoint
@@ -322,7 +322,7 @@ const LeafletMapComp = forwardRef<LeafletMapHandle, Props>(({ stopovers, routeMo
 
       const marker = L.marker([lat, lng], { icon: wpIcon(n), draggable: true })
         .addTo(map)
-        .bindTooltip(`Point ${n} — glisser pour déplacer · cliquer pour supprimer`, { direction: "top" });
+        .bindTooltip(`Point ${n} · glisser pour déplacer · cliquer pour supprimer`, { direction: "top" });
 
       const entry: WaypointEntry = { lat, lng, marker };
       waypointsRef.current.push(entry);

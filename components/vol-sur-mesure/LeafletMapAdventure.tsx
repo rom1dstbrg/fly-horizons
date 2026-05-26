@@ -16,19 +16,21 @@ export interface AdventureRouteData {
 }
 
 export interface AdventureMapHandle {
-  clearAll:  () => void;
-  addPOI:    (poi: POI) => void;
-  removePOI: (id: string) => void;
-  fitBounds: () => void;
+  clearAll:       () => void;
+  addPOI:         (poi: POI) => void;
+  removePOI:      (id: string) => void;
+  fitBounds:      () => void;
+  invalidateSize: () => void;
 }
 
 export type StyleMode = "vues" | "rapide";
 
 // ── Constants ──────────────────────────────────────────────────
-const DEPART:      { lat: number; lng: number } = { lat: 50.4592, lng: 4.4538 };
-const SPEED_KMH    = 185.2;
-const OBS_MIN_EACH = 2;
-const OBS_RADIUS_M = 1500;
+const DEPART:         { lat: number; lng: number } = { lat: 50.4592, lng: 4.4538 };
+const SPEED_KMH       = 185.2;
+const OBS_MIN_RAPIDE  = 4;  // +2 min/point vs ancienne valeur — circuit d'observation
+const OBS_MIN_VUES    = 6;  // panoramique : 2 min de plus par point pour bien profiter
+const OBS_RADIUS_M    = 1500;
 
 // ── Geo types ──────────────────────────────────────────────────
 type Pt = { lat: number; lng: number };
@@ -138,6 +140,223 @@ function gentleWave(route: Pt[], amplitude: number, steps = 10): Pt[] {
   return result;
 }
 
+// ── Zones restreintes — helpers ───────────────────────────────
+interface RestrictedZone { name: string; poly: [number, number][] }
+
+function deg2rad(d: number) { return (d * Math.PI) / 180; }
+
+/**
+ * Génère des points le long d'un arc de cercle géodésique.
+ * cLat/cLng : centre (degrés décimaux)
+ * radiusM   : rayon en mètres
+ * startBrg/endBrg : relèvements (degrés, Nord=0°, sens horaire)
+ * clockwise : sens de parcours
+ */
+function arcPoints(
+  cLat: number, cLng: number, radiusM: number,
+  startBrg: number, endBrg: number, clockwise: boolean,
+  steps = 32
+): [number, number][] {
+  const R = 6371000;
+  const d = radiusM / R;
+  const φ1 = deg2rad(cLat);
+  const λ1 = deg2rad(cLng);
+  const sweep = clockwise
+    ? (endBrg >= startBrg ? endBrg - startBrg : endBrg + 360 - startBrg)
+    : (startBrg >= endBrg ? startBrg - endBrg : startBrg + 360 - endBrg);
+
+  return Array.from({ length: steps + 1 }, (_, i) => {
+    const brg = deg2rad(((clockwise
+      ? startBrg + (sweep * i) / steps
+      : startBrg - (sweep * i) / steps) + 720) % 360);
+    const φ2 = Math.asin(
+      Math.sin(φ1) * Math.cos(d) + Math.cos(φ1) * Math.sin(d) * Math.cos(brg)
+    );
+    const λ2 = λ1 + Math.atan2(
+      Math.sin(brg) * Math.sin(d) * Math.cos(φ1),
+      Math.cos(d) - Math.sin(φ1) * Math.sin(φ2)
+    );
+    return [(φ2 * 180) / Math.PI, (λ2 * 180) / Math.PI] as [number, number];
+  });
+}
+
+/** Ray-casting — point dans polygone [[lat, lng], …] */
+function pointInPolygon(lat: number, lng: number, poly: [number, number][]): boolean {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [yi, xi] = poly[i], [yj, xj] = poly[j];
+    if (yi > lat !== yj > lat && lng < ((xj - xi) * (lat - yi)) / (yj - yi) + xi)
+      inside = !inside;
+  }
+  return inside;
+}
+
+// ── Zones restreintes définies manuellement ───────────────────
+//
+// EBR01 — BRUSSELS CITY  (source : AIP Belgique)
+// Arc 1 : r=0.8 NM (1482 m), centre 505311N 0042130E
+//   de 505311N 0042013E (relèvement 270°) à 505316N 0042247E (84.1°), horaire
+// Arc 2 : r=2.7 NM (5002 m), centre 505039N 0042142E
+//   de 505316N 0042247E (14.65°) à 505311N 0042013E (339.7°), horaire
+//
+const RESTRICTED_ZONES: RestrictedZone[] = [
+  {
+    // EBR01 — BRUSSELS CITY (source : AIP Belgique)
+    // Arc 1 : r=0.8 NM (1482 m), centre 505311N 0042130E — de 270° à 84.1°, horaire
+    // Arc 2 : r=2.7 NM (5002 m), centre 505039N 0042142E — de 14.65° à 339.7°, horaire
+    name: "EBR01 : Bruxelles Ville",
+    poly: [
+      ...arcPoints(50.886389, 4.358333, 1482,  270,   84.1, true, 20),
+      ...arcPoints(50.844167, 4.361667, 5002,  14.65, 339.7, true, 40),
+    ],
+  },
+  {
+    // EBR02 — ROYAL ESTATE OF CIERGNON
+    // Cercle r=0.8 NM (1482 m), centre 500958N 0050628E
+    name: "EBR02 : Domaine royal de Ciergnon",
+    poly: arcPoints(50.166111, 5.107778, 1482, 0, 359.99, true, 48),
+  },
+  {
+    // EBR03 — DIEST
+    // Cercle r=3 NM (5556 m), centre 505957N 0050355E
+    name: "EBR03 : Diest",
+    poly: arcPoints(50.999167, 5.065278, 5556, 0, 359.99, true, 48),
+  },
+  {
+    // EBR04 — ELSENBORN 01
+    // 503117N 0061200E — (frontière BE-DE) — 502557N 0062234E — 502557N 0060956E — 502657N 0060841E
+    name: "EBR04 : Elsenborn",
+    poly: [
+      [50.521389, 6.200000],
+      [50.432500, 6.376111],
+      [50.432500, 6.165556],
+      [50.449167, 6.144722],
+    ],
+  },
+  {
+    // EBR05A — HELCHTEREN
+    // 510723N 0053455E — 510157N 0053455E — 505929N 0051951E — 510452N 0051951E — 510557N 0052255E
+    name: "EBR05A : Helchteren",
+    poly: [
+      [51.123056, 5.581944],
+      [51.032500, 5.581944],
+      [50.991389, 5.330833],
+      [51.081111, 5.330833],
+      [51.099167, 5.381944],
+    ],
+  },
+  {
+    // EBR05B — HELCHTEREN RUN-IN
+    // 510805N 0055036E — (frontière BE-NL) — 510333N 0054619E — 510157N 0053455E — 510607N 0053455E
+    name: "EBR05B : Helchteren Run-In",
+    poly: [
+      [51.134722, 5.843333],
+      [51.059167, 5.771944],
+      [51.032500, 5.581944],
+      [51.101944, 5.581944],
+    ],
+  },
+  {
+    // EBR05C — HELCHTEREN DOWNWIND
+    // 510333N 0054619E — (BE-NL) — 505655N 0054502E — 505528N 0053207E — 505530N 0052752E — 505533N 0051951E — 505929N 0051951E — 510157N 0053455E
+    name: "EBR05C : Helchteren Downwind",
+    poly: [
+      [51.059167, 5.771944],
+      [50.948611, 5.750556],
+      [50.924444, 5.535278],
+      [50.925000, 5.464444],
+      [50.925833, 5.330833],
+      [50.991389, 5.330833],
+      [51.032500, 5.581944],
+    ],
+  },
+  {
+    // EBR05D — HELCHTEREN LOFT
+    // 505929N 0051951E — 510157N 0053455E — 505547N 0053455E — 505528N 0053207E — 505530N 0052754E
+    name: "EBR05D : Helchteren Loft",
+    poly: [
+      [50.991389, 5.330833],
+      [51.032500, 5.581944],
+      [50.929722, 5.581944],
+      [50.924444, 5.535278],
+      [50.925000, 5.465000],
+    ],
+  },
+  {
+    // EBR05E — HELCHTEREN MEDIUM LEVEL
+    // 505929N 0051951E — 510157N 0053455E — 511015N 0053455E — 510838N 0052127E — 510557N 0051658E — 510057N 0051655E
+    name: "EBR05E : Helchteren Medium Level",
+    poly: [
+      [50.991389, 5.330833],
+      [51.032500, 5.581944],
+      [51.170833, 5.581944],
+      [51.143889, 5.357500],
+      [51.099167, 5.282778],
+      [51.015833, 5.281944],
+    ],
+  },
+  {
+    // EBR05F — HELCHTEREN STRAFING (même emprise que EBR05D)
+    // 505929N 0051951E — 510157N 0053455E — 505547N 0053455E — 505528N 0053207E — 505530N 0052754E
+    name: "EBR05F : Helchteren Strafing",
+    poly: [
+      [50.991389, 5.330833],
+      [51.032500, 5.581944],
+      [50.929722, 5.581944],
+      [50.924444, 5.535278],
+      [50.925000, 5.465000],
+    ],
+  },
+  {
+    // EBR06A — FLORENNES (noyau, hors OPR HR)
+    // Cercle r=2 NM (3704 m), centre 501436N 0043845E
+    name: "EBR06A : Florennes (2 NM)",
+    poly: arcPoints(50.243333, 4.645833, 3704, 0, 359.99, true, 48),
+  },
+  {
+    // EBR06B — FLORENNES (zone élargie, HX)
+    // Cercle r=5 NM (9260 m), même centre
+    name: "EBR06B : Florennes (5 NM)",
+    poly: arcPoints(50.243333, 4.645833, 9260, 0, 359.99, true, 48),
+  },
+  {
+    // EBR07A — KLEINE-BROGEL (noyau, hors OPR HR)
+    // Cercle r=2 NM (3704 m), centre 511006N 0052812E
+    name: "EBR07A : Kleine-Brogel (2 NM)",
+    poly: arcPoints(51.168333, 5.470000, 3704, 0, 359.99, true, 48),
+  },
+  {
+    // EBR07B — KLEINE-BROGEL (zone élargie, HX)
+    // Cercle r=5 NM (9260 m), même centre
+    name: "EBR07B : Kleine-Brogel (5 NM)",
+    poly: arcPoints(51.168333, 5.470000, 9260, 0, 359.99, true, 48),
+  },
+  {
+    // EBR08 — KOKSIJDE (aérodrome militaire)
+    // Cercle r=2.5 NM (4630 m), centre 510525N 0023910E
+    name: "EBR08 : Koksijde",
+    poly: arcPoints(51.090278, 2.652778, 4630, 0, 359.99, true, 48),
+  },
+  {
+    // EBR10 — BEAUVECHAIN (aérodrome militaire)
+    // Cercle r=2 NM (3704 m), centre 504528N 0044601E
+    name: "EBR10 : Beauvechain",
+    poly: arcPoints(50.757778, 4.766944, 3704, 0, 359.99, true, 48),
+  },
+  {
+    // EBR11 — TIHANGE (installation nucléaire)
+    // Cercle r=1 NM (1852 m), centre 503203N 0051625E
+    name: "EBR11 : Tihange",
+    poly: arcPoints(50.534167, 5.273611, 1852, 0, 359.99, true, 48),
+  },
+  {
+    // EBR12 — CHIEVRES (aérodrome militaire)
+    // Cercle r=2 NM (3704 m), centre 503433N 0034952E
+    name: "EBR12 : Chièvres",
+    poly: arcPoints(50.575833, 3.831111, 3704, 0, 359.99, true, 48),
+  },
+];
+
 // ── Icons ──────────────────────────────────────────────────────
 const PLANE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#F2B705">
   <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
@@ -148,6 +367,23 @@ function departIcon() {
     className: "",
     html: `<div style="width:38px;height:38px;background:#113356;border:3px solid #F2B705;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.5);">${PLANE_SVG}</div>`,
     iconSize: [38, 38], iconAnchor: [19, 19],
+  });
+}
+
+function escaleIcon(nom: string) {
+  const short = nom.length > 22 ? nom.slice(0, 22) + "…" : nom;
+  return L.divIcon({
+    className: "",
+    html: `
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <div style="width:34px;height:34px;background:#113356;color:#F2B705;border-radius:8px;
+          display:flex;align-items:center;justify-content:center;font-size:16px;
+          box-shadow:0 3px 12px rgba(0,0,0,.45);border:2.5px solid #F2B705;cursor:default;">✈</div>
+        <div style="background:rgba(17,51,86,0.92);color:#F2B705;font-size:10px;font-weight:700;
+          padding:2px 9px;border-radius:20px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.4);
+          max-width:180px;overflow:hidden;text-overflow:ellipsis;">${short}</div>
+      </div>`,
+    iconSize: [180, 56], iconAnchor: [90, 17],
   });
 }
 
@@ -189,7 +425,14 @@ const LeafletMapAdventure = forwardRef<AdventureMapHandle, Props>(
     styleModeRef.current = styleMode;
 
     function rebuildIcons() {
-      poisRef.current.forEach((e, i) => e.marker.setIcon(poiIcon(i + 1, e.nom)));
+      poisRef.current.forEach((e, i) => {
+        // Renumérote les POI auto-nommés "Lieu N" pour garder la cohérence après suppression
+        if (/^Lieu \d+$/.test(e.nom)) {
+          e.nom = `Lieu ${i + 1}`;
+          try { e.marker.setTooltipContent(`${e.nom} · cliquer pour supprimer`); } catch { /* ok */ }
+        }
+        e.marker.setIcon(poiIcon(i + 1, e.nom));
+      });
     }
 
     function redraw() {
@@ -209,15 +452,18 @@ const LeafletMapAdventure = forwardRef<AdventureMapHandle, Props>(
       const pts       = entries.map(e => ({ lat: e.lat, lng: e.lng }));
       const baseRoute = optimizeRoute(pts); // [DEPART, …pois…, DEPART]
 
-      // Itinéraire direct → lignes droites ; Pittoresque → légère oscillation (4 %)
-      const displayPts = styleModeRef.current === "vues"
-        ? gentleWave(baseRoute, 0.04, 10)
+      // Vue panoramique → oscillation naturelle (6.5%, 24 steps) ; Équilibré → lignes droites
+      const isVues    = styleModeRef.current === "vues";
+      const displayPts = isVues
+        ? gentleWave(baseRoute, 0.065, 24)
         : baseRoute;
 
-      // Polyline principale
+      // Polyline principale — style différent selon le mode
       routeLayerRef.current = L.polyline(
         displayPts.map(p => [p.lat, p.lng] as [number, number]),
-        { color: "#F2B705", weight: 3, dashArray: "10 6", opacity: 0.95, lineCap: "round", lineJoin: "round" }
+        isVues
+          ? { color: "#F2B705", weight: 3.5, opacity: 0.9, lineCap: "round", lineJoin: "round" }
+          : { color: "#F2B705", weight: 3,   opacity: 0.9, lineCap: "round", lineJoin: "round", dashArray: "10 7" }
       ).addTo(map);
 
       // Distance calculée sur le tracé réel (incluant les courbes)
@@ -250,7 +496,7 @@ const LeafletMapAdventure = forwardRef<AdventureMapHandle, Props>(
 
       distKm = Math.round(distKm * 10) / 10;
       const transitMin = Math.round((distKm / SPEED_KMH) * 60);
-      const obsMin     = entries.length * OBS_MIN_EACH;
+      const obsMin     = entries.length * (isVues ? OBS_MIN_VUES : OBS_MIN_RAPIDE);
 
       onChangeRef.current({
         pois: entries.map(e => ({ id: e.id, lat: e.lat, lng: e.lng, nom: e.nom })),
@@ -267,10 +513,34 @@ const LeafletMapAdventure = forwardRef<AdventureMapHandle, Props>(
     }, [styleMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
     function _addPOIInternal(map: L.Map, poi: POI) {
-      const n      = poisRef.current.length + 1;
-      const marker = L.marker([poi.lat, poi.lng], { icon: poiIcon(n, poi.nom), draggable: true })
+      // Bloquer si dans une zone restreinte
+      const blocked = RESTRICTED_ZONES.find(z => pointInPolygon(poi.lat, poi.lng, z.poly));
+      if (blocked) {
+        L.popup({ closeButton: false, className: "" })
+          .setLatLng([poi.lat, poi.lng])
+          .setContent(
+            `<div style="background:#0b2238;color:#fff;font-size:11px;font-weight:700;
+              padding:7px 13px;border-radius:10px;border:1.5px solid #ef4444;
+              white-space:nowrap;">
+              🚫 Zone interdite : ${blocked.name}
+            </div>`
+          )
+          .openOn(map);
+        setTimeout(() => map.closePopup(), 2500);
+        return;
+      }
+
+      const isEscale = poi.id.startsWith("stop-");
+      const n        = poisRef.current.length + 1;
+      const marker   = L.marker([poi.lat, poi.lng], {
+        icon:      isEscale ? escaleIcon(poi.nom) : poiIcon(n, poi.nom),
+        draggable: !isEscale,
+      })
         .addTo(map)
-        .bindTooltip(`${poi.nom} — cliquer pour supprimer`, { direction: "top" });
+        .bindTooltip(
+          isEscale ? `${poi.nom} · escale (cliquer pour retirer)` : `${poi.nom} · cliquer pour supprimer`,
+          { direction: "top" }
+        );
 
       const circle = L.circle([poi.lat, poi.lng], {
         radius: OBS_RADIUS_M,
@@ -291,13 +561,15 @@ const LeafletMapAdventure = forwardRef<AdventureMapHandle, Props>(
         rebuildIcons();
         redraw();
       });
-      marker.on("dragstart", () => marker.closeTooltip());
-      marker.on("dragend", () => {
-        const pos = marker.getLatLng();
-        entry.lat = pos.lat; entry.lng = pos.lng;
-        circle.setLatLng(pos);
-        redraw();
-      });
+      if (!isEscale) {
+        marker.on("dragstart", () => marker.closeTooltip());
+        marker.on("dragend", () => {
+          const pos = marker.getLatLng();
+          entry.lat = pos.lat; entry.lng = pos.lng;
+          circle.setLatLng(pos);
+          redraw();
+        });
+      }
       redraw();
     }
 
@@ -331,7 +603,21 @@ const LeafletMapAdventure = forwardRef<AdventureMapHandle, Props>(
       // Marqueur EBCI fixe
       L.marker([DEPART.lat, DEPART.lng], { icon: departIcon(), interactive: false })
         .addTo(map)
-        .bindTooltip("Charleroi EBCI — Départ et Retour", { direction: "top" });
+        .bindTooltip("Charleroi EBCI · Départ et Retour", { direction: "top" });
+
+      // ── Zones restreintes ─────────────────────────────────────
+      RESTRICTED_ZONES.forEach(zone => {
+        L.polygon(zone.poly as [number, number][], {
+          color:       "#ef4444",
+          fillColor:   "#ef4444",
+          fillOpacity: 0.5,
+          weight:      2,
+          dashArray:   "7 5",
+          interactive: true,
+        })
+          .bindTooltip(`🚫 ${zone.name} · Zone interdite`, { sticky: true })
+          .addTo(map);
+      });
 
       mapRef.current = map;
 
@@ -440,6 +726,9 @@ const LeafletMapAdventure = forwardRef<AdventureMapHandle, Props>(
           ]),
           { padding: [50, 50] }
         );
+      },
+      invalidateSize() {
+        setTimeout(() => mapRef.current?.invalidateSize(), 80);
       },
     }));
 

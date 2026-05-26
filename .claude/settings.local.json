@@ -95,7 +95,11 @@
       "Bash(git commit -m 'fix: quick wins batch — 48h warning, HOBBS step3, FAQ altitude/peur de voler, 24h contact, mots interdits *)",
       "Bash(git commit -m 'feat: page /about, page /cgp, nav + liens mis a jour *)",
       "Bash(git commit -m 'fix: audit emails transactionnels — tone hybride, mots interdits *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "WebFetch(domain:www.openaip.net)",
+      "WebFetch(domain:docs.openaip.net)",
+      "Bash(grep -v \"^\\\\s*//\")",
+      "Bash(grep -v \"\\\\`—\\\\`\")"
     ]
   }
 }

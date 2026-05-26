@@ -4,7 +4,7 @@ import { MapPin, Car, Bus, Clock, Navigation, ParkingSquare, AlertTriangle } fro
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Plan d'accès — Fly Horizons",
+  title: "Plan d'accès · Fly Horizons",
   description: "Toutes les informations pour rejoindre le point de rendez-vous à l'aéroport de Charleroi (EBCI).",
   robots: { index: false },
 };
@@ -165,7 +165,7 @@ export default function AccessEbciPage() {
           </div>
           <Image
             src="/access-ebci-building.png"
-            alt="Point de rendez-vous — vue au sol"
+            alt="Point de rendez-vous, vue au sol"
             width={800}
             height={380}
             className="w-full object-cover"

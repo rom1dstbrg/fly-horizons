@@ -3,7 +3,7 @@ import { Mail, MapPin, Clock } from "lucide-react";
 import { ContactForm } from "@/components/shop/ContactForm";
 
 export const metadata = {
-  title: "Contact — Fly Horizons",
+  title: "Contact · Fly Horizons",
   description: "Une question sur votre réservation ou votre vol ? Contactez Romain, fondateur de Fly Horizons. Réponse personnelle sous 24 h.",
 };
 
@@ -18,7 +18,7 @@ export default function ContactPage() {
           <h1 className="text-3xl font-bold text-foreground">Contactez-nous</h1>
           <p className="text-muted-foreground text-sm mt-2 max-w-lg">
             Une question, un problème ou envie d&apos;en savoir plus ?
-            Écrivez-nous — Romain vous répond personnellement sous 24&nbsp;h.
+            Écrivez-nous : Romain vous répond personnellement sous 24&nbsp;h.
           </p>
         </div>
 

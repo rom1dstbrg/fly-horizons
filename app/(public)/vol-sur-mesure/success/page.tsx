@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CheckCircle, CalendarDays, MapPin, CloudRain, Users, ExternalLink } from "lucide-react";
 
-export const metadata = { title: "Vol sur mesure réservé — Fly Horizons" };
+export const metadata = { title: "Vol sur mesure réservé · Fly Horizons" };
 
 const STEPS = [
   {

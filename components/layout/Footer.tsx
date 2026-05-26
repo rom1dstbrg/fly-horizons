@@ -148,7 +148,7 @@ export function Footer() {
         {/* ── Barre de bas ── */}
         <div className="pt-5 max-xs:pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 max-xs:gap-2">
           <p className="text-xs text-white/25">
-            © {year} Fly Horizons — DESTANBERG Romain. Tous droits réservés.
+            © {year} Fly Horizons · DESTANBERG Romain. Tous droits réservés.
           </p>
           <div className="flex items-center gap-4 text-xs text-white/25">
             <div className="flex items-center gap-3">

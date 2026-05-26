@@ -363,7 +363,7 @@ export default function ReservationPage() {
                   <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />
                   <p className="text-xs text-amber-800 leading-relaxed">
                     <span className="font-semibold">Limite de poids : 190 kg total passagers.</span>{" "}
-                    Vérifiez ce critère avant de choisir votre créneau — le poids vous sera demandé à l&apos;étape suivante.
+                    Vérifiez ce critère avant de choisir votre créneau ; le poids vous sera demandé à l&apos;étape suivante.
                   </p>
                 </div>
                 <div className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
@@ -672,7 +672,7 @@ export default function ReservationPage() {
                       </div>
                       <div className="flex items-start gap-2.5">
                         <CloudRain size={12} className="text-blue-400 shrink-0 mt-0.5" />
-                        <p className="text-xs text-blue-800/80 leading-relaxed">En cas de météo défavorable, le vol est reporté sans frais. <strong>C&apos;est le pilote qui décide, jusqu&apos;à 2 h avant le départ</strong>, selon les conditions réelles à l&apos;aéroport — pas en fonction de la météo à votre domicile.</p>
+                        <p className="text-xs text-blue-800/80 leading-relaxed">En cas de météo défavorable, le vol est reporté sans frais. <strong>C&apos;est le pilote qui décide, jusqu&apos;à 2 h avant le départ</strong>, selon les conditions réelles à l&apos;aéroport, pas en fonction de la météo à votre domicile.</p>
                       </div>
                       <div className="flex items-start gap-2.5">
                         <Users size={12} className="text-blue-500 shrink-0 mt-0.5" />

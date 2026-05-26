@@ -15,7 +15,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
 
 export const metadata: Metadata = {
   title: {
-    default: "Fly Horizons — Baptême de l'air en Belgique",
+    default: "Fly Horizons, baptême de l'air en Belgique",
     template: "%s | Fly Horizons",
   },
   description:
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     locale: "fr_BE",
     url: siteUrl,
     siteName: "Fly Horizons",
-    title: "Fly Horizons — Baptême de l'air en Belgique",
+    title: "Fly Horizons, baptême de l'air en Belgique",
     description:
       "Baptême de l'air et vols privés en avion léger depuis Charleroi. Jusqu'à 3 passagers, itinéraire 100 % libre.",
     images: [
@@ -45,13 +45,13 @@ export const metadata: Metadata = {
         url: "/piste.jpg",
         width: 1200,
         height: 630,
-        alt: "Fly Horizons — Baptême de l'air en Belgique",
+        alt: "Fly Horizons, baptême de l'air en Belgique",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Fly Horizons — Baptême de l'air en Belgique",
+    title: "Fly Horizons, baptême de l'air en Belgique",
     description:
       "Vols privés en avion léger depuis Charleroi. Itinéraire libre, jusqu'à 3 passagers.",
     images: ["/piste.jpg"],
