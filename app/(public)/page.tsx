@@ -379,6 +379,47 @@ export default async function HomePage() {
       {/* ═══ VOTRE PILOTE ═══ */}
       <PilotCard />
 
+      {/* ═══ GALERIE ═══ */}
+      <section className="py-14 bg-white border-t border-border">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-8">
+            <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">
+              En images
+            </p>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground">
+              L&apos;expérience Fly Horizons
+            </h2>
+            <div className="w-10 h-0.5 bg-[#F2B705] mx-auto mt-3 rounded-full" />
+          </div>
+          <div className="columns-2 sm:columns-3 lg:columns-4 gap-3 space-y-3">
+            {[
+              { src: "/gallery/1.png",  alt: "Vol en avion léger au-dessus de la Belgique" },
+              { src: "/gallery/2.png",  alt: "Cockpit Diamond DA40 — vue panoramique" },
+              { src: "/gallery/3.png",  alt: "Paysage vu du ciel depuis Charleroi" },
+              { src: "/gallery/4.png",  alt: "Décollage depuis Charleroi EBCI" },
+              { src: "/gallery/5.png",  alt: "Passagers à bord — vol Fly Horizons" },
+              { src: "/gallery/6.png",  alt: "Vue aérienne en Belgique" },
+              { src: "/gallery/7.png",  alt: "Horizon depuis le cockpit" },
+              { src: "/gallery/8.png",  alt: "Nuages et paysage belge vu du ciel" },
+              { src: "/gallery/9.png",  alt: "Vol au coucher du soleil" },
+              { src: "/gallery/10.jpg", alt: "À bord du Diamond DA40" },
+              { src: "/gallery/11.jpg", alt: "Fly Horizons — vols depuis Charleroi" },
+            ].map(({ src, alt }) => (
+              <div key={src} className="break-inside-avoid overflow-hidden rounded-xl border border-border shadow-sm">
+                <Image
+                  src={src}
+                  alt={alt}
+                  width={400}
+                  height={300}
+                  className="w-full h-auto object-cover hover:scale-[1.02] transition-transform duration-300"
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ═══ AVIS CLIENTS ═══ */}
       <section className="py-16 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">

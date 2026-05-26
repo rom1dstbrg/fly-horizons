@@ -94,9 +94,14 @@ export default function CartPage() {
                     {item.title}
                   </Link>
                   {item.product_type === "voucher" && (
-                    <span className="inline-block text-[10px] font-semibold text-[#F2B705] bg-[#F2B705]/10 border border-[#F2B705]/20 rounded-full px-2 py-0.5 mt-1">
-                      Voucher : livraison par email
-                    </span>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      <span className="inline-block text-[10px] font-semibold text-[#F2B705] bg-[#F2B705]/10 border border-[#F2B705]/20 rounded-full px-2 py-0.5">
+                        Voucher · livraison par email
+                      </span>
+                      <span className="inline-block text-[10px] font-semibold text-muted-foreground bg-secondary border border-border rounded-full px-2 py-0.5">
+                        Valable 12 mois · Transférable librement
+                      </span>
+                    </div>
                   )}
                   <p className="text-primary font-bold mt-1">
                     {formatPrice(item.price)}

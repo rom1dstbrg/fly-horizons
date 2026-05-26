@@ -135,6 +135,26 @@ export default function AboutPage() {
 
         </div>
 
+        {/* ── Photos DA40 ── */}
+        <div className="grid grid-cols-3 gap-3 mb-8">
+          {[
+            { src: "/da-40-1.webp", alt: "Diamond DA40 — vue extérieure" },
+            { src: "/da-40-2.webp", alt: "Diamond DA40 — cockpit" },
+            { src: "/da-40-3.jpg",  alt: "Diamond DA40 — à bord" },
+          ].map(({ src, alt }) => (
+            <div key={src} className="overflow-hidden rounded-2xl border border-border shadow-sm aspect-[4/3]">
+              <Image
+                src={src}
+                alt={alt}
+                width={400}
+                height={300}
+                className="w-full h-full object-cover hover:scale-[1.03] transition-transform duration-300"
+                sizes="(max-width: 640px) 33vw, 300px"
+              />
+            </div>
+          ))}
+        </div>
+
         {/* ── L'approche ── */}
         <div className="bg-[#0b2238] rounded-3xl p-8 mb-8 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-[#F2B705]/8 -translate-y-1/2 translate-x-1/4" aria-hidden />

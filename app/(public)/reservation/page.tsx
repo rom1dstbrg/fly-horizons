@@ -303,7 +303,7 @@ export default function ReservationPage() {
           className={[
             "h-10 w-full rounded-lg text-sm font-medium transition-all duration-150 select-none flex items-center justify-center",
             isSel              ? "bg-[#fbae17] text-[#0b2238] font-bold shadow-sm scale-105" :
-            isAvail && !isPast ? "hover:bg-[#fbae17]/10 hover:text-[#fbae17] text-foreground/70 cursor-pointer font-semibold" :
+            isAvail && !isPast ? "bg-emerald-50 text-emerald-800 hover:bg-[#fbae17]/15 hover:text-[#fbae17] cursor-pointer font-semibold border border-emerald-200/60" :
                                  "text-muted-foreground/25 cursor-not-allowed text-xs",
           ].join(" ")}
         >{d}</button>
