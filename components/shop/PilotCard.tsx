@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Plane, ShieldCheck, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 export default function PilotCard() {
   return (
@@ -32,18 +32,6 @@ export default function PilotCard() {
                 d&apos;y accéder. Ici, c&apos;est vous qui choisissez où on va.&rdquo;
               </p>
             </blockquote>
-
-            {/* Badges */}
-            <div className="flex flex-wrap gap-2">
-              <div className="inline-flex items-center gap-1.5 bg-[#f5f8ff] border border-[#dce8ff] rounded-lg px-3 py-1.5">
-                <Plane size={13} className="text-[#F2B705] shrink-0" />
-                <span className="text-[#0b2238] text-[11px] font-semibold">Diamond DA40 · Charleroi EBCI</span>
-              </div>
-              <div className="inline-flex items-center gap-1.5 bg-[#f5f8ff] border border-[#dce8ff] rounded-lg px-3 py-1.5">
-                <ShieldCheck size={13} className="text-[#F2B705] shrink-0" />
-                <span className="text-[#0b2238] text-[11px] font-semibold">Assuré Air Academy New CAG</span>
-              </div>
-            </div>
 
             <Link
               href="/about"

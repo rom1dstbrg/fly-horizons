@@ -10,11 +10,11 @@ export function SplashScreen() {
     if (sessionStorage.getItem("fh-splash")) return;
 
     setPhase("visible");
-    const fadeTimer = setTimeout(() => setPhase("fading"), 1200);
+    const fadeTimer = setTimeout(() => setPhase("fading"), 400);
     const hideTimer = setTimeout(() => {
       setPhase("hidden");
       sessionStorage.setItem("fh-splash", "1");
-    }, 1800);
+    }, 700);
 
     return () => {
       clearTimeout(fadeTimer);

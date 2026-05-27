@@ -55,6 +55,8 @@ const localBusinessSchema = {
   },
 };
 
+export const revalidate = 300;
+
 export default async function HomePage() {
   const supabase = await createClient();
 
@@ -76,7 +78,7 @@ export default async function HomePage() {
       <section className="relative h-screen min-h-[580px] overflow-hidden">
         <video
           autoPlay loop muted playsInline
-          preload="auto"
+          preload="none"
           poster="/piste.jpg"
           className="absolute inset-0 w-full h-full object-cover"
         >
