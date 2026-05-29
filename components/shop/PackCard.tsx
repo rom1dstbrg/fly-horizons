@@ -53,10 +53,9 @@ export function PackCard({ pack }: { pack: PackBase }) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-transparent pointer-events-none" />
 
           {/* Badge */}
-          <div className="absolute top-4 left-4">
-            <div className="inline-flex items-center gap-1.5 bg-black/40 backdrop-blur-md border border-white/15 rounded-xl px-3 py-1.5">
+          <div className="absolute top-3.5 left-3.5">
+            <div className="inline-flex items-center bg-black/30 backdrop-blur-md border border-white/15 rounded-lg px-2.5 py-1.5">
               <span className="text-[#F2B705] font-black text-[13px] leading-none">{formatDuration(duree)}</span>
-              <span className="text-white/50 text-[11px] leading-none">avion léger</span>
             </div>
           </div>
         </div>
@@ -80,24 +79,18 @@ export function PackCard({ pack }: { pack: PackBase }) {
           </div>
 
           {/* Footer — ancré en bas */}
-          <div className="pt-4 mt-4 border-t border-border/50 space-y-3">
-            <div>
-              <p className="text-[10px] font-semibold text-[#F2B705] uppercase tracking-[2px] mb-1">
-                Prix
-              </p>
-              <div className="flex items-baseline gap-0.5">
-                <span className="text-[#0b2238] font-black text-[26px] leading-none">{pack.price}</span>
-                <span className="text-muted-foreground text-[13px] font-medium ml-0.5">€</span>
-              </div>
+          <div className="pt-4 mt-4 border-t border-border/50 flex items-center justify-between gap-3">
+            <div className="flex items-baseline gap-0.5">
+              <span className="text-[#0b2238] font-black text-[26px] leading-none">{pack.price}</span>
+              <span className="text-muted-foreground text-[13px] font-medium ml-0.5">€</span>
             </div>
 
-            <div className="flex items-center justify-between px-4 py-2.5 rounded-xl
-              bg-[#0b2238] text-white text-[13px] font-semibold tracking-wide
-              group-hover:bg-[#0e2f4a]
-              group-hover:shadow-[0_4px_14px_rgba(17,51,86,0.30)]
-              transition-all duration-400">
-              <span>Réserver ce vol</span>
-              <ArrowRight size={14} className="text-[#F2B705] group-hover:translate-x-0.5 transition-transform duration-300" />
+            <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl
+              bg-[#0b2238] text-white text-[13px] font-semibold
+              group-hover:bg-[#F2B705] group-hover:text-[#113356]
+              transition-all duration-300">
+              <span>Réserver</span>
+              <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform duration-300" />
             </div>
           </div>
 

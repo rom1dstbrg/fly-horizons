@@ -286,20 +286,13 @@ export default async function NosOffresPage() {
           </div>
         )}
 
-        {/* CTA retour vers vol sur mesure */}
-        <div className="mt-6 bg-[#0b2238] rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div>
-            <p className="text-white font-bold text-sm">Vous ne savez pas encore combien de temps vous voulez voler ?</p>
-            <p className="text-white/50 text-xs mt-1">Tracez votre route : le prix et la durée se calculent automatiquement.</p>
-          </div>
-          <Link
-            href="/vol-sur-mesure"
-            className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-[#F2B705] text-[#113356] rounded-xl text-xs font-black hover:bg-[#e6a800] transition-colors whitespace-nowrap"
-          >
-            <Route size={13} />
-            Essayer le vol sur mesure
-            <ArrowRight size={13} />
-          </Link>
+        <div className="mt-12 text-center">
+          <p className="text-sm text-muted-foreground">
+            Vous avez un itinéraire précis en tête ?{" "}
+            <Link href="/vol-sur-mesure" className="text-[#113356] font-semibold hover:underline">
+              Créez un vol entièrement sur mesure →
+            </Link>
+          </p>
         </div>
       </div>
 
