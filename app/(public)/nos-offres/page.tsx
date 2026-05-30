@@ -1,8 +1,9 @@
 import Link from "next/link";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import {
   Clock, Route, Zap, PlaneTakeoff, ArrowRight, MousePointerClick,
-  Check, EuroIcon, Users, MapPin,
+  EuroIcon, Users, MapPin,
 } from "lucide-react";
 import { PackCard } from "@/components/shop/PackCard";
 
@@ -40,13 +41,7 @@ export default async function NosOffresPage() {
       ══════════════════════════════════════════ */}
       <div className="bg-[#0b2238] pt-[98px] pb-0 relative overflow-hidden">
 
-        {/* Fond décoratif */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#F2B705]/5 rounded-full -translate-y-1/2 translate-x-1/4" />
-          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#113356]/60 rounded-full translate-y-1/2 -translate-x-1/4" />
-        </div>
-
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6">
 
           {/* Eyebrow label */}
           <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-6">
@@ -148,97 +143,18 @@ export default async function NosOffresPage() {
               </div>
             </div>
 
-            {/* Visuel droite — aperçu carte interactive */}
-            <div className="hidden lg:flex flex-col gap-3 self-start pt-2">
-
-              {/* Fenêtre carte */}
-              <div className="relative bg-white/5 border border-white/10 rounded-2xl overflow-hidden" style={{ height: 340 }}>
-
-                {/* Fond carte */}
-                <div className="absolute inset-0 bg-gradient-to-br from-[#0d3a6e] via-[#0b2238] to-[#061624]" />
-
-                {/* Grille */}
-                <svg className="absolute inset-0 w-full h-full opacity-10" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <pattern id="grid-no" width="40" height="40" patternUnits="userSpaceOnUse">
-                      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#F2B705" strokeWidth="0.5"/>
-                    </pattern>
-                  </defs>
-                  <rect width="100%" height="100%" fill="url(#grid-no)" />
-                </svg>
-
-                {/* Route */}
-                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 340" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M 75,270 L 155,90 L 310,125 L 285,265 Z" fill="none" stroke="#F2B705" strokeWidth="5" strokeLinejoin="round" opacity="0.12" strokeLinecap="round"/>
-                  <path d="M 75,270 L 155,90 L 310,125 L 285,265 Z" fill="none" stroke="#F2B705" strokeWidth="2" strokeDasharray="10 5" strokeLinejoin="round" opacity="0.85" strokeLinecap="round"/>
-                  <polygon points="0,-4 7,0 0,4" fill="#F2B705" opacity="0.65" transform="translate(118,177) rotate(-64)"/>
-                  <polygon points="0,-4 7,0 0,4" fill="#F2B705" opacity="0.65" transform="translate(240,107) rotate(8)"/>
-                  <polygon points="0,-4 7,0 0,4" fill="#F2B705" opacity="0.65" transform="translate(296,212) rotate(94)"/>
-                  <polygon points="0,-4 7,0 0,4" fill="#F2B705" opacity="0.65" transform="translate(168,272) rotate(188)"/>
-
-                  {/* Waypoint 1 — Namur */}
-                  <circle cx="155" cy="90" r="10" fill="#F2B705"/>
-                  <text x="155" y="94" textAnchor="middle" fill="#113356" fontSize="9" fontWeight="800">1</text>
-                  <rect x="168" y="82" width="46" height="14" rx="3" fill="#0b2238" opacity="0.9"/>
-                  <text x="191" y="92" textAnchor="middle" fill="#F2B705" fontSize="8" fontWeight="700">Namur</text>
-
-                  {/* Waypoint 2 — Bruxelles */}
-                  <circle cx="310" cy="125" r="10" fill="#F2B705"/>
-                  <text x="310" y="129" textAnchor="middle" fill="#113356" fontSize="9" fontWeight="800">2</text>
-                  <rect x="323" y="117" width="56" height="14" rx="3" fill="#0b2238" opacity="0.9"/>
-                  <text x="351" y="127" textAnchor="middle" fill="#F2B705" fontSize="8" fontWeight="700">Bruxelles</text>
-
-                  {/* Waypoint 3 — Wavre */}
-                  <circle cx="285" cy="265" r="10" fill="#F2B705"/>
-                  <text x="285" y="269" textAnchor="middle" fill="#113356" fontSize="9" fontWeight="800">3</text>
-                  <rect x="298" y="257" width="38" height="14" rx="3" fill="#0b2238" opacity="0.9"/>
-                  <text x="317" y="267" textAnchor="middle" fill="#F2B705" fontSize="8" fontWeight="700">Wavre</text>
-
-                  {/* CRL */}
-                  <circle cx="75" cy="270" r="14" fill="#113356" stroke="#F2B705" strokeWidth="3"/>
-                  <text x="75" y="274" textAnchor="middle" fill="#F2B705" fontSize="12">✈</text>
-                  <rect x="92" y="259" width="90" height="13" rx="3" fill="#0b2238" opacity="0.9"/>
-                  <text x="137" y="269" textAnchor="middle" fill="#F2B705" fontSize="8" fontWeight="700">CRL · Charleroi</text>
-                  <text x="137" y="279" textAnchor="middle" fill="white" fontSize="7" opacity="0.45">Départ &amp; Retour</text>
-
-                  {/* Curseur clique */}
-                  <circle cx="310" cy="125" r="18" fill="none" stroke="#F2B705" strokeWidth="1.5" opacity="0.35"/>
-                  <circle cx="310" cy="125" r="25" fill="none" stroke="#F2B705" strokeWidth="0.8" opacity="0.15"/>
-                </svg>
-
-                {/* Pill durée */}
-                <div className="absolute top-3 left-3 bg-[#0b2238]/90 border border-white/10 rounded-xl px-3 py-2 backdrop-blur-sm">
-                  <p className="text-white/45 text-[9px] font-bold uppercase tracking-widest leading-none mb-1">Durée estimée</p>
-                  <p className="text-white text-lg font-black leading-none">~94 <span className="text-xs font-semibold text-white/55">min</span></p>
-                </div>
-
-                {/* Pill prix */}
-                <div className="absolute top-3 right-3 bg-[#F2B705] rounded-xl px-3 py-2">
-                  <p className="text-[#113356] text-[9px] font-bold uppercase tracking-widest leading-none mb-1">Prix estimé</p>
-                  <p className="text-[#113356] text-lg font-black leading-none">397 <span className="text-xs font-semibold opacity-65">€</span></p>
-                </div>
-
-                {/* Badge LIVE */}
-                <div className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-black/50 border border-white/10 rounded-full px-2.5 py-1 backdrop-blur-sm">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                  <span className="text-white/70 text-[9px] font-bold tracking-wider">CALCUL EN DIRECT</span>
-                </div>
+            {/* Visuel droite */}
+            <div className="hidden lg:flex flex-col self-start pt-2">
+              <div className="rounded-2xl overflow-hidden border border-white/12 shadow-[0_24px_64px_rgba(0,0,0,0.55)]">
+                <Image
+                  src="/vol-sur-mesure-v2.png"
+                  alt="Aperçu de l'outil de planification vol sur mesure"
+                  width={900}
+                  height={600}
+                  className="w-full h-auto"
+                />
               </div>
-
-              {/* Légende étapes */}
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { icon: <MousePointerClick size={11} />, label: "Cliquez pour ajouter" },
-                  { icon: <Zap size={11} />, label: "Prix mis à jour" },
-                  { icon: <Check size={11} />, label: "Route optimisée" },
-                ].map(({ icon, label }) => (
-                  <div key={label} className="flex flex-col items-center gap-1.5 bg-white/4 border border-white/8 rounded-xl py-2.5 px-2">
-                    <span className="text-[#F2B705]">{icon}</span>
-                    <p className="text-white/45 text-[9px] text-center leading-tight">{label}</p>
-                  </div>
-                ))}
-              </div>
-              <p className="text-center text-white/20 text-[9px]">Aperçu illustratif. Les valeurs sont calculées sur votre vraie route</p>
+              <p className="text-center text-white/15 text-[9px] mt-2.5">Aperçu de l&apos;outil de planification</p>
             </div>
 
           </div>
@@ -280,8 +196,8 @@ export default async function NosOffresPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-            {packs.map((pack) => (
-              <PackCard key={pack.id} pack={pack} />
+            {packs.map((pack, index) => (
+              <PackCard key={pack.id} pack={pack} isPopular={index === 1} />
             ))}
           </div>
         )}

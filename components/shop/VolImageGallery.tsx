@@ -37,7 +37,7 @@ export function VolImageGallery({ images, title, duree }: VolImageGalleryProps) 
 
   if (images.length === 0) {
     return (
-      <div className="rounded-3xl overflow-hidden aspect-[16/10] relative bg-[#0b2238]">
+      <div className="rounded-2xl overflow-hidden aspect-[16/10] relative bg-[#0b2238]">
         <div className="absolute inset-0 bg-gradient-to-br from-[#0b2238] via-[#0e3060] to-[#1a4a8a] flex flex-col items-center justify-center gap-4">
           <p className="text-white text-7xl font-black leading-none tracking-tight">{formatDuration(duree)}</p>
           <p className="text-white/30 text-xs font-semibold uppercase tracking-[4px]">Vol privé · Au départ de Charleroi</p>
@@ -55,7 +55,7 @@ export function VolImageGallery({ images, title, duree }: VolImageGalleryProps) 
     <div className="space-y-3">
 
       {/* Image principale */}
-      <div className="rounded-3xl overflow-hidden aspect-[16/10] relative bg-[#0b2238]">
+      <div className="rounded-2xl overflow-hidden aspect-[16/10] relative bg-[#0b2238]">
         <Image
           src={images[active].url}
           alt={title}

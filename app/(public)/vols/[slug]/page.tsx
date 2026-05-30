@@ -1,11 +1,12 @@
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { ChevronLeft, Users, Headphones, MapPin, Route, ArrowRight } from "lucide-react";
+import { Route, ArrowRight, CalendarCheck, Map, Headphones, PlaneTakeoff } from "lucide-react";
 import { formatDuration } from "@/lib/vouchers";
 import { VolDetailClient } from "@/components/shop/VolDetailClient";
 import { VolImageGallery } from "@/components/shop/VolImageGallery";
+import { PackCard } from "@/components/shop/PackCard";
+import { BackLink } from "@/components/shop/BackLink";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -38,33 +39,30 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-const INCLUS = [
-  { icon: <Users size={14} className="text-[#F2B705] shrink-0" />,     label: "Jusqu'à 3 passagers" },
-  { icon: <MapPin size={14} className="text-[#F2B705] shrink-0" />,     label: "Départ depuis Charleroi (EBCI)" },
-  { icon: <Route size={14} className="text-[#F2B705] shrink-0" />,      label: "Itinéraire personnalisé" },
-  { icon: <Headphones size={14} className="text-[#F2B705] shrink-0" />, label: "Casques audio fournis" },
-];
-
 const STEPS = [
   {
     num: "01",
+    icon: <CalendarCheck size={14} />,
     title: "Réservation en ligne",
-    desc: "Choisissez votre durée et réglez en sécurité. Votre bon de réservation arrive immédiatement par email.",
+    desc: "Choisissez votre durée et réglez en sécurité. La confirmation et votre bon de vol arrivent par email dans la minute — pour vous ou à offrir.",
   },
   {
     num: "02",
-    title: "Le pilote trace la route",
-    desc: "Votre pilote vous contacte et propose un itinéraire adapté à la météo et à vos envies.",
+    icon: <Map size={14} />,
+    title: "Votre pilote trace la route",
+    desc: "Romain, pilote et fondateur de Fly Horizons, vous contacte pour composer l'itinéraire ensemble. Namur, Bruxelles, les Ardennes... la route s'adapte à vos envies et à la météo du jour.",
   },
   {
     num: "03",
-    title: "Briefing & équipement",
-    desc: "À Charleroi (EBCI) : briefing sécurité complet, casques audio fournis, toutes vos questions répondues.",
+    icon: <Headphones size={14} />,
+    title: "Briefing à Charleroi",
+    desc: "Rendez-vous sur l'aérodrome de Charleroi (EBCI) : accueil personnalisé, briefing sécurité, casques audio fournis. Vous montez à bord en toute sérénité.",
   },
   {
     num: "04",
+    icon: <PlaneTakeoff size={14} />,
     title: "À vous le ciel",
-    desc: "Décollage, montée, panorama. Votre pilote commente le vol tout au long du trajet.",
+    desc: "Décollage, montée en altitude, panorama sur la Belgique. Romain commente chaque repère tout au long du trajet et répond à toutes vos questions.",
   },
 ];
 
@@ -115,166 +113,126 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
   };
 
   return (
-    <main className="bg-[#f5f5f7]">
+    <main className="bg-white">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
       />
 
-      {/* ── Navigation ── */}
-      <div className="pt-[98px] px-4 sm:px-6">
-        <div className="max-w-6xl mx-auto pt-5">
-          <Link href="/nos-offres" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-            <ChevronLeft size={15} />
-            Tous les vols
-          </Link>
-        </div>
-      </div>
+      {/* ══════ SPLIT — galerie gauche / info droite ══════ */}
+      <div className="pt-[98px] bg-white">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-6 pb-20">
 
-      {/* ── Hero ── */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-5 pb-10 lg:pb-14">
-        {/*
-          Mobile : titre → image → description → CTA → inclus
-          Desktop : col gauche = image + inclus (même div) | col droite = titre + CTA
-        */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-x-6 gap-y-5 lg:gap-x-14 lg:gap-y-6 items-start">
+          <BackLink />
 
-          {/* ── 1 · Titre — mobile: 1er ; desktop: col droite ligne 1 ── */}
-          <div className="order-1 lg:col-start-2 lg:row-start-1 space-y-3 lg:pt-1">
-            <h1 className="text-[40px] sm:text-[50px] font-black text-[#0b2238] leading-[1.0] tracking-tight">
-              {vol.title}
-            </h1>
-            {vol.short_description && (
-              <p className="hidden lg:block text-[#0b2238]/65 text-[15px] leading-relaxed">
-                {vol.short_description}
-              </p>
-            )}
-            <p className="hidden lg:block text-muted-foreground/55 text-[12px]">
-              Au départ de Charleroi · EBCI
-            </p>
-          </div>
+          <div className="grid md:grid-cols-[1fr_380px] lg:grid-cols-[1fr_400px] gap-10 lg:gap-14 items-start">
 
-          {/* ── 2 · Galerie + INCLUS desktop — mobile: 2e ; desktop: col gauche lignes 1-2 ── */}
-          <div className="order-2 lg:col-start-1 lg:row-start-1 lg:row-span-2 space-y-5">
-            <VolImageGallery
-              images={vol.images ?? []}
-              title={vol.title}
-              duree={duree}
-            />
-            {/* INCLUS visible uniquement sur desktop, dans la même colonne que la galerie */}
-            <div className="hidden lg:block border-t border-border/60 pt-5">
-              <p className="text-[10px] font-bold text-foreground/40 uppercase tracking-[2px] mb-3">Ce qui est inclus</p>
-              <div className="grid grid-cols-2 gap-x-4">
-                {INCLUS.map(({ icon, label }) => (
-                  <div key={label} className="flex items-center gap-2.5 py-2.5 border-b border-border/50">
-                    {icon}
-                    <span className="text-xs text-foreground/70">{label}</span>
-                  </div>
-                ))}
+            {/* ── Gauche : galerie ── */}
+            <div>
+              <VolImageGallery
+                images={vol.images ?? []}
+                title={vol.title}
+                duree={duree}
+              />
+            </div>
+
+            {/* ── Droite : info + CTA (sticky) ── */}
+            <div className="md:sticky md:top-28 space-y-6">
+
+              <div>
+                <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">
+                  {formatDuration(duree)} · Vol en avion léger
+                </p>
+                <h1 className="text-4xl sm:text-5xl font-black text-[#0b2238] leading-none tracking-tight">
+                  {vol.title}
+                </h1>
+                {vol.short_description && (
+                  <p className="text-foreground/55 text-sm leading-relaxed mt-3">
+                    {vol.short_description}
+                  </p>
+                )}
               </div>
+
+              <VolDetailClient
+                id={vol.id} slug={vol.slug} title={vol.title}
+                price={vol.price} duree={duree} image_url={image}
+              />
+
             </div>
           </div>
-
-          {/* ── 3 · Description — mobile uniquement ── */}
-          <div className="order-3 lg:hidden space-y-1">
-            {vol.short_description && (
-              <p className="text-[#0b2238]/65 text-[15px] leading-relaxed">{vol.short_description}</p>
-            )}
-            <p className="text-muted-foreground/55 text-[12px]">
-              Au départ de Charleroi · EBCI
-            </p>
-          </div>
-
-          {/* ── 4 · CTA — mobile: 4e ; desktop: col droite ligne 2 ── */}
-          <div className="order-4 lg:col-start-2 lg:row-start-2">
-            <VolDetailClient
-              id={vol.id}
-              slug={vol.slug}
-              title={vol.title}
-              price={vol.price}
-              duree={duree}
-              image_url={image}
-            />
-          </div>
-
-          {/* ── 5 · INCLUS mobile uniquement — après CTA ── */}
-          <div className="order-5 lg:hidden border-t border-border/60 pt-5">
-            <p className="text-[10px] font-bold text-foreground/40 uppercase tracking-[2px] mb-3">Ce qui est inclus</p>
-            <div className="grid grid-cols-2 gap-x-4">
-              {INCLUS.map(({ icon, label }) => (
-                <div key={label} className="flex items-center gap-2.5 py-2.5 border-b border-border/50">
-                  {icon}
-                  <span className="text-xs text-foreground/70">{label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
         </div>
       </div>
 
-      {/* ── Déroulé ── */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-10">
-        <div className="border-t border-border pt-10">
-          <p className="text-[10px] font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">Comment ça se passe</p>
-          <h2 className="text-2xl font-extrabold text-[#0b2238] mb-10">De la réservation au vol</h2>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-8">
-            {STEPS.map(({ num, title, desc }) => (
-              <div key={num} className="flex flex-col gap-2.5">
-                <span className="text-[#F2B705]/35 text-3xl font-black leading-none">{num}</span>
-                <div className="w-6 h-0.5 bg-[#F2B705]" />
-                <p className="text-[#0b2238] font-bold text-sm">{title}</p>
-                <p className="text-foreground/55 text-xs leading-relaxed">{desc}</p>
+      {/* ══════ COMMENT ÇA SE PASSE — style testimonials ══════ */}
+      <div className="bg-white py-20 sm:py-28">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
+
+          <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-4">
+            Déroulement
+          </p>
+          <h2 className="text-4xl sm:text-5xl font-black text-[#0b2238] leading-none tracking-tight mb-12">
+            Comment ça se passe
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            {STEPS.map(({ num, icon, title, desc }) => (
+              <div key={num} className="bg-[#f5f5f7] rounded-2xl p-7 flex flex-col gap-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-[#F2B705]/15 flex items-center justify-center shrink-0 text-[#F2B705]">
+                    {icon}
+                  </div>
+                  <div>
+                    <p className="text-[#0b2238] font-bold text-sm leading-snug">{title}</p>
+                    <p className="text-[#F2B705] text-xs font-semibold tracking-wide mt-0.5">Étape {num}</p>
+                  </div>
+                </div>
+                <p className="text-foreground/70 text-sm leading-relaxed flex-1">{desc}</p>
+                <div className="w-8 h-1 bg-[#F2B705] rounded-full" />
               </div>
             ))}
           </div>
+
         </div>
       </div>
 
-      {/* ── Autres durées ── */}
+      {/* ══════ AUTRES DURÉES — bg-[#f5f5f7] ══════ */}
       {(autres ?? []).length > 0 && (
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-10">
-          <div className="border-t border-border pt-10">
-            <p className="text-[10px] font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">Autres durées disponibles</p>
-            <h2 className="text-2xl font-extrabold text-[#0b2238] mb-6">Changer de durée</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {(autres ?? []).map((p) => {
-                const d = p.voucher_duration_minutes ?? 60;
-                const img = p.images?.[0]?.url ?? null;
-                return (
-                  <Link key={p.id} href={`/vols/${p.slug}`} className="group flex items-center gap-4 p-3 rounded-xl bg-white border border-border hover:border-[#F2B705]/40 hover:shadow-sm transition-all">
-                    <div className="relative w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-[#0b2238]">
-                      {img
-                        ? <Image src={img} alt={p.title} fill className="object-cover" sizes="64px" />
-                        : <div className="absolute inset-0 bg-gradient-to-br from-[#0b2238] to-[#113356] flex items-center justify-center">
-                            <span className="text-[#F2B705] text-xs font-black">{formatDuration(d)}</span>
-                          </div>
-                      }
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[11px] font-bold text-[#F2B705] mb-0.5">{formatDuration(d)}</p>
-                      <p className="text-sm font-semibold text-[#0b2238] truncate">{p.title}</p>
-                      <p className="text-sm text-muted-foreground font-medium">{p.price} €</p>
-                    </div>
-                    <ArrowRight size={15} className="shrink-0 text-muted-foreground/40 group-hover:text-[#F2B705] group-hover:translate-x-0.5 transition-all" />
-                  </Link>
-                );
-              })}
+        <div className="bg-[#f5f5f7] py-20 sm:py-28">
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
+            <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-4">
+              Autres durées disponibles
+            </p>
+            <h2 className="text-4xl sm:text-5xl font-black text-[#0b2238] leading-none tracking-tight mb-10">
+              Changer de durée
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {(autres ?? []).map((p, index) => (
+                <PackCard key={p.id} pack={p} isPopular={p.voucher_duration_minutes === 60} />
+              ))}
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Vol sur mesure ── */}
-      <div className="border-t border-border bg-white py-8 px-4 sm:px-6">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      {/* ══════ VOL SUR MESURE — blanc ══════ */}
+      <div className="bg-white border-t border-border py-14">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div>
-            <p className="font-bold text-foreground text-sm">Vous avez un itinéraire précis en tête ?</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Tracez votre route sur la carte : durée et prix calculés en temps réel.</p>
+            <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">Vol sur mesure</p>
+            <h2 className="text-2xl sm:text-3xl font-black text-[#0b2238] leading-tight">
+              Vous avez un itinéraire précis en tête ?
+            </h2>
+            <p className="text-foreground/50 text-sm mt-2 max-w-md leading-relaxed">
+              Tracez votre route sur la carte : durée et prix calculés en temps réel, au kilomètre près.
+            </p>
           </div>
-          <Link href="/vol-sur-mesure" className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-[#f5f8ff] border border-[#dce8ff] text-[#113356] rounded-xl text-sm font-semibold hover:bg-[#113356] hover:text-white hover:border-[#113356] transition-all cursor-pointer">
-            <Route size={14} />
-            Vol sur mesure
+          <Link
+            href="/vol-sur-mesure"
+            className="shrink-0 inline-flex items-center gap-2.5 px-6 py-3.5 bg-[#0b2238] text-white rounded-xl text-sm font-black hover:bg-[#113356] transition-colors"
+          >
+            <Route size={16} />
+            Créer mon vol sur mesure
+            <ArrowRight size={15} />
           </Link>
         </div>
       </div>

@@ -139,7 +139,6 @@ export default function VolSurMesurePage() {
 
   function handleSelectDate(ds: string) {
     setForm(f => ({ ...f, date: ds, heure: "" }));
-    scrollAfterSlotsRef.current = true;
   }
 
   function handleSelectTime(s: string) {
@@ -553,12 +552,15 @@ export default function VolSurMesurePage() {
   // ── STEP 2 sidebar
   function ReserveSummary() {
     return (
-      <div className="rounded-2xl bg-card border border-border overflow-hidden" style={{ boxShadow: "var(--sh-sm)" }}>
-        <div className="bg-[#0b2238] px-5 py-4">
-          <p className="text-[#fbae17] text-[9px] font-black tracking-[3px] uppercase mb-1">Votre aventure</p>
-          <p className="text-white text-lg font-black">
+      <div className="bg-white rounded-2xl border border-border overflow-hidden">
+        <div className="px-5 pt-5 pb-4 border-b border-border">
+          <p className="text-[10px] font-bold text-[#F2B705] uppercase tracking-[2px] mb-1">Votre aventure</p>
+          <p className="text-[#0b2238] text-2xl font-black leading-none">
             {route.totalMin > 0 ? `≈ ${route.totalMin} min` : "—"}
           </p>
+          {route.distKm > 0 && (
+            <p className="text-muted-foreground text-xs mt-1">{route.distKm} km · {prixEstime > 0 ? `≈ ${prixEstime} €` : ""}</p>
+          )}
         </div>
         <div className="p-4 space-y-2.5 text-sm">
           {[
@@ -620,7 +622,7 @@ export default function VolSurMesurePage() {
   // RENDER
   // ─────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-white dark:bg-background">
+    <div className="min-h-screen bg-[#f5f5f7]">
       <div className="h-[84px]" />
 
       {/* ══════════════════════ STEP 1 : BUILD ══════════════════════ */}
@@ -628,85 +630,9 @@ export default function VolSurMesurePage() {
       {/* pb-[72px] lg:pb-0 : espace pour la barre CTA fixe sur mobile */}
       <div className={flowStep === "build" ? "flex flex-col pb-[72px] lg:pb-0" : "hidden"} style={{ height: "calc(100vh - 84px)" }}>
 
-          {/* Sub-header : recherche + style de vol (mobile) */}
-          <div ref={searchRef} className="bg-white border-b border-border px-4 pt-2.5 pb-2">
-            {/* Ligne recherche */}
-            <div className="w-full max-w-[820px] mx-auto flex items-center gap-2">
-              <div className="relative flex-1 min-w-0">
-                <div className={[
-                  "flex items-center gap-2.5 h-10 rounded-xl px-3.5 transition-all border-2",
-                  searchPulse
-                    ? "bg-white border-[#fbae17] shadow-[0_0_0_6px_rgba(251,174,23,0.30)] animate-pulse"
-                    : searchFocused || searchOpen
-                    ? "bg-white border-[#fbae17] shadow-[0_0_0_4px_rgba(251,174,23,0.15)]"
-                    : "bg-white border-[#cdd5e0] shadow-sm hover:border-[#fbae17]/70",
-                ].join(" ")}>
-                  {searchLoading
-                    ? <Loader2 size={14} className="text-[#fbae17] animate-spin shrink-0" />
-                    : <Search   size={14} className="text-[#6b7280] shrink-0" />
-                  }
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    value={searchQ}
-                    onChange={e => setSearchQ(e.target.value)}
-                    onFocus={() => { setSearchFocused(true); if (searchResults.length > 0) setSearchOpen(true); }}
-                    onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
-                    placeholder="Ajouter un point de survol : ville, château, lac, monument…"
-                    className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/55 outline-none min-w-0"
-                    autoComplete="off"
-                  />
-                  {searchQ && (
-                    <button onClick={() => { setSearchQ(""); setSearchOpen(false); }}
-                      className="text-muted-foreground hover:text-foreground cursor-pointer shrink-0">
-                      <X size={13} />
-                    </button>
-                  )}
-                </div>
-
-                {/* Dropdown */}
-                {searchOpen && searchResults.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 bg-white border border-border rounded-xl shadow-2xl z-[600] overflow-hidden mt-1.5">
-                    <div className="px-4 py-2 border-b border-border bg-muted/30">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                        {searchResults.length} résultat{searchResults.length > 1 ? "s" : ""}
-                      </p>
-                    </div>
-                    {searchResults.map(r => (
-                      <button key={r.place_id} type="button"
-                        onClick={() => addSearchResult(r)}
-                        className="w-full flex items-start gap-3 px-4 py-3 hover:bg-[#fbae17]/5 text-left transition-colors border-b border-border last:border-0 cursor-pointer group">
-                        <div className="w-7 h-7 rounded-lg bg-[#0b2238] flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-[#fbae17] transition-colors">
-                          <MapPin size={12} className="text-[#fbae17] group-hover:text-[#0b2238]" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-bold text-foreground truncate">{r.display_name.split(",")[0]}</p>
-                          <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-                            {r.display_name.split(",").slice(1, 3).join(", ").trim()}
-                          </p>
-                        </div>
-                        <span className="text-[10px] text-[#fbae17] font-bold shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                          Ajouter
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Tout effacer */}
-              {route.pois.length > 0 && (
-                <button type="button"
-                  onClick={() => mapRef.current?.clearAll()}
-                  className="flex items-center gap-1.5 h-10 px-3 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:text-destructive hover:border-destructive/30 transition-colors cursor-pointer shrink-0">
-                  <Trash2 size={12} />
-                  <span className="hidden sm:block">Tout effacer</span>
-                </button>
-              )}
-            </div>
-
-            {/* Mobile — style de vol (mini-toggle sous la recherche) */}
-            <div className="lg:hidden flex gap-2 mt-2 w-full max-w-[820px] mx-auto">
+          {/* Sub-header : style de vol mobile uniquement */}
+          <div className="lg:hidden bg-[#f5f5f7] border-b border-border px-4 pt-2.5 pb-2">
+            <div className="flex gap-2 w-full max-w-[820px] mx-auto">
               {STYLE_OPTIONS.map(o => (
                 <button key={o.key} type="button"
                   onClick={() => setStyleMode(o.key)}
@@ -723,13 +649,16 @@ export default function VolSurMesurePage() {
             </div>
           </div>
 
-          {/* Main area — fond blanc */}
-          <div className="flex-1 min-h-0 bg-white p-3 flex gap-3 overflow-hidden">
+          {/* Main area */}
+          <div className="flex-1 min-h-0 bg-[#f5f5f7] p-3 flex gap-3 overflow-hidden">
             {/* Left: carte + instructions */}
             <div className="flex flex-col flex-1 min-w-0 gap-3">
 
               {/* Card 1 — Carte */}
-              <div className="flex-1 min-h-0 relative rounded-2xl overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.10)] border border-black/6" style={{ isolation: "isolate" }}>
+              <div className="flex-1 min-h-0 relative rounded-2xl shadow-[0_2px_16px_rgba(0,0,0,0.10)] border border-black/6" style={{ isolation: "isolate" }}>
+
+                  {/* Carte + popup — overflow-hidden pour coins arrondis */}
+                  <div className="absolute inset-0 overflow-hidden rounded-2xl">
                   {popupVisible && route.pois.length === 0 && (
                     <div className="absolute inset-0 flex items-center justify-center z-[500] bg-black/20 backdrop-blur-sm p-4">
                       <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-sm w-full shadow-2xl border border-border pointer-events-auto text-center">
@@ -793,6 +722,82 @@ export default function VolSurMesurePage() {
                     styleMode={styleMode}
                     onRouteChange={setRoute}
                   />
+                  </div>{/* end overflow-hidden inner */}
+
+                  {/* Barre de recherche — overlay top center */}
+                  <div ref={searchRef} className="absolute top-3 left-0 right-0 flex justify-center z-[450] px-4 pointer-events-none">
+                    <div className="pointer-events-auto w-full max-w-lg flex items-center gap-2">
+                      <div className="relative flex-1 min-w-0">
+                        <div className={[
+                          "flex items-center gap-2.5 h-10 rounded-xl px-3.5 transition-all border-2",
+                          searchPulse
+                            ? "bg-white border-[#fbae17] shadow-[0_0_0_6px_rgba(251,174,23,0.30)] animate-pulse"
+                            : searchFocused || searchOpen
+                            ? "bg-white border-[#fbae17] shadow-[0_0_0_4px_rgba(251,174,23,0.15)]"
+                            : "bg-white/95 border-[#cdd5e0] shadow-md hover:border-[#fbae17]/70 backdrop-blur-sm",
+                        ].join(" ")}>
+                          {searchLoading
+                            ? <Loader2 size={14} className="text-[#fbae17] animate-spin shrink-0" />
+                            : <Search   size={14} className="text-[#6b7280] shrink-0" />
+                          }
+                          <input
+                            ref={searchInputRef}
+                            type="text"
+                            value={searchQ}
+                            onChange={e => setSearchQ(e.target.value)}
+                            onFocus={() => { setSearchFocused(true); if (searchResults.length > 0) setSearchOpen(true); }}
+                            onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
+                            placeholder="Ajouter un point de survol : ville, château, lac…"
+                            className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/55 outline-none min-w-0"
+                            autoComplete="off"
+                          />
+                          {searchQ && (
+                            <button onClick={() => { setSearchQ(""); setSearchOpen(false); }}
+                              className="text-muted-foreground hover:text-foreground cursor-pointer shrink-0">
+                              <X size={13} />
+                            </button>
+                          )}
+                        </div>
+                        {/* Dropdown résultats */}
+                        {searchOpen && searchResults.length > 0 && (
+                          <div className="absolute top-full left-0 right-0 bg-white border border-border rounded-xl shadow-2xl z-[600] overflow-hidden mt-1.5">
+                            <div className="px-4 py-2 border-b border-border bg-muted/30">
+                              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                {searchResults.length} résultat{searchResults.length > 1 ? "s" : ""}
+                              </p>
+                            </div>
+                            {searchResults.map(r => (
+                              <button key={r.place_id} type="button"
+                                onClick={() => addSearchResult(r)}
+                                className="w-full flex items-start gap-3 px-4 py-3 hover:bg-[#fbae17]/5 text-left transition-colors border-b border-border last:border-0 cursor-pointer group">
+                                <div className="w-7 h-7 rounded-lg bg-[#0b2238] flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-[#fbae17] transition-colors">
+                                  <MapPin size={12} className="text-[#fbae17] group-hover:text-[#0b2238]" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-sm font-bold text-foreground truncate">{r.display_name.split(",")[0]}</p>
+                                  <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                                    {r.display_name.split(",").slice(1, 3).join(", ").trim()}
+                                  </p>
+                                </div>
+                                <span className="text-[10px] text-[#fbae17] font-bold shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                  Ajouter
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {/* Tout effacer */}
+                      {route.pois.length > 0 && (
+                        <button type="button"
+                          onClick={() => mapRef.current?.clearAll()}
+                          className="flex items-center gap-1.5 h-10 px-3 rounded-xl border border-white/70 bg-white/95 text-xs font-semibold text-muted-foreground hover:text-destructive hover:border-destructive/30 transition-colors cursor-pointer shrink-0 backdrop-blur-sm shadow-md">
+                          <Trash2 size={12} />
+                          <span className="hidden sm:block">Tout effacer</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
 
                   {/* ── Légende ── */}
                   <div className="absolute bottom-5 left-3 z-[400] pointer-events-none">
@@ -947,8 +952,8 @@ export default function VolSurMesurePage() {
                       <h3 className="text-[9px] font-black text-foreground/40 uppercase tracking-[2px]">Escales</h3>
                       {availableStops.some(s => !selectedStops.find(ss => ss.id === s.id)) && (
                         <button type="button" onClick={() => setStopsOpen(v => !v)}
-                          className="flex items-center gap-1.5 text-[10px] font-bold text-[#fbae17] hover:text-white transition-colors cursor-pointer bg-[#fbae17]/10 hover:bg-[#fbae17]/20 px-2.5 py-1 rounded-lg">
-                          <Plus size={9} />Ajouter une escale
+                          className="flex items-center gap-1.5 text-xs font-bold text-[#fbae17] bg-[#fbae17]/15 hover:bg-[#fbae17]/25 border border-[#fbae17]/25 px-3 py-1.5 rounded-lg transition-colors cursor-pointer">
+                          <Plus size={12} />Ajouter
                         </button>
                       )}
                     </div>
@@ -1082,7 +1087,7 @@ export default function VolSurMesurePage() {
 
       {/* ══════════════════════ STEP 2 : RESERVE ══════════════════════ */}
       {flowStep === "reserve" && (
-        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-6">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 py-10">
 
           {/* ── Bande de navigation + récap de route ─────────────────── */}
           <div className="flex items-center gap-3 mb-6">
@@ -1095,22 +1100,22 @@ export default function VolSurMesurePage() {
             </button>
 
             {/* Récap route */}
-            <div className="flex-1 min-w-0 flex items-center gap-3 bg-[#0b2238] rounded-2xl px-4 py-2.5 overflow-hidden">
-              <PlaneTakeoff size={13} className="text-[#F2B705] shrink-0" />
-              <div className="flex items-center gap-1.5 text-xs text-white/60 flex-1 min-w-0 overflow-hidden">
-                <span className="text-white font-bold shrink-0">Charleroi</span>
+            <div className="flex-1 min-w-0 flex items-center gap-3 bg-white border border-border rounded-2xl px-4 py-2.5 overflow-hidden">
+              <PlaneTakeoff size={13} className="text-[#0b2238] shrink-0" />
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-1 min-w-0 overflow-hidden">
+                <span className="text-[#0b2238] font-bold shrink-0">Charleroi</span>
                 {route.pois.map(p => (
                   <span key={p.id} className="flex items-center gap-1.5 shrink-0">
-                    <ArrowRight size={9} className="text-white/30" />
-                    <span className="text-white/75 font-medium hidden sm:block truncate max-w-[120px]">{p.nom}</span>
+                    <ArrowRight size={9} className="text-muted-foreground/40" />
+                    <span className="text-foreground/75 font-medium hidden sm:block truncate max-w-[120px]">{p.nom}</span>
                   </span>
                 ))}
-                <ArrowRight size={9} className="text-white/30 shrink-0" />
-                <span className="text-white font-bold shrink-0">Charleroi</span>
+                <ArrowRight size={9} className="text-muted-foreground/40 shrink-0" />
+                <span className="text-[#0b2238] font-bold shrink-0">Charleroi</span>
               </div>
-              <div className="flex items-center gap-3 shrink-0 border-l border-white/10 pl-3">
-                {route.totalMin > 0 && <span className="text-[#F2B705] font-black text-sm">≈{route.totalMin}&thinsp;min</span>}
-                {prixEstime > 0 && <span className="text-white/50 text-xs font-semibold">{prixEstime}&thinsp;€</span>}
+              <div className="flex items-center gap-3 shrink-0 border-l border-border pl-3">
+                {route.totalMin > 0 && <span className="text-[#0b2238] font-black text-sm">≈{route.totalMin}&thinsp;min</span>}
+                {prixEstime > 0 && <span className="text-muted-foreground text-xs font-semibold">{prixEstime}&thinsp;€</span>}
               </div>
             </div>
           </div>
@@ -1146,13 +1151,12 @@ export default function VolSurMesurePage() {
               </div>
 
               {/* 1. Date & heure */}
-              <div className="bg-white rounded-2xl border border-border overflow-hidden" style={{ boxShadow: "var(--sh-sm)" }}>
-                <div className="bg-gradient-to-r from-[#0b2238] to-[#113356] px-5 py-3.5 flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-[#fbae17]">1</div>
-                  <div className="flex items-center gap-2">
-                    <Clock size={13} className="text-[#fbae17]" />
-                    <h2 className="text-sm font-extrabold text-white">Quand souhaitez-vous voler ?</h2>
+              <div className="bg-white rounded-2xl border border-border overflow-hidden">
+                <div className="px-6 pt-5 pb-4 border-b border-border flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-[#0b2238] flex items-center justify-center shrink-0">
+                    <span className="text-[#F2B705] font-black text-[13px]">1</span>
                   </div>
+                  <h2 className="text-[15px] font-black text-[#0b2238]">Quand souhaitez-vous voler ?</h2>
                 </div>
                 <div className="p-5">
                   <div className="flex items-center justify-between mb-4">
@@ -1229,13 +1233,12 @@ export default function VolSurMesurePage() {
               </div>
 
               {/* 2. Participants */}
-              <div ref={passengersRef} className="bg-white rounded-2xl border border-border overflow-hidden" style={{ boxShadow: "var(--sh-sm)" }}>
-                <div className="bg-gradient-to-r from-[#0b2238] to-[#113356] px-5 py-3.5 flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-[#fbae17]">2</div>
-                  <div className="flex items-center gap-2">
-                    <PlaneTakeoff size={13} className="text-[#fbae17]" />
-                    <h2 className="text-sm font-extrabold text-white">Participants</h2>
+              <div ref={passengersRef} className="bg-white rounded-2xl border border-border overflow-hidden">
+                <div className="px-6 pt-5 pb-4 border-b border-border flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-[#0b2238] flex items-center justify-center shrink-0">
+                    <span className="text-[#F2B705] font-black text-[13px]">2</span>
                   </div>
+                  <h2 className="text-[15px] font-black text-[#0b2238]">Participants</h2>
                 </div>
                 <div className="p-5 space-y-5">
                   <div>
@@ -1282,76 +1285,19 @@ export default function VolSurMesurePage() {
                 </div>
               </div>
 
-              {/* 3. Escales */}
-              {availableStops.length > 0 && (
-                <div className="bg-white rounded-2xl border border-border overflow-hidden" style={{ boxShadow: "var(--sh-sm)" }}>
-                  <div className="bg-gradient-to-r from-[#0b2238] to-[#113356] px-5 py-3.5 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-[#fbae17] shrink-0">3</div>
-                      <h2 className="text-sm font-extrabold text-white">
-                        Escales&nbsp;<span className="font-normal opacity-60">(optionnel)</span>
-                      </h2>
-                    </div>
-                    {selectedStops.length > 0 && (
-                      <span className="text-[10px] bg-[#fbae17]/20 text-[#fbae17] font-bold px-2 py-0.5 rounded-full">
-                        {selectedStops.length} sélectionnée{selectedStops.length > 1 ? "s" : ""}
-                      </span>
-                    )}
+              {/* 3. Coordonnées */}
+              <div className="bg-white rounded-2xl border border-border overflow-hidden">
+                <div className="px-6 pt-5 pb-4 border-b border-border flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-[#0b2238] flex items-center justify-center shrink-0">
+                    <span className="text-[#F2B705] font-black text-[13px]">3</span>
                   </div>
-                  <div className="p-5">
-                    <p className="text-xs text-muted-foreground mb-3">
-                      Ajoutez un atterrissage intermédiaire dans un aérodrome. Les taxes d&apos;atterrissage s&apos;appliquent en sus.
-                    </p>
-                    {/* Selected stops */}
-                    {selectedStops.length > 0 && (
-                      <div className="space-y-2 mb-3">
-                        {selectedStops.map(s => (
-                          <div key={s.id} className="flex items-center gap-2.5 py-2 px-3 bg-secondary rounded-xl border border-border">
-                            <span className="font-mono text-xs font-bold text-[#113356] shrink-0">{s.icao}</span>
-                            <span className="flex-1 text-xs text-foreground truncate">{s.nom}</span>
-                            {s.taxe > 0 && <span className="text-xs font-bold text-[#113356] shrink-0">+{s.taxe}&thinsp;€</span>}
-                            <button type="button" onClick={() => removeStop(s.id)}
-                              className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer shrink-0">
-                              <X size={12} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {/* Available stop chips */}
-                    {availableStops.some(s => !selectedStops.find(ss => ss.id === s.id)) && (
-                      <div className="flex flex-wrap gap-2">
-                        {availableStops
-                          .filter(s => !selectedStops.find(ss => ss.id === s.id))
-                          .map(s => (
-                            <button key={s.id} type="button" onClick={() => addStop(s)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-white text-xs font-medium hover:border-[#fbae17] hover:text-[#0b2238] transition-all cursor-pointer">
-                              <Plus size={10} className="text-[#fbae17]" />
-                              <span className="font-mono font-bold">{s.icao}</span>
-                              <span className="text-muted-foreground truncate max-w-[110px]">{s.nom.split(" ")[0]}</span>
-                              {s.taxe > 0 && <span className="text-muted-foreground">+{s.taxe}€</span>}
-                            </button>
-                          ))}
-                      </div>
-                    )}
-                    {selectedStops.length === availableStops.length && (
-                      <p className="text-xs text-muted-foreground italic">Toutes les escales disponibles ont été ajoutées.</p>
-                    )}
+                  <div>
+                    <h2 className="text-[15px] font-black text-[#0b2238]">Vos coordonnées</h2>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Romain vous contacte ici pour confirmer le vol</p>
                   </div>
                 </div>
-              )}
-
-              {/* 4. Coordonnées */}
-              <div className="bg-white rounded-2xl border border-border overflow-hidden" style={{ boxShadow: "var(--sh-sm)" }}>
-                <div className="bg-gradient-to-r from-[#0b2238] to-[#113356] px-5 py-3.5 flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-[#fbae17]">4</div>
-                  <div className="flex items-center gap-2">
-                    <Mail size={13} className="text-[#fbae17]" />
-                    <h2 className="text-sm font-extrabold text-white">Vos coordonnées</h2>
-                  </div>
-                </div>
-                <div className="p-5">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <VSMField label="Prénom" required value={form.prenom} onChange={v => setForm(f => ({ ...f, prenom: v }))} placeholder="Jean" />
                     <VSMField label="Nom"    required value={form.nom}    onChange={v => setForm(f => ({ ...f, nom:    v }))} placeholder="Dupont" />
                     <div className="sm:col-span-2">
@@ -1364,14 +1310,15 @@ export default function VolSurMesurePage() {
                 </div>
               </div>
 
-              {/* 5. Message pilote */}
-              <div className="bg-white rounded-2xl border border-border overflow-hidden" style={{ boxShadow: "var(--sh-sm)" }}>
-                <div className="bg-gradient-to-r from-[#0b2238] to-[#113356] px-5 py-3.5 flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-[#fbae17]">5</div>
-                  <div className="flex items-center gap-2">
-                    <Mail size={13} className="text-[#fbae17]" />
-                    <h2 className="text-sm font-extrabold text-white">Un mot pour nos pilotes ? <span className="font-normal opacity-60">(optionnel)</span></h2>
+              {/* 4. Message pilote */}
+              <div className="bg-white rounded-2xl border border-border overflow-hidden">
+                <div className="px-6 pt-5 pb-4 border-b border-border flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-[#0b2238] flex items-center justify-center shrink-0">
+                    <span className="text-[#F2B705] font-black text-[13px]">4</span>
                   </div>
+                  <h2 className="text-[15px] font-black text-[#0b2238]">
+                    Un mot pour Romain ? <span className="text-sm font-normal text-muted-foreground">(optionnel)</span>
+                  </h2>
                 </div>
                 <div className="p-5">
                   <textarea value={form.commentaire} rows={3} maxLength={300}
@@ -1444,8 +1391,8 @@ export default function VolSurMesurePage() {
               </p>
 
               {/* Validation checklist */}
-              <div className="bg-[#0b2238] rounded-2xl p-4">
-                <p className="text-[8px] font-black text-white/35 uppercase tracking-[2.5px] mb-3">Checklist</p>
+              <div className="bg-white rounded-2xl border border-border p-4">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px] mb-3">Checklist</p>
                 <div className="space-y-2">
                   {[
                     { ok: !!form.date && !!form.heure, label: "Date & heure sélectionnées" },
@@ -1453,9 +1400,9 @@ export default function VolSurMesurePage() {
                     { ok: !!form.prenom && !!form.nom && !!form.email, label: "Coordonnées complètes" },
                     { ok: form.accept_cgp,             label: "CGP acceptées" },
                   ].map(({ ok, label }) => (
-                    <div key={label} className={`flex items-center gap-2.5 text-xs transition-colors ${ok ? "text-[#F2B705]" : "text-white/25"}`}>
-                      <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 border transition-all ${ok ? "border-[#F2B705]/50 bg-[#F2B705]/10" : "border-white/10 bg-white/5"}`}>
-                        <CheckCircle size={9} className={ok ? "text-[#F2B705]" : "text-white/15"} />
+                    <div key={label} className={`flex items-center gap-2.5 text-xs transition-colors ${ok ? "text-green-600 font-medium" : "text-muted-foreground/50"}`}>
+                      <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 border transition-all ${ok ? "border-green-300 bg-green-50" : "border-border bg-white"}`}>
+                        <CheckCircle size={9} className={ok ? "text-green-500" : "text-muted-foreground/25"} />
                       </div>
                       {label}
                     </div>
@@ -1596,12 +1543,12 @@ function VSMField({ label, required, type = "text", value, onChange, placeholder
 }) {
   return (
     <div>
-      <label className="block text-sm font-semibold text-foreground mb-2">
-        {label}{required && <span className="text-muted-foreground font-normal"> *</span>}
+      <label className="block text-xs font-bold text-[#0b2238] uppercase tracking-[1.5px] mb-2">
+        {label}{required && <span className="text-[#F2B705] ml-0.5">*</span>}
       </label>
       <input type={type} value={value} required={required} placeholder={placeholder}
         onChange={e => onChange(e.target.value)}
-        className="w-full h-10 px-3 rounded-xl border border-border bg-white text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#fbae17]/20 focus:border-[#fbae17] transition-all placeholder:text-muted-foreground/40" />
+        className="w-full h-12 px-4 rounded-xl border border-border bg-white text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#F2B705]/20 focus:border-[#F2B705] transition-all placeholder:text-muted-foreground/35" />
     </div>
   );
 }
