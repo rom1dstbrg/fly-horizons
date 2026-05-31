@@ -2,7 +2,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { Mail, MapPin, Lock, Clock } from "lucide-react";
 
-// ── SVG brand icons (lucide doesn't ship these) ───────────────
 function IconFacebook({ size = 16 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -21,20 +20,24 @@ function IconInstagram({ size = 16 }: { size?: number }) {
   );
 }
 
-// ── Data ──────────────────────────────────────────────────────
 const SERVICES = [
   { href: "/nos-offres",     label: "Nos offres" },
   { href: "/vol-sur-mesure", label: "Vol sur mesure" },
 ];
 
-const PAGES = [
-  { href: "/about",        label: "À propos" },
-  { href: "/contact",      label: "Contact" },
-  { href: "/faq",          label: "FAQ" },
-  { href: "/access-ebci",  label: "Plan d'accès" },
-  { href: "/cgp",          label: "Conditions générales" },
-  { href: "/account",      label: "Mon compte" },
-  { href: "/orders",       label: "Mes commandes" },
+const INFOS = [
+  { href: "/about",       label: "À propos" },
+  { href: "/faq",         label: "FAQ" },
+  { href: "/guide",       label: "Guide passager" },
+  { href: "/access-ebci", label: "Plan d'accès · EBCI" },
+  { href: "/cgp",         label: "Conditions générales" },
+];
+
+const COMPTE = [
+  { href: "/account",        label: "Mon compte" },
+  { href: "/account#reservations", label: "Mes réservations" },
+  { href: "/orders",         label: "Mes commandes" },
+  { href: "/login",          label: "Connexion" },
 ];
 
 const SOCIALS = [
@@ -50,24 +53,23 @@ const SOCIALS = [
   },
 ];
 
-// ── Component ─────────────────────────────────────────────────
 export function Footer() {
   const year = new Date().getFullYear();
   const lnk  = "text-sm text-white/45 hover:text-white transition-colors";
-  const hd   = "text-[10px] font-bold text-[#F2B705] uppercase tracking-[2px] mb-4";
+  const hd   = "text-[10px] font-bold text-primary uppercase tracking-[2px] mb-4";
 
   return (
-    <footer className="bg-[#0b2238] border-t border-white/5 mt-auto">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 max-xs:py-7">
+    <footer className="bg-navy border-t border-white/5 mt-auto">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 py-10">
 
         {/* ── Grille principale ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-10 max-xs:gap-6 pb-10 max-xs:pb-6 border-b border-white/5">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-10 pb-10 border-b border-white/5">
 
           {/* ── Marque ── */}
-          <div>
+          <div className="col-span-2 md:col-span-3 lg:col-span-1">
             <Link href="/" className="inline-block">
               <Image
-                src="/logo-footer.png"
+                src="/fly-horizons-logo-white.svg"
                 alt="Fly Horizons"
                 width={160} height={40}
                 className="block h-8 w-auto object-contain"
@@ -75,12 +77,12 @@ export function Footer() {
               />
             </Link>
 
-            <p className="text-white/45 text-sm leading-relaxed max-w-xs mt-4 max-xs:mt-3 max-xs:text-xs">
-              Des vols en avion léger, tracés par vous, payés à la minute réelle.
+            <p className="text-white/45 text-sm leading-relaxed max-w-xs mt-4">
+              Baptêmes de l&apos;air et vols sur mesure en avion léger depuis Charleroi · EBCI.
+              Organisés dans le cadre du partage de frais réglementé (NCO.GEN.104).
             </p>
 
-            {/* Réseaux sociaux */}
-            <div className="mt-4 max-xs:mt-3 flex items-center gap-2">
+            <div className="mt-4 flex items-center gap-2">
               {SOCIALS.map(({ href, label, icon }) => (
                 <a key={href} href={href} target="_blank" rel="noopener noreferrer"
                   aria-label={label}
@@ -96,45 +98,51 @@ export function Footer() {
             <p className={hd}>Nos services</p>
             <ul className="space-y-2.5">
               {SERVICES.map(({ href, label }) => (
-                <li key={href}>
-                  <Link href={href} className={lnk}>{label}</Link>
-                </li>
+                <li key={href}><Link href={href} className={lnk}>{label}</Link></li>
               ))}
             </ul>
           </div>
 
-          {/* ── Pages utiles ── */}
+          {/* ── Informations ── */}
           <div>
-            <p className={hd}>Pages utiles</p>
+            <p className={hd}>Informations</p>
             <ul className="space-y-2.5">
-              {PAGES.map(({ href, label }) => (
-                <li key={href}>
-                  <Link href={href} className={lnk}>{label}</Link>
-                </li>
+              {INFOS.map(({ href, label }) => (
+                <li key={href}><Link href={href} className={lnk}>{label}</Link></li>
               ))}
             </ul>
           </div>
 
-          {/* ── Nous contacter ── */}
+          {/* ── Mon espace ── */}
           <div>
-            <p className={hd}>Nous contacter</p>
+            <p className={hd}>Mon espace</p>
+            <ul className="space-y-2.5">
+              {COMPTE.map(({ href, label }) => (
+                <li key={href}><Link href={href} className={lnk}>{label}</Link></li>
+              ))}
+            </ul>
+          </div>
+
+          {/* ── Contact ── */}
+          <div>
+            <p className={hd}>Contact</p>
             <div className="space-y-3">
               <div className="flex items-start gap-2.5">
-                <Mail size={13} className="text-[#fbae17] shrink-0 mt-0.5" />
+                <Mail size={13} className="text-primary shrink-0 mt-0.5" />
                 <a href="mailto:info@fly-horizons.com"
                   className="text-sm text-white/45 hover:text-white transition-colors">
                   info@fly-horizons.com
                 </a>
               </div>
               <div className="flex items-start gap-2.5">
-                <MapPin size={13} className="text-[#fbae17] shrink-0 mt-0.5" />
+                <MapPin size={13} className="text-primary shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm text-white/45">Aéroport de Charleroi</p>
-                  <p className="text-xs text-white/25 mt-0.5">EBCI, Belgique</p>
+                  <p className="text-xs text-white/25 mt-0.5">EBCI · Gosselies, Belgique</p>
                 </div>
               </div>
               <div className="flex items-start gap-2.5">
-                <Clock size={13} className="text-[#fbae17] shrink-0 mt-0.5" />
+                <Clock size={13} className="text-primary shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm text-white/45">7j/7 sur réservation</p>
                   <p className="text-xs text-white/25 mt-0.5">Réponse email sous 24 h</p>
@@ -146,7 +154,7 @@ export function Footer() {
         </div>
 
         {/* ── Barre de bas ── */}
-        <div className="pt-5 max-xs:pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 max-xs:gap-2">
+        <div className="pt-5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-white/25">
             © {year} Fly Horizons · DESTANBERG Romain. Tous droits réservés.
           </p>
@@ -159,7 +167,7 @@ export function Footer() {
             <div className="flex items-center gap-1.5">
               <Lock size={9} />
               <span>Paiement sécurisé</span>
-              <span className="text-[#fbae17] font-semibold">Stripe</span>
+              <span className="text-primary font-semibold">Stripe</span>
             </div>
           </div>
         </div>

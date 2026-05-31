@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -18,7 +18,7 @@ export default function AboutPage() {
     <main className="min-h-screen bg-white">
 
       {/* ══ ROMAIN ══ */}
-      <section className="bg-[#f5f5f7] pt-[98px] pb-20 sm:pb-28">
+      <section className="bg-secondary pt-[98px] pb-20 sm:pb-28">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-10">
 
           {/*
@@ -29,10 +29,10 @@ export default function AboutPage() {
 
             {/* 1. Header */}
             <div className="order-1 md:col-start-2 md:row-start-1">
-              <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-4">Votre pilote</p>
-              <h1 className="text-5xl sm:text-6xl font-black text-[#0b2238] leading-none tracking-tight mb-2">
+              <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-4">Votre pilote</p>
+              <h1 className="text-5xl sm:text-6xl font-black text-foreground leading-none tracking-tight mb-2">
                 Romain<br />
-                <span className="text-[#F2B705]">Destanberg</span>
+                <span className="text-primary">Destanberg</span>
               </h1>
               <p className="text-foreground/40 text-xs font-semibold uppercase tracking-[2px]">
                 Fondateur &amp; Pilote · Fly Horizons
@@ -40,7 +40,7 @@ export default function AboutPage() {
             </div>
 
             {/* 2. Photo */}
-            <div className="order-2 md:order-none md:col-start-1 md:row-start-1 md:row-span-2 relative aspect-[4/5] md:aspect-auto rounded-2xl overflow-hidden shadow-xl">
+            <div className="order-2 md:order-none md:col-start-1 md:row-start-1 md:row-span-2 relative aspect-[4/5] md:aspect-auto rounded-lg overflow-hidden shadow-xl">
               <Image
                 src="/photo-pilote.jpg"
                 alt="Romain DESTANBERG, Fondateur & Pilote Fly Horizons"
@@ -51,8 +51,8 @@ export default function AboutPage() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
               <div className="absolute bottom-4 left-4">
-                <div className="inline-flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-xl px-3 py-2">
-                  <BadgeCheck size={13} className="text-[#F2B705] shrink-0" />
+                <div className="inline-flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-lg px-3 py-2">
+                  <BadgeCheck size={13} className="text-primary shrink-0" />
                   <span className="text-white text-[12px] font-semibold">Licence CPL(A)</span>
                 </div>
               </div>
@@ -91,7 +91,7 @@ export default function AboutPage() {
                     key={label}
                     className="inline-flex items-center gap-1.5 bg-white border border-border text-foreground/65 text-[11px] font-medium px-3 py-1.5 rounded-full"
                   >
-                    <span className="text-[#F2B705]">{icon}</span>
+                    <span className="text-primary">{icon}</span>
                     {label}
                   </span>
                 ))}
@@ -114,14 +114,14 @@ export default function AboutPage() {
 
             {/* 1. Header */}
             <div className="order-1 md:col-start-2 md:row-start-1">
-              <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-4">L&apos;avion</p>
-              <h2 className="text-4xl sm:text-5xl font-black text-[#0b2238] leading-none tracking-tight">
+              <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-4">L&apos;avion</p>
+              <h2 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight">
                 Diamond DA40
               </h2>
             </div>
 
             {/* 2. Photo */}
-            <div className="order-2 md:order-none md:col-start-1 md:row-start-1 md:row-span-2 relative aspect-[4/3] md:aspect-auto rounded-2xl overflow-hidden">
+            <div className="order-2 md:order-none md:col-start-1 md:row-start-1 md:row-span-2 relative aspect-[4/3] md:aspect-auto rounded-lg overflow-hidden">
               <Image
                 src="/da-40-3.jpg"
                 alt="Diamond DA40 en vol"
@@ -146,16 +146,16 @@ export default function AboutPage() {
                   { icon: <Headphones size={14} />,   text: "Casques antibruit fournis" },
                 ].map(({ icon, text }) => (
                   <div key={text} className="flex items-center gap-3 py-3.5 border-b border-border/60 last:border-0">
-                    <span className="text-[#F2B705] shrink-0">{icon}</span>
+                    <span className="text-primary shrink-0">{icon}</span>
                     <span className="text-sm text-foreground/70">{text}</span>
                   </div>
                 ))}
               </div>
 
-              <div className="bg-[#f5f5f7] rounded-2xl p-5 flex flex-col gap-2.5">
+              <div className="bg-secondary border border-border rounded-lg p-5 flex flex-col gap-2.5">
                 <div className="flex items-center gap-2">
-                  <ShieldCheck size={14} className="text-[#F2B705] shrink-0" />
-                  <p className="text-[#0b2238] text-sm font-black">Sécurité &amp; assurance</p>
+                  <ShieldCheck size={14} className="text-primary shrink-0" />
+                  <p className="text-foreground text-sm font-black">Sécurité &amp; assurance</p>
                 </div>
                 <p className="text-foreground/60 text-sm leading-relaxed">
                   L&apos;avion appartient à <strong className="text-foreground/85">Air Academy New CAG</strong>{" "}
@@ -171,15 +171,15 @@ export default function AboutPage() {
       </section>
 
       {/* ══ L'APPROCHE ══ */}
-      <section className="bg-[#f5f5f7] py-20 sm:py-28">
+      <section className="bg-secondary py-20 sm:py-28">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
-          <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-4">
+          <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-4">
             L&apos;approche Fly Horizons
           </p>
-          <h2 className="text-4xl sm:text-5xl font-black text-[#0b2238] leading-none tracking-tight mb-12">
+          <h2 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight mb-12">
             Sans marge.<br />
-            <span className="text-[#F2B705]">Uniquement les frais réels.</span>
+            <span className="text-primary">Uniquement les frais réels.</span>
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
@@ -197,9 +197,9 @@ export default function AboutPage() {
                 text: "L'aviation légère reste hors de portée pour beaucoup. Fly Horizons a été conçu pour changer ça, sans compromis sur la qualité ni sur la sécurité.",
               },
             ].map(({ title, text }) => (
-              <div key={title} className="bg-white rounded-2xl p-7 flex flex-col gap-4">
-                <div className="w-8 h-1 bg-[#F2B705] rounded-full" />
-                <p className="text-[#0b2238] font-bold text-sm">{title}</p>
+              <div key={title} className="card-premium p-7 flex flex-col gap-4">
+                <div className="w-8 h-1 bg-primary rounded-full" />
+                <p className="text-foreground font-bold text-sm">{title}</p>
                 <p className="text-foreground/60 text-sm leading-relaxed flex-1">{text}</p>
               </div>
             ))}
@@ -212,22 +212,22 @@ export default function AboutPage() {
       <section className="bg-white border-t border-border py-14">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div>
-            <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">Prêt à décoller ?</p>
-            <h2 className="text-2xl sm:text-3xl font-black text-[#0b2238] leading-tight">
+            <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-3">Prêt à décoller ?</p>
+            <h2 className="text-2xl sm:text-3xl font-black text-foreground leading-tight">
               Réservez votre vol ou créez votre itinéraire.
             </h2>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 shrink-0">
             <Link
               href="/nos-offres"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#F2B705] text-[#113356] rounded-xl text-sm font-black hover:bg-[#e6a800] transition-colors shadow-md shadow-[#F2B705]/25"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-primary text-primary-foreground rounded-lg text-sm font-black hover:bg-[#e6a800] active:scale-[0.98] transition-all shadow-gold"
             >
               Voir les vols
               <ArrowRight size={15} />
             </Link>
             <Link
               href="/vol-sur-mesure"
-              className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 border border-border text-foreground/70 rounded-xl text-sm font-semibold hover:border-[#0b2238] hover:text-[#0b2238] transition-colors"
+              className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 border border-border text-foreground/70 rounded-lg text-sm font-semibold hover:border-foreground hover:text-foreground transition-colors"
             >
               <Route size={15} />
               Vol sur mesure

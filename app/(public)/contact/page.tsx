@@ -9,93 +9,81 @@ export const metadata = {
 
 export default function ContactPage() {
   return (
-    <main className="min-h-screen bg-gradient-navy pt-24 pb-16">
-      <div className="container-shop max-w-5xl">
+    <main className="min-h-screen bg-secondary">
 
-        {/* En-tête */}
-        <div className="mb-10">
-          <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-2">Contact</p>
-          <h1 className="text-3xl font-bold text-foreground">Contactez-nous</h1>
-          <p className="text-muted-foreground text-sm mt-2 max-w-lg">
-            Une question, un problème ou envie d&apos;en savoir plus ?
-            Écrivez-nous : Romain vous répond personnellement sous 24&nbsp;h.
-          </p>
-        </div>
+      {/* ══ INTRO ══ */}
+      <section className="pt-[98px] pb-20 sm:pb-28">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-12">
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-x-20 items-start">
 
-          {/* Formulaire — 1er sur mobile, 2e sur desktop */}
-          <div className="lg:col-span-2 lg:order-2">
-            <div className="card-premium p-6 sm:p-8">
-              <h2 className="font-semibold text-foreground mb-2">Envoyez-nous un message</h2>
-              <p className="text-xs text-muted-foreground mb-6">
+            {/* 1. Header — toujours en premier */}
+            <div className="order-1 lg:col-start-1 lg:row-start-1">
+              <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-4">Contact</p>
+              <h1 className="text-5xl sm:text-6xl font-black text-foreground leading-none tracking-tight mb-6">
+                Une question ?<br />
+                <span className="text-primary">Écrivez-nous.</span>
+              </h1>
+              <p className="text-foreground/60 text-sm leading-relaxed max-w-sm">
+                Romain vous répond personnellement sous 24&nbsp;h.
+                Pas de support externalisé, pas de réponse automatique.
+              </p>
+            </div>
+
+            {/* 2. Formulaire — deuxième sur mobile, colonne droite sur desktop */}
+            <div className="card-premium p-7 sm:p-10 order-2 lg:col-start-2 lg:row-start-1 lg:row-span-2">
+              <h2 className="text-xl font-black text-foreground mb-1">Envoyez un message</h2>
+              <p className="text-xs text-foreground/50 mb-7">
                 Votre question est peut-être déjà répondue dans notre{" "}
-                <Link href="/faq" className="text-primary hover:text-gold-400 transition-colors font-medium">FAQ</Link>.
+                <Link href="/faq" className="text-foreground font-semibold hover:text-primary transition-colors">
+                  FAQ
+                </Link>.
               </p>
               <ContactForm />
             </div>
-          </div>
 
-          {/* Colonne info — 2e sur mobile, 1er sur desktop */}
-          <div className="space-y-4 lg:order-1">
-
-            <div className="card-premium p-6 space-y-5">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Informations</p>
-
-              <div className="flex gap-3.5">
-                <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                  <Mail size={15} className="text-primary" />
+            {/* 3. Infos — troisième sur mobile, sous le header sur desktop */}
+            <div className="order-3 lg:col-start-1 lg:row-start-2">
+              {[
+                {
+                  Icon: Mail,
+                  label: "Email",
+                  value: "info@fly-horizons.com",
+                  href: "mailto:info@fly-horizons.com",
+                },
+                {
+                  Icon: MapPin,
+                  label: "Aérodrome de départ",
+                  value: "Brussels South Charleroi · EBCI",
+                },
+                {
+                  Icon: Clock,
+                  label: "Délai de réponse",
+                  value: "Sous 24 h · 7 j/7",
+                },
+              ].map(({ Icon, label, value, href }) => (
+                <div key={label} className="flex items-center gap-4 py-4 border-b border-border/60 last:border-0">
+                  <span className="text-primary shrink-0">
+                    <Icon size={16} />
+                  </span>
+                  <div>
+                    <p className="text-[11px] text-foreground/40 font-medium mb-0.5 uppercase tracking-wide">{label}</p>
+                    {href ? (
+                      <a href={href} className="text-sm font-semibold text-foreground hover:text-primary transition-colors">
+                        {value}
+                      </a>
+                    ) : (
+                      <p className="text-sm font-semibold text-foreground">{value}</p>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-0.5">Email</p>
-                  <a href="mailto:info@fly-horizons.com"
-                    className="text-sm font-semibold text-foreground hover:text-primary transition-colors">
-                    info@fly-horizons.com
-                  </a>
-                </div>
-              </div>
-
-              <div className="flex gap-3.5">
-                <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                  <MapPin size={15} className="text-primary" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-0.5">Aérodrome de départ</p>
-                  <p className="text-sm font-semibold text-foreground">Charleroi, EBCI</p>
-                  <p className="text-xs text-muted-foreground">Belgique</p>
-                </div>
-              </div>
-
-              <div className="flex gap-3.5">
-                <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                  <Clock size={15} className="text-primary" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-0.5">Délai de réponse</p>
-                  <p className="text-sm font-semibold text-foreground">Sous 24 h</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                    Chaque message est lu et répondu personnellement par Romain. Pas de réponse automatique, pas de support externalisé.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="card-premium p-5 border-l-2 border-primary space-y-2">
-              <p className="text-xs font-semibold text-foreground">Une approche personnelle</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Votre message est lu et répondu par{" "}
-                <span className="text-foreground font-medium">Romain</span>,
-                fondateur et pilote. Pas de support externalisé, pas de réponse automatique.
-              </p>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Chaque vol est organisé avec soin. Si vous avez la moindre question avant ou après votre réservation, n&apos;hésitez pas.
-              </p>
+              ))}
             </div>
 
           </div>
-
         </div>
-      </div>
+      </section>
+
     </main>
   );
 }

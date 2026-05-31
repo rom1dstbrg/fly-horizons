@@ -31,7 +31,7 @@ export function SplashScreen() {
       }`}
     >
       <Image
-        src="/logo-header.png"
+        src="/fly-horizons-logo-navy.svg"
         alt="Fly Horizons"
         width={260}
         height={70}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Calendar, Clock, Loader2, AlertCircle, RotateCcw } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar, Clock, Loader2, AlertCircle } from "lucide-react";
 import { rescheduleReservation } from "@/lib/actions/reservations";
 
 const MONTHS_FR = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
@@ -37,7 +37,6 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
   const [slotsLoading,  setSlotsLoading]  = useState(false);
   const [selectedHeure, setSelectedHeure] = useState("");
 
-  // "confirm" = step d'aperçu avant soumission finale
   const [step, setStep] = useState<"pick" | "confirm">("pick");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -52,7 +51,6 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
       })
     : null;
 
-  // ── Disponibilités du mois ───────────────────────────────────────────────
   const loadMonth = useCallback(async (y: number, m: number) => {
     setCalLoading(true);
     try {
@@ -63,7 +61,6 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
 
   useEffect(() => { loadMonth(calYear, calMonth); }, [calYear, calMonth, loadMonth]);
 
-  // ── Créneaux de la date choisie ──────────────────────────────────────────
   useEffect(() => {
     if (!selectedDate) { setSlots([]); setSelectedHeure(""); return; }
     setSlotsLoading(true);
@@ -89,9 +86,9 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
           onClick={() => { setSelectedDate(ds); setSelectedHeure(""); setError(""); }}
           className={[
             "h-10 w-full rounded-lg text-sm font-medium transition-all duration-150 select-none flex items-center justify-center",
-            isSel              ? "bg-[#fbae17] text-[#0b2238] font-bold shadow-sm scale-105" :
-            isAvail && !isPast ? "hover:bg-[#fbae17]/10 hover:text-[#fbae17] text-foreground/70 cursor-pointer font-semibold" :
-                                 "text-muted-foreground/25 cursor-not-allowed text-xs",
+            isSel              ? "bg-primary text-primary-foreground font-bold shadow-sm scale-105" :
+            isAvail && !isPast ? "hover:bg-primary/10 hover:text-primary text-foreground/70 cursor-pointer font-semibold" :
+                                 "text-foreground/20 cursor-not-allowed text-xs",
           ].join(" ")}
         >{d}</button>
       );
@@ -117,40 +114,36 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
   // ── Step 2 — Aperçu avant confirmation ──────────────────────────────────
   if (step === "confirm") {
     return (
-      <div className="bg-[#f5f5f7] flex-1 flex flex-col pb-16 px-4">
-        <div className="h-[84px]" />
-        <div className="max-w-xl mx-auto w-full py-6">
+      <div className="flex-1 flex items-center justify-center bg-gradient-navy px-4 pt-[86px] pb-16">
+        <div className="max-w-xl w-full py-6">
 
-          <div className="inline-flex items-center gap-2 mb-4">
-            <RotateCcw size={14} className="text-muted-foreground" />
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-[2px]">Confirmation du report</p>
-          </div>
-          <h1 className="text-xl font-extrabold text-foreground mb-6">
+          <p className="text-[10px] font-black text-primary uppercase tracking-[3px] mb-1">
+            Report de vol
+          </p>
+          <h1 className="text-xl font-black text-foreground mb-6">
             Vérifiez votre nouvelle date
           </h1>
 
-          {/* Récap — même style que la résa */}
-          <div className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden mb-5">
+          <div className="card-premium overflow-hidden mb-5">
 
-            {/* Header sombre */}
-            <div className="bg-[#0b2238] px-6 py-6 flex items-start justify-between gap-4">
+            <div className="bg-navy px-6 py-5 flex items-start justify-between gap-4">
               <div>
-                <p className="text-[#fbae17] text-[9px] font-black tracking-[3px] uppercase mb-3">Fly Horizons</p>
-                <h2 className="text-white text-base font-extrabold leading-snug">Report de vol</h2>
+                <h2 className="text-white text-base font-black leading-snug">Report de vol</h2>
                 <div className="mt-2 space-y-0.5">
                   <p className="text-white/40 text-xs line-through capitalize">{currentDateFormatted}</p>
-                  <p className="text-green-400 text-sm font-bold capitalize">{selectedFormatted} à {selectedHeure}</p>
+                  <p className="text-primary text-sm font-bold capitalize">{selectedFormatted} à {selectedHeure}</p>
                 </div>
               </div>
               <div className="shrink-0">
-                <div className="inline-flex items-center gap-1.5 bg-black/40 backdrop-blur-md border border-white/15 rounded-xl px-3 py-1.5">
-                  <span className="text-[#F2B705] font-black text-[13px] leading-none">{duree < 60 ? `${duree} min` : `${Math.floor(duree/60)}h${duree%60 > 0 ? String(duree%60).padStart(2,"0") : ""}`}</span>
+                <div className="inline-flex items-center gap-1.5 bg-black/40 border border-white/15 rounded-lg px-3 py-1.5">
+                  <span className="text-primary font-black text-[13px] leading-none">
+                    {duree < 60 ? `${duree} min` : `${Math.floor(duree/60)}h${duree%60 > 0 ? String(duree%60).padStart(2,"0") : ""}`}
+                  </span>
                   <span className="text-white/50 text-[11px] leading-none">avion léger</span>
                 </div>
               </div>
             </div>
 
-            {/* Infos client */}
             <div className="px-6 py-5 grid grid-cols-2 gap-x-6 gap-y-4">
               {[
                 { l: "Passager principal", v: `${prenom} ${nom}`.trim() },
@@ -159,7 +152,7 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
                 { l: "Aéroport",           v: "Charleroi · EBCI" },
               ].map(({ l, v }) => (
                 <div key={l}>
-                  <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[2px] mb-0.5">{l}</p>
+                  <p className="text-[9px] font-black text-foreground/40 uppercase tracking-[2px] mb-0.5">{l}</p>
                   <p className="text-sm font-semibold text-foreground truncate">{v}</p>
                 </div>
               ))}
@@ -168,7 +161,7 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
           </div>
 
           {error && (
-            <div className="flex items-center gap-2.5 text-sm text-destructive bg-destructive/5 border border-destructive/20 px-4 py-3 rounded-xl mb-4">
+            <div className="flex items-center gap-2.5 text-sm text-red-600 bg-red-50 border border-red-200 px-4 py-3 rounded-lg mb-4">
               <AlertCircle size={14} className="shrink-0" /> {error}
             </div>
           )}
@@ -178,7 +171,7 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
               type="button"
               onClick={() => { setStep("pick"); setError(""); }}
               disabled={submitting}
-              className="flex-1 px-4 py-3 rounded-xl border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50"
+              className="flex-1 px-4 py-3 rounded-lg border border-border text-sm font-semibold text-foreground/60 hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-50"
             >
               Modifier
             </button>
@@ -186,14 +179,14 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
               type="button"
               onClick={handleConfirm}
               disabled={submitting}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#113356] text-white rounded-xl text-sm font-bold hover:bg-[#0b2238] transition-colors disabled:opacity-30 shadow-sm"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-lg text-sm font-black hover:bg-[#e6a800] active:scale-[0.98] transition-all disabled:opacity-30 shadow-gold"
             >
               {submitting && <Loader2 size={14} className="animate-spin" />}
               {submitting ? "Confirmation…" : "Confirmer le report"}
             </button>
           </div>
 
-          <p className="text-xs text-muted-foreground text-center mt-4">
+          <p className="text-xs text-foreground/40 text-center mt-4">
             Vous recevrez un email de confirmation après validation.
           </p>
         </div>
@@ -203,36 +196,33 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
 
   // ── Step 1 — Calendrier + créneaux ───────────────────────────────────────
   return (
-    <div className="bg-[#f5f5f7] flex-1 flex flex-col pb-16">
+    <div className="flex-1 flex flex-col bg-gradient-navy pb-16">
       <div className="h-[84px]" />
 
       <div className="max-w-xl mx-auto w-full px-4 sm:px-6 py-6">
 
-        {/* Header */}
         <div className="mb-6">
-          <div className="inline-flex items-center gap-2 mb-1.5">
-            <Calendar size={14} className="text-muted-foreground" />
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-[2px]">Report de vol</p>
-          </div>
-          <h1 className="text-xl font-extrabold text-foreground">
+          <p className="text-[10px] font-black text-primary uppercase tracking-[3px] mb-1">
+            Report de vol
+          </p>
+          <h1 className="text-xl font-black text-foreground">
             Choisissez une nouvelle date
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">
+          <p className="text-sm text-foreground/50 mt-1">
             {prenom ? `Bonjour ${prenom}, votre` : "Votre"} vol prévu le{" "}
             <span className="font-semibold text-foreground capitalize">{currentDateFormatted}</span>{" "}
             est reporté. Sélectionnez une nouvelle date et un créneau horaire.
           </p>
         </div>
 
-        {/* Calendrier + créneaux */}
-        <div className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden divide-y divide-border">
+        <div className="card-premium overflow-hidden divide-y divide-border">
 
           {/* Calendrier */}
           <div className="p-5">
             <div className="flex items-center justify-between mb-4">
               <button type="button"
                 onClick={() => { if (calMonth === 1) { setCalMonth(12); setCalYear(y => y - 1); } else setCalMonth(m => m - 1); }}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all border border-border cursor-pointer">
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-foreground/40 hover:text-foreground hover:bg-secondary transition-all border border-border cursor-pointer">
                 <ChevronLeft size={15} />
               </button>
               <span className="text-sm font-bold text-foreground">
@@ -240,28 +230,28 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
               </span>
               <button type="button"
                 onClick={() => { if (calMonth === 12) { setCalMonth(1); setCalYear(y => y + 1); } else setCalMonth(m => m + 1); }}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all border border-border cursor-pointer">
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-foreground/40 hover:text-foreground hover:bg-secondary transition-all border border-border cursor-pointer">
                 <ChevronRight size={15} />
               </button>
             </div>
 
             <div className="grid grid-cols-7 mb-1">
               {DAYS_FR.map((d, i) => (
-                <div key={i} className="h-8 flex items-center justify-center text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+                <div key={i} className="h-8 flex items-center justify-center text-[9px] font-bold text-foreground/40 uppercase tracking-wider">
                   {d}
                 </div>
               ))}
             </div>
 
             {calLoading
-              ? <div className="flex items-center justify-center h-44"><Loader2 size={20} className="animate-spin text-muted-foreground/30" /></div>
+              ? <div className="flex items-center justify-center h-44"><Loader2 size={20} className="animate-spin text-foreground/20" /></div>
               : <div className="grid grid-cols-7 gap-0.5">{renderCalendar()}</div>
             }
 
-            <div className="flex flex-wrap items-center gap-4 mt-4 pt-4 border-t border-border text-[10px] text-muted-foreground">
-              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#fbae17]" />Sélectionné</span>
+            <div className="flex flex-wrap items-center gap-4 mt-4 pt-4 border-t border-border text-[10px] text-foreground/40">
+              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-primary" />Sélectionné</span>
               <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full border-2 border-border" />Disponible</span>
-              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-muted" />Indisponible</span>
+              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-border" />Indisponible</span>
             </div>
           </div>
 
@@ -269,35 +259,33 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
           <div className="p-5">
             {!selectedDate ? (
               <div className="flex items-center gap-3 py-1">
-                <Clock size={14} className="text-muted-foreground/40 shrink-0" />
-                <p className="text-sm text-muted-foreground">Sélectionnez une date pour voir les créneaux disponibles</p>
+                <Clock size={14} className="text-foreground/30 shrink-0" />
+                <p className="text-sm text-foreground/50">Sélectionnez une date pour voir les créneaux disponibles</p>
               </div>
             ) : slotsLoading ? (
               <div className="flex items-center justify-center py-4">
-                <Loader2 size={18} className="animate-spin text-muted-foreground/30" />
+                <Loader2 size={18} className="animate-spin text-foreground/20" />
               </div>
             ) : slots.length === 0 ? (
               <div className="flex items-center gap-3 py-1">
-                <Clock size={14} className="text-muted-foreground/40 shrink-0" />
+                <Clock size={14} className="text-foreground/30 shrink-0" />
                 <div>
                   <p className="text-sm font-semibold text-foreground capitalize">{selectedFormatted}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Aucun créneau disponible. Essayez une autre date.</p>
+                  <p className="text-xs text-foreground/50 mt-0.5">Aucun créneau disponible. Essayez une autre date.</p>
                 </div>
               </div>
             ) : (
               <div>
-                <div className="flex items-baseline gap-2 mb-3">
-                  <p className="text-sm font-extrabold text-foreground capitalize">{selectedFormatted}</p>
-                </div>
+                <p className="text-sm font-black text-foreground capitalize mb-3">{selectedFormatted}</p>
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                   {slots.map(s => (
                     <button key={s} type="button"
                       onClick={() => { setSelectedHeure(s); setError(""); }}
                       className={[
-                        "py-2.5 rounded-xl border text-sm font-bold transition-all duration-150 text-center cursor-pointer",
+                        "py-2.5 rounded-lg border text-sm font-bold transition-all duration-150 text-center cursor-pointer",
                         selectedHeure === s
-                          ? "border-[#fbae17] bg-[#fbae17] text-[#0b2238] shadow-sm"
-                          : "border-border text-foreground hover:border-[#fbae17]/50 hover:bg-[#fbae17]/5 hover:text-[#fbae17]",
+                          ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                          : "border-border text-foreground hover:border-primary/50 hover:bg-primary/5 hover:text-primary",
                       ].join(" ")}
                     >{s}</button>
                   ))}
@@ -307,11 +295,10 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
           </div>
         </div>
 
-        {/* Récap sélection + bouton */}
         <div className="mt-5 space-y-3">
           {selectedDate && selectedHeure && (
-            <div className="rounded-xl border border-[#fbae17]/40 bg-[#fbae17]/5 px-4 py-3 flex items-center gap-3">
-              <Calendar size={14} className="text-[#fbae17] shrink-0" />
+            <div className="rounded-lg border border-primary/40 bg-primary/5 px-4 py-3 flex items-center gap-3">
+              <Calendar size={14} className="text-primary shrink-0" />
               <p className="text-sm font-semibold text-foreground capitalize">
                 {selectedFormatted} à {selectedHeure}
               </p>
@@ -319,7 +306,7 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
           )}
 
           {error && (
-            <div className="flex items-center gap-2.5 text-sm text-destructive bg-destructive/5 border border-destructive/20 px-4 py-3 rounded-xl">
+            <div className="flex items-center gap-2.5 text-sm text-red-600 bg-red-50 border border-red-200 px-4 py-3 rounded-lg">
               <AlertCircle size={14} className="shrink-0" /> {error}
             </div>
           )}
@@ -328,7 +315,7 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
             type="button"
             disabled={!selectedDate || !selectedHeure}
             onClick={() => setStep("confirm")}
-            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[#113356] text-white rounded-xl text-sm font-bold transition-all duration-200 disabled:opacity-30 hover:bg-[#0b2238] shadow-sm hover:shadow-md hover:-translate-y-px active:translate-y-0 cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-primary text-primary-foreground rounded-lg text-sm font-black transition-all disabled:opacity-30 hover:bg-[#e6a800] shadow-gold hover:-translate-y-px active:translate-y-0 active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed"
           >
             {selectedDate && selectedHeure
               ? "Continuer"
@@ -337,7 +324,7 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
               : "Sélectionnez une date"}
           </button>
 
-          <p className="text-xs text-muted-foreground text-center">
+          <p className="text-xs text-foreground/40 text-center">
             Vous pourrez vérifier avant de confirmer.
           </p>
         </div>

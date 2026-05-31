@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -63,7 +63,7 @@ export function Header() {
           {/* Logo */}
           <Link href="/" className="shrink-0 flex items-center leading-none">
             <Image
-              src="/logo-header.png"
+              src="/fly-horizons-logo-navy.svg"
               alt="Fly Horizons"
               width={160} height={40}
               className="h-8 max-xs:h-7 md:h-8 w-auto object-contain"
@@ -96,7 +96,7 @@ export function Header() {
             ) : (
               <Link
                 href="/login"
-                className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#113356] border border-[#dce8ff] bg-[#f5f8ff] rounded-lg hover:bg-[#113356] hover:text-white hover:border-[#113356] transition-all"
+                className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#0b2238] border border-[#dce8ff] bg-[#f5f8ff] rounded-lg hover:bg-[#0b2238] hover:text-white hover:border-[#0b2238] transition-all"
               >
                 <User size={13} />
                 Connexion
@@ -132,27 +132,27 @@ export function Header() {
         <div className="border-t border-border">
           <nav className="px-3 py-3 flex flex-col gap-0.5">
             <Link href="/" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
-              <Home size={16} className="opacity-60 text-[#113356]" />
+              <Home size={16} className="opacity-60 text-[#0b2238]" />
               Accueil
             </Link>
             <Link href="/nos-offres" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
-              <Ticket size={16} className="opacity-60 text-[#113356]" />
+              <Ticket size={16} className="opacity-60 text-[#0b2238]" />
               Nos offres
             </Link>
             <Link href="/vol-sur-mesure" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
-              <Route size={16} className="opacity-60 text-[#113356]" />
+              <Route size={16} className="opacity-60 text-[#0b2238]" />
               Vol sur mesure
             </Link>
             <Link href="/about" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
-              <Info size={16} className="opacity-60 text-[#113356]" />
+              <Info size={16} className="opacity-60 text-[#0b2238]" />
               À propos
             </Link>
             <Link href="/faq" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
-              <HelpCircle size={16} className="opacity-60 text-[#113356]" />
+              <HelpCircle size={16} className="opacity-60 text-[#0b2238]" />
               FAQ
             </Link>
             <Link href="/contact" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
-              <Mail size={16} className="opacity-60 text-[#113356]" />
+              <Mail size={16} className="opacity-60 text-[#0b2238]" />
               Contact
             </Link>
 
@@ -161,13 +161,13 @@ export function Header() {
             {/* Panier + compte dans le menu mobile */}
             <Link href="/cart" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
               <span className={`inline-flex${cartBump ? " animate-cart-bump" : ""}`}>
-                <ShoppingBag size={16} className="opacity-60 text-[#113356]" />
+                <ShoppingBag size={16} className="opacity-60 text-[#0b2238]" />
               </span>
               <span className="flex-1">Panier</span>
               <CartCount />
             </Link>
             <Link href={user ? "/account" : "/login"} className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
-              <User size={16} className="opacity-60 text-[#113356]" />
+              <User size={16} className="opacity-60 text-[#0b2238]" />
               {user ? "Mon compte" : "Connexion"}
             </Link>
           </nav>

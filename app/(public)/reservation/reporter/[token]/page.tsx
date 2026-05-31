@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { RescheduleClient } from "./RescheduleClient";
+import { XCircle, AlertCircle } from "lucide-react";
 
 interface PageProps {
   params: Promise<{ token: string }>;
@@ -17,16 +18,16 @@ export default async function ReporterPage({ params }: PageProps) {
 
   if (!resa) {
     return (
-      <div className="bg-[#f5f5f7] flex-1 flex flex-col items-center justify-center px-4 py-16 min-h-[60vh]">
-        <div className="max-w-md w-full text-center">
-          <div className="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">🔗</span>
+      <div className="flex-1 flex flex-col items-center justify-center bg-gradient-navy px-4 pt-[86px] pb-16">
+        <div className="max-w-md w-full text-center space-y-4">
+          <div className="w-14 h-14 rounded-lg bg-secondary border border-border flex items-center justify-center mx-auto">
+            <XCircle size={24} className="text-foreground/30" />
           </div>
-          <h1 className="text-xl font-bold text-foreground mb-2">Lien invalide</h1>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Ce lien de report n&apos;est plus valide. Il a peut-être déjà été utilisé, ou il a expiré.
+          <h1 className="text-xl font-black text-foreground">Lien invalide</h1>
+          <p className="text-sm text-foreground/50 leading-relaxed">
+            Ce lien de report n&apos;est plus valide. Il a peut-être déjà été utilisé ou il a expiré.
             Contactez-nous à{" "}
-            <a href="mailto:info@fly-horizons.com" className="text-[#113356] underline">
+            <a href="mailto:info@fly-horizons.com" className="text-primary hover:text-[#e6a800] transition-colors font-semibold">
               info@fly-horizons.com
             </a>{" "}
             si vous avez besoin d&apos;aide.
@@ -38,14 +39,18 @@ export default async function ReporterPage({ params }: PageProps) {
 
   if (["annulee", "vol_effectue"].includes(resa.statut)) {
     return (
-      <div className="bg-[#f5f5f7] flex-1 flex flex-col items-center justify-center px-4 py-16 min-h-[60vh]">
-        <div className="max-w-md w-full text-center">
-          <div className="w-14 h-14 rounded-2xl bg-orange-100 flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">✈️</span>
+      <div className="flex-1 flex flex-col items-center justify-center bg-gradient-navy px-4 pt-[86px] pb-16">
+        <div className="max-w-md w-full text-center space-y-4">
+          <div className="w-14 h-14 rounded-lg bg-secondary border border-border flex items-center justify-center mx-auto">
+            <AlertCircle size={24} className="text-foreground/30" />
           </div>
-          <h1 className="text-xl font-bold text-foreground mb-2">Report non disponible</h1>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Ce vol ne peut plus être reporté. Contactez-nous si vous avez une question.
+          <h1 className="text-xl font-black text-foreground">Report non disponible</h1>
+          <p className="text-sm text-foreground/50 leading-relaxed">
+            Ce vol ne peut plus être reporté.{" "}
+            <a href="mailto:info@fly-horizons.com" className="text-primary hover:text-[#e6a800] transition-colors font-semibold">
+              Contactez-nous
+            </a>{" "}
+            si vous avez une question.
           </p>
         </div>
       </div>

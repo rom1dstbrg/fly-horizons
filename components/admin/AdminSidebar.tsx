@@ -92,7 +92,7 @@ function NavContentInner({ onClose }: { onClose?: () => void }) {
       <div className="flex items-center h-16 px-5 border-b border-border shrink-0">
         <Link href="/" className="block">
           <Image
-            src="/logo-sidebar-admin.png"
+            src="/fly-horizons-logo-admin.svg"
             alt="Fly Horizons"
             width={140}
             height={36}
@@ -253,7 +253,7 @@ export function AdminSidebar() {
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 h-16 bg-card border-b border-border flex items-center justify-between px-4">
         <Link href="/">
           <Image
-            src="/logo-sidebar-admin.png"
+            src="/fly-horizons-logo-admin.svg"
             alt="Fly Horizons"
             width={120}
             height={32}

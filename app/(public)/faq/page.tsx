@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
@@ -409,120 +409,126 @@ export default function FaqPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-navy pt-24 pb-16">
+    <main className="min-h-screen bg-secondary">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_SCHEMA) }}
       />
-      <div className="container-shop max-w-3xl">
 
-        {/* En-tête */}
-        <div className="mb-8">
-          <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-2">Questions fréquentes</p>
-          <h1 className="text-3xl font-bold text-foreground">Vous avez des questions ?</h1>
-          <p className="text-muted-foreground text-sm mt-2 max-w-lg">
-            Réservation, paiement, bons cadeaux, expérience à bord : trouvez rapidement ce dont vous avez besoin.
-          </p>
-        </div>
+      <section className="pt-[98px] pb-20">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
-        {/* Recherche */}
-        <div className="relative mb-5">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-          <input
-            type="text"
-            placeholder="Rechercher : acompte, bon cadeau, météo, annulation…"
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setOpenKey(null); setActiveTheme(null); }}
-            className="w-full pl-9 pr-9 py-2.5 text-sm bg-card border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
-          />
-          {query && (
+          {/* En-tête */}
+          <div className="mb-10 pt-12">
+            <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-4">Questions fréquentes</p>
+            <h1 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight mb-4">
+              Vous avez des questions ?
+            </h1>
+            <p className="text-foreground/60 text-sm max-w-lg leading-relaxed">
+              Réservation, paiement, bons cadeaux, expérience à bord : trouvez rapidement ce dont vous avez besoin.
+            </p>
+          </div>
+
+          {/* Recherche */}
+          <div className="relative mb-5">
+            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Rechercher : acompte, bon cadeau, météo, annulation…"
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setOpenKey(null); setActiveTheme(null); }}
+              className="w-full pl-9 pr-9 py-2.5 text-sm bg-white border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
+            />
+            {query && (
+              <button
+                onClick={() => { setSearch(""); setOpenKey(null); }}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          {/* Filtres par thème */}
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar mb-8">
             <button
-              onClick={() => { setSearch(""); setOpenKey(null); }}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <X size={14} />
-            </button>
-          )}
-        </div>
-
-        {/* Filtres par thème */}
-        <div className="flex gap-1.5 overflow-x-auto no-scrollbar mb-8">
-          <button
-            onClick={() => { setActiveTheme(null); setSearch(""); setOpenKey(null); }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
-              !activeTheme && !query ? "bg-[#113356] text-white" : "bg-secondary text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Tout
-          </button>
-          {THEMES.map(({ id, title, Icon }) => (
-            <button
-              key={id}
-              onClick={() => { setActiveTheme(id === activeTheme ? null : id); setSearch(""); setOpenKey(null); }}
+              onClick={() => { setActiveTheme(null); setSearch(""); setOpenKey(null); }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
-                activeTheme === id ? "bg-[#113356] text-white" : "bg-secondary text-muted-foreground hover:text-foreground"
+                !activeTheme && !query ? "bg-navy text-white" : "bg-white text-muted-foreground hover:text-foreground border border-border"
               }`}
             >
-              <Icon size={11} />
-              {title}
+              Tout
             </button>
-          ))}
-        </div>
+            {THEMES.map(({ id, title, Icon }) => (
+              <button
+                key={id}
+                onClick={() => { setActiveTheme(id === activeTheme ? null : id); setSearch(""); setOpenKey(null); }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
+                  activeTheme === id ? "bg-navy text-white" : "bg-white text-muted-foreground hover:text-foreground border border-border"
+                }`}
+              >
+                <Icon size={11} />
+                {title}
+              </button>
+            ))}
+          </div>
 
-        {/* Résultats */}
-        {results.length === 0 ? (
-          <div className="text-center py-16 space-y-3">
-            <p className="text-muted-foreground text-sm">Aucun résultat pour &laquo;&nbsp;{search}&nbsp;&raquo;.</p>
-            <Link href="/contact" className="text-sm text-primary hover:text-gold-400 transition-colors font-medium">
-              Posez-nous la question directement →
+          {/* Résultats */}
+          {results.length === 0 ? (
+            <div className="text-center py-16 space-y-3">
+              <p className="text-muted-foreground text-sm">Aucun résultat pour &laquo;&nbsp;{search}&nbsp;&raquo;.</p>
+              <Link href="/contact" className="text-sm text-foreground font-semibold hover:text-primary transition-colors">
+                Posez-nous la question directement →
+              </Link>
+            </div>
+          ) : query ? (
+            <div className="space-y-8">
+              <p className="text-xs text-muted-foreground">
+                {results.length} résultat{results.length > 1 ? "s" : ""} pour &laquo;&nbsp;{query}&nbsp;&raquo;
+              </p>
+              <div className="card-premium divide-y divide-border overflow-hidden">
+                <FaqList items={results} openKey={openKey} toggle={toggle} />
+              </div>
+            </div>
+          ) : grouped ? (
+            <div className="space-y-8">
+              {THEMES.filter((t) => !activeTheme || t.id === activeTheme).map((theme) => {
+                const items = grouped[theme.id];
+                if (!items || items.length === 0) return null;
+                return (
+                  <div key={theme.id}>
+                    <p className="text-[10px] font-bold text-primary uppercase tracking-[2px] mb-3">
+                      {theme.title}
+                    </p>
+                    <div className="card-premium divide-y divide-border overflow-hidden">
+                      <FaqList items={items} openKey={openKey} toggle={toggle} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : null}
+
+          {/* CTA contact */}
+          <div className="mt-10 bg-navy rounded-lg p-6 flex flex-col sm:flex-row items-center gap-4">
+            <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+              <MessageCircle size={16} className="text-primary" />
+            </div>
+            <div className="flex-1 text-center sm:text-left">
+              <p className="text-sm font-bold text-white">Vous ne trouvez pas votre réponse ?</p>
+              <p className="text-xs text-white/50 mt-0.5">Romain vous répond personnellement sous 24 h.</p>
+            </div>
+            <Link
+              href="/contact"
+              className="shrink-0 px-5 py-2.5 text-sm font-black bg-primary text-primary-foreground rounded-lg hover:bg-[#e6a800] transition-colors shadow-gold"
+            >
+              Nous contacter
             </Link>
           </div>
-        ) : query ? (
-          <div className="space-y-8">
-            <p className="text-xs text-muted-foreground">
-              {results.length} résultat{results.length > 1 ? "s" : ""} pour &laquo;&nbsp;{query}&nbsp;&raquo;
-            </p>
-            <div className="card-premium divide-y divide-border overflow-hidden">
-              <FaqList items={results} openKey={openKey} toggle={toggle} />
-            </div>
-          </div>
-        ) : grouped ? (
-          <div className="space-y-8">
-            {THEMES.filter((t) => !activeTheme || t.id === activeTheme).map((theme) => {
-              const items = grouped[theme.id];
-              if (!items || items.length === 0) return null;
-              return (
-                <div key={theme.id}>
-                  <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-3">
-                    {theme.title}
-                  </p>
-                  <div className="card-premium divide-y divide-border overflow-hidden">
-                    <FaqList items={items} openKey={openKey} toggle={toggle} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : null}
 
-        {/* CTA contact */}
-        <div className="mt-10 card-premium p-6 flex flex-col sm:flex-row items-center gap-4 border-l-2 border-primary">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-            <MessageCircle size={16} className="text-primary" />
-          </div>
-          <div className="flex-1 text-center sm:text-left">
-            <p className="text-sm font-semibold text-foreground">Vous ne trouvez pas votre réponse ?</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Romain vous répond personnellement sous 24 h.</p>
-          </div>
-          <Link
-            href="/contact"
-            className="shrink-0 px-4 py-2 text-sm font-semibold bg-primary text-primary-foreground rounded-xl hover:bg-gold-400 transition-colors"
-          >
-            Nous contacter
-          </Link>
         </div>
+      </section>
 
-      </div>
     </main>
   );
 }
@@ -547,7 +553,7 @@ function FaqList({
           <div key={key}>
             <button
               onClick={() => toggle(key)}
-              className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left hover:bg-secondary/40 transition-colors cursor-pointer"
+              className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left hover:bg-secondary/60 transition-colors cursor-pointer"
               aria-expanded={open}
             >
               <span className="text-sm font-medium text-foreground">{item.q}</span>

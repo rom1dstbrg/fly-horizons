@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, CalendarDays } from "lucide-react";
 
 interface Props {
   searchParams: Promise<{ d?: string }>;
@@ -10,33 +10,48 @@ export default async function ReporterConfirmePage({ searchParams }: Props) {
   const dateStr = d ? decodeURIComponent(d) : null;
 
   return (
-    <div className="bg-[#f5f5f7] flex-1 flex flex-col px-4 pb-16">
-      <div className="h-[84px]" />
-      <div className="flex-1 flex flex-col items-center justify-center py-10">
-      <div className="max-w-md w-full text-center">
-        <div className="w-16 h-16 rounded-2xl bg-green-100 flex items-center justify-center mx-auto mb-5">
-          <CheckCircle size={28} className="text-green-600" />
+    <main className="flex-1 flex items-center justify-center bg-gradient-navy px-4 pt-[86px] pb-16">
+      <div className="max-w-md w-full space-y-3">
+
+        {/* ── Confirmation ── */}
+        <div className="card-premium p-8 text-center">
+          <div className="w-14 h-14 rounded-lg bg-navy flex items-center justify-center mx-auto mb-5">
+            <CheckCircle size={26} className="text-primary" />
+          </div>
+          <h1 className="text-2xl font-black text-foreground leading-tight mb-2">
+            Report confirmé
+          </h1>
+          <p className="text-sm text-foreground/50 leading-relaxed">
+            {dateStr ? (
+              <>
+                Votre vol est bien reporté au{" "}
+                <strong className="text-foreground capitalize">{dateStr}</strong>.{" "}
+              </>
+            ) : (
+              "Votre vol a bien été reporté. "
+            )}
+            Un email de confirmation vous a été envoyé. Je prendrai contact avec vous pour confirmer les détails.
+          </p>
         </div>
-        <h1 className="text-xl font-bold text-foreground mb-2">Report confirmé</h1>
-        <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-          {dateStr ? (
-            <>
-              Votre vol est bien reporté au{" "}
-              <strong className="text-foreground capitalize">{dateStr}</strong>.{" "}
-            </>
-          ) : (
-            "Votre vol a bien été reporté. "
-          )}
-          Un email de confirmation vous a été envoyé. Je prendrai contact avec vous pour confirmer les détails.
-        </p>
-        <Link
-          href="/account#reservations"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#113356] text-white rounded-xl text-sm font-bold hover:bg-[#0b2238] transition-colors"
-        >
-          Voir ma réservation
-        </Link>
+
+        {/* ── CTA ── */}
+        <div className="flex flex-col gap-2.5 pt-1">
+          <Link
+            href="/account#reservations"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-primary text-primary-foreground rounded-lg text-sm font-black hover:bg-[#e6a800] active:scale-[0.98] transition-all shadow-gold"
+          >
+            <CalendarDays size={15} />
+            Voir ma réservation
+          </Link>
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center px-6 py-2.5 rounded-lg border border-border text-sm font-medium text-foreground/50 hover:text-foreground hover:border-foreground/20 transition-colors"
+          >
+            Retour à l&apos;accueil
+          </Link>
+        </div>
+
       </div>
-      </div>
-    </div>
+    </main>
   );
 }

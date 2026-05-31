@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -222,7 +222,32 @@ export default function VolSurMesurePage() {
     } finally { setCalLoading(false); }
   }, [dureeForCal]);
 
-  useEffect(() => { if (flowStep === "reserve") loadMonth(calYear, calMonth); }, [calYear, calMonth, flowStep, loadMonth]);
+  // Find first month with available slots silently when entering the reservation step
+  useEffect(() => {
+    if (flowStep !== "reserve") return;
+    let cancelled = false;
+    async function findFirstMonth() {
+      setCalLoading(true);
+      const sy = today.getFullYear(), sm = today.getMonth() + 1;
+      for (let offset = 0; offset < 6; offset++) {
+        let m = sm + offset, y = sy;
+        while (m > 12) { m -= 12; y++; }
+        try {
+          const r = await fetch(`/api/reservation/month?year=${y}&month=${m}&duree=${dureeForCal}`);
+          if (cancelled) return;
+          const available = (await r.json()).available ?? [];
+          if (available.length > 0 || offset === 5) {
+            setCalYear(y); setCalMonth(m); setAvailableDays(available);
+            setCalLoading(false); return;
+          }
+        } catch { if (!cancelled) setCalLoading(false); return; }
+      }
+      if (!cancelled) setCalLoading(false);
+    }
+    findFirstMonth();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flowStep]);
 
   useEffect(() => {
     if (!form.date) { setSlots([]); return; }
@@ -482,7 +507,7 @@ export default function VolSurMesurePage() {
 
           {/* Picker */}
           {stopsOpen && availableStops.length > 0 && (
-            <div className="rounded-xl overflow-hidden border border-white/10">
+            <div className="rounded-lg overflow-hidden border border-white/10">
               {availableStops
                 .filter(s => !selectedStops.find(ss => ss.id === s.id))
                 .map((s, i, arr) => (
@@ -504,7 +529,7 @@ export default function VolSurMesurePage() {
             {STYLE_OPTIONS.map(o => (
               <button key={o.key} type="button" onClick={() => setStyleMode(o.key)}
                 className={[
-                  "flex items-center gap-3 px-3.5 py-2.5 rounded-xl border transition-all text-left cursor-pointer",
+                  "flex items-center gap-3 px-3.5 py-2.5 rounded-lg border transition-all text-left cursor-pointer",
                   styleMode === o.key
                     ? "bg-[#fbae17] border-[#fbae17] text-[#0b2238]"
                     : "bg-white/5 border-white/10 text-white hover:bg-white/10",
@@ -531,8 +556,8 @@ export default function VolSurMesurePage() {
             )}
             <button type="button"
               disabled={route.pois.length === 0}
-              onClick={() => { setFlowStep("reserve"); loadMonth(calYear, calMonth); }}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-[#fbae17] text-[#0b2238] text-sm font-extrabold disabled:opacity-30 hover:brightness-105 transition-all shadow-lg cursor-pointer">
+              onClick={() => setFlowStep("reserve")}
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-lg bg-primary text-primary-foreground text-sm font-black disabled:opacity-30 hover:brightness-105 transition-all shadow-gold cursor-pointer">
               Continuer ma réservation <ChevronRight size={15} />
             </button>
             <p className="text-center text-[10px] text-white/25 mt-2.5">
@@ -552,10 +577,10 @@ export default function VolSurMesurePage() {
   // ── STEP 2 sidebar
   function ReserveSummary() {
     return (
-      <div className="bg-white rounded-2xl border border-border overflow-hidden">
+      <div className="card-premium overflow-hidden">
         <div className="px-5 pt-5 pb-4 border-b border-border">
-          <p className="text-[10px] font-bold text-[#F2B705] uppercase tracking-[2px] mb-1">Votre aventure</p>
-          <p className="text-[#0b2238] text-2xl font-black leading-none">
+          <p className="text-[10px] font-bold text-primary uppercase tracking-[2px] mb-1">Votre aventure</p>
+          <p className="text-foreground text-2xl font-black leading-none">
             {route.totalMin > 0 ? `≈ ${route.totalMin} min` : "—"}
           </p>
           {route.distKm > 0 && (
@@ -591,7 +616,7 @@ export default function VolSurMesurePage() {
             <div className="pt-2.5 border-t border-border">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Acompte</span>
-                <span className="text-2xl font-black text-[#113356]">{totalAcompte}&thinsp;€</span>
+                <span className="text-2xl font-black text-foreground">{totalAcompte}&thinsp;€</span>
               </div>
               {taxesEscalesTotal > 0 && (
                 <p className="text-[10px] text-muted-foreground text-right mt-0.5">
@@ -693,11 +718,11 @@ export default function VolSurMesurePage() {
                         </div>
 
                         {/* Notice ordinateur recommandé */}
-                        <div className="flex items-start gap-2.5 bg-[#f5f8ff] border border-[#dce8ff] rounded-xl px-3.5 py-2.5 mb-5 text-left">
-                          <Monitor size={14} className="text-[#113356] shrink-0 mt-0.5" />
-                          <p className="text-[11px] text-[#113356]/65 leading-relaxed">
+                        <div className="flex items-start gap-2.5 bg-secondary border border-border rounded-lg px-3.5 py-2.5 mb-5 text-left">
+                          <Monitor size={14} className="text-[#0b2238] shrink-0 mt-0.5" />
+                          <p className="text-[11px] text-[#0b2238]/65 leading-relaxed">
                             Pour une expérience optimale, utiliser un{" "}
-                            <span className="font-semibold text-[#113356]">ordinateur</span>{" "}
+                            <span className="font-semibold text-[#0b2238]">ordinateur</span>{" "}
                             est recommandé — le système de traçage est complexe.
                           </p>
                         </div>
@@ -706,7 +731,7 @@ export default function VolSurMesurePage() {
                         <button
                           type="button"
                           onClick={() => setPopupVisible(false)}
-                          className="w-full py-3 rounded-xl bg-[#0b2238] text-white text-sm font-bold hover:bg-[#113356] transition-colors cursor-pointer"
+                          className="w-full py-3 rounded-lg bg-navy text-white text-sm font-bold hover:opacity-90 transition-opacity cursor-pointer"
                         >
                           Compris, tracer ma route
                         </button>
@@ -729,7 +754,7 @@ export default function VolSurMesurePage() {
                     <div className="pointer-events-auto w-full max-w-lg flex items-center gap-2">
                       <div className="relative flex-1 min-w-0">
                         <div className={[
-                          "flex items-center gap-2.5 h-10 rounded-xl px-3.5 transition-all border-2",
+                          "flex items-center gap-2.5 h-10 rounded-lg px-3.5 transition-all border-2",
                           searchPulse
                             ? "bg-white border-[#fbae17] shadow-[0_0_0_6px_rgba(251,174,23,0.30)] animate-pulse"
                             : searchFocused || searchOpen
@@ -760,7 +785,7 @@ export default function VolSurMesurePage() {
                         </div>
                         {/* Dropdown résultats */}
                         {searchOpen && searchResults.length > 0 && (
-                          <div className="absolute top-full left-0 right-0 bg-white border border-border rounded-xl shadow-2xl z-[600] overflow-hidden mt-1.5">
+                          <div className="absolute top-full left-0 right-0 bg-white border border-border rounded-lg shadow-2xl z-[600] overflow-hidden mt-1.5">
                             <div className="px-4 py-2 border-b border-border bg-muted/30">
                               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                                 {searchResults.length} résultat{searchResults.length > 1 ? "s" : ""}
@@ -791,7 +816,7 @@ export default function VolSurMesurePage() {
                       {route.pois.length > 0 && (
                         <button type="button"
                           onClick={() => mapRef.current?.clearAll()}
-                          className="flex items-center gap-1.5 h-10 px-3 rounded-xl border border-white/70 bg-white/95 text-xs font-semibold text-muted-foreground hover:text-destructive hover:border-destructive/30 transition-colors cursor-pointer shrink-0 backdrop-blur-sm shadow-md">
+                          className="flex items-center gap-1.5 h-10 px-3 rounded-lg border border-white/70 bg-white/95 text-xs font-semibold text-muted-foreground hover:text-destructive hover:border-destructive/30 transition-colors cursor-pointer shrink-0 backdrop-blur-sm shadow-md">
                           <Trash2 size={12} />
                           <span className="hidden sm:block">Tout effacer</span>
                         </button>
@@ -809,11 +834,11 @@ export default function VolSurMesurePage() {
                           label: "Zone interdite (EBR)",
                         },
                         {
-                          icon: <span className="w-3 h-3 rounded-full shrink-0 bg-[#F2B705] flex items-center justify-center text-[6px] font-black text-[#113356]">1</span>,
+                          icon: <span className="w-3 h-3 rounded-full shrink-0 bg-[#F2B705] flex items-center justify-center text-[6px] font-black text-[#0b2238]">1</span>,
                           label: "Lieu à survoler",
                         },
                         {
-                          icon: <span className="w-3 h-3 rounded-[3px] shrink-0 bg-[#113356] border border-[#F2B705] flex items-center justify-center text-[7px]">✈</span>,
+                          icon: <span className="w-3 h-3 rounded-[3px] shrink-0 bg-[#0b2238] border border-[#F2B705] flex items-center justify-center text-[7px]">✈</span>,
                           label: "Escale",
                         },
                         {
@@ -832,16 +857,16 @@ export default function VolSurMesurePage() {
               </div>
 
               {/* Card 3 — Instructions ── */}
-              <div className="hidden lg:grid grid-cols-3 divide-x divide-border rounded-xl bg-white shadow-sm border border-border/50 shrink-0">
+              <div className="hidden lg:grid grid-cols-3 divide-x divide-border rounded-lg bg-card shadow-sm border border-border shrink-0">
                 {[
                   { n: 1, title: "Tracez votre itinéraire",   desc: "Cliquez sur la carte pour ajouter vos points de passage." },
                   { n: 2, title: "Découvrez le prix estimé",  desc: "Le prix se met à jour en temps réel en fonction de votre parcours." },
                   { n: 3, title: "Réservez votre expérience", desc: "Validez votre itinéraire et réglez votre acompte en ligne." },
                 ].map(({ n, title, desc }) => (
                   <div key={n} className="flex items-start gap-3 px-5 py-3.5">
-                    <div className="w-6 h-6 rounded-full bg-[#0b2238] text-white flex items-center justify-center text-[11px] font-black shrink-0 mt-0.5">{n}</div>
+                    <div className="w-6 h-6 rounded-full bg-navy text-white flex items-center justify-center text-[11px] font-black shrink-0 mt-0.5">{n}</div>
                     <div>
-                      <p className="text-[11px] font-bold text-[#0b2238]">{title}</p>
+                      <p className="text-[11px] font-bold text-foreground">{title}</p>
                       <p className="text-[10px] text-muted-foreground leading-relaxed mt-0.5">{desc}</p>
                     </div>
                   </div>
@@ -850,7 +875,7 @@ export default function VolSurMesurePage() {
             </div>
 
             {/* Card 2 — Sidebar droite */}
-            <div className="hidden lg:flex flex-col w-[360px] xl:w-[400px] shrink-0 rounded-2xl bg-white shadow-[0_2px_16px_rgba(0,0,0,0.10)] border border-black/6 overflow-hidden">
+            <div className="hidden lg:flex flex-col w-[360px] xl:w-[400px] shrink-0 card-premium overflow-hidden">
 
               {/* Zone scrollable */}
               <div className="flex-1 min-h-0 overflow-y-auto">
@@ -904,7 +929,7 @@ export default function VolSurMesurePage() {
                     {/* Départ */}
                     <div className="flex items-center gap-2.5">
                       <div className="w-3 h-3 rounded-full bg-[#F2B705] shrink-0 ring-4 ring-[#F2B705]/15" />
-                      <div className="flex-1 flex items-center justify-between bg-[#0b2238] rounded-xl px-3.5 py-2.5">
+                      <div className="flex-1 flex items-center justify-between bg-navy rounded-lg px-3.5 py-2.5">
                         <span className="text-xs font-bold text-white">Charleroi (EBCI)</span>
                         <span className="text-[9px] font-bold text-[#F2B705] uppercase tracking-wide">Départ</span>
                       </div>
@@ -919,7 +944,7 @@ export default function VolSurMesurePage() {
                       route.pois.map(poi => (
                         <div key={poi.id} className="flex items-center gap-2.5">
                           <div className="w-3 h-3 rounded-full bg-white border-2 border-muted-foreground/30 shrink-0" />
-                          <div className="flex-1 flex items-center justify-between bg-[#0b2238] rounded-xl px-3.5 py-2.5">
+                          <div className="flex-1 flex items-center justify-between bg-navy rounded-lg px-3.5 py-2.5">
                             <span className="text-xs font-bold text-white truncate flex-1 min-w-0 mr-2">{poi.nom}</span>
                             <button
                               onClick={() => mapRef.current?.removePOI(poi.id)}
@@ -936,7 +961,7 @@ export default function VolSurMesurePage() {
                     {route.pois.length > 0 && (
                       <div className="flex items-center gap-2.5">
                         <div className="w-3 h-3 rounded-full bg-[#F2B705] shrink-0 ring-4 ring-[#F2B705]/15" />
-                        <div className="flex-1 flex items-center justify-between bg-[#0b2238] rounded-xl px-3.5 py-2.5">
+                        <div className="flex-1 flex items-center justify-between bg-navy rounded-lg px-3.5 py-2.5">
                           <span className="text-xs font-bold text-white">Charleroi (EBCI)</span>
                           <span className="text-[9px] font-bold text-[#F2B705] uppercase tracking-wide">Arrivée</span>
                         </div>
@@ -981,7 +1006,7 @@ export default function VolSurMesurePage() {
 
                     {/* Picker */}
                     {stopsOpen && (
-                      <div className="rounded-xl overflow-hidden border border-border mt-2">
+                      <div className="rounded-lg overflow-hidden border border-border mt-2">
                         {availableStops
                           .filter(s => !selectedStops.find(ss => ss.id === s.id))
                           .map((s, i, arr) => (
@@ -1004,10 +1029,10 @@ export default function VolSurMesurePage() {
                     {STYLE_OPTIONS.map(o => (
                       <button key={o.key} type="button" onClick={() => setStyleMode(o.key)}
                         className={[
-                          "flex flex-col items-start gap-1.5 px-3 py-3 rounded-xl border-2 text-left transition-all cursor-pointer",
+                          "flex flex-col items-start gap-1.5 px-3 py-3 rounded-lg border-2 text-left transition-all cursor-pointer",
                           styleMode === o.key
-                            ? "border-[#F2B705] bg-[#fffbeb]"
-                            : "border-border bg-white hover:border-[#F2B705]/50",
+                            ? "border-primary bg-primary/5"
+                            : "border-border bg-card hover:border-primary/50",
                         ].join(" ")}>
                         <span className={styleMode === o.key ? "text-[#F2B705]" : "text-muted-foreground"}>{o.icon}</span>
                         <p className={`text-[11px] font-bold leading-tight ${styleMode === o.key ? "text-[#0b2238]" : "text-foreground"}`}>{o.label}</p>
@@ -1028,17 +1053,17 @@ export default function VolSurMesurePage() {
               </div>
 
               {/* CTA épinglé */}
-              <div className="shrink-0 px-5 py-5 bg-white border-t border-border">
+              <div className="shrink-0 px-5 py-5 bg-card border-t border-border">
                 {taxesEscalesTotal > 0 && acompte > 0 && (
                   <div className="flex items-center justify-between mb-3 text-xs text-muted-foreground">
                     <span>Acompte + taxes escales</span>
-                    <span className="font-bold text-[#0b2238]">{totalAcompte}&thinsp;€</span>
+                    <span className="font-bold text-foreground">{totalAcompte}&thinsp;€</span>
                   </div>
                 )}
                 <button type="button"
                   disabled={route.pois.length === 0}
-                  onClick={() => { setFlowStep("reserve"); loadMonth(calYear, calMonth); }}
-                  className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-[#F2B705] text-[#0b2238] text-[15px] font-extrabold disabled:opacity-30 hover:brightness-105 transition-all cursor-pointer">
+                  onClick={() => setFlowStep("reserve")}
+                  className="w-full flex items-center justify-center gap-2.5 py-4 rounded-lg bg-primary text-primary-foreground text-[15px] font-black disabled:opacity-30 hover:brightness-105 transition-all cursor-pointer shadow-gold">
                   Continuer ma réservation <ArrowRight size={16} />
                 </button>
                 <p className="text-center text-[10px] text-muted-foreground/50 mt-3 flex items-center gap-1 justify-center">
@@ -1055,7 +1080,7 @@ export default function VolSurMesurePage() {
           </div>
 
           {/* Mobile CTA */}
-          <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-border px-4 pt-2.5 pb-4 z-40">
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border px-4 pt-2.5 pb-4 z-40">
             {route.pois.length > 0 && (
               <div className="flex items-center justify-between mb-2.5">
                 <div className="flex items-center gap-2 min-w-0">
@@ -1075,8 +1100,8 @@ export default function VolSurMesurePage() {
             )}
             <button type="button"
               disabled={route.pois.length === 0}
-              onClick={() => { setFlowStep("reserve"); loadMonth(calYear, calMonth); }}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-[#F2B705] text-[#0b2238] text-sm font-extrabold disabled:opacity-40 disabled:bg-[#0b2238] disabled:text-white cursor-pointer transition-all">
+              onClick={() => setFlowStep("reserve")}
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-lg bg-primary text-primary-foreground text-sm font-black disabled:opacity-40 disabled:bg-navy disabled:text-white cursor-pointer transition-all shadow-gold">
               {route.pois.length === 0
                 ? "Ajoutez un lieu sur la carte"
                 : <>Continuer ma réservation <ChevronRight size={15} /></>
@@ -1092,18 +1117,18 @@ export default function VolSurMesurePage() {
           {/* ── Bande de navigation + récap de route ─────────────────── */}
           <div className="flex items-center gap-3 mb-6">
             <button type="button" onClick={() => setFlowStep("build")}
-              className="flex items-center gap-2 text-sm font-bold text-[#0b2238] hover:text-[#113356] cursor-pointer group shrink-0">
-              <div className="w-9 h-9 rounded-xl border-2 border-[#0b2238]/15 flex items-center justify-center group-hover:bg-[#0b2238] group-hover:border-[#0b2238] transition-all">
-                <ChevronLeft size={15} className="text-[#0b2238] group-hover:text-white transition-colors" />
+              className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-foreground cursor-pointer group shrink-0">
+              <div className="w-9 h-9 rounded-lg border border-border flex items-center justify-center group-hover:bg-navy group-hover:border-navy transition-all">
+                <ChevronLeft size={15} className="text-foreground group-hover:text-white transition-colors" />
               </div>
               <span className="hidden sm:block">Modifier l&apos;itinéraire</span>
             </button>
 
             {/* Récap route */}
-            <div className="flex-1 min-w-0 flex items-center gap-3 bg-white border border-border rounded-2xl px-4 py-2.5 overflow-hidden">
-              <PlaneTakeoff size={13} className="text-[#0b2238] shrink-0" />
+            <div className="flex-1 min-w-0 flex items-center gap-3 card-premium px-4 py-2.5 overflow-hidden">
+              <PlaneTakeoff size={13} className="text-foreground shrink-0" />
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-1 min-w-0 overflow-hidden">
-                <span className="text-[#0b2238] font-bold shrink-0">Charleroi</span>
+                <span className="text-foreground font-bold shrink-0">Charleroi</span>
                 {route.pois.map(p => (
                   <span key={p.id} className="flex items-center gap-1.5 shrink-0">
                     <ArrowRight size={9} className="text-muted-foreground/40" />
@@ -1111,10 +1136,10 @@ export default function VolSurMesurePage() {
                   </span>
                 ))}
                 <ArrowRight size={9} className="text-muted-foreground/40 shrink-0" />
-                <span className="text-[#0b2238] font-bold shrink-0">Charleroi</span>
+                <span className="text-foreground font-bold shrink-0">Charleroi</span>
               </div>
               <div className="flex items-center gap-3 shrink-0 border-l border-border pl-3">
-                {route.totalMin > 0 && <span className="text-[#0b2238] font-black text-sm">≈{route.totalMin}&thinsp;min</span>}
+                {route.totalMin > 0 && <span className="text-foreground font-black text-sm">≈{route.totalMin}&thinsp;min</span>}
                 {prixEstime > 0 && <span className="text-muted-foreground text-xs font-semibold">{prixEstime}&thinsp;€</span>}
               </div>
             </div>
@@ -1151,23 +1176,23 @@ export default function VolSurMesurePage() {
               </div>
 
               {/* 1. Date & heure */}
-              <div className="bg-white rounded-2xl border border-border overflow-hidden">
+              <div className="card-premium overflow-hidden">
                 <div className="px-6 pt-5 pb-4 border-b border-border flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-[#0b2238] flex items-center justify-center shrink-0">
-                    <span className="text-[#F2B705] font-black text-[13px]">1</span>
+                  <div className="w-8 h-8 rounded-lg bg-navy flex items-center justify-center shrink-0">
+                    <span className="text-primary font-black text-[13px]">1</span>
                   </div>
-                  <h2 className="text-[15px] font-black text-[#0b2238]">Quand souhaitez-vous voler ?</h2>
+                  <h2 className="text-[15px] font-black text-foreground">Quand souhaitez-vous voler ?</h2>
                 </div>
                 <div className="p-5">
                   <div className="flex items-center justify-between mb-4">
                     <button type="button"
-                      onClick={() => { if (calMonth === 1) { setCalMonth(12); setCalYear(y => y - 1); } else setCalMonth(m => m - 1); }}
+                      onClick={() => { const ny = calMonth === 1 ? calYear - 1 : calYear; const nm = calMonth === 1 ? 12 : calMonth - 1; setCalYear(ny); setCalMonth(nm); loadMonth(ny, nm); }}
                       className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all border border-border cursor-pointer">
                       <ChevronLeft size={15} />
                     </button>
                     <span className="text-sm font-bold">{MONTHS_FR[calMonth - 1]} {calYear}</span>
                     <button type="button"
-                      onClick={() => { if (calMonth === 12) { setCalMonth(1); setCalYear(y => y + 1); } else setCalMonth(m => m + 1); }}
+                      onClick={() => { const ny = calMonth === 12 ? calYear + 1 : calYear; const nm = calMonth === 12 ? 1 : calMonth + 1; setCalYear(ny); setCalMonth(nm); loadMonth(ny, nm); }}
                       className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all border border-border cursor-pointer">
                       <ChevronRight size={15} />
                     </button>
@@ -1186,9 +1211,9 @@ export default function VolSurMesurePage() {
                     <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full border-2 border-border" />Disponible</span>
                     <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-muted" />Indisponible</span>
                   </div>
-                  <div className="mt-3 bg-[#0b2238]/4 border border-[#0b2238]/8 rounded-xl px-3.5 py-2.5">
-                    <p className="text-[10px] font-bold text-[#0b2238] mb-1.5 flex items-center gap-1.5">
-                      <CloudRain size={10} className="text-[#F2B705]" />Météo : comment ça fonctionne ?
+                  <div className="mt-3 bg-secondary border border-border rounded-lg px-3.5 py-2.5">
+                    <p className="text-[10px] font-bold text-foreground mb-1.5 flex items-center gap-1.5">
+                      <CloudRain size={10} className="text-primary" />Météo : comment ça fonctionne ?
                     </p>
                     <ul className="space-y-1">
                       {[
@@ -1196,8 +1221,8 @@ export default function VolSurMesurePage() {
                         "Si la météo ne permet pas de voler, le vol est reporté sans frais.",
                         "C'est le pilote qui décide, jusqu'à 2 h avant, selon les conditions réelles à l'aéroport, pas chez vous.",
                       ].map(t => (
-                        <li key={t} className="flex items-start gap-1.5 text-[10px] text-[#0b2238]/55 leading-relaxed">
-                          <span className="text-[#F2B705] shrink-0 font-black mt-0.5">·</span>{t}
+                        <li key={t} className="flex items-start gap-1.5 text-[10px] text-muted-foreground leading-relaxed">
+                          <span className="text-primary shrink-0 font-black mt-0.5">·</span>{t}
                         </li>
                       ))}
                     </ul>
@@ -1212,16 +1237,16 @@ export default function VolSurMesurePage() {
                       <p className="text-sm text-muted-foreground">Aucun créneau disponible. Essayez une autre date.</p>
                     ) : (
                       <div>
-                        <p className="text-sm font-extrabold text-foreground capitalize mb-3">{formattedDate}</p>
+                        <p className="text-sm font-black text-foreground capitalize mb-3">{formattedDate}</p>
                         <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                           {slots.map(s => (
                             <button key={s} type="button"
                               onClick={() => handleSelectTime(s)}
                               className={[
-                                "py-2.5 rounded-xl border text-sm font-bold transition-all text-center cursor-pointer",
+                                "py-2.5 rounded-lg border text-sm font-bold transition-all text-center cursor-pointer",
                                 form.heure === s
-                                  ? "border-[#fbae17] bg-[#fbae17] text-[#0b2238] shadow-sm"
-                                  : "border-border text-foreground hover:border-[#fbae17]/50 hover:bg-[#fbae17]/5",
+                                  ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                                  : "border-border text-foreground hover:border-primary/50 hover:bg-primary/5",
                               ].join(" ")}>{s}
                             </button>
                           ))}
@@ -1233,12 +1258,12 @@ export default function VolSurMesurePage() {
               </div>
 
               {/* 2. Participants */}
-              <div ref={passengersRef} className="bg-white rounded-2xl border border-border overflow-hidden">
+              <div ref={passengersRef} className="card-premium overflow-hidden">
                 <div className="px-6 pt-5 pb-4 border-b border-border flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-[#0b2238] flex items-center justify-center shrink-0">
-                    <span className="text-[#F2B705] font-black text-[13px]">2</span>
+                  <div className="w-8 h-8 rounded-lg bg-navy flex items-center justify-center shrink-0">
+                    <span className="text-primary font-black text-[13px]">2</span>
                   </div>
-                  <h2 className="text-[15px] font-black text-[#0b2238]">Participants</h2>
+                  <h2 className="text-[15px] font-black text-foreground">Participants</h2>
                 </div>
                 <div className="p-5 space-y-5">
                   <div>
@@ -1248,10 +1273,10 @@ export default function VolSurMesurePage() {
                         <button key={n} type="button"
                           onClick={() => setForm(f => ({ ...f, passagers: n }))}
                           className={[
-                            "flex-1 py-3 rounded-xl border text-sm font-bold transition-all text-center cursor-pointer",
+                            "flex-1 py-3 rounded-lg border text-sm font-bold transition-all text-center cursor-pointer",
                             form.passagers === n
-                              ? "border-[#fbae17] bg-[#fbae17] text-[#0b2238] shadow-sm"
-                              : "border-border text-foreground hover:border-[#fbae17]/50 hover:bg-[#fbae17]/5",
+                              ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                              : "border-border text-foreground hover:border-primary/50 hover:bg-primary/5",
                           ].join(" ")}>
                           {n} {n === "1" ? "passager" : "passagers"}
                         </button>
@@ -1265,18 +1290,18 @@ export default function VolSurMesurePage() {
                     <div className="flex items-center gap-3">
                       <input type="number" value={form.poids_total} min={1} max={500} placeholder="ex : 156"
                         onChange={e => setForm(f => ({ ...f, poids_total: e.target.value }))}
-                        className="w-32 h-10 px-3 rounded-xl border border-border bg-white text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#fbae17]/20 focus:border-[#fbae17] transition-all placeholder:text-muted-foreground/40" />
+                        className="w-32 h-10 px-3 rounded-lg border border-border bg-input text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/40" />
                       <span className="text-sm text-muted-foreground">kg</span>
                     </div>
                     <p className="mt-2 text-xs text-muted-foreground">Utilisé uniquement pour préparer l&apos;équilibrage de l&apos;avion.</p>
                     {weightWarn && !weightCrit && (
-                      <div className="mt-2.5 flex items-start gap-2.5 bg-amber-50 border border-amber-200 px-3.5 py-3 rounded-xl text-sm text-amber-800">
+                      <div className="mt-2.5 flex items-start gap-2.5 bg-amber-50 border border-amber-200 px-3.5 py-3 rounded-lg text-sm text-amber-800">
                         <AlertTriangle size={14} className="shrink-0 mt-0.5 text-amber-500" />
                         <p>Le poids dépasse la limite recommandée de {MAX_WEIGHT} kg. Vous pouvez continuer votre demande, Romain vérifiera la faisabilité avant de vous envoyer le lien de paiement.</p>
                       </div>
                     )}
                     {weightCrit && (
-                      <div className="mt-2.5 flex items-start gap-2.5 bg-red-50 border border-red-200 px-3.5 py-3 rounded-xl text-sm text-red-800">
+                      <div className="mt-2.5 flex items-start gap-2.5 bg-red-50 border border-red-200 px-3.5 py-3 rounded-lg text-sm text-red-800">
                         <AlertCircle size={14} className="shrink-0 mt-0.5 text-red-500" />
                         <p>Le poids total est très élevé ({CRIT_WEIGHT} kg+). Vous pouvez continuer, mais Romain vous contactera pour confirmer la faisabilité avant toute suite.</p>
                       </div>
@@ -1286,13 +1311,13 @@ export default function VolSurMesurePage() {
               </div>
 
               {/* 3. Coordonnées */}
-              <div className="bg-white rounded-2xl border border-border overflow-hidden">
+              <div className="card-premium overflow-hidden">
                 <div className="px-6 pt-5 pb-4 border-b border-border flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-[#0b2238] flex items-center justify-center shrink-0">
-                    <span className="text-[#F2B705] font-black text-[13px]">3</span>
+                  <div className="w-8 h-8 rounded-lg bg-navy flex items-center justify-center shrink-0">
+                    <span className="text-primary font-black text-[13px]">3</span>
                   </div>
                   <div>
-                    <h2 className="text-[15px] font-black text-[#0b2238]">Vos coordonnées</h2>
+                    <h2 className="text-[15px] font-black text-foreground leading-tight">Vos coordonnées</h2>
                     <p className="text-[11px] text-muted-foreground mt-0.5">Romain vous contacte ici pour confirmer le vol</p>
                   </div>
                 </div>
@@ -1311,19 +1336,19 @@ export default function VolSurMesurePage() {
               </div>
 
               {/* 4. Message pilote */}
-              <div className="bg-white rounded-2xl border border-border overflow-hidden">
+              <div className="card-premium overflow-hidden">
                 <div className="px-6 pt-5 pb-4 border-b border-border flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-[#0b2238] flex items-center justify-center shrink-0">
-                    <span className="text-[#F2B705] font-black text-[13px]">4</span>
+                  <div className="w-8 h-8 rounded-lg bg-navy flex items-center justify-center shrink-0">
+                    <span className="text-primary font-black text-[13px]">4</span>
                   </div>
-                  <h2 className="text-[15px] font-black text-[#0b2238]">
+                  <h2 className="text-[15px] font-black text-foreground leading-tight">
                     Un mot pour Romain ? <span className="text-sm font-normal text-muted-foreground">(optionnel)</span>
                   </h2>
                 </div>
                 <div className="p-5">
                   <textarea value={form.commentaire} rows={3} maxLength={300}
                     onChange={e => setForm(f => ({ ...f, commentaire: e.target.value }))}
-                    className="w-full px-3 py-3 rounded-xl border border-border bg-white text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#fbae17]/20 focus:border-[#fbae17] transition-all resize-none placeholder:text-muted-foreground/40"
+                    className="w-full px-3 py-3 rounded-lg border border-border bg-input text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none placeholder:text-muted-foreground/40"
                     placeholder={"Ex : « C'est un anniversaire », « On aimerait faire un passage spécial », « C'est une surprise »…"} />
                   <div className="flex items-center justify-between mt-1.5">
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
@@ -1335,17 +1360,17 @@ export default function VolSurMesurePage() {
               </div>
 
               {/* CGP */}
-              <div className={`rounded-2xl border-2 p-5 transition-all ${form.accept_cgp ? "bg-[#0b2238]/4 border-[#0b2238]/20" : "bg-white border-border"}`}>
+              <div className={`rounded-lg border-2 p-5 transition-all ${form.accept_cgp ? "bg-primary/5 border-primary/20" : "bg-card border-border"}`}>
                 <label className="flex items-start gap-3.5 cursor-pointer">
-                  <div className={`mt-0.5 w-5 h-5 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all ${form.accept_cgp ? "bg-[#0b2238] border-[#0b2238]" : "border-border bg-white"}`}>
-                    {form.accept_cgp && <Check size={11} className="text-[#F2B705]" />}
+                  <div className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${form.accept_cgp ? "bg-navy border-navy" : "border-border bg-card"}`}>
+                    {form.accept_cgp && <Check size={11} className="text-primary" />}
                     <input type="checkbox" checked={form.accept_cgp}
                       onChange={e => setForm(f => ({ ...f, accept_cgp: e.target.checked }))}
                       className="sr-only" />
                   </div>
                   <span className="text-sm text-foreground/70 leading-relaxed">
                     J&apos;accepte les{" "}
-                    <Link href="/cgp" className="text-[#0b2238] underline underline-offset-2 font-semibold hover:text-[#F2B705] transition-colors">
+                    <Link href="/cgp" className="text-foreground underline underline-offset-2 font-semibold hover:text-primary transition-colors">
                       Conditions Générales de Participation
                     </Link>{" "}
                     et que mes données soient utilisées pour traiter ma réservation.
@@ -1354,7 +1379,7 @@ export default function VolSurMesurePage() {
               </div>
 
               {submitError && (
-                <div className="flex items-center gap-2.5 text-sm text-destructive bg-destructive/5 border border-destructive/20 px-4 py-3.5 rounded-xl">
+                <div className="flex items-center gap-2.5 text-sm text-destructive bg-destructive/5 border border-destructive/20 px-4 py-3.5 rounded-lg">
                   <AlertCircle size={14} className="shrink-0" /> {submitError}
                 </div>
               )}
@@ -1364,7 +1389,7 @@ export default function VolSurMesurePage() {
                 <button type="button"
                   disabled={!form.date || !form.heure || !form.prenom || !form.nom || !form.email || !form.poids_total || !form.accept_cgp || submitting}
                   onClick={handleSubmit}
-                  className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-[#fbae17] text-[#0b2238] text-sm font-extrabold disabled:opacity-40 transition-all cursor-pointer">
+                  className="w-full flex items-center justify-center gap-2 py-4 rounded-lg bg-primary text-primary-foreground text-sm font-black disabled:opacity-40 transition-all cursor-pointer shadow-gold">
                   {submitting
                     ? <><Loader2 size={14} className="animate-spin" /> Envoi…</>
                     : <><Mail size={14} /> Recevoir mon lien de paiement</>
@@ -1380,7 +1405,7 @@ export default function VolSurMesurePage() {
               <button type="button"
                 disabled={!form.date || !form.heure || !form.prenom || !form.nom || !form.email || !form.poids_total || !form.accept_cgp || submitting}
                 onClick={handleSubmit}
-                className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-[#fbae17] text-[#0b2238] text-sm font-extrabold disabled:opacity-40 hover:brightness-105 transition-all shadow-lg cursor-pointer">
+                className="w-full flex items-center justify-center gap-2 py-4 rounded-lg bg-primary text-primary-foreground text-sm font-black disabled:opacity-40 hover:brightness-105 transition-all shadow-gold cursor-pointer">
                 {submitting
                   ? <><Loader2 size={14} className="animate-spin" /> Envoi en cours…</>
                   : <><Mail size={14} /> Recevoir mon lien de paiement</>
@@ -1391,7 +1416,7 @@ export default function VolSurMesurePage() {
               </p>
 
               {/* Validation checklist */}
-              <div className="bg-white rounded-2xl border border-border p-4">
+              <div className="card-premium p-4">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px] mb-3">Checklist</p>
                 <div className="space-y-2">
                   {[
@@ -1420,7 +1445,7 @@ export default function VolSurMesurePage() {
           <div className="space-y-4">
 
             {/* Étapes */}
-            <div className="bg-white rounded-2xl border border-border p-5" style={{ boxShadow: "var(--sh-sm)" }}>
+            <div className="card-premium p-5">
 
               <div className="flex items-center gap-2.5 mb-4">
                 <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center shrink-0">
@@ -1433,7 +1458,7 @@ export default function VolSurMesurePage() {
               </div>
 
               {acompte > 0 && (
-                <div className="mb-4 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
                   <div className="flex items-start gap-2.5">
                     <Lock size={13} className="text-amber-600 mt-0.5 shrink-0" />
                     <p className="text-xs text-amber-800 leading-relaxed">
@@ -1487,11 +1512,11 @@ export default function VolSurMesurePage() {
             </div>
 
             {/* Infos pratiques */}
-            <div className="bg-white rounded-2xl border border-border p-5 space-y-3" style={{ boxShadow: "var(--sh-sm)" }}>
+            <div className="card-premium p-5 space-y-3">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px]">Informations pratiques</p>
               <div className="flex items-start gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-[#f5f8ff] border border-[#dce8ff] flex items-center justify-center shrink-0">
-                  <MapPin size={13} className="text-[#113356]" />
+                <div className="w-7 h-7 rounded-lg bg-secondary border border-border flex items-center justify-center shrink-0">
+                  <MapPin size={13} className="text-foreground" />
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-foreground">Aéroport de Charleroi (EBCI)</p>
@@ -1500,7 +1525,7 @@ export default function VolSurMesurePage() {
               </div>
               <a
                 href="/access-ebci"
-                className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-[#f5f8ff] border border-[#dce8ff] text-[#113356] rounded-xl text-xs font-semibold hover:bg-[#113356] hover:text-white hover:border-[#113356] transition-all"
+                className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-secondary border border-border text-foreground rounded-lg text-xs font-semibold hover:bg-navy hover:text-white hover:border-navy transition-all"
               >
                 <MapPin size={12} />
                 Plan d&apos;accès à l&apos;aéroport
@@ -1518,13 +1543,13 @@ export default function VolSurMesurePage() {
             {/* CTAs */}
             <div className="flex flex-col gap-3">
               <a href="/account#reservations"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#113356] text-white rounded-xl text-sm font-semibold hover:bg-[#0b2238] transition-colors">
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-navy text-white rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity">
                 <CalendarDays size={15} />
                 Suivre ma réservation
               </a>
               <button type="button"
                 onClick={() => { setFlowStep("build"); setRoute({ pois: [], distKm: 0, transitMin: 0, obsMin: 0, totalMin: 0 }); setForm(f => ({ ...f, date: "", heure: "", commentaire: "" })); mapRef.current?.clearAll(); }}
-                className="inline-flex items-center justify-center px-6 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:bg-secondary transition-colors cursor-pointer">
+                className="inline-flex items-center justify-center px-6 py-2.5 rounded-lg border border-border text-sm font-medium text-muted-foreground hover:bg-secondary transition-colors cursor-pointer">
                 Créer un nouveau vol
               </button>
             </div>
@@ -1543,12 +1568,12 @@ function VSMField({ label, required, type = "text", value, onChange, placeholder
 }) {
   return (
     <div>
-      <label className="block text-xs font-bold text-[#0b2238] uppercase tracking-[1.5px] mb-2">
-        {label}{required && <span className="text-[#F2B705] ml-0.5">*</span>}
+      <label className="block text-xs font-bold text-foreground uppercase tracking-[1.5px] mb-2">
+        {label}{required && <span className="text-primary ml-0.5">*</span>}
       </label>
       <input type={type} value={value} required={required} placeholder={placeholder}
         onChange={e => onChange(e.target.value)}
-        className="w-full h-12 px-4 rounded-xl border border-border bg-white text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#F2B705]/20 focus:border-[#F2B705] transition-all placeholder:text-muted-foreground/35" />
+        className="w-full h-12 px-4 rounded-lg border border-border bg-input text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/35" />
     </div>
   );
 }
