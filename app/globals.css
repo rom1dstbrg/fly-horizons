@@ -1,4 +1,4 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
@@ -47,7 +47,7 @@
   --color-chart-5: var(--chart-5);
 
   /* Couleurs nommees — generent bg-navy, bg-navy-dk, bg-gold, etc. */
-  --color-navy:    #113356;
+  --color-navy:    #0b2238;
   --color-navy-dk: #0b2238;
   --color-gold:    #F2B705;
 
@@ -80,7 +80,7 @@
   --font-sans:    var(--font-poppins);
   --font-display: var(--font-poppins);
   --font-heading: var(--font-poppins);
-  --font-mono:    ui-monospace, monospace;
+--font-mono:    ui-monospace, monospace;
 
   /* Rayons */
   --radius-sm:  calc(var(--radius) * 0.6);
@@ -92,9 +92,9 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 
   /* Ombres — valeurs exactes fly-horizons.com */
-  --shadow-premium:    0 2px 14px rgba(17,51,86,.07);
-  --shadow-premium-lg: 0 8px 32px rgba(17,51,86,.11);
-  --shadow-premium-xl: 0 20px 60px rgba(17,51,86,.16);
+  --shadow-premium:    0 2px 14px rgba(11,34,56,.07);
+  --shadow-premium-lg: 0 8px 32px rgba(11,34,56,.11);
+  --shadow-premium-xl: 0 20px 60px rgba(11,34,56,.16);
   --shadow-gold:       0 6px 24px rgba(242,183,5,.35);
   --shadow-gold-sm:    0 4px 12px rgba(242,183,5,.30);
 
@@ -113,20 +113,20 @@
    ============================================== */
 :root {
   /* Source variables — fly-horizons.com */
-  --navy:      #113356;
+  --navy:      #0b2238;
   --navy-dk:   #0b2238;
   --gold:      #F2B705;
   --gold-soft: rgba(242,183,5,.12);
   --r-sm:      10px;
   --r-md:      18px;
   --r-lg:      26px;
-  --sh-sm:     0 2px 14px rgba(17,51,86,.07);
-  --sh-md:     0 8px 32px rgba(17,51,86,.11);
-  --sh-lg:     0 20px 60px rgba(17,51,86,.16);
+  --sh-sm:     0 2px 14px rgba(11,34,56,.07);
+  --sh-md:     0 8px 32px rgba(11,34,56,.11);
+  --sh-lg:     0 20px 60px rgba(11,34,56,.16);
   --ease:      cubic-bezier(.4,0,.2,1);
 
   /* Shadcn semantic tokens */
-  --background:           #f6f8fc;
+  --background:           #f5f5f7;
   --foreground:           #1e2535;
 
   --card:                 #ffffff;
@@ -272,7 +272,7 @@
 
   .container-shop {
     width: 100%;
-    max-width: 80rem;
+    max-width: 87.5rem;
     margin-inline: auto;
     padding-inline: 1rem;
   }

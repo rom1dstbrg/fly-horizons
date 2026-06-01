@@ -274,7 +274,7 @@ export default function CheckoutPage() {
                         )}
                       </label>
                     ))}
-                    <Link href="/account" className="text-xs text-primary hover:text-[#e6a800] transition-colors">
+                    <Link href="/account" className="text-xs text-primary hover:brightness-90 transition-all">
                       Gérer mes adresses →
                     </Link>
                   </div>
@@ -299,7 +299,7 @@ export default function CheckoutPage() {
                       ))}
                     </select>
                     <p className="text-xs text-muted-foreground">
-                      <Link href="/account" className="text-primary hover:text-[#e6a800]">
+                      <Link href="/account" className="text-primary hover:brightness-90 transition-all">
                         Connectez-vous
                       </Link>{" "}
                       pour sauvegarder vos adresses.
@@ -350,8 +350,8 @@ export default function CheckoutPage() {
             {hasVoucher && (
               <div className="card-premium p-6">
                 <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-full bg-[#F2B705]/10 border border-[#F2B705]/20 flex items-center justify-center shrink-0">
-                    <Tag size={15} className="text-[#F2B705]" />
+                  <div className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                    <Tag size={15} className="text-primary" />
                   </div>
                   <div>
                     <p className="font-semibold text-foreground text-sm">Livraison par email</p>
@@ -386,7 +386,7 @@ export default function CheckoutPage() {
                         </div>
                       )}
                       {item.quantity > 1 && (
-                        <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-[9px] font-bold text-black flex items-center justify-center leading-none">
+                        <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-[9px] font-bold text-primary-foreground flex items-center justify-center leading-none">
                           {item.quantity}
                         </span>
                       )}
@@ -415,7 +415,7 @@ export default function CheckoutPage() {
                         {coupon.applies_to === "voucher" ? " · sur les vols" : coupon.applies_to === "physical" ? " · sur les accessoires" : ""}
                       </p>
                     </div>
-                    <button onClick={() => setCoupon(null)} className="text-muted-foreground hover:text-destructive transition-colors ml-2">
+                    <button onClick={() => setCoupon(null)} className="text-muted-foreground hover:text-destructive transition-colors ml-2 cursor-pointer">
                       <X size={14} />
                     </button>
                   </div>
@@ -487,7 +487,7 @@ export default function CheckoutPage() {
                 onClick={handleCheckout}
                 disabled={loading}
                 size="lg"
-                className="w-full bg-primary text-primary-foreground hover:bg-gold-400 font-semibold shadow-gold h-12 text-base"
+                className="w-full bg-primary text-primary-foreground hover:brightness-105 font-black shadow-gold h-12 text-base"
               >
                 <Lock size={15} className="mr-2" />
                 {loading ? "Redirection..." : "Payer en toute sécurité"}

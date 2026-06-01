@@ -4,10 +4,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  ShoppingCart, Package, Ticket, Tag, Pencil, Plus,
+  Package, Ticket, Tag, Pencil, Plus,
 } from "lucide-react";
-import { OrdersClient } from "./OrdersClient";
-import { VoucherOrdersClient } from "./VoucherOrdersClient";
 import { VouchersClient } from "./VouchersClient";
 import { CouponForm } from "./CouponForm";
 import { CouponsTableClient } from "./CouponsTableClient";
@@ -28,10 +26,9 @@ type Product = {
 };
 
 const TABS = [
-  { key: "commandes", label: "Commandes", icon: ShoppingCart },
+  { key: "vouchers",  label: "Vouchers",  icon: Ticket  },
   { key: "produits",  label: "Produits",  icon: Package },
-  { key: "vouchers",  label: "Vouchers",  icon: Ticket },
-  { key: "coupons",   label: "Coupons",   icon: Tag },
+  { key: "coupons",   label: "Coupons",   icon: Tag     },
 ];
 
 function ProductTable({ products, showStock }: { products: Product[]; showStock: boolean }) {
@@ -65,7 +62,7 @@ function ProductTable({ products, showStock }: { products: Product[]; showStock:
         </thead>
         <tbody>
           {products.map((product) => (
-            <tr key={product.id} className="border-b border-border last:border-0 hover:bg-secondary/30 transition-colors">
+            <tr key={product.id} className="border-b border-border last:border-0 hover:bg-secondary transition-colors">
               <td className="px-4 py-3">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-md bg-muted overflow-hidden shrink-0 border border-border">
@@ -114,8 +111,6 @@ function ProductTable({ products, showStock }: { products: Product[]; showStock:
 }
 
 export function BoutiqueHub({
-  physicalOrders,
-  voucherOrders,
   physicalProducts,
   voucherProducts,
   vouchers,
@@ -124,39 +119,38 @@ export function BoutiqueHub({
   stats,
   prixHeure60,
 }: {
-  physicalOrders: unknown[];
-  voucherOrders: unknown[];
   physicalProducts: Product[];
   voucherProducts: Product[];
   vouchers: unknown[];
   clients: unknown[];
   coupons: unknown[];
   stats: {
-    commandes: number;
-    volsAchetes: number;
-    produitsActifs: number;
+    vouchersTotal: number;
     vouchersDispos: number;
+    vouchersUtilises: number;
+    produitsActifs: number;
     coupons: number;
   };
   prixHeure60?: number | null;
 }) {
   const router = useRouter();
-  const tab = useSearchParams().get("tab") ?? "commandes";
+  const tab = useSearchParams().get("tab") ?? "vouchers";
 
   function changeTab(key: string) {
-    const url = key === "commandes" ? "/admin/boutique" : `/admin/boutique?tab=${key}`;
+    const url = key === "vouchers" ? "/admin/boutique" : `/admin/boutique?tab=${key}`;
     router.replace(url, { scroll: false });
   }
 
   return (
     <div className="space-y-5">
       {/* Stats bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {[
-          { label: "Commandes",       value: stats.commandes,       color: "text-blue-600" },
-          { label: "Produits actifs", value: stats.produitsActifs,  color: "text-green-600" },
-          { label: "Vouchers dispos", value: stats.vouchersDispos,  color: "text-emerald-600" },
-          { label: "Coupons",         value: stats.coupons,         color: "text-purple-600" },
+          { label: "Vouchers total",    value: stats.vouchersTotal,    color: "text-navy" },
+          { label: "Disponibles",       value: stats.vouchersDispos,   color: "text-emerald-600" },
+          { label: "Utilisés",          value: stats.vouchersUtilises, color: "text-purple-600" },
+          { label: "Produits actifs",   value: stats.produitsActifs,   color: "text-blue-600" },
+          { label: "Coupons",           value: stats.coupons,          color: "text-amber-600" },
         ].map(({ label, value, color }) => (
           <div key={label} className="bg-card rounded-xl border border-border p-4 text-center">
             <p className={`text-2xl font-bold ${color}`}>{value}</p>
@@ -166,7 +160,7 @@ export function BoutiqueHub({
       </div>
 
       {/* Tab bar */}
-      <div className="flex items-center gap-1 bg-secondary/50 p-1 rounded-xl border border-border w-fit overflow-x-auto">
+      <div className="flex items-center gap-1 bg-secondary p-1 rounded-xl border border-border w-fit overflow-x-auto">
         {TABS.map(t => {
           const Icon = t.icon;
           const isActive = tab === t.key;
@@ -174,7 +168,7 @@ export function BoutiqueHub({
             <button
               key={t.key}
               onClick={() => changeTab(t.key)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap cursor-pointer ${
                 isActive
                   ? "bg-card text-foreground shadow-sm border border-border"
                   : "text-muted-foreground hover:text-foreground"
@@ -189,14 +183,8 @@ export function BoutiqueHub({
 
       {/* Tab content */}
       <div>
-        {tab === "commandes" && (
-          physicalOrders.length === 0 ? (
-            <div className="bg-card rounded-xl border border-border p-12 text-center">
-              <p className="text-muted-foreground">Aucune commande pour le moment.</p>
-            </div>
-          ) : (
-            <OrdersClient orders={physicalOrders as never} />
-          )
+        {tab === "vouchers" && (
+          <VouchersClient vouchers={vouchers as never} clients={clients as never} prixHeure60={prixHeure60} />
         )}
 
         {tab === "produits" && (
@@ -209,7 +197,7 @@ export function BoutiqueHub({
               </div>
               <Link
                 href="/admin/products/new"
-                className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-medium"
+                className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:brightness-105 transition-all font-medium"
               >
                 <Plus size={13} />
                 Nouveau produit
@@ -224,10 +212,6 @@ export function BoutiqueHub({
             </div>
             <ProductTable products={physicalProducts} showStock={true} />
           </div>
-        )}
-
-        {tab === "vouchers" && (
-          <VouchersClient vouchers={vouchers as never} clients={clients as never} prixHeure60={prixHeure60} />
         )}
 
         {tab === "coupons" && (

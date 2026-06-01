@@ -46,10 +46,10 @@ export function Header() {
   }, []);
 
   const navLinkClass =
-    "px-3 py-2 text-sm font-medium text-foreground/70 hover:text-foreground rounded-lg hover:bg-secondary transition-colors";
+    "px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground rounded-lg hover:bg-secondary transition-colors";
 
   const iconLinkClass =
-    "p-2 rounded-lg text-foreground/60 hover:text-foreground hover:bg-secondary transition-colors";
+    "p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors";
 
   return (
     <header
@@ -96,7 +96,7 @@ export function Header() {
             ) : (
               <Link
                 href="/login"
-                className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#0b2238] border border-[#dce8ff] bg-[#f5f8ff] rounded-lg hover:bg-[#0b2238] hover:text-white hover:border-[#0b2238] transition-all"
+                className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-foreground border border-border bg-secondary rounded-lg hover:bg-navy hover:text-white hover:border-navy transition-all"
               >
                 <User size={13} />
                 Connexion
@@ -113,7 +113,7 @@ export function Header() {
 
             {/* Burger mobile uniquement */}
             <button
-              className={`md:hidden ${iconLinkClass} ml-0.5`}
+              className={`md:hidden ${iconLinkClass} ml-0.5 cursor-pointer`}
               onClick={() => setMenuOpen(!menuOpen)}
               aria-label="Menu"
             >
@@ -131,43 +131,43 @@ export function Header() {
       >
         <div className="border-t border-border">
           <nav className="px-3 py-3 flex flex-col gap-0.5">
-            <Link href="/" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
-              <Home size={16} className="opacity-60 text-[#0b2238]" />
+            <Link href="/" className="flex items-center gap-2.5 text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
+              <Home size={16} className="text-muted-foreground" />
               Accueil
             </Link>
-            <Link href="/nos-offres" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
-              <Ticket size={16} className="opacity-60 text-[#0b2238]" />
+            <Link href="/nos-offres" className="flex items-center gap-2.5 text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
+              <Ticket size={16} className="text-muted-foreground" />
               Nos offres
             </Link>
-            <Link href="/vol-sur-mesure" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
-              <Route size={16} className="opacity-60 text-[#0b2238]" />
+            <Link href="/vol-sur-mesure" className="flex items-center gap-2.5 text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
+              <Route size={16} className="text-muted-foreground" />
               Vol sur mesure
             </Link>
-            <Link href="/about" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
-              <Info size={16} className="opacity-60 text-[#0b2238]" />
+            <Link href="/about" className="flex items-center gap-2.5 text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
+              <Info size={16} className="text-muted-foreground" />
               À propos
             </Link>
-            <Link href="/faq" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
-              <HelpCircle size={16} className="opacity-60 text-[#0b2238]" />
+            <Link href="/faq" className="flex items-center gap-2.5 text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
+              <HelpCircle size={16} className="text-muted-foreground" />
               FAQ
             </Link>
-            <Link href="/contact" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
-              <Mail size={16} className="opacity-60 text-[#0b2238]" />
+            <Link href="/contact" className="flex items-center gap-2.5 text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
+              <Mail size={16} className="text-muted-foreground" />
               Contact
             </Link>
 
             <div className="w-full h-px bg-border my-1.5" />
 
             {/* Panier + compte dans le menu mobile */}
-            <Link href="/cart" className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
+            <Link href="/cart" className="flex items-center gap-2.5 text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
               <span className={`inline-flex${cartBump ? " animate-cart-bump" : ""}`}>
-                <ShoppingBag size={16} className="opacity-60 text-[#0b2238]" />
+                <ShoppingBag size={16} className="text-muted-foreground" />
               </span>
               <span className="flex-1">Panier</span>
               <CartCount />
             </Link>
-            <Link href={user ? "/account" : "/login"} className="flex items-center gap-2.5 text-sm font-medium text-foreground/80 hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
-              <User size={16} className="opacity-60 text-[#0b2238]" />
+            <Link href={user ? "/account" : "/login"} className="flex items-center gap-2.5 text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
+              <User size={16} className="text-muted-foreground" />
               {user ? "Mon compte" : "Connexion"}
             </Link>
           </nav>

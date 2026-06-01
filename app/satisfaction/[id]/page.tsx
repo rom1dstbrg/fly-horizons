@@ -35,12 +35,11 @@ export default async function SatisfactionPage({ params }: Props) {
   const dureeStr = fmtDuration(resa.duree);
 
   return (
-    <main className="min-h-screen bg-[#0b2238] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+    <main className="min-h-screen bg-gradient-navy flex items-center justify-center px-4 py-16">
+      <div className="w-full max-w-md card-premium p-8">
         {existing ? (
-          <div className="text-center space-y-4">
-            <p className="text-xs font-bold uppercase tracking-widest text-[#F2B705] mb-1">Fly Horizons</p>
-            <h1 className="text-xl font-bold text-foreground">Avis déjà envoyé</h1>
+          <div className="text-center space-y-3">
+            <h1 className="text-xl font-black text-foreground">Avis déjà envoyé</h1>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Vous avez déjà partagé votre avis pour ce vol. Merci !
             </p>

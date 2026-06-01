@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import L from "leaflet";
@@ -365,7 +365,7 @@ const PLANE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18
 function departIcon() {
   return L.divIcon({
     className: "",
-    html: `<div style="width:38px;height:38px;background:#113356;border:3px solid #F2B705;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.5);">${PLANE_SVG}</div>`,
+    html: `<div style="width:38px;height:38px;background:#0b2238;border:3px solid #F2B705;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.5);">${PLANE_SVG}</div>`,
     iconSize: [38, 38], iconAnchor: [19, 19],
   });
 }
@@ -376,7 +376,7 @@ function escaleIcon(nom: string) {
     className: "",
     html: `
       <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-        <div style="width:34px;height:34px;background:#113356;color:#F2B705;border-radius:8px;
+        <div style="width:34px;height:34px;background:#0b2238;color:#F2B705;border-radius:8px;
           display:flex;align-items:center;justify-content:center;font-size:16px;
           box-shadow:0 3px 12px rgba(0,0,0,.45);border:2.5px solid #F2B705;cursor:default;">✈</div>
         <div style="background:rgba(17,51,86,0.92);color:#F2B705;font-size:10px;font-weight:700;
@@ -393,7 +393,7 @@ function poiIcon(n: number, nom: string) {
     className: "",
     html: `
       <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-        <div style="width:34px;height:34px;background:#F2B705;color:#113356;border-radius:50%;
+        <div style="width:34px;height:34px;background:#F2B705;color:#0b2238;border-radius:50%;
           display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;
           box-shadow:0 3px 12px rgba(0,0,0,.45);border:2.5px solid #fff;cursor:grab;">${n}</div>
         <div style="background:rgba(11,34,56,0.90);color:#fff;font-size:10px;font-weight:700;

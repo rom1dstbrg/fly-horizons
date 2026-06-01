@@ -99,7 +99,9 @@
       "WebFetch(domain:www.openaip.net)",
       "WebFetch(domain:docs.openaip.net)",
       "Bash(grep -v \"^\\\\s*//\")",
-      "Bash(grep -v \"\\\\`—\\\\`\")"
+      "Bash(grep -v \"\\\\`—\\\\`\")",
+      "Bash(Write-Host \"Done\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\romai\\\\Documents\\\\Projects\\\\shop_fly-horizons\\\\app\\\\api\" -Recurse -File)"
     ]
   }
 }

@@ -141,7 +141,7 @@ function AddressForm({
           type="submit"
           disabled={isPending}
           size="sm"
-          className="bg-primary text-primary-foreground hover:bg-gold-400 font-semibold"
+          className="bg-primary text-primary-foreground hover:bg-[#e6a800] font-semibold cursor-pointer"
         >
           {isPending ? "..." : isEdit ? "Modifier" : "Ajouter"}
         </Button>
@@ -217,7 +217,7 @@ export function AddressBook({ addresses }: AddressBookProps) {
                   <button
                     onClick={() => handleSetDefault(address.id)}
                     disabled={isPending}
-                    className="p-1.5 text-muted-foreground hover:text-primary transition-colors rounded"
+                    className="p-1.5 text-muted-foreground hover:text-primary transition-colors rounded cursor-pointer"
                     title="Definir par defaut"
                   >
                     <Star size={14} />
@@ -225,14 +225,14 @@ export function AddressBook({ addresses }: AddressBookProps) {
                 )}
                 <button
                   onClick={() => setEditingId(editingId === address.id ? null : address.id)}
-                  className="p-1.5 text-muted-foreground hover:text-primary transition-colors rounded"
+                  className="p-1.5 text-muted-foreground hover:text-primary transition-colors rounded cursor-pointer"
                 >
                   <Pencil size={14} />
                 </button>
                 <button
                   onClick={() => handleDelete(address.id)}
                   disabled={isPending}
-                  className="p-1.5 text-muted-foreground hover:text-destructive transition-colors rounded"
+                  className="p-1.5 text-muted-foreground hover:text-destructive transition-colors rounded cursor-pointer"
                 >
                   <Trash2 size={14} />
                 </button>
@@ -256,7 +256,7 @@ export function AddressBook({ addresses }: AddressBookProps) {
       {!showForm && (
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 text-sm text-primary hover:text-gold-400 transition-colors font-medium"
+          className="flex items-center gap-2 text-sm text-primary hover:text-[#e6a800] transition-colors font-medium cursor-pointer"
         >
           <Plus size={16} />
           Ajouter une adresse

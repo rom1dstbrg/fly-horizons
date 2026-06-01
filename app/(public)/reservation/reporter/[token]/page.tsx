@@ -24,10 +24,10 @@ export default async function ReporterPage({ params }: PageProps) {
             <XCircle size={24} className="text-foreground/30" />
           </div>
           <h1 className="text-xl font-black text-foreground">Lien invalide</h1>
-          <p className="text-sm text-foreground/50 leading-relaxed">
+          <p className="text-sm text-muted-foreground leading-relaxed">
             Ce lien de report n&apos;est plus valide. Il a peut-être déjà été utilisé ou il a expiré.
             Contactez-nous à{" "}
-            <a href="mailto:info@fly-horizons.com" className="text-primary hover:text-[#e6a800] transition-colors font-semibold">
+            <a href="mailto:info@fly-horizons.com" className="text-primary hover:brightness-90 transition-all font-semibold">
               info@fly-horizons.com
             </a>{" "}
             si vous avez besoin d&apos;aide.
@@ -45,9 +45,9 @@ export default async function ReporterPage({ params }: PageProps) {
             <AlertCircle size={24} className="text-foreground/30" />
           </div>
           <h1 className="text-xl font-black text-foreground">Report non disponible</h1>
-          <p className="text-sm text-foreground/50 leading-relaxed">
+          <p className="text-sm text-muted-foreground leading-relaxed">
             Ce vol ne peut plus être reporté.{" "}
-            <a href="mailto:info@fly-horizons.com" className="text-primary hover:text-[#e6a800] transition-colors font-semibold">
+            <a href="mailto:info@fly-horizons.com" className="text-primary hover:brightness-90 transition-all font-semibold">
               Contactez-nous
             </a>{" "}
             si vous avez une question.

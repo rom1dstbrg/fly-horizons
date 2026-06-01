@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useTransition, useEffect } from "react";
 import { createStopover, updateStopover, deleteStopover } from "@/lib/actions/stopovers";
@@ -103,10 +103,10 @@ function StopoverRow({
                 <div className="flex gap-1">
                   <input value={icao} onChange={e => { setIcao(e.target.value.toUpperCase()); setLookupError(""); setLookupDone(false); }}
                     maxLength={4}
-                    className="w-16 h-8 px-2 rounded-lg border border-amber-300 bg-white text-xs font-mono font-bold uppercase focus:outline-none focus:ring-1 focus:ring-amber-400" />
+                    className="w-16 h-8 px-2 rounded-lg border border-amber-300 bg-backgroundtext-xs font-mono font-bold uppercase focus:outline-none focus:ring-1 focus:ring-amber-400" />
                   <button type="button" onClick={handleLookup} disabled={lookupLoading}
                     title="Rechercher dans la base NOAA"
-                    className="h-8 px-2 bg-[#113356] text-white rounded-lg text-xs hover:bg-[#0b2238] transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1">
+                    className="h-8 px-2 bg-navy text-white rounded-lg text-xs hover:brightness-90 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1">
                     {lookupLoading ? <Loader2 size={10} className="animate-spin" /> : <Search size={10} />}
                   </button>
                 </div>
@@ -117,14 +117,14 @@ function StopoverRow({
                   Nom {lookupDone && <span className="text-green-500 normal-case font-normal">• NOAA ✓</span>}
                 </label>
                 <input value={nom} onChange={e => setNom(e.target.value)}
-                  className={`w-full h-8 px-2 rounded-lg border bg-white text-xs focus:outline-none focus:ring-1 focus:ring-amber-400 ${lookupDone ? "border-green-300" : "border-amber-300"}`} />
+                  className={`w-full h-8 px-2 rounded-lg border bg-backgroundtext-xs focus:outline-none focus:ring-1 focus:ring-amber-400 ${lookupDone ? "border-green-300" : "border-amber-300"}`} />
               </div>
               {/* Taxe */}
               <div>
                 <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Taxe (€)</label>
                 <div className="flex items-center gap-1">
                   <input type="number" value={taxe} onChange={e => setTaxe(e.target.value)} min={0} max={999}
-                    className="w-16 h-8 px-2 rounded-lg border border-amber-300 bg-white text-xs text-right focus:outline-none focus:ring-1 focus:ring-amber-400" />
+                    className="w-16 h-8 px-2 rounded-lg border border-amber-300 bg-backgroundtext-xs text-right focus:outline-none focus:ring-1 focus:ring-amber-400" />
                   <span className="text-xs text-muted-foreground">€</span>
                 </div>
               </div>
@@ -134,12 +134,12 @@ function StopoverRow({
               <div>
                 <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Latitude</label>
                 <input value={lat} onChange={e => setLat(e.target.value)} placeholder="50.4835"
-                  className="w-24 h-8 px-2 rounded-lg border border-amber-300 bg-white text-xs font-mono focus:outline-none focus:ring-1 focus:ring-amber-400" />
+                  className="w-24 h-8 px-2 rounded-lg border border-amber-300 bg-backgroundtext-xs font-mono focus:outline-none focus:ring-1 focus:ring-amber-400" />
               </div>
               <div>
                 <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Longitude</label>
                 <input value={lng} onChange={e => setLng(e.target.value)} placeholder="4.9138"
-                  className="w-24 h-8 px-2 rounded-lg border border-amber-300 bg-white text-xs font-mono focus:outline-none focus:ring-1 focus:ring-amber-400" />
+                  className="w-24 h-8 px-2 rounded-lg border border-amber-300 bg-backgroundtext-xs font-mono focus:outline-none focus:ring-1 focus:ring-amber-400" />
               </div>
               {hasCoords && (
                 <p className="text-[10px] text-green-600 font-medium mt-4 flex items-center gap-1">
@@ -172,13 +172,13 @@ function StopoverRow({
   return (
     <tr className={`border-b border-border last:border-0 transition-colors ${!stop.actif ? "opacity-40" : ""}`}>
       <td className="px-3 py-2.5">
-        <span className="font-mono text-xs font-bold text-[#113356]">{stop.icao}</span>
+        <span className="font-mono text-xs font-bold text-foreground">{stop.icao}</span>
       </td>
       <td className="px-3 py-2.5">
         <div>
           <span className="text-sm text-foreground">{stop.nom}</span>
           {stop.lat != null && stop.lng != null ? (
-            <p className="text-[10px] text-muted-foreground/60 mt-0.5 flex items-center gap-0.5">
+            <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-0.5">
               <MapPin size={8} />{stop.lat.toFixed(4)}, {stop.lng.toFixed(4)}
             </p>
           ) : (
@@ -198,7 +198,7 @@ function StopoverRow({
               : <ToggleLeft  size={18} />}
           </button>
           <button onClick={() => setEditing(true)}
-            className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-[#113356] hover:border-[#113356] transition-colors cursor-pointer">
+            className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors cursor-pointer">
             <Pencil size={12} />
           </button>
           <button onClick={() => startTransition(() => onDelete(stop.id))}
@@ -324,8 +324,8 @@ export function StopoversAdmin({ initialData }: Props) {
         onClick={() => setOpen(v => !v)}
       >
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-[#113356]/8 flex items-center justify-center">
-            <Plane size={15} className="text-[#113356]" />
+          <div className="w-8 h-8 rounded-lg bg-navy/10 flex items-center justify-center">
+            <Plane size={15} className="text-foreground" />
           </div>
           <div>
             <p className="text-sm font-bold text-foreground">Escales disponibles</p>
@@ -339,7 +339,7 @@ export function StopoversAdmin({ initialData }: Props) {
           {open && (
             <button
               onClick={e => { e.stopPropagation(); setShowForm(v => !v); if (showForm) resetForm(); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#113356] text-white rounded-xl text-xs font-bold hover:bg-[#0b2238] transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-navy text-white rounded-lg text-xs font-bold hover:brightness-90 transition-all cursor-pointer"
             >
               <Plus size={12} />
               Ajouter
@@ -357,7 +357,7 @@ export function StopoversAdmin({ initialData }: Props) {
 
       {/* Add form */}
       {showForm && (
-        <div className="px-5 py-4 bg-secondary/30 border-b border-border">
+        <div className="px-5 py-4 bg-secondary border-b border-border">
           <div className="flex flex-wrap gap-3 items-end">
             {/* ICAO */}
             <div>
@@ -367,7 +367,7 @@ export function StopoversAdmin({ initialData }: Props) {
                   value={newIcao}
                   onChange={e => setNewIcao(e.target.value.toUpperCase())}
                   maxLength={4} placeholder="EBBT"
-                  className="w-20 h-9 px-2.5 pr-8 rounded-xl border border-border bg-white text-sm font-mono font-bold uppercase focus:outline-none focus:ring-2 focus:ring-[#113356]/20 focus:border-[#113356] transition-all"
+                  className="w-20 h-9 px-2.5 pr-8 rounded-lg border border-border bg-backgroundtext-sm font-mono font-bold uppercase focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2">
                   {icaoLoading   && <Loader2     size={12} className="animate-spin text-muted-foreground" />}
@@ -388,7 +388,7 @@ export function StopoversAdmin({ initialData }: Props) {
                 value={newNom}
                 onChange={e => setNewNom(e.target.value)}
                 placeholder={newIcao.length < 4 ? "Tapez 4 lettres ICAO pour auto-remplir…" : "Nom de l'aérodrome"}
-                className={`w-full h-9 px-2.5 rounded-xl border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#113356]/20 focus:border-[#113356] transition-all ${
+                className={`w-full h-9 px-2.5 rounded-lg border bg-backgroundtext-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all ${
                   icaoFound ? "border-green-300" : icaoNotFound ? "border-amber-300" : "border-border"
                 }`}
               />
@@ -401,17 +401,17 @@ export function StopoversAdmin({ initialData }: Props) {
                 type="number" value={newTaxe}
                 onChange={e => setNewTaxe(e.target.value)}
                 min={0} max={999} placeholder="0"
-                className="w-20 h-9 px-2.5 rounded-xl border border-border bg-white text-sm text-right focus:outline-none focus:ring-2 focus:ring-[#113356]/20 focus:border-[#113356] transition-all"
+                className="w-20 h-9 px-2.5 rounded-lg border border-border bg-backgroundtext-sm text-right focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               />
             </div>
 
             <button onClick={handleAdd} disabled={pending || icaoLoading}
-              className="flex items-center gap-1.5 h-9 px-4 bg-green-500 text-white rounded-xl text-sm font-bold hover:bg-green-600 transition-colors cursor-pointer disabled:opacity-50">
+              className="flex items-center gap-1.5 h-9 px-4 bg-green-500 text-white rounded-lg text-sm font-bold hover:bg-green-600 transition-colors cursor-pointer disabled:opacity-50">
               {pending ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
               Créer
             </button>
             <button onClick={resetForm}
-              className="h-9 px-3 rounded-xl border border-border text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+              className="h-9 px-3 rounded-lg border border-border text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
               <X size={14} />
             </button>
           </div>
@@ -426,7 +426,7 @@ export function StopoversAdmin({ initialData }: Props) {
                 <input
                   value={newLat} onChange={e => setNewLat(e.target.value)}
                   placeholder="50.4835"
-                  className={`w-28 h-8 px-2.5 rounded-xl border bg-white text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#113356]/20 focus:border-[#113356] transition-all ${
+                  className={`w-28 h-8 px-2.5 rounded-lg border bg-backgroundtext-xs font-mono focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all ${
                     icaoFound ? "border-green-300 bg-green-50/40" : "border-border"
                   }`}
                 />
@@ -438,7 +438,7 @@ export function StopoversAdmin({ initialData }: Props) {
                 <input
                   value={newLng} onChange={e => setNewLng(e.target.value)}
                   placeholder="4.9138"
-                  className={`w-28 h-8 px-2.5 rounded-xl border bg-white text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#113356]/20 focus:border-[#113356] transition-all ${
+                  className={`w-28 h-8 px-2.5 rounded-lg border bg-backgroundtext-xs font-mono focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all ${
                     icaoFound ? "border-green-300 bg-green-50/40" : "border-border"
                   }`}
                 />
@@ -472,7 +472,7 @@ export function StopoversAdmin({ initialData }: Props) {
       ) : (
         <table className="w-full">
           <thead>
-            <tr className="border-b border-border bg-secondary/20">
+            <tr className="border-b border-border bg-secondary">
               <th className="px-3 py-2 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">ICAO</th>
               <th className="px-3 py-2 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Aérodrome</th>
               <th className="px-3 py-2 text-right text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Taxe</th>

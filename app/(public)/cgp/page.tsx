@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { CgvAccordion } from "@/components/shop/CgvAccordion";
 
 export const metadata: Metadata = {
@@ -203,70 +203,71 @@ Juridiction : À défaut de résolution amiable, les tribunaux compétents de Be
 
 export default function CgpPage() {
   return (
-    <main className="min-h-screen bg-gradient-navy pt-24 pb-16">
-      <div className="container-shop max-w-3xl">
+    <main className="min-h-screen bg-background">
 
-        {/* En-tête */}
-        <div className="mb-10">
-          <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-2">Légal</p>
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            Conditions Générales de Participation
-          </h1>
-          <p className="text-muted-foreground text-sm leading-relaxed mb-8">
-            Ces conditions régissent la participation aux vols en avion léger organisés par Fly Horizons dans le cadre du partage de coûts (NCO.GEN.104), ainsi que l&apos;ensemble des achats effectués sur fly-horizons.com.
-          </p>
+      <section className="pt-[98px] pb-20">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
-          {/* Métadonnées */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-6 card-premium">
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Version</p>
-              <p className="text-sm font-semibold text-foreground">1.0</p>
+          {/* En-tête */}
+          <div className="mb-10 pt-12">
+            <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-4">Légal</p>
+            <h1 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight mb-4">
+              Conditions Générales<br />
+              <span className="text-primary">de Participation</span>
+            </h1>
+            <p className="text-muted-foreground text-sm leading-relaxed max-w-2xl mb-10">
+              Ces conditions régissent la participation aux vols en avion léger organisés par Fly Horizons
+              dans le cadre du partage de coûts (NCO.GEN.104), ainsi que l&apos;ensemble des achats effectués sur fly-horizons.com.
+            </p>
+
+            {/* Métadonnées */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-border rounded-2xl overflow-hidden mb-4">
+              {[
+                { label: "Version",          value: "1.0" },
+                { label: "Exploitant",       value: "DESTANBERG Romain" },
+                { label: "Mise à jour",      value: "26 mai 2026" },
+                { label: "Droit applicable", value: "Droit belge · EASA" },
+              ].map(({ label, value }) => (
+                <div key={label} className="bg-card px-5 py-4">
+                  <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide mb-1">{label}</p>
+                  <p className="text-sm font-semibold text-foreground">{value}</p>
+                </div>
+              ))}
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Exploitant</p>
-              <p className="text-sm font-semibold text-foreground">DESTANBERG Romain</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Mise à jour</p>
-              <p className="text-sm font-semibold text-foreground">26 mai 2026</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Droit applicable</p>
-              <p className="text-sm font-semibold text-foreground">Droit belge · EASA</p>
+
+            {/* Avertissement partage de coûts */}
+            <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg">
+              <p className="text-xs font-bold text-foreground uppercase tracking-[2px] mb-1">
+                Activité de partage de coûts · NCO.GEN.104
+              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Les vols Fly Horizons sont des vols en partage de coûts au sens du règlement EASA NCO.GEN.104.
+                Il ne s&apos;agit pas d&apos;un service de transport aérien commercial. Le paiement couvre la quote-part
+                des frais directs du vol (carburant, aéronef, redevances).
+              </p>
             </div>
           </div>
 
-          {/* Avertissement partage de coûts */}
-          <div className="mt-4 p-4 bg-primary/5 border border-primary/20 rounded-xl">
-            <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">
-              Activité de partage de coûts, NCO.GEN.104
-            </p>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Les vols Fly Horizons sont des vols en partage de coûts au sens du règlement EASA NCO.GEN.104.
-              Il ne s&apos;agit pas d&apos;un service de transport aérien commercial. Le paiement couvre la quote-part
-              des frais directs du vol (carburant, aéronef, redevances).
-            </p>
+          {/* Accordéon */}
+          <CgvAccordion sections={CGP_SECTIONS} />
+
+          {/* Contact */}
+          <div className="mt-8 bg-navy rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex-1">
+              <p className="text-sm font-bold text-white mb-0.5">Une question sur ces conditions ?</p>
+              <p className="text-xs text-white/50">Romain répond personnellement sous 24 h.</p>
+            </div>
+            <a
+              href="/contact"
+              className="shrink-0 inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-black bg-primary text-primary-foreground rounded-lg hover:brightness-105 active:scale-[0.98] transition-all shadow-gold"
+            >
+              Nous contacter
+            </a>
           </div>
+
         </div>
+      </section>
 
-        {/* Accordéon */}
-        <CgvAccordion sections={CGP_SECTIONS} />
-
-        {/* Contact */}
-        <div className="mt-8 p-6 card-premium border-l-2 border-primary">
-          <p className="text-sm font-semibold text-foreground mb-1">Une question sur ces conditions ?</p>
-          <p className="text-xs text-muted-foreground mb-3">
-            Romain répond personnellement sous 24 h.
-          </p>
-          <a
-            href="/contact"
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-primary text-primary-foreground rounded-xl hover:bg-gold-400 transition-colors"
-          >
-            Nous contacter
-          </a>
-        </div>
-
-      </div>
     </main>
   );
 }

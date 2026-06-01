@@ -76,12 +76,17 @@ function KanbanCard({ reservation, onClick, isDragging = false }: {
             Voucher
           </span>
         )}
-        {reservation.acompte != null && (
+        {reservation.paye != null && reservation.paye > 0 ? (
+          <span className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 font-semibold">
+            <CreditCard size={9} />
+            {reservation.paye} € ✓
+          </span>
+        ) : reservation.acompte != null ? (
           <span className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-secondary border border-border text-muted-foreground font-medium">
             <CreditCard size={9} />
             {reservation.acompte} €
           </span>
-        )}
+        ) : null}
       </div>
     </div>
   );

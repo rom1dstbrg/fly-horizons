@@ -21,7 +21,7 @@ export default async function ReporterConfirmePage({ searchParams }: Props) {
           <h1 className="text-2xl font-black text-foreground leading-tight mb-2">
             Report confirmé
           </h1>
-          <p className="text-sm text-foreground/50 leading-relaxed">
+          <p className="text-sm text-muted-foreground leading-relaxed">
             {dateStr ? (
               <>
                 Votre vol est bien reporté au{" "}
@@ -38,14 +38,14 @@ export default async function ReporterConfirmePage({ searchParams }: Props) {
         <div className="flex flex-col gap-2.5 pt-1">
           <Link
             href="/account#reservations"
-            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-primary text-primary-foreground rounded-lg text-sm font-black hover:bg-[#e6a800] active:scale-[0.98] transition-all shadow-gold"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-primary text-primary-foreground rounded-lg text-sm font-black hover:brightness-105 active:scale-[0.98] transition-all shadow-gold"
           >
             <CalendarDays size={15} />
             Voir ma réservation
           </Link>
           <Link
             href="/"
-            className="inline-flex items-center justify-center px-6 py-2.5 rounded-lg border border-border text-sm font-medium text-foreground/50 hover:text-foreground hover:border-foreground/20 transition-colors"
+            className="inline-flex items-center justify-center px-6 py-2.5 rounded-lg border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors"
           >
             Retour à l&apos;accueil
           </Link>

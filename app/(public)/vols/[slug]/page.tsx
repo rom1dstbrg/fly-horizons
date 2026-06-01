@@ -113,14 +113,14 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
   };
 
   return (
-    <main className="bg-white">
+    <main className="bg-gradient-navy">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
       />
 
       {/* ══════ SPLIT — galerie gauche / info droite ══════ */}
-      <div className="pt-[98px] bg-white">
+      <div className="pt-[98px] bg-gradient-navy">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-6 pb-20">
 
           <BackLink />
@@ -140,10 +140,10 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
             <div className="md:sticky md:top-28 space-y-6">
 
               <div>
-                <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">
+                <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-3">
                   {formatDuration(duree)} · Vol en avion léger
                 </p>
-                <h1 className="text-4xl sm:text-5xl font-black text-[#0b2238] leading-none tracking-tight">
+                <h1 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight">
                   {vol.title}
                 </h1>
                 {vol.short_description && (
@@ -164,30 +164,30 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
       </div>
 
       {/* ══════ COMMENT ÇA SE PASSE — style testimonials ══════ */}
-      <div className="bg-white py-20 sm:py-28">
+      <div className="bg-card py-20 sm:py-28">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
-          <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-4">
+          <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-4">
             Déroulement
           </p>
-          <h2 className="text-4xl sm:text-5xl font-black text-[#0b2238] leading-none tracking-tight mb-12">
+          <h2 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight mb-12">
             Comment ça se passe
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             {STEPS.map(({ num, icon, title, desc }) => (
-              <div key={num} className="bg-[#f5f5f7] rounded-2xl p-7 flex flex-col gap-5">
+              <div key={num} className="bg-secondary rounded-lg p-7 flex flex-col gap-5">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-[#F2B705]/15 flex items-center justify-center shrink-0 text-[#F2B705]">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 text-primary">
                     {icon}
                   </div>
                   <div>
-                    <p className="text-[#0b2238] font-bold text-sm leading-snug">{title}</p>
-                    <p className="text-[#F2B705] text-xs font-semibold tracking-wide mt-0.5">Étape {num}</p>
+                    <p className="text-foreground font-bold text-sm leading-snug">{title}</p>
+                    <p className="text-primary text-xs font-semibold tracking-wide mt-0.5">Étape {num}</p>
                   </div>
                 </div>
                 <p className="text-foreground/70 text-sm leading-relaxed flex-1">{desc}</p>
-                <div className="w-8 h-1 bg-[#F2B705] rounded-full" />
+                <div className="w-8 h-1 bg-primary rounded-full" />
               </div>
             ))}
           </div>
@@ -197,12 +197,12 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
 
       {/* ══════ AUTRES DURÉES — bg-[#f5f5f7] ══════ */}
       {(autres ?? []).length > 0 && (
-        <div className="bg-[#f5f5f7] py-20 sm:py-28">
+        <div className="bg-gradient-navy py-20 sm:py-28">
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
-            <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-4">
+            <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-4">
               Autres durées disponibles
             </p>
-            <h2 className="text-4xl sm:text-5xl font-black text-[#0b2238] leading-none tracking-tight mb-10">
+            <h2 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight mb-10">
               Changer de durée
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -215,20 +215,20 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
       )}
 
       {/* ══════ VOL SUR MESURE — blanc ══════ */}
-      <div className="bg-white border-t border-border py-14">
+      <div className="bg-card border-t border-border py-14">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div>
-            <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">Vol sur mesure</p>
-            <h2 className="text-2xl sm:text-3xl font-black text-[#0b2238] leading-tight">
+            <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-3">Vol sur mesure</p>
+            <h2 className="text-2xl sm:text-3xl font-black text-foreground leading-tight">
               Vous avez un itinéraire précis en tête ?
             </h2>
-            <p className="text-foreground/50 text-sm mt-2 max-w-md leading-relaxed">
+            <p className="text-muted-foreground text-sm mt-2 max-w-md leading-relaxed">
               Tracez votre route sur la carte : durée et prix calculés en temps réel, au kilomètre près.
             </p>
           </div>
           <Link
             href="/vol-sur-mesure"
-            className="shrink-0 inline-flex items-center gap-2.5 px-6 py-3.5 bg-[#0b2238] text-white rounded-xl text-sm font-black hover:bg-[#113356] transition-colors"
+            className="shrink-0 inline-flex items-center gap-2.5 px-6 py-3.5 bg-navy text-white rounded-lg text-sm font-black hover:opacity-90 transition-opacity"
           >
             <Route size={16} />
             Créer mon vol sur mesure

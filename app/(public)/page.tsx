@@ -3,8 +3,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { ChevronDown, Gift, Route, Lock, Users, Clock, PlaneTakeoff, Zap, ArrowRight, MousePointerClick } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { PackCard } from "@/components/shop/PackCard";
-import PilotCard from "@/components/shop/PilotCard";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
 
@@ -68,7 +66,7 @@ export default async function HomePage() {
     .order("voucher_duration_minutes", { ascending: true });
 
   return (
-    <main className="bg-background">
+    <main className="bg-gradient-navy">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
@@ -82,7 +80,6 @@ export default async function HomePage() {
           poster="/piste.jpg"
           className="absolute inset-0 w-full h-full object-cover"
         >
-          {/* MP4 en premier — seul format supporté par Safari */}
           <source src="/vol-rev%202.2.mp4" type="video/mp4" />
           <source src="/vol-rev%202.2.webm" type="video/webm" />
         </video>
@@ -91,13 +88,13 @@ export default async function HomePage() {
 
         <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-4 pb-16 pt-[48px] md:pt-[76px]">
           <div className="inline-flex items-center gap-2 bg-[#F2B705] rounded-full px-5 py-2 mb-8 shadow-[0_4px_20px_rgba(242,183,5,.4)]">
-            <PlaneTakeoff size={13} className="text-[#113356]" />
-            <span className="text-[#113356] text-xs font-bold tracking-[2.5px] uppercase">
+            <PlaneTakeoff size={13} className="text-[#0b2238]" />
+            <span className="text-[#0b2238] text-xs font-bold tracking-[2.5px] uppercase">
               Vols en avion léger
             </span>
           </div>
 
-          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[80px] font-extrabold text-white leading-[1.0] tracking-tight mb-6 drop-shadow-lg">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[80px] font-black text-white leading-[1.0] tracking-tight mb-6 drop-shadow-lg">
             Volez où vous voulez.<br />
             <span className="text-[#F2B705]">À votre façon.</span>
           </h1>
@@ -111,14 +108,14 @@ export default async function HomePage() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <a
               href="#nos-vols"
-              className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-[#F2B705] text-[#113356] rounded-xl font-bold text-sm hover:bg-[#e6a800] transition-all shadow-[0_8px_30px_rgba(242,183,5,.35)] hover:-translate-y-0.5 active:translate-y-0"
+              className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-[#F2B705] text-[#0b2238] rounded-lg font-bold text-sm hover:bg-[#e6a800] transition-all shadow-[0_8px_30px_rgba(242,183,5,.35)] hover:-translate-y-0.5 active:translate-y-0"
             >
               <Gift size={16} />
               Réserver un vol
             </a>
             <a
               href="#vol-sur-mesure"
-              className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-white/10 text-white border border-white/30 rounded-xl font-semibold text-sm hover:bg-white/20 hover:border-white/50 transition-all backdrop-blur-sm"
+              className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-white/10 text-white border border-white/30 rounded-lg font-semibold text-sm hover:bg-white/20 hover:border-white/50 transition-all backdrop-blur-sm"
             >
               <Route size={16} />
               Vol sur mesure
@@ -142,17 +139,17 @@ export default async function HomePage() {
       </section>
 
       {/* ═══ BARRE DE CONFIANCE ═══ */}
-      <section className="bg-white border-b border-border">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+      <section className="bg-card border-b border-border">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 py-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { icon: <Lock size={20} className="text-[#113356]" />, title: "Paiement sécurisé", desc: "Via Stripe, carte bancaire" },
-              { icon: <Clock size={20} className="text-[#113356]" />, title: "Annulation gratuite", desc: "Jusqu'à 48 h avant le vol" },
-              { icon: <Users size={20} className="text-[#113356]" />, title: "Jusqu'à 3 passagers", desc: "Partagez l'expérience à plusieurs" },
-              { icon: <PlaneTakeoff size={20} className="text-[#113356]" />, title: "Itinéraire libre", desc: "Vous choisissez votre route" },
+              { icon: <Lock size={20} className="text-foreground" />, title: "Paiement sécurisé", desc: "Via Stripe, carte bancaire" },
+              { icon: <Clock size={20} className="text-foreground" />, title: "Annulation gratuite", desc: "Jusqu'à 48 h avant le vol" },
+              { icon: <Users size={20} className="text-foreground" />, title: "Jusqu'à 3 passagers", desc: "Partagez l'expérience à plusieurs" },
+              { icon: <PlaneTakeoff size={20} className="text-foreground" />, title: "Itinéraire libre", desc: "Vous choisissez votre route" },
             ].map(({ icon, title, desc }) => (
               <div key={title} className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-[#f5f8ff] border border-[#dce8ff] flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-secondary border border-border flex items-center justify-center shrink-0">
                   {icon}
                 </div>
                 <div>
@@ -167,32 +164,85 @@ export default async function HomePage() {
 
       {/* ═══ NOS VOLS ═══ */}
       {(packs ?? []).length > 0 && (
-        <section id="nos-vols" className="py-16 bg-[#f5f5f7]">
+        <section id="nos-vols" className="py-16 bg-gradient-navy border-t border-border">
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
-            <div className="text-center mb-10">
-              <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">
+            <div className="mb-10">
+              <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-4">
                 Au départ de Charleroi (EBCI)
               </p>
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-foreground">
-                Choisissez votre expérience
+              <h2 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight">
+                Jusqu&apos;où voulez-vous aller ?
               </h2>
-              <div className="w-10 h-0.5 bg-[#F2B705] mx-auto mt-4 mb-3 rounded-full" />
-              <p className="text-muted-foreground text-sm mt-0 max-w-md mx-auto">
+              <p className="text-muted-foreground text-sm mt-4">
                 Du vol découverte à l&apos;aventure prolongée : sélectionnez la durée qui vous convient.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-              {(packs ?? []).map((pack) => (
-                <PackCard key={pack.id} pack={pack} />
-              ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              {(packs ?? []).map((pack, index) => {
+                const image = pack.images?.[0]?.url ?? null;
+                const duree = pack.voucher_duration_minutes ?? 60;
+                const isPopular = index === 1;
+                return (
+                  <Link key={pack.id} href={`/vols/${pack.slug}`} className="group block focus-visible:outline-none">
+                    <article className="relative overflow-hidden rounded-lg aspect-[4/3] sm:aspect-[3/4]">
+                      {image ? (
+                        <Image
+                          src={image}
+                          alt={pack.title}
+                          fill
+                          className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
+                          sizes="(max-width:640px) 100vw, (max-width:1280px) 50vw, 25vw"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#0b2238] via-[#0e3060] to-[#1a4a8a]" />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/92 via-black/20 to-transparent" />
+
+                      {/* Badges haut */}
+                      <div className="absolute top-4 left-4 right-4 flex items-start justify-between">
+                        <div className="inline-flex items-center bg-black/40 backdrop-blur-md border border-white/20 rounded-lg px-3.5 py-2">
+                          <span className="text-[#F2B705] font-black text-[15px] leading-none">{duree} min</span>
+                        </div>
+                        {isPopular && (
+                          <div className="inline-flex items-center bg-[#F2B705] rounded-lg px-3 py-2">
+                            <span className="text-[#0b2238] font-black text-[11px] leading-none uppercase tracking-wide">Le plus offert</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-5">
+                        <h3 className="text-white font-bold text-[19px] sm:text-[21px] leading-tight mb-1.5">
+                          {pack.title}
+                        </h3>
+                        {pack.short_description && (
+                          <p className="text-white/70 text-[13px] leading-snug mb-2.5 line-clamp-2">
+                            {pack.short_description}
+                          </p>
+                        )}
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-white font-black text-[24px] leading-none">{pack.price} €</span>
+                          <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold
+                            bg-white/12 text-white border border-white/18
+                            px-3 py-2 rounded-lg backdrop-blur-sm shrink-0
+                            group-hover:bg-[#F2B705] group-hover:text-[#0b2238] group-hover:border-transparent
+                            transition-all duration-300">
+                            Réserver
+                            <ArrowRight size={11} className="group-hover:translate-x-0.5 transition-transform" />
+                          </span>
+                        </div>
+                      </div>
+                    </article>
+                  </Link>
+                );
+              })}
             </div>
 
             <div className="mt-12 text-center">
               <p className="text-sm text-muted-foreground">
                 Vous avez un itinéraire précis en tête ?{" "}
-                <Link href="/vol-sur-mesure" className="text-[#113356] font-semibold hover:underline">
+                <Link href="/vol-sur-mesure" className="text-foreground font-semibold hover:underline">
                   Créez un vol entièrement sur mesure →
                 </Link>
               </p>
@@ -203,25 +253,25 @@ export default async function HomePage() {
       )}
 
       {/* ═══ VOL SUR MESURE ═══ */}
-      <section id="vol-sur-mesure" className="bg-[#0b2238] pt-20 pb-0 overflow-hidden relative">
+      <section id="vol-sur-mesure" className="bg-[#0b2238] overflow-hidden relative">
 
-        {/* Fond décoratif */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#F2B705]/5 rounded-full -translate-y-1/2 translate-x-1/4" />
-          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#113356]/60 rounded-full translate-y-1/2 -translate-x-1/4" />
+        {/* Vague haut — background → navy */}
+        <div className="relative h-12 overflow-hidden">
+          <svg viewBox="0 0 1440 48" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,0 L1440,0 L1440,24 Q720,48 0,24 Z" fill="#f5f5f7" />
+          </svg>
         </div>
 
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-12">
 
-          {/* Label section */}
           <div className="mb-6">
             <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px]">Vol sur mesure</p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-12 items-center pb-12">
+          <div className="grid lg:grid-cols-[2fr_3fr] gap-12 items-center pb-0">
 
             {/* Texte gauche */}
-            <div>
+            <div className="pb-12">
               <h2 className="text-4xl sm:text-5xl font-black text-white leading-[1.1] mb-4">
                 Volez où vous voulez.<br />
                 <span className="text-[#F2B705]">Payez ce que vous volez.</span>
@@ -260,11 +310,22 @@ export default async function HomePage() {
                 ))}
               </div>
 
+              {/* Image mobile */}
+              <div className="block md:hidden rounded-xl overflow-hidden border border-white/12 shadow-[0_8px_32px_rgba(0,0,0,0.4)] mb-8">
+                <Image
+                  src="/vol-sur-mesure.png"
+                  alt="Aperçu de l'outil de planification vol sur mesure"
+                  width={900}
+                  height={600}
+                  className="w-full h-auto"
+                />
+              </div>
+
               {/* CTA */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link
                   href="/vol-sur-mesure"
-                  className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 bg-[#F2B705] text-[#113356] rounded-xl text-sm font-black hover:bg-[#e6a800] transition-colors shadow-lg shadow-[#F2B705]/20"
+                  className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 bg-[#F2B705] text-[#0b2238] rounded-lg text-sm font-black hover:bg-[#e6a800] transition-colors shadow-lg shadow-[#F2B705]/20"
                 >
                   <Route size={16} />
                   Créer mon vol sur mesure
@@ -278,8 +339,8 @@ export default async function HomePage() {
             </div>
 
             {/* Aperçu du configurateur */}
-            <div className="hidden lg:flex flex-col">
-              <div className="rounded-2xl overflow-hidden border border-white/12 shadow-[0_24px_64px_rgba(0,0,0,0.55)]">
+            <div className="hidden md:flex flex-col">
+              <div className="rounded-t-2xl overflow-hidden border border-white/12 border-b-0 shadow-[0_24px_64px_rgba(0,0,0,0.55)]">
                 <Image
                   src="/vol-sur-mesure.png"
                   alt="Aperçu de l'outil de planification vol sur mesure"
@@ -288,33 +349,34 @@ export default async function HomePage() {
                   className="w-full h-auto"
                 />
               </div>
-              <p className="text-center text-white/15 text-[9px] mt-2.5">Aperçu de l&apos;outil de planification</p>
             </div>
 
           </div>
         </div>
 
+        {/* Vague bas — navy → card */}
+        <div className="relative h-12 overflow-hidden">
+          <svg viewBox="0 0 1440 48" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,48 L0,24 Q360,0 720,24 Q1080,48 1440,24 L1440,48 Z" fill="#edf0f7" />
+          </svg>
+        </div>
+
       </section>
 
-      {/* ═══ VOTRE PILOTE ═══ */}
-      <PilotCard />
-
-
       {/* ═══ AVIS CLIENTS ═══ */}
-      <section className="bg-white py-16 sm:py-20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+      <section className="bg-secondary py-20 sm:py-28">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
-          <div className="text-center mb-14">
-            <p className="text-[#F2B705] text-[10px] font-bold tracking-[3px] uppercase mb-3">
+          <div className="mb-12">
+            <p className="text-primary text-xs font-bold tracking-[3px] uppercase mb-4">
               Ils ont volé avec Fly Horizons
             </p>
-            <h2 className="text-[#0b2238] text-3xl sm:text-4xl font-extrabold">
+            <h2 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight">
               Ce qu&apos;ils en disent
             </h2>
-            <div className="w-10 h-0.5 bg-[#F2B705] mx-auto mt-4 rounded-full" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {[
               {
                 name: "Sophie M.",
@@ -332,26 +394,16 @@ export default async function HomePage() {
                 text: "J'ai choisi le vol sur mesure pour survoler les Fagnes. Voir le prix se calculer en temps réel m'a mis en confiance : aucune surprise au moment de payer. Pilote à l'écoute, réponse rapide, vol sans accroc. Je recommande sans hésiter.",
               },
             ].map(({ name, location, text }) => (
-              <div key={name} className="flex flex-col gap-4">
-
-                {/* Guillemet décoratif */}
-                <span className="text-[#F2B705] text-7xl font-black leading-none select-none -mb-2">&ldquo;</span>
-
-                {/* Texte */}
-                <p className="text-foreground/65 text-sm leading-relaxed flex-1">
-                  {text}
-                </p>
-
-                {/* Auteur */}
-                <div className="pt-5 border-t border-border">
-                  <p className="text-[#0b2238] font-bold text-sm">{name}</p>
-                  <p className="text-[#F2B705] text-xs font-semibold tracking-wide mt-0.5">{location}</p>
+              <div key={name} className="bg-card rounded-lg p-7 flex flex-col gap-5 shadow-[var(--sh-card)]">
+                <div className="w-8 h-1 bg-primary rounded-full" />
+                <p className="text-foreground/70 text-base leading-relaxed flex-1">{text}</p>
+                <div>
+                  <p className="text-foreground font-bold text-sm">{name}</p>
+                  <p className="text-primary text-xs font-semibold tracking-wide mt-0.5">{location}</p>
                 </div>
-
               </div>
             ))}
           </div>
-
 
         </div>
       </section>

@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-[#f5f5f7]">
 
       {/* ══ ROMAIN ══ */}
       <section className="bg-secondary pt-[98px] pb-20 sm:pb-28">
@@ -123,7 +123,7 @@ export default function AboutPage() {
             {/* 2. Photo */}
             <div className="order-2 md:order-none md:col-start-1 md:row-start-1 md:row-span-2 relative aspect-[4/3] md:aspect-auto rounded-lg overflow-hidden">
               <Image
-                src="/da-40-3.jpg"
+                src="/da-40.webp"
                 alt="Diamond DA40 en vol"
                 fill
                 className="object-cover"

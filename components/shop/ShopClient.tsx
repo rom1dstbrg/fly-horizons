@@ -51,8 +51,8 @@ export function ShopClient({ products, tags }: ShopClientProps) {
             onClick={() => setActiveTag(null)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
               activeTag === null
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-transparent text-muted-foreground border-border hover:border-primary/50 hover:text-foreground"
+                ? "bg-[#F2B705] text-[#0b2238] border-[#F2B705]"
+                : "bg-transparent text-[#0b2238]/50 border-[#e0e5ef] hover:border-[#F2B705]/50 hover:text-[#0b2238]"
             }`}
           >
             Tous
@@ -63,8 +63,8 @@ export function ShopClient({ products, tags }: ShopClientProps) {
               onClick={() => setActiveTag(tag === activeTag ? null : tag)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
                 activeTag === tag
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-transparent text-muted-foreground border-border hover:border-primary/50 hover:text-foreground"
+                  ? "bg-[#F2B705] text-[#0b2238] border-[#F2B705]"
+                  : "bg-transparent text-[#0b2238]/50 border-[#e0e5ef] hover:border-[#F2B705]/50 hover:text-[#0b2238]"
               }`}
             >
               {tag}
@@ -76,7 +76,7 @@ export function ShopClient({ products, tags }: ShopClientProps) {
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as SortOption)}
-          className="bg-secondary border border-border text-foreground text-xs rounded-md px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+          className="bg-[#edf0f7] border border-[#e0e5ef] text-[#0b2238] text-xs rounded-md px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#F2B705] cursor-pointer"
         >
           <option value="newest">Plus recents</option>
           <option value="price_asc">Prix croissant</option>
@@ -92,11 +92,11 @@ export function ShopClient({ products, tags }: ShopClientProps) {
           ))}
         </div>
       ) : (
-        <div className="text-center py-20 text-muted-foreground">
+        <div className="text-center py-20 text-[#0b2238]/50">
           <p className="text-lg mb-2">Aucun produit dans cette categorie.</p>
           <button
             onClick={() => setActiveTag(null)}
-            className="text-sm text-primary hover:text-gold-400 transition-colors"
+            className="text-sm text-[#F2B705] hover:text-[#e6a800] transition-colors"
           >
             Voir tous les produits
           </button>

@@ -1,10 +1,10 @@
-import { Plane, ShoppingBag, Users } from "lucide-react";
+﻿import { Plane, ShoppingBag, Users } from "lucide-react";
 
 const CONFIG = {
   vols: {
     label: "Vols",
     icon: Plane,
-    className: "border-[#113356]/25 bg-[#113356]/10 text-[#113356]",
+    className: "border-[#0b2238]/25 bg-[#0b2238]/10 text-[#0b2238]",
   },
   boutique: {
     label: "Boutique",

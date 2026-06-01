@@ -7,14 +7,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { getEmailPreview, resendOrderEmail, type EmailPreviewType } from "@/lib/actions/email";
+import { getEmailPreview, resendOrderEmail } from "@/lib/actions/email";
 import { Send, Check, AlertCircle } from "lucide-react";
-
-const EMAIL_TYPES: { value: EmailPreviewType; label: string }[] = [
-  { value: "confirmation", label: "Confirmation + Facture" },
-  { value: "processing",   label: "En préparation" },
-  { value: "shipped",      label: "Expédiée" },
-];
 
 interface EmailPreviewSheetProps {
   open: boolean;
@@ -31,7 +25,6 @@ export function EmailPreviewSheet({
   orderRef,
   customerEmail,
 }: EmailPreviewSheetProps) {
-  const [type, setType] = useState<EmailPreviewType>("confirmation");
   const [html, setHtml] = useState("");
   const [loading, setLoading] = useState(false);
   const [sendState, setSendState] = useState<"idle" | "sent" | "error">("idle");
@@ -41,20 +34,16 @@ export function EmailPreviewSheet({
     if (!open) return;
     setLoading(true);
     setHtml("");
-    getEmailPreview(orderId, type).then((h) => {
+    getEmailPreview(orderId).then((h) => {
       setHtml(h);
       setLoading(false);
     });
-  }, [open, orderId, type]);
-
-  useEffect(() => {
-    setSendState("idle");
-  }, [type]);
+  }, [open, orderId]);
 
   function handleResend() {
     setSendState("idle");
     startTransition(async () => {
-      const result = await resendOrderEmail(orderId, type);
+      const result = await resendOrderEmail(orderId);
       setSendState(result.success ? "sent" : "error");
     });
   }
@@ -78,22 +67,8 @@ export function EmailPreviewSheet({
             )}
           </div>
 
-          {/* Type tabs + send button */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {EMAIL_TYPES.map((t) => (
-              <button
-                key={t.value}
-                onClick={() => setType(t.value)}
-                className={`px-3 py-1 text-xs rounded-md font-medium border transition-colors ${
-                  type === t.value
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "border-border text-muted-foreground hover:text-foreground hover:border-primary/40"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Confirmation de commande + facture</span>
             <div className="ml-auto flex items-center gap-2 shrink-0">
               {sendState === "sent" && (
                 <span className="flex items-center gap-1 text-xs text-green-500">
@@ -108,7 +83,7 @@ export function EmailPreviewSheet({
               <button
                 onClick={handleResend}
                 disabled={isPending || loading}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-secondary border border-border text-foreground hover:border-primary transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-secondary border border-border text-foreground hover:border-primary transition-colors disabled:opacity-50 cursor-pointer"
               >
                 <Send size={12} />
                 {isPending ? "Envoi…" : "Renvoyer"}

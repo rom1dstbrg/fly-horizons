@@ -17,10 +17,10 @@ export function CgvAccordion({ sections }: { sections: Section[] }) {
         const isOpen = openIndex === i;
 
         return (
-          <div key={i} className="card-premium overflow-hidden">
+          <div key={i} className="bg-card border border-border rounded-2xl overflow-hidden">
             <button
               onClick={() => setOpenIndex(isOpen ? null : i)}
-              className="w-full flex items-center justify-between px-6 py-4 text-left gap-4"
+              className="w-full flex items-center justify-between px-6 py-4 text-left gap-4 hover:bg-secondary transition-colors cursor-pointer"
               aria-expanded={isOpen}
             >
               <span className="text-sm font-semibold text-foreground">{section.title}</span>

@@ -24,7 +24,7 @@ export function PackCard({ pack, isPopular }: { pack: PackBase; isPopular?: bool
 
   return (
     <Link href={`/vols/${pack.slug}`} className="group block focus-visible:outline-none">
-      <article className="relative overflow-hidden rounded-2xl aspect-[4/3] sm:aspect-[3/4]">
+      <article className="relative overflow-hidden rounded-lg aspect-[4/3] sm:aspect-[3/4]">
         {image ? (
           <Image
             src={image}
@@ -40,11 +40,11 @@ export function PackCard({ pack, isPopular }: { pack: PackBase; isPopular?: bool
 
         {/* Badges haut */}
         <div className="absolute top-4 left-4 right-4 flex items-start justify-between">
-          <div className="inline-flex items-center bg-black/40 backdrop-blur-md border border-white/20 rounded-xl px-3.5 py-2">
+          <div className="inline-flex items-center bg-black/40 backdrop-blur-md border border-white/20 rounded-lg px-3.5 py-2">
             <span className="text-[#F2B705] font-black text-[15px] leading-none">{duree} min</span>
           </div>
           {isPopular && (
-            <div className="inline-flex items-center bg-[#F2B705] rounded-xl px-3 py-2">
+            <div className="inline-flex items-center bg-[#F2B705] rounded-lg px-3 py-2">
               <span className="text-[#0b2238] font-black text-[11px] leading-none uppercase tracking-wide">Le plus offert</span>
             </div>
           )}
@@ -64,7 +64,7 @@ export function PackCard({ pack, isPopular }: { pack: PackBase; isPopular?: bool
             <span className="text-white font-black text-[24px] leading-none">{pack.price} €</span>
             <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold
               bg-white/12 text-white border border-white/18
-              px-3 py-2 rounded-xl backdrop-blur-sm shrink-0
+              px-3 py-2 rounded-lg backdrop-blur-sm shrink-0
               group-hover:bg-[#F2B705] group-hover:text-[#0b2238] group-hover:border-transparent
               transition-all duration-300">
               Réserver
@@ -101,8 +101,8 @@ export function PackBuyCard({ pack }: { pack: PackBase }) {
 
   return (
     <article className="flex flex-col h-full rounded-3xl overflow-hidden bg-white
-      shadow-[0_4px_20px_rgba(17,51,86,0.07),0_0_0_1px_rgba(0,0,0,0.06)]
-      hover:shadow-[0_10px_40px_rgba(17,51,86,0.16),0_0_0_1px_rgba(242,183,5,0.22)]
+      shadow-[0_4px_20px_rgba(11,34,56,0.07),0_0_0_1px_rgba(0,0,0,0.06)]
+      hover:shadow-[0_10px_40px_rgba(11,34,56,0.16),0_0_0_1px_rgba(242,183,5,0.22)]
       transition-all duration-500 ease-out group">
 
       <div className="relative h-44 sm:h-48 shrink-0 overflow-hidden bg-[#0b2238]">
@@ -138,27 +138,27 @@ export function PackBuyCard({ pack }: { pack: PackBase }) {
           <h3 className="font-bold text-[#0b2238] text-[15px] sm:text-base leading-snug mb-2 line-clamp-1">
             {pack.title}
           </h3>
-          <p className="text-muted-foreground text-[12.5px] leading-relaxed line-clamp-2 min-h-[2.6rem] mb-3">
+          <p className="text-[#0b2238]/50 text-[12.5px] leading-relaxed line-clamp-2 min-h-[2.6rem] mb-3">
             {pack.short_description ?? ""}
           </p>
-          <p className="text-[11px] text-muted-foreground/55 tracking-wide flex items-center gap-1.5">
+          <p className="text-[11px] text-[#0b2238]/50/55 tracking-wide flex items-center gap-1.5">
             <span className="w-1 h-1 rounded-full bg-[#F2B705] shrink-0" />
             Briefing · Casques · 3 passagers
           </p>
         </div>
 
-        <div className="pt-4 mt-4 border-t border-border/50 space-y-3">
+        <div className="pt-4 mt-4 border-t border-[#0b2238]/10 space-y-3">
           <div>
             <p className="text-[10px] font-semibold text-[#F2B705] uppercase tracking-[2px] mb-1">
               À partir de
             </p>
             <div className="flex items-baseline gap-0.5">
               <span className="text-[#0b2238] font-black text-[26px] leading-none">{pack.price}</span>
-              <span className="text-muted-foreground text-[13px] font-medium ml-0.5">€</span>
+              <span className="text-[#0b2238]/50 text-[13px] font-medium ml-0.5">€</span>
             </div>
           </div>
 
-          <p className="text-[10px] text-muted-foreground/60 text-center">
+          <p className="text-[10px] text-[#0b2238]/50/60 text-center">
             ✓ Valable 12 mois · Transférable librement
           </p>
 

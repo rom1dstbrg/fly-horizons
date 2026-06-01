@@ -25,56 +25,52 @@ function add(id: string, label: string, html: string) {
   emails.push({ id, label, html });
 }
 
-// 1. Confirmation de commande
+// 1a. Confirmation de commande — sans codes (cadeau)
 add(
   "order-confirmation",
-  "1 · Confirmation commande",
+  "1a · Confirmation commande (cadeau)",
   et.orderConfirmationEmail({
     orderRef: ORDER_REF,
     customerEmail: EMAIL,
     customerName: PRENOM + " " + NOM,
     items: [
-      { title: "T-shirt Fly Horizons — M", quantity: 2, unit_price: 2900, image_url: null },
-      { title: "Casquette brodée", quantity: 1, unit_price: 1800, image_url: null },
+      { title: "Voucher Exploration · 1h", quantity: 1, unit_price: 17500, image_url: null },
+      { title: "Voucher Découverte · 30 min", quantity: 2, unit_price: 9500, image_url: null },
     ],
-    subtotal: 7600,
-    shippingCost: 500,
+    subtotal: 36500,
+    shippingCost: 0,
     discountAmount: 0,
-    total: 8100,
+    total: 36500,
     couponCode: null,
     shippingAddress: {
       full_name: PRENOM + " " + NOM,
       email: EMAIL,
-      line1: "Rue de la Paix 12",
-      city: "Bruxelles",
-      postal_code: "1000",
-      country: "BE",
     },
     orderDate: "24 mai 2026",
   })
 );
 
-// 2. Commande en préparation
+// 1b. Confirmation de commande — avec codes inclus (achat pour soi-même)
 add(
-  "order-processing",
-  "2 · En préparation",
-  et.orderProcessingEmail({ orderRef: ORDER_REF, customerName: PRENOM })
-);
-
-// 3. Commande expédiée
-add(
-  "order-shipped",
-  "3 · Expédiée",
-  et.orderShippedEmail({
+  "order-confirmation-with-codes",
+  "1b · Confirmation commande + codes",
+  et.orderConfirmationEmail({
     orderRef: ORDER_REF,
-    customerName: PRENOM,
-    shippingAddress: {
-      full_name: PRENOM + " " + NOM,
-      line1: "Rue de la Paix 12",
-      city: "Bruxelles",
-      postal_code: "1000",
-      country: "BE",
-    },
+    customerEmail: EMAIL,
+    customerName: PRENOM + " " + NOM,
+    items: [
+      { title: "Voucher Exploration · 1h", quantity: 1, unit_price: 17500, image_url: null },
+    ],
+    subtotal: 17500,
+    shippingCost: 0,
+    discountAmount: 0,
+    total: 17500,
+    couponCode: null,
+    shippingAddress: { full_name: PRENOM + " " + NOM, email: EMAIL },
+    orderDate: "24 mai 2026",
+    voucherCodes: [
+      { code: "FLYH-X4K9-2026", duration_minutes: 60, product_title: "Voucher Exploration · 1h" },
+    ],
   })
 );
 
@@ -294,6 +290,20 @@ add(
     sujet: "Question sur les tarifs groupe",
     reponse:
       "Bonjour Sophie,\n\nMerci pour votre message. Pour un groupe de 4 personnes, nous proposons des vols privés à bord d'un ULM 2 places. Pour 4 passagers, nous organisons 2 rotations.\n\nLe tarif pour 2 vols de 30 min est de 280 € au total.\n\nN'hésitez pas à me contacter pour définir une date !",
+  })
+);
+
+// 14b. Rappel J-2
+add(
+  "flight-reminder",
+  "14b · Rappel J-2 avant le vol",
+  et.flightReminderEmail({
+    prenom: PRENOM,
+    dateStr: DATE_STR,
+    heure: HEURE,
+    duree: 60,
+    type_resa: "standard",
+    accountUrl: "https://fly-horizons.com/account",
   })
 );
 

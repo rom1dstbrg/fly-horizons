@@ -4,10 +4,9 @@ import { useState, useTransition, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { login } from "@/lib/actions/auth";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ShieldCheck } from "lucide-react";
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -32,13 +31,13 @@ function LoginForm() {
     <div className="card-premium p-8">
       <form onSubmit={handleSubmit} className="space-y-5">
         {error && (
-          <div className="bg-destructive/10 border border-destructive/30 text-destructive text-sm rounded-md px-4 py-3">
+          <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
             {error}
           </div>
         )}
 
-        <div className="space-y-2">
-          <Label htmlFor="email" className="text-foreground">Email</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="email" className="text-sm font-semibold text-foreground">Email</Label>
           <Input
             id="email"
             name="email"
@@ -46,12 +45,12 @@ function LoginForm() {
             placeholder="vous@exemple.com"
             required
             autoComplete="email"
-            className="bg-input border-border text-foreground placeholder:text-muted-foreground"
+            className="bg-input border-border text-foreground placeholder:text-muted-foreground/40 focus:border-foreground focus:bg-card transition-colors"
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="password" className="text-foreground">Mot de passe</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="password" className="text-sm font-semibold text-foreground">Mot de passe</Label>
           <div className="relative">
             <Input
               id="password"
@@ -60,7 +59,7 @@ function LoginForm() {
               placeholder="••••••••"
               required
               autoComplete="current-password"
-              className="bg-input border-border text-foreground pr-10"
+              className="bg-input border-border text-foreground pr-10 focus:border-foreground focus:bg-card transition-colors"
             />
             <button
               type="button"
@@ -73,19 +72,19 @@ function LoginForm() {
           </div>
         </div>
 
-        <Button
+        <button
           type="submit"
           disabled={isPending}
-          className="w-full bg-primary text-primary-foreground hover:bg-gold-400 font-semibold"
+          className="w-full py-3.5 bg-primary text-primary-foreground font-black text-sm rounded-lg hover:bg-[#e6a800] transition-colors shadow-gold disabled:opacity-60 cursor-pointer"
         >
           {isPending ? "Connexion..." : "Se connecter"}
-        </Button>
+        </button>
       </form>
 
       <p className="text-center text-sm text-muted-foreground mt-6">
         Pas encore de compte ?{" "}
-        <Link href="/register" className="text-primary hover:text-gold-400 font-medium transition-colors">
-          Creer un compte
+        <Link href="/register" className="text-foreground font-semibold hover:text-primary transition-colors">
+          Créer un compte
         </Link>
       </p>
     </div>
@@ -94,21 +93,26 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-navy px-4">
+    <main className="min-h-screen flex items-center justify-center bg-gradient-navy px-4 py-16">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/">
-            <span className="text-2xl font-semibold text-gold-gradient">
-              Fly Horizons
-            </span>
-          </Link>
-          <p className="text-muted-foreground text-sm mt-2">
-            Connectez-vous a votre compte
-          </p>
-        </div>
-        <Suspense fallback={<div className="card-premium p-8 text-center text-muted-foreground text-sm">Chargement...</div>}>
+
+        <h1 className="text-4xl font-black text-foreground text-center leading-none tracking-tight mb-8">
+          Connexion
+        </h1>
+
+        <Suspense fallback={
+          <div className="card-premium p-8 text-center text-muted-foreground text-sm">
+            Chargement...
+          </div>
+        }>
           <LoginForm />
         </Suspense>
+
+        <div className="flex items-center justify-center gap-1.5 mt-6 text-[11px] text-muted-foreground/70">
+          <ShieldCheck size={12} />
+          <span>Connexion sécurisée · Données chiffrées</span>
+        </div>
+
       </div>
     </main>
   );

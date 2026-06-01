@@ -111,12 +111,12 @@ const THEMES: Theme[] = [
       {
         q: "Comment réserver un vol en durée fixe ?",
         aText: "Rendez-vous sur la page Nos offres, choisissez votre durée de vol : 30, 60, 90 ou 120 minutes. Cliquez sur Réserver, sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis choisissez votre mode de paiement. La réservation est confirmée dès que l'acompte est reçu.",
-        a: <>Rendez-vous sur la page <Link href="/nos-offres" className="text-primary font-semibold hover:text-gold-400 transition-colors">Nos offres</Link>, choisissez votre durée : 30, 60, 90 ou 120 minutes. Sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis choisissez votre mode de paiement. La réservation est confirmée dès que l'acompte est reçu.</>,
+        a: <>Rendez-vous sur la page <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Nos offres</Link>, choisissez votre durée : 30, 60, 90 ou 120 minutes. Sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis choisissez votre mode de paiement. La réservation est confirmée dès que l'acompte est reçu.</>,
       },
       {
         q: "Comment fonctionne le vol sur mesure ?",
         aText: "Le vol sur mesure vous permet de dessiner votre propre itinéraire sur une carte interactive. Vous placez des points de passage : l'algorithme calcule la distance totale, la durée estimée et le prix en temps réel. Vous savez exactement ce que vous payez avant de confirmer.",
-        a: <>Le vol sur mesure vous permet de tracer votre propre itinéraire sur une carte interactive. Vous placez des points de passage : l'algorithme calcule la distance, la durée estimée et le prix en temps réel. Accédez à l'outil via <Link href="/vol-sur-mesure" className="text-primary font-semibold hover:text-gold-400 transition-colors">Vol sur mesure</Link>.</>,
+        a: <>Le vol sur mesure vous permet de tracer votre propre itinéraire sur une carte interactive. Vous placez des points de passage : l'algorithme calcule la distance, la durée estimée et le prix en temps réel. Accédez à l'outil via <Link href="/vol-sur-mesure" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Vol sur mesure</Link>.</>,
       },
       {
         q: "D'où partent les vols ?",
@@ -126,22 +126,22 @@ const THEMES: Theme[] = [
       {
         q: "Puis-je réserver pour quelqu'un d'autre ?",
         aText: "Oui. Vous pouvez réserver au nom d'une autre personne, ou lui offrir un bon cadeau qu'elle utilisera elle-même pour choisir sa date. Le bon cadeau est la solution la plus flexible : le bénéficiaire réserve quand il le souhaite.",
-        a: <>Oui. Vous pouvez réserver directement au nom d'une autre personne, ou lui offrir un <Link href="/nos-offres" className="text-primary font-semibold hover:text-gold-400 transition-colors">bon cadeau</Link> qu'elle utilisera elle-même pour choisir sa date.</>,
+        a: <>Oui. Vous pouvez réserver directement au nom d'une autre personne, ou lui offrir un <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">bon cadeau</Link> qu'elle utilisera elle-même pour choisir sa date.</>,
       },
       {
         q: "Puis-je réserver pour une occasion spéciale ?",
         aText: "Oui. Pour un anniversaire, une demande en mariage ou toute autre occasion particulière, contactez-nous via le formulaire de contact. Nous adaptons l'expérience selon vos souhaits.",
-        a: <>Oui. Pour un anniversaire, une demande en mariage ou toute autre occasion particulière, <Link href="/contact" className="text-primary font-semibold hover:text-gold-400 transition-colors">contactez-nous</Link>. Nous adaptons l'expérience selon vos souhaits.</>,
+        a: <>Oui. Pour un anniversaire, une demande en mariage ou toute autre occasion particulière, <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link>. Nous adaptons l'expérience selon vos souhaits.</>,
       },
       {
         q: "Combien de temps à l'avance faut-il réserver ?",
         aText: "Les réservations sont possibles jusqu'à 48 heures avant le vol au minimum. En dessous de ce délai, le calendrier n'affiche plus de créneaux disponibles. Pour une demande de dernière minute, rendez-vous sur la page Contact : nous répondrons le plus rapidement possible. En période chargée (printemps, été), il est conseillé de réserver plusieurs semaines à l'avance pour avoir le choix des dates.",
-        a: <>Les réservations sont possibles jusqu&apos;à 48 heures avant le vol au minimum. En dessous de ce délai, le calendrier n&apos;affiche plus de créneaux disponibles. Pour une demande de dernière minute, rendez-vous sur la <Link href="/contact" className="text-primary font-semibold hover:text-gold-400 transition-colors">page Contact</Link> : nous répondrons le plus rapidement possible. En période chargée (printemps, été), il est conseillé de réserver plusieurs semaines à l&apos;avance pour avoir le choix des dates.</>,
+        a: <>Les réservations sont possibles jusqu&apos;à 48 heures avant le vol au minimum. En dessous de ce délai, le calendrier n&apos;affiche plus de créneaux disponibles. Pour une demande de dernière minute, rendez-vous sur la <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">page Contact</Link> : nous répondrons le plus rapidement possible. En période chargée (printemps, été), il est conseillé de réserver plusieurs semaines à l&apos;avance pour avoir le choix des dates.</>,
       },
       {
         q: "Mon itinéraire vol sur mesure peut-il être refusé ou modifié ?",
         aText: "Un itinéraire peut être refusé ou adapté pour des raisons de sécurité, de météo ou de réglementation d'espace aérien (zones interdites, trafic contrôlé). Dans ce cas, le pilote propose une alternative adaptée avant le vol. Si aucune solution ne convient, la réservation est annulée et l'acompte remboursé intégralement. Pour les zones ou destinations importantes pour vous, signalez-les à la réservation : le pilote vérifiera la faisabilité en amont.",
-        a: <>Un itinéraire peut être refusé ou adapté pour des raisons de sécurité, de météo ou de réglementation d&apos;espace aérien (zones interdites, trafic contrôlé). Dans ce cas, le pilote propose une alternative avant le vol. Si aucune solution ne convient, la réservation est annulée et l&apos;acompte remboursé intégralement. Pour les destinations importantes pour vous, signalez-les à la <Link href="/contact" className="text-primary font-semibold hover:text-gold-400 transition-colors">réservation</Link> : le pilote vérifiera la faisabilité en amont.</>,
+        a: <>Un itinéraire peut être refusé ou adapté pour des raisons de sécurité, de météo ou de réglementation d&apos;espace aérien (zones interdites, trafic contrôlé). Dans ce cas, le pilote propose une alternative avant le vol. Si aucune solution ne convient, la réservation est annulée et l&apos;acompte remboursé intégralement. Pour les destinations importantes pour vous, signalez-les à la <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">réservation</Link> : le pilote vérifiera la faisabilité en amont.</>,
       },
     ],
   },
@@ -185,7 +185,7 @@ const THEMES: Theme[] = [
       {
         q: "Comment acheter un bon cadeau ?",
         aText: "Rendez-vous sur Nos offres, choisissez la durée de vol souhaitée (30, 60, 90 ou 120 minutes) et payez via Stripe. Le code est envoyé par email dans les minutes qui suivent, au format XXXX-XXXX-XXXX-XXXX. Vous pouvez le transmettre par email ou l'imprimer.",
-        a: <>Rendez-vous sur <Link href="/nos-offres" className="text-primary font-semibold hover:text-gold-400 transition-colors">Nos offres</Link>, choisissez la durée souhaitée et payez via Stripe. Le code arrive par email dans les minutes qui suivent, au format <span className="font-mono font-bold text-foreground">XXXX-XXXX-XXXX-XXXX</span>. Vous pouvez le transmettre ou l'imprimer.</>,
+        a: <>Rendez-vous sur <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Nos offres</Link>, choisissez la durée souhaitée et payez via Stripe. Le code arrive par email dans les minutes qui suivent, au format <span className="font-mono font-bold text-foreground">XXXX-XXXX-XXXX-XXXX</span>. Vous pouvez le transmettre ou l'imprimer.</>,
       },
       {
         q: "Comment le bénéficiaire utilise-t-il le bon cadeau ?",
@@ -200,7 +200,7 @@ const THEMES: Theme[] = [
       {
         q: "Quelle est la durée de validité d'un bon cadeau ?",
         aText: "La durée de validité est indiquée sur le bon lors de l'achat. Passé ce délai, le code ne peut plus être utilisé. En cas de doute, contactez-nous.",
-        a: <>La durée de validité est indiquée sur le bon lors de l'achat. Passé ce délai, le code ne peut plus être utilisé. En cas de doute, <Link href="/contact" className="text-primary font-semibold hover:text-gold-400 transition-colors">contactez-nous</Link>.</>,
+        a: <>La durée de validité est indiquée sur le bon lors de l'achat. Passé ce délai, le code ne peut plus être utilisé. En cas de doute, <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link>.</>,
       },
       {
         q: "Un bon cadeau est-il remboursable ?",
@@ -222,7 +222,7 @@ const THEMES: Theme[] = [
       {
         q: "Puis-je annuler ou reporter mon vol ?",
         aText: "Oui. Annulation sans frais jusqu'à 48 heures avant le vol. En deçà de 48 heures, des frais de replanning pouvant aller jusqu'à 50 € peuvent s'appliquer pour couvrir les démarches administratives. En cas d'absence sans prévenir (no-show), l'acompte est conservé et aucun remboursement n'est effectué. Pour reporter votre vol, connectez-vous à votre espace client : un lien de report vous sera proposé.",
-        a: <>Annulation sans frais jusqu'à 48 heures avant le vol. En deçà, des frais de replanning jusqu'à 50 € peuvent s'appliquer. En cas d'absence sans prévenir, l'acompte est conservé. Pour reporter, connectez-vous à votre <Link href="/account" className="text-primary font-semibold hover:text-gold-400 transition-colors">espace client</Link> ou <Link href="/contact" className="text-primary font-semibold hover:text-gold-400 transition-colors">contactez-nous</Link>.</>,
+        a: <>Annulation sans frais jusqu'à 48 heures avant le vol. En deçà, des frais de replanning jusqu'à 50 € peuvent s'appliquer. En cas d'absence sans prévenir, l'acompte est conservé. Pour reporter, connectez-vous à votre <Link href="/account" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">espace client</Link> ou <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link>.</>,
       },
       {
         q: "Combien de temps avant le vol dois-je arriver ?",
@@ -237,17 +237,17 @@ const THEMES: Theme[] = [
       {
         q: "Je suis enceinte ou j'ai une condition médicale, puis-je voler ?",
         aText: "En cas de grossesse, consultez votre médecin avant de réserver. Il n'y a pas de contre-indication générale pour les vols légers, mais les vibrations et les légères variations d'altitude peuvent être inconfortables. Pour toute condition médicale particulière (problème cardiaque, claustrophobie, traitement lourd, handicap moteur), signalez-le lors de la réservation ou contactez-nous avant de réserver : nous évaluerons ensemble la faisabilité en toute transparence.",
-        a: <>En cas de grossesse, consultez votre médecin avant de réserver. Pour toute condition médicale particulière (problème cardiaque, claustrophobie, traitement lourd, handicap moteur), signalez-le lors de la réservation ou <Link href="/contact" className="text-primary font-semibold hover:text-gold-400 transition-colors">contactez-nous</Link> : nous évaluerons ensemble la faisabilité.</>,
+        a: <>En cas de grossesse, consultez votre médecin avant de réserver. Pour toute condition médicale particulière (problème cardiaque, claustrophobie, traitement lourd, handicap moteur), signalez-le lors de la réservation ou <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link> : nous évaluerons ensemble la faisabilité.</>,
       },
       {
         q: "Que se passe-t-il si je suis en retard le jour du vol ?",
         aText: "Prévenez-nous dès que possible par téléphone ou email. Un léger retard de quelques minutes peut généralement être absorbé. Au-delà de 15 minutes, le créneau peut être compromis selon la disponibilité du planning. En cas d'absence sans prévenir (no-show), l'acompte reste acquis et aucun remboursement ne peut être effectué.",
-        a: <>Prévenez-nous dès que possible. Un léger retard peut être absorbé. Au-delà de 15 minutes, le créneau peut être compromis. En cas d'absence sans prévenir, l'acompte reste acquis. <Link href="/contact" className="text-primary font-semibold hover:text-gold-400 transition-colors">Nous contacter</Link>.</>,
+        a: <>Prévenez-nous dès que possible. Un léger retard peut être absorbé. Au-delà de 15 minutes, le créneau peut être compromis. En cas d'absence sans prévenir, l'acompte reste acquis. <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Nous contacter</Link>.</>,
       },
       {
         q: "Comment suivre l'état de ma réservation ?",
         aText: "Connectez-vous à votre espace client : vous y retrouvez le statut de votre réservation en temps réel (en attente, acompte reçu, date confirmée, heure confirmée). Chaque changement de statut vous est également notifié par email.",
-        a: <>Connectez-vous à votre <Link href="/account" className="text-primary font-semibold hover:text-gold-400 transition-colors">espace client</Link> : vous y retrouvez le statut en temps réel (en attente, acompte reçu, date confirmée, heure confirmée). Chaque changement vous est notifié par email.</>,
+        a: <>Connectez-vous à votre <Link href="/account" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">espace client</Link> : vous y retrouvez le statut en temps réel (en attente, acompte reçu, date confirmée, heure confirmée). Chaque changement vous est notifié par email.</>,
       },
       {
         q: "À quelle heure décollera-t-on exactement ?",
@@ -262,7 +262,7 @@ const THEMES: Theme[] = [
       {
         q: "Peut-on voler dans d'autres pays que la Belgique ?",
         aText: "Oui. Les vols peuvent s'étendre à la France, l'Allemagne, les Pays-Bas et le Royaume-Uni, dans les limites de l'espace aérien autorisé et selon les conditions météo. Signalez votre destination souhaitée lors de la réservation ou via le formulaire de contact : le pilote vérifie la faisabilité et les autorisations nécessaires.",
-        a: <>Oui. Les vols peuvent s&apos;étendre à la France, l&apos;Allemagne, les Pays-Bas et le Royaume-Uni, dans les limites autorisées. Signalez votre destination lors de la réservation ou via le <Link href="/contact" className="text-primary font-semibold hover:text-gold-400 transition-colors">formulaire de contact</Link> : le pilote vérifie la faisabilité.</>,
+        a: <>Oui. Les vols peuvent s&apos;étendre à la France, l&apos;Allemagne, les Pays-Bas et le Royaume-Uni, dans les limites autorisées. Signalez votre destination lors de la réservation ou via le <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">formulaire de contact</Link> : le pilote vérifie la faisabilité.</>,
       },
     ],
   },
@@ -309,12 +309,12 @@ const THEMES: Theme[] = [
       {
         q: "J'ai peur de voler, est-ce fait pour moi ?",
         aText: "C'est une préoccupation très courante, et Romain l'entend souvent. Ce que vous ressentez est parfaitement normal : beaucoup de passagers montent à bord avec une certaine appréhension, et la grande majorité repart surpris de s'être sentis à l'aise dès les premières minutes. La différence avec un vol commercial : vous n'êtes pas enfermé dans une cabine. Vous êtes dans le cockpit, vous voyez ce que fait le pilote, vous comprenez ce qui se passe. Ce sentiment de transparence change tout. Les vols se déroulent à altitude modérée (600 à 1 000 m), à allure douce, loin des turbulences des altitudes commerciales. Si vous avez envie de redescendre ou si vous vous sentez mal à l'aise, vous le dites. Si vous avez le moindre doute, contactez-nous avant de réserver : Romain vous répond directement et prend le temps de vous expliquer.",
-        a: <>C&apos;est une préoccupation très courante, et Romain l&apos;entend souvent. Ce que vous ressentez est parfaitement normal : beaucoup de passagers montent à bord avec une certaine appréhension, et la grande majorité repart surpris de s&apos;être sentis à l&apos;aise dès les premières minutes.<br /><br />La différence avec un vol commercial : vous n&apos;êtes pas enfermé dans une cabine. Vous êtes dans le cockpit, vous voyez ce que fait le pilote, vous comprenez ce qui se passe : ce sentiment de transparence change tout. Les vols se déroulent à altitude modérée (600 à 1 000 m), à allure douce, loin des turbulences des altitudes commerciales.<br /><br />Si vous ressentez un inconfort pendant le vol, vous le dites et on s&apos;adapte. Si vous avez le moindre doute avant de réserver, <Link href="/contact" className="text-primary font-semibold hover:text-gold-400 transition-colors">contactez-nous</Link> : Romain vous répond directement.</>,
+        a: <>C&apos;est une préoccupation très courante, et Romain l&apos;entend souvent. Ce que vous ressentez est parfaitement normal : beaucoup de passagers montent à bord avec une certaine appréhension, et la grande majorité repart surpris de s&apos;être sentis à l&apos;aise dès les premières minutes.<br /><br />La différence avec un vol commercial : vous n&apos;êtes pas enfermé dans une cabine. Vous êtes dans le cockpit, vous voyez ce que fait le pilote, vous comprenez ce qui se passe : ce sentiment de transparence change tout. Les vols se déroulent à altitude modérée (600 à 1 000 m), à allure douce, loin des turbulences des altitudes commerciales.<br /><br />Si vous ressentez un inconfort pendant le vol, vous le dites et on s&apos;adapte. Si vous avez le moindre doute avant de réserver, <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link> : Romain vous répond directement.</>,
       },
       {
         q: "Les passagers sont-ils assurés pendant le vol ?",
         aText: "Oui. L'avion utilisé (Diamond DA40) appartient à Air Academy New CAG (ATO-005, EBCI), école d'aviation certifiée. L'assurance de l'école couvre tous les occupants à bord. Ce vol est organisé dans le cadre du partage de frais réglementé par le règlement européen NCO.GEN.104 (aviation légère non commerciale). Pour toute question sur les garanties, contactez-nous avant de réserver.",
-        a: <>Oui. L&apos;avion utilisé (Diamond DA40) appartient à Air Academy New CAG (ATO-005, EBCI), école d&apos;aviation certifiée. L&apos;assurance de l&apos;école couvre tous les occupants à bord. Ce vol est organisé dans le cadre du partage de frais réglementé par le règlement européen NCO.GEN.104 (aviation légère non commerciale). Pour toute question, <Link href="/contact" className="text-primary font-semibold hover:text-gold-400 transition-colors">contactez-nous</Link> avant de réserver.</>,
+        a: <>Oui. L&apos;avion utilisé (Diamond DA40) appartient à Air Academy New CAG (ATO-005, EBCI), école d&apos;aviation certifiée. L&apos;assurance de l&apos;école couvre tous les occupants à bord. Ce vol est organisé dans le cadre du partage de frais réglementé par le règlement européen NCO.GEN.104 (aviation légère non commerciale). Pour toute question, <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link> avant de réserver.</>,
       },
       {
         q: "Peut-on prendre des photos et des vidéos pendant le vol ?",
@@ -336,17 +336,17 @@ const THEMES: Theme[] = [
       {
         q: "Comment créer un compte ?",
         aText: "Un compte est créé automatiquement lors de votre première réservation ou commande. Vous pouvez aussi vous inscrire directement depuis la page de connexion. Votre compte vous donne accès au suivi de vos réservations, commandes et codes de vol.",
-        a: <>Un compte est créé automatiquement lors de votre première réservation ou commande. Vous pouvez aussi vous inscrire depuis la <Link href="/login" className="text-primary font-semibold hover:text-gold-400 transition-colors">page de connexion</Link>.</>,
+        a: <>Un compte est créé automatiquement lors de votre première réservation ou commande. Vous pouvez aussi vous inscrire depuis la <Link href="/login" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">page de connexion</Link>.</>,
       },
       {
         q: "Mes codes de vol sont-ils visibles dans mon compte ?",
         aText: "Oui. Tous vos bons cadeaux achetés apparaissent dans la section Codes de vol de votre espace client, avec leur statut : disponible, réservé ou utilisé.",
-        a: <>Oui. Tous vos bons cadeaux apparaissent dans la section <Link href="/account" className="text-primary font-semibold hover:text-gold-400 transition-colors">Codes de vol</Link> de votre espace client, avec leur statut : disponible, réservé ou utilisé.</>,
+        a: <>Oui. Tous vos bons cadeaux apparaissent dans la section <Link href="/account" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Codes de vol</Link> de votre espace client, avec leur statut : disponible, réservé ou utilisé.</>,
       },
       {
         q: "Je n'ai pas reçu l'email de confirmation, que faire ?",
         aText: "Vérifiez vos spams. Si l'email n'y est pas, connectez-vous à votre espace client : le statut et les détails de votre réservation y sont toujours accessibles. En dernier recours, contactez-nous.",
-        a: <>Vérifiez vos spams. Si l'email n'y est pas, connectez-vous à votre <Link href="/account" className="text-primary font-semibold hover:text-gold-400 transition-colors">espace client</Link> : le statut et les détails de votre réservation y sont toujours accessibles. En dernier recours, <Link href="/contact" className="text-primary font-semibold hover:text-gold-400 transition-colors">contactez-nous</Link>.</>,
+        a: <>Vérifiez vos spams. Si l'email n'y est pas, connectez-vous à votre <Link href="/account" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">espace client</Link> : le statut et les détails de votre réservation y sont toujours accessibles. En dernier recours, <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link>.</>,
       },
     ],
   },
@@ -409,7 +409,7 @@ export default function FaqPage() {
   }
 
   return (
-    <main className="min-h-screen bg-secondary">
+    <main className="min-h-screen bg-[#f5f5f7]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_SCHEMA) }}
@@ -442,7 +442,7 @@ export default function FaqPage() {
             {query && (
               <button
                 onClick={() => { setSearch(""); setOpenKey(null); }}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               >
                 <X size={14} />
               </button>

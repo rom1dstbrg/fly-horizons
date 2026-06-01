@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -16,7 +16,7 @@ async function checkAdmin() {
   if (profile?.role !== "admin") throw new Error("Non autorise");
 }
 
-// ── Plages récurrentes ────────────────────────────────────────
+// â”€â”€ Plages rÃ©currentes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function createPlage(formData: FormData) {
   try {
@@ -34,7 +34,7 @@ export async function createPlage(formData: FormData) {
     });
 
     if (error) return { error: error.message };
-    revalidatePath("/admin/disponibilites");
+    revalidatePath("/admin/vols");
     return { success: true };
   } catch {
     return { error: "Erreur serveur" };
@@ -50,7 +50,7 @@ export async function togglePlageActif(id: string, actif: boolean) {
       .update({ actif })
       .eq("id", id);
     if (error) return { error: error.message };
-    revalidatePath("/admin/disponibilites");
+    revalidatePath("/admin/vols");
     return { success: true };
   } catch {
     return { error: "Erreur serveur" };
@@ -62,14 +62,14 @@ export async function deletePlage(id: string) {
     await checkAdmin();
     const db = createAdminClient();
     await db.from("disponibilites").delete().eq("id", id);
-    revalidatePath("/admin/disponibilites");
+    revalidatePath("/admin/vols");
     return { success: true };
   } catch {
     return { error: "Erreur serveur" };
   }
 }
 
-// ── Overrides individuels ─────────────────────────────────────
+// â”€â”€ Overrides individuels â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function upsertJourIndiv(formData: FormData) {
   try {
@@ -87,7 +87,7 @@ export async function upsertJourIndiv(formData: FormData) {
     );
 
     if (error) return { error: error.message };
-    revalidatePath("/admin/disponibilites");
+    revalidatePath("/admin/vols");
     return { success: true };
   } catch {
     return { error: "Erreur serveur" };
@@ -99,7 +99,7 @@ export async function deleteJourIndiv(id: string) {
     await checkAdmin();
     const db = createAdminClient();
     await db.from("disponibilites_jours").delete().eq("id", id);
-    revalidatePath("/admin/disponibilites");
+    revalidatePath("/admin/vols");
     return { success: true };
   } catch {
     return { error: "Erreur serveur" };

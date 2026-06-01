@@ -269,7 +269,7 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
 
   return (
     <main className="min-h-screen bg-gradient-navy pt-24 pb-16">
-      <div className="container-shop max-w-2xl">
+      <div className="max-w-2xl mx-auto px-4">
 
         {/* Back link */}
         <Link
@@ -321,8 +321,6 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
               className={`flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-full border shrink-0 transition-all ${
                 liveStatus === "live"
                   ? "bg-green-50 text-green-600 border-green-200"
-                  : liveStatus === "offline"
-                  ? "bg-secondary text-muted-foreground border-border"
                   : "bg-secondary text-muted-foreground border-border"
               }`}
             >
@@ -352,12 +350,12 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium text-foreground">{isPerso ? "Acompte requis" : "Paiement requis"}</p>
                 <p className="text-xs text-muted-foreground">
-                  {isPerso ? "Réglez l’acompte pour confirmer votre vol" : "Réglez le montant pour confirmer votre réservation"}
+                  {isPerso ? "Réglez l'acompte pour confirmer votre vol" : "Réglez le montant pour confirmer votre réservation"}
                 </p>
               </div>
               <Link
                 href={paymentUrl}
-                className="shrink-0 px-4 py-2 bg-[#F2B705] text-[#113356] rounded-xl text-xs font-bold hover:bg-[#e6a800] transition-colors"
+                className="shrink-0 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-xs font-bold hover:brightness-105 transition-all"
               >
                 Payer {resa.acompte != null ? `${resa.acompte} €` : ""}
               </Link>
@@ -367,7 +365,7 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
 
         {/* Cancelled state */}
         {isCancelled ? (
-          <div className="card-premium p-6 border-red-200">
+          <div className="card-premium p-6 !border-red-200">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-red-50 border border-red-200 flex items-center justify-center shrink-0">
                 <AlertTriangle size={18} className="text-red-500" />
@@ -382,7 +380,7 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
             <div className="mt-4 pt-4 border-t border-border">
               <Link
                 href="/contact"
-                className="text-xs font-medium text-primary hover:text-gold-500 transition-colors"
+                className="text-xs font-semibold text-foreground hover:text-primary transition-colors"
               >
                 Nous contacter →
               </Link>
@@ -414,12 +412,12 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
                       <div
                         className={`w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-500 ${
                           isFlashing
-                            ? "bg-[#F2B705] border-[#F2B705] scale-110"
+                            ? "bg-primary border-primary scale-110"
                             : isCompleted
                             ? "bg-green-500 border-green-500"
                             : isCurrent
-                            ? "bg-[#113356] border-[#113356]"
-                            : "bg-white border-border"
+                            ? "bg-navy border-navy"
+                            : "bg-card border-border"
                         }`}
                       >
                         {isCompleted && (
@@ -443,12 +441,12 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
                       <p
                         className={`text-sm font-semibold leading-tight transition-colors duration-300 ${
                           isFlashing
-                            ? "text-[#F2B705]"
+                            ? "text-primary"
                             : isCompleted
                             ? "text-green-700"
                             : isCurrent
                             ? "text-foreground"
-                            : "text-muted-foreground/60"
+                            : "text-muted-foreground"
                         }`}
                       >
                         {step.label}
@@ -460,7 +458,7 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
                               ? "text-green-600/70"
                               : isCurrent
                               ? "text-muted-foreground"
-                              : "text-muted-foreground/40"
+                              : "text-muted-foreground"
                           }`}
                         >
                           {description}
@@ -479,10 +477,10 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
           <div className="card-premium p-6 mt-5">
             <div className="flex items-center justify-between gap-3 mb-4">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-[#113356]/10 flex items-center justify-center shrink-0">
-                  <MapPin size={14} className="text-[#113356]" />
+                <div className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+                  <MapPin size={14} className="text-foreground" />
                 </div>
-                <p className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                   Itinéraire proposé
                 </p>
               </div>
@@ -493,15 +491,14 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
               )}
             </div>
 
-            {/* Texte de route dans une box — évite l'effet sandwich entre deux séparateurs */}
-            <div className="bg-[#f5f8ff] border border-[#dce8ff] rounded-xl px-4 py-3">
-              <p className="text-sm text-[#0b2238] whitespace-pre-line leading-relaxed">
+            <div className="bg-secondary border border-border rounded-lg px-4 py-3">
+              <p className="text-sm text-foreground whitespace-pre-line leading-relaxed">
                 {resa.route}
               </p>
             </div>
 
             {resa.route_feedback && (
-              <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl p-3">
+              <div className="mt-3 bg-amber-50 border border-amber-200 rounded-lg p-3">
                 <p className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider mb-1">Votre retour</p>
                 <p className="text-xs text-amber-700 leading-relaxed">{resa.route_feedback}</p>
               </div>
@@ -511,7 +508,7 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
               <div className="mt-4">
                 <Link
                   href={`/vol/itineraire/${resa.route_token}`}
-                  className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-[#113356] text-white rounded-xl text-xs font-bold hover:bg-[#0b2238] transition-colors"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-navy text-white rounded-lg text-xs font-bold hover:bg-navy/90 transition-colors"
                 >
                   Valider ou modifier la route →
                 </Link>
@@ -534,10 +531,10 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
           return (
             <div className="card-premium p-6 mt-5">
               <div className="flex items-center gap-2 mb-5">
-                <div className="w-7 h-7 rounded-lg bg-[#113356]/10 flex items-center justify-center shrink-0">
-                  <MapPin size={14} className="text-[#113356]" />
+                <div className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+                  <MapPin size={14} className="text-foreground" />
                 </div>
-                <p className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                   Lieux à survoler
                 </p>
               </div>
@@ -546,8 +543,8 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
                 {/* Départ EBCI */}
                 <li className="flex gap-3">
                   <div className="flex flex-col items-center">
-                    <div className="w-8 h-8 rounded-full bg-[#113356] flex items-center justify-center shrink-0 text-[#F2B705] text-base leading-none">✈</div>
-                    <div className="w-px flex-1 bg-[#F2B705]/40 my-1 min-h-[24px]" />
+                    <div className="w-8 h-8 rounded-full bg-navy flex items-center justify-center shrink-0 text-primary text-base leading-none">✈</div>
+                    <div className="w-px flex-1 bg-primary/40 my-1 min-h-[24px]" />
                   </div>
                   <div className="pb-4 pt-1">
                     <p className="text-sm font-semibold text-foreground">Charleroi EBCI</p>
@@ -560,9 +557,9 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
                   return (
                     <li key={i} className="flex gap-3">
                       <div className="flex flex-col items-center">
-                        <div className="w-8 h-8 rounded-full bg-[#F2B705] flex items-center justify-center shrink-0 text-[#113356] text-sm font-bold leading-none">{i + 1}</div>
-                        {!isLastWp && <div className="w-px flex-1 bg-[#F2B705]/40 my-1 min-h-[24px]" />}
-                        {isLastWp && <div className="w-px flex-1 bg-[#F2B705]/40 my-1 min-h-[24px]" />}
+                        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0 text-primary-foreground text-sm font-bold leading-none">{i + 1}</div>
+                        {!isLastWp && <div className="w-px flex-1 bg-primary/40 my-1 min-h-[24px]" />}
+                        {isLastWp && <div className="w-px flex-1 bg-primary/40 my-1 min-h-[24px]" />}
                       </div>
                       <div className="pb-4 pt-1">
                         <p className="text-sm font-semibold text-foreground">{wp.nom}</p>
@@ -575,7 +572,7 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
                 {/* Retour EBCI */}
                 <li className="flex gap-3">
                   <div className="flex flex-col items-center">
-                    <div className="w-8 h-8 rounded-full bg-[#113356] flex items-center justify-center shrink-0 text-[#F2B705] text-base leading-none">✈</div>
+                    <div className="w-8 h-8 rounded-full bg-navy flex items-center justify-center shrink-0 text-primary text-base leading-none">✈</div>
                   </div>
                   <div className="pt-1">
                     <p className="text-sm font-semibold text-foreground">Charleroi EBCI</p>
@@ -587,7 +584,7 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
               <div className="mt-5 pt-4 border-t border-border flex flex-wrap gap-2">
                 <Link
                   href={`/account/reservations/${resa.id}/carte`}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#F2B705] text-[#113356] rounded-xl text-xs font-bold hover:bg-[#e6a800] transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-xs font-bold hover:brightness-105 transition-all"
                 >
                   <Map size={12} />
                   Carte interactive
@@ -596,7 +593,7 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
                   href={mapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#113356] text-white rounded-xl text-xs font-bold hover:bg-[#0b2238] transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-navy text-white rounded-lg text-xs font-bold hover:bg-navy/90 transition-colors"
                 >
                   <MapPin size={12} />
                   Google Maps
@@ -609,8 +606,8 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
         {/* Accès EBCI — visible dès que la date est confirmée */}
         {["date_confirmee", "heure_confirmee", "vol_effectue"].includes(resa.statut) && (
           <div className="card-premium p-5 mt-5 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-[#113356]/8 flex items-center justify-center shrink-0">
-              <Navigation size={16} className="text-[#113356]" />
+            <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+              <Navigation size={16} className="text-foreground" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-foreground">Comment accéder à l&apos;aérodrome ?</p>
@@ -618,7 +615,7 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
             </div>
             <Link
               href="/access-ebci"
-              className="shrink-0 text-xs font-bold text-[#113356] hover:text-primary transition-colors"
+              className="shrink-0 text-xs font-bold text-foreground hover:text-primary transition-colors"
             >
               Voir →
             </Link>
@@ -639,7 +636,7 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
               type="button"
               onClick={handleReschedule}
               disabled={rescheduling}
-              className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500 text-white text-xs font-bold hover:bg-amber-600 transition-colors disabled:opacity-50"
+              className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-500 text-white text-xs font-bold hover:bg-amber-600 transition-colors disabled:opacity-50 cursor-pointer"
             >
               {rescheduling ? <Loader2 size={12} className="animate-spin" /> : <RotateCcw size={12} />}
               Reporter
@@ -650,7 +647,7 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
         {/* Contact footer */}
         <p className="text-center text-xs text-muted-foreground mt-6">
           Une question ?{" "}
-          <Link href="/contact" className="text-primary hover:text-gold-500 transition-colors font-medium">
+          <Link href="/contact" className="text-foreground font-semibold hover:text-primary transition-colors">
             Contactez-nous
           </Link>
         </p>

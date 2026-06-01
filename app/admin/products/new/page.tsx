@@ -9,7 +9,7 @@ export default function NewProductPage() {
     <div className="space-y-6">
       <div>
         <Link
-          href="/admin/products"
+          href="/admin/boutique?tab=produits"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors mb-4"
         >
           <ChevronLeft size={16} />

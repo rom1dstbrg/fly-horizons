@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search, LayoutDashboard, Plane, CalendarCheck, Route,
-  CalendarDays, ShoppingCart, Package, Ticket, Tag,
+  CalendarDays, Package, Ticket, Tag,
   Users, MessageSquare, Settings, ArrowRight, User,
   ShoppingBag, X, Loader2,
 } from "lucide-react";
@@ -16,21 +16,19 @@ interface SearchResult {
 }
 
 const QUICK_LINKS = [
-  { href: "/admin", label: "Vue globale", icon: LayoutDashboard, group: "Navigation" },
-  { href: "/admin/reservations", label: "Réservations", icon: CalendarCheck, group: "Navigation" },
-  { href: "/admin/vols-sur-mesure", label: "Vols sur mesure", icon: Route, group: "Navigation" },
-  { href: "/admin/disponibilites", label: "Disponibilités", icon: CalendarDays, group: "Navigation" },
-  { href: "/admin/orders", label: "Commandes", icon: ShoppingCart, group: "Navigation" },
-  { href: "/admin/voucher-orders", label: "Vols achetés", icon: Plane, group: "Navigation" },
-  { href: "/admin/products", label: "Produits", icon: Package, group: "Navigation" },
-  { href: "/admin/vouchers", label: "Vouchers", icon: Ticket, group: "Navigation" },
-  { href: "/admin/coupons", label: "Coupons", icon: Tag, group: "Navigation" },
-  { href: "/admin/clients", label: "Clients", icon: Users, group: "Navigation" },
-  { href: "/admin/contacts", label: "Messages", icon: MessageSquare, group: "Navigation" },
-  { href: "/admin/settings", label: "Paramètres", icon: Settings, group: "Navigation" },
-  { href: "/admin/reservations/new", label: "Nouvelle réservation", icon: CalendarCheck, group: "Actions rapides" },
-  { href: "/admin/vouchers", label: "Nouveau voucher", icon: Ticket, group: "Actions rapides" },
-  { href: "/admin/products/new", label: "Nouveau produit", icon: Package, group: "Actions rapides" },
+  { href: "/admin",                            label: "Vue globale",          icon: LayoutDashboard, group: "Navigation" },
+  { href: "/admin/vols",                       label: "Réservations",         icon: CalendarCheck,   group: "Navigation" },
+  { href: "/admin/vols?tab=sur-mesure",        label: "Vols sur mesure",      icon: Route,           group: "Navigation" },
+  { href: "/admin/vols?tab=disponibilites",    label: "Disponibilités",       icon: CalendarDays,    group: "Navigation" },
+  { href: "/admin/boutique",                   label: "Vouchers",             icon: Ticket,          group: "Navigation" },
+  { href: "/admin/boutique?tab=produits",      label: "Produits",             icon: Package,         group: "Navigation" },
+  { href: "/admin/boutique?tab=coupons",       label: "Coupons",              icon: Tag,             group: "Navigation" },
+  { href: "/admin/clients",                    label: "Clients",              icon: Users,           group: "Navigation" },
+  { href: "/admin/contacts",                   label: "Messages",             icon: MessageSquare,   group: "Navigation" },
+  { href: "/admin/settings",                   label: "Paramètres",           icon: Settings,        group: "Navigation" },
+  { href: "/admin/reservations/new",           label: "Nouvelle réservation", icon: CalendarCheck,   group: "Actions rapides" },
+  { href: "/admin/boutique",                   label: "Nouveau voucher",      icon: Ticket,          group: "Actions rapides" },
+  { href: "/admin/products/new",               label: "Nouveau produit",      icon: Package,         group: "Actions rapides" },
 ];
 
 const STATUS_LABELS: Record<string, string> = {
@@ -185,7 +183,7 @@ export function CommandPalette() {
               {results.orders.map(order => (
                 <button
                   key={order.id}
-                  onClick={() => navigate("/admin/orders")}
+                  onClick={() => navigate("/admin/boutique")}
                   className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-secondary transition-colors text-left"
                 >
                   <div className="w-7 h-7 rounded-full bg-gold/10 flex items-center justify-center shrink-0">
@@ -210,7 +208,7 @@ export function CommandPalette() {
               {results.vouchers.map(v => (
                 <button
                   key={v.id}
-                  onClick={() => navigate("/admin/vouchers")}
+                  onClick={() => navigate("/admin/boutique?tab=vouchers")}
                   className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-secondary transition-colors text-left"
                 >
                   <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center shrink-0">

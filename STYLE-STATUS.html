@@ -1,125 +1,1411 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Style Status · Fly Horizons</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f5f7; color: #0b2238; min-height: 100vh; padding: 40px 20px; }
-    .wrapper { max-width: 900px; margin: 0 auto; }
-    h1 { font-size: 26px; font-weight: 900; margin-bottom: 4px; }
-    .sub { font-size: 13px; color: #888; margin-bottom: 32px; }
-    .stats { display: flex; gap: 12px; margin-bottom: 36px; flex-wrap: wrap; }
-    .stat { background: white; border-radius: 10px; border: 1px solid #e8ecf0; padding: 14px 20px; min-width: 120px; }
-    .stat-num { font-size: 30px; font-weight: 900; line-height: 1; }
-    .stat-lbl { font-size: 11px; color: #888; margin-top: 4px; }
-    .green  { color: #22c55e; }
-    .orange { color: #f97316; }
-    .gray   { color: #94a3b8; }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fly Horizons — Identité visuelle</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
+<style>
+/* ── TOKENS ─────────────────────────────────────────── */
+:root {
+  --navy:       #0b2238;
+  --gold:       #F2B705;
+  --gold-hover: #e6a800;
+  --bg:         #f5f5f7;
+  --card:       #ffffff;
+  --secondary:  #edf0f7;
+  --fg:         #1e2535;
+  --muted:      #64748b;
+  --border:     #e0e5ef;
+  --input:      #edf0f7;
+  --r-sm:       10px;
+  --r-md:       18px;
+  --r-lg:       26px;
+  --sh-card:    0 2px 14px rgba(11,34,56,.07);
+  --sh-hover:   0 8px 32px rgba(11,34,56,.11);
+  --sh-xl:      0 20px 60px rgba(11,34,56,.16);
+  --sh-gold:    0 6px 24px rgba(242,183,5,.35);
+}
 
-    .section { margin-bottom: 32px; }
-    .section-title { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 3px; color: #F2B705; margin-bottom: 10px; }
-    .list { display: flex; flex-direction: column; gap: 4px; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--fg); display: flex; }
 
-    .item { background: white; border-radius: 8px; border: 1px solid #e8ecf0; padding: 10px 14px; display: flex; align-items: center; gap-10px; gap: 10px; }
-    .item.done   { border-left: 3px solid #22c55e; }
-    .item.todo   { border-left: 3px solid #f97316; }
-    .item.redir  { border-left: 3px solid #cbd5e1; opacity: 0.6; }
+/* ── SIDEBAR ────────────────────────────────────────── */
+nav {
+  position: fixed; top: 0; left: 0; bottom: 0; width: 210px;
+  background: var(--navy); overflow-y: auto; padding: 24px 0;
+  z-index: 100;
+}
+nav .logo {
+  padding: 0 20px 20px;
+  font-size: 13px; font-weight: 900; color: #fff; letter-spacing: 1px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+nav .logo span { color: var(--gold); }
+nav ul { list-style: none; padding: 12px 0; }
+nav li a {
+  display: block; padding: 7px 20px;
+  font-size: 12px; font-weight: 500; color: rgba(255,255,255,.5);
+  text-decoration: none; transition: color .15s;
+}
+nav li a:hover { color: #fff; }
+nav li.group > span {
+  display: block; padding: 12px 20px 4px;
+  font-size: 9px; font-weight: 700; color: var(--gold);
+  letter-spacing: 2.5px; text-transform: uppercase;
+}
 
-    .item-left { flex: 1; display: flex; flex-direction: column; gap: 1px; }
-    .route { font-size: 13px; font-weight: 700; font-family: monospace; }
-    .desc  { font-size: 11px; color: #888; }
-    .badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; flex-shrink: 0; white-space: nowrap; }
-    .badge.done  { background: #dcfce7; color: #16a34a; }
-    .badge.todo  { background: #ffedd5; color: #c2410c; }
-    .badge.redir { background: #f1f5f9; color: #64748b; }
-  </style>
+/* ── MAIN ───────────────────────────────────────────── */
+main { margin-left: 210px; max-width: 1100px; padding: 40px 48px 80px; }
+
+/* ── SECTIONS ───────────────────────────────────────── */
+section { padding-top: 60px; scroll-margin-top: 20px; }
+.section-label {
+  font-size: 9px; font-weight: 700; color: var(--gold);
+  letter-spacing: 3px; text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.section-title {
+  font-size: 22px; font-weight: 900; color: var(--fg);
+  margin-bottom: 28px;
+  padding-bottom: 12px; border-bottom: 1px solid var(--border);
+}
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; margin-bottom: 20px; }
+.col { display: flex; flex-direction: column; gap: 8px; }
+.label {
+  font-size: 10px; font-weight: 600; color: var(--muted);
+  letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px;
+}
+
+/* ── COLORS ─────────────────────────────────────────── */
+.swatch-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+.swatch {
+  width: 80px;
+  border-radius: var(--r-sm); overflow: hidden;
+  box-shadow: var(--sh-card);
+}
+.swatch-color { height: 48px; }
+.swatch-info {
+  background: var(--card); padding: 6px 8px;
+  font-size: 10px; color: var(--muted); border-top: 1px solid var(--border);
+}
+.swatch-info strong { display: block; font-size: 11px; font-weight: 700; color: var(--fg); }
+
+/* ── TYPOGRAPHY ─────────────────────────────────────── */
+.typo-demo { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 28px 32px; }
+.eyebrow { font-size: 11px; font-weight: 700; color: var(--gold); letter-spacing: 3px; text-transform: uppercase; }
+.h1 { font-size: 56px; font-weight: 900; line-height: 1.0; letter-spacing: -.5px; }
+.h1 .gold { color: var(--gold); }
+.h2 { font-size: 40px; font-weight: 900; line-height: 1.05; letter-spacing: -.3px; }
+.h3 { font-size: 24px; font-weight: 900; line-height: 1.1; }
+.h4 { font-size: 18px; font-weight: 700; }
+.h5 { font-size: 15px; font-weight: 700; }
+.body-lg { font-size: 16px; line-height: 1.65; color: rgba(30,37,53,.7); }
+.body-sm { font-size: 13px; line-height: 1.6; color: var(--muted); }
+.mono  { font-family: ui-monospace, monospace; font-size: 13px; font-weight: 700; color: var(--gold); background: rgba(242,183,5,.1); padding: 2px 6px; border-radius: 4px; }
+
+.typo-row { margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.typo-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.typo-meta { font-size: 10px; color: var(--muted); margin-bottom: 4px; }
+
+/* ── BUTTONS ─────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 20px; border-radius: var(--r-sm);
+  font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 700;
+  cursor: pointer; border: none; text-decoration: none; transition: all .2s;
+}
+.btn-primary {
+  background: var(--gold); color: var(--navy);
+  box-shadow: var(--sh-gold);
+}
+.btn-primary:hover { background: var(--gold-hover); transform: translateY(-1px); }
+.btn-outline {
+  background: transparent; color: var(--fg);
+  border: 1.5px solid var(--border);
+}
+.btn-outline:hover { border-color: var(--fg); }
+.btn-ghost-white {
+  background: rgba(255,255,255,.1); color: #fff;
+  border: 1.5px solid rgba(255,255,255,.3); backdrop-filter: blur(4px);
+}
+.btn-ghost-white:hover { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.5); }
+.btn-navy-sm {
+  background: var(--secondary); color: var(--navy);
+  border: 1.5px solid #dce8ff; font-size: 11px; padding: 6px 12px;
+}
+.btn-navy-sm:hover { background: var(--navy); color: #fff; border-color: var(--navy); }
+.btn-sm { padding: 7px 14px; font-size: 12px; }
+.btn-lg { padding: 14px 28px; font-size: 15px; }
+.btn-icon { width: 36px; height: 36px; padding: 0; justify-content: center; border-radius: 8px; border: 1.5px solid var(--border); background: transparent; color: var(--muted); }
+.btn-icon:hover { color: var(--fg); background: var(--secondary); }
+.btn-destructive { background: #fef2f2; color: #ef4444; border: 1.5px solid #fecaca; font-size: 12px; padding: 6px 12px; }
+
+/* ── FORMS ───────────────────────────────────────────── */
+.form-demo { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 28px 32px; max-width: 420px; }
+.field { margin-bottom: 16px; }
+.field-label { display: block; font-size: 13px; font-weight: 600; color: var(--fg); margin-bottom: 5px; }
+.field-input {
+  width: 100%; padding: 10px 14px;
+  background: var(--input); border: 1.5px solid var(--border);
+  border-radius: var(--r-sm); font-family: 'Poppins', sans-serif;
+  font-size: 13px; color: var(--fg); outline: none; transition: border-color .2s, background .2s;
+  appearance: none;
+}
+.field-input::placeholder { color: rgba(100,116,139,.5); }
+.field-input:focus { border-color: var(--fg); background: var(--card); }
+.field-input.error { border-color: #ef4444; background: #fef2f2; }
+.field-error { font-size: 11px; color: #ef4444; margin-top: 4px; }
+.field-hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.input-icon-wrap { position: relative; }
+.input-icon-wrap .field-input { padding-left: 38px; }
+.input-icon-wrap .icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+.field-select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+textarea.field-input { resize: vertical; min-height: 100px; }
+.checkbox-row { display: flex; align-items: flex-start; gap: 10px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+.checkbox-row input { margin-top: 2px; accent-color: var(--navy); flex-shrink: 0; }
+
+/* ── CARDS ───────────────────────────────────────────── */
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r-sm); box-shadow: var(--sh-card);
+}
+.card-body { padding: 24px 28px; }
+.card:hover { box-shadow: var(--sh-hover); }
+
+.card-dark {
+  background: var(--navy); border-radius: var(--r-sm);
+  padding: 20px 24px;
+}
+
+.pack-card {
+  position: relative; overflow: hidden; border-radius: var(--r-sm);
+  aspect-ratio: 3/4; background: linear-gradient(160deg, var(--navy) 0%, #1a4a8a 100%);
+  cursor: pointer;
+}
+.pack-card-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,.92) 0%, rgba(0,0,0,.2) 50%, transparent 100%);
+}
+.pack-card-top {
+  position: absolute; top: 14px; left: 14px; right: 14px;
+  display: flex; align-items: flex-start; justify-content: space-between;
+}
+.pack-card-bottom { position: absolute; bottom: 0; left: 0; right: 0; padding: 16px 18px; }
+.badge-duration {
+  display: inline-flex; align-items: center;
+  background: rgba(0,0,0,.4); backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,.2); border-radius: 8px;
+  padding: 7px 12px; font-size: 14px; font-weight: 900; color: var(--gold);
+}
+.badge-popular {
+  display: inline-flex; background: var(--gold); border-radius: 8px;
+  padding: 6px 10px; font-size: 10px; font-weight: 900;
+  color: var(--navy); text-transform: uppercase; letter-spacing: .5px;
+}
+.pack-title { font-size: 18px; font-weight: 700; color: #fff; line-height: 1.3; margin-bottom: 4px; }
+.pack-desc { font-size: 12px; color: rgba(255,255,255,.65); margin-bottom: 10px; }
+.pack-price { font-size: 24px; font-weight: 900; color: #fff; line-height: 1; }
+.pack-cta {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 600; color: #fff;
+  background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18);
+  padding: 7px 12px; border-radius: 8px; backdrop-filter: blur(4px);
+  transition: all .3s;
+}
+.pack-card:hover .pack-cta { background: var(--gold); color: var(--navy); border-color: transparent; }
+
+/* ── BADGES & TAGS ───────────────────────────────────── */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 9999px;
+  font-size: 11px; font-weight: 600;
+}
+.badge-gold-soft { background: rgba(242,183,5,.12); color: #b38500; border: 1px solid rgba(242,183,5,.25); }
+.badge-navy-soft { background: rgba(11,34,56,.07); color: var(--navy); border: 1px solid rgba(11,34,56,.12); }
+.badge-green { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+.badge-red   { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+.badge-muted { background: var(--secondary); color: var(--muted); border: 1px solid var(--border); }
+.badge-white-ghost { background: rgba(255,255,255,.06); color: rgba(255,255,255,.6); border: 1px solid rgba(255,255,255,.1); }
+
+.statut-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: var(--r-sm);
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+}
+
+/* ── SECTIONS MARKETING ──────────────────────────────── */
+.section-navy {
+  background: var(--navy); border-radius: var(--r-sm); padding: 40px 44px;
+}
+.section-white {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 40px 44px;
+}
+.section-secondary {
+  background: var(--secondary); border-radius: var(--r-sm); padding: 40px 44px;
+}
+.wave-separator {
+  height: 32px; overflow: hidden; position: relative;
+}
+
+.trust-bar {
+  background: var(--card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  padding: 20px 28px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+}
+.trust-item { display: flex; align-items: center; gap: 10px; }
+.trust-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--secondary); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.trust-title { font-size: 12px; font-weight: 600; color: var(--fg); }
+.trust-desc { font-size: 11px; color: var(--muted); }
+
+/* ── HEADER ──────────────────────────────────────────── */
+.header-demo {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 18px; box-shadow: var(--sh-card);
+  padding: 0 20px; display: flex; align-items: center;
+  height: 56px; gap: 8px;
+}
+.header-logo { font-size: 16px; font-weight: 900; color: var(--navy); letter-spacing: -.3px; flex-shrink: 0; }
+.header-logo span { color: var(--gold); }
+.header-spacer { flex: 1; }
+.header-nav { display: flex; align-items: center; gap: 2px; }
+.header-link {
+  padding: 6px 10px; font-size: 12px; font-weight: 500; color: rgba(30,37,53,.65);
+  border-radius: 8px; text-decoration: none; transition: all .15s;
+}
+.header-link:hover { color: var(--fg); background: var(--secondary); }
+.header-sep { width: 1px; height: 18px; background: var(--border); margin: 0 6px; }
+.header-actions { display: flex; align-items: center; gap: 4px; }
+
+/* ── STEPPER ─────────────────────────────────────────── */
+.stepper { display: flex; align-items: center; gap: 0; margin-bottom: 28px; }
+.step {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 600; color: var(--muted);
+}
+.step.active { color: var(--fg); }
+.step.done { color: var(--muted); }
+.step-num {
+  width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+  background: var(--secondary); border: 1.5px solid var(--border);
+  color: var(--muted); flex-shrink: 0;
+}
+.step.active .step-num { background: var(--navy); border-color: var(--navy); color: #fff; }
+.step.done .step-num { background: var(--secondary); border-color: var(--border); }
+.step-connector { flex: 1; height: 1px; background: var(--border); margin: 0 8px; min-width: 20px; }
+
+/* ── CALENDAR ────────────────────────────────────────── */
+.calendar { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-sm); overflow: hidden; max-width: 300px; }
+.cal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; border-bottom: 1px solid var(--border);
+  font-size: 13px; font-weight: 700; color: var(--fg);
+}
+.cal-days { display: grid; grid-template-columns: repeat(7, 1fr); padding: 10px 10px 4px; gap: 2px; }
+.cal-day-label { text-align: center; font-size: 10px; font-weight: 600; color: var(--muted); padding: 4px 0; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); padding: 0 10px 10px; gap: 2px; }
+.cal-cell {
+  aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; border-radius: 8px; cursor: pointer;
+  transition: all .15s; color: var(--fg);
+}
+.cal-cell:hover { background: var(--secondary); }
+.cal-cell.today { font-weight: 700; }
+.cal-cell.selected { background: var(--navy); color: #fff; font-weight: 700; }
+.cal-cell.available { color: var(--fg); }
+.cal-cell.unavailable { color: var(--border); cursor: not-allowed; }
+.cal-cell.past { color: rgba(100,116,139,.3); cursor: not-allowed; }
+.cal-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gold); margin: 0 auto; margin-top: -3px; }
+
+/* ── TABS ────────────────────────────────────────────── */
+.tabs { display: flex; border-bottom: 1.5px solid var(--border); margin-bottom: 24px; }
+.tab {
+  padding: 10px 16px; font-size: 13px; font-weight: 500; color: var(--muted);
+  cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1.5px;
+  transition: all .15s; text-decoration: none;
+}
+.tab.active { color: var(--fg); font-weight: 600; border-bottom-color: var(--navy); }
+.tab:hover { color: var(--fg); }
+
+/* ── RESERVATION STATUS ───────────────────────────────── */
+.resa-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 18px 20px; }
+.resa-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+.resa-date { font-size: 15px; font-weight: 700; color: var(--fg); }
+.resa-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.resa-body { display: flex; gap: 16px; flex-wrap: wrap; padding-top: 12px; border-top: 1px solid var(--border); }
+.resa-info { font-size: 11px; color: var(--muted); }
+.resa-info strong { display: block; font-size: 13px; font-weight: 600; color: var(--fg); }
+
+/* ── INFO ROW ────────────────────────────────────────── */
+.info-row { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid rgba(30,37,53,.07); }
+.info-row:last-child { border-bottom: none; }
+.info-icon { color: var(--gold); flex-shrink: 0; }
+.info-key { font-size: 10px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 1px; }
+.info-val { font-size: 13px; font-weight: 600; color: var(--fg); }
+
+/* ── ACCORDION ────────────────────────────────────────── */
+.accordion { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-sm); overflow: hidden; }
+.accordion-item { border-bottom: 1px solid var(--border); }
+.accordion-item:last-child { border-bottom: none; }
+.accordion-q {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; font-size: 13px; font-weight: 500; color: var(--fg); cursor: pointer;
+}
+.accordion-a { padding: 0 20px 16px; font-size: 12px; color: var(--muted); line-height: 1.65; border-top: 1px solid var(--border); padding-top: 12px; }
+
+/* ── DIVIDER ─────────────────────────────────────────── */
+hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+.section-divider {
+  margin: 48px 0 24px; padding: 12px 16px;
+  background: var(--navy); border-radius: 8px;
+  font-size: 10px; font-weight: 700; color: rgba(255,255,255,.4);
+  letter-spacing: 3px; text-transform: uppercase;
+}
+
+/* ── SPACING ─────────────────────────────────────────── */
+.spacing-demo { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.sp { background: rgba(242,183,5,.35); border: 1px solid var(--gold); border-radius: 3px; }
+.sp-label { font-size: 10px; color: var(--muted); text-align: center; margin-top: 4px; }
+
+/* ── MAP MOCKUP ───────────────────────────────────────── */
+.map-mockup {
+  background: #132d4a; border-radius: var(--r-sm); position: relative; overflow: hidden;
+  height: 260px; border: 1px solid rgba(255,255,255,.08);
+}
+.map-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+  background-size: 30px 30px;
+}
+.map-route {
+  position: absolute; top: 40%; left: 15%; width: 70%;
+  border-top: 2px dashed rgba(242,183,5,.6); transform: rotate(-5deg);
+}
+.map-pin {
+  position: absolute; width: 10px; height: 10px; border-radius: 50%;
+  background: var(--gold); border: 2px solid #fff;
+  box-shadow: 0 0 12px rgba(242,183,5,.6);
+}
+.map-label { position: absolute; font-size: 9px; font-weight: 600; color: rgba(255,255,255,.5); }
+</style>
 </head>
 <body>
-<div class="wrapper">
 
-  <h1>Style Status · Fly Horizons</h1>
-  <p class="sub">Mis à jour le 31 mai 2026</p>
+<!-- ── SIDEBAR ── -->
+<nav>
+  <div class="logo">FLY <span>HORIZONS</span><br><small style="font-weight:400;font-size:9px;color:rgba(255,255,255,.3);letter-spacing:1px">IDENTITÉ VISUELLE</small></div>
+  <ul>
+    <li class="group"><span>Design tokens</span></li>
+    <li><a href="#colors">Palette</a></li>
+    <li><a href="#typography">Typographie</a></li>
+    <li><a href="#spacing">Espacements</a></li>
+    <li><a href="#shadows">Ombres & rayons</a></li>
+    <li class="group"><span>Composants</span></li>
+    <li><a href="#header">Header</a></li>
+    <li><a href="#buttons">Boutons</a></li>
+    <li><a href="#forms">Formulaires</a></li>
+    <li><a href="#cards">Cartes</a></li>
+    <li><a href="#badges">Badges & tags</a></li>
+    <li><a href="#accordion">Accordéon</a></li>
+    <li><a href="#stepper">Stepper</a></li>
+    <li><a href="#calendar">Calendrier</a></li>
+    <li><a href="#tabs">Onglets</a></li>
+    <li class="group"><span>Patterns page</span></li>
+    <li><a href="#sections">Sections</a></li>
+    <li><a href="#pack-card">Cards vols</a></li>
+    <li><a href="#reservation-card">Réservation</a></li>
+    <li><a href="#map">Carte vol mesure</a></li>
+    <li class="group"><span>Pages</span></li>
+    <li><a href="#page-marketing">Marketing (dark)</a></li>
+    <li><a href="#page-account">Compte client</a></li>
+    <li><a href="#page-auth">Auth (login)</a></li>
+    <li><a href="#footer">Footer</a></li>
+  </ul>
+</nav>
 
-  <div class="stats">
-    <div class="stat"><div class="stat-num green">19</div><div class="stat-lbl">Pages terminées</div></div>
-    <div class="stat"><div class="stat-num orange">7</div><div class="stat-lbl">Pages à faire</div></div>
-    <div class="stat"><div class="stat-num gray">4</div><div class="stat-lbl">Redirects (rien à faire)</div></div>
+<!-- ── MAIN ── -->
+<main>
+
+  <div style="padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:8px">
+    <div class="eyebrow" style="margin-bottom:6px">Fly Horizons · Référence design</div>
+    <h1 class="h3" style="font-size:28px">Identité visuelle figée</h1>
+    <p class="body-sm" style="margin-top:6px">Ce fichier est la source de vérité pour tout le design. Toute nouvelle page doit respecter ces tokens et patterns sans exception.</p>
   </div>
 
-  <!-- Pages publiques terminées -->
-  <div class="section">
-    <div class="section-title">Pages publiques — terminées</div>
-    <div class="list">
-      <div class="item done"><div class="item-left"><span class="route">/</span><span class="desc">Accueil</span></div><span class="badge done">OK</span></div>
-      <div class="item done"><div class="item-left"><span class="route">/nos-offres</span><span class="desc">Catalogue vols</span></div><span class="badge done">OK</span></div>
-      <div class="item done"><div class="item-left"><span class="route">/vols/[slug]</span><span class="desc">Détail d'un vol</span></div><span class="badge done">OK</span></div>
-      <div class="item done"><div class="item-left"><span class="route">/vol-sur-mesure</span><span class="desc">Vol sur mesure</span></div><span class="badge done">OK</span></div>
-      <div class="item done"><div class="item-left"><span class="route">/reservation</span><span class="desc">Wizard de réservation (3 étapes)</span></div><span class="badge done">OK</span></div>
-      <div class="item done"><div class="item-left"><span class="route">/reservation/success</span><span class="desc">Confirmation réservation</span></div><span class="badge done">OK</span></div>
-      <div class="item done"><div class="item-left"><span class="route">/reservation/reporter/[token]</span><span class="desc">Report de vol (lien email)</span></div><span class="badge done">OK</span></div>
-      <div class="item done"><div class="item-left"><span class="route">/reservation/reporter/confirme</span><span class="desc">Confirmation report</span></div><span class="badge done">OK</span></div>
-      <div class="item done"><div class="item-left"><span class="route">/cart</span><span class="desc">Panier</span></div><span class="badge done">OK</span></div>
-      <div class="item done"><div class="item-left"><span class="route">/checkout</span><span class="desc">Finaliser commande</span></div><span class="badge done">OK</span></div>
-      <div class="item done"><div class="item-left"><span class="route">/about</span><span class="desc">À propos</span></div><span class="badge done">OK</span></div>
-      <div class="item done"><div class="item-left"><span class="route">/contact</span><span class="desc">Contact</span></div><span class="badge done">OK</span></div>
-      <div class="item done"><div class="item-left"><span class="route">/faq</span><span class="desc">FAQ</span></div><span class="badge done">OK</span></div>
+  <!-- ══ PALETTE ══ -->
+  <section id="colors">
+    <div class="section-label">Design tokens</div>
+    <div class="section-title">Palette de couleurs</div>
+
+    <div class="label">Couleurs principales</div>
+    <div class="swatch-grid" style="margin-bottom:24px">
+      <div class="swatch">
+        <div class="swatch-color" style="background:#0b2238"></div>
+        <div class="swatch-info"><strong>Navy</strong>#0b2238</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#F2B705"></div>
+        <div class="swatch-info"><strong>Gold</strong>#F2B705</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#e6a800"></div>
+        <div class="swatch-info"><strong>Gold hover</strong>#e6a800</div>
+      </div>
     </div>
-  </div>
 
-  <!-- Pages publiques à faire -->
-  <div class="section">
-    <div class="section-title">Pages publiques — à faire</div>
-    <div class="list">
-      <div class="item todo"><div class="item-left"><span class="route">/orders</span><span class="desc">Mes commandes (vouchers achetés)</span></div><span class="badge todo">À faire</span></div>
-      <div class="item todo"><div class="item-left"><span class="route">/orders/success</span><span class="desc">Confirmation commande</span></div><span class="badge todo">À faire</span></div>
-      <div class="item todo"><div class="item-left"><span class="route">/vol-sur-mesure/success</span><span class="desc">Confirmation vol sur mesure</span></div><span class="badge todo">À faire</span></div>
-      <div class="item todo"><div class="item-left"><span class="route">/guide</span><span class="desc">Guide passager</span></div><span class="badge todo">À faire</span></div>
-      <div class="item todo"><div class="item-left"><span class="route">/access-ebci</span><span class="desc">Accès aéroport EBCI</span></div><span class="badge todo">À faire</span></div>
-      <div class="item todo"><div class="item-left"><span class="route">/cgp</span><span class="desc">Conditions générales de participation</span></div><span class="badge todo">À faire</span></div>
-      <div class="item todo"><div class="item-left"><span class="route">/vol/itineraire/[token]</span><span class="desc">Validation itinéraire (lien email)</span></div><span class="badge todo">À faire</span></div>
+    <div class="label">Surfaces & arrière-plans</div>
+    <div class="swatch-grid" style="margin-bottom:24px">
+      <div class="swatch">
+        <div class="swatch-color" style="background:#f5f5f7;border:1px solid #e0e5ef"></div>
+        <div class="swatch-info"><strong>Background</strong>#f5f5f7</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#ffffff;border:1px solid #e0e5ef"></div>
+        <div class="swatch-info"><strong>Card</strong>#ffffff</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#edf0f7;border:1px solid #e0e5ef"></div>
+        <div class="swatch-info"><strong>Secondary</strong>#edf0f7</div>
+      </div>
     </div>
-  </div>
 
-  <!-- Redirects -->
-  <div class="section">
-    <div class="section-title">Redirects (rien à faire)</div>
-    <div class="list">
-      <div class="item redir"><div class="item-left"><span class="route">/shop → /nos-offres</span></div><span class="badge redir">Redirect</span></div>
-      <div class="item redir"><div class="item-left"><span class="route">/packs → /nos-offres</span></div><span class="badge redir">Redirect</span></div>
-      <div class="item redir"><div class="item-left"><span class="route">/packs/[slug] → /vols/[slug]</span></div><span class="badge redir">Redirect</span></div>
-      <div class="item redir"><div class="item-left"><span class="route">/product/[slug] → /vols/[slug]</span></div><span class="badge redir">Redirect</span></div>
+    <div class="label">Texte & UI</div>
+    <div class="swatch-grid">
+      <div class="swatch">
+        <div class="swatch-color" style="background:#1e2535"></div>
+        <div class="swatch-info"><strong>Foreground</strong>#1e2535</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#64748b"></div>
+        <div class="swatch-info"><strong>Muted</strong>#64748b</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#e0e5ef;border:1px solid #ccc"></div>
+        <div class="swatch-info"><strong>Border</strong>#e0e5ef</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#edf0f7;border:1px solid #e0e5ef"></div>
+        <div class="swatch-info"><strong>Input bg</strong>#edf0f7</div>
+      </div>
     </div>
-  </div>
 
-  <!-- Compte client -->
-  <div class="section">
-    <div class="section-title">Compte client</div>
-    <div class="list">
-      <div class="item done"><div class="item-left"><span class="route">/account</span><span class="desc">Mon compte (profil, réservations, vouchers)</span></div><span class="badge done">OK</span></div>
-      <div class="item done"><div class="item-left"><span class="route">/account/reservations/[id]</span><span class="desc">Détail réservation</span></div><span class="badge done">OK</span></div>
-      <div class="item done"><div class="item-left"><span class="route">/account/reservations/[id]/carte</span><span class="desc">Carte vol en direct</span></div><span class="badge done">OK</span></div>
+    <div style="margin-top:24px;padding:16px 20px;background:var(--secondary);border-radius:var(--r-sm);border:1px solid var(--border)">
+      <p class="body-sm"><strong style="color:var(--fg)">Règle d'utilisation :</strong> Navy <strong>#0b2238</strong> uniquement en fonds de sections entières, header flottant, footer, et accents UI (boutons outline, icônes). Jamais en fond de page entier. <strong>#f5f5f7</strong> pour les fonds de pages. <strong>#ffffff</strong> pour les cards. <strong>#edf0f7</strong> pour les sections secondaires.</p>
     </div>
-  </div>
+  </section>
 
-  <!-- Auth -->
-  <div class="section">
-    <div class="section-title">Authentification</div>
-    <div class="list">
-      <div class="item done"><div class="item-left"><span class="route">/login</span><span class="desc">Connexion</span></div><span class="badge done">OK</span></div>
-      <div class="item done"><div class="item-left"><span class="route">/register</span><span class="desc">Inscription</span></div><span class="badge done">OK</span></div>
+  <!-- ══ TYPOGRAPHY ══ -->
+  <section id="typography">
+    <div class="section-label">Design tokens</div>
+    <div class="section-title">Typographie — Poppins</div>
+
+    <div class="typo-demo">
+      <div class="typo-row">
+        <div class="typo-meta">Eyebrow — 11px / 700 / tracking 3px / uppercase / gold</div>
+        <div class="eyebrow">Au départ de Charleroi (EBCI)</div>
+      </div>
+      <div class="typo-row">
+        <div class="typo-meta">H1 — 56px / 900 / leading 1.0 / tracking -0.5px</div>
+        <div class="h1">Volez où vous voulez.<br><span class="gold">À votre façon.</span></div>
+      </div>
+      <div class="typo-row">
+        <div class="typo-meta">H2 — 40px / 900 / leading 1.05 / tracking -0.3px</div>
+        <div class="h2">Jusqu'où voulez-vous aller ?</div>
+      </div>
+      <div class="typo-row">
+        <div class="typo-meta">H3 — 24px / 900</div>
+        <div class="h3">Romain Destanberg</div>
+      </div>
+      <div class="typo-row">
+        <div class="typo-meta">H4 — 18px / 700</div>
+        <div class="h4">Envoyez un message</div>
+      </div>
+      <div class="typo-row">
+        <div class="typo-meta">H5 — 15px / 700</div>
+        <div class="h5">Paiement et acompte</div>
+      </div>
+      <div class="typo-row">
+        <div class="typo-meta">Body lg — 16px / 400 / leading 1.65 / color fg/70</div>
+        <div class="body-lg">Baptême de l'air en avion léger depuis Charleroi, itinéraire libre, jusqu'à 3 passagers, date au choix.</div>
+      </div>
+      <div class="typo-row">
+        <div class="typo-meta">Body sm — 13px / 400 / leading 1.6 / muted</div>
+        <div class="body-sm">Pas de forfait à la minute. Tracez votre itinéraire sur la carte interactive et voyez le prix s'ajuster en direct, kilomètre par kilomètre.</div>
+      </div>
+      <div class="typo-row">
+        <div class="typo-meta">Mono code promo — font-mono / 13px / 700 / gold bg soft</div>
+        <span class="mono">WELCOME2026</span>
+      </div>
     </div>
-  </div>
 
-  <!-- Token / email -->
-  <div class="section">
-    <div class="section-title">Liens email (token)</div>
-    <div class="list">
-      <div class="item done"><div class="item-left"><span class="route">/satisfaction/[id]</span><span class="desc">Formulaire de satisfaction</span></div><span class="badge done">OK</span></div>
+    <div style="margin-top:20px;padding:14px 18px;background:var(--secondary);border-radius:var(--r-sm);border:1px solid var(--border)">
+      <p class="body-sm"><strong style="color:var(--fg)">Règle typographique :</strong> H1/H2 toujours en <strong>font-weight: 900</strong> (font-black). Jamais de police différente de Poppins. Le gold <strong>#F2B705</strong> s'utilise uniquement sur les mots-clés de titres ou les eyebrows, jamais sur du corps de texte.</p>
     </div>
-  </div>
+  </section>
 
-</div>
+  <!-- ══ SPACING ══ -->
+  <section id="spacing">
+    <div class="section-label">Design tokens</div>
+    <div class="section-title">Espacements</div>
+
+    <div class="label" style="margin-bottom:12px">Échelle verticale des sections</div>
+    <div class="card" style="padding:20px 24px;margin-bottom:20px">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:8px 12px;font-weight:700;color:var(--fg)">py-14 → 56px</td>
+          <td style="padding:8px 12px;color:var(--muted)">Sections compactes (trust bar, CTA band, footer interne)</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:8px 12px;font-weight:700;color:var(--fg)">py-16 → 64px</td>
+          <td style="padding:8px 12px;color:var(--muted)">Sections standards (vols, packs)</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:8px 12px;font-weight:700;color:var(--fg)">py-20 → 80px</td>
+          <td style="padding:8px 12px;color:var(--muted)">Sections majeures (témoignages, À propos)</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 12px;font-weight:700;color:var(--fg)">pt-[98px]</td>
+          <td style="padding:8px 12px;color:var(--muted)">Offset header sur toutes les pages intérieures</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="label" style="margin-bottom:12px">Container max-width</div>
+    <div class="card" style="padding:16px 20px;margin-bottom:20px">
+      <p class="body-sm"><strong style="color:var(--fg)">max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10</strong> — utilisé sur toutes les pages sans exception.</p>
+    </div>
+
+    <div class="label" style="margin-bottom:12px">Grilles</div>
+    <div class="card" style="padding:16px 20px">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:6px 12px;font-weight:700;color:var(--fg)">4 colonnes</td>
+          <td style="padding:6px 12px;color:var(--muted)">Cartes vols (grid-cols-1 sm:2 lg:4), trust bar (4 items)</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:6px 12px;font-weight:700;color:var(--fg)">2 colonnes</td>
+          <td style="padding:6px 12px;color:var(--muted)">À propos, Contact, Checkout (2/3 + 1/3)</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:6px 12px;font-weight:700;color:var(--fg)">3 colonnes</td>
+          <td style="padding:6px 12px;color:var(--muted)">Témoignages, cards approche, FAQ résultats</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 12px;font-weight:700;color:var(--fg)">gap</td>
+          <td style="padding:6px 12px;color:var(--muted)">gap-3 ou gap-4 (petits), gap-5 (standard), gap-8 / gap-12 (layouts)</td>
+        </tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══ SHADOWS ══ -->
+  <section id="shadows">
+    <div class="section-label">Design tokens</div>
+    <div class="section-title">Ombres & rayons</div>
+
+    <div class="row" style="margin-bottom:28px">
+      <div style="text-align:center">
+        <div style="width:100px;height:60px;background:var(--card);border-radius:var(--r-sm);box-shadow:var(--sh-card);border:1px solid var(--border)"></div>
+        <div class="sp-label" style="margin-top:6px">--sh-card<br><small>0 2px 14px rgba(11,34,56,.07)</small></div>
+      </div>
+      <div style="text-align:center">
+        <div style="width:100px;height:60px;background:var(--card);border-radius:var(--r-sm);box-shadow:var(--sh-hover)"></div>
+        <div class="sp-label" style="margin-top:6px">--sh-hover<br><small>0 8px 32px rgba(11,34,56,.11)</small></div>
+      </div>
+      <div style="text-align:center">
+        <div style="width:100px;height:60px;background:var(--card);border-radius:var(--r-sm);box-shadow:var(--sh-xl)"></div>
+        <div class="sp-label" style="margin-top:6px">--sh-xl<br><small>0 20px 60px rgba(11,34,56,.16)</small></div>
+      </div>
+      <div style="text-align:center">
+        <div style="width:100px;height:60px;background:var(--gold);border-radius:var(--r-sm);box-shadow:var(--sh-gold)"></div>
+        <div class="sp-label" style="margin-top:6px">--sh-gold<br><small>0 6px 24px rgba(242,183,5,.35)</small></div>
+      </div>
+    </div>
+
+    <div class="label" style="margin-bottom:12px">Border-radius</div>
+    <div class="row">
+      <div style="text-align:center">
+        <div style="width:80px;height:40px;background:var(--navy);border-radius:10px"></div>
+        <div class="sp-label" style="margin-top:6px">r-sm · 10px<br><small>inputs, cards, tags</small></div>
+      </div>
+      <div style="text-align:center">
+        <div style="width:80px;height:40px;background:var(--navy);border-radius:18px"></div>
+        <div class="sp-label" style="margin-top:6px">r-md · 18px<br><small>sections, header</small></div>
+      </div>
+      <div style="text-align:center">
+        <div style="width:80px;height:40px;background:var(--navy);border-radius:9999px"></div>
+        <div class="sp-label" style="margin-top:6px">pill · 9999px<br><small>badges, filtres FAQ</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ HEADER ══ -->
+  <section id="header">
+    <div class="section-label">Composants</div>
+    <div class="section-title">Header — flottant, fixe, rounded-2xl</div>
+
+    <div class="header-demo">
+      <div class="header-logo">Fly <span>Horizons</span></div>
+      <div class="header-spacer"></div>
+      <div class="header-nav">
+        <a class="header-link" href="#">Nos offres</a>
+        <a class="header-link" href="#">Vol sur mesure</a>
+        <a class="header-link" href="#">À propos</a>
+        <a class="header-link" href="#">FAQ</a>
+        <a class="header-link" href="#">Contact</a>
+      </div>
+      <div class="header-sep"></div>
+      <div class="header-actions">
+        <a class="btn btn-navy-sm" href="#">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          Connexion
+        </a>
+        <button class="btn-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;padding:14px 18px;background:var(--secondary);border-radius:var(--r-sm);border:1px solid var(--border)">
+      <p class="body-sm"><strong style="color:var(--fg)">Comportement :</strong> <code style="background:var(--border);padding:1px 5px;border-radius:4px;font-size:11px">position:fixed</code> · top: 8px desktop, top: 14px md · inset-x: 12px · max-w-[1400px] · z-index 800 · shadow augmente au scroll (shadow-premium → shadow-premium-lg).</p>
+    </div>
+  </section>
+
+  <!-- ══ BUTTONS ══ -->
+  <section id="buttons">
+    <div class="section-label">Composants</div>
+    <div class="section-title">Boutons</div>
+
+    <div class="label">Primaire — gold + navy text (CTA principal)</div>
+    <div class="row" style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)">
+      <a class="btn btn-primary btn-lg" href="#">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        Réserver un vol
+      </a>
+      <a class="btn btn-primary" href="#">Créer mon vol sur mesure</a>
+      <a class="btn btn-primary btn-sm" href="#">Voir les vols</a>
+    </div>
+
+    <div class="label">Outline — border + fg text (action secondaire sur fond blanc)</div>
+    <div class="row" style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)">
+      <a class="btn btn-outline btn-lg" href="#">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Vol sur mesure
+      </a>
+      <a class="btn btn-outline" href="#">Conditions générales</a>
+    </div>
+
+    <div class="label" style="margin-bottom:8px">Ghost blanc — sur fond navy sombre</div>
+    <div style="background:var(--navy);padding:20px;border-radius:var(--r-sm);margin-bottom:20px">
+      <div class="row">
+        <a class="btn btn-ghost-white" href="#">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Vol sur mesure
+        </a>
+      </div>
+    </div>
+
+    <div class="label">Connexion — small, navy border, bg secondary (dans le header)</div>
+    <div class="row" style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)">
+      <a class="btn btn-navy-sm" href="#">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        Connexion
+      </a>
+    </div>
+
+    <div class="label">Icon button — pour les actions discrètes (panier, fermer…)</div>
+    <div class="row">
+      <button class="btn-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
+      </button>
+      <button class="btn-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      </button>
+      <button class="btn-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <button class="btn btn-destructive">Supprimer</button>
+    </div>
+  </section>
+
+  <!-- ══ FORMS ══ -->
+  <section id="forms">
+    <div class="section-label">Composants</div>
+    <div class="section-title">Formulaires</div>
+
+    <div class="row" style="align-items:flex-start">
+      <div class="form-demo">
+        <div class="field">
+          <label class="field-label">Email</label>
+          <div class="input-icon-wrap">
+            <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            <input class="field-input" type="email" placeholder="vous@exemple.com" />
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Mot de passe</label>
+          <div class="input-icon-wrap">
+            <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input class="field-input" type="password" placeholder="••••••••" />
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Sujet</label>
+          <select class="field-input field-select">
+            <option>Réservation</option>
+            <option>Vol sur mesure</option>
+            <option>Bon cadeau</option>
+            <option>Autre</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label">Message</label>
+          <textarea class="field-input" placeholder="Votre message…"></textarea>
+        </div>
+        <div class="field">
+          <label class="field-label">Champ en erreur</label>
+          <input class="field-input error" type="text" value="email invalide" />
+          <div class="field-error">Adresse email incorrecte.</div>
+        </div>
+        <div class="field">
+          <div class="checkbox-row">
+            <input type="checkbox" id="cgp" checked />
+            <label for="cgp">J'accepte les <a href="#" style="color:var(--fg);font-weight:600">conditions générales de prestation</a> et reconnais avoir pris connaissance du cadre légal NCO.GEN.104.</label>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Envoyer le message
+        </button>
+        <p class="body-sm" style="text-align:center;margin-top:12px">Pas encore de compte ? <a href="#" style="color:var(--fg);font-weight:600">Créer un compte</a></p>
+      </div>
+
+      <div style="flex:1;max-width:300px">
+        <div class="label" style="margin-bottom:10px">États des champs</div>
+        <div class="card card-body" style="padding:16px 20px">
+          <div style="margin-bottom:12px">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Normal</div>
+            <input class="field-input" style="width:100%" placeholder="Champ normal" />
+          </div>
+          <div style="margin-bottom:12px">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Focus (border-color: fg, bg: white)</div>
+            <input class="field-input" style="width:100%;border-color:var(--fg);background:var(--card)" value="En cours de saisie" />
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Erreur</div>
+            <input class="field-input error" style="width:100%" value="Valeur incorrecte" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ CARDS ══ -->
+  <section id="cards">
+    <div class="section-label">Composants</div>
+    <div class="section-title">Cartes</div>
+
+    <div class="label" style="margin-bottom:10px">card-premium — fond blanc, border, shadow</div>
+    <div class="row" style="margin-bottom:24px;align-items:stretch">
+      <div class="card" style="flex:1;max-width:320px">
+        <div class="card-body">
+          <div style="width:28px;height:4px;background:var(--gold);border-radius:9999px;margin-bottom:16px"></div>
+          <p style="font-size:16px;font-weight:700;color:var(--fg);margin-bottom:8px">Partage de frais</p>
+          <p class="body-sm">Les vols sont organisés dans le cadre réglementé du partage de frais (NCO.GEN.104). Chaque passager contribue aux coûts réels.</p>
+        </div>
+      </div>
+      <div class="card" style="flex:1;max-width:320px">
+        <div class="card-body">
+          <p style="font-size:14px;font-weight:700;color:var(--fg);margin-bottom:4px">Sophie M. · Namur</p>
+          <p class="body-sm" style="margin-top:6px">"La vue sur la vallée de la Sambre était à couper le souffle. Un souvenir que je garderai longtemps."</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="label" style="margin-bottom:10px">card-dark — fond navy (panneaux info, CTA embedded)</div>
+    <div class="row" style="margin-bottom:24px">
+      <div class="card-dark" style="flex:1;max-width:480px;display:flex;align-items:center;gap:16px">
+        <div style="width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F2B705" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div style="flex:1">
+          <p style="font-size:13px;font-weight:700;color:#fff">Vous ne trouvez pas votre réponse ?</p>
+          <p style="font-size:11px;color:rgba(255,255,255,.45);margin-top:2px">Romain vous répond personnellement sous 24 h.</p>
+        </div>
+        <a class="btn btn-primary btn-sm" href="#">Nous contacter</a>
+      </div>
+    </div>
+
+    <div class="label" style="margin-bottom:10px">card highlight — info importante (encadrée, bg white/5 navy)</div>
+    <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:var(--r-sm);padding:14px 16px;max-width:480px;background:var(--navy);margin-bottom:24px">
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div style="width:22px;height:22px;border-radius:50%;background:rgba(242,183,5,.2);border:1px solid rgba(242,183,5,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#F2B705" stroke-width="2.5"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <p style="font-size:12px;color:rgba(255,255,255,.65);line-height:1.55"><strong style="color:#fff">Pas de minuterie. Pas de formule fixe.</strong> Vous volez 52 minutes ? Vous payez 52 minutes.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ BADGES ══ -->
+  <section id="badges">
+    <div class="section-label">Composants</div>
+    <div class="section-title">Badges, tags & statuts</div>
+
+    <div class="label" style="margin-bottom:10px">Badges inline (pills)</div>
+    <div class="row" style="margin-bottom:20px">
+      <span class="badge badge-gold-soft">Le plus offert</span>
+      <span class="badge badge-navy-soft">Avion léger</span>
+      <span class="badge badge-green">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Payé
+      </span>
+      <span class="badge badge-red">Annulé</span>
+      <span class="badge badge-muted">Expiré</span>
+    </div>
+
+    <div class="label" style="margin-bottom:10px">Tags fonctionnels (features, filtres FAQ)</div>
+    <div class="row" style="margin-bottom:20px">
+      <span class="badge badge-muted" style="border-radius:9999px">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        Jusqu'à 3 passagers
+      </span>
+      <span class="badge badge-muted" style="border-radius:9999px">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Annulation gratuite 48 h
+      </span>
+      <span class="badge badge-muted" style="border-radius:9999px">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Itinéraire libre
+      </span>
+    </div>
+
+    <div class="label" style="margin-bottom:10px">Tags sur fond navy (features dans sections dark)</div>
+    <div style="background:var(--navy);padding:16px;border-radius:var(--r-sm);margin-bottom:20px">
+      <div class="row">
+        <span class="badge badge-white-ghost" style="border-radius:9999px">Jusqu'à 3 passagers</span>
+        <span class="badge badge-white-ghost" style="border-radius:9999px">Prix au km, sans surprise</span>
+        <span class="badge badge-white-ghost" style="border-radius:9999px">Escales possibles</span>
+      </div>
+    </div>
+
+    <div class="label" style="margin-bottom:10px">Statuts de réservation</div>
+    <div class="row">
+      <span class="statut-badge" style="background:rgba(242,183,5,.12);color:#9a7200;border:1px solid rgba(242,183,5,.25)">Acompte reçu</span>
+      <span class="statut-badge" style="background:#edf0f7;color:#64748b;border:1px solid #e0e5ef">En attente</span>
+      <span class="statut-badge" style="background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0">Confirmé</span>
+      <span class="statut-badge" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca">Annulé</span>
+      <span class="statut-badge" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe">Date confirmée</span>
+    </div>
+  </section>
+
+  <!-- ══ ACCORDION ══ -->
+  <section id="accordion">
+    <div class="section-label">Composants</div>
+    <div class="section-title">Accordéon FAQ</div>
+
+    <div class="accordion" style="max-width:640px">
+      <div class="accordion-item">
+        <div class="accordion-q">
+          <span>Comment réserver un vol en durée fixe ?</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transform:rotate(180deg);flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="accordion-a">
+          Rendez-vous sur la page <strong>Nos offres</strong>, choisissez votre durée : 30, 60, 90 ou 120 minutes. Sélectionnez une date et un horaire, renseignez vos informations, puis choisissez votre mode de paiement. La réservation est confirmée dès que l'acompte est reçu.
+        </div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-q">
+          <span>Comment fonctionne le vol sur mesure ?</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-q">
+          <span>Puis-je réserver pour quelqu'un d'autre ?</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ STEPPER ══ -->
+  <section id="stepper">
+    <div class="section-label">Composants</div>
+    <div class="section-title">Stepper — Réservation</div>
+
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:24px 28px;max-width:520px">
+      <div class="stepper">
+        <div class="step done">
+          <div class="step-num">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <span>Date & heure</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step active">
+          <div class="step-num">2</div>
+          <span>Informations</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <span>Paiement</span>
+        </div>
+      </div>
+      <p class="body-sm">Étape 2 active — les étapes passées affichent une coche, les étapes futures sont grisées.</p>
+    </div>
+  </section>
+
+  <!-- ══ CALENDAR ══ -->
+  <section id="calendar">
+    <div class="section-label">Composants</div>
+    <div class="section-title">Calendrier de disponibilités</div>
+
+    <div class="calendar">
+      <div class="cal-header">
+        <button class="btn-icon" style="width:28px;height:28px;border-radius:6px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <span>Juin 2026</span>
+        <button class="btn-icon" style="width:28px;height:28px;border-radius:6px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <div class="cal-days">
+        <div class="cal-day-label">L</div><div class="cal-day-label">M</div><div class="cal-day-label">M</div>
+        <div class="cal-day-label">J</div><div class="cal-day-label">V</div><div class="cal-day-label">S</div><div class="cal-day-label">D</div>
+      </div>
+      <div class="cal-grid">
+        <div class="cal-cell past">26</div><div class="cal-cell past">27</div><div class="cal-cell past">28</div>
+        <div class="cal-cell past">29</div><div class="cal-cell past">30</div><div class="cal-cell past">31</div><div class="cal-cell past">1</div>
+        <div class="cal-cell past">2</div><div class="cal-cell past">3</div><div class="cal-cell past">4</div>
+        <div class="cal-cell past">5</div><div class="cal-cell past">6</div><div class="cal-cell available">7</div><div class="cal-cell available">8</div>
+        <div class="cal-cell available">9</div><div class="cal-cell available">10</div><div class="cal-cell unavailable">11</div>
+        <div class="cal-cell available">12</div><div class="cal-cell available">13</div>
+        <div class="cal-cell selected">14</div>
+        <div class="cal-cell available">15</div>
+        <div class="cal-cell available">16</div><div class="cal-cell unavailable">17</div><div class="cal-cell unavailable">18</div>
+        <div class="cal-cell available">19</div><div class="cal-cell available">20</div><div class="cal-cell available">21</div><div class="cal-cell available">22</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:16px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)">
+        <div style="width:14px;height:14px;border-radius:4px;background:var(--navy)"></div> Sélectionné
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)">
+        <div style="width:14px;height:14px;border-radius:4px;background:var(--card);border:1.5px solid var(--border)"></div> Disponible
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)">
+        <div style="width:14px;height:14px;border-radius:4px;background:var(--secondary)"></div> Indisponible
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ TABS ══ -->
+  <section id="tabs">
+    <div class="section-label">Composants</div>
+    <div class="section-title">Onglets — espace compte</div>
+
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:20px 24px;max-width:520px">
+      <div class="tabs">
+        <a class="tab active" href="#">Mon profil</a>
+        <a class="tab" href="#">Mes réservations</a>
+        <a class="tab" href="#">Mes commandes</a>
+      </div>
+      <p class="body-sm">Contenu de l'onglet actif ici.</p>
+    </div>
+  </section>
+
+  <!-- ══ SECTIONS ══ -->
+  <section id="sections">
+    <div class="section-label">Patterns page</div>
+    <div class="section-title">Alternance des fonds de sections</div>
+
+    <div style="display:flex;flex-direction:column;gap:0;border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--border);max-width:480px">
+      <div style="background:linear-gradient(160deg,#0b2238 0%,#1a3a5c 100%);padding:28px 32px">
+        <div class="eyebrow" style="color:var(--gold)">Hero section</div>
+        <p style="color:rgba(255,255,255,.7);font-size:12px;margin-top:6px">background: linear-gradient navy → navy-deep<br>Texte blanc / gold. Utilisé : hero landing, hero nos-offres, hero vol-sur-mesure, section promo.</p>
+      </div>
+      <div style="background:#ffffff;padding:24px 32px;border-top:1px solid var(--border)">
+        <p style="font-size:12px;font-weight:700;color:var(--fg)">Section blanche</p>
+        <p class="body-sm" style="margin-top:4px">background: #ffffff · Utilisé : trust bar, section avion, CTA band, cart, checkout.</p>
+      </div>
+      <div style="background:#f5f5f7;padding:24px 32px;border-top:1px solid var(--border)">
+        <p style="font-size:12px;font-weight:700;color:var(--fg)">Section background #f5f5f7</p>
+        <p class="body-sm" style="margin-top:4px">Fond de page. Utilisé : body par défaut, pages compte, login, cart, reservation.</p>
+      </div>
+      <div style="background:#edf0f7;padding:24px 32px;border-top:1px solid var(--border)">
+        <p style="font-size:12px;font-weight:700;color:var(--fg)">Section secondary #edf0f7</p>
+        <p class="body-sm" style="margin-top:4px">Utilisé : témoignages, section "Votre pilote", FAQ, Contact, alternances légères.</p>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;padding:14px 18px;background:var(--secondary);border-radius:var(--r-sm);border:1px solid var(--border)">
+      <p class="body-sm"><strong style="color:var(--fg)">Transitions vague SVG :</strong> entre une section navy et une section blanche/secondary, utiliser une vague SVG de hauteur 48px (path avec Q bezier). Couleur du path = couleur de la section suivante.</p>
+    </div>
+  </section>
+
+  <!-- ══ PACK CARDS ══ -->
+  <section id="pack-card">
+    <div class="section-label">Patterns page</div>
+    <div class="section-title">Cards vols — photo-dominant</div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;max-width:720px">
+      <div>
+        <div class="pack-card">
+          <div class="pack-card-overlay"></div>
+          <div class="pack-card-top">
+            <div class="badge-duration">30 min</div>
+          </div>
+          <div class="pack-card-bottom">
+            <div class="pack-title">Vol Découverte</div>
+            <div class="pack-desc">Tour panoramique depuis Charleroi</div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span class="pack-price">99 €</span>
+              <span class="pack-cta">Réserver <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="pack-card">
+          <div class="pack-card-overlay"></div>
+          <div class="pack-card-top">
+            <div class="badge-duration">60 min</div>
+            <div class="badge-popular">Le plus offert</div>
+          </div>
+          <div class="pack-card-bottom">
+            <div class="pack-title">Vol Horizon</div>
+            <div class="pack-desc">Namur, vallée de la Sambre</div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span class="pack-price">169 €</span>
+              <span class="pack-cta">Réserver <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="pack-card">
+          <div class="pack-card-overlay"></div>
+          <div class="pack-card-top">
+            <div class="badge-duration">90 min</div>
+          </div>
+          <div class="pack-card-bottom">
+            <div class="pack-title">Vol Panorama</div>
+            <div class="pack-desc">Bruxelles ou la côte belge</div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span class="pack-price">229 €</span>
+              <span class="pack-cta">Réserver <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="pack-card">
+          <div class="pack-card-overlay"></div>
+          <div class="pack-card-top">
+            <div class="badge-duration">120 min</div>
+          </div>
+          <div class="pack-card-bottom">
+            <div class="pack-title">Vol Aventure</div>
+            <div class="pack-desc">Ardennes, frontière France</div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span class="pack-price">289 €</span>
+              <span class="pack-cta">Réserver <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="body-sm" style="margin-top:12px">Aspect ratio 3/4 (portrait). Hover : scale image 1.06 + CTA devient gold. Badge durée : bg black/40 blur, border white/20. Badge populaire : bg gold, text navy.</p>
+  </section>
+
+  <!-- ══ RESERVATION CARD ══ -->
+  <section id="reservation-card">
+    <div class="section-label">Patterns page</div>
+    <div class="section-title">Card réservation — espace compte</div>
+
+    <div class="resa-card" style="max-width:480px">
+      <div class="resa-header">
+        <div>
+          <div class="resa-date">Samedi 14 juin 2026</div>
+          <div class="resa-meta">Vol 60 minutes · 2 passagers</div>
+        </div>
+        <span class="statut-badge" style="background:rgba(242,183,5,.12);color:#9a7200;border:1px solid rgba(242,183,5,.25)">Acompte reçu</span>
+      </div>
+      <div class="resa-body">
+        <div class="resa-info">
+          <strong>169 €</strong>
+          Acompte
+        </div>
+        <div class="resa-info">
+          <strong>Horizon</strong>
+          Type de vol
+        </div>
+        <div class="resa-info">
+          <strong>—</strong>
+          Heure à confirmer
+        </div>
+      </div>
+      <div style="margin-top:14px;display:flex;gap:8px">
+        <a class="btn btn-outline btn-sm" href="#">Voir les détails</a>
+        <a class="btn btn-sm" style="background:var(--secondary);color:var(--muted);border:1px solid var(--border)" href="#">Reporter</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ MAP ══ -->
+  <section id="map">
+    <div class="section-label">Patterns page</div>
+    <div class="section-title">Configurateur vol sur mesure</div>
+
+    <div style="display:grid;grid-template-columns:1fr 220px;gap:12px;max-width:680px">
+      <div class="map-mockup">
+        <div class="map-grid"></div>
+        <div class="map-route"></div>
+        <div class="map-pin" style="top:38%;left:18%"></div>
+        <div class="map-pin" style="top:50%;left:48%"></div>
+        <div class="map-pin" style="top:35%;left:76%"></div>
+        <div class="map-label" style="top:32%;left:10%">Charleroi EBCI</div>
+        <div class="map-label" style="top:54%;left:42%">Namur</div>
+        <div class="map-label" style="top:29%;left:70%">Liège</div>
+      </div>
+      <div class="card" style="padding:0">
+        <div style="padding:16px 18px;border-bottom:1px solid var(--border)">
+          <div class="eyebrow" style="font-size:9px;margin-bottom:6px">Estimation</div>
+          <div style="font-size:28px;font-weight:900;color:var(--fg)">~147 <span style="font-size:16px;font-weight:500;color:var(--muted)">€</span></div>
+        </div>
+        <div style="padding:12px 18px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <span style="color:var(--muted)">Durée</span>
+            <span style="font-weight:700;color:var(--fg)">42 min</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <span style="color:var(--muted)">Distance</span>
+            <span style="font-weight:700;color:var(--fg)">98 km</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <span style="color:var(--muted)">Passagers</span>
+            <span style="font-weight:700;color:var(--fg)">2</span>
+          </div>
+        </div>
+        <div style="padding:14px 16px">
+          <button class="btn btn-primary" style="width:100%;justify-content:center;font-size:12px;padding:10px 14px">Envoyer ma demande</button>
+          <p style="font-size:10px;color:var(--muted);text-align:center;margin-top:8px">Aucun paiement immédiat</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ PAGE MARKETING ══ -->
+  <section id="page-marketing">
+    <div class="section-label">Patterns page</div>
+    <div class="section-title">Pages marketing — règles de composition</div>
+
+    <div class="card card-body" style="margin-bottom:16px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <div>
+          <p style="font-size:12px;font-weight:700;color:var(--fg);margin-bottom:10px">Structure type d'une page marketing</p>
+          <ol style="font-size:12px;color:var(--muted);line-height:2;padding-left:18px">
+            <li>Section hero navy (pt-[98px])</li>
+            <li>Vague SVG de transition (h-12)</li>
+            <li>Section principale bg-#f5f5f7 ou bg-white</li>
+            <li>Section alternée bg-#edf0f7</li>
+            <li>CTA band bg-white border-t</li>
+          </ol>
+        </div>
+        <div>
+          <p style="font-size:12px;font-weight:700;color:var(--fg);margin-bottom:10px">Structure d'une section</p>
+          <ol style="font-size:12px;color:var(--muted);line-height:2;padding-left:18px">
+            <li>Eyebrow (gold, caps, tracking 3px)</li>
+            <li>H2 (font-black, leading-none)</li>
+            <li>Ligne décorative or (w-10 h-0.5) si centré</li>
+            <li>Sous-titre muted (sm, max-w-lg)</li>
+            <li>Contenu (grid, cards, liste)</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--secondary);padding:16px 20px;border-radius:var(--r-sm);border:1px solid var(--border)">
+      <p class="body-sm"><strong style="color:var(--fg)">Voix de marque dans les pages :</strong> "nous" sur le site public · "Romain" dans les étapes personnelles et les descriptions pilote · "je" dans les emails envoyés par Romain. Pas de tirets cadratins (—), ponctuation naturelle (, ; . :). Jamais de point d'exclamation dans les titres H1/H2.</p>
+    </div>
+  </section>
+
+  <!-- ══ PAGE COMPTE ══ -->
+  <section id="page-account">
+    <div class="section-label">Patterns page</div>
+    <div class="section-title">Pages compte client — règles de composition</div>
+
+    <div class="card card-body" style="max-width:520px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+        <div>
+          <p style="font-size:12px;color:var(--muted)">Connecté en tant que</p>
+          <p style="font-size:18px;font-weight:900;color:var(--fg)">Bonjour, Romain</p>
+        </div>
+        <button class="btn btn-outline btn-sm" style="color:var(--muted)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Déconnexion
+        </button>
+      </div>
+      <div class="tabs">
+        <a class="tab active" href="#">Mon profil</a>
+        <a class="tab" href="#">Mes réservations</a>
+        <a class="tab" href="#">Mes commandes</a>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div class="field">
+          <label class="field-label" style="font-size:12px">Prénom</label>
+          <input class="field-input" style="font-size:12px" value="Romain" />
+        </div>
+        <div class="field">
+          <label class="field-label" style="font-size:12px">Nom</label>
+          <input class="field-input" style="font-size:12px" value="Destanberg" />
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <label class="field-label" style="font-size:12px">Email</label>
+        <input class="field-input" style="font-size:12px" value="info@fly-horizons.com" />
+      </div>
+      <button class="btn btn-primary btn-sm">Enregistrer les modifications</button>
+    </div>
+
+    <div style="padding:14px 18px;background:var(--secondary);border-radius:var(--r-sm);border:1px solid var(--border)">
+      <p class="body-sm"><strong style="color:var(--fg)">Pages compte :</strong> fond bg-#f5f5f7 · header pt-offset · tabs underline (navy) · toutes les actions dans des cards-premium blanches · statuts avec colored badges · boutons primaires uniquement pour les actions critiques.</p>
+    </div>
+  </section>
+
+  <!-- ══ AUTH ══ -->
+  <section id="page-auth">
+    <div class="section-label">Patterns page</div>
+    <div class="section-title">Pages auth — Login / Register</div>
+
+    <div style="background:var(--bg);border-radius:var(--r-sm);border:1px solid var(--border);padding:32px;display:flex;align-items:center;justify-content:center">
+      <div style="width:100%;max-width:380px">
+        <h1 class="h3" style="text-align:center;margin-bottom:28px">Connexion</h1>
+        <div class="card card-body">
+          <div class="field">
+            <label class="field-label">Email</label>
+            <input class="field-input" type="email" placeholder="vous@exemple.com" />
+          </div>
+          <div class="field">
+            <label class="field-label">Mot de passe</label>
+            <input class="field-input" type="password" placeholder="••••••••" />
+          </div>
+          <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Se connecter
+          </button>
+          <p style="text-align:center;font-size:12px;color:var(--muted);margin-top:16px">Pas encore de compte ? <a href="#" style="color:var(--fg);font-weight:600">Créer un compte</a></p>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:14px;font-size:10px;color:rgba(100,116,139,.6)">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/><circle cx="12" cy="12" r="10"/></svg>
+          Connexion sécurisée · Données chiffrées
+        </div>
+      </div>
+    </div>
+    <p class="body-sm" style="margin-top:12px">Layout centré, min-h-screen bg-#f5f5f7, card max-w-md. Bouton pleine largeur gold. Note sécurité sous la card.</p>
+  </section>
+
+  <!-- ══ FOOTER ══ -->
+  <section id="footer">
+    <div class="section-label">Composants</div>
+    <div class="section-title">Footer</div>
+
+    <div style="background:var(--navy);border-radius:var(--r-sm);padding:36px 40px">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:32px;padding-bottom:28px;border-bottom:1px solid rgba(255,255,255,.05)">
+        <div>
+          <p style="font-size:18px;font-weight:900;color:#fff;margin-bottom:12px">Fly <span style="color:var(--gold)">Horizons</span></p>
+          <p style="font-size:12px;color:rgba(255,255,255,.4);line-height:1.6;max-width:200px">Baptêmes de l'air et vols sur mesure en avion léger depuis Charleroi · EBCI.</p>
+          <div style="display:flex;gap:6px;margin-top:14px">
+            <a href="#" style="width:30px;height:30px;border-radius:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4);text-decoration:none">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+            </a>
+            <a href="#" style="width:30px;height:30px;border-radius:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4);text-decoration:none">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+            </a>
+          </div>
+        </div>
+        <div>
+          <p style="font-size:9px;font-weight:700;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">Nos services</p>
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:8px">
+            <li><a href="#" style="font-size:12px;color:rgba(255,255,255,.4);text-decoration:none">Nos offres</a></li>
+            <li><a href="#" style="font-size:12px;color:rgba(255,255,255,.4);text-decoration:none">Vol sur mesure</a></li>
+          </ul>
+        </div>
+        <div>
+          <p style="font-size:9px;font-weight:700;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">Informations</p>
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:8px">
+            <li><a href="#" style="font-size:12px;color:rgba(255,255,255,.4);text-decoration:none">À propos</a></li>
+            <li><a href="#" style="font-size:12px;color:rgba(255,255,255,.4);text-decoration:none">FAQ</a></li>
+            <li><a href="#" style="font-size:12px;color:rgba(255,255,255,.4);text-decoration:none">Guide passager</a></li>
+            <li><a href="#" style="font-size:12px;color:rgba(255,255,255,.4);text-decoration:none">Conditions générales</a></li>
+          </ul>
+        </div>
+        <div>
+          <p style="font-size:9px;font-weight:700;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">Mon espace</p>
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:8px">
+            <li><a href="#" style="font-size:12px;color:rgba(255,255,255,.4);text-decoration:none">Mon compte</a></li>
+            <li><a href="#" style="font-size:12px;color:rgba(255,255,255,.4);text-decoration:none">Mes réservations</a></li>
+            <li><a href="#" style="font-size:12px;color:rgba(255,255,255,.4);text-decoration:none">Connexion</a></li>
+          </ul>
+        </div>
+        <div>
+          <p style="font-size:9px;font-weight:700;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">Contact</p>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F2B705" stroke-width="2" style="flex-shrink:0;margin-top:1px"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+              <a href="mailto:info@fly-horizons.com" style="font-size:11px;color:rgba(255,255,255,.4);text-decoration:none">info@fly-horizons.com</a>
+            </div>
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F2B705" stroke-width="2" style="flex-shrink:0;margin-top:1px"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              <p style="font-size:11px;color:rgba(255,255,255,.4)">Aéroport de Charleroi · EBCI</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding-top:18px;flex-wrap:wrap;gap:8px">
+        <p style="font-size:11px;color:rgba(255,255,255,.2)">© 2026 Fly Horizons · DESTANBERG Romain. Tous droits réservés.</p>
+        <div style="display:flex;align-items:center;gap:12px;font-size:11px;color:rgba(255,255,255,.2)">
+          <a href="#" style="color:rgba(255,255,255,.2);text-decoration:none">Conditions générales</a>
+          <span>·</span>
+          <a href="#" style="color:rgba(255,255,255,.2);text-decoration:none">Contact</a>
+          <span>·</span>
+          <div style="display:flex;align-items:center;gap:5px">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Paiement sécurisé
+            <span style="color:var(--gold);font-weight:700">Stripe</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+const links = document.querySelectorAll('nav a[href^="#"]');
+const sections = document.querySelectorAll('section[id]');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      links.forEach(l => l.style.color = '');
+      const active = document.querySelector(`nav a[href="#${e.target.id}"]`);
+      if (active) active.style.color = '#F2B705';
+    }
+  });
+}, { threshold: 0.3 });
+sections.forEach(s => observer.observe(s));
+</script>
 </body>
 </html>

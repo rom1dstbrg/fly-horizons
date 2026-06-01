@@ -28,7 +28,7 @@ type ActionItem = { label: string; href: string; icon: React.ElementType };
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="text-[11px] font-bold text-muted-foreground/50 uppercase tracking-[1.8px] mb-3">
+    <h2 className="text-[11px] font-bold text-muted-foreground uppercase tracking-[1.8px] mb-3">
       {children}
     </h2>
   );
@@ -54,10 +54,10 @@ function MiniKPICard({
         <Icon size={12} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] text-muted-foreground/60 font-medium uppercase tracking-wide leading-none">{label}</p>
+        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide leading-none">{label}</p>
         <p className="text-sm font-bold text-foreground tracking-tight mt-0.5">{value}</p>
       </div>
-      {href && <ChevronRight size={11} className="text-muted-foreground/25 group-hover:text-muted-foreground/50 transition-colors shrink-0" />}
+      {href && <ChevronRight size={11} className="text-muted-foreground/30 group-hover:text-muted-foreground transition-colors shrink-0" />}
     </div>
   );
   return href ? <Link href={href} className="block">{content}</Link> : content;
@@ -112,13 +112,13 @@ export default async function AdminDashboardPage() {
 
   // urgent = action immédiate requise
   const urgentItems: ActionItem[] = [
-    ...(paymentPending  > 0 ? [{ label: `${paymentPending} paiement${paymentPending > 1 ? "s" : ""} en attente de confirmation`, href: "/admin/reservations",   icon: AlertTriangle }] : []),
-    ...(volsDemainSansH > 0 ? [{ label: `${volsDemainSansH} vol${volsDemainSansH > 1 ? "s" : ""} demain sans heure confirmée`,    href: "/admin/reservations",   icon: AlertTriangle }] : []),
+    ...(paymentPending  > 0 ? [{ label: `${paymentPending} paiement${paymentPending > 1 ? "s" : ""} en attente de confirmation`, href: "/admin/vols",   icon: AlertTriangle }] : []),
+    ...(volsDemainSansH > 0 ? [{ label: `${volsDemainSansH} vol${volsDemainSansH > 1 ? "s" : ""} demain sans heure confirmée`,    href: "/admin/vols",   icon: AlertTriangle }] : []),
   ];
 
   // à traiter = à gérer dans la journée
   const todayItems: ActionItem[] = [
-    ...(enAttenteStd   > 0 ? [{ label: `${enAttenteStd} réservation${enAttenteStd > 1 ? "s" : ""} standard sans date`,                                             href: "/admin/reservations",   icon: AlertCircle   }] : []),
+    ...(enAttenteStd   > 0 ? [{ label: `${enAttenteStd} réservation${enAttenteStd > 1 ? "s" : ""} standard sans date`,                                             href: "/admin/vols",   icon: AlertCircle   }] : []),
     ...(enAttentePerso > 0 ? [{ label: `${enAttentePerso} vol${enAttentePerso > 1 ? "s" : ""} sur mesure en attente`,                                               href: "/admin/vols",           icon: AlertCircle   }] : []),
     ...(newContactsCount > 0 ? [{ label: `${newContactsCount} message${newContactsCount > 1 ? "s" : ""} non lu${newContactsCount > 1 ? "s" : ""}`,                  href: "/admin/contacts",       icon: MessageSquare }] : []),
     ...(pendingOrders  > 0 ? [{ label: `${pendingOrders} commande${pendingOrders > 1 ? "s" : ""} à traiter`,                                                        href: "/admin/boutique",       icon: ShoppingCart  }] : []),
@@ -146,7 +146,7 @@ export default async function AdminDashboardPage() {
         </div>
         <Link
           href="/admin/reservations/new"
-          className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-navy text-white text-sm font-semibold hover:bg-navy-dk transition-colors shadow-sm"
+          className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-navy text-white text-sm font-semibold hover:brightness-90 transition-colors shadow-sm"
         >
           <Plus size={15} />
           Nouvelle réservation
@@ -168,7 +168,7 @@ export default async function AdminDashboardPage() {
           {/* À traiter */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <h2 className="text-[11px] font-bold text-muted-foreground/50 uppercase tracking-[1.8px]">À traiter</h2>
+              <h2 className="text-[11px] font-bold text-muted-foreground uppercase tracking-[1.8px]">À traiter</h2>
               {allActionItems.length > 0 && (
                 <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold text-white ${isUrgent ? "bg-red-500" : "bg-amber-500"}`}>
                   {allActionItems.length}
@@ -213,11 +213,11 @@ export default async function AdminDashboardPage() {
                         const Icon = item.icon;
                         return (
                           <Link key={`t${i}`} href={item.href}
-                            className={`flex items-center gap-3 px-4 py-2.5 hover:bg-secondary/50 transition-colors group ${i < todayItems.length - 1 ? "border-b border-border" : ""}`}
+                            className={`flex items-center gap-3 px-4 py-2.5 hover:bg-secondary transition-colors group ${i < todayItems.length - 1 ? "border-b border-border" : ""}`}
                           >
                             <Icon size={12} className="text-amber-500 shrink-0" />
                             <span className="text-xs text-foreground flex-1 leading-snug">{item.label}</span>
-                            <ArrowRight size={10} className="text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors shrink-0" />
+                            <ArrowRight size={10} className="text-muted-foreground/30 group-hover:text-muted-foreground transition-colors shrink-0" />
                           </Link>
                         );
                       })}
@@ -242,7 +242,7 @@ export default async function AdminDashboardPage() {
                 { href: "/admin/vols?tab=disponibilites", icon: CalendarDays, label: "Disponibilités",       color: "text-muted-foreground" },
               ].map(({ href, icon: Icon, label, color }, idx, arr) => (
                 <Link key={href} href={href}
-                  className={`flex items-center gap-3 px-4 py-2.5 hover:bg-secondary/50 transition-colors text-sm text-foreground hover:text-navy ${idx < arr.length - 1 ? "border-b border-border" : ""}`}
+                  className={`flex items-center gap-3 px-4 py-2.5 hover:bg-secondary transition-colors text-sm text-foreground hover:text-navy ${idx < arr.length - 1 ? "border-b border-border" : ""}`}
                 >
                   <Icon size={13} className={`shrink-0 ${color}`} />
                   {label}
@@ -255,7 +255,7 @@ export default async function AdminDashboardPage() {
           {/* Stock faible */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-[11px] font-bold text-muted-foreground/50 uppercase tracking-[1.8px]">Stock faible</h2>
+              <h2 className="text-[11px] font-bold text-muted-foreground uppercase tracking-[1.8px]">Stock faible</h2>
               {lowStock.length > 0 && (
                 <Link href="/admin/boutique" className="text-xs text-muted-foreground hover:text-navy transition-colors flex items-center gap-1">
                   Gérer <ArrowRight size={11} />
@@ -321,7 +321,7 @@ export default async function AdminDashboardPage() {
                 shipped: "Expédiée", delivered: "Livrée", cancelled: "Annulée", refunded: "Remboursée",
               };
               return (
-                <div key={order.id} className={`flex items-center gap-4 px-5 py-3 hover:bg-secondary/40 transition-colors ${idx < recentOrders.length - 1 ? "border-b border-border" : ""}`}>
+                <div key={order.id} className={`flex items-center gap-4 px-5 py-3 hover:bg-secondary transition-colors ${idx < recentOrders.length - 1 ? "border-b border-border" : ""}`}>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{name}</p>
                     <p className="text-xs text-muted-foreground font-mono">#{order.id.slice(0, 8).toUpperCase()} · {date}</p>

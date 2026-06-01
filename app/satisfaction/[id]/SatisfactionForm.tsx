@@ -22,7 +22,7 @@ function StarRating({
   const [hovered, setHovered] = useState(0);
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium text-foreground">{label}</p>
+      <p className="text-sm font-semibold text-foreground">{label}</p>
       <div className="flex gap-1">
         {[1, 2, 3, 4, 5].map((n) => (
           <button
@@ -31,14 +31,14 @@ function StarRating({
             onClick={() => onChange(n)}
             onMouseEnter={() => setHovered(n)}
             onMouseLeave={() => setHovered(0)}
-            className="p-0.5 transition-transform hover:scale-110 focus:outline-none"
+            className="p-0.5 transition-transform hover:scale-110 focus:outline-none cursor-pointer"
             aria-label={`${n} étoile${n > 1 ? "s" : ""}`}
           >
             <Star
               size={28}
               className="transition-colors"
               fill={(hovered || value) >= n ? "#F2B705" : "transparent"}
-              stroke={(hovered || value) >= n ? "#F2B705" : "#cbd5e1"}
+              stroke={(hovered || value) >= n ? "#F2B705" : "#d1d8e4"}
               strokeWidth={1.5}
             />
           </button>
@@ -92,16 +92,16 @@ export default function SatisfactionForm({ reservationId, prenom, dateStr, duree
   if (status === "success") {
     return (
       <div className="text-center space-y-4">
-        <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
-          <CheckCircle className="text-green-600" size={32} />
+        <div className="w-14 h-14 rounded-lg bg-navy flex items-center justify-center mx-auto">
+          <CheckCircle className="text-primary" size={26} />
         </div>
-        <h2 className="text-xl font-bold text-foreground">Merci, {prenom} !</h2>
-        <p className="text-muted-foreground text-sm leading-relaxed">
+        <h2 className="text-xl font-black text-foreground">Merci, {prenom} !</h2>
+        <p className="text-sm text-muted-foreground leading-relaxed">
           Votre avis a bien été transmis, vos remarques incluses.<br />
-          Chaque retour, positif ou non, nous aide à nous améliorer.
+          Chaque retour nous aide à rendre chaque vol meilleur.
         </p>
         <p className="text-xs text-muted-foreground pt-2">
-          À bientôt à bord. L&apos;équipe Fly Horizons
+          À bientôt à bord.
         </p>
       </div>
     );
@@ -109,19 +109,21 @@ export default function SatisfactionForm({ reservationId, prenom, dateStr, duree
 
   return (
     <form onSubmit={handleSubmit} className="space-y-7">
+
       <div className="text-center">
-        <p className="text-xs font-bold uppercase tracking-widest text-[#F2B705] mb-1">Fly Horizons</p>
-        <h1 className="text-2xl font-extrabold text-foreground mb-1">Votre avis compte</h1>
+        <p className="text-[10px] font-black text-primary uppercase tracking-[3px] mb-1">
+          Enquête de satisfaction
+        </p>
+        <h1 className="text-2xl font-black text-foreground mb-1">Votre avis compte</h1>
         <p className="text-sm text-muted-foreground">
           Vol du {dateStr} &middot; {duree}
         </p>
       </div>
 
-      {/* Intro critique acceptée */}
-      <div className="flex items-start gap-3 bg-[#f5f8ff] border border-[#dce8ff] rounded-xl px-4 py-3.5">
-        <MessageSquare size={16} className="text-[#113356] shrink-0 mt-0.5" />
-        <p className="text-xs text-[#113356]/80 leading-relaxed">
-          <strong className="text-[#113356]">Nous accueillons toutes les remarques</strong>, bonnes comme mauvaises.
+      <div className="flex items-start gap-3 bg-secondary border border-border rounded-lg px-4 py-3.5">
+        <MessageSquare size={15} className="text-muted-foreground shrink-0 mt-0.5" />
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          <strong className="text-foreground">Nous accueillons toutes les remarques</strong>, bonnes comme mauvaises.
           Votre honnêteté est précieuse : chaque retour nous aide à rendre chaque vol meilleur.
         </p>
       </div>
@@ -134,9 +136,8 @@ export default function SatisfactionForm({ reservationId, prenom, dateStr, duree
 
       <hr className="border-border" />
 
-      {/* Commentaire général */}
       <div className="space-y-2">
-        <label htmlFor="commentaire" className="text-sm font-medium text-foreground">
+        <label htmlFor="commentaire" className="text-sm font-semibold text-foreground">
           Votre expérience globale{" "}
           <span className="text-muted-foreground font-normal">(facultatif)</span>
         </label>
@@ -147,13 +148,12 @@ export default function SatisfactionForm({ reservationId, prenom, dateStr, duree
           onChange={(e) => setCommentaire(e.target.value)}
           placeholder="Comment s'est passé votre vol ? Ce qui vous a marqué..."
           maxLength={1000}
-          className="w-full rounded-xl border border-border bg-secondary/30 px-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#F2B705]/50 resize-none"
+          className="w-full rounded-lg border border-border bg-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
         />
       </div>
 
-      {/* Points à améliorer */}
       <div className="space-y-2">
-        <label htmlFor="points_amelioration" className="text-sm font-medium text-foreground">
+        <label htmlFor="points_amelioration" className="text-sm font-semibold text-foreground">
           Ce qu&apos;on pourrait améliorer{" "}
           <span className="text-muted-foreground font-normal">(facultatif)</span>
         </label>
@@ -167,12 +167,12 @@ export default function SatisfactionForm({ reservationId, prenom, dateStr, duree
           onChange={(e) => setPointsAmelioration(e.target.value)}
           placeholder="Par exemple : l'accueil à l'arrivée, la durée du briefing, la communication avant le vol..."
           maxLength={1000}
-          className="w-full rounded-xl border border-amber-200 bg-amber-50/40 px-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-amber-300/50 resize-none"
+          className="w-full rounded-lg border border-border bg-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
         />
       </div>
 
       {status === "error" && (
-        <div className="flex items-start gap-2.5 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div className="flex items-start gap-2.5 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
           <AlertCircle size={16} className="shrink-0 mt-0.5" />
           <span>{errorMsg}</span>
         </div>
@@ -181,7 +181,7 @@ export default function SatisfactionForm({ reservationId, prenom, dateStr, duree
       <button
         type="submit"
         disabled={!canSubmit}
-        className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#F2B705] text-[#0b2238] font-bold py-3.5 text-sm transition-opacity disabled:opacity-40"
+        className="w-full flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground font-black py-3.5 text-sm hover:brightness-105 active:scale-[0.98] transition-all shadow-gold disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
       >
         {status === "loading" ? (
           <span className="animate-pulse">Envoi en cours…</span>
@@ -194,7 +194,7 @@ export default function SatisfactionForm({ reservationId, prenom, dateStr, duree
       </button>
 
       <p className="text-center text-xs text-muted-foreground">
-        Votre avis est lu personnellement par Romain.
+        Votre avis est lu personnellement par votre pilote.
       </p>
     </form>
   );

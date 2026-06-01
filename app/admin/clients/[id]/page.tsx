@@ -17,7 +17,7 @@ export default async function ClientFichePage({ params }: Props) {
 
   const [{ data: reservations }, { data: vouchers }] = await Promise.all([
     db.from("reservations")
-      .select("id, date_vol, heure_vol, duree, statut, type_resa, acompte, passagers, created_at")
+      .select("id, date_vol, heure_vol, duree, statut, type_resa, acompte, paye, passagers, created_at")
       .eq("client_id", client.id)
       .order("created_at", { ascending: false }),
     db.from("voucher_codes")

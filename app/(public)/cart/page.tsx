@@ -28,7 +28,7 @@ export default function CartPage() {
                 Decouvrez nos produits et ajoutez-en a votre panier.
               </p>
             </div>
-            <Button asChild className="bg-primary text-primary-foreground hover:bg-gold-400 font-semibold">
+            <Button asChild className="bg-primary text-primary-foreground hover:brightness-105 font-black shadow-gold">
               <Link href="/nos-offres">
                 <ShoppingBag size={16} className="mr-2" />
                 Voir nos vols
@@ -95,7 +95,7 @@ export default function CartPage() {
                   </Link>
                   {item.product_type === "voucher" && (
                     <div className="flex flex-wrap gap-1.5 mt-1">
-                      <span className="inline-block text-[10px] font-semibold text-[#F2B705] bg-[#F2B705]/10 border border-[#F2B705]/20 rounded-full px-2 py-0.5">
+                      <span className="inline-block text-[10px] font-semibold text-primary bg-primary/10 border border-primary/20 rounded-full px-2 py-0.5">
                         Voucher · livraison par email
                       </span>
                       <span className="inline-block text-[10px] font-semibold text-muted-foreground bg-secondary border border-border rounded-full px-2 py-0.5">
@@ -112,7 +112,7 @@ export default function CartPage() {
                     <div className="flex items-center border border-border rounded-md overflow-hidden">
                       <button
                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        className="w-8 h-8 flex items-center justify-center text-foreground hover:bg-secondary transition-colors text-sm"
+                        className="w-8 h-8 flex items-center justify-center text-foreground hover:bg-secondary transition-colors text-sm cursor-pointer"
                       >
                         -
                       </button>
@@ -121,7 +121,7 @@ export default function CartPage() {
                       </span>
                       <button
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="w-8 h-8 flex items-center justify-center text-foreground hover:bg-secondary transition-colors text-sm"
+                        className="w-8 h-8 flex items-center justify-center text-foreground hover:bg-secondary transition-colors text-sm cursor-pointer"
                       >
                         +
                       </button>
@@ -133,7 +133,7 @@ export default function CartPage() {
                       </span>
                       <button
                         onClick={() => removeItem(item.id)}
-                        className="text-muted-foreground hover:text-destructive transition-colors"
+                        className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
                         aria-label="Supprimer"
                       >
                         <Trash2 size={15} />
@@ -176,7 +176,7 @@ export default function CartPage() {
               <Button
                 asChild
                 size="lg"
-                className="w-full bg-primary text-primary-foreground hover:bg-gold-400 font-semibold shadow-gold text-base h-12"
+                className="w-full bg-primary text-primary-foreground hover:brightness-105 font-black shadow-gold text-base h-12"
               >
                 <Link href="/checkout" className="flex items-center justify-center gap-2">
                   <Lock size={15} />

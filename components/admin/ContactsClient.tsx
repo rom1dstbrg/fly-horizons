@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useTransition } from "react";
 import { updateContactStatut, replyContact, deleteContact } from "@/lib/actions/contacts";
@@ -82,7 +82,7 @@ function DrawerBody({
                 className={[
                   "text-xs px-3 py-1.5 rounded-lg border font-medium transition-all",
                   isActive
-                    ? "bg-[#113356] text-white border-[#113356] cursor-default"
+                    ? "bg-[#0b2238] text-white border-[#0b2238] cursor-default"
                     : "border-border text-muted-foreground hover:bg-secondary disabled:opacity-50",
                 ].join(" ")}
               >
@@ -116,7 +116,7 @@ function DrawerBody({
         <button
           onClick={handleReply}
           disabled={isPending || !reponse.trim()}
-          className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#113356] text-white text-xs font-semibold hover:bg-[#0b2238] disabled:opacity-50 transition-colors"
+          className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#0b2238] text-white text-xs font-semibold hover:bg-[#0b2238] disabled:opacity-50 transition-colors"
         >
           {isPending ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
           Envoyer par email
@@ -246,7 +246,7 @@ export function ContactsClient({ contacts: initial }: { contacts: Contact[] }) {
                 onClick={() => setFilter(f)}
                 className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors ${
                   filter === f
-                    ? "bg-[#113356] text-white border-[#113356]"
+                    ? "bg-[#0b2238] text-white border-[#0b2238]"
                     : "border-border text-muted-foreground hover:bg-secondary"
                 }`}
               >

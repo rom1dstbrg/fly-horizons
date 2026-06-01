@@ -17,13 +17,13 @@ export default function NotFound() {
           className="w-full max-w-xs sm:max-w-sm md:max-w-md mb-8 select-none"
           priority
         />
-        <h1 className="text-2xl font-bold text-foreground mb-2">Page introuvable</h1>
-        <p className="text-muted-foreground text-sm mb-8 max-w-xs">
+        <h1 className="text-2xl font-black text-[#0b2238] mb-2">Page introuvable</h1>
+        <p className="text-[#0b2238]/50 text-sm mb-8 max-w-xs">
           Cette page n&apos;existe pas ou a été déplacée.
         </p>
         <Link
           href="/"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors"
+          className="inline-flex items-center gap-2 px-6 py-3.5 bg-[#F2B705] text-[#0b2238] rounded-xl text-sm font-black hover:bg-[#e6a800] active:scale-[0.98] transition-all shadow-sm shadow-[#F2B705]/20"
         >
           Retour à l&apos;accueil
         </Link>

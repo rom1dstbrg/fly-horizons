@@ -35,6 +35,7 @@ export interface DrawerReservation {
   type_resa: string;
   voucher_code: string | null;
   acompte: number | null;
+  paye: number | null;
   payment_token: string | null;
   created_at: string;
   route?: string | null;
@@ -382,7 +383,7 @@ export function ReservationDrawer({
                   {r.clients?.prenom} {r.clients?.nom}
                 </p>
               </div>
-              <button onClick={onClose} className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground shrink-0">
+              <button onClick={onClose} className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground shrink-0 cursor-pointer">
                 <X size={16} />
               </button>
             </div>
@@ -408,8 +409,8 @@ export function ReservationDrawer({
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
 
               {/* Client */}
-              <div className="bg-secondary/50 rounded-xl p-4 space-y-2.5">
-                <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[1.5px] mb-3">Client</p>
+              <div className="bg-secondary rounded-xl p-4 space-y-2.5">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-3">Client</p>
                 <div className="flex items-center gap-2.5">
                   <User size={13} className="text-muted-foreground shrink-0" />
                   <span className="text-sm font-semibold text-foreground">{r.clients?.prenom} {r.clients?.nom}</span>
@@ -431,11 +432,11 @@ export function ReservationDrawer({
               {/* Vol details */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[1.5px]">Vol</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px]">Vol</p>
                   {!editingDetails && (
                     <button
                       onClick={openEditDetails}
-                      className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded hover:bg-secondary"
+                      className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded hover:bg-secondary cursor-pointer"
                     >
                       <Pencil size={10} />
                       Modifier
@@ -479,12 +480,12 @@ export function ReservationDrawer({
                     </div>
                     <div className="flex gap-2">
                       <button onClick={saveDetails} disabled={isPending}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-navy text-white text-xs font-semibold hover:bg-navy/90 transition-colors disabled:opacity-50">
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-navy text-white text-xs font-semibold hover:brightness-90 transition-colors disabled:opacity-50 cursor-pointer">
                         {isPending ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
                         Sauvegarder
                       </button>
                       <button onClick={() => setEditingDetails(false)}
-                        className="px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-secondary transition-colors">
+                        className="px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-secondary transition-colors cursor-pointer">
                         Annuler
                       </button>
                     </div>
@@ -527,11 +528,23 @@ export function ReservationDrawer({
                       </Field>
                     )}
                     {r.acompte != null && (
-                      <Field label="Acompte">
+                      <Field label="Paiement">
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <CreditCard size={13} className="text-muted-foreground" />
-                          {r.acompte} €
+                          <span className="text-muted-foreground text-xs">Prévu :</span>
+                          <span>{r.acompte} €</span>
                         </div>
+                        {r.paye != null && r.paye > 0 ? (
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <CheckCircle2 size={13} className="text-emerald-500" />
+                            <span className="text-emerald-600 font-semibold">{r.paye} € encaissé</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <XCircle size={13} className="text-amber-400" />
+                            <span className="text-amber-600 text-xs">Pas encore encaissé</span>
+                          </div>
+                        )}
                       </Field>
                     )}
                     {r.voucher_code && (
@@ -555,7 +568,7 @@ export function ReservationDrawer({
               {isStandard && (
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[1.5px] flex items-center gap-1.5">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] flex items-center gap-1.5">
                       <MapPin size={11} />
                       Route
                     </p>
@@ -571,14 +584,14 @@ export function ReservationDrawer({
                     onChange={e => setLocalRoute(e.target.value)}
                     rows={3}
                     placeholder="Villes, coordonnées, infos supplémentaires…"
-                    className="w-full px-2.5 py-2 rounded-lg border border-input bg-background text-xs resize-none focus:outline-none focus:ring-1 focus:ring-navy/30 placeholder:text-muted-foreground/40"
+                    className="w-full px-2.5 py-2 rounded-lg border border-input bg-background text-xs resize-none focus:outline-none focus:ring-1 focus:ring-navy/30 placeholder:text-muted-foreground"
                   />
 
                   <div className="flex items-center gap-2 mt-1.5">
                     <button
                       onClick={saveRoute}
                       disabled={isPending || localRoute === savedRoute}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-navy text-white text-xs font-semibold hover:bg-navy/90 transition-colors disabled:opacity-40"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-navy text-white text-xs font-semibold hover:brightness-90 transition-colors disabled:opacity-40 cursor-pointer"
                     >
                       {isPending ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
                       Sauvegarder
@@ -587,7 +600,7 @@ export function ReservationDrawer({
                       <button
                         onClick={doResendRoute}
                         disabled={isPending}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-40"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-40 cursor-pointer"
                       >
                         <RefreshCw size={11} />
                         Renvoyer la route
@@ -624,13 +637,13 @@ export function ReservationDrawer({
                       <button
                         onClick={() => doChangeStatut("date_confirmee")}
                         disabled={isPending}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors disabled:opacity-50"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors disabled:opacity-50 cursor-pointer"
                       >
                         {isPending ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}
                         Confirmer quand même
                       </button>
                       <button onClick={() => setShowDateAlert(false)}
-                        className="px-3 py-1.5 rounded-lg border border-orange-200 text-xs text-orange-700 hover:bg-orange-100 transition-colors">
+                        className="px-3 py-1.5 rounded-lg border border-orange-200 text-xs text-orange-700 hover:bg-orange-100 transition-colors cursor-pointer">
                         Annuler
                       </button>
                     </div>
@@ -641,7 +654,7 @@ export function ReservationDrawer({
               {/* Status actions */}
               {!showDateAlert && (
                 <div>
-                  <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[1.5px] mb-2">Actions</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-2">Actions</p>
                   <div className="space-y-2">
 
                     {/* en_attente → both date and time available */}
@@ -650,7 +663,7 @@ export function ReservationDrawer({
                         <button
                           onClick={() => changeStatut("date_confirmee")}
                           disabled={isPending}
-                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50"
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 cursor-pointer"
                         >
                           {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
                           Confirmer la date, envoyer l&apos;email
@@ -658,7 +671,7 @@ export function ReservationDrawer({
                         <button
                           onClick={() => changeStatut("heure_confirmee")}
                           disabled={isPending}
-                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors disabled:opacity-50"
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 cursor-pointer"
                         >
                           {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
                           Confirmer date + heure, envoyer l&apos;email
@@ -678,7 +691,7 @@ export function ReservationDrawer({
                         <button
                           onClick={() => changeStatut("heure_confirmee")}
                           disabled={isPending}
-                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors disabled:opacity-50"
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 cursor-pointer"
                         >
                           {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
                           Confirmer l&apos;heure, envoyer l&apos;email
@@ -692,7 +705,7 @@ export function ReservationDrawer({
                         <button
                           onClick={() => changeStatut("en_attente")}
                           disabled={isPending}
-                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-50"
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-50 cursor-pointer"
                         >
                           <ChevronRight size={14} className="rotate-180" />
                           Revenir en attente
@@ -705,7 +718,7 @@ export function ReservationDrawer({
                         <button
                           onClick={() => changeStatut("vol_effectue")}
                           disabled={isPending}
-                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-purple-500 text-white text-sm font-semibold hover:bg-purple-600 transition-colors disabled:opacity-50"
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-purple-500 text-white text-sm font-semibold hover:bg-purple-600 transition-colors disabled:opacity-50 cursor-pointer"
                         >
                           {isPending ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
                           Marquer vol effectué
@@ -713,7 +726,7 @@ export function ReservationDrawer({
                         <button
                           onClick={() => changeStatut("date_confirmee")}
                           disabled={isPending}
-                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-50"
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-50 cursor-pointer"
                         >
                           <ChevronRight size={14} className="rotate-180" />
                           Revenir planification
@@ -732,7 +745,7 @@ export function ReservationDrawer({
                       <button
                         onClick={doSendRescheduleInvite}
                         disabled={isPending}
-                        className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-amber-200 text-sm text-amber-600 hover:bg-amber-50 transition-colors disabled:opacity-50"
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-amber-200 text-sm text-amber-600 hover:bg-amber-50 transition-colors disabled:opacity-50 cursor-pointer"
                       >
                         {isPending ? <Loader2 size={14} className="animate-spin" /> : <RotateCcw size={14} />}
                         Proposer un report
@@ -743,7 +756,7 @@ export function ReservationDrawer({
                       <button
                         onClick={() => changeStatut("annulee")}
                         disabled={isPending}
-                        className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-red-200 text-sm text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-red-200 text-sm text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50 cursor-pointer"
                       >
                         <XCircle size={14} />
                         Annuler la réservation
@@ -754,7 +767,7 @@ export function ReservationDrawer({
                       <button
                         onClick={() => changeStatut("en_attente")}
                         disabled={isPending}
-                        className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-navy text-white text-sm font-semibold hover:bg-navy-dk transition-colors disabled:opacity-50"
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-navy text-white text-sm font-semibold hover:brightness-90 transition-colors disabled:opacity-50 cursor-pointer"
                       >
                         <ChevronRight size={14} />
                         Réactiver la réservation
@@ -776,7 +789,7 @@ export function ReservationDrawer({
                                 type="button"
                                 onClick={copyPaymentLink}
                                 title="Copier le lien"
-                                className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white border border-orange-200 text-xs font-semibold text-orange-700 hover:bg-orange-100 transition-colors"
+                                className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white border border-orange-200 text-xs font-semibold text-orange-700 hover:bg-orange-100 transition-colors cursor-pointer"
                               >
                                 {linkCopied ? <Check size={11} className="text-green-600" /> : <Copy size={11} />}
                                 {linkCopied ? "Copié" : "Copier"}
@@ -787,7 +800,7 @@ export function ReservationDrawer({
                                 type="button"
                                 onClick={doResendPaymentLink}
                                 disabled={isPending}
-                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors disabled:opacity-50"
+                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors disabled:opacity-50 cursor-pointer"
                               >
                                 {isPending ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}
                                 Renvoyer l&apos;email de paiement
@@ -807,7 +820,7 @@ export function ReservationDrawer({
                         <button
                           onClick={() => changeStatut("en_attente")}
                           disabled={isPending}
-                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-navy text-white text-sm font-semibold hover:bg-navy-dk transition-colors disabled:opacity-50"
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-navy text-white text-sm font-semibold hover:brightness-90 transition-colors disabled:opacity-50 cursor-pointer"
                         >
                           <Check size={14} />
                           Marquer paiement reçu
@@ -819,7 +832,7 @@ export function ReservationDrawer({
                       <button
                         onClick={() => changeStatut("date_confirmee")}
                         disabled={isPending}
-                        className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50"
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 cursor-pointer"
                       >
                         {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
                         Confirmer la date, envoyer l&apos;email
@@ -831,9 +844,9 @@ export function ReservationDrawer({
 
               {/* Free email */}
               <div>
-                <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[1.5px] mb-2">Email libre</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-2">Email libre</p>
                 <div className="mb-2">
-                  <p className="text-[10px] text-muted-foreground/60 flex items-center gap-1 mb-1.5">
+                  <p className="text-[10px] text-muted-foreground flex items-center gap-1 mb-1.5">
                     <Sparkles size={9} />
                     Templates rapides
                   </p>
@@ -851,7 +864,7 @@ export function ReservationDrawer({
                             setIncludeReschedule(false);
                           }
                         }}
-                        className="text-[11px] px-2.5 py-1 rounded-lg border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-50"
+                        className="text-[11px] px-2.5 py-1 rounded-lg border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-50 cursor-pointer"
                       >
                         {tpl.label}
                       </button>
@@ -860,7 +873,7 @@ export function ReservationDrawer({
                 </div>
                 <button
                   onClick={openEmailComposer}
-                  className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
                 >
                   <Send size={14} />
                   Composer un email…
@@ -872,7 +885,7 @@ export function ReservationDrawer({
             {/* Compositeur email plein-écran — occupe toute la hauteur du drawer */}
             {emailOpen && (
               <div className="flex-1 flex flex-col min-h-0 px-5 py-4 gap-3">
-                <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[1.5px] shrink-0">Email libre</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] shrink-0">Email libre</p>
                 <div className="shrink-0">
                   <p className="text-[10px] text-muted-foreground mb-1">À</p>
                   <p className="text-xs text-foreground font-medium">{r.clients?.email}</p>
@@ -904,6 +917,7 @@ export function ReservationDrawer({
                       includeReschedule
                         ? "border-amber-300 bg-amber-50 text-amber-700"
                         : "border-border text-muted-foreground hover:bg-secondary",
+                      "cursor-pointer",
                     ].join(" ")}
                   >
                     <RotateCcw size={11} className={includeReschedule ? "text-amber-600" : ""} />
@@ -914,14 +928,14 @@ export function ReservationDrawer({
                   <button
                     onClick={sendEmail_custom}
                     disabled={isPending || !emailSubject.trim() || !emailBody.trim()}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-navy text-white text-xs font-semibold hover:bg-navy/90 transition-colors disabled:opacity-50"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-navy text-white text-xs font-semibold hover:brightness-90 transition-colors disabled:opacity-50 cursor-pointer"
                   >
                     {isPending ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
                     Envoyer
                   </button>
                   <button
                     onClick={() => { setEmailOpen(false); setIncludeReschedule(false); }}
-                    className="px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-secondary transition-colors"
+                    className="px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-secondary transition-colors cursor-pointer"
                   >
                     Annuler
                   </button>
@@ -931,7 +945,7 @@ export function ReservationDrawer({
 
             {/* Footer */}
             <div className="px-5 py-3 border-t border-border shrink-0">
-              <p className="text-xs text-muted-foreground/50">
+              <p className="text-xs text-muted-foreground">
                 Créée le {new Date(r.created_at).toLocaleDateString("fr-BE", { day: "numeric", month: "long", year: "numeric" })}
               </p>
             </div>

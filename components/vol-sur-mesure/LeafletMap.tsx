@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import L from "leaflet";
@@ -136,7 +136,7 @@ const PLANE_SVG =
 function departIcon() {
   return L.divIcon({
     className: "",
-    html: `<div style="width:36px;height:36px;background:#113356;border:3px solid #F2B705;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,.45);">${PLANE_SVG}</div>`,
+    html: `<div style="width:36px;height:36px;background:#0b2238;border:3px solid #F2B705;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,.45);">${PLANE_SVG}</div>`,
     iconSize: [36, 36],
     iconAnchor: [18, 18],
   });
@@ -145,7 +145,7 @@ function departIcon() {
 function wpIcon(n: number) {
   return L.divIcon({
     className: "",
-    html: `<div style="width:30px;height:30px;background:#F2B705;color:#113356;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;box-shadow:0 2px 8px rgba(0,0,0,.35);cursor:grab;border:2px solid #fff;">${n}</div>`,
+    html: `<div style="width:30px;height:30px;background:#F2B705;color:#0b2238;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;box-shadow:0 2px 8px rgba(0,0,0,.35);cursor:grab;border:2px solid #fff;">${n}</div>`,
     iconSize: [30, 30],
     iconAnchor: [15, 15],
   });
@@ -154,7 +154,7 @@ function wpIcon(n: number) {
 function soIcon(icao: string) {
   return L.divIcon({
     className: "",
-    html: `<div style="background:#113356;border:2px solid #F2B705;color:#F2B705;padding:3px 8px;border-radius:6px;font-size:9px;font-weight:700;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.3);">${icao}</div>`,
+    html: `<div style="background:#0b2238;border:2px solid #F2B705;color:#F2B705;padding:3px 8px;border-radius:6px;font-size:9px;font-weight:700;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.3);">${icao}</div>`,
     iconSize: [56, 22],
     iconAnchor: [28, 11],
   });

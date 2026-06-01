@@ -1,5 +1,4 @@
 import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 
 export default function AccountLayout({
   children,
@@ -12,7 +11,6 @@ export default function AccountLayout({
       <div className="flex-1">
         {children}
       </div>
-      <Footer />
     </div>
   );
 }

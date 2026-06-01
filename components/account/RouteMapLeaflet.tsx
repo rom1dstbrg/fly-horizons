@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef } from "react";
 import L from "leaflet";
@@ -139,7 +139,7 @@ export default function RouteMapLeaflet({ waypoints }: Props) {
     // EBCI fixed marker
     const departIcon = L.divIcon({
       className: "",
-      html: `<div style="width:38px;height:38px;background:#113356;border:3px solid #F2B705;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.5);">${PLANE_SVG}</div>`,
+      html: `<div style="width:38px;height:38px;background:#0b2238;border:3px solid #F2B705;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.5);">${PLANE_SVG}</div>`,
       iconSize: [38, 38], iconAnchor: [19, 19],
     });
     L.marker([DEPART.lat, DEPART.lng], { icon: departIcon, interactive: false })
@@ -164,7 +164,7 @@ export default function RouteMapLeaflet({ waypoints }: Props) {
         className: "",
         html: `
           <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-            <div style="width:34px;height:34px;background:#F2B705;color:#113356;border-radius:50%;
+            <div style="width:34px;height:34px;background:#F2B705;color:#0b2238;border-radius:50%;
               display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;
               box-shadow:0 3px 12px rgba(0,0,0,.45);border:2.5px solid #fff;">${i + 1}</div>
             <div style="background:rgba(11,34,56,0.90);color:#fff;font-size:10px;font-weight:700;

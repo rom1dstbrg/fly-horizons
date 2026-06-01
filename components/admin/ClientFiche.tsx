@@ -20,6 +20,7 @@ interface Reservation {
   statut: string;
   type_resa: string;
   acompte: number | null;
+  paye: number | null;
   passagers: number | null;
   created_at: string;
 }
@@ -266,7 +267,7 @@ export function ClientFiche({
                         Vol le {volDate}
                         {r.heure_vol ? ` à ${r.heure_vol.slice(0, 5)}` : ""}, {r.duree} min
                         {r.passagers ? ` · ${r.passagers} passager${r.passagers > 1 ? "s" : ""}` : ""}
-                        {r.acompte ? ` · ${r.acompte} €` : ""}
+                        {r.paye != null && r.paye > 0 ? ` · ${r.paye} € payé` : r.acompte ? ` · ${r.acompte} € prévu` : ""}
                       </p>
                     </div>
                     <span className="text-xs text-muted-foreground/60 shrink-0 mt-0.5">{dateStr}</span>

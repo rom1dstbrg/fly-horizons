@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -30,7 +30,7 @@ export async function toggleProductActive(productId: string, active: boolean) {
       .eq("id", productId);
 
     if (error) return { error: error.message };
-    revalidatePath("/admin/products");
+    revalidatePath("/admin/boutique");
     revalidatePath("/admin/boutique");
     return { success: true };
   } catch {
@@ -84,7 +84,7 @@ export async function createProduct(formData: FormData) {
       return { error: error?.message ?? "Erreur creation produit" };
     }
 
-    revalidatePath("/admin/products");
+    revalidatePath("/admin/boutique");
     revalidatePath("/admin/boutique");
     revalidatePath("/shop");
     redirect(`/admin/products/${product.id}`);
@@ -133,13 +133,30 @@ export async function updateProduct(productId: string, formData: FormData) {
 
     if (error) return { error: error.message };
 
-    revalidatePath("/admin/products");
+    revalidatePath("/admin/boutique");
     revalidatePath("/admin/boutique");
     revalidatePath(`/admin/products/${productId}`);
     revalidatePath("/shop");
     return { success: true };
   } catch {
     return { error: "Erreur serveur" };
+  }
+}
+
+export async function reorderProductImages(images: { id: string; position: number }[]) {
+  try {
+    await checkAdmin();
+    const adminSupabase = createAdminClient();
+
+    await Promise.all(
+      images.map(({ id, position }) =>
+        adminSupabase.from("product_images").update({ position }).eq("id", id)
+      )
+    );
+
+    return { success: true };
+  } catch {
+    return { error: "Erreur reorder images" };
   }
 }
 
@@ -160,7 +177,7 @@ export async function deleteProductImage(imageId: string, imageUrl: string) {
         .remove([urlParts[1]]);
     }
 
-    revalidatePath("/admin/products");
+    revalidatePath("/admin/boutique");
     revalidatePath("/admin/boutique");
     return { success: true };
   } catch {

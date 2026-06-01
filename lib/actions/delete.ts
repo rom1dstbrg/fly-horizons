@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -46,10 +46,10 @@ export async function deleteProduct(productId: string) {
 
     if (error) return { error: error.message };
 
-    revalidatePath("/admin/products");
+    revalidatePath("/admin/boutique");
     revalidatePath("/admin/boutique");
     revalidatePath("/shop");
-    redirect("/admin/products");
+    redirect("/admin/boutique?tab=produits");
   } catch (err: unknown) {
     if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
     return { error: "Erreur suppression produit" };
@@ -68,7 +68,7 @@ export async function deleteOrder(orderId: string) {
 
     if (error) return { error: error.message };
 
-    revalidatePath("/admin/orders");
+    revalidatePath("/admin/boutique");
     revalidatePath("/admin/boutique");
     revalidatePath("/admin");
     return { success: true };
@@ -86,7 +86,6 @@ export async function deleteReservationPerso(resaId: string) {
       .delete()
       .eq("id", resaId);
     if (error) return { error: error.message };
-    revalidatePath("/admin/vols-sur-mesure");
     revalidatePath("/admin/vols");
     return { success: true };
   } catch {
@@ -98,12 +97,12 @@ export async function deleteClient(clientId: string) {
   try {
     await checkAdmin();
     const adminSupabase = createAdminClient();
-    // Supprime d'abord les réservations associées (au cas où pas de cascade FK)
+    // Supprime d'abord les rÃ©servations associÃ©es (au cas oÃ¹ pas de cascade FK)
     await adminSupabase.from("reservations").delete().eq("client_id", clientId);
     const { error } = await adminSupabase.from("clients").delete().eq("id", clientId);
     if (error) return { error: error.message };
     revalidatePath("/admin/clients");
-    revalidatePath("/admin/reservations");
+    revalidatePath("/admin/vols");
     revalidatePath("/admin/vols");
     return { success: true };
   } catch {
@@ -120,7 +119,7 @@ export async function deleteReservationStandard(resaId: string) {
       .delete()
       .eq("id", resaId);
     if (error) return { error: error.message };
-    revalidatePath("/admin/reservations");
+    revalidatePath("/admin/vols");
     revalidatePath("/admin/vols");
     revalidatePath("/admin");
     return { success: true };
@@ -141,7 +140,7 @@ export async function deleteCoupon(couponId: string) {
 
     if (error) return { error: error.message };
 
-    revalidatePath("/admin/coupons");
+    revalidatePath("/admin/boutique");
     revalidatePath("/admin/boutique");
     return { success: true };
   } catch {

@@ -88,16 +88,16 @@ export function ReservationCalendar({
         <div className="flex items-center gap-2">
           <button
             onClick={goToday}
-            className="px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+            className="px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
           >
             Aujourd'hui
           </button>
           <div className="flex items-center border border-border rounded-lg overflow-hidden">
-            <button onClick={prevMonth} className="p-1.5 hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground">
+            <button onClick={prevMonth} className="p-1.5 hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground cursor-pointer">
               <ChevronLeft size={15} />
             </button>
             <div className="w-px h-5 bg-border" />
-            <button onClick={nextMonth} className="p-1.5 hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground">
+            <button onClick={nextMonth} className="p-1.5 hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground cursor-pointer">
               <ChevronRight size={15} />
             </button>
           </div>
@@ -121,7 +121,7 @@ export function ReservationCalendar({
             <div key={weekIdx} className={`grid grid-cols-7 ${weekIdx < calendarDays.length / 7 - 1 ? "border-b border-border" : ""}`}>
               {calendarDays.slice(weekIdx * 7, weekIdx * 7 + 7).map((day, dayIdx) => {
                 if (!day) {
-                  return <div key={dayIdx} className="p-2 min-h-[90px] bg-secondary/20" />;
+                  return <div key={dayIdx} className="p-2 min-h-[90px] bg-secondary" />;
                 }
 
                 const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
@@ -133,7 +133,7 @@ export function ReservationCalendar({
                 return (
                   <div
                     key={dayIdx}
-                    className={`p-2 min-h-[90px] ${dayIdx < 6 ? "border-r border-border" : ""} ${isSunday || isSaturday ? "bg-secondary/10" : ""}`}
+                    className={`p-2 min-h-[90px] ${dayIdx < 6 ? "border-r border-border" : ""} ${isSunday || isSaturday ? "bg-secondary" : ""}`}
                   >
                     <div className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold mb-1.5 ${
                       isToday
@@ -151,7 +151,7 @@ export function ReservationCalendar({
                           <button
                             key={r.id}
                             onClick={() => onCardClick(r)}
-                            className={`w-full text-left text-[10px] font-medium px-1.5 py-0.5 rounded border truncate hover:opacity-80 transition-opacity ${statusClass}`}
+                            className={`w-full text-left text-[10px] font-medium px-1.5 py-0.5 rounded border truncate hover:opacity-80 transition-opacity cursor-pointer ${statusClass}`}
                             title={`${client?.prenom} ${client?.nom} — ${r.heure_vol?.slice(0, 5) ?? "?"} — ${r.duree}min`}
                           >
                             {r.heure_vol ? r.heure_vol.slice(0, 5) + " " : ""}
@@ -160,7 +160,7 @@ export function ReservationCalendar({
                         );
                       })}
                       {dayResas.length > 3 && (
-                        <p className="text-[10px] text-muted-foreground/50 pl-1">
+                        <p className="text-[10px] text-muted-foreground pl-1">
                           +{dayResas.length - 3} autre{dayResas.length - 3 > 1 ? "s" : ""}
                         </p>
                       )}

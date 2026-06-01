@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -27,7 +27,7 @@ export async function markVoucherUsed(voucherId: string) {
       .eq("id", voucherId)
       .eq("status", "unused");
     if (error) return { error: error.message };
-    revalidatePath("/admin/vouchers");
+    revalidatePath("/admin/boutique");
     revalidatePath("/admin/boutique");
     return { success: true };
   } catch {
@@ -44,7 +44,7 @@ export async function markVoucherUnused(voucherId: string) {
       .update({ status: "unused", used_at: null })
       .eq("id", voucherId);
     if (error) return { error: error.message };
-    revalidatePath("/admin/vouchers");
+    revalidatePath("/admin/boutique");
     revalidatePath("/admin/boutique");
     return { success: true };
   } catch {
@@ -64,7 +64,7 @@ export async function createManualVoucher(formData: FormData) {
     const recipientName = (formData.get("recipient_name") as string)?.trim() || null;
     const expiresAt = (formData.get("expires_at") as string) || null;
 
-    if (!duration || duration <= 0) return { error: "Durée invalide." };
+    if (!duration || duration <= 0) return { error: "DurÃ©e invalide." };
 
     const code = generateVoucherCode();
     const expiresAtISO = expiresAt ? new Date(expiresAt).toISOString() : null;
@@ -81,7 +81,7 @@ export async function createManualVoucher(formData: FormData) {
     });
 
     if (error) return { error: error.message };
-    revalidatePath("/admin/vouchers");
+    revalidatePath("/admin/boutique");
     revalidatePath("/admin/boutique");
     return { success: true, code };
   } catch {
@@ -108,7 +108,7 @@ export async function updateVoucher(voucherId: string, data: {
       .update(update)
       .eq("id", voucherId);
     if (error) return { error: error.message };
-    revalidatePath("/admin/vouchers");
+    revalidatePath("/admin/boutique");
     revalidatePath("/admin/boutique");
     return { success: true };
   } catch {
@@ -125,7 +125,7 @@ export async function deleteVoucher(voucherId: string) {
       .delete()
       .eq("id", voucherId);
     if (error) return { error: error.message };
-    revalidatePath("/admin/vouchers");
+    revalidatePath("/admin/boutique");
     revalidatePath("/admin/boutique");
     return { success: true };
   } catch {

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -110,7 +110,7 @@ export function CreateReservationForm({ clients, prixHeure }: Props) {
       } else {
         setSuccess("Réservation créée et marquée comme confirmée ✓");
       }
-      setTimeout(() => router.push("/admin/reservations"), 1500);
+      setTimeout(() => router.push("/admin/vols"), 1500);
     });
   }
 
@@ -127,9 +127,9 @@ export function CreateReservationForm({ clients, prixHeure }: Props) {
             onClick={() => setClientMode("existing")}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
               clientMode === "existing"
-                ? "bg-[#113356] text-white border-[#113356]"
+                ? "bg-navy text-white border-navy"
                 : "border-border text-muted-foreground hover:bg-secondary"
-            }`}
+            } cursor-pointer`}
           >
             <Users size={14} /> Client existant
           </button>
@@ -138,9 +138,9 @@ export function CreateReservationForm({ clients, prixHeure }: Props) {
             onClick={() => setClientMode("new")}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
               clientMode === "new"
-                ? "bg-[#113356] text-white border-[#113356]"
+                ? "bg-navy text-white border-navy"
                 : "border-border text-muted-foreground hover:bg-secondary"
-            }`}
+            } cursor-pointer`}
           >
             <UserPlus size={14} /> Nouveau client
           </button>
@@ -237,9 +237,9 @@ export function CreateReservationForm({ clients, prixHeure }: Props) {
                 key={d}
                 type="button"
                 onClick={() => setDuree(d)}
-                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors cursor-pointer ${
                   duree === d
-                    ? "bg-[#113356] text-white border-[#113356]"
+                    ? "bg-navy text-white border-navy"
                     : "border-border text-muted-foreground hover:bg-secondary"
                 }`}
               >
@@ -280,7 +280,7 @@ export function CreateReservationForm({ clients, prixHeure }: Props) {
       <div className="card-premium p-5 space-y-4">
         <h2 className="font-semibold text-foreground text-sm">Paiement</h2>
 
-        <div className="bg-secondary/30 rounded-lg p-3 flex items-center justify-between">
+        <div className="bg-secondary rounded-lg p-3 flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
             Prix calculé ({duree} min à {prixHeure} €/h)
           </p>
@@ -355,15 +355,15 @@ export function CreateReservationForm({ clients, prixHeure }: Props) {
         <button
           type="submit"
           disabled={isPending}
-          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors"
+          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-black hover:brightness-105 active:scale-[0.98] disabled:opacity-50 transition-all shadow-gold cursor-pointer"
         >
           {isPending ? <Loader2 size={14} className="animate-spin" /> : null}
           {envoyerPaiement ? "Créer et envoyer le lien de paiement" : "Créer la réservation"}
         </button>
         <button
           type="button"
-          onClick={() => router.push("/admin/reservations")}
-          className="px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary transition-colors"
+          onClick={() => router.push("/admin/vols")}
+          className="px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary transition-colors cursor-pointer"
         >
           Annuler
         </button>

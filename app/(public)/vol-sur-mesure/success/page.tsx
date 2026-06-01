@@ -13,8 +13,8 @@ const STEPS = [
   {
     num: 2,
     done: false,
-    title: "Romain analyse votre route",
-    desc: "Dans les 24 h, Romain étudie la faisabilité de votre itinéraire. Si certaines zones ne peuvent pas être survolées (espace aérien, restrictions), il vous en informe et propose des alternatives.",
+    title: "Votre pilote analyse votre route",
+    desc: "Dans les 24 h, votre pilote étudie la faisabilité de votre itinéraire. Si certaines zones ne peuvent pas être survolées, il vous propose des alternatives.",
   },
   {
     num: 3,
@@ -32,37 +32,42 @@ const STEPS = [
 
 export default function VolSurMesureSuccessPage() {
   return (
-    <main className="min-h-screen bg-[#f5f5f7] flex items-center justify-center px-4 pt-[86px] pb-16">
-      <div className="max-w-lg w-full space-y-4">
+    <main className="flex-1 flex items-center justify-center bg-[#f5f5f7] px-4 pt-[86px] pb-16">
+      <div className="max-w-lg w-full space-y-3">
+
+        {/* ── En-tête ── */}
+        <div className="bg-card rounded-2xl border border-border shadow-[var(--sh-card)] p-6">
+          <p className="text-[10px] font-black text-primary uppercase tracking-[3px] mb-1">
+            Vol sur mesure
+          </p>
+          <h1 className="text-2xl font-black text-foreground leading-tight">
+            Votre aventure est réservée !
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+            Voici ce qui se passe maintenant.
+          </p>
+        </div>
 
         {/* ── Étapes ── */}
-        <div className="bg-white rounded-2xl border border-border shadow-sm p-5">
-
-          <div className="flex items-center gap-2.5 mb-4">
-            <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center shrink-0">
-              <CheckCircle className="text-green-600" size={16} />
-            </div>
-            <div>
-              <p className="text-sm font-bold text-foreground">Votre aventure est réservée !</p>
-              <p className="text-[10px] text-muted-foreground">Voici ce qui se passe ensuite</p>
-            </div>
-          </div>
-
-          <div className="space-y-0">
+        <div className="bg-card rounded-2xl border border-border shadow-[var(--sh-card)] p-6">
+          <p className="text-[10px] font-black text-primary uppercase tracking-[3px] mb-5">
+            Prochaines étapes
+          </p>
+          <div>
             {STEPS.map(({ num, done, title, desc }, i) => (
               <div key={num} className="flex gap-3">
                 <div className="flex flex-col items-center">
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${done ? "bg-green-500" : "bg-[#F2B705]"}`}>
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${done ? "bg-navy" : "bg-primary"}`}>
                     {done
-                      ? <CheckCircle size={13} className="text-white" />
-                      : <span className="font-black text-[#0b2238] text-xs leading-none">{num}</span>}
+                      ? <CheckCircle size={13} className="text-primary" />
+                      : <span className="font-black text-primary-foreground text-xs leading-none">{num}</span>}
                   </div>
                   {i < STEPS.length - 1 && (
-                    <div className="w-px bg-border mt-1" style={{ height: 28 }} />
+                    <div className="w-px bg-border my-1 min-h-[20px] flex-1" />
                   )}
                 </div>
-                <div className="pb-4">
-                  <p className={`text-sm font-bold ${done ? "text-green-700" : "text-foreground"}`}>{title}</p>
+                <div className="pb-4 pt-0.5">
+                  <p className="text-sm font-bold text-foreground">{title}</p>
                   <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{desc}</p>
                 </div>
               </div>
@@ -71,39 +76,41 @@ export default function VolSurMesureSuccessPage() {
         </div>
 
         {/* ── Infos pratiques ── */}
-        <div className="bg-white rounded-2xl border border-border shadow-sm p-5 space-y-3">
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px]">Informations pratiques</p>
+        <div className="bg-card rounded-2xl border border-border shadow-[var(--sh-card)] p-6 space-y-4">
+          <p className="text-[10px] font-black text-primary uppercase tracking-[3px]">
+            Informations pratiques
+          </p>
 
-          <div className="flex items-start gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-[#f5f8ff] border border-[#dce8ff] flex items-center justify-center shrink-0">
-              <MapPin size={13} className="text-[#113356]" />
+          <div className="flex items-start gap-3">
+            <div className="w-7 h-7 rounded-lg bg-secondary border border-border flex items-center justify-center shrink-0 mt-0.5">
+              <MapPin size={13} className="text-muted-foreground" />
             </div>
             <div>
               <p className="text-xs font-semibold text-foreground">Aéroport de Charleroi (EBCI)</p>
-              <p className="text-xs text-muted-foreground">Rue des Frères Wright 8, Gosselies · Arrivez 15 min avant</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Rue des Frères Wright 8, Gosselies · Arrivez 15 min avant</p>
             </div>
           </div>
 
           <Link
             href="/access-ebci"
-            className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-[#f5f8ff] border border-[#dce8ff] text-[#113356] rounded-xl text-xs font-semibold hover:bg-[#113356] hover:text-white hover:border-[#113356] transition-all"
+            className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-secondary border border-border text-muted-foreground rounded-lg text-xs font-semibold hover:bg-navy hover:text-white hover:border-navy transition-all"
           >
             <ExternalLink size={12} />
             Plan d&apos;accès à l&apos;aéroport
           </Link>
 
-          <div className="flex items-start gap-2.5 pt-2 border-t border-border">
-            <div className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
-              <CloudRain size={13} className="text-blue-500" />
+          <div className="flex items-start gap-3 pt-1 border-t border-border">
+            <div className="w-7 h-7 rounded-lg bg-secondary border border-border flex items-center justify-center shrink-0 mt-0.5">
+              <CloudRain size={13} className="text-muted-foreground" />
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
               <strong className="text-foreground">Météo :</strong> si les conditions ne permettent pas de voler, le vol est reporté sans frais. Romain décide jusqu&apos;à 2 h avant.
             </p>
           </div>
 
-          <div className="flex items-start gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-[#f5f8ff] border border-[#dce8ff] flex items-center justify-center shrink-0">
-              <Users size={13} className="text-[#113356]" />
+          <div className="flex items-start gap-3">
+            <div className="w-7 h-7 rounded-lg bg-secondary border border-border flex items-center justify-center shrink-0 mt-0.5">
+              <Users size={13} className="text-muted-foreground" />
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
               <strong className="text-foreground">Passagers :</strong> maximum 3 passagers par vol (avion léger), sans exception.
@@ -112,17 +119,17 @@ export default function VolSurMesureSuccessPage() {
         </div>
 
         {/* ── CTAs ── */}
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2.5 pt-1">
           <Link
             href="/account#reservations"
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#113356] text-white rounded-xl text-sm font-semibold hover:bg-[#0b2238] transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-primary text-primary-foreground rounded-lg text-sm font-black hover:brightness-105 active:scale-[0.98] transition-all shadow-gold"
           >
             <CalendarDays size={15} />
             Suivre ma réservation
           </Link>
           <Link
             href="/"
-            className="inline-flex items-center justify-center px-6 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:bg-secondary transition-colors"
+            className="inline-flex items-center justify-center px-6 py-2.5 rounded-lg border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors"
           >
             Retour à l&apos;accueil
           </Link>

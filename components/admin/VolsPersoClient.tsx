@@ -30,6 +30,7 @@ type Reservation = {
   poids_total: number | null;
   statut: string;
   acompte: number | null;
+  paye: number | null;
   distance_km: number | null;
   style_vol: "rapide" | "vues" | null;
   waypoints: Waypoint[] | null;
@@ -280,7 +281,7 @@ function VolsPersoDrawer({
                   {r.clients?.prenom} {r.clients?.nom}
                 </p>
               </div>
-              <button onClick={onClose} className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground shrink-0">
+              <button onClick={onClose} className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground shrink-0 cursor-pointer">
                 <X size={16} />
               </button>
             </div>
@@ -306,8 +307,8 @@ function VolsPersoDrawer({
               <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
 
                 {/* Client */}
-                <div className="bg-secondary/50 rounded-xl p-4 space-y-2.5">
-                  <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[1.5px] mb-3">Client</p>
+                <div className="bg-secondary rounded-lg p-4 space-y-2.5">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-3">Client</p>
                   <div className="flex items-center gap-2.5">
                     <User size={13} className="text-muted-foreground shrink-0" />
                     <span className="text-sm font-semibold text-foreground">{r.clients?.prenom} {r.clients?.nom}</span>
@@ -329,11 +330,11 @@ function VolsPersoDrawer({
                 {/* Vol */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[1.5px]">Vol</p>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px]">Vol</p>
                     {!editingDetails && (
                       <button
                         onClick={openEditDetails}
-                        className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded hover:bg-secondary"
+                        className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded hover:bg-secondary cursor-pointer"
                       >
                         <Pencil size={10} />
                         Modifier
@@ -387,12 +388,12 @@ function VolsPersoDrawer({
                       </div>
                       <div className="flex gap-2">
                         <button onClick={saveDetails} disabled={isPending}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-navy text-white text-xs font-semibold hover:bg-navy/90 transition-colors disabled:opacity-50">
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-navy text-white text-xs font-semibold hover:brightness-90 transition-all disabled:opacity-50 cursor-pointer">
                           {isPending ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
                           Sauvegarder
                         </button>
                         <button onClick={() => setEditingDetails(false)}
-                          className="px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-secondary transition-colors">
+                          className="px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-secondary transition-colors cursor-pointer">
                           Annuler
                         </button>
                       </div>
@@ -436,11 +437,23 @@ function VolsPersoDrawer({
                           </Field>
                         )}
                         {r.acompte != null && (
-                          <Field label="Acompte">
+                          <Field label="Paiement">
                             <div className="flex items-center gap-1.5 mt-0.5">
                               <CreditCard size={13} className="text-muted-foreground" />
-                              {r.acompte} €
+                              <span className="text-muted-foreground text-xs">Prévu :</span>
+                              <span>{r.acompte} €</span>
                             </div>
+                            {r.paye != null && r.paye > 0 ? (
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <CheckCircle2 size={13} className="text-emerald-500" />
+                                <span className="text-emerald-600 font-semibold">{r.paye} € encaissé</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <XCircle size={13} className="text-amber-400" />
+                                <span className="text-amber-600 text-xs">Pas encore encaissé</span>
+                              </div>
+                            )}
                           </Field>
                         )}
                         {r.distance_km != null && (
@@ -483,7 +496,7 @@ function VolsPersoDrawer({
                       {r.commentaire && (
                         <div>
                           <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Remarques client</p>
-                          <p className="text-xs text-muted-foreground bg-secondary/30 rounded-lg p-3 whitespace-pre-wrap">{r.commentaire}</p>
+                          <p className="text-xs text-muted-foreground bg-secondary rounded-lg p-3 whitespace-pre-wrap">{r.commentaire}</p>
                         </div>
                       )}
                     </div>
@@ -493,11 +506,11 @@ function VolsPersoDrawer({
                 {/* Route — waypoints (lecture seule) */}
                 {r.waypoints && r.waypoints.length > 0 && (
                   <div>
-                    <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[1.5px] flex items-center gap-1.5 mb-2">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] flex items-center gap-1.5 mb-2">
                       <MapPin size={11} />
                       Route
                     </p>
-                    <div className="bg-secondary/30 rounded-lg p-3 space-y-1 text-xs font-mono overflow-x-auto">
+                    <div className="bg-secondary rounded-lg p-3 space-y-1 text-xs font-mono overflow-x-auto">
                       <p className="text-muted-foreground">✈ EBCI (départ)</p>
                       {r.waypoints.map((wp, i) => (
                         <p key={i} className="text-foreground pl-3">
@@ -510,7 +523,7 @@ function VolsPersoDrawer({
                         </p>
                       ))}
                       {(r.stopovers ?? []).map(so => (
-                        <p key={so.icao} className="text-[#F2B705] pl-3">
+                        <p key={so.icao} className="text-primary pl-3">
                           ⊕ {so.icao}, {so.nom} (+{so.taxe}€)
                         </p>
                       ))}
@@ -521,7 +534,7 @@ function VolsPersoDrawer({
 
                 {/* Actions de statut — contextuelles */}
                 <div>
-                  <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[1.5px] mb-2">Actions</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-2">Actions</p>
                   <div className="space-y-2">
 
                     {r.statut === "en_attente" && (
@@ -529,7 +542,7 @@ function VolsPersoDrawer({
                         <button
                           onClick={() => doChangeStatut("date_confirmee")}
                           disabled={isPending}
-                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50"
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 cursor-pointer"
                         >
                           {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
                           Confirmer la date, envoyer l&apos;email
@@ -537,7 +550,7 @@ function VolsPersoDrawer({
                         <button
                           onClick={() => doChangeStatut("heure_confirmee")}
                           disabled={isPending}
-                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors disabled:opacity-50"
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 cursor-pointer"
                         >
                           {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
                           Confirmer date + heure, envoyer l&apos;email
@@ -549,7 +562,7 @@ function VolsPersoDrawer({
                       <button
                         onClick={() => doChangeStatut("date_confirmee")}
                         disabled={isPending}
-                        className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50"
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 cursor-pointer"
                       >
                         {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
                         Confirmer la date, envoyer l&apos;email
@@ -561,7 +574,7 @@ function VolsPersoDrawer({
                         <button
                           onClick={() => doChangeStatut("heure_confirmee")}
                           disabled={isPending}
-                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors disabled:opacity-50"
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 cursor-pointer"
                         >
                           {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
                           Confirmer l&apos;heure, envoyer l&apos;email
@@ -569,7 +582,7 @@ function VolsPersoDrawer({
                         <button
                           onClick={() => doChangeStatut("en_attente")}
                           disabled={isPending}
-                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-50"
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-50 cursor-pointer"
                         >
                           <ChevronRight size={14} className="rotate-180" />
                           Revenir en attente
@@ -582,7 +595,7 @@ function VolsPersoDrawer({
                         <button
                           onClick={() => doChangeStatut("vol_effectue")}
                           disabled={isPending}
-                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-purple-500 text-white text-sm font-semibold hover:bg-purple-600 transition-colors disabled:opacity-50"
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-purple-500 text-white text-sm font-semibold hover:bg-purple-600 transition-colors disabled:opacity-50 cursor-pointer"
                         >
                           {isPending ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
                           Marquer vol effectué
@@ -590,7 +603,7 @@ function VolsPersoDrawer({
                         <button
                           onClick={() => doChangeStatut("date_confirmee")}
                           disabled={isPending}
-                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-50"
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-50 cursor-pointer"
                         >
                           <ChevronRight size={14} className="rotate-180" />
                           Revenir planification
@@ -610,7 +623,7 @@ function VolsPersoDrawer({
                         <button
                           onClick={doSendRescheduleInvite}
                           disabled={isPending}
-                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-amber-200 text-sm text-amber-600 hover:bg-amber-50 transition-colors disabled:opacity-50"
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-amber-200 text-sm text-amber-600 hover:bg-amber-50 transition-colors disabled:opacity-50 cursor-pointer"
                         >
                           {isPending ? <Loader2 size={14} className="animate-spin" /> : <RotateCcw size={14} />}
                           Proposer un report
@@ -618,7 +631,7 @@ function VolsPersoDrawer({
                         <button
                           onClick={() => doChangeStatut("annulee")}
                           disabled={isPending}
-                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-red-200 text-sm text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-red-200 text-sm text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50 cursor-pointer"
                         >
                           <XCircle size={14} />
                           Annuler la réservation
@@ -630,7 +643,7 @@ function VolsPersoDrawer({
                       <button
                         onClick={() => doChangeStatut("en_attente")}
                         disabled={isPending}
-                        className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-navy text-white text-sm font-semibold hover:bg-navy/90 transition-colors disabled:opacity-50"
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-navy text-white text-sm font-semibold hover:brightness-90 transition-all disabled:opacity-50 cursor-pointer"
                       >
                         <AlertTriangle size={14} />
                         Réactiver la réservation
@@ -642,9 +655,9 @@ function VolsPersoDrawer({
                 {/* Email libre */}
                 {r.clients && (
                   <div>
-                    <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[1.5px] mb-2">Email libre</p>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-2">Email libre</p>
                     <div className="mb-2">
-                      <p className="text-[10px] text-muted-foreground/60 flex items-center gap-1 mb-1.5">
+                      <p className="text-[10px] text-muted-foreground flex items-center gap-1 mb-1.5">
                         <Sparkles size={9} />
                         Templates rapides
                       </p>
@@ -654,7 +667,7 @@ function VolsPersoDrawer({
                             key={tpl.label}
                             disabled={isPending}
                             onClick={() => idx === 0 ? applyTemplate(tpl, true) : applyTemplate(tpl, false)}
-                            className="text-[11px] px-2.5 py-1 rounded-lg border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-50"
+                            className="text-[11px] px-2.5 py-1 rounded-lg border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-50 cursor-pointer"
                           >
                             {tpl.label}
                           </button>
@@ -663,7 +676,7 @@ function VolsPersoDrawer({
                     </div>
                     <button
                       onClick={openEmailComposer}
-                      className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
                     >
                       <Send size={14} />
                       Composer un email…
@@ -676,7 +689,7 @@ function VolsPersoDrawer({
             {/* Compositeur email */}
             {emailOpen && (
               <div className="flex-1 flex flex-col min-h-0 px-5 py-4 gap-3">
-                <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[1.5px] shrink-0">Email libre</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] shrink-0">Email libre</p>
                 <div className="shrink-0">
                   <p className="text-[10px] text-muted-foreground mb-1">À</p>
                   <p className="text-xs text-foreground font-medium">{r.clients?.email}</p>
@@ -707,6 +720,7 @@ function VolsPersoDrawer({
                       includeReschedule
                         ? "border-amber-300 bg-amber-50 text-amber-700"
                         : "border-border text-muted-foreground hover:bg-secondary",
+                    , "cursor-pointer",
                     ].join(" ")}
                   >
                     <RotateCcw size={11} className={includeReschedule ? "text-amber-600" : ""} />
@@ -717,14 +731,14 @@ function VolsPersoDrawer({
                   <button
                     onClick={sendEmail}
                     disabled={emailPending || !emailSubject.trim() || !emailBody.trim()}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-navy text-white text-xs font-semibold hover:bg-navy/90 transition-colors disabled:opacity-50"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-navy text-white text-xs font-semibold hover:brightness-90 transition-all disabled:opacity-50 cursor-pointer"
                   >
                     {emailPending ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
                     Envoyer
                   </button>
                   <button
                     onClick={() => { setEmailOpen(false); setIncludeReschedule(false); }}
-                    className="px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-secondary transition-colors"
+                    className="px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-secondary transition-colors cursor-pointer"
                   >
                     Annuler
                   </button>
@@ -734,7 +748,7 @@ function VolsPersoDrawer({
 
             {/* Footer */}
             <div className="px-5 py-3 border-t border-border shrink-0">
-              <p className="text-xs text-muted-foreground/50">
+              <p className="text-xs text-muted-foreground">
                 Créée le {new Date(r.created_at).toLocaleDateString("fr-BE", { day: "numeric", month: "long", year: "numeric" })}
               </p>
             </div>

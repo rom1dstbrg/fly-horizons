@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, MapPin, AlertTriangle, CloudRain, Users, ExternalLink, CheckCircle, Clock } from "lucide-react";
+import { CalendarDays, MapPin, CloudRain, Users, ExternalLink, CheckCircle, AlertTriangle } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -78,16 +78,16 @@ export default async function ReservationSuccessPage({ searchParams }: Props) {
           <h1 className="text-2xl font-black text-foreground leading-tight">
             {isPayLater ? "Demande enregistrée" : "Demande envoyée !"}
           </h1>
-          <p className="text-sm text-foreground/50 mt-1.5 leading-relaxed">
+          <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
             {isPayLater
               ? "Votre créneau sera confirmé dès réception de votre paiement."
               : "Voici ce qui se passe maintenant."}
           </p>
 
           {isPayLater && (
-            <div className="mt-4 bg-primary/8 border border-primary/25 rounded-lg px-4 py-3 flex items-start gap-2.5">
-              <AlertTriangle size={13} className="text-amber-700 mt-0.5 shrink-0" />
-              <p className="text-xs text-foreground/70 leading-relaxed">
+            <div className="mt-4 bg-primary/10 border border-primary/25 rounded-lg px-4 py-3 flex items-start gap-2.5">
+              <AlertTriangle size={13} className="text-[#b38500] mt-0.5 shrink-0" />
+              <p className="text-xs text-muted-foreground leading-relaxed">
                 <strong className="text-foreground">Créneau non garanti.</strong>{" "}
                 Réglez <strong className="text-foreground">dans les 24 h</strong> via le lien reçu par email. Au-delà, la date peut être attribuée à un autre client.
               </p>
@@ -107,15 +107,15 @@ export default async function ReservationSuccessPage({ searchParams }: Props) {
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${done ? "bg-navy" : "bg-primary"}`}>
                     {done
                       ? <CheckCircle size={13} className="text-primary" />
-                      : <span className="font-black text-foreground text-xs leading-none">{num}</span>}
+                      : <span className="font-black text-primary-foreground text-xs leading-none">{num}</span>}
                   </div>
                   {i < steps.length - 1 && (
                     <div className="w-px bg-border my-1 min-h-[20px] flex-1" />
                   )}
                 </div>
                 <div className="pb-4 pt-0.5">
-                  <p className={`text-sm font-bold ${done ? "text-foreground" : "text-foreground"}`}>{title}</p>
-                  <p className="text-xs text-foreground/50 mt-0.5 leading-relaxed">{desc}</p>
+                  <p className="text-sm font-bold text-foreground">{title}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{desc}</p>
                 </div>
               </div>
             ))}
@@ -130,17 +130,17 @@ export default async function ReservationSuccessPage({ searchParams }: Props) {
 
           <div className="flex items-start gap-3">
             <div className="w-7 h-7 rounded-lg bg-secondary border border-border flex items-center justify-center shrink-0 mt-0.5">
-              <MapPin size={13} className="text-foreground/60" />
+              <MapPin size={13} className="text-muted-foreground" />
             </div>
             <div>
               <p className="text-xs font-semibold text-foreground">Aéroport de Charleroi (EBCI)</p>
-              <p className="text-xs text-foreground/50 mt-0.5">Rue des Frères Wright 8, Gosselies · Arrivez 15 min avant</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Rue des Frères Wright 8, Gosselies · Arrivez 15 min avant</p>
             </div>
           </div>
 
           <Link
             href="/access-ebci"
-            className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-secondary border border-border text-foreground/60 rounded-lg text-xs font-semibold hover:bg-navy hover:text-white hover:border-navy transition-all"
+            className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-secondary border border-border text-muted-foreground rounded-lg text-xs font-semibold hover:bg-navy hover:text-white hover:border-navy transition-all"
           >
             <ExternalLink size={12} />
             Plan d&apos;accès à l&apos;aéroport
@@ -148,18 +148,18 @@ export default async function ReservationSuccessPage({ searchParams }: Props) {
 
           <div className="flex items-start gap-3 pt-1 border-t border-border">
             <div className="w-7 h-7 rounded-lg bg-secondary border border-border flex items-center justify-center shrink-0 mt-0.5">
-              <CloudRain size={13} className="text-foreground/50" />
+              <CloudRain size={13} className="text-muted-foreground" />
             </div>
-            <p className="text-xs text-foreground/50 leading-relaxed">
+            <p className="text-xs text-muted-foreground leading-relaxed">
               <strong className="text-foreground">Météo :</strong> en cas de conditions défavorables, le vol est reporté sans frais. Romain vous recontacte pour fixer une nouvelle date.
             </p>
           </div>
 
           <div className="flex items-start gap-3">
             <div className="w-7 h-7 rounded-lg bg-secondary border border-border flex items-center justify-center shrink-0 mt-0.5">
-              <Users size={13} className="text-foreground/60" />
+              <Users size={13} className="text-muted-foreground" />
             </div>
-            <p className="text-xs text-foreground/50 leading-relaxed">
+            <p className="text-xs text-muted-foreground leading-relaxed">
               <strong className="text-foreground">Passagers :</strong> maximum 3 passagers par vol (avion léger), sans exception.
             </p>
           </div>
@@ -169,14 +169,14 @@ export default async function ReservationSuccessPage({ searchParams }: Props) {
         <div className="flex flex-col gap-2.5 pt-1">
           <Link
             href="/account#reservations"
-            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-primary text-primary-foreground rounded-lg text-sm font-black hover:bg-[#e6a800] active:scale-[0.98] transition-all shadow-gold"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-primary text-primary-foreground rounded-lg text-sm font-black hover:brightness-105 active:scale-[0.98] transition-all shadow-gold"
           >
             <CalendarDays size={15} />
             {isPayLater ? "Accéder à mon compte" : "Suivre ma réservation"}
           </Link>
           <Link
             href="/"
-            className="inline-flex items-center justify-center px-6 py-2.5 rounded-lg border border-border text-sm font-medium text-foreground/50 hover:text-foreground hover:border-foreground/20 transition-colors"
+            className="inline-flex items-center justify-center px-6 py-2.5 rounded-lg border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors"
           >
             Retour à l&apos;accueil
           </Link>

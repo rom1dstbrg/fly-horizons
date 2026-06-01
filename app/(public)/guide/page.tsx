@@ -65,17 +65,14 @@ export default function GuidePage() {
   const [activeSection, setActiveSection] = useState(NAV[0].id);
   const [openQ, setOpenQ] = useState<string | null>(null);
 
-  // Scrollspy stable : scroll event + getBoundingClientRect
   useEffect(() => {
     function onScroll() {
-      // Si on est proche du bas de la page, activer la dernière section
       const nearBottom =
         window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 80;
       if (nearBottom) {
         setActiveSection(NAV[NAV.length - 1].id);
         return;
       }
-
       const threshold = 130;
       let active = NAV[0].id;
       for (const { id } of NAV) {
@@ -97,26 +94,23 @@ export default function GuidePage() {
   }
 
   return (
-    <main className="bg-[#f5f5f7] min-h-screen">
+    <main className="bg-background min-h-screen">
 
       {/* ── Hero ── */}
-      <div className="bg-[#0b2238] pt-[98px] pb-12 relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#F2B705]/4 rounded-full -translate-y-1/2 translate-x-1/4" />
-        </div>
-        <div className="relative max-w-5xl mx-auto px-4 sm:px-6">
-          <p className="text-[#F2B705] text-[10px] font-black tracking-[3px] uppercase mb-3">Fly Horizons</p>
-          <h1 className="text-3xl sm:text-4xl font-black text-white leading-tight mb-3">
+      <div className="pt-[98px] pb-12">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-12">
+          <p className="text-primary text-[10px] font-black tracking-[3px] uppercase mb-3">Fly Horizons</p>
+          <h1 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight mb-4">
             Tout ce que vous voulez savoir
           </h1>
-          <p className="text-white/55 text-sm max-w-lg leading-relaxed">
+          <p className="text-muted-foreground text-sm max-w-lg leading-relaxed">
             Bon cadeau, réservation classique ou vol sur mesure : choisissez ce qui vous concerne et lisez directement les détails.
           </p>
         </div>
       </div>
 
       {/* ── Mobile tab bar ── */}
-      <div className="lg:hidden sticky top-[72px] z-40 bg-background/95 backdrop-blur border-b border-border">
+      <div className="lg:hidden sticky top-[72px] z-40 bg-card/95 backdrop-blur border-b border-border">
         <div className="flex gap-1.5 overflow-x-auto no-scrollbar px-4 py-2.5">
           {NAV.map(({ id, label, Icon }) => (
             <button
@@ -125,8 +119,8 @@ export default function GuidePage() {
               className={[
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors shrink-0 cursor-pointer",
                 activeSection === id
-                  ? "bg-[#113356] text-white"
-                  : "bg-secondary text-muted-foreground hover:text-foreground",
+                  ? "bg-navy text-white"
+                  : "bg-card border border-border text-muted-foreground hover:text-foreground",
               ].join(" ")}
             >
               <Icon size={12} />{label}
@@ -136,7 +130,7 @@ export default function GuidePage() {
       </div>
 
       {/* ── Corps ── */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 py-10">
         <div className="flex gap-10 lg:gap-14 items-start">
 
           {/* Sidebar desktop */}
@@ -147,13 +141,13 @@ export default function GuidePage() {
                   key={id}
                   onClick={() => scrollTo(id)}
                   className={[
-                    "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left cursor-pointer",
+                    "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left cursor-pointer",
                     activeSection === id
-                      ? "bg-[#113356] text-white"
-                      : "text-muted-foreground hover:text-foreground hover:bg-white",
+                      ? "bg-navy text-white"
+                      : "text-muted-foreground hover:text-foreground hover:bg-card",
                   ].join(" ")}
                 >
-                  <Icon size={15} className={activeSection === id ? "text-[#F2B705]" : "opacity-50"} />
+                  <Icon size={15} className={activeSection === id ? "text-primary" : "opacity-50"} />
                   {label}
                 </button>
               ))}
@@ -225,17 +219,17 @@ export default function GuidePage() {
                   return (
                     <div key={s.n} className="flex gap-4 items-start">
                       <div className="flex flex-col items-center shrink-0">
-                        <div className="w-9 h-9 rounded-xl bg-[#0b2238] text-[#F2B705] flex items-center justify-center font-black text-[11px]">{s.n}</div>
+                        <div className="w-9 h-9 rounded-lg bg-navy text-primary flex items-center justify-center font-black text-[11px]">{s.n}</div>
                         {i < arr.length - 1 && <div className="w-px flex-1 bg-border mt-2 min-h-[24px]" />}
                       </div>
                       <div className="pb-7 flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <Icon size={14} className="text-[#113356] shrink-0" />
+                          <Icon size={14} className="text-foreground shrink-0" />
                           <p className="font-bold text-foreground text-sm">{s.title}</p>
                         </div>
                         {s.desc && <p className="text-muted-foreground text-sm leading-relaxed mb-2">{s.desc}</p>}
                         {s.cta && (
-                          <Link href={s.cta.href} className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#113356] hover:underline underline-offset-2">
+                          <Link href={s.cta.href} className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground hover:text-primary transition-colors underline-offset-2">
                             {s.cta.label} <ChevronRight size={12} />
                           </Link>
                         )}
@@ -247,7 +241,7 @@ export default function GuidePage() {
               </div>
 
               <div className="flex gap-3 flex-wrap">
-                <Link href="/nos-offres" className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#113356] text-white rounded-xl text-sm font-semibold hover:bg-[#0b2238] transition-colors">
+                <Link href="/nos-offres" className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-black hover:brightness-105 active:scale-[0.98] transition-all shadow-gold">
                   Voir les formules <ChevronRight size={14} />
                 </Link>
               </div>
@@ -273,8 +267,8 @@ export default function GuidePage() {
               </InfoCard>
 
               {/* Ce que vous pouvez faire */}
-              <div className="bg-white border border-border rounded-2xl p-5 shadow-sm mb-6">
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-[1.5px] mb-4">Ce que vous pouvez demander</p>
+              <div className="bg-card border border-border rounded-2xl p-5 mb-6">
+                <p className="text-xs font-bold text-primary uppercase tracking-[2px] mb-4">Ce que vous pouvez demander</p>
                 <div className="grid sm:grid-cols-2 gap-2">
                   {[
                     "Survoler votre maison, votre village ou votre région",
@@ -285,7 +279,7 @@ export default function GuidePage() {
                     "Personnaliser la durée selon votre budget",
                   ].map((item) => (
                     <div key={item} className="flex items-start gap-2">
-                      <CheckCircle size={13} className="text-[#113356] shrink-0 mt-0.5" />
+                      <CheckCircle size={13} className="text-primary shrink-0 mt-0.5" />
                       <p className="text-sm text-muted-foreground">{item}</p>
                     </div>
                   ))}
@@ -337,17 +331,17 @@ export default function GuidePage() {
                   return (
                     <div key={s.n} className="flex gap-4 items-start">
                       <div className="flex flex-col items-center shrink-0">
-                        <div className="w-9 h-9 rounded-xl bg-[#0b2238] text-[#F2B705] flex items-center justify-center font-black text-[11px]">{s.n}</div>
+                        <div className="w-9 h-9 rounded-lg bg-navy text-primary flex items-center justify-center font-black text-[11px]">{s.n}</div>
                         {i < arr.length - 1 && <div className="w-px flex-1 bg-border mt-2 min-h-[24px]" />}
                       </div>
                       <div className="pb-7 flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <Icon size={14} className="text-[#113356] shrink-0" />
+                          <Icon size={14} className="text-foreground shrink-0" />
                           <p className="font-bold text-foreground text-sm">{s.title}</p>
                         </div>
                         {s.desc && <p className="text-muted-foreground text-sm leading-relaxed mb-2">{s.desc}</p>}
                         {s.cta && (
-                          <Link href={s.cta.href} className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#113356] hover:underline underline-offset-2">
+                          <Link href={s.cta.href} className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground hover:text-primary transition-colors underline-offset-2">
                             {s.cta.label} <ChevronRight size={12} />
                           </Link>
                         )}
@@ -365,7 +359,7 @@ export default function GuidePage() {
               </NoteCard>
 
               <div className="flex gap-3 flex-wrap mt-6">
-                <Link href="/vol-sur-mesure" className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#113356] text-white rounded-xl text-sm font-semibold hover:bg-[#0b2238] transition-colors">
+                <Link href="/vol-sur-mesure" className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-black hover:brightness-105 active:scale-[0.98] transition-all shadow-gold">
                   Créer mon vol sur mesure <ChevronRight size={14} />
                 </Link>
               </div>
@@ -422,17 +416,17 @@ export default function GuidePage() {
                   return (
                     <div key={s.n} className="flex gap-4 items-start">
                       <div className="flex flex-col items-center shrink-0">
-                        <div className="w-9 h-9 rounded-xl bg-[#0b2238] text-[#F2B705] flex items-center justify-center font-black text-[11px]">{s.n}</div>
+                        <div className="w-9 h-9 rounded-lg bg-navy text-primary flex items-center justify-center font-black text-[11px]">{s.n}</div>
                         {i < arr.length - 1 && <div className="w-px flex-1 bg-border mt-2 min-h-[24px]" />}
                       </div>
                       <div className="pb-7 flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <Icon size={14} className="text-[#113356] shrink-0" />
+                          <Icon size={14} className="text-foreground shrink-0" />
                           <p className="font-bold text-foreground text-sm">{s.title}</p>
                         </div>
                         <p className="text-muted-foreground text-sm leading-relaxed mb-2">{s.desc}</p>
                         {s.cta && (
-                          <Link href={s.cta.href} className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#113356] hover:underline underline-offset-2">
+                          <Link href={s.cta.href} className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground hover:text-primary transition-colors underline-offset-2">
                             {s.cta.label} <ChevronRight size={12} />
                           </Link>
                         )}
@@ -458,14 +452,14 @@ export default function GuidePage() {
                 desc="Les doutes les plus courants avant un premier vol."
               />
 
-              <div className="bg-white border border-border rounded-2xl overflow-hidden shadow-sm divide-y divide-border mb-5">
+              <div className="bg-card border border-border rounded-2xl overflow-hidden divide-y divide-border mb-5">
                 {QUESTIONS.map((item) => {
                   const open = openQ === item.q;
                   return (
                     <div key={item.q}>
                       <button
                         onClick={() => setOpenQ(open ? null : item.q)}
-                        className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left hover:bg-muted/30 transition-colors cursor-pointer"
+                        className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left hover:bg-secondary transition-colors cursor-pointer"
                         aria-expanded={open}
                       >
                         <span className="text-sm font-semibold text-foreground">{item.q}</span>
@@ -481,12 +475,12 @@ export default function GuidePage() {
                 })}
               </div>
 
-              <div className="bg-[#0b2238] rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="bg-navy rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div>
                   <p className="text-white font-bold text-sm">Une autre question ?</p>
                   <p className="text-white/50 text-xs mt-0.5">Notre équipe répond sous 48 h.</p>
                 </div>
-                <Link href="/contact" className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-[#F2B705] text-[#0b2238] rounded-xl text-sm font-bold hover:bg-[#e6a800] transition-colors whitespace-nowrap">
+                <Link href="/contact" className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-black hover:brightness-105 active:scale-[0.98] transition-all shadow-gold whitespace-nowrap">
                   Nous contacter <ChevronRight size={14} />
                 </Link>
               </div>
@@ -504,7 +498,7 @@ export default function GuidePage() {
 function SectionHeader({ tag, title, desc }: { tag: string; title: string; desc: string }) {
   return (
     <div className="mb-8">
-      <p className="text-[10px] font-bold text-[#F2B705] uppercase tracking-[2.5px] mb-2">{tag}</p>
+      <p className="text-[10px] font-bold text-primary uppercase tracking-[2.5px] mb-2">{tag}</p>
       <h2 className="text-2xl font-black text-foreground mb-2">{title}</h2>
       <p className="text-muted-foreground text-sm leading-relaxed">{desc}</p>
     </div>
@@ -513,7 +507,7 @@ function SectionHeader({ tag, title, desc }: { tag: string; title: string; desc:
 
 function InfoCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`bg-white border border-border rounded-2xl p-5 shadow-sm ${className}`}>
+    <div className={`bg-card border border-border rounded-2xl p-5 ${className}`}>
       {children}
     </div>
   );
@@ -527,13 +521,13 @@ function NoteCard({
   color: "amber" | "blue";
 }) {
   const styles = {
-    amber: "bg-amber-50 border-amber-200 text-amber-800",
-    blue:  "bg-blue-50 border-blue-200 text-blue-800",
+    amber: "bg-primary/10 border-primary/30 text-foreground",
+    blue:  "bg-secondary border-border text-foreground",
   };
   return (
     <div className={`flex items-start gap-3 border rounded-2xl px-4 py-3.5 ${styles[color]}`}>
-      <span className="shrink-0 mt-0.5">{icon}</span>
-      <p className="text-sm leading-relaxed">{children}</p>
+      <span className="shrink-0 mt-0.5 text-primary">{icon}</span>
+      <p className="text-sm leading-relaxed text-muted-foreground">{children}</p>
     </div>
   );
 }
@@ -542,11 +536,11 @@ function PaymentBlock() {
   return (
     <div className="grid sm:grid-cols-2 gap-3 mt-2">
       {/* Option A */}
-      <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+      <div className="bg-navy rounded-lg p-4">
         <div className="flex items-center gap-2 mb-2">
-          <Lock size={13} className="text-green-700 shrink-0" />
-          <p className="text-xs font-bold text-green-800">Payer maintenant</p>
-          <span className="ml-auto text-[10px] font-bold bg-green-600 text-white px-1.5 py-0.5 rounded-full">Recommandé</span>
+          <Lock size={13} className="text-primary shrink-0" />
+          <p className="text-xs font-bold text-white">Payer maintenant</p>
+          <span className="ml-auto text-[10px] font-bold bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full">Recommandé</span>
         </div>
         <ul className="space-y-1">
           {[
@@ -554,27 +548,27 @@ function PaymentBlock() {
             "Le créneau est sécurisé sur-le-champ.",
             "Confirmation reçue dans la minute.",
           ].map((t) => (
-            <li key={t} className="flex items-start gap-1.5 text-xs text-green-700">
-              <CheckCircle size={11} className="shrink-0 mt-0.5 text-green-500" />
+            <li key={t} className="flex items-start gap-1.5 text-xs text-white/65">
+              <CheckCircle size={11} className="shrink-0 mt-0.5 text-primary" />
               {t}
             </li>
           ))}
         </ul>
       </div>
       {/* Option B */}
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+      <div className="bg-card border border-border rounded-lg p-4">
         <div className="flex items-center gap-2 mb-2">
-          <Mail size={13} className="text-amber-700 shrink-0" />
-          <p className="text-xs font-bold text-amber-800">Payer plus tard</p>
+          <Mail size={13} className="text-foreground shrink-0" />
+          <p className="text-xs font-bold text-foreground">Payer plus tard</p>
         </div>
         <ul className="space-y-1">
           {[
             "Un email avec un lien Stripe vous est envoyé.",
             "Aucune saisie de carte sur ce site.",
-            "Attention : le créneau n'est pas garanti. Un autre client peut le prendre avant vous si vous tardez à payer.",
+            "Attention : le créneau n'est pas garanti tant que l'acompte n'est pas reçu.",
           ].map((t) => (
-            <li key={t} className="flex items-start gap-1.5 text-xs text-amber-700">
-              <Headphones size={11} className="shrink-0 mt-0.5 text-amber-400 opacity-0" aria-hidden />
+            <li key={t} className="flex items-start gap-1.5 text-xs text-muted-foreground">
+              <span className="w-1 h-1 rounded-full bg-muted-foreground/50 shrink-0 mt-1.5" />
               {t}
             </li>
           ))}

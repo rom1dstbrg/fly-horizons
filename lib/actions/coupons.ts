@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -58,7 +58,7 @@ export async function createCoupon(formData: FormData) {
       return { error: error.message };
     }
 
-    revalidatePath("/admin/coupons");
+    revalidatePath("/admin/boutique");
     revalidatePath("/admin/boutique");
     return { success: true };
   } catch {
@@ -88,7 +88,7 @@ export async function updateCoupon(couponId: string, data: {
     if ("applies_to" in data) update.applies_to = data.applies_to ?? null;
     const { error } = await adminSupabase.from("coupons").update(update).eq("id", couponId);
     if (error) return { error: error.message };
-    revalidatePath("/admin/coupons");
+    revalidatePath("/admin/boutique");
     revalidatePath("/admin/boutique");
     return { success: true };
   } catch {
@@ -105,7 +105,7 @@ export async function toggleCouponActive(couponId: string, active: boolean) {
       .update({ active })
       .eq("id", couponId);
     if (error) return { error: error.message };
-    revalidatePath("/admin/coupons");
+    revalidatePath("/admin/boutique");
     revalidatePath("/admin/boutique");
     return { success: true };
   } catch {

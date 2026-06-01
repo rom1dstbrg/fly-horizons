@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
@@ -164,7 +164,7 @@ function DrawerBody({ client }: { client: Client }) {
               <button
                 onClick={handleSend}
                 disabled={isPending || !emailSubject.trim() || !emailBody.trim()}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#113356] text-white text-xs font-semibold hover:bg-[#0b2238] transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0b2238] text-white text-xs font-semibold hover:bg-[#0b2238] transition-colors disabled:opacity-50"
               >
                 {isPending ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
                 Envoyer

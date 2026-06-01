@@ -3,8 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingBag, ChevronLeft, Package, Mail, Ticket } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ShoppingBag, ChevronLeft, Package, Mail, Ticket, Check } from "lucide-react";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { useCartStore } from "@/store/cart";
 import { formatPrice } from "@/lib/utils";
@@ -46,17 +45,18 @@ export function ProductDetail({ product, relatedProducts = [], backHref, backLab
   }
 
   return (
-    <main className="min-h-screen bg-gradient-navy pt-24 pb-16">
-      <div className="container-shop">
+    <main className="flex-1 bg-[#f5f5f7] pb-16">
+      <div className="h-[84px]" />
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Breadcrumb */}
         <div className="mb-8">
           <Link
             href={backHref ?? "/shop"}
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm text-[#0b2238]/50 hover:text-[#0b2238] transition-colors"
           >
             <ChevronLeft size={16} />
-            {backLabel ?? "Retour a la boutique"}
+            {backLabel ?? "Retour à la boutique"}
           </Link>
         </div>
 
@@ -64,7 +64,7 @@ export function ProductDetail({ product, relatedProducts = [], backHref, backLab
 
           {/* Images */}
           <div className="space-y-4">
-            <div className="relative aspect-square rounded-lg overflow-hidden border border-border">
+            <div className="relative aspect-square rounded-2xl overflow-hidden border border-[#e8ecf0]">
               {mainImage ? (
                 <Image
                   src={mainImage}
@@ -75,7 +75,6 @@ export function ProductDetail({ product, relatedProducts = [], backHref, backLab
                   priority
                 />
               ) : isVoucher ? (
-                /* Fallback visuel pour voucher sans image */
                 <div className="absolute inset-0 bg-gradient-to-br from-[#0b2238] to-[#0e2d4a] flex flex-col items-center justify-center gap-6 p-10">
                   <div className="inline-flex items-center gap-1.5 bg-[#F2B705]/10 border border-[#F2B705]/30 rounded-full px-4 py-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#F2B705]" />
@@ -85,19 +84,19 @@ export function ProductDetail({ product, relatedProducts = [], backHref, backLab
                     <p className="text-white text-6xl font-black leading-none">
                       {formatDuration(product.voucher_duration_minutes ?? 60)}
                     </p>
-                    <p className="text-white/50 text-sm mt-3">de vol avec Fly Horizons</p>
+                    <p className="text-white/50 text-sm mt-3">de vol en avion léger</p>
                   </div>
                   <Ticket size={40} className="text-[#F2B705]/30" />
                 </div>
               ) : (
-                <div className="absolute inset-0 bg-muted flex items-center justify-center text-muted-foreground">
-                  <Package size={48} />
+                <div className="absolute inset-0 bg-[#f5f5f7] flex items-center justify-center">
+                  <Package size={48} className="text-[#0b2238]/20" />
                 </div>
               )}
 
               {isOutOfStock && (
-                <div className="absolute inset-0 bg-foreground/60 flex items-center justify-center">
-                  <span className="bg-card text-muted-foreground text-sm font-medium px-4 py-2 rounded-full border border-border">
+                <div className="absolute inset-0 bg-[#0b2238]/60 flex items-center justify-center">
+                  <span className="bg-white text-[#0b2238]/50 text-sm font-medium px-4 py-2 rounded-full border border-[#e8ecf0]">
                     Rupture de stock
                   </span>
                 </div>
@@ -111,10 +110,10 @@ export function ProductDetail({ product, relatedProducts = [], backHref, backLab
                   <button
                     key={img.id}
                     onClick={() => setActiveImage(i)}
-                    className={`relative w-16 h-16 rounded-md overflow-hidden border-2 shrink-0 transition-colors ${
+                    className={`relative w-16 h-16 rounded-xl overflow-hidden border-2 shrink-0 transition-colors ${
                       i === activeImage
-                        ? "border-primary"
-                        : "border-border hover:border-primary/50"
+                        ? "border-[#F2B705]"
+                        : "border-[#e8ecf0] hover:border-[#F2B705]/50"
                     }`}
                   >
                     <Image
@@ -149,7 +148,7 @@ export function ProductDetail({ product, relatedProducts = [], backHref, backLab
                 {product.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="text-xs font-medium text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full"
+                    className="text-xs font-semibold text-[#F2B705] bg-[#F2B705]/10 border border-[#F2B705]/20 px-2.5 py-1 rounded-full"
                   >
                     {tag}
                   </span>
@@ -159,27 +158,21 @@ export function ProductDetail({ product, relatedProducts = [], backHref, backLab
 
             {/* Titre */}
             <div>
-              <h1 className="text-3xl font-bold text-foreground leading-tight">
-                {product.title}
-              </h1>
+              <h1 className="text-3xl font-black text-[#0b2238] leading-tight">{product.title}</h1>
               {product.short_description && (
-                <p className="text-muted-foreground mt-3 leading-relaxed">
-                  {product.short_description}
-                </p>
+                <p className="text-[#0b2238]/50 mt-3 leading-relaxed">{product.short_description}</p>
               )}
             </div>
 
             {/* Prix */}
             <div className="flex items-baseline gap-3">
-              <span className="text-4xl font-bold text-primary">
-                {formatPrice(product.price)}
-              </span>
+              <span className="text-4xl font-black text-[#F2B705]">{formatPrice(product.price)}</span>
             </div>
 
             {/* Disponibilité */}
             <div className="flex items-center gap-2">
-              <span className={`w-2 h-2 rounded-full ${isOutOfStock ? "bg-destructive" : "bg-green-500"}`} />
-              <span className="text-sm text-muted-foreground">
+              <span className={`w-2 h-2 rounded-full ${isOutOfStock ? "bg-red-500" : "bg-green-500"}`} />
+              <span className="text-sm text-[#0b2238]/50">
                 {isVoucher
                   ? "Disponible : livraison par email"
                   : isOutOfStock
@@ -188,73 +181,73 @@ export function ProductDetail({ product, relatedProducts = [], backHref, backLab
               </span>
             </div>
 
-            {/* Quantite + ajout panier */}
+            {/* Quantité + ajout panier */}
             {!isOutOfStock && (
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
-                  <span className="text-sm text-muted-foreground">Quantite</span>
-                  <div className="flex items-center border border-border rounded-md overflow-hidden">
+                  <span className="text-sm text-[#0b2238]/50">Quantité</span>
+                  <div className="flex items-center border border-[#e8ecf0] rounded-xl overflow-hidden">
                     <button
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="w-9 h-9 flex items-center justify-center text-foreground hover:bg-secondary transition-colors"
+                      className="w-9 h-9 flex items-center justify-center text-[#0b2238] hover:bg-[#f5f5f7] transition-colors font-semibold"
                     >
                       -
                     </button>
-                    <span className="w-10 text-center text-sm font-medium text-foreground">
-                      {quantity}
-                    </span>
+                    <span className="w-10 text-center text-sm font-semibold text-[#0b2238]">{quantity}</span>
                     <button
                       onClick={() => setQuantity(quantity + 1)}
-                      className="w-9 h-9 flex items-center justify-center text-foreground hover:bg-secondary transition-colors"
+                      className="w-9 h-9 flex items-center justify-center text-[#0b2238] hover:bg-[#f5f5f7] transition-colors font-semibold"
                     >
                       +
                     </button>
                   </div>
                 </div>
 
-                <Button
+                <button
                   onClick={handleAddToCart}
-                  size="lg"
-                  className="w-full bg-primary text-primary-foreground hover:bg-gold-400 font-semibold shadow-gold"
+                  className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-[#F2B705] text-[#0b2238] rounded-xl text-sm font-black hover:bg-[#e6a800] active:scale-[0.98] transition-all shadow-sm shadow-[#F2B705]/20"
                 >
-                  {isVoucher ? (
+                  {added ? (
                     <>
-                      <Ticket size={18} className="mr-2" />
-                      {added ? "Ajoute au panier !" : "Acheter ce voucher"}
+                      <Check size={18} />
+                      Ajouté au panier !
+                    </>
+                  ) : isVoucher ? (
+                    <>
+                      <Ticket size={18} />
+                      Acheter ce voucher
                     </>
                   ) : (
                     <>
-                      <ShoppingBag size={18} className="mr-2" />
-                      {added ? "Ajoute au panier !" : "Ajouter au panier"}
+                      <ShoppingBag size={18} />
+                      Ajouter au panier
                     </>
                   )}
-                </Button>
+                </button>
               </div>
             )}
 
             {/* Infos livraison */}
-            <div className="border-t border-border pt-6 space-y-2">
+            <div className="border-t border-[#e8ecf0] pt-6 space-y-2">
               {isVoucher ? (
                 <>
                   <div className="flex items-start gap-2">
-                    <Mail size={14} className="text-primary mt-0.5 shrink-0" />
-                    <p className="text-xs text-muted-foreground">
+                    <Mail size={14} className="text-[#F2B705] mt-0.5 shrink-0" />
+                    <p className="text-xs text-[#0b2238]/50">
                       Votre code vous est envoyé par email immédiatement après le paiement.
                     </p>
                   </div>
                   <div className="flex items-start gap-2">
-                    <Ticket size={14} className="text-primary mt-0.5 shrink-0" />
-                    <p className="text-xs text-muted-foreground">
-                      Entrez votre code à l&apos;étape « Détails » sur fly-horizons.com/reservation pour réserver votre vol.
+                    <Ticket size={14} className="text-[#F2B705] mt-0.5 shrink-0" />
+                    <p className="text-xs text-[#0b2238]/50">
+                      Entrez votre code à l&apos;étape Détails sur fly-horizons.com/reservation pour réserver votre vol.
                     </p>
                   </div>
                 </>
               ) : (
-                <>
-                  <p className="text-xs text-muted-foreground">
-                    Livraison disponible en Belgique, France, Pays-Bas et Allemagne.
-                  </p>
-                </>
+                <p className="text-xs text-[#0b2238]/50">
+                  Livraison disponible en Belgique, France, Pays-Bas et Allemagne.
+                </p>
               )}
             </div>
 
@@ -263,19 +256,19 @@ export function ProductDetail({ product, relatedProducts = [], backHref, backLab
 
         {/* Produits suggérés */}
         {relatedProducts.length > 0 && (
-          <section className="mt-20 pt-12 border-t border-border">
+          <section className="mt-20 pt-12 border-t border-[#e8ecf0]">
             <div className="flex items-end justify-between mb-8">
               <div>
-                <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-2">
+                <p className="text-[10px] font-black text-[#F2B705] uppercase tracking-[3px] mb-2">
                   {isVoucher ? "Autres durées disponibles" : "Vous aimerez aussi"}
                 </p>
-                <h2 className="text-2xl font-bold text-foreground">
+                <h2 className="text-2xl font-black text-[#0b2238]">
                   {isVoucher ? "Autres vouchers" : "Autres produits"}
                 </h2>
               </div>
               <Link
                 href={isVoucher ? "/nos-offres" : "/shop"}
-                className="hidden sm:inline-flex text-sm text-primary hover:text-[#e6a800] font-medium transition-colors"
+                className="hidden sm:inline-flex text-sm text-[#F2B705] hover:text-[#e6a800] font-semibold transition-colors"
               >
                 Voir tout
               </Link>

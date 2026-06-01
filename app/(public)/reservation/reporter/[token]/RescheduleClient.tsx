@@ -88,7 +88,7 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
             "h-10 w-full rounded-lg text-sm font-medium transition-all duration-150 select-none flex items-center justify-center",
             isSel              ? "bg-primary text-primary-foreground font-bold shadow-sm scale-105" :
             isAvail && !isPast ? "hover:bg-primary/10 hover:text-primary text-foreground/70 cursor-pointer font-semibold" :
-                                 "text-foreground/20 cursor-not-allowed text-xs",
+                                 "text-muted-foreground/30 cursor-not-allowed text-xs",
           ].join(" ")}
         >{d}</button>
       );
@@ -152,7 +152,7 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
                 { l: "Aéroport",           v: "Charleroi · EBCI" },
               ].map(({ l, v }) => (
                 <div key={l}>
-                  <p className="text-[9px] font-black text-foreground/40 uppercase tracking-[2px] mb-0.5">{l}</p>
+                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[2px] mb-0.5">{l}</p>
                   <p className="text-sm font-semibold text-foreground truncate">{v}</p>
                 </div>
               ))}
@@ -171,7 +171,7 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
               type="button"
               onClick={() => { setStep("pick"); setError(""); }}
               disabled={submitting}
-              className="flex-1 px-4 py-3 rounded-lg border border-border text-sm font-semibold text-foreground/60 hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-50"
+              className="flex-1 px-4 py-3 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-50 cursor-pointer"
             >
               Modifier
             </button>
@@ -179,14 +179,14 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
               type="button"
               onClick={handleConfirm}
               disabled={submitting}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-lg text-sm font-black hover:bg-[#e6a800] active:scale-[0.98] transition-all disabled:opacity-30 shadow-gold"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-lg text-sm font-black hover:brightness-105 active:scale-[0.98] transition-all disabled:opacity-30 shadow-gold cursor-pointer"
             >
               {submitting && <Loader2 size={14} className="animate-spin" />}
               {submitting ? "Confirmation…" : "Confirmer le report"}
             </button>
           </div>
 
-          <p className="text-xs text-foreground/40 text-center mt-4">
+          <p className="text-xs text-muted-foreground text-center mt-4">
             Vous recevrez un email de confirmation après validation.
           </p>
         </div>
@@ -208,7 +208,7 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
           <h1 className="text-xl font-black text-foreground">
             Choisissez une nouvelle date
           </h1>
-          <p className="text-sm text-foreground/50 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             {prenom ? `Bonjour ${prenom}, votre` : "Votre"} vol prévu le{" "}
             <span className="font-semibold text-foreground capitalize">{currentDateFormatted}</span>{" "}
             est reporté. Sélectionnez une nouvelle date et un créneau horaire.
@@ -222,7 +222,7 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
             <div className="flex items-center justify-between mb-4">
               <button type="button"
                 onClick={() => { if (calMonth === 1) { setCalMonth(12); setCalYear(y => y - 1); } else setCalMonth(m => m - 1); }}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-foreground/40 hover:text-foreground hover:bg-secondary transition-all border border-border cursor-pointer">
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-all border border-border cursor-pointer">
                 <ChevronLeft size={15} />
               </button>
               <span className="text-sm font-bold text-foreground">
@@ -230,25 +230,25 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
               </span>
               <button type="button"
                 onClick={() => { if (calMonth === 12) { setCalMonth(1); setCalYear(y => y + 1); } else setCalMonth(m => m + 1); }}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-foreground/40 hover:text-foreground hover:bg-secondary transition-all border border-border cursor-pointer">
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-all border border-border cursor-pointer">
                 <ChevronRight size={15} />
               </button>
             </div>
 
             <div className="grid grid-cols-7 mb-1">
               {DAYS_FR.map((d, i) => (
-                <div key={i} className="h-8 flex items-center justify-center text-[9px] font-bold text-foreground/40 uppercase tracking-wider">
+                <div key={i} className="h-8 flex items-center justify-center text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
                   {d}
                 </div>
               ))}
             </div>
 
             {calLoading
-              ? <div className="flex items-center justify-center h-44"><Loader2 size={20} className="animate-spin text-foreground/20" /></div>
+              ? <div className="flex items-center justify-center h-44"><Loader2 size={20} className="animate-spin text-muted-foreground/30" /></div>
               : <div className="grid grid-cols-7 gap-0.5">{renderCalendar()}</div>
             }
 
-            <div className="flex flex-wrap items-center gap-4 mt-4 pt-4 border-t border-border text-[10px] text-foreground/40">
+            <div className="flex flex-wrap items-center gap-4 mt-4 pt-4 border-t border-border text-[10px] text-muted-foreground">
               <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-primary" />Sélectionné</span>
               <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full border-2 border-border" />Disponible</span>
               <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-border" />Indisponible</span>
@@ -259,19 +259,19 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
           <div className="p-5">
             {!selectedDate ? (
               <div className="flex items-center gap-3 py-1">
-                <Clock size={14} className="text-foreground/30 shrink-0" />
-                <p className="text-sm text-foreground/50">Sélectionnez une date pour voir les créneaux disponibles</p>
+                <Clock size={14} className="text-muted-foreground/50 shrink-0" />
+                <p className="text-sm text-muted-foreground">Sélectionnez une date pour voir les créneaux disponibles</p>
               </div>
             ) : slotsLoading ? (
               <div className="flex items-center justify-center py-4">
-                <Loader2 size={18} className="animate-spin text-foreground/20" />
+                <Loader2 size={18} className="animate-spin text-muted-foreground/30" />
               </div>
             ) : slots.length === 0 ? (
               <div className="flex items-center gap-3 py-1">
-                <Clock size={14} className="text-foreground/30 shrink-0" />
+                <Clock size={14} className="text-muted-foreground/50 shrink-0" />
                 <div>
                   <p className="text-sm font-semibold text-foreground capitalize">{selectedFormatted}</p>
-                  <p className="text-xs text-foreground/50 mt-0.5">Aucun créneau disponible. Essayez une autre date.</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Aucun créneau disponible. Essayez une autre date.</p>
                 </div>
               </div>
             ) : (
@@ -315,7 +315,7 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
             type="button"
             disabled={!selectedDate || !selectedHeure}
             onClick={() => setStep("confirm")}
-            className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-primary text-primary-foreground rounded-lg text-sm font-black transition-all disabled:opacity-30 hover:bg-[#e6a800] shadow-gold hover:-translate-y-px active:translate-y-0 active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-primary text-primary-foreground rounded-lg text-sm font-black transition-all disabled:opacity-30 hover:brightness-105 shadow-gold hover:-translate-y-px active:translate-y-0 active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed"
           >
             {selectedDate && selectedHeure
               ? "Continuer"
@@ -324,7 +324,7 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
               : "Sélectionnez une date"}
           </button>
 
-          <p className="text-xs text-foreground/40 text-center">
+          <p className="text-xs text-muted-foreground text-center">
             Vous pourrez vérifier avant de confirmer.
           </p>
         </div>

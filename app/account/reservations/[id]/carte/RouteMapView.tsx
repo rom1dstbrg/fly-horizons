@@ -1,25 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { ArrowLeft, Copy, Check, ExternalLink, Clock, Ruler } from "lucide-react";
+import { ArrowLeft, ExternalLink, Clock, Ruler, PlaneTakeoff } from "lucide-react";
 import { formatDuration } from "@/lib/vouchers";
 
-// ── Leaflet map (SSR-disabled) ─────────────────────────────────
 const RouteMapLeaflet = dynamic(
   () => import("@/components/account/RouteMapLeaflet"),
   {
     ssr: false,
     loading: () => (
-      <div className="w-full h-full bg-[#0b1e30] flex items-center justify-center">
+      <div className="w-full h-full bg-navy flex items-center justify-center">
         <p className="text-sm text-white/40 animate-pulse">Chargement de la carte…</p>
       </div>
     ),
   }
 );
 
-// ── Types ──────────────────────────────────────────────────────
 interface Waypoint {
   lat: number;
   lng: number;
@@ -35,52 +33,11 @@ export interface RouteMapViewProps {
   reservationId: string;
 }
 
-// ── Helpers ────────────────────────────────────────────────────
 const EBCI = { lat: 50.4592, lng: 4.4538 };
 
-/** Format décimal → ForeFlight : 50.45920°N/4.45380°E */
-function fmtFF(lat: number, lng: number): string {
-  return `${Math.abs(lat).toFixed(5)}°${lat >= 0 ? "N" : "S"}/${Math.abs(lng).toFixed(5)}°${lng >= 0 ? "E" : "W"}`;
-}
-
-// ── Sub-component ──────────────────────────────────────────────
-function CoordRow({
-  icon, isPlane, label, coord,
-}: {
-  icon: string;
-  isPlane: boolean;
-  label: string;
-  coord: string;
-}) {
-  return (
-    <div className="flex items-center gap-3 py-2.5 px-3 rounded-xl bg-secondary border border-border">
-      <div
-        className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-bold leading-none select-none ${
-          isPlane
-            ? "bg-[#113356] text-[#F2B705] text-base"
-            : "bg-[#F2B705] text-[#113356] text-xs"
-        }`}
-      >
-        {icon}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-xs font-semibold text-foreground truncate">{label}</p>
-        <p className="text-[11px] font-mono text-muted-foreground mt-0.5 select-all break-all">
-          {coord}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-// ── Main component ─────────────────────────────────────────────
 export function RouteMapView({
   waypoints, dateVol, heureVol, duree, distKm, reservationId,
 }: RouteMapViewProps) {
-  const [copied, setCopied] = useState(false);
-  const ebciFF = fmtFF(EBCI.lat, EBCI.lng);
-
-  // Lock body scroll so the footer doesn't appear
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
@@ -90,45 +47,49 @@ export function RouteMapView({
     weekday: "long", day: "numeric", month: "long", year: "numeric",
   });
 
-  // All coords as a single string for copy (ForeFlight-ready)
-  const allCoords = [
-    ebciFF,
-    ...waypoints.map(w => fmtFF(w.lat, w.lng)),
-    ebciFF,
-  ].join("\n");
-
   const mapsUrl = `https://www.google.com/maps/dir/${EBCI.lat},${EBCI.lng}/${
     waypoints.map(w => `${w.lat},${w.lng}`).join("/")
   }/${EBCI.lat},${EBCI.lng}`;
 
-  function handleCopy() {
-    navigator.clipboard.writeText(allCoords).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2200);
-    });
-  }
-
   return (
-    /*
-     * Fixed overlay from just below the header (top: 84px) to the bottom of the
-     * viewport. The z-40 sits below the header (z-50) so it's always covered.
-     */
     <div
-      className="fixed left-0 right-0 bottom-0 z-40 bg-background flex flex-col"
+      className="fixed left-0 right-0 bottom-0 z-40 bg-background p-3 flex flex-col lg:flex-row gap-3"
       style={{ top: "84px" }}
     >
-      <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
+      {/* ── Carte Leaflet ─────────────────────────────────────── */}
+      <div className="h-[42vh] lg:h-auto lg:flex-1 relative rounded-[var(--r-sm)] overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.10)] border border-border">
+        <RouteMapLeaflet waypoints={waypoints} />
+      </div>
 
-        {/* ── Leaflet map ───────────────────────────────────────── */}
-        <div className="h-[45vh] lg:h-full lg:flex-1 shrink-0 relative">
-          <RouteMapLeaflet waypoints={waypoints} />
+      {/* ── Panneau droit ─────────────────────────────────────── */}
+      <div className="lg:w-[360px] xl:w-[400px] shrink-0 card-premium overflow-hidden flex flex-col">
+
+        {/* En-tête */}
+        <div className="px-5 pt-5 pb-4 border-b border-border">
+          <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-1">
+            Vol sur mesure
+          </p>
+          <h1 className="text-lg font-black text-foreground leading-tight capitalize">{dateStr}</h1>
+          <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground flex-wrap">
+            <span className="flex items-center gap-1">
+              <Clock size={11} />
+              {formatDuration(duree)}
+            </span>
+            {distKm && (
+              <span className="flex items-center gap-1">
+                <Ruler size={11} />
+                ~{Math.round(distKm)}&nbsp;km
+              </span>
+            )}
+            {heureVol && <span>{heureVol}</span>}
+          </div>
         </div>
 
-        {/* ── Info panel ────────────────────────────────────────── */}
-        <div className="lg:w-[380px] xl:w-[420px] shrink-0 overflow-y-auto border-l border-border bg-background">
-          <div className="p-5 lg:p-6 space-y-5">
+        {/* Contenu scrollable */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-5 space-y-5">
 
-            {/* Back link */}
+            {/* Retour */}
             <Link
               href={`/account/reservations/${reservationId}`}
               className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -137,71 +98,72 @@ export function RouteMapView({
               Retour à la réservation
             </Link>
 
-            {/* Flight summary */}
+            {/* Waypoints */}
             <div>
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">
-                Vol sur mesure
+              <p className="text-[10px] font-bold text-primary uppercase tracking-[3px] mb-4">
+                Lieux à survoler
               </p>
-              <h1 className="text-base font-bold text-foreground capitalize">{dateStr}</h1>
-              <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground flex-wrap">
-                <span className="flex items-center gap-1">
-                  <Clock size={11} className="opacity-60" />
-                  {formatDuration(duree)}
-                </span>
-                {distKm && (
-                  <span className="flex items-center gap-1">
-                    <Ruler size={11} className="opacity-60" />
-                    ~{Math.round(distKm)}&nbsp;km
-                  </span>
-                )}
-                {heureVol && <span>{heureVol}</span>}
-              </div>
-            </div>
+              <ol className="space-y-0">
 
-            <hr className="border-border" />
+                {/* Départ EBCI */}
+                <li className="flex gap-3">
+                  <div className="flex flex-col items-center">
+                    <div className="w-7 h-7 rounded-full bg-navy flex items-center justify-center shrink-0">
+                      <PlaneTakeoff size={13} className="text-primary" />
+                    </div>
+                    <div className="w-px flex-1 bg-border my-1 min-h-[20px]" />
+                  </div>
+                  <div className="pb-3 pt-1">
+                    <p className="text-sm font-semibold text-foreground">Charleroi EBCI</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Départ</p>
+                  </div>
+                </li>
 
-            {/* ForeFlight coordinates */}
-            <div>
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                Coordonnées ForeFlight
-              </p>
-              <div className="space-y-2">
-                <CoordRow icon="✈" isPlane label="Charleroi EBCI — Départ" coord={ebciFF} />
                 {waypoints.map((wp, i) => (
-                  <CoordRow
-                    key={i}
-                    icon={String(i + 1)}
-                    isPlane={false}
-                    label={wp.nom}
-                    coord={fmtFF(wp.lat, wp.lng)}
-                  />
+                  <li key={i} className="flex gap-3">
+                    <div className="flex flex-col items-center">
+                      <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center shrink-0 text-[11px] font-black text-primary-foreground">
+                        {i + 1}
+                      </div>
+                      <div className="w-px flex-1 bg-border my-1 min-h-[20px]" />
+                    </div>
+                    <div className="pb-3 pt-1">
+                      <p className="text-sm font-semibold text-foreground">{wp.nom}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">≈ 2 min d&apos;observation</p>
+                    </div>
+                  </li>
                 ))}
-                <CoordRow icon="✈" isPlane label="Charleroi EBCI — Retour" coord={ebciFF} />
-              </div>
+
+                {/* Retour EBCI */}
+                <li className="flex gap-3">
+                  <div className="w-7 h-7 rounded-full bg-navy flex items-center justify-center shrink-0">
+                    <PlaneTakeoff size={13} className="text-primary scale-x-[-1]" />
+                  </div>
+                  <div className="pt-1">
+                    <p className="text-sm font-semibold text-foreground">Charleroi EBCI</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Retour</p>
+                  </div>
+                </li>
+
+              </ol>
             </div>
-
-            {/* Copy button */}
-            <button
-              onClick={handleCopy}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#113356] text-white rounded-xl text-sm font-bold hover:bg-[#0b2238] active:scale-[0.98] transition-all"
-            >
-              {copied ? <Check size={15} /> : <Copy size={15} />}
-              {copied ? "Copié !" : "Copier les coordonnées"}
-            </button>
-
-            {/* Google Maps link */}
-            <a
-              href={mapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-border rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors"
-            >
-              <ExternalLink size={13} />
-              Voir sur Google Maps
-            </a>
 
           </div>
         </div>
+
+        {/* Actions — collées en bas */}
+        <div className="px-5 pb-5 pt-3 shrink-0 border-t border-border">
+          <a
+            href={mapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-border rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors"
+          >
+            <ExternalLink size={13} />
+            Voir sur Google Maps
+          </a>
+        </div>
+
       </div>
     </div>
   );

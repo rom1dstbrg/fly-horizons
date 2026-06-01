@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -34,7 +34,7 @@ export default async function NosOffresPage() {
     .order("voucher_duration_minutes", { ascending: true });
 
   return (
-    <main className="bg-[#f5f5f7]">
+    <main className="bg-gradient-navy">
 
       {/* ══════════════════════════════════════════
           HERO — Vol sur mesure
@@ -52,7 +52,7 @@ export default async function NosOffresPage() {
 
             {/* Texte gauche */}
             <div>
-              <h1 className="text-4xl sm:text-5xl font-black text-white leading-[1.1] mb-4">
+              <h1 className="text-5xl sm:text-6xl font-black text-white leading-none mb-4">
                 Vous choisissez<br />
                 où vous allez.<br />
                 <span className="text-[#F2B705]">On calcule le reste.</span>
@@ -64,7 +64,7 @@ export default async function NosOffresPage() {
               </p>
 
               {/* Différenciation vs packs */}
-              <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 mb-7 flex items-start gap-3">
+              <div className="bg-white/5 border border-white/10 rounded-lg px-4 py-3.5 mb-7 flex items-start gap-3">
                 <div className="w-6 h-6 rounded-full bg-[#F2B705]/20 border border-[#F2B705]/30 flex items-center justify-center shrink-0 mt-0.5">
                   <Zap size={11} className="text-[#F2B705]" />
                 </div>
@@ -130,7 +130,7 @@ export default async function NosOffresPage() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link
                   href="/vol-sur-mesure"
-                  className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 bg-[#F2B705] text-[#113356] rounded-xl text-sm font-black hover:bg-[#e6a800] transition-colors shadow-lg shadow-[#F2B705]/20"
+                  className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 bg-[#F2B705] text-[#0b2238] rounded-lg text-sm font-black hover:bg-[#e6a800] transition-colors shadow-lg shadow-[#F2B705]/20"
                 >
                   <Route size={16} />
                   Créer mon vol sur mesure
@@ -145,9 +145,9 @@ export default async function NosOffresPage() {
 
             {/* Visuel droite */}
             <div className="hidden lg:flex flex-col self-start pt-2">
-              <div className="rounded-2xl overflow-hidden border border-white/12 shadow-[0_24px_64px_rgba(0,0,0,0.55)]">
+              <div className="rounded-lg overflow-hidden border border-white/12 shadow-[0_24px_64px_rgba(0,0,0,0.55)]">
                 <Image
-                  src="/vol-sur-mesure-v2.png"
+                  src="/vol-sur-mesure.png"
                   alt="Aperçu de l'outil de planification vol sur mesure"
                   width={900}
                   height={600}
@@ -179,7 +179,7 @@ export default async function NosOffresPage() {
             <Clock size={13} className="text-[#F2B705]" />
             <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px]">Durée fixe</p>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-foreground">
+          <h2 className="text-3xl sm:text-4xl font-black text-foreground">
             Vous préférez une durée prédéfinie ?
           </h2>
           <div className="w-10 h-0.5 bg-[#F2B705] mx-auto mt-4 mb-3 rounded-full" />
@@ -205,7 +205,7 @@ export default async function NosOffresPage() {
         <div className="mt-12 text-center">
           <p className="text-sm text-muted-foreground">
             Vous avez un itinéraire précis en tête ?{" "}
-            <Link href="/vol-sur-mesure" className="text-[#113356] font-semibold hover:underline">
+            <Link href="/vol-sur-mesure" className="text-foreground font-semibold hover:underline">
               Créez un vol entièrement sur mesure →
             </Link>
           </p>
@@ -215,14 +215,14 @@ export default async function NosOffresPage() {
       {/* ══════════════════════════════════════════
           Réassurance
       ══════════════════════════════════════════ */}
-      <div className="border-t border-border bg-white">
+      <div className="border-t border-border bg-card">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 py-6">
           <div className="flex flex-wrap justify-center gap-6">
             {[
-              { icon: <Users size={14} className="text-[#113356]" />, text: "Jusqu'à 3 passagers" },
-              { icon: <MapPin size={14} className="text-[#113356]" />, text: "Depuis Charleroi (EBCI)" },
-              { icon: <Clock size={14} className="text-[#113356]" />, text: "Durées de 30 min à 2 h+" },
-              { icon: <Route size={14} className="text-[#113356]" />, text: "Itinéraire flexible" },
+              { icon: <Users size={14} className="text-foreground" />, text: "Jusqu'à 3 passagers" },
+              { icon: <MapPin size={14} className="text-foreground" />, text: "Depuis Charleroi (EBCI)" },
+              { icon: <Clock size={14} className="text-foreground" />, text: "Durées de 30 min à 2 h+" },
+              { icon: <Route size={14} className="text-foreground" />, text: "Itinéraire flexible" },
             ].map(({ icon, text }) => (
               <div key={text} className="flex items-center gap-2 text-sm text-muted-foreground">
                 {icon}

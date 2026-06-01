@@ -21,7 +21,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const isVoucher = product.product_type === "voucher" ||
     (product.voucher_duration_minutes != null && product.voucher_duration_minutes > 0);
   const isOutOfStock = !isVoucher && product.stock === 0;
-  const href = isVoucher ? `/vols/${product.slug}` : `/product/${product.slug}`;
+  const href = `/vols/${product.slug}`;
 
   function handleQuickAdd(e: React.MouseEvent) {
     e.preventDefault();
@@ -42,10 +42,10 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Link href={href} className="group flex h-full">
-      <div className="card-premium overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-premium-lg flex flex-col w-full">
+      <div className="bg-white rounded-2xl border border-[#e8ecf0] overflow-hidden transition-all duration-300 hover:border-[#F2B705]/40 hover:shadow-md flex flex-col w-full">
 
         {/* Image */}
-        <div className="relative aspect-square max-xs:aspect-[4/3] bg-muted overflow-hidden shrink-0">
+        <div className="relative aspect-square max-xs:aspect-[4/3] bg-[#f5f5f7] overflow-hidden shrink-0">
           {mainImage ? (
             <Image
               src={mainImage}
@@ -65,13 +65,13 @@ export function ProductCard({ product }: ProductCardProps) {
             </div>
           ) : (
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-muted-foreground text-sm">Aucune image</span>
+              <span className="text-[#0b2238]/30 text-sm">Aucune image</span>
             </div>
           )}
 
           {isOutOfStock && (
-            <div className="absolute inset-0 bg-foreground/60 flex items-center justify-center">
-              <span className="bg-card text-muted-foreground text-xs font-medium px-3 py-1 rounded-full border border-border">
+            <div className="absolute inset-0 bg-[#0b2238]/60 flex items-center justify-center">
+              <span className="bg-white text-[#0b2238]/50 text-xs font-medium px-3 py-1 rounded-full border border-[#e8ecf0]">
                 Rupture de stock
               </span>
             </div>
@@ -79,7 +79,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
           {product.featured && !isOutOfStock && !isVoucher && (
             <div className="absolute top-2 left-2">
-              <span className="bg-primary text-primary-foreground text-xs font-semibold px-2 py-0.5 rounded-full">
+              <span className="bg-[#F2B705] text-[#0b2238] text-xs font-black px-2 py-0.5 rounded-full">
                 Populaire
               </span>
             </div>
@@ -87,7 +87,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
           {isVoucher && (
             <div className="absolute top-2 left-2">
-              <span className="bg-[#F2B705]/90 text-[#113356] text-xs font-semibold px-2 py-0.5 rounded-full">
+              <span className="bg-[#F2B705]/90 text-[#0b2238] text-xs font-black px-2 py-0.5 rounded-full">
                 Voucher
               </span>
             </div>
@@ -97,28 +97,26 @@ export function ProductCard({ product }: ProductCardProps) {
           {!isOutOfStock && (
             <button
               onClick={handleQuickAdd}
-              className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-primary hover:bg-[#e6a800] text-primary-foreground rounded-full w-9 h-9 flex items-center justify-center shadow-lg translate-y-1 group-hover:translate-y-0"
+              className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-[#F2B705] hover:bg-[#e6a800] text-[#0b2238] rounded-full w-9 h-9 flex items-center justify-center shadow-lg translate-y-1 group-hover:translate-y-0"
               title={isVoucher ? "Acheter" : "Ajouter au panier"}
             >
-              {added
-                ? <Check size={15} />
-                : <Plus size={15} />}
+              {added ? <Check size={15} /> : <Plus size={15} />}
             </button>
           )}
         </div>
 
         {/* Infos */}
         <div className="p-4 max-xs:p-3 flex flex-col flex-1">
-          <h3 className="font-semibold text-foreground text-sm leading-snug group-hover:text-primary transition-colors line-clamp-2 mb-2">
+          <h3 className="font-semibold text-[#0b2238] text-sm leading-snug group-hover:text-[#F2B705] transition-colors line-clamp-2 mb-2">
             {product.title}
           </h3>
 
-          <p className={`text-muted-foreground text-xs leading-relaxed ${isVoucher ? "line-clamp-2 max-xs:line-clamp-1 min-h-[3.75rem] max-xs:min-h-0" : "line-clamp-2 max-xs:line-clamp-1 min-h-[2.5rem] max-xs:min-h-0"}`}>
+          <p className={`text-[#0b2238]/50 text-xs leading-relaxed ${isVoucher ? "line-clamp-2 max-xs:line-clamp-1 min-h-[3.75rem] max-xs:min-h-0" : "line-clamp-2 max-xs:line-clamp-1 min-h-[2.5rem] max-xs:min-h-0"}`}>
             {product.short_description ?? ""}
           </p>
 
           <div className="flex items-center justify-between mt-auto pt-3">
-            <span className="text-primary font-bold text-base">
+            <span className="text-[#F2B705] font-bold text-base">
               {formatPrice(product.price)}
             </span>
 
@@ -127,7 +125,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 {formatDuration(product.voucher_duration_minutes ?? 60)}
               </span>
             ) : product.tags.length > 0 ? (
-              <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
+              <span className="text-xs text-[#0b2238]/40 bg-[#f5f5f7] px-2 py-0.5 rounded-full border border-[#e8ecf0]">
                 {product.tags[0]}
               </span>
             ) : null}

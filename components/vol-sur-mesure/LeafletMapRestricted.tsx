@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import L from "leaflet";
@@ -60,7 +60,7 @@ const PLANE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18
 function departIcon() {
   return L.divIcon({
     className: "",
-    html: `<div style="width:36px;height:36px;background:#113356;border:3px solid #F2B705;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,.45);">${PLANE_SVG}</div>`,
+    html: `<div style="width:36px;height:36px;background:#0b2238;border:3px solid #F2B705;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,.45);">${PLANE_SVG}</div>`,
     iconSize: [36, 36],
     iconAnchor: [18, 18],
   });
@@ -78,7 +78,7 @@ function destIcon(emoji: string, color: string) {
 function customIcon(n: number) {
   return L.divIcon({
     className: "",
-    html: `<div style="width:28px;height:28px;background:#F2B705;color:#113356;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;box-shadow:0 2px 8px rgba(0,0,0,.35);cursor:grab;border:2px solid #fff;">${n}</div>`,
+    html: `<div style="width:28px;height:28px;background:#F2B705;color:#0b2238;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;box-shadow:0 2px 8px rgba(0,0,0,.35);cursor:grab;border:2px solid #fff;">${n}</div>`,
     iconSize: [28, 28],
     iconAnchor: [14, 14],
   });

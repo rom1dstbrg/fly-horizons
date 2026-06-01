@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { deleteReservationStandard } from "@/lib/actions/delete";
@@ -64,7 +64,7 @@ function ReservationCard({
               <p className="text-xs text-emerald-600 font-mono font-semibold">{r.voucher_code}</p>
             )}
             {r.route && (
-              <span className="text-xs text-muted-foreground/60 flex items-center gap-1">
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
                 <MapPin size={10} />Route définie
               </span>
             )}
@@ -119,9 +119,9 @@ export function ReservationsClient({ reservations: initial }: { reservations: Re
               : reservations.filter(r => values.includes(r.statut)).length;
             return (
               <button key={f} onClick={() => setFilter(f)}
-                className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors ${
+                className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors cursor-pointer ${
                   filter === f
-                    ? "bg-[#113356] text-white border-[#113356]"
+                    ? "bg-navy text-white border-navy"
                     : "border-border text-muted-foreground hover:bg-secondary"
                 }`}>
                 {f}

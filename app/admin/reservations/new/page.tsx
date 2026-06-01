@@ -21,7 +21,7 @@ export default async function NewReservationPage() {
     <div className="space-y-6">
       <div>
         <Link
-          href="/admin/reservations"
+          href="/admin/vols"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3"
         >
           <ChevronLeft size={15} /> Retour aux réservations

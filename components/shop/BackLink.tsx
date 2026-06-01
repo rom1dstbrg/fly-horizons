@@ -17,7 +17,7 @@ export function BackLink() {
   return (
     <button
       onClick={handleBack}
-      className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-[#0b2238] transition-colors mb-8 cursor-pointer"
+      className="inline-flex items-center gap-1.5 text-sm font-medium text-[#0b2238]/50 hover:text-[#0b2238] transition-colors mb-8 cursor-pointer"
     >
       <ChevronLeft size={14} />
       Retour
