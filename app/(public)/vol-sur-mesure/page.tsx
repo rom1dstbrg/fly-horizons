@@ -273,8 +273,8 @@ export default function VolSurMesurePage() {
           onClick={() => handleSelectDate(ds)}
           className={[
             "h-9 w-full rounded-lg text-sm font-medium transition-all select-none flex items-center justify-center",
-            isSel              ? "bg-[#fbae17] text-[#0b2238] font-bold shadow-sm scale-105" :
-            isAvail && !isPast ? "hover:bg-[#fbae17]/10 text-foreground/70 cursor-pointer font-semibold" :
+            isSel              ? "bg-primary text-primary-foreground font-bold shadow-sm scale-105" :
+            isAvail && !isPast ? "hover:bg-primary/10 text-foreground/70 cursor-pointer font-semibold" :
                                  "text-muted-foreground/25 cursor-not-allowed text-xs",
           ].join(" ")}>{d}
         </button>
@@ -377,201 +377,6 @@ export default function VolSurMesurePage() {
       setFlowStep("done");
     } catch { setSubmitError("Erreur réseau."); }
     finally { setSubmitting(false); }
-  }
-
-  // ── Sidebar resume (shared)
-  function FlightSummaryCard({ showCTA }: { showCTA?: boolean }) {
-    return (
-      <div className="bg-[#0b2238] rounded-2xl overflow-hidden text-white">
-        {/* Header */}
-        <div className="px-5 pt-5 pb-4 border-b border-white/10">
-          <p className="text-[#fbae17] text-[9px] font-black tracking-[3px] uppercase mb-3">Votre vol personnalisé</p>
-          <div className="flex items-end gap-3">
-            <p className="text-4xl font-black leading-none">
-              {route.totalMin > 0 ? `≈${route.totalMin}` : "—"}
-              <span className="text-xl font-bold ml-1">min</span>
-            </p>
-            {route.pois.length > 0 && (
-              <p className="text-white/40 text-xs mb-1">Votre aventure estimée</p>
-            )}
-          </div>
-          {route.totalMin > 0 && (
-            <div className="grid grid-cols-3 gap-2 mt-4">
-              {[
-                { l: "Distance",      v: `${route.distKm} km` },
-                { l: "Observation",   v: `≈${route.obsMin} min` },
-                { l: "Prix estimé",   v: prixEstime > 0 ? `${prixEstime} €` : "—" },
-              ].map(({ l, v }) => (
-                <div key={l} className="bg-white/5 rounded-xl px-2.5 py-2 text-center">
-                  <p className="text-[9px] text-white/40 font-semibold uppercase tracking-wider mb-0.5">{l}</p>
-                  <p className="text-sm font-bold text-white">{v}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Parcours */}
-        <div className="px-5 py-4 border-b border-white/10">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-[9px] font-black text-white/40 uppercase tracking-[2px]">Votre parcours</p>
-            {route.pois.length > 0 && (
-              <span className="text-[9px] bg-[#fbae17]/15 text-[#fbae17] font-bold px-2 py-0.5 rounded-full">
-                Optimisé automatiquement
-              </span>
-            )}
-          </div>
-          <div className="space-y-1.5">
-            {/* Départ */}
-            <div className="flex items-center gap-2.5">
-              <div className="w-6 h-6 rounded-full bg-[#fbae17] flex items-center justify-center shrink-0">
-                <PlaneTakeoff size={11} className="text-[#0b2238]" />
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-white">{DEPART_NOM}</p>
-                <p className="text-[10px] text-white/35">Départ</p>
-              </div>
-            </div>
-
-            {route.pois.length === 0 ? (
-              <p className="text-xs text-white/25 italic pl-8 py-2">Ajoutez des lieux sur la carte…</p>
-            ) : (
-              route.pois.map((poi, i) => (
-                <div key={poi.id} className="flex items-start gap-2.5">
-                  <div className="w-6 h-6 rounded-full bg-white/10 border border-white/20 flex items-center justify-center shrink-0 text-[10px] font-bold text-[#fbae17]">
-                    {i + 1}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-white truncate">{poi.nom}</p>
-                    <p className="text-[10px] text-white/35">≈ {styleMode === "vues" ? 6 : 4} min observation</p>
-                  </div>
-                  <button
-                    onClick={() => mapRef.current?.removePOI(poi.id)}
-                    className="shrink-0 mt-0.5 text-white/20 hover:text-red-400 transition-colors cursor-pointer"
-                  >
-                    <X size={11} />
-                  </button>
-                </div>
-              ))
-            )}
-
-            {/* Retour */}
-            {route.pois.length > 0 && (
-              <div className="flex items-center gap-2.5">
-                <div className="w-6 h-6 rounded-full bg-[#fbae17] flex items-center justify-center shrink-0">
-                  <PlaneTakeoff size={11} className="text-[#0b2238] rotate-180" />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-white">{DEPART_NOM}</p>
-                  <p className="text-[10px] text-white/35">Retour</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Escales — toujours visible */}
-        <div className="px-5 py-4 border-b border-white/10">
-          <div className="flex items-center justify-between mb-2.5">
-            <p className="text-[9px] font-black text-white/40 uppercase tracking-[2px]">Escales</p>
-            {availableStops.some(s => !selectedStops.find(ss => ss.id === s.id)) && (
-              <button type="button" onClick={() => setStopsOpen(v => !v)}
-                className="flex items-center gap-1 text-[10px] font-bold text-[#fbae17] hover:text-white transition-colors cursor-pointer">
-                <Plus size={9} />Ajouter
-              </button>
-            )}
-          </div>
-
-          {/* Selected */}
-          {selectedStops.length > 0 && (
-            <div className="space-y-1.5 mb-2">
-              {selectedStops.map(s => (
-                <div key={s.id} className="flex items-center gap-2 bg-white/5 rounded-lg px-2.5 py-1.5">
-                  <span className="font-mono text-[10px] font-bold text-[#fbae17] shrink-0">{s.icao}</span>
-                  <span className="flex-1 text-[11px] text-white/70 truncate">{s.nom}</span>
-                  {s.taxe > 0 && <span className="text-[10px] text-[#fbae17] font-bold shrink-0">+{s.taxe}€</span>}
-                  <button type="button" onClick={() => removeStop(s.id)}
-                    className="text-white/30 hover:text-red-400 transition-colors cursor-pointer shrink-0">
-                    <X size={10} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {availableStops.length === 0 ? (
-            <p className="text-[11px] text-white/20 italic">Aucune escale disponible</p>
-          ) : selectedStops.length === 0 && !stopsOpen ? (
-            <p className="text-[11px] text-white/25 italic">Aucune escale</p>
-          ) : null}
-
-          {/* Picker */}
-          {stopsOpen && availableStops.length > 0 && (
-            <div className="rounded-lg overflow-hidden border border-white/10">
-              {availableStops
-                .filter(s => !selectedStops.find(ss => ss.id === s.id))
-                .map((s, i, arr) => (
-                  <button key={s.id} type="button" onClick={() => addStop(s)}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-white/10 text-left transition-colors cursor-pointer ${i < arr.length - 1 ? "border-b border-white/8" : ""}`}>
-                    <span className="font-mono text-[10px] font-bold text-[#fbae17] shrink-0 w-11">{s.icao}</span>
-                    <span className="flex-1 text-[11px] text-white/80 truncate">{s.nom}</span>
-                    {s.taxe > 0 && <span className="text-[10px] text-white/50 shrink-0">+{s.taxe}€</span>}
-                  </button>
-                ))}
-            </div>
-          )}
-        </div>
-
-        {/* Style */}
-        <div className="px-5 py-4">
-          <p className="text-[9px] font-black text-white/40 uppercase tracking-[2px] mb-3">Objectif de votre vol</p>
-          <div className="flex flex-col gap-2">
-            {STYLE_OPTIONS.map(o => (
-              <button key={o.key} type="button" onClick={() => setStyleMode(o.key)}
-                className={[
-                  "flex items-center gap-3 px-3.5 py-2.5 rounded-lg border transition-all text-left cursor-pointer",
-                  styleMode === o.key
-                    ? "bg-[#fbae17] border-[#fbae17] text-[#0b2238]"
-                    : "bg-white/5 border-white/10 text-white hover:bg-white/10",
-                ].join(" ")}>
-                <span className={styleMode === o.key ? "text-[#0b2238]" : "text-[#fbae17]"}>{o.icon}</span>
-                <div>
-                  <p className="text-xs font-bold leading-tight">{o.label}</p>
-                  <p className={`text-[10px] leading-tight mt-0.5 ${styleMode === o.key ? "text-[#0b2238]/60" : "text-white/40"}`}>{o.sub}</p>
-                </div>
-                {styleMode === o.key && <Check size={13} className="ml-auto shrink-0 text-[#0b2238]" />}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* CTA */}
-        {showCTA && (
-          <div className="px-5 pb-5">
-            {taxesEscalesTotal > 0 && acompte > 0 && (
-              <div className="flex items-center justify-between mb-3 px-3 py-2 bg-white/5 rounded-xl text-[11px]">
-                <span className="text-white/50">Acompte + taxes escales</span>
-                <span className="font-bold text-[#fbae17]">{totalAcompte}&thinsp;€</span>
-              </div>
-            )}
-            <button type="button"
-              disabled={route.pois.length === 0}
-              onClick={() => setFlowStep("reserve")}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-lg bg-primary text-primary-foreground text-sm font-black disabled:opacity-30 hover:brightness-105 transition-all shadow-gold cursor-pointer">
-              Continuer ma réservation <ChevronRight size={15} />
-            </button>
-            <p className="text-center text-[10px] text-white/25 mt-2.5">
-              <Lock size={9} className="inline mr-1" />Paiement sécurisé, aucun débit immédiat
-            </p>
-            {route.pois.length === 0 && (
-              <p className="text-center text-[10px] text-white/30 mt-1">
-                Ajoutez au moins un lieu pour continuer
-              </p>
-            )}
-          </div>
-        )}
-      </div>
-    );
   }
 
   // ── STEP 2 sidebar
@@ -731,7 +536,7 @@ export default function VolSurMesurePage() {
                         <button
                           type="button"
                           onClick={() => setPopupVisible(false)}
-                          className="w-full py-3 rounded-lg bg-navy text-white text-sm font-bold hover:opacity-90 transition-opacity cursor-pointer"
+                          className="w-full py-3 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:brightness-105 transition-all shadow-gold cursor-pointer"
                         >
                           Compris, tracer ma route
                         </button>
@@ -756,13 +561,13 @@ export default function VolSurMesurePage() {
                         <div className={[
                           "flex items-center gap-2.5 h-10 rounded-lg px-3.5 transition-all border-2",
                           searchPulse
-                            ? "bg-white border-[#fbae17] shadow-[0_0_0_6px_rgba(251,174,23,0.30)] animate-pulse"
+                            ? "bg-white border-primary shadow-[0_0_0_6px_rgba(242,183,5,0.30)] animate-pulse"
                             : searchFocused || searchOpen
-                            ? "bg-white border-[#fbae17] shadow-[0_0_0_4px_rgba(251,174,23,0.15)]"
-                            : "bg-white/95 border-[#cdd5e0] shadow-md hover:border-[#fbae17]/70 backdrop-blur-sm",
+                            ? "bg-white border-primary shadow-[0_0_0_4px_rgba(242,183,5,0.15)]"
+                            : "bg-white/95 border-[#cdd5e0] shadow-md hover:border-primary/70 backdrop-blur-sm",
                         ].join(" ")}>
                           {searchLoading
-                            ? <Loader2 size={14} className="text-[#fbae17] animate-spin shrink-0" />
+                            ? <Loader2 size={14} className="text-primary animate-spin shrink-0" />
                             : <Search   size={14} className="text-[#6b7280] shrink-0" />
                           }
                           <input
@@ -794,9 +599,9 @@ export default function VolSurMesurePage() {
                             {searchResults.map(r => (
                               <button key={r.place_id} type="button"
                                 onClick={() => addSearchResult(r)}
-                                className="w-full flex items-start gap-3 px-4 py-3 hover:bg-[#fbae17]/5 text-left transition-colors border-b border-border last:border-0 cursor-pointer group">
-                                <div className="w-7 h-7 rounded-lg bg-[#0b2238] flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-[#fbae17] transition-colors">
-                                  <MapPin size={12} className="text-[#fbae17] group-hover:text-[#0b2238]" />
+                                className="w-full flex items-start gap-3 px-4 py-3 hover:bg-primary/5 text-left transition-colors border-b border-border last:border-0 cursor-pointer group">
+                                <div className="w-7 h-7 rounded-lg bg-navy flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-primary transition-colors">
+                                  <MapPin size={12} className="text-primary group-hover:text-primary-foreground" />
                                 </div>
                                 <div className="min-w-0 flex-1">
                                   <p className="text-sm font-bold text-foreground truncate">{r.display_name.split(",")[0]}</p>
@@ -804,7 +609,7 @@ export default function VolSurMesurePage() {
                                     {r.display_name.split(",").slice(1, 3).join(", ").trim()}
                                   </p>
                                 </div>
-                                <span className="text-[10px] text-[#fbae17] font-bold shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                <span className="text-[10px] text-primary font-bold shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                                   Ajouter
                                 </span>
                               </button>
@@ -977,7 +782,7 @@ export default function VolSurMesurePage() {
                       <h3 className="text-[9px] font-black text-foreground/40 uppercase tracking-[2px]">Escales</h3>
                       {availableStops.some(s => !selectedStops.find(ss => ss.id === s.id)) && (
                         <button type="button" onClick={() => setStopsOpen(v => !v)}
-                          className="flex items-center gap-1.5 text-xs font-bold text-[#fbae17] bg-[#fbae17]/15 hover:bg-[#fbae17]/25 border border-[#fbae17]/25 px-3 py-1.5 rounded-lg transition-colors cursor-pointer">
+                          className="flex items-center gap-1.5 text-xs font-bold text-primary bg-primary/15 hover:bg-primary/25 border border-primary/25 px-3 py-1.5 rounded-lg transition-colors cursor-pointer">
                           <Plus size={12} />Ajouter
                         </button>
                       )}
@@ -1011,7 +816,7 @@ export default function VolSurMesurePage() {
                           .filter(s => !selectedStops.find(ss => ss.id === s.id))
                           .map((s, i, arr) => (
                             <button key={s.id} type="button" onClick={() => addStop(s)}
-                              className={`w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-[#fbae17]/5 text-left transition-colors cursor-pointer ${i < arr.length - 1 ? "border-b border-border" : ""}`}>
+                              className={`w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-primary/5 text-left transition-colors cursor-pointer ${i < arr.length - 1 ? "border-b border-border" : ""}`}>
                               <span className="font-mono text-[10px] font-bold text-[#0b2238] shrink-0 w-11">{s.icao}</span>
                               <span className="flex-1 text-[11px] text-foreground/80 truncate">{s.nom}</span>
                               {s.taxe > 0 && <span className="text-[10px] text-muted-foreground shrink-0">+{s.taxe}€</span>}
@@ -1101,7 +906,7 @@ export default function VolSurMesurePage() {
             <button type="button"
               disabled={route.pois.length === 0}
               onClick={() => setFlowStep("reserve")}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-lg bg-primary text-primary-foreground text-sm font-black disabled:opacity-40 disabled:bg-navy disabled:text-white cursor-pointer transition-all shadow-gold">
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-lg bg-primary text-primary-foreground text-sm font-black disabled:opacity-40 cursor-pointer transition-all shadow-gold">
               {route.pois.length === 0
                 ? "Ajoutez un lieu sur la carte"
                 : <>Continuer ma réservation <ChevronRight size={15} /></>
@@ -1207,25 +1012,9 @@ export default function VolSurMesurePage() {
                     : <div className="grid grid-cols-7 gap-0.5">{renderCalendar()}</div>
                   }
                   <div className="flex flex-wrap gap-4 mt-4 pt-4 border-t border-border text-[10px] text-muted-foreground">
-                    <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#fbae17]" />Sélectionné</span>
+                    <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-primary" />Sélectionné</span>
                     <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full border-2 border-border" />Disponible</span>
                     <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-muted" />Indisponible</span>
-                  </div>
-                  <div className="mt-3 bg-secondary border border-border rounded-lg px-3.5 py-2.5">
-                    <p className="text-[10px] font-bold text-foreground mb-1.5 flex items-center gap-1.5">
-                      <CloudRain size={10} className="text-primary" />Météo : comment ça fonctionne ?
-                    </p>
-                    <ul className="space-y-1">
-                      {[
-                        "Annulation gratuite jusqu'à 48 h avant.",
-                        "Si la météo ne permet pas de voler, le vol est reporté sans frais.",
-                        "C'est le pilote qui décide, jusqu'à 2 h avant, selon les conditions réelles à l'aéroport, pas chez vous.",
-                      ].map(t => (
-                        <li key={t} className="flex items-start gap-1.5 text-[10px] text-muted-foreground leading-relaxed">
-                          <span className="text-primary shrink-0 font-black mt-0.5">·</span>{t}
-                        </li>
-                      ))}
-                    </ul>
                   </div>
                 </div>
 
@@ -1370,7 +1159,7 @@ export default function VolSurMesurePage() {
                   </div>
                   <span className="text-sm text-foreground/70 leading-relaxed">
                     J&apos;accepte les{" "}
-                    <Link href="/cgp" className="text-foreground underline underline-offset-2 font-semibold hover:text-primary transition-colors">
+                    <Link href="/cgp" target="_blank" rel="noopener noreferrer" className="text-foreground underline underline-offset-2 font-semibold hover:text-primary transition-colors">
                       Conditions Générales de Participation
                     </Link>{" "}
                     et que mes données soient utilisées pour traiter ma réservation.
@@ -1531,8 +1320,8 @@ export default function VolSurMesurePage() {
                 Plan d&apos;accès à l&apos;aéroport
               </a>
               <div className="flex items-start gap-2.5 pt-2 border-t border-border">
-                <div className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
-                  <CloudRain size={13} className="text-blue-500" />
+                <div className="w-7 h-7 rounded-lg bg-secondary border border-border flex items-center justify-center shrink-0">
+                  <CloudRain size={13} className="text-muted-foreground" />
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   <strong className="text-foreground">Météo :</strong> si les conditions ne permettent pas de voler, le vol est reporté sans frais. Romain décide jusqu&apos;à 2 h avant.
@@ -1543,7 +1332,7 @@ export default function VolSurMesurePage() {
             {/* CTAs */}
             <div className="flex flex-col gap-3">
               <a href="/account#reservations"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-navy text-white rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity">
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg text-sm font-bold hover:brightness-105 transition-all shadow-gold">
                 <CalendarDays size={15} />
                 Suivre ma réservation
               </a>

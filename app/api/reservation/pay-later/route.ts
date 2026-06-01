@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { reservationPayLaterEmail } from "@/lib/email-templates";
+import { reservationPaymentInvitationEmail } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { rateLimit, getIp } from "@/lib/rate-limit";
 
@@ -212,7 +212,7 @@ export async function POST(request: NextRequest) {
       to: [email],
       replyTo: EMAIL_REPLY_TO,
       subject: "Votre réservation — Lien de paiement Fly Horizons",
-      html: reservationPayLaterEmail({
+      html: reservationPaymentInvitationEmail({
         prenom,
         nom,
         dateStr,
@@ -220,9 +220,7 @@ export async function POST(request: NextRequest) {
         duree: dureeMins,
         montant: finalPrice,
         paymentUrl,
-        deadlineStr,
         voucherCode: resolvedVoucherCode,
-        accountUrl: `${siteUrl}/account#reservations`,
       }),
     });
 

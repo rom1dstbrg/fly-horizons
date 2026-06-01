@@ -1,14 +1,14 @@
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import {
   orderConfirmationEmail,
-  orderProcessingEmail,
-  orderShippedEmail,
   voucherEmail,
+  flightReminderEmail,
   volSurMesureQuoteEmail,
   contactNotificationEmail,
   contactAcknowledgmentEmail,
   contactReplyEmail,
   type VoucherEmailCode,
+  type FlightReminderEmailProps,
   type VolSurMesureQuoteEmailProps,
   type ContactNotificationProps,
   type ContactAcknowledgmentProps,
@@ -32,6 +32,11 @@ interface ShippingAddress {
   country?: string;
 }
 
+interface EmailAttachment {
+  filename: string;
+  content: Buffer;
+}
+
 interface SendOrderConfirmationParams {
   to: string;
   orderRef: string;
@@ -44,16 +49,11 @@ interface SendOrderConfirmationParams {
   couponCode?: string | null;
   shippingAddress?: ShippingAddress;
   orderDate?: string;
+  voucherCodes?: VoucherEmailCode[];
+  attachments?: EmailAttachment[];
 }
 
-interface SendStatusEmailParams {
-  to: string;
-  orderRef: string;
-  customerName?: string;
-  shippingAddress?: ShippingAddress;
-}
-
-async function send(to: string, subject: string, html: string) {
+async function send(to: string, subject: string, html: string, attachments?: EmailAttachment[]) {
   try {
     const { data, error } = await resend.emails.send({
       from: EMAIL_FROM,
@@ -61,6 +61,7 @@ async function send(to: string, subject: string, html: string) {
       replyTo: EMAIL_REPLY_TO,
       subject,
       html,
+      ...(attachments && attachments.length > 0 ? { attachments } : {}),
     });
     if (error) {
       console.error("Resend error:", error);
@@ -74,21 +75,9 @@ async function send(to: string, subject: string, html: string) {
 }
 
 export async function sendOrderConfirmation(params: SendOrderConfirmationParams) {
-  const { to, orderRef, ...rest } = params;
+  const { to, orderRef, attachments, ...rest } = params;
   const html = orderConfirmationEmail({ orderRef, customerEmail: to, ...rest });
-  return send(to, `Confirmation de commande #${orderRef} — Fly Horizons`, html);
-}
-
-export async function sendOrderProcessingEmail(params: SendStatusEmailParams) {
-  const { to, orderRef, customerName } = params;
-  const html = orderProcessingEmail({ orderRef, customerName });
-  return send(to, `Votre commande #${orderRef} est en préparation — Fly Horizons`, html);
-}
-
-export async function sendOrderShippedEmail(params: SendStatusEmailParams) {
-  const { to, orderRef, customerName, shippingAddress } = params;
-  const html = orderShippedEmail({ orderRef, customerName, shippingAddress });
-  return send(to, `Votre commande #${orderRef} est expédiée ! — Fly Horizons`, html);
+  return send(to, `Confirmation de commande #${orderRef} — Fly Horizons`, html, attachments);
 }
 
 export async function sendVoucherEmail(params: {
@@ -96,10 +85,17 @@ export async function sendVoucherEmail(params: {
   orderRef: string;
   customerName?: string;
   codes: VoucherEmailCode[];
+  attachments?: EmailAttachment[];
 }) {
-  const { to, orderRef, customerName, codes } = params;
+  const { to, orderRef, customerName, codes, attachments } = params;
   const html = voucherEmail({ orderRef, customerName, codes });
-  return send(to, `Vos vouchers Fly Horizons — #${orderRef}`, html);
+  return send(to, `Votre bon de vol Fly Horizons`, html, attachments);
+}
+
+export async function sendFlightReminder(params: FlightReminderEmailProps & { to: string }) {
+  const { to, ...rest } = params;
+  const html = flightReminderEmail(rest);
+  return send(to, `Rappel — Votre vol le ${rest.dateStr} — Fly Horizons`, html);
 }
 
 type SendVolSurMesureQuoteParams = VolSurMesureQuoteEmailProps & { to: string };
@@ -122,7 +118,6 @@ export async function sendContactAcknowledgmentEmail(params: ContactAcknowledgme
   const html = contactAcknowledgmentEmail(params);
   return send(params.email, "Votre message a bien été reçu — Fly Horizons", html);
 }
-
 
 export async function sendContactReplyEmail(params: ContactReplyProps) {
   const html = contactReplyEmail(params);

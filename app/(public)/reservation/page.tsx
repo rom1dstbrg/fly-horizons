@@ -7,7 +7,7 @@ import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import {
   ChevronLeft, ChevronRight, Clock, Lock,
-  CheckCircle, AlertCircle, AlertTriangle, Loader2, Users, ArrowRight, X, CloudRain,
+  CheckCircle, AlertCircle, AlertTriangle, Loader2, ArrowRight, X,
 } from "lucide-react";
 import { formatDuration } from "@/lib/vouchers";
 
@@ -93,7 +93,6 @@ export default function ReservationPage() {
   const [codeError,   setCodeError]   = useState("");
   const [submitting,   setSubmitting]   = useState(false);
   const [submitError,  setSubmitError]  = useState("");
-  const [payLaterSubmitting, setPayLaterSubmitting] = useState(false);
 
   // ── Data ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -260,23 +259,6 @@ export default function ReservationPage() {
     }
   }
 
-  async function handlePayLater() {
-    setPayLaterSubmitting(true); setSubmitError("");
-    const { price } = computePrice(form.product, form.voucher, form.coupon);
-    const payload = {
-      prenom: form.prenom, nom: form.nom, email: form.email, telephone: form.telephone,
-      duree, date: form.date, heure: form.heure,
-      passengers: form.passengers, poids_total: form.poids_total ? parseInt(form.poids_total) : null,
-      voucher_code: form.voucher?.code,
-      coupon_code: form.coupon?.code || undefined,
-      commentaire: form.commentaire || undefined,
-    };
-    const r = await fetch("/api/reservation/pay-later", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, amount_cents: price * 100 }) });
-    const d = await r.json();
-    if (!r.ok) { setSubmitError(d.error || "Erreur."); setPayLaterSubmitting(false); return; }
-    router.push("/reservation/success?mode=pay-later");
-  }
-
   // ── Computed ─────────────────────────────────────────────────────
   const { price, discount, couponDiscount, full: prixPlein } = computePrice(form.product, form.voucher, form.coupon);
   const stepIndex = STEPS.findIndex(s => s.key === step);
@@ -293,7 +275,7 @@ export default function ReservationPage() {
   const ctaDisabled =
     step === "datetime" ? !form.date || !form.heure :
     step === "infos"    ? !form.prenom || !form.nom || !form.email || !form.poids_total || !form.passengers :
-                          !form.accept_cgp || submitting || payLaterSubmitting || codeLoading;
+                          !form.accept_cgp || submitting || codeLoading;
 
   async function handleCTA() {
     if (step === "datetime") { setStep("infos"); return; }
@@ -374,14 +356,6 @@ export default function ReservationPage() {
             {/* ─ Step 1 : Date & heure ─ */}
             {step === "datetime" && (
               <>
-                <div className="mb-4 flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
-                  <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />
-                  <p className="text-xs text-amber-800 leading-relaxed">
-                    <span className="font-semibold">Limite de poids : 190 kg total passagers.</span>{" "}
-                    Vérifiez ce critère avant de choisir votre créneau ; le poids vous sera demandé à l&apos;étape suivante.
-                  </p>
-                </div>
-
                 <div className="card-premium overflow-hidden">
 
                   {/* Calendrier */}
@@ -566,17 +540,16 @@ export default function ReservationPage() {
 
                 {/* Recap card */}
                 <div className="card-premium overflow-hidden">
-                  <div className="bg-navy px-6 py-6 flex items-start justify-between gap-4">
+                  <div className="px-6 py-5 flex items-start justify-between gap-4 border-b border-border">
                     <div>
-                      <h2 className="text-white text-base font-black leading-snug">{form.product?.title}</h2>
-                      <p className="text-white/50 text-sm mt-1.5 capitalize">
+                      <h2 className="text-foreground text-base font-black leading-snug">{form.product?.title}</h2>
+                      <p className="text-muted-foreground text-sm mt-1 capitalize">
                         {formattedDate}{form.heure && ` · ${form.heure}`}
                       </p>
                     </div>
                     <div className="shrink-0">
-                      <div className="inline-flex items-center gap-1.5 bg-black/40 border border-white/15 rounded-lg px-3 py-1.5">
+                      <div className="inline-flex items-center gap-1.5 bg-secondary border border-border rounded-lg px-3 py-1.5">
                         <span className="text-primary font-black text-[13px] leading-none">{formatDuration(duree)}</span>
-                        <span className="text-white/50 text-[11px] leading-none">avion léger</span>
                       </div>
                     </div>
                   </div>
@@ -609,25 +582,13 @@ export default function ReservationPage() {
                       <p className="text-xs text-foreground/40">Par avion · jusqu&apos;à 3 passagers</p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-[9px] font-black text-foreground/40 uppercase tracking-[2px] mb-0.5">Acompte</p>
+                      <p className="text-[9px] font-black text-foreground/40 uppercase tracking-[2px] mb-0.5">Prix du vol</p>
                       <p className={`text-3xl font-black tabular-nums ${price === 0 ? "text-green-600" : "text-foreground"}`}>
                         {price === 0 ? "Gratuit" : `${price} €`}
                       </p>
                     </div>
                   </div>
 
-                  {/* Note HOBBS */}
-                  <div className="px-6 pb-5">
-                    <div className="bg-amber-50 border border-amber-100 rounded-lg px-4 py-3 flex items-start gap-2.5">
-                      <AlertTriangle size={11} className="text-amber-500 shrink-0 mt-0.5" />
-                      <p className="text-[11px] text-amber-800/80 leading-relaxed">
-                        <strong className="text-amber-900">Prix calculé à la minute réelle.</strong>{" "}
-                        Après le vol, l&apos;avion dispose d&apos;un compteur (HOBBS) qui mesure le temps exact passé en vol.
-                        Si votre vol dure moins que prévu, la différence vous est <strong>remboursée sous 24 h</strong>.
-                        S&apos;il dure un peu plus, un petit complément vous est facturé dans le même délai. En pratique, l&apos;écart reste minime.
-                      </p>
-                    </div>
-                  </div>
                 </div>
 
                 {/* Code réduction — mobile uniquement */}
@@ -644,25 +605,6 @@ export default function ReservationPage() {
                   />
                 </div>
 
-                {/* Politique annulation */}
-                <div className="card-premium p-5">
-                  <p className="text-[10px] font-black text-primary uppercase tracking-[3px] mb-3">Annulation, météo &amp; passagers</p>
-                  <div className="space-y-2.5">
-                    <div className="flex items-start gap-2.5">
-                      <CheckCircle size={12} className="text-green-500 shrink-0 mt-0.5" />
-                      <p className="text-xs text-foreground/60 leading-relaxed">Annulation gratuite jusqu&apos;à <strong className="text-foreground">48 h avant</strong> le vol.</p>
-                    </div>
-                    <div className="flex items-start gap-2.5">
-                      <CloudRain size={12} className="text-foreground/30 shrink-0 mt-0.5" />
-                      <p className="text-xs text-foreground/60 leading-relaxed">En cas de météo défavorable, le vol est reporté sans frais. <strong className="text-foreground">C&apos;est votre pilote qui décide, jusqu&apos;à 2 h avant le départ</strong>, selon les conditions réelles à l&apos;aéroport.</p>
-                    </div>
-                    <div className="flex items-start gap-2.5">
-                      <Users size={12} className="text-foreground/30 shrink-0 mt-0.5" />
-                      <p className="text-xs text-foreground/60 leading-relaxed">Maximum <strong className="text-foreground">3 passagers</strong> par vol (avion léger), sans exception.</p>
-                    </div>
-                  </div>
-                </div>
-
                 {/* CGP */}
                 <div className="card-premium p-5">
                   <label className="flex items-start gap-3.5 cursor-pointer">
@@ -671,7 +613,7 @@ export default function ReservationPage() {
                       className="mt-0.5 w-4 h-4 accent-primary shrink-0 cursor-pointer" />
                     <span className="text-sm text-foreground/60 leading-relaxed">
                       J&apos;ai lu et j&apos;accepte les{" "}
-                      <Link href="/cgp" className="text-primary underline underline-offset-2 font-semibold hover:text-[#e6a800] transition-colors">
+                      <Link href="/cgp" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 font-semibold hover:brightness-90 transition-all">
                         Conditions Générales de Participation
                       </Link>{" "}
                       et j&apos;autorise l&apos;utilisation de mes données personnelles pour le traitement de cette réservation.
@@ -700,7 +642,7 @@ export default function ReservationPage() {
 
               <div className="flex flex-col items-end gap-2">
                 <button type="button" disabled={ctaDisabled} onClick={handleCTA}
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-primary text-primary-foreground rounded-lg text-sm font-black transition-all disabled:opacity-30 hover:bg-[#e6a800] shadow-gold hover:-translate-y-px active:translate-y-0 active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed">
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-primary text-primary-foreground rounded-lg text-sm font-black transition-all disabled:opacity-30 hover:brightness-105 shadow-gold hover:-translate-y-px active:translate-y-0 active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed">
                   {(submitting || codeLoading) && <Loader2 size={14} className="animate-spin" />}
                   {step === "paiement" && !submitting && price > 0 && <Lock size={13} />}
                   {step === "paiement" && !submitting && price === 0 && <CheckCircle size={13} />}
@@ -712,24 +654,6 @@ export default function ReservationPage() {
                   {!submitting && step !== "paiement" && <ChevronRight size={15} />}
                 </button>
 
-                {step === "paiement" && price > 0 && (
-                  <button
-                    type="button"
-                    disabled={ctaDisabled}
-                    onClick={handlePayLater}
-                    className="inline-flex items-center justify-center gap-2 px-6 py-2.5 border border-border text-foreground/50 rounded-lg text-sm font-medium transition-colors disabled:opacity-30 hover:text-foreground hover:border-foreground/20 cursor-pointer"
-                  >
-                    {payLaterSubmitting && <Loader2 size={13} className="animate-spin" />}
-                    Recevoir un lien de paiement par email
-                  </button>
-                )}
-
-                {step === "paiement" && price > 0 && (
-                  <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 flex items-start gap-1.5 text-right leading-snug max-w-xs">
-                    <AlertTriangle size={11} className="shrink-0 mt-0.5" />
-                    <span>Sans paiement immédiat, le créneau n&apos;est <strong>pas sécurisé</strong>. Un autre client peut le réserver entre-temps.</span>
-                  </p>
-                )}
               </div>
 
             </div>
@@ -832,7 +756,7 @@ export default function ReservationPage() {
                   </p>
                   <Link
                     href="/nos-offres"
-                    className="inline-flex items-center gap-1.5 text-[11.5px] font-bold text-primary hover:text-[#e6a800] transition-colors"
+                    className="inline-flex items-center gap-1.5 text-[11.5px] font-bold text-primary hover:brightness-90 transition-all"
                   >
                     Voir toutes les durées
                     <ArrowRight size={11} />
@@ -903,7 +827,7 @@ function CodeField({ codeInput, voucher, coupon, discount, codeLoading, codeErro
           className={`flex-1 ${h} ${px} rounded-lg border border-border bg-input font-mono uppercase tracking-wide text-foreground focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary transition-all placeholder:text-foreground/30 placeholder:tracking-normal placeholder:font-sans placeholder:normal-case`} />
         <button type="button" onClick={onApply}
           disabled={!codeInput.trim() || codeLoading}
-          className={`${h} ${btnPx} rounded-lg bg-primary text-primary-foreground font-black hover:bg-[#e6a800] disabled:opacity-40 transition-all flex items-center justify-center shadow-sm cursor-pointer whitespace-nowrap`}>
+          className={`${h} ${btnPx} rounded-lg bg-primary text-primary-foreground font-black hover:brightness-105 disabled:opacity-40 transition-all flex items-center justify-center shadow-sm cursor-pointer whitespace-nowrap`}>
           {codeLoading ? <Loader2 size={size === "lg" ? 14 : 12} className="animate-spin" /> : "OK"}
         </button>
       </div>

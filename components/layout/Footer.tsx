@@ -30,7 +30,7 @@ const INFOS = [
   { href: "/faq",         label: "FAQ" },
   { href: "/guide",       label: "Guide passager" },
   { href: "/access-ebci", label: "Plan d'accès · EBCI" },
-  { href: "/cgp",         label: "Conditions générales" },
+  { href: "/cgp",         label: "Conditions générales", newTab: true },
 ];
 
 const COMPTE = [
@@ -107,8 +107,12 @@ export function Footer() {
           <div>
             <p className={hd}>Informations</p>
             <ul className="space-y-2.5">
-              {INFOS.map(({ href, label }) => (
-                <li key={href}><Link href={href} className={lnk}>{label}</Link></li>
+              {INFOS.map(({ href, label, newTab }) => (
+                <li key={href}>
+                  <Link href={href} className={lnk} {...(newTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
+                    {label}
+                  </Link>
+                </li>
               ))}
             </ul>
           </div>
@@ -160,7 +164,7 @@ export function Footer() {
           </p>
           <div className="flex items-center gap-4 text-xs text-white/25">
             <div className="flex items-center gap-3">
-              <Link href="/cgp" className="hover:text-white/60 transition-colors">Conditions générales</Link>
+              <Link href="/cgp" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">Conditions générales</Link>
               <span>·</span>
               <Link href="/contact" className="hover:text-white/60 transition-colors">Contact</Link>
             </div>

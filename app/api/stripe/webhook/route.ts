@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendOrderConfirmation, sendVoucherEmail } from "@/lib/email-service";
+import { generateVoucherPDFBuffer } from "@/lib/pdf/voucher-pdf";
 import { generateVoucherCode } from "@/lib/vouchers";
 import type { VoucherEmailCode } from "@/lib/email-templates";
 import { reservationPaymentConfirmationEmail, volSurMesureAcompteEmail } from "@/lib/email-templates";
@@ -41,8 +42,9 @@ export async function POST(request: NextRequest) {
     if (session.metadata?.type === "reservation_perso") {
       const { reservationId, voucherId, voucherCode, couponCode, paymentToken } = session.metadata;
       if (reservationId) {
+        const montantPayePerso = session.amount_total ? session.amount_total / 100 : 0;
         await adminSupabase.from("reservations")
-          .update({ statut: "acompte_recu", payment_token: null })
+          .update({ statut: "acompte_recu", payment_token: null, paye: montantPayePerso })
           .eq("id", reservationId)
           .eq("statut", "en_attente"); // Garde idempotence — évite de rétrograder si déjà avancé
         if (voucherId) {
@@ -84,9 +86,10 @@ export async function POST(request: NextRequest) {
     if (session.metadata?.type === "reservation") {
       const { reservationId, voucherId, voucherCode, couponCode } = session.metadata;
       if (reservationId) {
+        const montantPayeStd = session.amount_total ? session.amount_total / 100 : 0;
         await adminSupabase
           .from("reservations")
-          .update({ statut: "en_attente", payment_token: null })
+          .update({ statut: "en_attente", payment_token: null, paye: montantPayeStd })
           .eq("id", reservationId)
           .eq("statut", "payment_pending");
 
@@ -270,13 +273,32 @@ export async function POST(request: NextRequest) {
         orderDate: order.created_at,
       });
 
-      // Email voucher séparé avec les codes
       if (voucherCodes.length > 0) {
+        const pdfAttachments: Array<{ filename: string; content: Buffer }> = [];
+        for (const vc of voucherCodes) {
+          try {
+            const expiresAt = new Date();
+            expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+            const pdfBuffer = await generateVoucherPDFBuffer({
+              code: vc.code,
+              duration_minutes: vc.duration_minutes,
+              product_title: vc.product_title,
+              expiresAt,
+            });
+            pdfAttachments.push({
+              filename: `bon-vol-${vc.code.slice(0, 8).toLowerCase()}.pdf`,
+              content: pdfBuffer,
+            });
+          } catch (err) {
+            console.error("PDF generation failed for voucher", vc.code, err);
+          }
+        }
         await sendVoucherEmail({
           to: customerEmail,
           orderRef: orderId.slice(0, 8).toUpperCase(),
           customerName,
           codes: voucherCodes,
+          ...(pdfAttachments.length > 0 ? { attachments: pdfAttachments } : {}),
         });
       }
     }

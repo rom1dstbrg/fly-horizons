@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendOrderConfirmation, sendVoucherEmail } from "@/lib/email-service";
+import { generateVoucherPDFBuffer } from "@/lib/pdf/voucher-pdf";
 import { generateVoucherCode } from "@/lib/vouchers";
 import type { VoucherEmailCode } from "@/lib/email-templates";
 
@@ -227,11 +228,31 @@ export async function POST(request: NextRequest) {
         });
 
         if (voucherCodes.length > 0) {
+          const pdfAttachments: Array<{ filename: string; content: Buffer }> = [];
+          for (const vc of voucherCodes) {
+            try {
+              const expiresAt = new Date();
+              expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+              const pdfBuffer = await generateVoucherPDFBuffer({
+                code: vc.code,
+                duration_minutes: vc.duration_minutes,
+                product_title: vc.product_title,
+                expiresAt,
+              });
+              pdfAttachments.push({
+                filename: `bon-vol-${vc.code.slice(0, 8).toLowerCase()}.pdf`,
+                content: pdfBuffer,
+              });
+            } catch (err) {
+              console.error("PDF generation failed for voucher", vc.code, err);
+            }
+          }
           await sendVoucherEmail({
             to: user.email,
             orderRef: order.id.slice(0, 8).toUpperCase(),
             customerName: clientAddress?.full_name || undefined,
             codes: voucherCodes,
+            ...(pdfAttachments.length > 0 ? { attachments: pdfAttachments } : {}),
           });
         }
       }
