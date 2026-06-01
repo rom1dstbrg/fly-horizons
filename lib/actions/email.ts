@@ -2,18 +2,8 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import {
-  orderConfirmationEmail,
-  orderProcessingEmail,
-  orderShippedEmail,
-} from "@/lib/email-templates";
-import {
-  sendOrderConfirmation,
-  sendOrderProcessingEmail,
-  sendOrderShippedEmail,
-} from "@/lib/email-service";
-
-export type EmailPreviewType = "confirmation" | "processing" | "shipped";
+import { orderConfirmationEmail } from "@/lib/email-templates";
+import { sendOrderConfirmation } from "@/lib/email-service";
 
 async function checkAdmin() {
   const supabase = await createClient();
@@ -51,10 +41,7 @@ async function getOrderData(orderId: string) {
   return { order, customerEmail };
 }
 
-export async function getEmailPreview(
-  orderId: string,
-  type: EmailPreviewType
-): Promise<string> {
+export async function getEmailPreview(orderId: string): Promise<string> {
   await checkAdmin();
 
   const result = await getOrderData(orderId);
@@ -65,33 +52,22 @@ export async function getEmailPreview(
   const name = order.shipping_address?.full_name;
   const address = order.shipping_address;
 
-  if (type === "confirmation") {
-    return orderConfirmationEmail({
-      orderRef: ref,
-      customerEmail,
-      customerName: name,
-      items: order.items ?? [],
-      subtotal: order.subtotal,
-      shippingCost: order.shipping_cost,
-      discountAmount: order.discount_amount,
-      total: order.total,
-      couponCode: order.coupon_code,
-      shippingAddress: address,
-      orderDate: order.created_at,
-    });
-  }
-
-  if (type === "processing") {
-    return orderProcessingEmail({ orderRef: ref, customerName: name });
-  }
-
-  return orderShippedEmail({ orderRef: ref, customerName: name, shippingAddress: address });
+  return orderConfirmationEmail({
+    orderRef: ref,
+    customerEmail,
+    customerName: name,
+    items: order.items ?? [],
+    subtotal: order.subtotal,
+    shippingCost: order.shipping_cost ?? 0,
+    discountAmount: order.discount_amount ?? 0,
+    total: order.total,
+    couponCode: order.coupon_code,
+    shippingAddress: address,
+    orderDate: order.created_at,
+  });
 }
 
-export async function resendOrderEmail(
-  orderId: string,
-  type: EmailPreviewType
-): Promise<{ success?: boolean; error?: string }> {
+export async function resendOrderEmail(orderId: string): Promise<{ success?: boolean; error?: string }> {
   await checkAdmin();
 
   const result = await getOrderData(orderId);
@@ -104,28 +80,18 @@ export async function resendOrderEmail(
   const name = order.shipping_address?.full_name;
   const address = order.shipping_address;
 
-  if (type === "confirmation") {
-    const r = await sendOrderConfirmation({
-      to: customerEmail,
-      orderRef: ref,
-      customerName: name,
-      items: order.items ?? [],
-      subtotal: order.subtotal,
-      shippingCost: order.shipping_cost,
-      discountAmount: order.discount_amount,
-      total: order.total,
-      couponCode: order.coupon_code,
-      shippingAddress: address,
-      orderDate: order.created_at,
-    });
-    return r.error ? { error: String(r.error) } : { success: true };
-  }
-
-  if (type === "processing") {
-    const r = await sendOrderProcessingEmail({ to: customerEmail, orderRef: ref, customerName: name });
-    return r.error ? { error: String(r.error) } : { success: true };
-  }
-
-  const r = await sendOrderShippedEmail({ to: customerEmail, orderRef: ref, customerName: name, shippingAddress: address });
+  const r = await sendOrderConfirmation({
+    to: customerEmail,
+    orderRef: ref,
+    customerName: name,
+    items: order.items ?? [],
+    subtotal: order.subtotal,
+    shippingCost: order.shipping_cost ?? 0,
+    discountAmount: order.discount_amount ?? 0,
+    total: order.total,
+    couponCode: order.coupon_code,
+    shippingAddress: address,
+    orderDate: order.created_at,
+  });
   return r.error ? { error: String(r.error) } : { success: true };
 }

@@ -1,9 +1,9 @@
-"use server";
+﻿"use server";
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationPaymentInvitationEmail, reservationConfirmationFreeEmail, postVolEmail, routeProposalEmail, customEmail, reservationPayLaterEmail, rescheduleInviteEmail, rescheduleConfirmationEmail } from "@/lib/email-templates";
+import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationPaymentInvitationEmail, reservationConfirmationFreeEmail, postVolEmail, routeProposalEmail, customEmail, rescheduleInviteEmail, rescheduleConfirmationEmail } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 
 async function checkAdmin() {
@@ -105,7 +105,7 @@ export async function updateStatutReservation(id: string, statut: string) {
       }
     }
 
-    revalidatePath("/admin/reservations");
+    revalidatePath("/admin/vols");
     revalidatePath("/admin/vols");
     return { success: true };
   } catch {
@@ -172,7 +172,6 @@ export async function updateStatutReservationPerso(id: string, statut: string) {
       }
     }
 
-    revalidatePath("/admin/vols-sur-mesure");
     revalidatePath("/admin/vols");
     return { success: true };
   } catch {
@@ -211,7 +210,6 @@ export async function sendEmailConfirmation(id: string, type: "date" | "heure") 
     await supabase.from("reservations")
       .update({ statut: newStatut, [timestampField]: now })
       .eq("id", id);
-    revalidatePath("/admin/vols-sur-mesure");
     revalidatePath("/admin/vols");
     return { success: true };
   } catch (err) {
@@ -355,7 +353,7 @@ export async function createAdminReservation(data: {
       });
     }
 
-    revalidatePath("/admin/reservations");
+    revalidatePath("/admin/vols");
     revalidatePath("/admin/vols");
     revalidatePath("/admin/clients");
     return { success: true, reservationId: resa.id };
@@ -373,8 +371,7 @@ export async function updateReservationDateHeure(id: string, fields: {
     await checkAdmin();
     const supabase = createAdminClient();
     await supabase.from("reservations").update(fields).eq("id", id);
-    revalidatePath("/admin/reservations");
-    revalidatePath("/admin/vols-sur-mesure");
+    revalidatePath("/admin/vols");
     revalidatePath("/admin/vols");
     return { success: true };
   } catch {
@@ -432,8 +429,7 @@ export async function updateReservationFields(id: string, fields: {
     await checkAdmin();
     const supabase = createAdminClient();
     await supabase.from("reservations").update(fields).eq("id", id);
-    revalidatePath("/admin/reservations");
-    revalidatePath("/admin/vols-sur-mesure");
+    revalidatePath("/admin/vols");
     revalidatePath("/admin/vols");
     return { success: true };
   } catch {
@@ -452,7 +448,6 @@ export async function updateReservationPersoFields(id: string, fields: {
     await checkAdmin();
     const supabase = createAdminClient();
     await supabase.from("reservations").update(fields).eq("id", id);
-    revalidatePath("/admin/vols-sur-mesure");
     revalidatePath("/admin/vols");
     return { success: true };
   } catch {
@@ -460,7 +455,7 @@ export async function updateReservationPersoFields(id: string, fields: {
   }
 }
 
-// ── Renvoyer le lien de paiement (admin) ──────────────────────────────────────
+// â"€â"€ Renvoyer le lien de paiement (admin) â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 export async function resendPaymentLinkAdmin(id: string) {
   try {
@@ -502,17 +497,15 @@ export async function resendPaymentLinkAdmin(id: string) {
       to: [client.email],
       replyTo: EMAIL_REPLY_TO,
       subject: "Votre réservation — Lien de paiement Fly Horizons",
-      html: reservationPayLaterEmail({
+      html: reservationPaymentInvitationEmail({
         prenom: client.prenom,
         nom: client.nom,
         dateStr,
-        heure: resa.heure_vol ?? "—",
+        heure: resa.heure_vol ?? "-",
         duree: resa.duree,
         montant: resa.acompte ?? 0,
         paymentUrl,
-        deadlineStr,
         voucherCode: resa.voucher_code ?? null,
-        accountUrl: `${siteUrl}/account#reservations`,
       }),
     });
 
@@ -527,7 +520,7 @@ export async function updateReservationRoute(id: string, route: string) {
     await checkAdmin();
     const supabase = createAdminClient();
     await supabase.from("reservations").update({ route }).eq("id", id);
-    revalidatePath("/admin/reservations");
+    revalidatePath("/admin/vols");
     revalidatePath("/admin/vols");
     return { success: true };
   } catch {
@@ -571,7 +564,7 @@ export async function resendRoute(id: string) {
       html: routeProposalEmail({ prenom: client.prenom, dateStr, duree: resa.duree, route: resa.route, routeUrl }),
     });
 
-    revalidatePath("/admin/reservations");
+    revalidatePath("/admin/vols");
     revalidatePath("/admin/vols");
     return { success: true };
   } catch {
@@ -579,7 +572,7 @@ export async function resendRoute(id: string) {
   }
 }
 
-// ── Report de vol : générer un lien et envoyer l'email (admin) ────────────────
+// â"€â"€ Report de vol : générer un lien et envoyer l'email (admin) â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 export async function sendRescheduleInvite(id: string) {
   try {
@@ -624,8 +617,7 @@ export async function sendRescheduleInvite(id: string) {
       }),
     });
 
-    revalidatePath("/admin/reservations");
-    revalidatePath("/admin/vols-sur-mesure");
+    revalidatePath("/admin/vols");
     revalidatePath("/admin/vols");
     return { success: true };
   } catch (e) {
@@ -634,7 +626,7 @@ export async function sendRescheduleInvite(id: string) {
   }
 }
 
-// ── Report de vol : traitement du choix de date par le client (public) ────────
+// â"€â"€ Report de vol : traitement du choix de date par le client (public) â"€â"€â"€â"€â"€â"€â"€â"€
 
 export async function rescheduleReservation(token: string, newDate: string, newHeure: string) {
   try {
@@ -711,8 +703,7 @@ export async function rescheduleReservation(token: string, newDate: string, newH
       }),
     });
 
-    revalidatePath("/admin/reservations");
-    revalidatePath("/admin/vols-sur-mesure");
+    revalidatePath("/admin/vols");
     revalidatePath("/admin/vols");
     revalidatePath("/account");
     return { success: true, newDateStr: newDateTimeStr };
@@ -722,7 +713,7 @@ export async function rescheduleReservation(token: string, newDate: string, newH
   }
 }
 
-// ── Report de vol : générer un token depuis le compte client ──────────────────
+// â"€â"€ Report de vol : générer un token depuis le compte client â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 export async function generateClientRescheduleToken(reservationId: string) {
   try {
