@@ -3,11 +3,11 @@
 import { useState, useTransition } from "react";
 import {
   markVoucherUsed, markVoucherUnused,
-  createManualVoucher, deleteVoucher,
+  createManualVoucher, deleteVoucher, resendVoucherEmail,
 } from "@/lib/actions/vouchers";
 import { formatDuration } from "@/lib/vouchers";
 import {
-  Check, RotateCcw, Copy, Plus, Loader2, Users, AlertTriangle,
+  Check, RotateCcw, Copy, Plus, Loader2, Users, AlertTriangle, Mail,
 } from "lucide-react";
 import { AdminBadge, STATUT_VOUCHER } from "@/components/admin/ui/AdminBadge";
 import { AdminRowActions } from "@/components/admin/ui/AdminRowActions";
@@ -116,9 +116,10 @@ function CreateVoucherForm({ onClose, clients, prixHeure60 }: {
 }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
-  const [created, setCreated] = useState<string | null>(null);
+  const [created, setCreated] = useState<{ code: string; emailSent?: boolean } | null>(null);
   const [recipientName, setRecipientName] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
+  const [sendEmail, setSendEmail] = useState(false);
   const [priceMode, setPriceMode] = useState<"auto" | "manual">("auto");
   const [duration, setDuration] = useState<number>(60);
   const [manualPrix, setManualPrix] = useState("");
@@ -139,9 +140,15 @@ function CreateVoucherForm({ onClose, clients, prixHeure60 }: {
     startTransition(async () => {
       const r = await createManualVoucher(formData);
       if (r.error) { setError(r.error); return; }
-      setCreated(r.code ?? null);
+      let emailSent = false;
+      if (sendEmail && recipientEmail && r.id) {
+        const er = await resendVoucherEmail(r.id);
+        emailSent = !er.error;
+      }
+      setCreated({ code: r.code ?? "", emailSent });
       setRecipientName("");
       setRecipientEmail("");
+      setSendEmail(false);
       setManualPrix("");
       setDuration(60);
       (e.target as HTMLFormElement).reset();
@@ -164,8 +171,10 @@ function CreateVoucherForm({ onClose, clients, prixHeure60 }: {
         <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 mb-4 flex items-center gap-3">
           <Check size={14} className="text-green-500 shrink-0" />
           <div>
-            <p className="text-sm text-green-700 font-medium">Voucher créé !</p>
-            <p className="font-mono text-base font-bold text-green-800 tracking-widest mt-0.5">{created}</p>
+            <p className="text-sm text-green-700 font-medium">
+              Voucher créé !{created.emailSent ? " Email envoyé ✓" : ""}
+            </p>
+            <p className="font-mono text-base font-bold text-green-800 tracking-widest mt-0.5">{created.code}</p>
           </div>
         </div>
       )}
@@ -246,6 +255,20 @@ function CreateVoucherForm({ onClose, clients, prixHeure60 }: {
                 className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
           </div>
+          {recipientEmail && (
+            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={sendEmail}
+                onChange={e => setSendEmail(e.target.checked)}
+                className="rounded border-border accent-navy cursor-pointer"
+              />
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Mail size={11} />
+                Envoyer le voucher par email au destinataire
+              </span>
+            </label>
+          )}
         </div>
 
         <div className="flex gap-2 pt-1">

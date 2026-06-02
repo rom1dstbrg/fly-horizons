@@ -8,7 +8,7 @@ import {
   AlertTriangle, Loader2, Pencil, RotateCcw, Trash2,
 } from "lucide-react";
 import {
-  markVoucherUsed, markVoucherUnused, updateVoucher, deleteVoucher,
+  markVoucherUsed, markVoucherUnused, updateVoucher, deleteVoucher, resendVoucherEmail,
 } from "@/lib/actions/vouchers";
 import { formatDuration } from "@/lib/vouchers";
 import { AdminBadge, STATUT_VOUCHER } from "@/components/admin/ui/AdminBadge";
@@ -153,6 +153,15 @@ export function VoucherDrawer({
       await deleteVoucher(voucher.id);
       onDelete?.(voucher.id);
       onClose();
+    });
+  }
+
+  function doResendEmail() {
+    if (!voucher) return;
+    startTransition(async () => {
+      const r = await resendVoucherEmail(voucher.id);
+      if (r.error) showFeedback("Erreur : " + r.error, false);
+      else showFeedback("Email renvoyé ✓");
     });
   }
 
@@ -407,7 +416,8 @@ export function VoucherDrawer({
             </div>
 
             {/* Footer */}
-            <div className="px-5 py-4 border-t border-border shrink-0 flex items-center gap-2">
+            <div className="px-5 py-4 border-t border-border shrink-0 space-y-2">
+              <div className="flex items-center gap-2">
               {v.status !== "expired" && (
                 <button
                   onClick={toggleUsed} disabled={isPending}
@@ -444,6 +454,16 @@ export function VoucherDrawer({
                 >
                   <Trash2 size={14} />
                   Supprimer
+                </button>
+              )}
+              </div>
+              {v.recipient_email && (
+                <button
+                  onClick={doResendEmail} disabled={isPending}
+                  className="w-full flex items-center justify-center gap-2 px-4 h-9 rounded-lg border border-border text-sm text-muted-foreground hover:text-navy hover:border-navy/30 hover:bg-navy/5 disabled:opacity-50 transition-colors cursor-pointer"
+                >
+                  {isPending ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
+                  Renvoyer par email
                 </button>
               )}
             </div>

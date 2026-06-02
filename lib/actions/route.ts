@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { routeFeedbackAdminEmail } from "@/lib/email-templates";
 import { resend, EMAIL_FROM } from "@/lib/resend";
 
-const ADMIN_EMAIL = "Romainpilot2003@gmail.com";
+const ADMIN_EMAIL = "info@fly-horizons.com";
 
 export async function submitRouteResponse(
   token: string,

@@ -96,8 +96,27 @@ export default function VolSurMesurePage() {
     setTimeout(() => setSearchPulse(false), 1400);
   }
 
-  // ── Popup d'accueil (session uniquement — réapparaît à chaque visite)
-  const [popupVisible, setPopupVisible] = useState(true);
+  // ── Popup d'accueil
+  const [popupVisible, setPopupVisible] = useState(false);
+
+  // ── Init sessionStorage : restauration des POIs + popup
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("vsm_pois");
+      const pois = raw ? JSON.parse(raw) as import("@/components/vol-sur-mesure/LeafletMapAdventure").POI[] : [];
+      if (pois.length > 0) {
+        const t = setTimeout(() => pois.forEach(p => mapRef.current?.addPOI(p)), 1200);
+        return () => clearTimeout(t);
+      }
+    } catch { /* ignore */ }
+    if (!sessionStorage.getItem("vsm_popup_seen")) setPopupVisible(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── Sauvegarde des POIs dans sessionStorage à chaque changement
+  useEffect(() => {
+    sessionStorage.setItem("vsm_pois", JSON.stringify(route.pois));
+  }, [route.pois]);
 
   // ── Scroll vers le haut à chaque changement d'étape
   useEffect(() => {
@@ -164,11 +183,35 @@ export default function VolSurMesurePage() {
   const [selectedStops,  setSelectedStops]  = useState<Stopover[]>([]);
   const [stopsOpen,      setStopsOpen]      = useState(false);
 
+  // ── Voucher / coupon
+  const [voucherCode,    setVoucherCode]    = useState("");
+  const [voucherData,    setVoucherData]    = useState<{ id: string; code: string; product_price: number; duration_minutes: number; product_title: string } | null>(null);
+  const [voucherError,   setVoucherError]   = useState("");
+  const [voucherLoading, setVoucherLoading] = useState(false);
+  const [couponCode,     setCouponCode]     = useState("");
+  const [couponData,     setCouponData]     = useState<{ code: string; type: "percentage" | "fixed"; value: number } | null>(null);
+  const [couponError,    setCouponError]    = useState("");
+  const [couponLoading,  setCouponLoading]  = useState(false);
+
   // ── Price calc
   const prixEstime        = route.totalMin > 0 ? Math.round((prixHeure / 60) * route.totalMin) : 0;
   const acompte           = route.totalMin > 0 ? Math.round((acompteH  / 60) * route.totalMin) : 0;
   const taxesEscalesTotal = selectedStops.reduce((acc, s) => acc + s.taxe, 0);
   const totalAcompte      = acompte + taxesEscalesTotal;
+  // Valeur du voucher : prix produit, ou fallback duration_minutes × prixHeure / 60
+  const voucherValue = voucherData
+    ? (voucherData.product_price > 0
+        ? voucherData.product_price
+        : Math.round((prixHeure / 60) * (voucherData.duration_minutes ?? 0)))
+    : 0;
+  const voucherDiscount          = Math.min(voucherValue, totalAcompte);
+  const totalAcompteApresVoucher = Math.max(0, totalAcompte - voucherDiscount);
+  const couponDiscount = couponData
+    ? (couponData.type === "percentage"
+        ? Math.round(totalAcompteApresVoucher * couponData.value / 100)
+        : Math.min(couponData.value, totalAcompteApresVoucher))
+    : 0;
+  const totalAcompteFinal = Math.max(0, totalAcompteApresVoucher - couponDiscount);
   const weightKg    = parseInt(form.poids_total) || 0;
   const weightWarn  = weightKg > MAX_WEIGHT && weightKg < CRIT_WEIGHT;
   const weightCrit  = weightKg >= CRIT_WEIGHT;
@@ -339,6 +382,38 @@ export default function VolSurMesurePage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [route.pois]);
 
+  async function validateVoucher() {
+    if (!voucherCode.trim()) return;
+    setVoucherLoading(true); setVoucherError("");
+    try {
+      const r = await fetch(`/api/vouchers/validate?code=${encodeURIComponent(voucherCode.trim())}`);
+      const d = await r.json();
+      if (!r.ok || !d.valid) {
+        setVoucherError(d.error ?? "Code invalide ou déjà utilisé.");
+        setVoucherData(null);
+      } else {
+        setVoucherData({ id: d.id, code: d.code, product_price: d.product_price, duration_minutes: d.duration_minutes ?? 0, product_title: d.product_title });
+      }
+    } catch { setVoucherError("Erreur de validation."); }
+    finally { setVoucherLoading(false); }
+  }
+
+  async function validateCoupon() {
+    if (!couponCode.trim()) return;
+    setCouponLoading(true); setCouponError("");
+    try {
+      const r = await fetch(`/api/coupons/validate?code=${encodeURIComponent(couponCode.trim())}`);
+      const d = await r.json();
+      if (!r.ok || !d.valid) {
+        setCouponError(d.error ?? "Code invalide.");
+        setCouponData(null);
+      } else {
+        setCouponData({ code: d.code, type: d.type, value: d.value });
+      }
+    } catch { setCouponError("Erreur de validation."); }
+    finally { setCouponLoading(false); }
+  }
+
   function addSearchResult(r: NominatimResult) {
     const poi: POI = {
       id:  `nom-${r.place_id}`,
@@ -369,7 +444,9 @@ export default function VolSurMesurePage() {
           distKm:       route.distKm,
           dureMin:      route.totalMin,
           taxesEscales: taxesEscalesTotal,
-          voucher_code: null, voucher_id: null, coupon_code: null,
+          voucher_code: voucherData?.code ?? null,
+          voucher_id:   voucherData?.id   ?? null,
+          coupon_code:  couponCode.trim() || null,
         }),
       });
       const d = await r.json();
@@ -418,15 +495,43 @@ export default function VolSurMesurePage() {
             </div>
           )}
           {totalAcompte > 0 && (
-            <div className="pt-2.5 border-t border-border">
+            <div className="pt-2.5 border-t border-border space-y-1.5">
+              {/* Acompte brut */}
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Acompte</span>
-                <span className="text-2xl font-black text-foreground">{totalAcompte}&thinsp;€</span>
+                <span className={`font-black text-foreground ${(voucherDiscount > 0 || couponDiscount > 0) ? "text-sm line-through opacity-40" : "text-2xl"}`}>
+                  {totalAcompte}&thinsp;€
+                </span>
               </div>
-              {taxesEscalesTotal > 0 && (
-                <p className="text-[10px] text-muted-foreground text-right mt-0.5">
+              {taxesEscalesTotal > 0 && voucherDiscount === 0 && couponDiscount === 0 && (
+                <p className="text-[10px] text-muted-foreground text-right">
                   vol {acompte}€ + taxes {taxesEscalesTotal}€
                 </p>
+              )}
+              {/* Bon cadeau */}
+              {voucherDiscount > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-green-600 font-semibold flex items-center gap-1">
+                    <CheckCircle size={10} />Bon cadeau
+                  </span>
+                  <span className="text-sm font-bold text-green-600">−{voucherDiscount}&thinsp;€</span>
+                </div>
+              )}
+              {/* Code promo */}
+              {couponDiscount > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-blue-600 font-semibold flex items-center gap-1">
+                    <CheckCircle size={10} />Code promo
+                  </span>
+                  <span className="text-sm font-bold text-blue-600">−{couponDiscount}&thinsp;€</span>
+                </div>
+              )}
+              {/* Total net */}
+              {(voucherDiscount > 0 || couponDiscount > 0) && (
+                <div className="flex items-center justify-between pt-2 border-t border-border">
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">À payer</span>
+                  <span className="text-2xl font-black text-foreground">{totalAcompteFinal}&thinsp;€</span>
+                </div>
               )}
             </div>
           )}
@@ -535,7 +640,7 @@ export default function VolSurMesurePage() {
                         {/* CTA */}
                         <button
                           type="button"
-                          onClick={() => setPopupVisible(false)}
+                          onClick={() => { setPopupVisible(false); sessionStorage.setItem("vsm_popup_seen", "1"); }}
                           className="w-full py-3 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:brightness-105 transition-all shadow-gold cursor-pointer"
                         >
                           Compris, tracer ma route
@@ -1144,6 +1249,89 @@ export default function VolSurMesurePage() {
                       <Info size={10} className="shrink-0" />Nous ferons notre maximum selon météo et sécurité.
                     </p>
                     <p className="text-[10px] text-muted-foreground">{form.commentaire.length} / 300</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 5. Bon cadeau / code promo */}
+              <div className="card-premium overflow-hidden">
+                <div className="px-6 pt-5 pb-4 border-b border-border flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-navy flex items-center justify-center shrink-0">
+                    <span className="text-primary font-black text-[13px]">5</span>
+                  </div>
+                  <div>
+                    <h2 className="text-[15px] font-black text-foreground leading-tight">Bon cadeau ou code promo</h2>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">optionnel</p>
+                  </div>
+                </div>
+                <div className="p-5 space-y-5">
+                  {/* Voucher */}
+                  <div>
+                    <label className="block text-xs font-bold text-foreground uppercase tracking-[1.5px] mb-2">Code bon cadeau</label>
+                    {voucherData ? (
+                      <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+                        <CheckCircle size={14} className="text-green-600 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-green-700">{voucherData.code}</p>
+                          <p className="text-xs text-green-600">{voucherData.product_title} · −{voucherDiscount}&thinsp;€ déduits</p>
+                        </div>
+                        <button type="button" onClick={() => { setVoucherData(null); setVoucherCode(""); }}
+                          className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer">
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input type="text" value={voucherCode}
+                          onChange={e => setVoucherCode(e.target.value.toUpperCase())}
+                          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); validateVoucher(); } }}
+                          placeholder="FLH-XXXX-XXXX"
+                          className="flex-1 h-10 px-3.5 rounded-lg border border-border bg-input text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/35" />
+                        <button type="button" onClick={validateVoucher}
+                          disabled={!voucherCode.trim() || voucherLoading}
+                          className="px-4 h-10 rounded-lg bg-navy text-white text-sm font-bold disabled:opacity-40 hover:bg-navy/80 transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1.5">
+                          {voucherLoading ? <Loader2 size={13} className="animate-spin" /> : "Valider"}
+                        </button>
+                      </div>
+                    )}
+                    {voucherError && <p className="mt-2 text-xs text-destructive">{voucherError}</p>}
+                    <p className="mt-1.5 text-[10px] text-muted-foreground">Applicable uniquement sur le prix du vol, pas sur les taxes d&apos;escales.</p>
+                  </div>
+                  {/* Coupon */}
+                  <div>
+                    <label className="block text-xs font-bold text-foreground uppercase tracking-[1.5px] mb-2">Code promo</label>
+                    {couponData ? (
+                      <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+                        <CheckCircle size={14} className="text-green-600 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-green-700">{couponData.code}</p>
+                          <p className="text-xs text-green-600">
+                            {couponData.type === "percentage"
+                              ? `−${couponData.value} % → −${couponDiscount} €`
+                              : `−${couponDiscount} €`}
+                          </p>
+                        </div>
+                        <button type="button" onClick={() => { setCouponData(null); setCouponCode(""); }}
+                          className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer">
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input type="text" value={couponCode}
+                          onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); validateCoupon(); } }}
+                          placeholder="WELCOME2026"
+                          className="flex-1 h-10 px-3.5 rounded-lg border border-border bg-input text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/35" />
+                        <button type="button" onClick={validateCoupon}
+                          disabled={!couponCode.trim() || couponLoading}
+                          className="px-4 h-10 rounded-lg bg-navy text-white text-sm font-bold disabled:opacity-40 hover:bg-navy/80 transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1.5">
+                          {couponLoading ? <Loader2 size={13} className="animate-spin" /> : "Valider"}
+                        </button>
+                      </div>
+                    )}
+                    {couponError && <p className="mt-2 text-xs text-destructive">{couponError}</p>}
+                    <p className="mt-1.5 text-[10px] text-muted-foreground">Appliqué sur le montant restant après le bon cadeau.</p>
                   </div>
                 </div>
               </div>

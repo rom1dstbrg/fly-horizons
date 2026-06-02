@@ -6,7 +6,7 @@ import {
   X, User, Phone, Mail, Calendar, Clock, Users, Weight,
   Ticket, CreditCard, CheckCircle2, XCircle, ChevronRight,
   Loader2, Send, Pencil, Check, MapPin, RefreshCw, AlertTriangle,
-  Copy, ExternalLink, Sparkles, RotateCcw,
+  Copy, ExternalLink, Sparkles, RotateCcw, Calculator, ChevronDown,
 } from "lucide-react";
 import {
   updateStatutReservation,
@@ -154,7 +154,7 @@ export function ReservationDrawer({
   const [localRoute, setLocalRoute] = useState(reservation?.route ?? "");
   const [savedRoute, setSavedRoute] = useState(reservation?.route ?? "");
   const [localRouteStatus, setLocalRouteStatus] = useState(reservation?.route_status ?? null);
-  const [localRouteFeedback] = useState(reservation?.route_feedback ?? null);
+  const [localRouteFeedback, setLocalRouteFeedback] = useState(reservation?.route_feedback ?? null);
 
   // UI state
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null);
@@ -165,14 +165,33 @@ export function ReservationDrawer({
   const [includeReschedule, setIncludeReschedule] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
 
+  // Calculateur de remboursement (vol sur mesure uniquement)
+  const [calcOpen, setCalcOpen] = useState(false);
+  const [calcPrixHeure, setCalcPrixHeure] = useState("");
+  const [calcDureeReelle, setCalcDureeReelle] = useState("");
+
   // Reset when drawer opens with new reservation
   useEffect(() => {
     setLocalRoute(reservation?.route ?? "");
     setSavedRoute(reservation?.route ?? "");
     setLocalRouteStatus(reservation?.route_status ?? null);
+    setLocalRouteFeedback(reservation?.route_feedback ?? null);
     setShowDateAlert(false);
     setEditingDetails(false);
+    setCalcOpen(false);
+    setCalcDureeReelle("");
   }, [reservation?.id]);
+
+  function openCalc() {
+    if (!calcOpen && !calcPrixHeure) {
+      import("@/lib/supabase/client").then(({ createClient }) => {
+        createClient()
+          .from("crm_settings").select("value").eq("key", "prix_heure").single()
+          .then(({ data }) => { if (data) setCalcPrixHeure(data.value); });
+      });
+    }
+    setCalcOpen(v => !v);
+  }
 
   function showFeedback(msg: string, ok = true) {
     setFeedback({ msg, ok });
@@ -354,6 +373,13 @@ export function ReservationDrawer({
     : "";
   const isStandard = r?.type_resa !== "perso";
   const routeStatusCfg = localRouteStatus ? ROUTE_STATUS_CONFIG[localRouteStatus] : null;
+
+  // Calculateur de remboursement
+  const calcPrixH      = parseFloat(calcPrixHeure) || 0;
+  const calcDureeR     = parseInt(calcDureeReelle)  || 0;
+  const calcPrixReel   = calcPrixH > 0 && calcDureeR > 0 ? (calcPrixH / 60) * calcDureeR : null;
+  const calcMontantPaye = r ? (r.paye ?? r.acompte ?? 0) : 0;
+  const calcRemboursement = calcPrixReel !== null ? calcMontantPaye - calcPrixReel : null;
 
   return (
     <AnimatePresence>
@@ -563,6 +589,104 @@ export function ReservationDrawer({
                   </div>
                 )}
               </div>
+
+              {/* Calculateur de remboursement — vol sur mesure uniquement */}
+              {!isStandard && (
+                <div>
+                  <button
+                    type="button"
+                    onClick={openCalc}
+                    className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg border border-border bg-secondary hover:bg-secondary/80 transition-colors cursor-pointer"
+                  >
+                    <span className="flex items-center gap-2 text-[11px] font-bold text-foreground uppercase tracking-wider">
+                      <Calculator size={12} className="text-muted-foreground" />
+                      Calculateur de remboursement
+                    </span>
+                    <ChevronDown
+                      size={13}
+                      className={`text-muted-foreground transition-transform ${calcOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+
+                  {calcOpen && (
+                    <div className="mt-2 p-4 rounded-xl border border-border bg-background space-y-3.5">
+
+                      {/* Infos de la réservation */}
+                      <div className="grid grid-cols-2 gap-3 pb-3 border-b border-border">
+                        <div>
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Durée estimée</p>
+                          <p className="text-sm font-black text-foreground">{r.duree} min</p>
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Montant encaissé</p>
+                          <p className="text-sm font-black text-foreground">
+                            {calcMontantPaye > 0
+                              ? `${calcMontantPaye} €`
+                              : <span className="text-amber-500 text-xs font-semibold">Non encaissé</span>
+                            }
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Inputs */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
+                            Prix / heure (€)
+                          </label>
+                          <input
+                            type="number" min={0} step={0.01}
+                            value={calcPrixHeure}
+                            onChange={e => setCalcPrixHeure(e.target.value)}
+                            placeholder="ex : 260"
+                            className="w-full h-9 px-2.5 rounded-lg border border-input bg-secondary text-sm font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-navy/30 placeholder:text-muted-foreground/40"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
+                            Durée réelle (min)
+                          </label>
+                          <input
+                            type="number" min={0}
+                            value={calcDureeReelle}
+                            onChange={e => setCalcDureeReelle(e.target.value)}
+                            placeholder="ex : 55"
+                            className="w-full h-9 px-2.5 rounded-lg border border-input bg-secondary text-sm font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-navy/30 placeholder:text-muted-foreground/40"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Résultat */}
+                      {calcPrixReel !== null ? (
+                        <div className="pt-3 border-t border-border space-y-2">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground font-mono">
+                              {calcPrixHeure} ÷ 60 × {calcDureeReelle}
+                            </span>
+                            <span className="font-semibold text-foreground">{calcPrixReel.toFixed(2)} €</span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground">Encaissé</span>
+                            <span className="font-semibold text-foreground">{calcMontantPaye} €</span>
+                          </div>
+                          <div className={`flex items-center justify-between pt-2.5 border-t border-border ${calcRemboursement! >= 0 ? "text-emerald-700" : "text-red-700"}`}>
+                            <span className="text-sm font-bold">
+                              {calcRemboursement! >= 0 ? "À rembourser" : "Supplément dû"}
+                            </span>
+                            <span className="text-xl font-black">
+                              {Math.abs(calcRemboursement!).toFixed(2)} €
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-[10px] text-muted-foreground text-center py-1">
+                          Entrez le prix/h et la durée réelle pour voir le résultat.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Route — standard only */}
               {isStandard && (

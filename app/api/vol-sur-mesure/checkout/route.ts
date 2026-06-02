@@ -84,6 +84,14 @@ export async function POST(request: NextRequest) {
           .from("products").select("price").eq("id", claimed.product_id).maybeSingle();
         voucherValue = prod?.price ?? 0;
       }
+      // Fallback : si pas de prix produit, calculer depuis la durée du voucher au tarif actuel
+      if (voucherValue === 0) {
+        const { data: voucherMeta } = await supabase
+          .from("voucher_codes").select("duration_minutes").eq("id", claimedVoucherId ?? claimed.id).maybeSingle();
+        if (voucherMeta?.duration_minutes) {
+          voucherValue = Math.round((prixHeure / 60) * voucherMeta.duration_minutes);
+        }
+      }
       claimedVoucherId = claimed.id;
     }
 
