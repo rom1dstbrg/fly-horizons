@@ -52,6 +52,14 @@ export function Header() {
     "p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors";
 
   return (
+    <>
+    {menuOpen && (
+      <div
+        className="fixed inset-0 z-[799] md:hidden"
+        onClick={() => setMenuOpen(false)}
+        aria-hidden="true"
+      />
+    )}
     <header
       className={`fixed top-2 max-xs:top-1.5 md:top-3.5 inset-x-3 max-xs:inset-x-2.5 md:inset-x-4 mx-auto max-w-[1400px] z-[800] rounded-2xl bg-card border border-border transition-shadow duration-300 ${
         scrolled ? "shadow-premium-lg" : "shadow-premium"
@@ -174,5 +182,6 @@ export function Header() {
         </div>
       </div>
     </header>
+    </>
   );
 }

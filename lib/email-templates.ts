@@ -343,6 +343,7 @@ export interface VoucherEmailCode {
   code: string;
   duration_minutes: number;
   product_title: string;
+  expires_at?: Date | string | null;
 }
 
 interface VoucherEmailProps {
@@ -372,7 +373,11 @@ export function voucherEmail(props: VoucherEmailProps): string {
           <p class="em-gold" style="margin:0 0 14px;font-size:26px;font-weight:800;font-family:'Courier New',Courier,monospace;color:#F2B705;letter-spacing:0.15em;background-color:#0b2238;display:inline-block;padding:10px 24px;border-radius:8px;">
             ${esc(c.code)}
           </p>
-          <p class="em-muted" style="margin:0;font-size:11px;color:#94a3b8;">Valable 12 mois &agrave; compter de la date d&rsquo;achat</p>
+          <p class="em-muted" style="margin:0;font-size:11px;color:#94a3b8;">${
+            c.expires_at
+              ? `Valable jusqu&rsquo;au ${new Date(c.expires_at).toLocaleDateString("fr-BE", { day: "numeric", month: "long", year: "numeric" })}`
+              : "Valable 12 mois &agrave; compter de la date d&rsquo;achat"
+          }</p>
           <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px;">
             <tr>
               <td align="center">

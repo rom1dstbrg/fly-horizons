@@ -52,6 +52,7 @@ export default function CheckoutPage() {
   const [isVoucherOnlyDB, setIsVoucherOnlyDB] = useState<boolean | null>(null);
   const [clientInfo, setClientInfo] = useState<{ full_name: string; email: string; phone: string | null } | null>(null);
   const [freeShippingThreshold, setFreeShippingThreshold] = useState<number>(0);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
   const isVoucherOnlyCart = items.length > 0 && items.every((i) => i.product_type === "voucher");
   const isVoucherOnly = isVoucherOnlyDB ?? isVoucherOnlyCart;
@@ -101,6 +102,7 @@ export default function CheckoutPage() {
       });
 
     supabase.auth.getUser().then(async ({ data: { user } }) => {
+      setIsLoggedIn(!!user);
       if (!user) return;
 
       const [{ data: addresses }, { data: profile }] = await Promise.all([
@@ -172,6 +174,10 @@ export default function CheckoutPage() {
   }
 
   async function handleCheckout() {
+    if (!isLoggedIn) {
+      window.location.href = `/login?redirectTo=${encodeURIComponent("/checkout")}`;
+      return;
+    }
     setLoading(true);
     setError(null);
     try {

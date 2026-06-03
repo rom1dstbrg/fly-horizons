@@ -177,6 +177,7 @@ export async function resendVoucherEmail(voucherId: string) {
         code: voucher.code,
         duration_minutes: voucher.duration_minutes,
         product_title: voucher.product_title,
+        expires_at: voucher.expires_at ?? null,
       }],
       attachments: pdfAttachments,
     });

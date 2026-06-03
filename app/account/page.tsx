@@ -29,7 +29,7 @@ export default async function AccountPage() {
         .order("is_default", { ascending: false }),
       supabase
         .from("orders")
-        .select("*, items:order_items(*)")
+        .select("id, created_at, status, total, subtotal, discount_amount, coupon_code, shipping_cost, shipping_address")
         .eq("user_id", user.id)
         .neq("status", "pending")
         .order("created_at", { ascending: false }),
@@ -37,34 +37,48 @@ export default async function AccountPage() {
 
   // Voucher codes for all orders
   const orderIds = (orders ?? []).map((o) => o.id);
-  let vouchersByOrder: Record<
-    string,
-    {
-      id: string;
-      code: string;
-      duration_minutes: number;
-      status: string;
-      order_id: string;
-      product_title: string;
-      expires_at: string | null;
-    }[]
-  > = {};
+  type VoucherRow = {
+    id: string;
+    code: string;
+    duration_minutes: number;
+    status: string;
+    order_id: string | null;
+    product_title: string;
+    expires_at: string | null;
+  };
+  let vouchersByOrder: Record<string, VoucherRow[]> = {};
 
-  if (orderIds.length > 0) {
-    const { data: voucherCodes } = await adminSupabase
-      .from("voucher_codes")
-      .select("id, code, duration_minutes, status, order_id, product_title, expires_at")
-      .in("order_id", orderIds);
+  // Fetch by order_id AND by recipient_email (covers manually-created vouchers or failed auto-creation)
+  const [{ data: byOrder }, { data: byEmail }] = await Promise.all([
+    orderIds.length > 0
+      ? adminSupabase
+          .from("voucher_codes")
+          .select("id, code, duration_minutes, status, order_id, product_title, expires_at")
+          .in("order_id", orderIds)
+      : Promise.resolve({ data: [] as VoucherRow[] }),
+    user.email
+      ? adminSupabase
+          .from("voucher_codes")
+          .select("id, code, duration_minutes, status, order_id, product_title, expires_at")
+          .eq("recipient_email", user.email.toLowerCase())
+          .is("order_id", null)
+      : Promise.resolve({ data: [] as VoucherRow[] }),
+  ]);
 
-    vouchersByOrder = (voucherCodes ?? []).reduce(
-      (acc, v) => {
-        if (!acc[v.order_id]) acc[v.order_id] = [];
-        acc[v.order_id].push(v);
-        return acc;
-      },
-      {} as typeof vouchersByOrder
-    );
-  }
+  const allVoucherRows: VoucherRow[] = [
+    ...((byOrder ?? []) as VoucherRow[]),
+    ...((byEmail ?? []) as VoucherRow[]),
+  ];
+
+  vouchersByOrder = allVoucherRows.reduce(
+    (acc, v) => {
+      const key = v.order_id ?? "_unlinked";
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(v);
+      return acc;
+    },
+    {} as typeof vouchersByOrder
+  );
 
   // Reservations via email → client_id lookup
   let reservations: {

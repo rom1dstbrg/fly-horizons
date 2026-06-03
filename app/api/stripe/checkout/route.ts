@@ -180,6 +180,8 @@ export async function POST(request: NextRequest) {
         if (isVoucherProduct(product)) {
           for (let i = 0; i < item.quantity; i++) {
             const code = generateVoucherCode();
+            const expiresAt = new Date();
+            expiresAt.setFullYear(expiresAt.getFullYear() + 1);
             await adminSupabase.from("voucher_codes").insert({
               code,
               order_id: order.id,
@@ -189,11 +191,13 @@ export async function POST(request: NextRequest) {
               recipient_email: user?.email ?? null,
               recipient_name: clientAddress?.full_name ?? null,
               status: "unused",
+              expires_at: expiresAt.toISOString(),
             });
             voucherCodes.push({
               code,
               duration_minutes: product.voucher_duration_minutes ?? 60,
               product_title: item.title,
+              expires_at: expiresAt,
             });
           }
         } else {

@@ -231,6 +231,7 @@ export async function POST(request: NextRequest) {
             code,
             duration_minutes: product.voucher_duration_minutes ?? 60,
             product_title: item.title,
+            expires_at: expiresAt,
           });
         }
       } else {

@@ -34,13 +34,6 @@ import { formatDuration } from "@/lib/vouchers";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-interface OrderItem {
-  id: string;
-  title: string;
-  quantity: number;
-  unit_price: number;
-}
-
 interface Order {
   id: string;
   created_at: string;
@@ -49,7 +42,6 @@ interface Order {
   discount_amount?: number;
   coupon_code?: string;
   shipping_cost?: number;
-  items: OrderItem[];
   shipping_address?: { line1?: string; postal_code?: string; city?: string };
 }
 
@@ -58,7 +50,7 @@ interface VoucherCode {
   code: string;
   duration_minutes: number;
   status: string;
-  order_id: string;
+  order_id: string | null;
   product_title?: string;
   expires_at?: string | null;
 }
@@ -746,7 +738,7 @@ export function AccountClient({
                 }
               />
 
-              {orders.length === 0 ? (
+              {allVouchers.length === 0 ? (
                 <div className="card-premium p-10 text-center">
                   <div className="w-12 h-12 rounded-full bg-secondary border border-border flex items-center justify-center mx-auto mb-3">
                     <Ticket size={20} className="text-muted-foreground" />
@@ -764,7 +756,64 @@ export function AccountClient({
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {orders.map((order) => {
+                  {/* Bons reçus directement (sans commande associée) */}
+                  {vouchersByOrder["_unlinked"] && (
+                    <div className="card-premium overflow-hidden">
+                      <div className="divide-y divide-border">
+                        {vouchersByOrder["_unlinked"].map((v) => {
+                          const vStatusColor =
+                            v.status === "unused"   ? "bg-green-50 text-green-600 border-green-200" :
+                            v.status === "reserved" ? "bg-yellow-50 text-yellow-600 border-yellow-200" :
+                            v.status === "used"     ? "bg-secondary text-muted-foreground border-border" :
+                                                      "bg-red-50 text-red-600 border-red-200";
+                          const vStatusLabel =
+                            v.status === "unused"   ? "Disponible" :
+                            v.status === "used"     ? "Utilisé" :
+                            v.status === "reserved" ? "Réservé" : "Expiré";
+                          return (
+                            <div key={v.id} className={`p-5 ${v.status !== "unused" ? "opacity-60" : ""}`}>
+                              <div className="flex items-start justify-between gap-3 mb-4">
+                                <div>
+                                  <p className="font-mono text-sm font-bold tracking-widest text-foreground">{v.code}</p>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {formatDuration(v.duration_minutes)} de vol
+                                    {v.product_title ? ` · ${v.product_title}` : ""}
+                                  </p>
+                                  {v.expires_at && v.status === "unused" && (
+                                    <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                                      Expire le {new Date(v.expires_at).toLocaleDateString("fr-BE")}
+                                    </p>
+                                  )}
+                                </div>
+                                <span className={`text-[11px] px-2 py-0.5 rounded-full border font-semibold shrink-0 ${vStatusColor}`}>
+                                  {vStatusLabel}
+                                </span>
+                              </div>
+                              <div className="flex flex-col gap-2">
+                                {v.status === "unused" && (
+                                  <Link
+                                    href={`/reservation?duree=${v.duration_minutes}&code=${encodeURIComponent(v.code)}`}
+                                    className="flex items-center justify-center gap-1.5 w-full py-2 px-4 rounded-lg bg-primary text-primary-foreground text-xs font-black hover:bg-[#e6a800] transition-colors cursor-pointer"
+                                  >
+                                    Utiliser ce bon →
+                                  </Link>
+                                )}
+                                <a
+                                  href={`/api/voucher/pdf?code=${encodeURIComponent(v.code)}`}
+                                  download
+                                  className="flex items-center justify-center gap-1.5 w-full py-2 px-4 rounded-lg border border-border bg-secondary text-foreground hover:border-foreground text-xs font-semibold transition-colors cursor-pointer"
+                                >
+                                  <Download size={13} />
+                                  Imprimer le bon cadeau
+                                </a>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  {orders.filter(order => (vouchersByOrder[order.id] ?? []).length > 0).map((order) => {
                     const status = ORDER_STATUS[order.status] ?? ORDER_STATUS.pending;
                     const date = new Date(order.created_at).toLocaleDateString("fr-BE", {
                       day: "numeric", month: "long", year: "numeric",

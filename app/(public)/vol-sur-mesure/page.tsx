@@ -4,12 +4,13 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRef, useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 import {
   MapPin, Clock, Search, Trash2, ChevronRight, ChevronLeft,
   Check, CheckCircle, Loader2, AlertCircle, AlertTriangle,
-  Mail, Lock, Eye, Zap, PlaneTakeoff, X, Info,
+  Mail, Lock, Eye, EyeOff, Zap, PlaneTakeoff, X, Info,
   Navigation, Star, Plus, CalendarDays, CloudRain,
-  ArrowRight, ShieldCheck, Monitor,
+  ArrowRight, ShieldCheck, Monitor, UserPlus, LogIn,
 } from "lucide-react";
 import type {
   AdventureRouteData, AdventureMapHandle, POI, StyleMode,
@@ -99,17 +100,58 @@ export default function VolSurMesurePage() {
   // ── Popup d'accueil
   const [popupVisible, setPopupVisible] = useState(false);
 
-  // ── Init sessionStorage : restauration des POIs + popup
+  // ── Init sessionStorage : restauration complète + popup
   useEffect(() => {
+    type SavedPOI = import("@/components/vol-sur-mesure/LeafletMapAdventure").POI;
+    let pois: SavedPOI[] = [];
+    let isLoginRestore = false;
+
+    // Cas post-login redirect : vsm_state contient tout
+    // IMPORTANT: ne pas supprimer vsm_state ici — React 18 StrictMode double-invoke les
+    // effects; on le supprime dans le callback du timeout, après ajout des POIs.
     try {
-      const raw = sessionStorage.getItem("vsm_pois");
-      const pois = raw ? JSON.parse(raw) as import("@/components/vol-sur-mesure/LeafletMapAdventure").POI[] : [];
-      if (pois.length > 0) {
-        const t = setTimeout(() => pois.forEach(p => mapRef.current?.addPOI(p)), 1200);
-        return () => clearTimeout(t);
+      const raw = sessionStorage.getItem("vsm_state");
+      if (raw) {
+        isLoginRestore = true;
+        const s = JSON.parse(raw) as {
+          form?: Partial<FormData>;
+          styleMode?: StyleMode;
+          pois?: SavedPOI[];
+          selectedStops?: Stopover[];
+          voucherCode?: string;
+          couponCode?: string;
+        };
+        if (s.form)          setForm(f => ({ ...f, ...s.form }));
+        if (s.styleMode)     setStyleMode(s.styleMode);
+        if (s.selectedStops) setSelectedStops(s.selectedStops);
+        if (s.voucherCode)   setVoucherCode(s.voucherCode);
+        if (s.couponCode)    setCouponCode(s.couponCode);
+        setShouldRestoreForm(true);
+        restoredFromSessionRef.current = true;
+        pois = s.pois ?? [];
       }
     } catch { /* ignore */ }
-    if (!sessionStorage.getItem("vsm_popup_seen")) setPopupVisible(true);
+
+    // Cas navigation normale : restauration des POIs depuis vsm_pois
+    if (!isLoginRestore) {
+      try {
+        const raw = sessionStorage.getItem("vsm_pois");
+        pois = raw ? JSON.parse(raw) as SavedPOI[] : [];
+      } catch { /* ignore */ }
+    }
+
+    if (pois.length === 0) {
+      if (isLoginRestore) sessionStorage.removeItem("vsm_state");
+      else if (!sessionStorage.getItem("vsm_popup_seen")) setPopupVisible(true);
+      return;
+    }
+
+    poisTargetRef.current = pois.length;
+    const t = setTimeout(() => {
+      pois.forEach(p => mapRef.current?.addPOI(p));
+      if (isLoginRestore) sessionStorage.removeItem("vsm_state");
+    }, 1200);
+    return () => clearTimeout(t);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -178,6 +220,18 @@ export default function VolSurMesurePage() {
   const [submitting,  setSubmitting]  = useState(false);
   const [submitError, setSubmitError] = useState("");
 
+  // ── Auth state
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  type EmailStatus = "idle" | "checking" | "new" | "exists";
+  const [emailStatus,               setEmailStatus]               = useState<EmailStatus>("idle");
+  const [inlinePassword,            setInlinePassword]            = useState("");
+  const [inlinePasswordConfirm,     setInlinePasswordConfirm]     = useState("");
+  const [showInlinePassword,        setShowInlinePassword]        = useState(false);
+  const [showInlinePasswordConfirm, setShowInlinePasswordConfirm] = useState(false);
+  const [shouldRestoreForm,         setShouldRestoreForm]         = useState(false);
+  const restoredFromSessionRef = useRef(false);
+  const poisTargetRef          = useRef(0); // nb de POIs attendus après restore
+
   // ── Escales
   const [availableStops, setAvailableStops] = useState<Stopover[]>([]);
   const [selectedStops,  setSelectedStops]  = useState<Stopover[]>([]);
@@ -240,19 +294,39 @@ export default function VolSurMesurePage() {
           setAvailableStops((data ?? []) as Stopover[]);
         }
       });
-    sb.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
-      sb.from("profiles").select("full_name, phone").eq("id", user.id).single()
+    sb.auth.getUser().then(({ data: { user: authUser } }) => {
+      if (!authUser) return;
+      setUser(authUser);
+      if (restoredFromSessionRef.current) return; // don't overwrite form restored from sessionStorage
+      sb.from("profiles").select("full_name, phone").eq("id", authUser.id).single()
         .then(({ data }) => {
           const parts = (data?.full_name || "").split(" ");
           setForm(f => ({
-            ...f, email: user.email ?? "",
+            ...f, email: authUser.email ?? "",
             prenom: parts[0] ?? "", nom: parts.slice(1).join(" ") ?? "",
             telephone: data?.phone ?? "",
           }));
         });
     });
   }, []);
+
+  // ── Navigate to reserve step once user is set after login redirect
+  // Reactive: waits for POIs to propagate through onRouteChange before switching step.
+  // Falls back to 2000ms in case Leaflet never fires onRouteChange (e.g. map still initializing).
+  useEffect(() => {
+    if (!user || !shouldRestoreForm) return;
+    const hasPendingPOIs = poisTargetRef.current > 0;
+    if (hasPendingPOIs && route.pois.length === 0) {
+      const t = setTimeout(() => {
+        setShouldRestoreForm(false);
+        setFlowStep("reserve");
+      }, 2000);
+      return () => clearTimeout(t);
+    }
+    setShouldRestoreForm(false);
+    setFlowStep("reserve");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, shouldRestoreForm, route.pois.length]);
 
   // ── Calendar
   const dureeForCal = Math.max(30, route.totalMin);
@@ -424,6 +498,73 @@ export default function VolSurMesurePage() {
     mapRef.current?.addPOI(poi);
     setSearchQ("");
     setSearchOpen(false);
+  }
+
+  // ── Auth helpers
+  async function checkEmail() {
+    const email = form.email.trim();
+    if (!email || !email.includes("@")) return;
+    if (user) return;
+    setEmailStatus("checking");
+    try {
+      const r = await fetch("/api/auth/check-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const d = await r.json();
+      setEmailStatus(d.exists ? "exists" : "new");
+    } catch {
+      setEmailStatus("idle");
+    }
+  }
+
+  function handleLoginRedirect() {
+    sessionStorage.setItem("vsm_state", JSON.stringify({
+      form,
+      styleMode,
+      pois: route.pois,
+      selectedStops,
+      voucherCode,
+      couponCode,
+    }));
+    window.location.href = `/login?redirectTo=${encodeURIComponent("/vol-sur-mesure")}`;
+  }
+
+  async function handleSignupAndContinue() {
+    if (inlinePassword.length < 8) {
+      setSubmitError("Le mot de passe doit contenir au moins 8 caractères.");
+      return;
+    }
+    if (inlinePassword !== inlinePasswordConfirm) {
+      setSubmitError("Les mots de passe ne correspondent pas.");
+      return;
+    }
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      const sb = createClient();
+      const { data, error } = await sb.auth.signUp({
+        email: form.email.trim(),
+        password: inlinePassword,
+        options: { data: { full_name: `${form.prenom} ${form.nom}`.trim() } },
+      });
+      if (error) { setSubmitError(error.message); setSubmitting(false); return; }
+      if (data.user) setUser(data.user);
+    } catch {
+      setSubmitError("Erreur lors de la création du compte.");
+      setSubmitting(false);
+      return;
+    }
+    await handleSubmit();
+  }
+
+  async function handleMainCTA() {
+    if (user) { handleSubmit(); return; }
+    if (emailStatus === "new") { handleSignupAndContinue(); return; }
+    if (emailStatus === "exists") { handleLoginRedirect(); return; }
+    // email not yet checked — trigger check and wait for user to complete auth
+    await checkEmail();
   }
 
   // ── Submit
@@ -1055,7 +1196,7 @@ export default function VolSurMesurePage() {
             </div>
           </div>
 
-          <div className="flex flex-col lg:flex-row gap-6 items-start">
+          <div className="flex flex-col lg:flex-row gap-6 lg:items-start">
             {/* ── FORM ── */}
             <div className="flex-1 min-w-0 space-y-4">
 
@@ -1220,8 +1361,89 @@ export default function VolSurMesurePage() {
                     <VSMField label="Prénom" required value={form.prenom} onChange={v => setForm(f => ({ ...f, prenom: v }))} placeholder="Jean" />
                     <VSMField label="Nom"    required value={form.nom}    onChange={v => setForm(f => ({ ...f, nom:    v }))} placeholder="Dupont" />
                     <div className="sm:col-span-2">
-                      <VSMField label="Email" required type="email" value={form.email} onChange={v => setForm(f => ({ ...f, email: v }))} placeholder="jean@exemple.com" />
+                      <VSMField label="Email" required type="email" value={form.email}
+                        onChange={v => { setForm(f => ({ ...f, email: v })); setEmailStatus("idle"); }}
+                        placeholder="jean@exemple.com"
+                        onBlur={checkEmail} />
                     </div>
+
+                    {/* Inline auth block */}
+                    {!user && emailStatus !== "idle" && (
+                      <div className="sm:col-span-2">
+                        {emailStatus === "checking" && (
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground py-1">
+                            <Loader2 size={12} className="animate-spin" /> Vérification…
+                          </div>
+                        )}
+                        {emailStatus === "exists" && (
+                          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3.5">
+                            <p className="text-sm font-bold text-amber-900 flex items-center gap-2 mb-1">
+                              <LogIn size={14} className="shrink-0" /> Un compte existe déjà avec cet email
+                            </p>
+                            <p className="text-xs text-amber-700 mb-3">
+                              Connectez-vous pour finaliser votre réservation. Votre parcours sera sauvegardé.
+                            </p>
+                            <button type="button" onClick={handleLoginRedirect}
+                              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#0b2238] text-white text-sm font-bold hover:bg-[#0b2238]/80 transition-colors cursor-pointer">
+                              <LogIn size={13} /> Se connecter
+                            </button>
+                          </div>
+                        )}
+                        {emailStatus === "new" && (
+                          <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-4 space-y-3">
+                            <p className="text-sm font-bold text-foreground flex items-center gap-2">
+                              <UserPlus size={14} className="shrink-0 text-primary" /> Créez votre compte Fly Horizons
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Un compte est nécessaire pour accéder à vos bons de vol et gérer vos réservations.
+                            </p>
+                            <div className="space-y-2.5">
+                              <div>
+                                <label className="block text-xs font-bold text-foreground uppercase tracking-[1.5px] mb-1.5">
+                                  Mot de passe <span className="text-primary">*</span>
+                                </label>
+                                <div className="relative">
+                                  <input
+                                    type={showInlinePassword ? "text" : "password"}
+                                    value={inlinePassword}
+                                    onChange={e => setInlinePassword(e.target.value)}
+                                    placeholder="8 caractères minimum"
+                                    className="w-full h-11 px-4 pr-10 rounded-lg border border-border bg-input text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/35"
+                                  />
+                                  <button type="button" onClick={() => setShowInlinePassword(v => !v)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer">
+                                    {showInlinePassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                                  </button>
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-xs font-bold text-foreground uppercase tracking-[1.5px] mb-1.5">
+                                  Confirmer <span className="text-primary">*</span>
+                                </label>
+                                <div className="relative">
+                                  <input
+                                    type={showInlinePasswordConfirm ? "text" : "password"}
+                                    value={inlinePasswordConfirm}
+                                    onChange={e => setInlinePasswordConfirm(e.target.value)}
+                                    placeholder="Répétez le mot de passe"
+                                    className="w-full h-11 px-4 pr-10 rounded-lg border border-border bg-input text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/35"
+                                  />
+                                  <button type="button" onClick={() => setShowInlinePasswordConfirm(v => !v)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer">
+                                    {showInlinePasswordConfirm ? <EyeOff size={14} /> : <Eye size={14} />}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                              <ShieldCheck size={9} className="shrink-0 text-green-500" />
+                              Vos données restent confidentielles.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     <div className="sm:col-span-2">
                       <VSMField label="Téléphone" type="tel" value={form.telephone} onChange={v => setForm(f => ({ ...f, telephone: v }))} placeholder="+32 470 00 00 00" />
                     </div>
@@ -1364,11 +1586,15 @@ export default function VolSurMesurePage() {
               {/* Mobile CTA */}
               <div className="lg:hidden">
                 <button type="button"
-                  disabled={!form.date || !form.heure || !form.prenom || !form.nom || !form.email || !form.poids_total || !form.accept_cgp || submitting}
-                  onClick={handleSubmit}
+                  disabled={!form.date || !form.heure || !form.prenom || !form.nom || !form.email || !form.poids_total || !form.accept_cgp || submitting || emailStatus === "checking"}
+                  onClick={handleMainCTA}
                   className="w-full flex items-center justify-center gap-2 py-4 rounded-lg bg-primary text-primary-foreground text-sm font-black disabled:opacity-40 transition-all cursor-pointer shadow-gold">
                   {submitting
-                    ? <><Loader2 size={14} className="animate-spin" /> Envoi…</>
+                    ? <><Loader2 size={14} className="animate-spin" /> {!user && emailStatus === "new" ? "Création…" : "Envoi…"}</>
+                    : !user && emailStatus === "exists"
+                    ? <><LogIn size={14} /> Se connecter et réserver</>
+                    : !user && emailStatus === "new"
+                    ? <><UserPlus size={14} /> Créer mon compte et réserver</>
                     : <><Mail size={14} /> Recevoir mon lien de paiement</>
                   }
                 </button>
@@ -1380,11 +1606,15 @@ export default function VolSurMesurePage() {
               <ReserveSummary />
 
               <button type="button"
-                disabled={!form.date || !form.heure || !form.prenom || !form.nom || !form.email || !form.poids_total || !form.accept_cgp || submitting}
-                onClick={handleSubmit}
+                disabled={!form.date || !form.heure || !form.prenom || !form.nom || !form.email || !form.poids_total || !form.accept_cgp || submitting || emailStatus === "checking"}
+                onClick={handleMainCTA}
                 className="w-full flex items-center justify-center gap-2 py-4 rounded-lg bg-primary text-primary-foreground text-sm font-black disabled:opacity-40 hover:brightness-105 transition-all shadow-gold cursor-pointer">
                 {submitting
-                  ? <><Loader2 size={14} className="animate-spin" /> Envoi en cours…</>
+                  ? <><Loader2 size={14} className="animate-spin" /> {!user && emailStatus === "new" ? "Création…" : "Envoi en cours…"}</>
+                  : !user && emailStatus === "exists"
+                  ? <><LogIn size={14} /> Se connecter et réserver</>
+                  : !user && emailStatus === "new"
+                  ? <><UserPlus size={14} /> Créer mon compte et réserver</>
                   : <><Mail size={14} /> Recevoir mon lien de paiement</>
                 }
               </button>
@@ -1539,9 +1769,9 @@ export default function VolSurMesurePage() {
 }
 
 // ── Helper field ───────────────────────────────────────────────
-function VSMField({ label, required, type = "text", value, onChange, placeholder }: {
+function VSMField({ label, required, type = "text", value, onChange, placeholder, onBlur }: {
   label: string; required?: boolean; type?: string;
-  value: string; onChange: (v: string) => void; placeholder?: string;
+  value: string; onChange: (v: string) => void; placeholder?: string; onBlur?: () => void;
 }) {
   return (
     <div>
@@ -1550,6 +1780,7 @@ function VSMField({ label, required, type = "text", value, onChange, placeholder
       </label>
       <input type={type} value={value} required={required} placeholder={placeholder}
         onChange={e => onChange(e.target.value)}
+        onBlur={onBlur}
         className="w-full h-12 px-4 rounded-lg border border-border bg-input text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/35" />
     </div>
   );
