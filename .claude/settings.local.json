@@ -101,7 +101,11 @@
       "Bash(grep -v \"^\\\\s*//\")",
       "Bash(grep -v \"\\\\`—\\\\`\")",
       "Bash(Write-Host \"Done\")",
-      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\romai\\\\Documents\\\\Projects\\\\shop_fly-horizons\\\\app\\\\api\" -Recurse -File)"
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\romai\\\\Documents\\\\Projects\\\\shop_fly-horizons\\\\app\\\\api\" -Recurse -File)",
+      "Bash(Get-ChildItem app\\\\\\(public\\\\\\) -Name)",
+      "Bash(npm ls *)",
+      "Read(//root/.npm/**)",
+      "Bash(npm root *)"
     ]
   }
 }
