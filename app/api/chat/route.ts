@@ -146,15 +146,23 @@ export async function POST(req: NextRequest) {
     content: m.content,
   }));
 
-  const response = await anthropic.messages.create({
-    model: "claude-haiku-4-5-20251001",
-    max_tokens: 512,
-    system: SYSTEM_PROMPT,
-    messages: anthropicMessages,
-  });
-
-  const assistantText =
-    response.content[0]?.type === "text" ? response.content[0].text : "";
+  let assistantText: string;
+  try {
+    const response = await anthropic.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 512,
+      system: SYSTEM_PROMPT,
+      messages: anthropicMessages,
+    });
+    assistantText =
+      response.content[0]?.type === "text" ? response.content[0].text : "";
+  } catch (err) {
+    console.error("[chat] Anthropic error:", err);
+    return NextResponse.json(
+      { error: "Le service de chat est temporairement indisponible." },
+      { status: 502 }
+    );
+  }
 
   // Sauvegarder la réponse
   if (currentSessionId && assistantText) {
