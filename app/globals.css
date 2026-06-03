@@ -232,12 +232,6 @@
     background: var(--gold);
   }
 
-  /* Empêche le zoom auto iOS sur les champs de saisie */
-  @supports (-webkit-touch-callout: none) {
-    input, textarea, select {
-      font-size: 16px;
-    }
-  }
 }
 
 /* ==============================================
@@ -388,5 +382,12 @@
   }
   footer .space-y-3 > * + * {
     margin-top: 0.5rem;
+  }
+}
+
+/* Empêche le zoom auto iOS sur les champs de saisie (hors layer pour surcharger Tailwind) */
+@supports (-webkit-touch-callout: none) {
+  input, textarea, select {
+    font-size: 16px !important;
   }
 }
