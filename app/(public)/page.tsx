@@ -122,13 +122,13 @@ export default async function HomePage() {
             </a>
           </div>
 
-          <div className="mt-6 flex flex-col items-center gap-0.5">
+          <div className="mt-6 flex flex-col items-center gap-1.5">
             <p className="text-sm text-white/80">
               Utilisez le code{" "}
-              <span className="font-mono font-bold text-[#F2B705]">WELCOME2026</span>
+              <span className="font-mono font-black text-[#F2B705] bg-[#F2B705]/10 border border-[#F2B705]/30 rounded px-2 py-0.5">WELCOME2026</span>
               {" "}pour −10%
             </p>
-            <p className="text-[10px] italic text-white/35">valable une seule fois · compte requis pour l&apos;utiliser.</p>
+            <p className="text-[11px] text-white/55">* valable une seule fois · applicable lors de votre réservation.</p>
           </div>
         </div>
 

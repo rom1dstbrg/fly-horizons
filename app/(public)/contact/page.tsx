@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Mail, MapPin, Clock } from "lucide-react";
 import { ContactForm } from "@/components/shop/ContactForm";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 
 export const metadata = {
   title: "Contact · Fly Horizons",
@@ -84,6 +85,7 @@ export default function ContactPage() {
         </div>
       </section>
 
+      <ChatWidget />
     </main>
   );
 }

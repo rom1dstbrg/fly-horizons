@@ -5,14 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { submitContact } from "@/lib/actions/contacts";
 import { Send, Loader2 } from "lucide-react";
-
-const SUJETS = [
-  "Question générale",
-  "Vol sur mesure",
-  "Commande / livraison",
-  "Bug ou problème technique",
-  "Autre",
-];
+import { useAuth } from "@/hooks/useAuth";
 
 const inputCls = "w-full h-10 px-3 rounded-lg border border-border bg-input text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all placeholder:text-muted-foreground";
 const labelCls = "block text-sm font-medium text-foreground mb-1.5";
@@ -20,6 +13,10 @@ const labelCls = "block text-sm font-medium text-foreground mb-1.5";
 export function ContactForm() {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const { profile, user } = useAuth();
+
+  const defaultNom   = profile?.full_name ?? "";
+  const defaultEmail = profile?.email ?? user?.email ?? "";
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -43,13 +40,26 @@ export function ContactForm() {
           <label className={labelCls}>
             Nom complet <span className="text-foreground/40 font-normal">*</span>
           </label>
-          <input name="nom" required placeholder="Jean Dupont" className={inputCls} />
+          <input
+            name="nom"
+            required
+            placeholder="Jean Dupont"
+            defaultValue={defaultNom}
+            className={inputCls}
+          />
         </div>
         <div>
           <label className={labelCls}>
             Adresse email <span className="text-foreground/40 font-normal">*</span>
           </label>
-          <input name="email" type="email" required placeholder="jean@exemple.com" className={inputCls} />
+          <input
+            name="email"
+            type="email"
+            required
+            placeholder="jean@exemple.com"
+            defaultValue={defaultEmail}
+            className={inputCls}
+          />
         </div>
       </div>
 
@@ -57,11 +67,12 @@ export function ContactForm() {
         <label className={labelCls}>
           Sujet <span className="text-foreground/40 font-normal">*</span>
         </label>
-        <select name="sujet" required defaultValue=""
-          className="w-full h-10 px-3 rounded-lg border border-border bg-input text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all">
-          <option value="" disabled>Choisissez un sujet…</option>
-          {SUJETS.map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
+        <input
+          name="sujet"
+          required
+          placeholder="Ex. : question sur mon vol, bon cadeau, annulation…"
+          className={inputCls}
+        />
       </div>
 
       <div>
@@ -69,7 +80,9 @@ export function ContactForm() {
           Message <span className="text-foreground/40 font-normal">*</span>
         </label>
         <textarea
-          name="message" required rows={6}
+          name="message"
+          required
+          rows={6}
           placeholder="Décrivez votre demande en détail…"
           className="w-full px-3 py-2.5 rounded-lg border border-border bg-input text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all resize-none placeholder:text-muted-foreground"
         />

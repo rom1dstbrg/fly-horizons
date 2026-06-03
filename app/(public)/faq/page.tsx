@@ -6,6 +6,7 @@ import {
   ChevronDown, Search, MessageCircle, X,
   CalendarCheck, CreditCard, Gift, CloudRain, PlaneTakeoff, Users,
 } from "lucide-react";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 
 // ── Recherche intelligente ──────────────────────────────────────────────────
 
@@ -525,6 +526,9 @@ export default function FaqPage() {
               Nous contacter
             </Link>
           </div>
+
+          {/* Assistant IA flottant */}
+          <ChatWidget />
 
         </div>
       </section>
