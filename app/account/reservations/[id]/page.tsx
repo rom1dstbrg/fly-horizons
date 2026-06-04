@@ -40,6 +40,15 @@ export default async function ReservationTrackerPage({ params }: PageProps) {
 
   if (!client) notFound();
 
+  // Fetch latest route proposal for this reservation
+  const { data: latestProposal } = await adminSupabase
+    .from("route_proposals")
+    .select("token, status")
+    .eq("reservation_id", id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL?.startsWith("http://localhost") ||
     process.env.NEXT_PUBLIC_SITE_URL?.startsWith("http://127")
@@ -65,6 +74,8 @@ export default async function ReservationTrackerPage({ params }: PageProps) {
         route_token: resa.route_token ?? null,
         route_feedback: resa.route_feedback ?? null,
         waypoints: resa.waypoints ?? null,
+        latestProposalToken: latestProposal?.token ?? null,
+        latestProposalStatus: latestProposal?.status ?? null,
       }}
       siteUrl={siteUrl ?? "https://fly-horizons.com"}
     />

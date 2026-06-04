@@ -96,6 +96,9 @@ export default async function AccountPage() {
     route: string | null;
     route_status: string | null;
     route_token: string | null;
+    waypoints: Array<{ lat: number; lng: number; nom: string }> | null;
+    latestProposalToken: string | null;
+    latestProposalStatus: string | null;
   }[] = [];
 
   if (user.email) {
@@ -110,11 +113,35 @@ export default async function AccountPage() {
       const { data: resas } = await adminSupabase
         .from("reservations")
         .select(
-          "id, date_vol, heure_vol, duree, passagers, statut, type_resa, payment_token, acompte, distance_km, created_at, route, route_status, route_token"
+          "id, date_vol, heure_vol, duree, passagers, statut, type_resa, payment_token, acompte, distance_km, created_at, route, route_status, route_token, waypoints"
         )
         .in("client_id", clientIds)
         .order("date_vol", { ascending: false });
-      reservations = resas ?? [];
+
+      const rawResas = resas ?? [];
+      const reservationIds = rawResas.map((r) => r.id);
+
+      // Latest proposal per reservation
+      const latestProposalByResa: Record<string, { token: string; status: string }> = {};
+      if (reservationIds.length > 0) {
+        const { data: proposals } = await adminSupabase
+          .from("route_proposals")
+          .select("token, status, reservation_id")
+          .in("reservation_id", reservationIds)
+          .order("created_at", { ascending: false });
+        for (const p of proposals ?? []) {
+          if (!latestProposalByResa[p.reservation_id]) {
+            latestProposalByResa[p.reservation_id] = { token: p.token, status: p.status };
+          }
+        }
+      }
+
+      reservations = rawResas.map((r) => ({
+        ...r,
+        waypoints: (r.waypoints as Array<{ lat: number; lng: number; nom: string }> | null) ?? null,
+        latestProposalToken: latestProposalByResa[r.id]?.token ?? null,
+        latestProposalStatus: latestProposalByResa[r.id]?.status ?? null,
+      }));
     }
   }
 

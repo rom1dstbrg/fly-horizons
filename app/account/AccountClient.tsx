@@ -70,6 +70,9 @@ interface Reservation {
   route?: string | null;
   route_status?: string | null;
   route_token?: string | null;
+  waypoints?: Array<{ lat: number; lng: number; nom: string }> | null;
+  latestProposalToken?: string | null;
+  latestProposalStatus?: string | null;
 }
 
 interface Address {
@@ -115,7 +118,7 @@ const RESA_STATUS: Record<string, { label: string; color: string }> = {
   heure_confirmee:  { label: "Heure confirmée",    color: "text-green-600 bg-green-50 border-green-200" },
   vol_effectue:     { label: "Vol effectué",       color: "text-purple-600 bg-purple-50 border-purple-200" },
   annulee:          { label: "Annulée",            color: "text-red-600 bg-red-50 border-red-200" },
-  en_attente_perso: { label: "Devis en cours",    color: "text-yellow-600 bg-yellow-50 border-yellow-200" },
+  en_attente_perso: { label: "En cours",           color: "text-yellow-600 bg-yellow-50 border-yellow-200" },
   acompte_recu:     { label: "Acompte reçu",      color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
 };
 
@@ -576,7 +579,7 @@ export function AccountClient({
                     });
                     const isUpcoming =
                       new Date(resa.date_vol + "T23:59:59") >= new Date();
-                    const isPaid = !["en_attente", "payment_pending"].includes(resa.statut);
+                    const isPaid = !["en_attente", "payment_pending", "en_attente_perso"].includes(resa.statut);
                     const isPerso = resa.type_resa === "perso";
                     const hasPaymentLink = resa.payment_token && !isPaid;
                     const paymentUrl = isPerso
@@ -630,86 +633,100 @@ export function AccountClient({
                           </div>
                         </div>
 
-                        {/* Route proposée */}
+                        {/* Route proposée (ancien système) */}
                         {resa.route && (
-                          <div className="mt-3 flex items-start gap-2">
-                            <MapPin size={12} className="text-foreground shrink-0 mt-0.5" />
-                            <div className="flex-1 min-w-0 space-y-0.5">
-                              <p className="text-[10px] font-bold text-foreground uppercase tracking-wider">
-                                Itinéraire proposé
-                              </p>
-                              <p className="text-xs text-muted-foreground leading-snug">{resa.route}</p>
-                              {resa.route_status === "sent" && resa.route_token && (
-                                <Link
-                                  href={`/vol/itineraire/${resa.route_token}`}
-                                  className="inline-flex items-center gap-1 pt-0.5 text-[10px] font-bold text-amber-600 hover:text-amber-700 transition-colors"
-                                  onClick={e => e.stopPropagation()}
-                                >
-                                  Valider ou modifier →
-                                </Link>
-                              )}
-                              {resa.route_status === "modification_requested" && (
-                                <span className="inline-flex items-center gap-1 pt-0.5 text-[10px] font-semibold text-orange-600">
-                                  Modification en cours de traitement
-                                </span>
+                          <div className="mt-3 pt-3 border-t border-border space-y-2">
+                            <div className="flex items-start gap-2">
+                              <MapPin size={12} className="text-muted-foreground shrink-0 mt-0.5" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">
+                                  Itinéraire proposé
+                                </p>
+                                <p className="text-xs text-foreground leading-snug">{resa.route}</p>
+                              </div>
+                              {resa.route_status === "validated" && (
+                                <CheckCircle size={13} className="text-green-500 shrink-0 mt-0.5" />
                               )}
                             </div>
-                            {resa.route_status === "validated" && (
-                              <CheckCircle size={13} className="text-green-500 shrink-0 mt-0.5" />
+                            {resa.route_status === "sent" && resa.route_token && (
+                              <Link
+                                href={`/vol/itineraire/${resa.route_token}`}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-200 bg-amber-50 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors"
+                              >
+                                Valider ou modifier
+                              </Link>
+                            )}
+                            {resa.route_status === "modification_requested" && (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-secondary text-xs font-medium text-muted-foreground">
+                                Modification en cours de traitement
+                              </span>
                             )}
                           </div>
                         )}
 
                         {/* Lien de paiement acompte */}
                         {hasPaymentLink && (
-                          <div className="flex items-center gap-2 pt-3 border-t border-border">
-                            <CreditCard size={13} className="text-primary shrink-0" />
+                          <div className="mt-3 pt-3 border-t border-border">
                             <Link
                               href={paymentUrl}
-                              className="text-xs font-semibold text-foreground hover:text-primary transition-colors"
+                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:brightness-105 transition-all"
                             >
-                              {isPerso ? "Payer l'acompte" : "Finaliser le paiement"}{resa.acompte != null ? ` (${resa.acompte} €)` : ""} →
+                              <CreditCard size={12} />
+                              {isPerso ? "Payer l'acompte" : "Finaliser le paiement"}{resa.acompte != null ? ` · ${resa.acompte} €` : ""}
                             </Link>
                           </div>
                         )}
 
                         {/* Acompte payé */}
                         {isPaid && resa.acompte != null && (
-                          <div className="flex items-center gap-2 pt-3 border-t border-border">
-                            <CheckCircle size={13} className="text-green-500 shrink-0" />
-                            <span className="text-xs text-green-600 font-medium">
-                              Acompte payé : {resa.acompte} €
-                            </span>
+                          <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-border text-xs text-green-600 font-medium">
+                            <CheckCircle size={12} className="shrink-0" />
+                            Acompte payé · {resa.acompte} €
                           </div>
                         )}
 
-                        {/* Lien suivi + reporter */}
+                        {/* Actions footer */}
                         {(() => {
                           const canReschedule =
                             !["annulee", "vol_effectue", "payment_pending"].includes(resa.statut) &&
                             (new Date(resa.date_vol + "T23:59:59Z").getTime() - Date.now()) > 48 * 60 * 60 * 1000;
-                          const hasBorder = hasPaymentLink || (isPaid && resa.acompte != null) || !!resa.route;
+
+                          const carteHref = resa.latestProposalToken
+                            ? `/vol/proposition/${resa.latestProposalToken}`
+                            : isPerso && resa.waypoints?.length
+                            ? `/account/reservations/${resa.id}/carte`
+                            : null;
+
                           return (
-                            <div className={`flex items-center justify-between gap-3 flex-wrap ${hasBorder ? "mt-2" : "pt-3 border-t border-border mt-0"}`}>
-                              {canReschedule ? (
+                            <div className="flex items-center gap-2 flex-wrap mt-3 pt-3 border-t border-border">
+                              <Link
+                                href={`/account/reservations/${resa.id}`}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-foreground hover:bg-secondary transition-colors"
+                              >
+                                Suivre la réservation
+                              </Link>
+                              {carteHref && (
+                                <Link
+                                  href={carteHref}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-foreground hover:bg-secondary transition-colors"
+                                >
+                                  <MapPin size={11} />
+                                  Voir la carte
+                                </Link>
+                              )}
+                              {canReschedule && (
                                 <button
                                   type="button"
                                   onClick={() => handleReschedule(resa.id)}
                                   disabled={reschedulingId === resa.id}
-                                  className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 cursor-pointer"
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-50 cursor-pointer ml-auto"
                                 >
                                   {reschedulingId === resa.id
                                     ? <Loader2 size={11} className="animate-spin" />
                                     : <RotateCcw size={11} />}
-                                  Reporter mon vol
+                                  Reporter
                                 </button>
-                              ) : <div />}
-                              <Link
-                                href={`/account/reservations/${resa.id}`}
-                                className="text-xs font-medium text-foreground hover:text-primary transition-colors"
-                              >
-                                Suivre la réservation →
-                              </Link>
+                              )}
                             </div>
                           );
                         })()}
@@ -755,161 +772,59 @@ export function AccountClient({
                   </Link>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {/* Bons reçus directement (sans commande associée) */}
-                  {vouchersByOrder["_unlinked"] && (
-                    <div className="card-premium overflow-hidden">
-                      <div className="divide-y divide-border">
-                        {vouchersByOrder["_unlinked"].map((v) => {
-                          const vStatusColor =
-                            v.status === "unused"   ? "bg-green-50 text-green-600 border-green-200" :
-                            v.status === "reserved" ? "bg-yellow-50 text-yellow-600 border-yellow-200" :
-                            v.status === "used"     ? "bg-secondary text-muted-foreground border-border" :
-                                                      "bg-red-50 text-red-600 border-red-200";
-                          const vStatusLabel =
-                            v.status === "unused"   ? "Disponible" :
-                            v.status === "used"     ? "Utilisé" :
-                            v.status === "reserved" ? "Réservé" : "Expiré";
-                          return (
-                            <div key={v.id} className={`p-5 ${v.status !== "unused" ? "opacity-60" : ""}`}>
-                              <div className="flex items-start justify-between gap-3 mb-4">
-                                <div>
-                                  <p className="font-mono text-sm font-bold tracking-widest text-foreground">{v.code}</p>
-                                  <p className="text-xs text-muted-foreground mt-1">
-                                    {formatDuration(v.duration_minutes)} de vol
-                                    {v.product_title ? ` · ${v.product_title}` : ""}
-                                  </p>
-                                  {v.expires_at && v.status === "unused" && (
-                                    <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-                                      Expire le {new Date(v.expires_at).toLocaleDateString("fr-BE")}
-                                    </p>
-                                  )}
-                                </div>
-                                <span className={`text-[11px] px-2 py-0.5 rounded-full border font-semibold shrink-0 ${vStatusColor}`}>
-                                  {vStatusLabel}
-                                </span>
-                              </div>
-                              <div className="flex flex-col gap-2">
-                                {v.status === "unused" && (
-                                  <Link
-                                    href={`/reservation?duree=${v.duration_minutes}&code=${encodeURIComponent(v.code)}`}
-                                    className="flex items-center justify-center gap-1.5 w-full py-2 px-4 rounded-lg bg-primary text-primary-foreground text-xs font-black hover:bg-[#e6a800] transition-colors cursor-pointer"
-                                  >
-                                    Utiliser ce bon →
-                                  </Link>
-                                )}
-                                <a
-                                  href={`/api/voucher/pdf?code=${encodeURIComponent(v.code)}`}
-                                  download
-                                  className="flex items-center justify-center gap-1.5 w-full py-2 px-4 rounded-lg border border-border bg-secondary text-foreground hover:border-foreground text-xs font-semibold transition-colors cursor-pointer"
-                                >
-                                  <Download size={13} />
-                                  Imprimer le bon cadeau
-                                </a>
-                              </div>
+                <div className="card-premium overflow-hidden">
+                  <div className="divide-y divide-border">
+                    {allVouchers.map((v) => {
+                      const vStatusColor =
+                        v.status === "unused"   ? "bg-green-50 text-green-600 border-green-200" :
+                        v.status === "reserved" ? "bg-yellow-50 text-yellow-600 border-yellow-200" :
+                        v.status === "used"     ? "bg-secondary text-muted-foreground border-border" :
+                                                  "bg-red-50 text-red-600 border-red-200";
+                      const vStatusLabel =
+                        v.status === "unused"   ? "Disponible" :
+                        v.status === "used"     ? "Utilisé" :
+                        v.status === "reserved" ? "Réservé" : "Expiré";
+                      return (
+                        <div key={v.id} className={`p-5 ${v.status !== "unused" ? "opacity-60" : ""}`}>
+                          <div className="flex items-start justify-between gap-3 mb-4">
+                            <div>
+                              <p className="font-mono text-sm font-bold tracking-widest text-foreground">{v.code}</p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {formatDuration(v.duration_minutes)} de vol
+                                {v.product_title ? ` · ${v.product_title}` : ""}
+                              </p>
+                              {v.expires_at && v.status === "unused" && (
+                                <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                                  Expire le {new Date(v.expires_at).toLocaleDateString("fr-BE")}
+                                </p>
+                              )}
                             </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                  {orders.filter(order => (vouchersByOrder[order.id] ?? []).length > 0).map((order) => {
-                    const status = ORDER_STATUS[order.status] ?? ORDER_STATUS.pending;
-                    const date = new Date(order.created_at).toLocaleDateString("fr-BE", {
-                      day: "numeric", month: "long", year: "numeric",
-                    });
-                    const vouchers = vouchersByOrder[order.id] ?? [];
-
-                    return (
-                      <div key={order.id} className="card-premium overflow-hidden">
-                        {/* En-tête commande */}
-                        <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-border bg-secondary/40">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <span className="text-xs text-muted-foreground shrink-0">{date}</span>
-                            <span className="text-[10px] font-mono text-muted-foreground/50 shrink-0">
-                              #{order.id.slice(0, 8).toUpperCase()}
+                            <span className={`text-[11px] px-2 py-0.5 rounded-full border font-semibold shrink-0 ${vStatusColor}`}>
+                              {vStatusLabel}
                             </span>
-                            {(order.discount_amount ?? 0) > 0 && (
-                              <span className="text-[10px] text-green-600 font-medium truncate">
-                                -{formatPrice(order.discount_amount!)}
-                                {order.coupon_code && ` · ${order.coupon_code}`}
-                              </span>
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            {v.status === "unused" && (
+                              <Link
+                                href={`/reservation?duree=${v.duration_minutes}&code=${encodeURIComponent(v.code)}`}
+                                className="flex items-center justify-center gap-1.5 w-full py-2 px-4 rounded-lg bg-primary text-primary-foreground text-xs font-black hover:bg-[#e6a800] transition-colors cursor-pointer"
+                              >
+                                Utiliser ce bon →
+                              </Link>
                             )}
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${status.color}`}>
-                              {status.label}
-                            </span>
-                            <span className="text-sm font-bold text-foreground">
-                              {formatPrice(order.total)}
-                            </span>
+                            <a
+                              href={`/api/voucher/pdf?code=${encodeURIComponent(v.code)}`}
+                              download
+                              className="flex items-center justify-center gap-1.5 w-full py-2 px-4 rounded-lg border border-border bg-secondary text-foreground hover:border-foreground text-xs font-semibold transition-colors cursor-pointer"
+                            >
+                              <Download size={13} />
+                              Imprimer le bon cadeau
+                            </a>
                           </div>
                         </div>
-
-                        {/* Bons de vol */}
-                        <div className="divide-y divide-border">
-                          {vouchers.length === 0 ? (
-                            <p className="px-5 py-4 text-xs text-muted-foreground italic">Aucun bon associé.</p>
-                          ) : (
-                            vouchers.map((v) => {
-                              const vStatusColor =
-                                v.status === "unused"   ? "bg-green-50 text-green-600 border-green-200" :
-                                v.status === "reserved" ? "bg-yellow-50 text-yellow-600 border-yellow-200" :
-                                v.status === "used"     ? "bg-secondary text-muted-foreground border-border" :
-                                                          "bg-red-50 text-red-600 border-red-200";
-                              const vStatusLabel =
-                                v.status === "unused"   ? "Disponible" :
-                                v.status === "used"     ? "Utilisé" :
-                                v.status === "reserved" ? "Réservé" : "Expiré";
-
-                              return (
-                                <div key={v.id} className={`p-5 ${v.status !== "unused" ? "opacity-60" : ""}`}>
-                                  <div className="flex items-start justify-between gap-3 mb-4">
-                                    <div>
-                                      <p className="font-mono text-sm font-bold tracking-widest text-foreground">
-                                        {v.code}
-                                      </p>
-                                      <p className="text-xs text-muted-foreground mt-1">
-                                        {formatDuration(v.duration_minutes)} de vol
-                                        {v.product_title ? ` · ${v.product_title}` : ""}
-                                      </p>
-                                      {v.expires_at && v.status === "unused" && (
-                                        <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-                                          Expire le {new Date(v.expires_at).toLocaleDateString("fr-BE")}
-                                        </p>
-                                      )}
-                                    </div>
-                                    <span className={`text-[11px] px-2 py-0.5 rounded-full border font-semibold shrink-0 ${vStatusColor}`}>
-                                      {vStatusLabel}
-                                    </span>
-                                  </div>
-
-                                  <div className="flex flex-col gap-2">
-                                    {v.status === "unused" && (
-                                      <Link
-                                        href={`/reservation?duree=${v.duration_minutes}&code=${encodeURIComponent(v.code)}`}
-                                        className="flex items-center justify-center gap-1.5 w-full py-2 px-4 rounded-lg bg-primary text-primary-foreground text-xs font-black hover:bg-[#e6a800] transition-colors cursor-pointer"
-                                      >
-                                        Utiliser ce bon →
-                                      </Link>
-                                    )}
-                                    <a
-                                      href={`/api/voucher/pdf?code=${encodeURIComponent(v.code)}`}
-                                      download
-                                      className="flex items-center justify-center gap-1.5 w-full py-2 px-4 rounded-lg border border-border bg-secondary text-foreground hover:border-foreground text-xs font-semibold transition-colors cursor-pointer"
-                                    >
-                                      <Download size={13} />
-                                      Imprimer le bon cadeau
-                                    </a>
-                                  </div>
-                                </div>
-                              );
-                            })
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </section>

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationPaymentInvitationEmail, reservationConfirmationFreeEmail, postVolEmail, routeProposalEmail, customEmail, rescheduleInviteEmail, rescheduleConfirmationEmail } from "@/lib/email-templates";
+import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationPaymentInvitationEmail, reservationConfirmationFreeEmail, postVolEmail, routeItineraireEmail, customEmail, rescheduleInviteEmail, rescheduleConfirmationEmail } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 
 async function checkAdmin() {
@@ -27,7 +27,11 @@ export async function updateStatutReservation(id: string, statut: string) {
         .eq("id", id)
         .single();
       if (check?.type_resa === "standard" && !check?.route?.trim()) {
-        return { error: "Route requise avant de confirmer l'heure" };
+        const { count } = await supabase
+          .from("route_proposals")
+          .select("*", { count: "exact", head: true })
+          .eq("reservation_id", id);
+        if (!count) return { error: "Route requise avant de confirmer l'heure" };
       }
     }
 
@@ -105,7 +109,6 @@ export async function updateStatutReservation(id: string, statut: string) {
       }
     }
 
-    revalidatePath("/admin/vols");
     revalidatePath("/admin/vols");
     return { success: true };
   } catch {
@@ -561,7 +564,7 @@ export async function resendRoute(id: string) {
       to: [client.email],
       replyTo: EMAIL_REPLY_TO,
       subject: "Fly Horizons — Votre itinéraire de vol",
-      html: routeProposalEmail({ prenom: client.prenom, dateStr, duree: resa.duree, route: resa.route, routeUrl }),
+      html: routeItineraireEmail({ prenom: client.prenom, dateStr, duree: resa.duree, route: resa.route, routeUrl }),
     });
 
     revalidatePath("/admin/vols");

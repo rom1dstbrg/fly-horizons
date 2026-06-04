@@ -1316,52 +1316,6 @@ export function satisfactionResultEmail(p: SatisfactionResultEmailProps): string
   return emailBase(body, `Satisfaction — ${p.prenom} ${p.nom}`);
 }
 
-// ── 17. Route — proposition d'itinéraire au client ───────────────────────────
-
-export interface RouteProposalEmailProps {
-  prenom: string;
-  dateStr: string;
-  duree: number;
-  route: string;
-  routeUrl: string;
-}
-
-export function routeProposalEmail(p: RouteProposalEmailProps): string {
-  const body = `
-    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Itin&eacute;raire de vol</p>
-    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Votre itin&eacute;raire de vol</h1>
-    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">Bonjour <strong style="color:#0b2238;">${esc(p.prenom)}</strong>, voici l&rsquo;itin&eacute;raire de vol propos&eacute; par Romain. Regardez et indiquez-nous s&rsquo;il vous convient&nbsp;!</p>
-
-    ${separator()}
-    ${label("D&eacute;tails")}
-    ${infoRows([
-      ["Date", `<strong style="text-transform:capitalize;">${esc(p.dateStr)}</strong>`],
-      ["Durée estimée", `~${fmtDuration(p.duree)}`],
-    ])}
-
-    ${separator()}
-    ${label("Itin&eacute;raire pr&eacute;vu")}
-    <p class="em-body" style="margin:0 0 20px;font-size:13px;color:#334155;line-height:1.8;white-space:pre-line;border-left:3px solid #F2B705;padding:4px 0 4px 16px;">${esc(p.route)}</p>
-
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;"><tr><td align="center">
-      <a href="${esc(p.routeUrl)}" class="em-btn"
-        style="display:inline-block;background-color:#F2B705;color:#0b2238;font-size:15px;font-weight:800;padding:16px 44px;border-radius:10px;text-decoration:none;letter-spacing:0.02em;">
-        Valider ou modifier l&rsquo;itin&eacute;raire &#8594;
-      </a>
-    </td></tr></table>
-
-    <p class="em-muted" style="margin:0 0 28px;font-size:12px;color:#94a3b8;text-align:center;">Ce lien est actif jusqu&rsquo;&agrave; 48&nbsp;h avant le vol. Pass&eacute; ce d&eacute;lai, r&eacute;pondez directement &agrave; cet email.</p>
-
-
-    <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">
-      Des ajustements ? Pas de souci, r&eacute;pondez &agrave; cet email ou utilisez le bouton ci-dessus.<br>
-      &Agrave; tr&egrave;s bient&ocirc;t,
-      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
-    </p>`;
-
-  return emailBase(body, "Votre itinéraire de vol — Fly Horizons");
-}
-
 // ── 19. Email libre stylisé ───────────────────────────────────────────────────
 
 export function customEmail({ subject, body, rescheduleUrl }: { subject: string; body: string; rescheduleUrl?: string | null }): string {
@@ -1502,4 +1456,171 @@ export function rescheduleConfirmationEmail(p: {
     </p>`;
 
   return emailBase(body, "Votre report est confirmé — Fly Horizons");
+}
+
+// ── Route itinéraire (ancien flux texte, /vol/itineraire/[token]) ────────────
+
+export interface RouteItineraireEmailProps {
+  prenom: string;
+  dateStr: string;
+  duree: number;
+  route: string;
+  routeUrl: string;
+}
+
+export function routeItineraireEmail(p: RouteItineraireEmailProps): string {
+  const body = `
+    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Itin&eacute;raire de vol</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Votre itin&eacute;raire de vol</h1>
+    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">Bonjour <strong style="color:#0b2238;">${esc(p.prenom)}</strong>, voici l&rsquo;itin&eacute;raire de vol propos&eacute; par Romain. Regardez et indiquez-nous s&rsquo;il vous convient&nbsp;!</p>
+
+    ${separator()}
+    ${label("D&eacute;tails")}
+    ${infoRows([
+      ["Date", `<strong style="text-transform:capitalize;">${esc(p.dateStr)}</strong>`],
+      ["Dur&eacute;e estim&eacute;e", `~${fmtDuration(p.duree)}`],
+    ])}
+
+    ${separator()}
+    ${label("Itin&eacute;raire pr&eacute;vu")}
+    <p class="em-body" style="margin:0 0 20px;font-size:13px;color:#334155;line-height:1.8;white-space:pre-line;border-left:3px solid #F2B705;padding:4px 0 4px 16px;">${esc(p.route)}</p>
+
+    ${ctaButton(p.routeUrl, "Valider ou modifier l’itinéraire →")}
+
+    <p class="em-muted" style="margin:0 0 28px;font-size:12px;color:#94a3b8;text-align:center;">Ce lien est actif jusqu&rsquo;&agrave; 48&nbsp;h avant le vol.</p>
+
+    <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">
+      Des ajustements ? Pas de souci, r&eacute;pondez &agrave; cet email ou utilisez le bouton ci-dessus.<br>
+      &Agrave; tr&egrave;s bient&ocirc;t,
+      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
+    </p>`;
+
+  return emailBase(body, "Votre itinéraire de vol — Fly Horizons");
+}
+
+// ── Route proposal (nouveau flux waypoints, /vol/proposition/[token]) ────────
+
+export interface RouteProposalEmailProps {
+  prenom: string;
+  dateStr: string;
+  waypoints: Array<{ lat?: number; lng?: number; nom?: string }>;
+  adminComment: string;
+  responseUrl: string;
+}
+
+export function routeProposalEmail(p: RouteProposalEmailProps): string {
+  const waypointRows = p.waypoints.map((wp, i) => `
+    <tr>
+      <td style="padding:9px 0;${i < p.waypoints.length - 1 ? "border-bottom:1px solid #f1f5f9;" : ""}vertical-align:middle;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:22px;height:22px;background:#F2B705;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#0b2238;flex-shrink:0;">${i + 1}</div>
+          <span class="em-dark" style="font-size:13px;font-weight:600;color:#0b2238;">${esc(wp.nom ?? `Point ${i + 1}`)}</span>
+        </div>
+      </td>
+    </tr>`).join("");
+
+  const body = `
+    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Proposition d&rsquo;itin&eacute;raire</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Votre itin&eacute;raire personnalis&eacute;</h1>
+    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">
+      Bonjour <strong style="color:#0b2238;">${esc(p.prenom)}</strong>,
+      votre pilote a pr&eacute;par&eacute; un itin&eacute;raire pour votre vol du <strong style="color:#0b2238;">${esc(p.dateStr)}</strong>.
+    </p>
+
+    ${p.adminComment ? `
+    ${separator()}
+    ${label("Message de votre pilote")}
+    ${callout(esc(p.adminComment))}
+    ` : ""}
+
+    ${separator()}
+    ${label("Votre parcours — " + p.waypoints.length + " point" + (p.waypoints.length > 1 ? "s" : ""))}
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+      <tr>
+        <td style="padding:9px 0;border-bottom:1px solid #f1f5f9;vertical-align:middle;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:22px;height:22px;background:#0b2238;border:2px solid #F2B705;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <span style="font-size:10px;color:#F2B705;">✈</span>
+            </div>
+            <span class="em-muted" style="font-size:13px;color:#64748b;font-weight:600;">Charleroi EBCI &mdash; D&eacute;part</span>
+          </div>
+        </td>
+      </tr>
+      ${waypointRows}
+      <tr>
+        <td style="padding:9px 0;vertical-align:middle;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:22px;height:22px;background:#0b2238;border:2px solid #F2B705;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <span style="font-size:10px;color:#F2B705;">✈</span>
+            </div>
+            <span class="em-muted" style="font-size:13px;color:#64748b;font-weight:600;">Charleroi EBCI &mdash; Retour</span>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    ${ctaButton(p.responseUrl, "Voir la carte et répondre →")}
+
+    ${separator()}
+    <p class="em-body" style="margin:0;font-size:13px;color:#334155;line-height:1.7;">
+      Vous pouvez visualiser le trac&eacute; sur la carte, accepter l&rsquo;itin&eacute;raire ou nous demander des ajustements.<br>
+      Ce lien est personnel et valable uniquement pour cette proposition.<br><br>
+      &Agrave; bient&ocirc;t,<br>
+      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
+    </p>`;
+
+  return emailBase(body, `Votre itinéraire personnalisé — Fly Horizons`);
+}
+
+// ── Payment link after route acceptance ──────────────────────────────────────
+
+export interface PaymentLinkEmailProps {
+  prenom: string;
+  dateStr: string;
+  duree: number;
+  acompte: number;
+  paymentUrl: string;
+}
+
+export function paymentLinkEmail(p: PaymentLinkEmailProps): string {
+  const body = `
+    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">R&eacute;servation confirm&eacute;e</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Finalisez votre r&eacute;servation</h1>
+    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">
+      Bonjour <strong style="color:#0b2238;">${esc(p.prenom)}</strong>,
+      vous avez valid&eacute; votre itin&eacute;raire pour le vol du <strong style="color:#0b2238;">${esc(p.dateStr)}</strong>.
+      Il ne reste qu&rsquo;une &eacute;tape&nbsp;: r&eacute;gler l&rsquo;acompte pour confirmer d&eacute;finitivement votre r&eacute;servation.
+    </p>
+
+    ${separator()}
+    ${label("D&eacute;tail")}
+    ${infoRows([
+      ["Date du vol", `<strong style="text-transform:capitalize;">${esc(p.dateStr)}</strong>`],
+      ["D&eacute;part / retour", "Charleroi EBCI"],
+      ["Dur&eacute;e estim&eacute;e", `~${p.duree}&nbsp;min`],
+    ])}
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+      <tr>
+        <td style="border:2px solid #F2B705;border-radius:12px;padding:28px 24px;text-align:center;">
+          <p class="em-muted" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.1em;">Acompte &agrave; r&eacute;gler</p>
+          <p class="em-dark" style="margin:0 0 20px;font-size:42px;font-weight:800;color:#0b2238;line-height:1;">${p.acompte}&nbsp;&euro;</p>
+          <a href="${esc(p.paymentUrl)}" class="em-btn"
+            style="display:inline-block;background-color:#F2B705;color:#0b2238;font-size:14px;font-weight:800;padding:14px 36px;border-radius:10px;text-decoration:none;">
+            Payer mon acompte &mdash; ${p.acompte}&nbsp;&euro;
+          </a>
+          <p class="em-muted" style="margin:14px 0 0;font-size:11px;color:#94a3b8;">Paiement s&eacute;curis&eacute; par Stripe, carte bancaire</p>
+        </td>
+      </tr>
+    </table>
+
+    ${separator()}
+    <p class="em-body" style="margin:0;font-size:13px;color:#334155;line-height:1.7;">
+      Le solde sera calcul&eacute; apr&egrave;s votre vol selon la dur&eacute;e r&eacute;elle. Si l&rsquo;acompte vers&eacute; d&eacute;passe le montant final, la diff&eacute;rence vous est rembours&eacute;e sous 24&nbsp;h.<br><br>
+      &Agrave; tr&egrave;s bient&ocirc;t,<br>
+      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
+    </p>`;
+
+  return emailBase(body, `Finalisez votre réservation — Fly Horizons`);
 }

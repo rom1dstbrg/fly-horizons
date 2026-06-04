@@ -17,7 +17,6 @@ import {
   MapPin,
   CheckCircle,
   Navigation,
-  Map,
   RotateCcw,
   Loader2,
 } from "lucide-react";
@@ -43,6 +42,8 @@ export interface ReservationData {
   route_token?: string | null;
   route_feedback?: string | null;
   waypoints?: Array<{ lat: number; lng: number; nom: string }> | null;
+  latestProposalToken?: string | null;
+  latestProposalStatus?: string | null;
 }
 
 const ROUTE_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
@@ -70,19 +71,7 @@ const STATUS_RANK: Record<string, number> = {
 
 // ── Timelines ──────────────────────────────────────────────────────────────
 
-const STANDARD_TIMELINE = [
-  {
-    key: "payment_pending",
-    label: "Confirmation du paiement",
-    desc: () => "En attente de votre paiement",
-    doneDesc: () => "Paiement reçu",
-  },
-  {
-    key: "en_attente",
-    label: "Confirmation en cours",
-    desc: () => "Nous vérifions les disponibilités",
-    doneDesc: () => "Confirmé",
-  },
+const DATE_STEPS = [
   {
     key: "date_confirmee",
     label: "Date de vol confirmée",
@@ -118,52 +107,61 @@ const STANDARD_TIMELINE = [
   },
 ];
 
+// Virtual step — rendered with custom logic (not based on STATUS_RANK)
+const PROPOSAL_STEP = {
+  key: "route_proposal",
+  label: "Proposition d'itinéraire",
+  isVirtual: true,
+};
+
+const STANDARD_TIMELINE = [
+  {
+    key: "payment_pending",
+    label: "Confirmation du paiement",
+    desc: () => "En attente de votre paiement",
+    doneDesc: () => "Paiement reçu",
+  },
+  {
+    key: "en_attente",
+    label: "Confirmation en cours",
+    desc: () => "Nous vérifions les disponibilités",
+    doneDesc: () => "Confirmé",
+  },
+  ...DATE_STEPS,
+];
+
+const STANDARD_TIMELINE_WITH_PROPOSAL = [
+  {
+    key: "payment_pending",
+    label: "Confirmation du paiement",
+    desc: () => "En attente de votre paiement",
+    doneDesc: () => "Paiement reçu",
+  },
+  {
+    key: "en_attente",
+    label: "Confirmation en cours",
+    desc: () => "Nous vérifions les disponibilités",
+    doneDesc: () => "Confirmé",
+  },
+  PROPOSAL_STEP,
+  ...DATE_STEPS,
+];
+
 const PERSO_TIMELINE = [
   {
     key: "en_attente_perso",
-    label: "Demande envoyée",
+    label: "Demande reçue",
     desc: () => "Votre demande est en cours de traitement",
     doneDesc: () => "Demande reçue",
   },
+  PROPOSAL_STEP,
   {
     key: "acompte_recu",
     label: "Acompte reçu",
     desc: () => "En attente de votre paiement",
     doneDesc: () => "Acompte confirmé",
   },
-  {
-    key: "date_confirmee",
-    label: "Date de vol confirmée",
-    desc: (r: ReservationData) =>
-      r.date_vol
-        ? new Date(r.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          })
-        : "En attente",
-    doneDesc: (r: ReservationData) =>
-      r.date_vol
-        ? new Date(r.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-          })
-        : null,
-  },
-  {
-    key: "heure_confirmee",
-    label: "Créneau horaire confirmé",
-    desc: (r: ReservationData) => formatHeure(r.heure_vol),
-    doneDesc: (r: ReservationData) => formatHeure(r.heure_vol),
-  },
-  {
-    key: "vol_effectue",
-    label: "Vol effectué",
-    desc: () => "À bientôt en l'air !",
-    doneDesc: () => "Vol effectué. Merci !",
-  },
+  ...DATE_STEPS,
 ];
 
 // ── Helper ─────────────────────────────────────────────────────────────────
@@ -257,10 +255,15 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
 
   const isPerso = resa.type_resa === "perso";
   const isCancelled = resa.statut === "annulee";
-  const timeline = isPerso ? PERSO_TIMELINE : STANDARD_TIMELINE;
   const currentRank = STATUS_RANK[resa.statut] ?? 0;
 
-  const isPaid = !["payment_pending"].includes(resa.statut);
+  const timeline = isPerso
+    ? PERSO_TIMELINE
+    : resa.latestProposalToken
+    ? STANDARD_TIMELINE_WITH_PROPOSAL
+    : STANDARD_TIMELINE;
+
+  const isPaid = !["payment_pending", "en_attente_perso"].includes(resa.statut);
   const hasPaymentLink = resa.payment_token && !isPaid && !isCancelled;
 
   const paymentUrl = isPerso
@@ -395,15 +398,38 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
 
             <div className="space-y-0">
               {timeline.map((step, i) => {
-                const stepRank = STATUS_RANK[step.key] ?? i;
-                const isCompleted = stepRank < currentRank;
-                const isCurrent = stepRank === currentRank;
+                const isVirtual = "isVirtual" in step && step.isVirtual;
+                let isCompleted: boolean;
+                let isCurrent: boolean;
+                let description: string | null;
+
+                if (isVirtual && step.key === "route_proposal") {
+                  const proposalStatus = resa.latestProposalStatus;
+                  const hasProposal = !!resa.latestProposalToken;
+
+                  if (isPerso) {
+                    // Completed when reservation has moved past en_attente_perso
+                    isCompleted = currentRank > (STATUS_RANK["en_attente_perso"] ?? 1);
+                    isCurrent = !isCompleted && hasProposal;
+                  } else {
+                    isCompleted = proposalStatus === "accepted" || currentRank >= (STATUS_RANK["date_confirmee"] ?? 3);
+                    isCurrent = !isCompleted && hasProposal;
+                  }
+
+                  if (isCompleted) description = "Itinéraire validé";
+                  else if (proposalStatus === "modification_requested") description = "Modification en cours de traitement";
+                  else if (proposalStatus === "pending") description = "En attente de votre validation";
+                  else description = "En attente de la proposition de votre pilote";
+                } else {
+                  const stepFn = step as { key: string; label: string; desc: (r: ReservationData) => string | null; doneDesc: (r: ReservationData) => string | null };
+                  const stepRank = STATUS_RANK[step.key] ?? i;
+                  isCompleted = stepRank < currentRank;
+                  isCurrent = stepRank === currentRank;
+                  description = isCompleted ? stepFn.doneDesc(resa) : stepFn.desc(resa);
+                }
+
                 const isFlashing = flashId === step.key;
                 const isLast = i === timeline.length - 1;
-
-                const description = isCompleted
-                  ? step.doneDesc(resa)
-                  : step.desc(resa);
 
                 return (
                   <div key={step.key} className="flex gap-4">
@@ -524,6 +550,51 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
           </div>
         )}
 
+        {/* Proposition de route (nouveau système) */}
+        {resa.latestProposalToken && (
+          <div className="card-premium p-6 mt-5">
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+                  <MapPin size={14} className="text-foreground" />
+                </div>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  Itinéraire proposé
+                </p>
+              </div>
+              {resa.latestProposalStatus === "pending" && (
+                <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full border text-amber-700 bg-amber-50 border-amber-200">
+                  En attente de votre réponse
+                </span>
+              )}
+              {resa.latestProposalStatus === "accepted" && (
+                <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full border text-green-700 bg-green-50 border-green-200">
+                  Accepté ✓
+                </span>
+              )}
+              {resa.latestProposalStatus === "modification_requested" && (
+                <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full border text-amber-700 bg-amber-50 border-amber-200">
+                  Modification demandée
+                </span>
+              )}
+            </div>
+
+            {resa.latestProposalStatus === "modification_requested" && (
+              <p className="text-xs text-muted-foreground mb-4">
+                Votre pilote prépare un nouvel itinéraire tenant compte de vos souhaits.
+              </p>
+            )}
+
+            <Link
+              href={`/vol/proposition/${resa.latestProposalToken}`}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-xs font-bold hover:brightness-105 transition-all"
+            >
+              <MapPin size={12} />
+              {resa.latestProposalStatus === "pending" ? "Voir et répondre" : "Revoir l'itinéraire"}
+            </Link>
+          </div>
+        )}
+
         {/* Waypoints — vol sur mesure uniquement */}
         {isPerso && resa.waypoints && resa.waypoints.length > 0 && (() => {
           const wps = resa.waypoints!;
@@ -586,7 +657,7 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
                   href={`/account/reservations/${resa.id}/carte`}
                   className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-xs font-bold hover:brightness-105 transition-all"
                 >
-                  <Map size={12} />
+                  <MapPin size={12} />
                   Carte interactive
                 </Link>
                 <a
