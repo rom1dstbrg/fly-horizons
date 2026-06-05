@@ -4,23 +4,37 @@ import { useState, useTransition, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   updateStatutReservationPerso,
-  updateReservationPersoFields,
-  updateReservationDateHeure,
   sendCustomEmail,
   sendRescheduleInvite,
 } from "@/lib/actions/reservations";
+import {
+  updateReservationAllFields,
+  saveFinalWaypoints,
+  sendRouteProposalToClient,
+  getReservationHistory,
+  getRouteProposals,
+} from "@/lib/actions/reservation-edit";
+import { toForeFlight } from "@/lib/foreflight";
+import { optimizeWaypoints } from "@/lib/route-optimize";
 import { deleteReservationPerso } from "@/lib/actions/delete";
 import { AdminBadge, STATUT_PERSO } from "@/components/admin/ui/AdminBadge";
 import { AdminRowActions } from "@/components/admin/ui/AdminRowActions";
 import {
   X, User, Phone, Mail, Calendar, Clock, Users, Weight,
-  CreditCard, Loader2, Send, Pencil, Check, MapPin,
+  CreditCard, Loader2, Send, Check, MapPin,
   Sparkles, RotateCcw, Zap, Wind, AlertTriangle,
-  CheckCircle2, XCircle, ChevronRight,
+  CheckCircle2, XCircle, ChevronRight, Copy, Plus, Trash2,
+  List, Map as MapIcon, ArrowUpDown,
 } from "lucide-react";
+import dynamic from "next/dynamic";
+
+const AdminRouteEditor = dynamic(
+  () => import("@/components/admin/AdminRouteEditor").then(m => m.AdminRouteEditor),
+  { ssr: false, loading: () => <div className="w-full rounded-lg border border-border bg-secondary animate-pulse" style={{ height: "280px" }} /> }
+);
 
 type Waypoint = { lat: number; lng: number; nom?: string };
-type Stopover = { icao: string; nom: string; taxe: number };
+type Stopover = { icao: string; nom: string; taxe: number; lat?: number; lng?: number };
 type Reservation = {
   id: string;
   date_vol: string;
@@ -31,9 +45,13 @@ type Reservation = {
   statut: string;
   acompte: number | null;
   paye: number | null;
+  payment_status: string | null;
+  voucher_code: string | null;
+  coupon_code: string | null;
   distance_km: number | null;
   style_vol: "rapide" | "vues" | null;
   waypoints: Waypoint[] | null;
+  final_waypoints: Waypoint[] | null;
   stopovers: Stopover[] | null;
   taxes_escales: number | null;
   commentaire: string | null;
@@ -41,14 +59,18 @@ type Reservation = {
   date_confirmee_at: string | null;
   heure_confirmee_at: string | null;
   clients: { id: string; prenom: string; nom: string; email: string; telephone: string | null } | null;
+  route_proposals: Array<{ status: string; created_at: string }> | null;
 };
 
+type Tab = "infos" | "modifier" | "route" | "historique";
+
 // ── Templates email ────────────────────────────────────────────────────────────
-type EmailTemplate = { label: string; subject: (dateStr: string) => string; body: (prenom: string, dateStr: string) => string };
+type EmailTemplate = { label: string; subject: (dateStr: string) => string; body: (prenom: string, dateStr: string) => string; includeReschedule?: boolean };
 const EMAIL_TEMPLATES: EmailTemplate[] = [
   {
-    label: "☁️ Report météo",
+    label: "Report météo",
     subject: (dateStr) => `Fly Horizons — Votre vol du ${dateStr}`,
+    includeReschedule: true,
     body: (prenom, dateStr) =>
 `Bonjour ${prenom},
 
@@ -56,13 +78,13 @@ J'ai suivi les prévisions pour le ${dateStr} et les conditions ne permettent ma
 
 Votre acompte est bien conservé, aucun frais ne vous est facturé.
 
-Je vous contacterai dès qu'une nouvelle date se libère. N'hésitez pas à me donner vos prochaines disponibilités pour que je puisse vous proposer quelque chose rapidement.
+Vous pouvez choisir votre nouvelle date directement depuis votre espace client en cliquant sur le bouton de report ci-dessous.
 
 À très vite,
 Romain`,
   },
   {
-    label: "✈️ Vol maintenu",
+    label: "Vol maintenu",
     subject: (dateStr) => `Fly Horizons — Vol confirmé pour le ${dateStr}`,
     body: (prenom, dateStr) =>
 `Bonjour ${prenom},
@@ -74,37 +96,59 @@ Rendez-vous à l'aéroport de Charleroi (EBCI) 15 minutes avant l'heure convenue
 À très bientôt,
 Romain`,
   },
-  {
-    label: "🗺️ Zone restreinte",
-    subject: (dateStr) => `Fly Horizons — Votre itinéraire du ${dateStr}`,
-    body: (prenom) =>
-`Bonjour ${prenom},
-
-J'ai analysé votre itinéraire en détail. Une partie de la route que vous m'avez demandée traverse une zone d'espace aérien contrôlé que je ne peux pas survoler sans autorisation spéciale pour ce type de vol.
-
-Je vous propose de contourner cette zone par [à compléter], ce qui donnera un résultat très similaire. Le reste de votre itinéraire est tout à fait réalisable.
-
-Dites-moi si cette alternative vous convient ou si vous préférez qu'on en parle, je reste disponible pour ajuster.
-
-À bientôt,
-Romain`,
-  },
-  {
-    label: "⏰ Rappel J-1",
-    subject: () => `Fly Horizons — Votre vol est demain`,
-    body: (prenom) =>
-`Bonjour ${prenom},
-
-Je vous confirme votre vol prévu demain. Quelques rappels pour que tout se passe au mieux.
-
-Présentez-vous à l'aéroport de Charleroi (EBCI) 15 minutes avant l'heure prévue. Portez des chaussures fermées, c'est indispensable pour circuler sur la piste. Un pull ou une veste légère est conseillé même en été, il fait généralement plus frais en altitude.
-
-Si vous avez une question de dernière minute, répondez directement à cet email.
-
-À demain,
-Romain`,
-  },
 ];
+
+const PAYMENT_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  paid:     { label: "Payé",      color: "bg-green-50 text-green-700 border border-green-200" },
+  unpaid:   { label: "Non payé",  color: "bg-amber-50 text-amber-700 border border-amber-200" },
+  partial:  { label: "Partiel",   color: "bg-blue-50 text-blue-700 border border-blue-200" },
+  refunded: { label: "Remboursé", color: "bg-gray-50 text-gray-600 border border-gray-200" },
+};
+
+const PROPOSAL_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  pending:               { label: "En attente",          color: "bg-amber-50 text-amber-700 border-amber-200" },
+  accepted:              { label: "Acceptée ✓",          color: "bg-green-50 text-green-700 border-green-200" },
+  modification_requested:{ label: "Modif. demandée",     color: "bg-red-50 text-red-700 border-red-200" },
+};
+
+const ACTION_LABELS: Record<string, string> = {
+  field_changed:        "Modification",
+  route_proposal_sent:  "Proposition envoyée",
+  client_response:      "Réponse client",
+  status_changed:       "Changement de statut",
+};
+
+const FIELD_LABELS: Record<string, string> = {
+  "client.prenom":    "Prénom",
+  "client.nom":       "Nom",
+  "client.email":     "Email",
+  "client.telephone": "Téléphone",
+  date_vol:           "Date",
+  heure_vol:          "Heure",
+  duree:              "Durée",
+  passagers:          "Passagers",
+  poids_total:        "Poids total",
+  acompte:            "Acompte",
+  paye:               "Montant payé",
+  payment_status:     "Statut paiement",
+  voucher_code:       "Code voucher",
+  coupon_code:        "Code promo",
+  commentaire:        "Remarques",
+  final_waypoints:    "Route finale",
+  route_proposal:     "Proposition de route",
+};
+
+type HistoryItem = {
+  id: string; action: string; field: string | null; old_value: string | null;
+  new_value: string | null; author: string; note: string | null; created_at: string;
+};
+
+type ProposalItem = {
+  id: string; created_at: string; status: string; admin_comment: string | null;
+  client_comment: string | null; waypoints: Waypoint[]; token: string;
+};
+
+type WaypointDraft = { lat: string; lng: string; nom: string };
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -114,6 +158,17 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
+
+function InputField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">{label}</p>
+      {children}
+    </div>
+  );
+}
+
+const inputCls = "w-full h-8 px-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-1 focus:ring-navy/30";
 
 // ── Drawer principal ───────────────────────────────────────────────────────────
 function VolsPersoDrawer({
@@ -128,15 +183,8 @@ function VolsPersoDrawer({
   const [isPending, startTransition] = useTransition();
   const [emailPending, startEmailTransition] = useTransition();
 
-  // Edit mode
-  const [editingDetails, setEditingDetails] = useState(false);
-  const [draftDate, setDraftDate] = useState("");
-  const [draftHeure, setDraftHeure] = useState("");
-  const [draftDuree, setDraftDuree] = useState("");
-  const [draftPassagers, setDraftPassagers] = useState("");
-  const [draftPoids, setDraftPoids] = useState("");
-  const [draftAcompte, setDraftAcompte] = useState("");
-  const [draftCommentaire, setDraftCommentaire] = useState("");
+  // Tab
+  const [activeTab, setActiveTab] = useState<Tab>("infos");
 
   // Email
   const [emailOpen, setEmailOpen] = useState(false);
@@ -147,55 +195,107 @@ function VolsPersoDrawer({
   // UI
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null);
 
+  // Modifier drafts
+  const [draftPrenom, setDraftPrenom] = useState("");
+  const [draftNom, setDraftNom] = useState("");
+  const [draftEmail, setDraftEmail] = useState("");
+  const [draftTelephone, setDraftTelephone] = useState("");
+  const [draftDate, setDraftDate] = useState("");
+  const [draftHeure, setDraftHeure] = useState("");
+  const [draftDuree, setDraftDuree] = useState("");
+  const [draftPassagers, setDraftPassagers] = useState("");
+  const [draftPoids, setDraftPoids] = useState("");
+  const [draftAcompte, setDraftAcompte] = useState("");
+  const [draftPaye, setDraftPaye] = useState("");
+  const [draftPaymentStatus, setDraftPaymentStatus] = useState<"paid" | "unpaid" | "partial" | "refunded">("unpaid");
+  const [draftVoucherCode, setDraftVoucherCode] = useState("");
+  const [draftCouponCode, setDraftCouponCode] = useState("");
+  const [draftCommentaire, setDraftCommentaire] = useState("");
+  const [draftStyleVol, setDraftStyleVol] = useState<"rapide" | "vues" | "">("");
+
+  // Route tab
+  const [finalWpDrafts, setFinalWpDrafts] = useState<WaypointDraft[]>([]);
+  const [proposalComment, setProposalComment] = useState("");
+  const [routeCopied, setRouteCopied] = useState(false);
+  const [routeViewMode, setRouteViewMode] = useState<"list" | "map">("map");
+  const [proposals, setProposals] = useState<ProposalItem[]>([]);
+  const [proposalsLoaded, setProposalsLoaded] = useState(false);
+
+  // Historique
+  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+
   // Reset on reservation change
   useEffect(() => {
-    setEditingDetails(false);
-    setEmailOpen(false);
-    setIncludeReschedule(false);
-  }, [reservation?.id]);
-
-  function showFeedback(msg: string, ok = true) {
-    setFeedback({ msg, ok });
-    setTimeout(() => setFeedback(null), 3500);
-  }
-
-  function openEditDetails() {
     if (!reservation) return;
+    setDraftPrenom(reservation.clients?.prenom ?? "");
+    setDraftNom(reservation.clients?.nom ?? "");
+    setDraftEmail(reservation.clients?.email ?? "");
+    setDraftTelephone(reservation.clients?.telephone ?? "");
     setDraftDate(reservation.date_vol);
     setDraftHeure(reservation.heure_vol?.slice(0, 5) ?? "");
     setDraftDuree(String(reservation.duree));
     setDraftPassagers(String(reservation.passagers));
     setDraftPoids(reservation.poids_total != null ? String(reservation.poids_total) : "");
     setDraftAcompte(reservation.acompte != null ? String(reservation.acompte) : "");
+    setDraftPaye(reservation.paye != null ? String(reservation.paye) : "");
+    setDraftPaymentStatus((reservation.payment_status ?? "unpaid") as "paid" | "unpaid" | "partial" | "refunded");
+    setDraftVoucherCode(reservation.voucher_code ?? "");
+    setDraftCouponCode(reservation.coupon_code ?? "");
     setDraftCommentaire(reservation.commentaire ?? "");
-    setEditingDetails(true);
-  }
+    setDraftStyleVol(reservation.style_vol ?? "");
+    // Final waypoints: load from saved state, or fall back to client route — always optimized
+    const fw = reservation.final_waypoints ?? [];
+    const rawDrafts = fw.length > 0
+      ? fw.map(wp => ({ lat: String(wp.lat), lng: String(wp.lng), nom: wp.nom ?? "" }))
+      : [
+          ...(reservation.waypoints ?? []).map(wp => ({ lat: String(wp.lat), lng: String(wp.lng), nom: wp.nom ?? "" })),
+          ...(reservation.stopovers ?? [])
+            .filter(so => so.lat != null && so.lng != null)
+            .map(so => ({ lat: String(so.lat!), lng: String(so.lng!), nom: so.icao })),
+        ];
+    if (rawDrafts.length >= 2) {
+      const parsed = rawDrafts
+        .map(wp => ({ lat: parseFloat(wp.lat), lng: parseFloat(wp.lng), nom: wp.nom, _orig: wp }))
+        .filter(wp => !isNaN(wp.lat) && !isNaN(wp.lng));
+      const optimizedDrafts = parsed.length >= 2 ? optimizeWaypoints(parsed) : parsed;
+      setFinalWpDrafts(optimizedDrafts.map(wp => wp._orig));
+    } else {
+      setFinalWpDrafts(rawDrafts);
+    }
+    setProposalComment("");
+    setEmailOpen(false);
+    setIncludeReschedule(false);
+    setActiveTab("infos");
+    setHistoryLoaded(false);
+    setHistoryItems([]);
+    setProposalsLoaded(false);
+    setProposals([]);
+  }, [reservation?.id]);
 
-  function saveDetails() {
-    if (!reservation) return;
-    startTransition(async () => {
-      // Date / heure
-      const dateChanged  = draftDate && draftDate !== reservation.date_vol;
-      const heureChanged = draftHeure !== (reservation.heure_vol?.slice(0, 5) ?? "");
-      if (dateChanged || heureChanged) {
-        const updates: Record<string, string> = {};
-        if (dateChanged)  updates.date_vol  = draftDate;
-        if (heureChanged) updates.heure_vol = draftHeure;
-        const dr = await updateReservationDateHeure(reservation.id, updates);
-        if (dr.error) { showFeedback("Erreur : " + dr.error, false); return; }
-      }
-      // Autres champs
-      const r = await updateReservationPersoFields(reservation.id, {
-        duree:       parseInt(draftDuree)    || reservation.duree,
-        passagers:   parseInt(draftPassagers) || reservation.passagers,
-        poids_total: draftPoids ? parseFloat(draftPoids) : null,
-        acompte:     draftAcompte ? parseFloat(draftAcompte) : null,
-        commentaire: draftCommentaire.trim() || null,
-      });
-      if (r.error) { showFeedback("Erreur : " + r.error, false); return; }
-      setEditingDetails(false);
-      showFeedback("Informations sauvegardées ✓");
+  // Lazy-load when tabs open
+  useEffect(() => {
+    if (activeTab !== "historique" || historyLoaded || !reservation) return;
+    setHistoryLoading(true);
+    getReservationHistory(reservation.id).then(res => {
+      if (res.data) setHistoryItems(res.data as HistoryItem[]);
+      setHistoryLoading(false);
+      setHistoryLoaded(true);
     });
+  }, [activeTab, historyLoaded, reservation?.id]);
+
+  useEffect(() => {
+    if (activeTab !== "route" || proposalsLoaded || !reservation) return;
+    getRouteProposals(reservation.id).then(res => {
+      if (res.data) setProposals(res.data as ProposalItem[]);
+      setProposalsLoaded(true);
+    });
+  }, [activeTab, proposalsLoaded, reservation?.id]);
+
+  function showFeedback(msg: string, ok = true) {
+    setFeedback({ msg, ok });
+    setTimeout(() => setFeedback(null), 3500);
   }
 
   function doChangeStatut(statut: string) {
@@ -215,6 +315,85 @@ function VolsPersoDrawer({
       const result = await sendRescheduleInvite(reservation.id);
       if (result.error) { showFeedback("Erreur : " + result.error, false); return; }
       showFeedback("Email de report envoyé au client ✓");
+    });
+  }
+
+  function saveAllFields() {
+    if (!reservation) return;
+    startTransition(async () => {
+      const r = await updateReservationAllFields(
+        reservation.id,
+        {
+          prenom: draftPrenom.trim() || reservation.clients?.prenom || "",
+          nom: draftNom.trim() || reservation.clients?.nom || "",
+          email: draftEmail.trim() || reservation.clients?.email || "",
+          telephone: draftTelephone.trim() || null,
+        },
+        {
+          date_vol: draftDate || reservation.date_vol,
+          heure_vol: draftHeure || null,
+          duree: parseInt(draftDuree) || reservation.duree,
+          passagers: parseInt(draftPassagers) || reservation.passagers,
+          poids_total: draftPoids ? parseFloat(draftPoids) : null,
+          acompte: draftAcompte ? parseFloat(draftAcompte) : null,
+          paye: draftPaye ? parseFloat(draftPaye) : null,
+          payment_status: draftPaymentStatus,
+          voucher_code: draftVoucherCode.trim() || null,
+          coupon_code: draftCouponCode.trim() || null,
+          commentaire: draftCommentaire.trim() || null,
+          style_vol: draftStyleVol || null,
+        }
+      );
+      if (r.error) { showFeedback("Erreur : " + r.error, false); return; }
+      showFeedback("Modifications sauvegardées ✓");
+    });
+  }
+
+  function saveFinalRoute() {
+    if (!reservation) return;
+    const parsed = finalWpDrafts
+      .filter(wp => wp.lat.trim() && wp.lng.trim())
+      .map(wp => ({
+        lat: parseFloat(wp.lat),
+        lng: parseFloat(wp.lng),
+        ...(wp.nom.trim() ? { nom: wp.nom.trim() } : {}),
+      }));
+    startTransition(async () => {
+      const r = await saveFinalWaypoints(reservation.id, parsed);
+      if (r.error) { showFeedback("Erreur : " + r.error, false); return; }
+      showFeedback("Route finale sauvegardée ✓");
+    });
+  }
+
+  function copyForeFlightRoute() {
+    if (!reservation) return;
+    const wps = finalWpDrafts.filter(wp => wp.lat.trim() && wp.lng.trim());
+    const clientWps = reservation.waypoints ?? [];
+    const source = wps.length > 0
+      ? wps.map(wp => toForeFlight(parseFloat(wp.lat), parseFloat(wp.lng)))
+      : clientWps.map(wp => toForeFlight(wp.lat, wp.lng));
+    if (source.length === 0) return;
+    const parts = ["EBCI", ...source, "EBCI"];
+    navigator.clipboard.writeText(parts.join(" ")).then(() => {
+      setRouteCopied(true);
+      setTimeout(() => setRouteCopied(false), 2000);
+    });
+  }
+
+  function sendProposal() {
+    if (!reservation) return;
+    const wps = finalWpDrafts.filter(wp => wp.lat.trim() && wp.lng.trim());
+    const clientWps = reservation.waypoints ?? [];
+    const toSend = wps.length > 0
+      ? wps.map(wp => ({ lat: parseFloat(wp.lat), lng: parseFloat(wp.lng), nom: wp.nom.trim() || undefined }))
+      : clientWps;
+    if (toSend.length === 0) { showFeedback("Aucun waypoint à envoyer", false); return; }
+    startTransition(async () => {
+      const r = await sendRouteProposalToClient(reservation.id, toSend, proposalComment);
+      if (r.error) { showFeedback("Erreur : " + r.error, false); return; }
+      showFeedback("Proposition envoyée au client ✓");
+      setProposalComment("");
+      setProposalsLoaded(false); // refresh proposals on next render
     });
   }
 
@@ -302,8 +481,27 @@ function VolsPersoDrawer({
               )}
             </AnimatePresence>
 
-            {/* Contenu principal — masqué quand le compositeur email est ouvert */}
+            {/* Tab bar */}
             {!emailOpen && (
+              <div className="flex border-b border-border shrink-0">
+                {(["infos", "modifier", "route", "historique"] as Tab[]).map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`flex-1 py-2.5 text-[11px] font-semibold transition-colors cursor-pointer ${
+                      activeTab === tab
+                        ? "text-navy border-b-2 border-navy -mb-px"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {tab === "infos" ? "Infos" : tab === "modifier" ? "Modifier" : tab === "route" ? "Route" : "Historique"}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* ── Onglet Infos ─────────────────────────────────────────────────── */}
+            {!emailOpen && activeTab === "infos" && (
               <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
 
                 {/* Client */}
@@ -329,186 +527,133 @@ function VolsPersoDrawer({
 
                 {/* Vol */}
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px]">Vol</p>
-                    {!editingDetails && (
-                      <button
-                        onClick={openEditDetails}
-                        className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded hover:bg-secondary cursor-pointer"
-                      >
-                        <Pencil size={10} />
-                        Modifier
-                      </button>
-                    )}
-                  </div>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-2">Vol</p>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <Field label="Date du vol">
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <Calendar size={13} className="text-muted-foreground shrink-0" />
+                          <span className="capitalize text-sm">{dateLabel}</span>
+                        </div>
+                      </Field>
+                      <Field label="Heure">
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <Clock size={13} className="text-muted-foreground shrink-0" />
+                          {r.heure_vol
+                            ? <span>{r.heure_vol.slice(0, 5)}</span>
+                            : <span className="text-orange-400 text-xs">À définir</span>
+                          }
+                        </div>
+                      </Field>
+                      <Field label="Durée">
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <Clock size={13} className="text-muted-foreground" />
+                          ~{r.duree} min
+                        </div>
+                      </Field>
+                      <Field label="Passagers">
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <Users size={13} className="text-muted-foreground" />
+                          {r.passagers}
+                        </div>
+                      </Field>
+                      {r.poids_total != null && (
+                        <Field label="Poids total">
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <Weight size={13} className="text-muted-foreground" />
+                            {r.poids_total} kg
+                          </div>
+                        </Field>
+                      )}
+                      {r.acompte != null && (
+                        <Field label="Paiement">
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <CreditCard size={13} className="text-muted-foreground" />
+                            <span className="text-muted-foreground text-xs">Prévu :</span>
+                            <span>{r.acompte} €</span>
+                          </div>
+                          {r.paye != null && r.paye > 0 ? (
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <CheckCircle2 size={13} className="text-emerald-500" />
+                              <span className="text-emerald-600 font-semibold">{r.paye} € encaissé</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <XCircle size={13} className="text-amber-400" />
+                              <span className="text-amber-600 text-xs">Pas encore encaissé</span>
+                            </div>
+                          )}
+                        </Field>
+                      )}
+                      {r.payment_status && PAYMENT_STATUS_CONFIG[r.payment_status] && (
+                        <Field label="Statut paiement">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold mt-0.5 ${PAYMENT_STATUS_CONFIG[r.payment_status].color}`}>
+                            {PAYMENT_STATUS_CONFIG[r.payment_status].label}
+                          </span>
+                        </Field>
+                      )}
+                      {r.distance_km != null && (
+                        <Field label="Distance">
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <MapPin size={13} className="text-muted-foreground" />
+                            {r.distance_km} km
+                          </div>
+                        </Field>
+                      )}
+                      {r.taxes_escales != null && r.taxes_escales > 0 && (
+                        <Field label="Taxes escales">
+                          <span className="text-sm">{r.taxes_escales} €</span>
+                        </Field>
+                      )}
+                      {r.voucher_code && (
+                        <Field label="Voucher">
+                          <span className="font-mono text-xs tracking-wider">{r.voucher_code}</span>
+                        </Field>
+                      )}
+                      {r.coupon_code && (
+                        <Field label="Code promo">
+                          <span className="font-mono text-xs tracking-wider">{r.coupon_code}</span>
+                        </Field>
+                      )}
+                    </div>
 
-                  {editingDetails ? (
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
+                    {/* Style de vol */}
+                    {r.style_vol && (
+                      <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-semibold ${
+                        r.style_vol === "rapide"
+                          ? "bg-blue-50 border-blue-200 text-blue-800"
+                          : "bg-purple-50 border-purple-200 text-purple-800"
+                      }`}>
+                        {r.style_vol === "rapide" ? <Zap size={14} /> : <Wind size={14} />}
                         <div>
-                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Date du vol</p>
-                          <input type="date" value={draftDate} onChange={e => setDraftDate(e.target.value)}
-                            className="w-full h-8 px-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-1 focus:ring-navy/30" />
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Heure</p>
-                          <input type="time" value={draftHeure} onChange={e => setDraftHeure(e.target.value)}
-                            className="w-full h-8 px-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-1 focus:ring-navy/30" />
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Durée (min)</p>
-                          <input type="number" value={draftDuree} onChange={e => setDraftDuree(e.target.value)} min={1}
-                            className="w-full h-8 px-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-1 focus:ring-navy/30" />
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Passagers</p>
-                          <input type="number" value={draftPassagers} onChange={e => setDraftPassagers(e.target.value)} min={1}
-                            className="w-full h-8 px-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-1 focus:ring-navy/30" />
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Poids total (kg)</p>
-                          <input type="number" value={draftPoids} onChange={e => setDraftPoids(e.target.value)} min={0} placeholder="—"
-                            className="w-full h-8 px-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-1 focus:ring-navy/30" />
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Acompte (€)</p>
-                          <input type="number" value={draftAcompte} onChange={e => setDraftAcompte(e.target.value)} min={0} placeholder="—"
-                            className="w-full h-8 px-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-1 focus:ring-navy/30" />
+                          <p className="font-bold text-sm">
+                            {r.style_vol === "rapide" ? "Itinéraire direct" : "Parcours pittoresque"}
+                          </p>
+                          <p className="text-xs font-normal opacity-70 mt-0.5">
+                            {r.style_vol === "rapide"
+                              ? "Le client souhaite le trajet le plus court entre les lieux."
+                              : "Le client préfère une route plus ample. Tu peux ajouter des détours."}
+                          </p>
                         </div>
                       </div>
+                    )}
+
+                    {/* Remarques client */}
+                    {r.commentaire && (
                       <div>
                         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Remarques client</p>
-                        <textarea
-                          rows={3}
-                          value={draftCommentaire}
-                          onChange={e => setDraftCommentaire(e.target.value)}
-                          className="w-full px-2.5 py-2 rounded-lg border border-input bg-background text-xs resize-none focus:outline-none focus:ring-1 focus:ring-navy/30 placeholder:text-muted-foreground/40"
-                          placeholder="Texte libre client…"
-                        />
+                        <p className="text-xs text-muted-foreground bg-secondary rounded-lg p-3 whitespace-pre-wrap">{r.commentaire}</p>
                       </div>
-                      <div className="flex gap-2">
-                        <button onClick={saveDetails} disabled={isPending}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-navy text-white text-xs font-semibold hover:brightness-90 transition-all disabled:opacity-50 cursor-pointer">
-                          {isPending ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
-                          Sauvegarder
-                        </button>
-                        <button onClick={() => setEditingDetails(false)}
-                          className="px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-secondary transition-colors cursor-pointer">
-                          Annuler
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <Field label="Date du vol">
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <Calendar size={13} className="text-muted-foreground shrink-0" />
-                            <span className="capitalize text-sm">{dateLabel}</span>
-                          </div>
-                        </Field>
-                        <Field label="Heure">
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <Clock size={13} className="text-muted-foreground shrink-0" />
-                            {r.heure_vol
-                              ? <span>{r.heure_vol.slice(0, 5)}</span>
-                              : <span className="text-orange-400 text-xs">À définir</span>
-                            }
-                          </div>
-                        </Field>
-                        <Field label="Durée">
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <Clock size={13} className="text-muted-foreground" />
-                            ~{r.duree} min
-                          </div>
-                        </Field>
-                        <Field label="Passagers">
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <Users size={13} className="text-muted-foreground" />
-                            {r.passagers}
-                          </div>
-                        </Field>
-                        {r.poids_total != null && (
-                          <Field label="Poids total">
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                              <Weight size={13} className="text-muted-foreground" />
-                              {r.poids_total} kg
-                            </div>
-                          </Field>
-                        )}
-                        {r.acompte != null && (
-                          <Field label="Paiement">
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                              <CreditCard size={13} className="text-muted-foreground" />
-                              <span className="text-muted-foreground text-xs">Prévu :</span>
-                              <span>{r.acompte} €</span>
-                            </div>
-                            {r.paye != null && r.paye > 0 ? (
-                              <div className="flex items-center gap-1.5 mt-0.5">
-                                <CheckCircle2 size={13} className="text-emerald-500" />
-                                <span className="text-emerald-600 font-semibold">{r.paye} € encaissé</span>
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-1.5 mt-0.5">
-                                <XCircle size={13} className="text-amber-400" />
-                                <span className="text-amber-600 text-xs">Pas encore encaissé</span>
-                              </div>
-                            )}
-                          </Field>
-                        )}
-                        {r.distance_km != null && (
-                          <Field label="Distance">
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                              <MapPin size={13} className="text-muted-foreground" />
-                              {r.distance_km} km
-                            </div>
-                          </Field>
-                        )}
-                        {r.taxes_escales != null && r.taxes_escales > 0 && (
-                          <Field label="Taxes escales">
-                            <span className="text-sm">{r.taxes_escales} €</span>
-                          </Field>
-                        )}
-                      </div>
-
-                      {/* Style de vol */}
-                      {r.style_vol && (
-                        <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-semibold ${
-                          r.style_vol === "rapide"
-                            ? "bg-blue-50 border-blue-200 text-blue-800"
-                            : "bg-purple-50 border-purple-200 text-purple-800"
-                        }`}>
-                          {r.style_vol === "rapide" ? <Zap size={14} /> : <Wind size={14} />}
-                          <div>
-                            <p className="font-bold text-sm">
-                              {r.style_vol === "rapide" ? "Itinéraire direct" : "Parcours pittoresque"}
-                            </p>
-                            <p className="text-xs font-normal opacity-70 mt-0.5">
-                              {r.style_vol === "rapide"
-                                ? "Le client souhaite le trajet le plus court entre les lieux."
-                                : "Le client préfère une route plus ample. Tu peux ajouter des détours."}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Remarques client (texte libre uniquement) */}
-                      {r.commentaire && (
-                        <div>
-                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Remarques client</p>
-                          <p className="text-xs text-muted-foreground bg-secondary rounded-lg p-3 whitespace-pre-wrap">{r.commentaire}</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
 
-                {/* Route — waypoints (lecture seule) */}
+                {/* Résumé waypoints client (lecture seule) */}
                 {r.waypoints && r.waypoints.length > 0 && (
                   <div>
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] flex items-center gap-1.5 mb-2">
                       <MapPin size={11} />
-                      Route
+                      Route demandée ({r.waypoints.length} points)
                     </p>
                     <div className="bg-secondary rounded-lg p-3 space-y-1 text-xs font-mono overflow-x-auto">
                       <p className="text-muted-foreground">✈ EBCI (départ)</p>
@@ -517,7 +662,7 @@ function VolsPersoDrawer({
                           → {wp.nom ?? `${wp.lat.toFixed(5)}, ${wp.lng.toFixed(5)}`}
                           {wp.nom && (
                             <span className="text-muted-foreground ml-2">
-                              ({wp.lat.toFixed(4)}, {wp.lng.toFixed(4)})
+                              ({toForeFlight(wp.lat, wp.lng)})
                             </span>
                           )}
                         </p>
@@ -532,7 +677,7 @@ function VolsPersoDrawer({
                   </div>
                 )}
 
-                {/* Actions de statut — contextuelles */}
+                {/* Actions de statut */}
                 <div>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-2">Actions</p>
                   <div className="space-y-2">
@@ -662,11 +807,11 @@ function VolsPersoDrawer({
                         Templates rapides
                       </p>
                       <div className="flex flex-wrap gap-1.5">
-                        {EMAIL_TEMPLATES.map((tpl, idx) => (
+                        {EMAIL_TEMPLATES.map((tpl) => (
                           <button
                             key={tpl.label}
                             disabled={isPending}
-                            onClick={() => idx === 0 ? applyTemplate(tpl, true) : applyTemplate(tpl, false)}
+                            onClick={() => applyTemplate(tpl, tpl.includeReschedule ?? false)}
                             className="text-[11px] px-2.5 py-1 rounded-lg border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-50 cursor-pointer"
                           >
                             {tpl.label}
@@ -681,6 +826,386 @@ function VolsPersoDrawer({
                       <Send size={14} />
                       Composer un email…
                     </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Onglet Modifier ──────────────────────────────────────────────── */}
+            {!emailOpen && activeTab === "modifier" && (
+              <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+
+                {/* Client */}
+                <div>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-3">Client</p>
+                  <div className="space-y-2.5">
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <InputField label="Prénom">
+                        <input type="text" value={draftPrenom} onChange={e => setDraftPrenom(e.target.value)} className={inputCls} />
+                      </InputField>
+                      <InputField label="Nom">
+                        <input type="text" value={draftNom} onChange={e => setDraftNom(e.target.value)} className={inputCls} />
+                      </InputField>
+                    </div>
+                    <InputField label="Email">
+                      <input type="email" value={draftEmail} onChange={e => setDraftEmail(e.target.value)} className={inputCls} />
+                    </InputField>
+                    <InputField label="Téléphone">
+                      <input type="tel" value={draftTelephone} onChange={e => setDraftTelephone(e.target.value)} placeholder="Optionnel" className={inputCls} />
+                    </InputField>
+                  </div>
+                </div>
+
+                {/* Vol */}
+                <div>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-3">Vol</p>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <InputField label="Date">
+                      <input type="date" value={draftDate} onChange={e => setDraftDate(e.target.value)} className={inputCls} />
+                    </InputField>
+                    <InputField label="Heure">
+                      <input type="time" value={draftHeure} onChange={e => setDraftHeure(e.target.value)} className={inputCls} />
+                    </InputField>
+                    <InputField label="Durée (min)">
+                      <input type="number" value={draftDuree} onChange={e => setDraftDuree(e.target.value)} min={1} className={inputCls} />
+                    </InputField>
+                    <InputField label="Passagers">
+                      <input type="number" value={draftPassagers} onChange={e => setDraftPassagers(e.target.value)} min={1} className={inputCls} />
+                    </InputField>
+                    <InputField label="Poids total (kg)">
+                      <input type="number" value={draftPoids} onChange={e => setDraftPoids(e.target.value)} min={0} placeholder="—" className={inputCls} />
+                    </InputField>
+                    <InputField label="Acompte (€)">
+                      <input type="number" value={draftAcompte} onChange={e => setDraftAcompte(e.target.value)} min={0} placeholder="—" className={inputCls} />
+                    </InputField>
+                    <InputField label="Montant encaissé (€)">
+                      <input type="number" value={draftPaye} onChange={e => setDraftPaye(e.target.value)} min={0} placeholder="—" className={inputCls} />
+                    </InputField>
+                    <InputField label="Statut paiement">
+                      <select value={draftPaymentStatus} onChange={e => setDraftPaymentStatus(e.target.value as "paid" | "unpaid" | "partial" | "refunded")} className={inputCls}>
+                        <option value="unpaid">Non payé</option>
+                        <option value="paid">Payé</option>
+                        <option value="partial">Partiel</option>
+                        <option value="refunded">Remboursé</option>
+                      </select>
+                    </InputField>
+                    <InputField label="Style de vol">
+                      <select value={draftStyleVol} onChange={e => setDraftStyleVol(e.target.value as "rapide" | "vues" | "")} className={inputCls}>
+                        <option value="">Non défini</option>
+                        <option value="rapide">Direct</option>
+                        <option value="vues">Pittoresque</option>
+                      </select>
+                    </InputField>
+                  </div>
+                </div>
+
+                {/* Codes */}
+                <div>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-3">Codes</p>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <InputField label="Code voucher">
+                      <input type="text" value={draftVoucherCode} onChange={e => setDraftVoucherCode(e.target.value)} placeholder="—" className={`${inputCls} font-mono`} />
+                    </InputField>
+                    <InputField label="Code promo">
+                      <input type="text" value={draftCouponCode} onChange={e => setDraftCouponCode(e.target.value)} placeholder="—" className={`${inputCls} font-mono`} />
+                    </InputField>
+                  </div>
+                </div>
+
+                {/* Remarques */}
+                <div>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-2">Remarques client</p>
+                  <textarea
+                    value={draftCommentaire}
+                    onChange={e => setDraftCommentaire(e.target.value)}
+                    rows={4}
+                    placeholder="Texte libre…"
+                    className="w-full px-2.5 py-2 rounded-lg border border-input bg-background text-xs resize-none focus:outline-none focus:ring-1 focus:ring-navy/30 placeholder:text-muted-foreground/40"
+                  />
+                </div>
+
+                <button
+                  onClick={saveAllFields}
+                  disabled={isPending}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-navy text-white text-sm font-semibold hover:brightness-90 transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  {isPending ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                  Sauvegarder les modifications
+                </button>
+              </div>
+            )}
+
+            {/* ── Onglet Route ─────────────────────────────────────────────────── */}
+            {!emailOpen && activeTab === "route" && (
+              <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+
+                {/* Route client (lecture seule) */}
+                {r.waypoints && r.waypoints.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-2">Itinéraire demandé par le client</p>
+                    <div className="bg-secondary rounded-lg p-3 space-y-1 text-xs font-mono">
+                      <p className="text-muted-foreground">EBCI</p>
+                      {r.waypoints.map((wp, i) => (
+                        <p key={i} className="pl-2 text-foreground">
+                          {wp.nom && <span className="font-semibold">{wp.nom} </span>}
+                          <span className="text-muted-foreground">{toForeFlight(wp.lat, wp.lng)}</span>
+                        </p>
+                      ))}
+                      {(r.stopovers ?? []).map(so => (
+                        <p key={so.icao} className="pl-2 text-primary">{so.icao} (+{so.taxe}€)</p>
+                      ))}
+                      <p className="text-muted-foreground">EBCI</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Éditeur de route finale */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px]">Route finale (pilote)</p>
+                    <div className="flex items-center gap-1.5">
+                      {/* Copy from client route */}
+                      {((r.waypoints ?? []).length > 0 || (r.stopovers ?? []).length > 0) && (
+                        <button
+                          onClick={() => {
+                            const allDrafts = [
+                              ...(r.waypoints ?? []).map(wp => ({
+                                lat: String(wp.lat), lng: String(wp.lng), nom: wp.nom ?? "",
+                              })),
+                              ...(r.stopovers ?? [])
+                                .filter(so => so.lat != null && so.lng != null)
+                                .map(so => ({ lat: String(so.lat!), lng: String(so.lng!), nom: so.icao })),
+                            ];
+                            const parsed = allDrafts
+                              .map(wp => ({ lat: parseFloat(wp.lat), lng: parseFloat(wp.lng), nom: wp.nom, _orig: wp }))
+                              .filter(wp => !isNaN(wp.lat) && !isNaN(wp.lng));
+                            const optimized = parsed.length >= 2 ? optimizeWaypoints(parsed) : parsed;
+                            setFinalWpDrafts(optimized.map(wp => wp._orig));
+                          }}
+                          className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
+                          title="Copier la route client (waypoints + escales) dans la route finale, ordre optimisé"
+                        >
+                          <Copy size={9} />
+                          Route client
+                        </button>
+                      )}
+                      {/* Inverser button */}
+                      {finalWpDrafts.length > 1 && (
+                        <button
+                          onClick={() => setFinalWpDrafts([...finalWpDrafts].reverse())}
+                          className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
+                          title="Inverser l'ordre des waypoints"
+                        >
+                          <ArrowUpDown size={9} />
+                          Inverser
+                        </button>
+                      )}
+                      {/* List / Map toggle */}
+                      <div className="flex items-center border border-border rounded-lg overflow-hidden">
+                        <button
+                          onClick={() => setRouteViewMode("list")}
+                          className={`flex items-center gap-1 px-2 py-1 text-[10px] font-semibold transition-colors cursor-pointer ${routeViewMode === "list" ? "bg-navy text-white" : "text-muted-foreground hover:bg-secondary"}`}
+                        >
+                          <List size={10} />
+                          Liste
+                        </button>
+                        <button
+                          onClick={() => setRouteViewMode("map")}
+                          className={`flex items-center gap-1 px-2 py-1 text-[10px] font-semibold transition-colors cursor-pointer ${routeViewMode === "map" ? "bg-navy text-white" : "text-muted-foreground hover:bg-secondary"}`}
+                        >
+                          <MapIcon size={10} />
+                          Carte
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* List view */}
+                  {routeViewMode === "list" && (
+                    <div className="space-y-2">
+                      <div className="text-xs font-mono text-muted-foreground px-1 mb-1">EBCI (départ)</div>
+                      {finalWpDrafts.map((wp, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-muted-foreground/50 w-5 shrink-0 text-right">{i + 1}</span>
+                          <input
+                            type="text"
+                            value={wp.nom}
+                            onChange={e => setFinalWpDrafts(prev => prev.map((w, j) => j === i ? { ...w, nom: e.target.value } : w))}
+                            placeholder="Nom (optionnel)"
+                            className="flex-1 h-7 px-2 rounded-md border border-input bg-background text-xs focus:outline-none focus:ring-1 focus:ring-navy/30 placeholder:text-muted-foreground/40"
+                          />
+                          <input
+                            type="text"
+                            value={wp.lat}
+                            onChange={e => setFinalWpDrafts(prev => prev.map((w, j) => j === i ? { ...w, lat: e.target.value } : w))}
+                            placeholder="Lat"
+                            className="w-[72px] h-7 px-2 rounded-md border border-input bg-background text-xs font-mono focus:outline-none focus:ring-1 focus:ring-navy/30"
+                          />
+                          <input
+                            type="text"
+                            value={wp.lng}
+                            onChange={e => setFinalWpDrafts(prev => prev.map((w, j) => j === i ? { ...w, lng: e.target.value } : w))}
+                            placeholder="Lng"
+                            className="w-[72px] h-7 px-2 rounded-md border border-input bg-background text-xs font-mono focus:outline-none focus:ring-1 focus:ring-navy/30"
+                          />
+                          <button
+                            onClick={() => setFinalWpDrafts(prev => prev.filter((_, j) => j !== i))}
+                            className="p-1 rounded text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer shrink-0"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      ))}
+                      <div className="text-xs font-mono text-muted-foreground px-1">EBCI (retour)</div>
+                      <button
+                        onClick={() => setFinalWpDrafts(prev => [...prev, { lat: "", lng: "", nom: "" }])}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-border text-xs text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors cursor-pointer"
+                      >
+                        <Plus size={11} />
+                        Ajouter un point
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Map view */}
+                  {routeViewMode === "map" && (
+                    <AdminRouteEditor
+                      waypoints={finalWpDrafts}
+                      onChange={setFinalWpDrafts}
+                      clientWaypoints={r.waypoints ?? []}
+                      stopovers={r.stopovers ?? []}
+                      height="320px"
+                    />
+                  )}
+
+                  <div className="flex items-center gap-2 mt-3">
+                    <button
+                      onClick={saveFinalRoute}
+                      disabled={isPending}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-navy text-white text-xs font-semibold hover:brightness-90 transition-colors disabled:opacity-50 cursor-pointer"
+                    >
+                      {isPending ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
+                      Sauvegarder
+                    </button>
+                    <button
+                      onClick={copyForeFlightRoute}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
+                    >
+                      {routeCopied ? <Check size={11} className="text-green-600" /> : <Copy size={11} />}
+                      {routeCopied ? "Copié !" : "Copier ForeFlight"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Envoi de proposition */}
+                <div className="bg-secondary rounded-xl p-4 space-y-3">
+                  <p className="text-[10px] font-bold text-foreground uppercase tracking-[1.5px]">Envoyer une proposition au client</p>
+                  <p className="text-[10px] text-muted-foreground -mt-1">
+                    Utilise la route finale si définie, sinon la route du client.
+                  </p>
+                  <textarea
+                    value={proposalComment}
+                    onChange={e => setProposalComment(e.target.value)}
+                    rows={3}
+                    placeholder="Message d'accompagnement (optionnel)…"
+                    className="w-full px-2.5 py-2 rounded-lg border border-input bg-background text-xs resize-none focus:outline-none focus:ring-1 focus:ring-navy/30 placeholder:text-muted-foreground/40"
+                  />
+                  <button
+                    onClick={sendProposal}
+                    disabled={isPending}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:brightness-105 transition-all disabled:opacity-50 cursor-pointer"
+                  >
+                    {isPending ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
+                    Envoyer la proposition
+                  </button>
+                </div>
+
+                {/* Propositions précédentes */}
+                {proposalsLoaded && proposals.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-2">Propositions précédentes</p>
+                    <div className="space-y-2">
+                      {proposals.map(p => {
+                        const cfg = PROPOSAL_STATUS_CONFIG[p.status] ?? { label: p.status, color: "bg-secondary text-foreground border-border" };
+                        return (
+                          <div key={p.id} className="bg-card border border-border rounded-xl p-3 space-y-1.5">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(p.created_at).toLocaleDateString("fr-BE", { day: "numeric", month: "short", year: "numeric" })}
+                              </span>
+                              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${cfg.color}`}>
+                                {cfg.label}
+                              </span>
+                            </div>
+                            {p.admin_comment && (
+                              <p className="text-xs text-muted-foreground italic">&ldquo;{p.admin_comment}&rdquo;</p>
+                            )}
+                            {p.client_comment && (
+                              <p className="text-xs text-foreground bg-amber-50 border border-amber-200 rounded-lg p-2">
+                                <span className="font-semibold text-amber-800">Client : </span>{p.client_comment}
+                              </p>
+                            )}
+                            <p className="text-[10px] text-muted-foreground">{p.waypoints?.length ?? 0} points</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                {proposalsLoaded && proposals.length === 0 && (
+                  <p className="text-xs text-muted-foreground text-center py-2">Aucune proposition envoyée pour l&apos;instant.</p>
+                )}
+              </div>
+            )}
+
+            {/* ── Onglet Historique ────────────────────────────────────────────── */}
+            {!emailOpen && activeTab === "historique" && (
+              <div className="flex-1 overflow-y-auto px-5 py-4">
+                {historyLoading && (
+                  <div className="flex items-center justify-center py-10">
+                    <Loader2 size={20} className="animate-spin text-muted-foreground" />
+                  </div>
+                )}
+                {historyLoaded && historyItems.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-10">Aucune modification enregistrée.</p>
+                )}
+                {historyLoaded && historyItems.length > 0 && (
+                  <div className="space-y-0">
+                    {historyItems.map(item => (
+                      <div key={item.id} className="flex gap-3 py-3 border-b border-border/50 last:border-b-0">
+                        <div className="w-1.5 h-1.5 rounded-full bg-navy/40 mt-2 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 mb-0.5">
+                            <span className="text-xs font-semibold text-foreground">
+                              {ACTION_LABELS[item.action] ?? item.action}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground shrink-0">
+                              {new Date(item.created_at).toLocaleString("fr-BE", {
+                                day: "numeric", month: "short",
+                                hour: "2-digit", minute: "2-digit",
+                              })}
+                            </span>
+                          </div>
+                          {item.field && (
+                            <p className="text-[11px] text-muted-foreground">
+                              <span className="font-medium text-foreground/70">{FIELD_LABELS[item.field] ?? item.field}</span>
+                              {item.old_value != null && item.new_value != null && (
+                                <> · <span className="line-through opacity-50">{item.old_value}</span>{" → "}<span className="text-foreground font-medium">{item.new_value}</span></>
+                              )}
+                              {item.old_value == null && item.new_value != null && (
+                                <> · <span className="text-foreground font-medium">{item.new_value}</span></>
+                              )}
+                            </p>
+                          )}
+                          {item.note && (
+                            <p className="text-[10px] text-muted-foreground/60 mt-0.5 italic">{item.note}</p>
+                          )}
+                          <p className="text-[10px] text-muted-foreground/50 mt-0.5">
+                            {item.author === "client" ? "Client" : "Admin"}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -720,7 +1245,7 @@ function VolsPersoDrawer({
                       includeReschedule
                         ? "border-amber-300 bg-amber-50 text-amber-700"
                         : "border-border text-muted-foreground hover:bg-secondary",
-                    , "cursor-pointer",
+                      "cursor-pointer",
                     ].join(" ")}
                   >
                     <RotateCcw size={11} className={includeReschedule ? "text-amber-600" : ""} />
@@ -774,6 +1299,13 @@ function ReservationCard({
   const dateStr = new Date(r.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
     weekday: "short", day: "numeric", month: "short", year: "numeric",
   });
+  const latestProposal = r.route_proposals
+    ?.slice().sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
+  const proposalBadge: Record<string, { label: string; variant: import("@/components/admin/ui/AdminBadge").BadgeVariant }> = {
+    pending:                { label: "Proposition envoyée", variant: "info"    },
+    accepted:               { label: "Route acceptée ✓",   variant: "emerald" },
+    modification_requested: { label: "Modif. demandée",     variant: "warning" },
+  };
 
   return (
     <div className="card-premium p-4 hover:border-primary/30 transition-colors">
@@ -784,6 +1316,12 @@ function ReservationCard({
               {client ? `${client.prenom} ${client.nom}` : "Client inconnu"}
             </p>
             <AdminBadge variant={statusCfg.variant} label={statusCfg.label} />
+            {latestProposal && proposalBadge[latestProposal.status] && (
+              <AdminBadge
+                variant={proposalBadge[latestProposal.status].variant}
+                label={proposalBadge[latestProposal.status].label}
+              />
+            )}
             {r.style_vol === "rapide" && (
               <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
                 <Zap size={9} /> Direct

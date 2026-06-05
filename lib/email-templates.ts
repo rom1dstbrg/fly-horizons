@@ -474,14 +474,13 @@ export interface VolSurMesureQuoteEmailProps {
   taxesEscales: number;
   totalAcompte: number;
   voucherCode: string | null;
-  paymentUrl: string | null;
 }
 
 export function volSurMesureQuoteEmail(props: VolSurMesureQuoteEmailProps): string {
   const {
     prenom, date, heure, dureMin, distKm, reservationId, styleVol, stopovers,
     prixEstime, discount, prixBillable, acompte, taxesEscales, totalAcompte,
-    voucherCode, paymentUrl,
+    voucherCode,
   } = props;
 
   const dateStr = new Date(date + "T12:00:00Z").toLocaleDateString("fr-BE", {
@@ -517,27 +516,16 @@ export function volSurMesureQuoteEmail(props: VolSurMesureQuoteEmailProps): stri
         <td class="em-muted" style="padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;text-align:right;">+${taxesEscales}&nbsp;&euro;</td>
       </tr>` : "";
 
-  const ctaSection = paymentUrl
+  const nextStepsSection = totalAcompte > 0
     ? `${separator()}
-    ${label("Et apr&egrave;s ?")}
+    ${label("Prochaines &eacute;tapes")}
     <p class="em-body" style="margin:0 0 12px;font-size:13px;color:#334155;line-height:1.7;">
-      Romain va analyser votre itin&eacute;raire et vous envoyer une <strong>proposition de route d&eacute;finitive</strong> sous 24&nbsp;h.
+      Je vais analyser votre itin&eacute;raire dans les <strong>24&nbsp;h</strong> et vous enverrai une proposition de route d&eacute;finitive par email. Si certaines zones ne peuvent pas &ecirc;tre survol&eacute;es, je vous proposerai des alternatives.
     </p>
     <p class="em-body" style="margin:0 0 20px;font-size:13px;color:#334155;line-height:1.7;">
-      Une fois la route valid&eacute;e, vous recevrez un lien de paiement pour r&eacute;gler l&rsquo;acompte estim&eacute;&nbsp;(${totalAcompte}&nbsp;&euro;). <strong>Aucun paiement n&rsquo;est demand&eacute; avant cette &eacute;tape.</strong>
-    </p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
-      <tr>
-        <td style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;">
-          <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;line-height:1.8;">
-            &bull;&nbsp;L&rsquo;acompte est d&eacute;duit du solde &agrave; r&eacute;gler le jour du vol.<br>
-            &bull;&nbsp;Si Romain annule pour m&eacute;t&eacute;o ou contrainte op&eacute;rationnelle, l&rsquo;acompte est int&eacute;gralement rembours&eacute;.<br>
-            &bull;&nbsp;Si vous annulez plus de 48&nbsp;h avant la date pr&eacute;vue, l&rsquo;acompte est int&eacute;gralement rembours&eacute;.
-          </p>
-        </td>
-      </tr>
-    </table>`
-    : `${callout("Votre vol est enti&egrave;rement couvert par votre voucher &mdash; aucun paiement requis. Romain vous contactera sous 24&nbsp;h pour vous envoyer la route d&eacute;finitive.")}`;
+      Une fois que vous aurez valid&eacute; la route, je vous enverrai un lien pour r&eacute;gler l&rsquo;acompte. <strong>Aucun paiement n&rsquo;est demand&eacute; &agrave; ce stade.</strong>
+    </p>`
+    : `${callout("Votre vol est enti&egrave;rement couvert par votre voucher &mdash; aucun paiement requis. Je vous contacterai sous 24&nbsp;h pour vous envoyer la route d&eacute;finitive.")}`;
 
   const body = `
     <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Vol sur mesure</p>
@@ -550,7 +538,7 @@ export function volSurMesureQuoteEmail(props: VolSurMesureQuoteEmailProps): stri
     ${reservationId ? ctaButton(`${SITE_URL}/account/reservations/${reservationId}`, "Voir mon itinéraire →") : ""}
 
     ${separator()}
-    ${label("D&eacute;tail du prix")}
+    ${label("Estimation des prix")}
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
       <tr>
         <td class="em-muted" style="padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;">Prix estim&eacute; du vol (~${dureMin}&nbsp;min)</td>
@@ -563,13 +551,13 @@ export function volSurMesureQuoteEmail(props: VolSurMesureQuoteEmailProps): stri
       </tr>
       ${taxesRow}
       <tr>
-        <td class="em-dark" style="padding:11px 0;font-size:14px;font-weight:700;color:#0b2238;">Acompte demand&eacute;</td>
+        <td class="em-dark" style="padding:11px 0;font-size:14px;font-weight:700;color:#0b2238;">Acompte estim&eacute;</td>
         <td class="em-gold" style="padding:11px 0;font-size:18px;font-weight:800;color:#F2B705;text-align:right;">${acompte}&nbsp;&euro;</td>
       </tr>
     </table>
-    <p class="em-muted" style="margin:0 0 28px;font-size:12px;color:#94a3b8;line-height:1.6;">Le solde est r&eacute;gl&eacute; apr&egrave;s votre vol selon la dur&eacute;e r&eacute;elle.</p>
+    <p class="em-muted" style="margin:0 0 28px;font-size:12px;color:#94a3b8;line-height:1.6;">Ces montants sont des estimations bas&eacute;es sur l&rsquo;itin&eacute;raire demand&eacute;. Le prix final sera &eacute;tabli selon la route valid&eacute;e.</p>
 
-    ${ctaSection}
+    ${nextStepsSection}
 
     ${separator()}
     <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">

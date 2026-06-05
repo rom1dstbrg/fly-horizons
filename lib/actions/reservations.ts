@@ -126,6 +126,23 @@ export async function updateStatutReservationPerso(id: string, statut: string) {
     if (statut === "heure_confirmee") extra.heure_confirmee_at = new Date().toISOString();
     await supabase.from("reservations").update({ statut, ...extra }).eq("id", id);
 
+    // Libérer le voucher réservé si on annule — le webhook session.expired ne le fait plus
+    // pour les perso (pour permettre les nouvelles tentatives de paiement jusqu'à J-4).
+    if (statut === "annulee") {
+      const { data: resaForVoucher } = await supabase
+        .from("reservations")
+        .select("voucher_code")
+        .eq("id", id)
+        .single();
+      if (resaForVoucher?.voucher_code) {
+        await supabase
+          .from("voucher_codes")
+          .update({ status: "unused" })
+          .eq("code", resaForVoucher.voucher_code)
+          .eq("status", "reserved");
+      }
+    }
+
     if (["date_confirmee", "heure_confirmee", "vol_effectue"].includes(statut)) {
       const { data: resa } = await supabase
         .from("reservations")
@@ -670,7 +687,9 @@ export async function rescheduleReservation(token: string, newDate: string, newH
     });
     const newDateTimeStr = `${newDateStr} à ${newHeure}`;
 
-    const newStatut = resa.type_resa === "perso" ? "acompte_recu" : "date_confirmee";
+    const newStatut = resa.type_resa === "perso"
+      ? (["acompte_recu", "solde", "vol_effectue"].includes(resa.statut) ? "acompte_recu" : "en_attente")
+      : "date_confirmee";
 
     await supabase.from("reservations").update({
       date_vol: newDate,

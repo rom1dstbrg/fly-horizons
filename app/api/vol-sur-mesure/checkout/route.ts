@@ -233,7 +233,6 @@ export async function POST(request: NextRequest) {
       taxesEscales: taxes,
       totalAcompte: finalAcompte,
       voucherCode: voucher_code || null,
-      paymentUrl,
     });
 
     // Notify admin
@@ -252,7 +251,7 @@ export async function POST(request: NextRequest) {
           <li>Acompte : ${finalAcompte} €${discount > 0 ? ` (voucher −${discount} €)` : ""}${couponDiscountAmount > 0 ? ` (code promo −${couponDiscountAmount} €)` : ""}</li>
           <li>Réservation : ${resa.id}</li>
         </ul>
-        ${paymentUrl ? `<p>Lien de paiement envoyé au client : <a href="${paymentUrl}">${paymentUrl}</a></p>` : "<p>Vol entièrement couvert par voucher — aucun paiement requis.</p>"}`,
+        ${paymentUrl ? `<p>Lien de paiement (sera envoyé automatiquement après validation de la route) : <a href="${paymentUrl}">${paymentUrl}</a></p>` : "<p>Vol entièrement couvert par voucher — aucun paiement requis.</p>"}`,
     });
 
     return NextResponse.json({ success: true });

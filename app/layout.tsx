@@ -80,7 +80,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className={`${poppins.variable} h-full`} data-scroll-behavior="smooth">
+    <html lang="fr" className={`${poppins.variable} h-full`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="min-h-full antialiased">
         <ScrollToTop />
         <SplashScreen />

@@ -111,8 +111,8 @@ export function Header() {
               </Link>
             )}
 
-            {/* Panier desktop uniquement */}
-            <Link href="/cart" className={`relative hidden md:flex ${iconLinkClass}`} aria-label="Panier">
+            {/* Panier — caché seulement sur très petit écran (≤390px) */}
+            <Link href="/cart" className={`relative max-xs:hidden flex ${iconLinkClass}`} aria-label="Panier">
               <span className={`inline-flex${cartBump ? " animate-cart-bump" : ""}`}>
                 <ShoppingBag size={19} />
               </span>
@@ -168,11 +168,8 @@ export function Header() {
 
             {/* Panier + compte dans le menu mobile */}
             <Link href="/cart" className="flex items-center gap-2.5 text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
-              <span className={`inline-flex${cartBump ? " animate-cart-bump" : ""}`}>
-                <ShoppingBag size={16} className="text-muted-foreground" />
-              </span>
-              <span className="flex-1">Panier</span>
-              <CartCount />
+              <ShoppingBag size={16} className="text-muted-foreground" />
+              Panier
             </Link>
             <Link href={user ? "/account" : "/login"} className="flex items-center gap-2.5 text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
               <User size={16} className="text-muted-foreground" />

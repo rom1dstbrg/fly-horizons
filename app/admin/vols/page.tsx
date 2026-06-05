@@ -17,7 +17,7 @@ export default async function VolsPage() {
     { data: joursIndiv },
   ] = await Promise.all([
     db.from("reservations").select("*, clients(*)").eq("type_resa", "standard").order("date_vol", { ascending: true }),
-    db.from("reservations").select("*, clients(*)").eq("type_resa", "perso").order("date_vol", { ascending: true }),
+    db.from("reservations").select("*, clients(*), route_proposals(status, created_at)").eq("type_resa", "perso").order("date_vol", { ascending: true }),
     db.from("disponibilites").select("*").order("date_debut", { ascending: true }),
     db.from("disponibilites_jours").select("*").order("date", { ascending: true }),
   ]);

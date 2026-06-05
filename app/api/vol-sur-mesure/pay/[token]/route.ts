@@ -40,23 +40,33 @@ export async function GET(
     return NextResponse.redirect(new URL("/vol-sur-mesure/success", siteUrl));
   }
 
-  // Atomic voucher claim — prevents double-use if two sessions are opened
+  // J-4 guard: payment link expires 4 days before the flight.
+  // On bloque également si J-4 est à moins de 30 min : Stripe exige expires_at >= now+30min.
+  const j4 = new Date(resa.date_vol + "T00:00:00Z");
+  j4.setUTCDate(j4.getUTCDate() - 4);
+  const j4Ts = Math.floor(j4.getTime() / 1000);
+  const nowTs = Math.floor(Date.now() / 1000);
+  if (nowTs >= j4Ts - 30 * 60) {
+    return NextResponse.redirect(new URL("/vol-sur-mesure?error=lien_expire", siteUrl));
+  }
+
+  // Le voucher a déjà été réservé atomiquement au moment du checkout (statut "reserved").
+  // Ici on récupère juste l'ID — on ne modifie pas le statut (déjà "reserved").
+  // On accepte aussi "unused" au cas où une session précédente aurait expiré et le webhook
+  // aurait libéré le voucher (ce qui ne devrait plus arriver, mais reste possible en cas de bug).
   let voucherId = "";
   if (resa.voucher_code) {
-    const { data: claimed } = await supabase
+    const { data: voucherData } = await supabase
       .from("voucher_codes")
-      .update({ status: "reserved" })
-      .eq("code", resa.voucher_code)
-      .eq("status", "unused")
       .select("id")
+      .eq("code", resa.voucher_code)
+      .in("status", ["reserved", "unused"])
       .maybeSingle();
 
-    // Voucher already reserved/used — abort rather than let payment proceed
-    // with a voucher that won't be honoured
-    if (!claimed) {
+    if (!voucherData) {
       return NextResponse.redirect(new URL("/vol-sur-mesure?error=voucher_indisponible", siteUrl));
     }
-    voucherId = claimed.id;
+    voucherId = voucherData.id;
   }
 
   const c = resa.clients as { prenom: string; nom: string; email: string };
@@ -71,7 +81,7 @@ export async function GET(
       payment_method_types: ["card"],
       customer_email: c.email,
       locale: "fr",
-      expires_at: Math.floor(Date.now() / 1000) + 30 * 60, // 30 min — libère le voucher plus vite
+      expires_at: Math.min(j4Ts, nowTs + 24 * 60 * 60), // max J-4, capped at 24h (Stripe limit)
       line_items: [
         {
           price_data: {
@@ -98,10 +108,8 @@ export async function GET(
       cancel_url: `${siteUrl}/vol-sur-mesure?cancelled=1`,
     });
   } catch (stripeError) {
-    // Rollback voucher claim if Stripe session creation failed
-    if (voucherId) {
-      await supabase.from("voucher_codes").update({ status: "unused" }).eq("id", voucherId).eq("status", "reserved");
-    }
+    // Ne pas libérer le voucher ici — il a été réservé au checkout (pas dans cette route)
+    // et doit rester "reserved" pour les tentatives suivantes.
     console.error("Stripe session creation error (vol-sur-mesure):", stripeError);
     return NextResponse.redirect(new URL("/vol-sur-mesure?error=erreur_paiement", siteUrl));
   }

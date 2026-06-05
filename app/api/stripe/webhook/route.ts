@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       if (reservationId) {
         const montantPayePerso = session.amount_total ? session.amount_total / 100 : 0;
         await adminSupabase.from("reservations")
-          .update({ statut: "acompte_recu", payment_token: null, paye: montantPayePerso })
+          .update({ statut: "acompte_recu", payment_token: null, paye: montantPayePerso, payment_status: "paid" })
           .eq("id", reservationId)
           .eq("statut", "en_attente"); // Garde idempotence — évite de rétrograder si déjà avancé
         if (voucherId) {
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
         const montantPayeStd = session.amount_total ? session.amount_total / 100 : 0;
         await adminSupabase
           .from("reservations")
-          .update({ statut: "en_attente", payment_token: null, paye: montantPayeStd })
+          .update({ statut: "en_attente", payment_token: null, paye: montantPayeStd, payment_status: "paid" })
           .eq("id", reservationId)
           .eq("statut", "payment_pending");
 
@@ -311,8 +311,12 @@ export async function POST(request: NextRequest) {
     const session = event.data.object as Stripe.Checkout.Session;
     const { orderId, voucherId, reservationId, type, paymentToken } = session.metadata ?? {};
 
-    // Release any voucher that was atomically reserved for this session
-    if (voucherId) {
+    // Release any voucher that was atomically reserved for this session.
+    // Exception : réservations perso — le voucher est réservé dès le checkout (pas à la création
+    // de la session Stripe) et doit rester "reserved" jusqu'au paiement. Le client peut
+    // recliquer son lien de paiement autant de fois que nécessaire jusqu'à J-4 ; libérer le
+    // voucher ici casserait les tentatives suivantes.
+    if (voucherId && type !== "reservation_perso") {
       await adminSupabase
         .from("voucher_codes")
         .update({ status: "unused" })
@@ -334,20 +338,14 @@ export async function POST(request: NextRequest) {
     //   (le client avait 30 min devant lui au moment du checkout)
     // - standard, pay-later (paymentToken présent) : NE PAS annuler ici — le cron gère la
     //   deadline à T-48h avant le vol ; le client peut recliquer son lien autant de fois qu'il veut
-    // - perso : en_attente → annulee (acompte_recu = déjà payée, ne pas toucher)
+    // - perso : NE PAS annuler — le payment_token reste valide jusqu'à J-4, chaque clic sur le
+    //   lien crée une nouvelle session Stripe. L'annulation se fait manuellement par l'admin.
     if (reservationId && type === "reservation" && !paymentToken) {
       await adminSupabase
         .from("reservations")
         .update({ statut: "annulee" })
         .eq("id", reservationId)
         .eq("statut", "payment_pending");
-    }
-    if (reservationId && type === "reservation_perso") {
-      await adminSupabase
-        .from("reservations")
-        .update({ statut: "annulee" })
-        .eq("id", reservationId)
-        .eq("statut", "en_attente");
     }
   }
 

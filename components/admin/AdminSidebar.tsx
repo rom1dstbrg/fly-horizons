@@ -31,7 +31,7 @@ const DEFAULT_TABS: Record<string, string> = {
 };
 
 const NAVIGATION: NavEntry[] = [
-  { type: "link", id: "dashboard", icon: LayoutDashboard, label: "Vue globale",    href: "/admin",           exact: true },
+  { type: "link", id: "dashboard",      icon: LayoutDashboard, label: "Vue globale",    href: "/admin",           exact: true },
   { type: "section", label: "Vols" },
   { type: "link", id: "reservations",   icon: CalendarCheck,   label: "Réservations",   href: "/admin/vols",                    tab: "reservations",   tabBase: "/admin/vols"     },
   { type: "link", id: "sur-mesure",     icon: Route,           label: "Sur mesure",     href: "/admin/vols?tab=sur-mesure",     tab: "sur-mesure",     tabBase: "/admin/vols"     },
@@ -68,31 +68,40 @@ function NavContentInner({ onClose }: { onClose?: () => void }) {
   return (
     <div className="flex flex-col h-full bg-card border-r border-border">
 
-      {/* Logo */}
-      <div className="flex items-center h-16 px-5 border-b border-border shrink-0">
+      {/* Logo + close */}
+      <div className="flex items-center justify-between h-14 lg:h-16 px-5 border-b border-border shrink-0">
         <Link href="/" className="block">
           <Image
             src="/fly-horizons-logo-admin.svg"
             alt="Fly Horizons"
             width={140}
             height={36}
-            className="h-9 w-auto object-contain"
+            className="h-8 w-auto object-contain"
             style={{ width: "auto" }}
             priority
             unoptimized
           />
         </Link>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="lg:hidden p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+            aria-label="Fermer le menu"
+          >
+            <X size={18} />
+          </button>
+        )}
       </div>
 
       {/* CMD+K search trigger */}
       <div className="px-3 py-3 shrink-0">
         <button
-          onClick={openPalette}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-secondary border border-border text-muted-foreground text-sm hover:border-navy/20 hover:bg-secondary/80 transition-all cursor-pointer"
+          onClick={() => { openPalette(); onClose?.(); }}
+          className="w-full flex items-center gap-2.5 px-3 py-2.5 lg:py-2 rounded-lg bg-secondary border border-border text-muted-foreground text-sm hover:border-navy/20 hover:bg-secondary/80 transition-all cursor-pointer"
         >
           <Search size={13} className="shrink-0" />
           <span className="flex-1 text-left text-xs text-muted-foreground/70">Rechercher…</span>
-          <kbd className="hidden sm:inline-flex items-center gap-0.5 text-[10px] font-mono bg-background border border-border rounded px-1.5 py-0.5 text-muted-foreground/50">
+          <kbd className="hidden lg:inline-flex items-center gap-0.5 text-[10px] font-mono bg-background border border-border rounded px-1.5 py-0.5 text-muted-foreground/50">
             ⌘K
           </kbd>
         </button>
@@ -120,7 +129,7 @@ function NavContentInner({ onClose }: { onClose?: () => void }) {
               key={entry.id}
               href={entry.href}
               onClick={onClose}
-              className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`flex items-center gap-2.5 px-3 py-2.5 lg:py-2 rounded-lg text-sm font-medium transition-all ${
                 isActive
                   ? "bg-navy text-white shadow-sm"
                   : "text-muted-foreground hover:text-foreground hover:bg-secondary"
@@ -137,17 +146,17 @@ function NavContentInner({ onClose }: { onClose?: () => void }) {
       <div className="px-2.5 pt-2 pb-1 border-t border-border shrink-0">
         <p className="px-3 mb-1.5 text-[9px] font-bold text-muted-foreground/40 uppercase tracking-[1.5px]">Outils</p>
         {[
-          { href: "https://app.netlify.com/teams/rom1dstbrg/projects",                    label: "Netlify"   },
-          { href: "https://supabase.com/dashboard",                                       label: "Supabase"  },
-          { href: "https://resend.com",                                                   label: "Resend"    },
-          { href: "https://dashboard.stripe.com/acct_1LMvw92UU7RkMsk7/dashboard",        label: "Stripe"    },
+          { href: "https://app.netlify.com/teams/rom1dstbrg/projects",             label: "Netlify"  },
+          { href: "https://supabase.com/dashboard",                                label: "Supabase" },
+          { href: "https://resend.com",                                            label: "Resend"   },
+          { href: "https://dashboard.stripe.com/acct_1LMvw92UU7RkMsk7/dashboard", label: "Stripe"   },
         ].map(({ href, label }) => (
           <a
             key={href}
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
+            className="flex items-center gap-2.5 px-3 py-2 lg:py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
           >
             <ExternalLink size={11} className="shrink-0 text-muted-foreground/50" />
             {label}
@@ -160,7 +169,7 @@ function NavContentInner({ onClose }: { onClose?: () => void }) {
         <form action={logout}>
           <button
             type="submit"
-            className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all w-full cursor-pointer"
+            className="flex items-center gap-2.5 px-3 py-2.5 lg:py-2 rounded-lg text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all w-full cursor-pointer"
           >
             <LogOut size={14} />
             Déconnexion
@@ -179,6 +188,51 @@ function NavContent({ onClose }: { onClose?: () => void }) {
   );
 }
 
+const BOTTOM_NAV = [
+  { id: "dashboard", icon: LayoutDashboard, label: "Accueil",  href: "/admin",          exact: true },
+  { id: "vols",      icon: CalendarCheck,   label: "Vols",     href: "/admin/vols",     base: "/admin/vols"     },
+  { id: "boutique",  icon: Package,         label: "Boutique", href: "/admin/boutique", base: "/admin/boutique" },
+  { id: "clients",   icon: Users,           label: "Clients",  href: "/admin/clients",  base: "/admin/clients"  },
+] as const;
+
+function BottomNavInner({ onMenuOpen }: { onMenuOpen: () => void }) {
+  const pathname = usePathname();
+
+  function isActive(item: typeof BOTTOM_NAV[number]): boolean {
+    if ("exact" in item && item.exact) return pathname === item.href;
+    if ("base" in item) return pathname.startsWith(item.base);
+    return pathname.startsWith(item.href);
+  }
+
+  return (
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border flex items-stretch" style={{ height: "calc(60px + env(safe-area-inset-bottom))", paddingBottom: "env(safe-area-inset-bottom)" }}>
+      {BOTTOM_NAV.map((item) => {
+        const Icon = item.icon;
+        const active = isActive(item);
+        return (
+          <Link
+            key={item.id}
+            href={item.href}
+            className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-semibold transition-colors cursor-pointer ${
+              active ? "text-navy" : "text-muted-foreground"
+            }`}
+          >
+            <Icon size={20} strokeWidth={active ? 2.5 : 1.75} />
+            <span>{item.label}</span>
+          </Link>
+        );
+      })}
+      <button
+        onClick={onMenuOpen}
+        className="flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+      >
+        <Menu size={20} strokeWidth={1.75} />
+        <span>Plus</span>
+      </button>
+    </nav>
+  );
+}
+
 export function AdminSidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -190,7 +244,7 @@ export function AdminSidebar() {
       </aside>
 
       {/* Mobile top bar */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 h-16 bg-card border-b border-border flex items-center justify-between px-4">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 h-14 bg-card border-b border-border flex items-center justify-between px-4">
         <Link href="/">
           <Image
             src="/fly-horizons-logo-admin.svg"
@@ -202,31 +256,40 @@ export function AdminSidebar() {
             unoptimized
           />
         </Link>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={openPalette}
-            className="p-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors cursor-pointer"
-          >
-            <Search size={18} />
-          </button>
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="p-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-          >
-            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-        </div>
+        <button
+          onClick={openPalette}
+          className="p-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors cursor-pointer"
+          aria-label="Rechercher"
+        >
+          <Search size={18} />
+        </button>
       </div>
 
-      {/* Mobile sidebar overlay */}
-      {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-40">
-          <div className="absolute inset-0 bg-foreground/20 backdrop-blur-[1px]" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute left-0 top-0 bottom-0 w-64 pt-16">
-            <NavContent onClose={() => setMobileOpen(false)} />
-          </aside>
-        </div>
-      )}
+      {/* Mobile bottom nav */}
+      <BottomNavInner onMenuOpen={() => setMobileOpen(true)} />
+
+      {/* Mobile drawer avec animation */}
+      <div
+        className={`lg:hidden fixed inset-0 z-[60] transition-all duration-300 ${
+          mobileOpen ? "pointer-events-auto" : "pointer-events-none"
+        }`}
+      >
+        {/* Backdrop */}
+        <div
+          className={`absolute inset-0 bg-foreground/30 backdrop-blur-[2px] transition-opacity duration-300 ${
+            mobileOpen ? "opacity-100" : "opacity-0"
+          }`}
+          onClick={() => setMobileOpen(false)}
+        />
+        {/* Panel glissant */}
+        <aside
+          className={`absolute left-0 top-0 bottom-0 w-[280px] max-w-[85vw] transition-transform duration-300 ease-out ${
+            mobileOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <NavContent onClose={() => setMobileOpen(false)} />
+        </aside>
+      </div>
     </>
   );
 }
