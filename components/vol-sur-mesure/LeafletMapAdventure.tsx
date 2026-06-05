@@ -426,7 +426,7 @@ const LeafletMapAdventure = forwardRef<AdventureMapHandle, Props>(
 
     function rebuildIcons() {
       poisRef.current.forEach((e, i) => {
-        // Renumérote les POI auto-nommés "Lieu N" pour garder la cohérence après suppression
+        // Renumérote uniquement les POIs encore en placeholder (reverse geocode pas encore reçu)
         if (/^Lieu \d+$/.test(e.nom)) {
           e.nom = `Lieu ${i + 1}`;
           try { e.marker.setTooltipContent(`${e.nom} · cliquer pour supprimer`); } catch { /* ok */ }
@@ -673,14 +673,32 @@ const LeafletMapAdventure = forwardRef<AdventureMapHandle, Props>(
         }
       }, { passive: true });
 
-      // ── Clic carte → ajouter POI ───────────────────────────────
-      map.on("click", (e: L.LeafletMouseEvent) => {
+      // ── Clic carte → ajouter POI + reverse geocode ───────────
+      map.on("click", async (e: L.LeafletMouseEvent) => {
         const { lat, lng } = e.latlng;
-        _addPOIInternal(map, {
-          id:  `click-${Date.now()}`,
-          lat, lng,
-          nom: `Lieu ${poisRef.current.length + 1}`,
-        });
+        const id = `click-${Date.now()}`;
+        const placeholder = `Lieu ${poisRef.current.length + 1}`;
+        _addPOIInternal(map, { id, lat, lng, nom: placeholder });
+        try {
+          const r = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=fr&zoom=10`,
+            { headers: { "Accept-Language": "fr" } }
+          );
+          const d = await r.json();
+          const realName =
+            d.address?.city || d.address?.town || d.address?.village ||
+            d.address?.municipality || d.address?.hamlet || d.address?.county || d.name;
+          if (realName) {
+            const entry = poisRef.current.find(x => x.id === id);
+            if (entry) {
+              entry.nom = realName;
+              const idx = poisRef.current.indexOf(entry);
+              try { entry.marker.setTooltipContent(`${realName} · cliquer pour supprimer`); } catch { /* ok */ }
+              entry.marker.setIcon(poiIcon(idx + 1, realName));
+              redraw();
+            }
+          }
+        } catch { /* garde le nom placeholder */ }
       });
 
       return () => {

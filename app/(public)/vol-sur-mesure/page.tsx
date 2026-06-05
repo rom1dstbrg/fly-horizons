@@ -22,7 +22,7 @@ const LeafletMapAdventure = dynamic(
 );
 
 // ── Types ─────────────────────────────────────────────────────
-type FlowStep = "build" | "reserve" | "done";
+type FlowStep = "build" | "reserve" | "recap" | "done";
 
 interface Stopover {
   id: string;
@@ -124,8 +124,8 @@ export default function VolSurMesurePage() {
         if (s.form)          setForm(f => ({ ...f, ...s.form }));
         if (s.styleMode)     setStyleMode(s.styleMode);
         if (s.selectedStops) setSelectedStops(s.selectedStops);
-        if (s.voucherCode)   setVoucherCode(s.voucherCode);
-        if (s.couponCode)    setCouponCode(s.couponCode);
+        if (s.voucherCode)   { setVoucherCode(s.voucherCode); setPromoInput(s.voucherCode); }
+        else if (s.couponCode) { setCouponCode(s.couponCode); setPromoInput(s.couponCode); }
         setShouldRestoreForm(true);
         restoredFromSessionRef.current = true;
         pois = s.pois ?? [];
@@ -213,7 +213,7 @@ export default function VolSurMesurePage() {
 
   // ── Form
   const [form, setForm] = useState<FormData>({
-    date: "", heure: "", passagers: "2", poids_total: "",
+    date: "", heure: "", passagers: "", poids_total: "",
     prenom: "", nom: "", email: "", telephone: "",
     commentaire: "", accept_cgp: false,
   });
@@ -237,15 +237,15 @@ export default function VolSurMesurePage() {
   const [selectedStops,  setSelectedStops]  = useState<Stopover[]>([]);
   const [stopsOpen,      setStopsOpen]      = useState(false);
 
-  // ── Voucher / coupon
-  const [voucherCode,    setVoucherCode]    = useState("");
-  const [voucherData,    setVoucherData]    = useState<{ id: string; code: string; product_price: number; duration_minutes: number; product_title: string } | null>(null);
-  const [voucherError,   setVoucherError]   = useState("");
-  const [voucherLoading, setVoucherLoading] = useState(false);
-  const [couponCode,     setCouponCode]     = useState("");
-  const [couponData,     setCouponData]     = useState<{ code: string; type: "percentage" | "fixed"; value: number } | null>(null);
-  const [couponError,    setCouponError]    = useState("");
-  const [couponLoading,  setCouponLoading]  = useState(false);
+  // ── Voucher / coupon (état interne pour le calcul et la sérialisation)
+  const [voucherCode,  setVoucherCode]  = useState("");
+  const [voucherData,  setVoucherData]  = useState<{ id: string; code: string; product_price: number; duration_minutes: number; product_title: string } | null>(null);
+  const [couponCode,   setCouponCode]   = useState("");
+  const [couponData,   setCouponData]   = useState<{ code: string; type: "percentage" | "fixed"; value: number } | null>(null);
+  // ── Champ unifié bon cadeau / code promo
+  const [promoInput,   setPromoInput]   = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError,   setPromoError]   = useState("");
 
   // ── Price calc
   const prixEstime        = route.totalMin > 0 ? Math.round((prixHeure / 60) * route.totalMin) : 0;
@@ -456,36 +456,32 @@ export default function VolSurMesurePage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [route.pois]);
 
-  async function validateVoucher() {
-    if (!voucherCode.trim()) return;
-    setVoucherLoading(true); setVoucherError("");
+  async function validatePromoCode() {
+    if (!promoInput.trim()) return;
+    setPromoLoading(true); setPromoError("");
+    const code = promoInput.trim();
     try {
-      const r = await fetch(`/api/vouchers/validate?code=${encodeURIComponent(voucherCode.trim())}`);
-      const d = await r.json();
-      if (!r.ok || !d.valid) {
-        setVoucherError(d.error ?? "Code invalide ou déjà utilisé.");
-        setVoucherData(null);
-      } else {
-        setVoucherData({ id: d.id, code: d.code, product_price: d.product_price, duration_minutes: d.duration_minutes ?? 0, product_title: d.product_title });
+      // Essaie bon cadeau d'abord
+      const vr = await fetch(`/api/vouchers/validate?code=${encodeURIComponent(code)}`);
+      const vd = await vr.json();
+      if (vr.ok && vd.valid) {
+        setVoucherData({ id: vd.id, code: vd.code, product_price: vd.product_price, duration_minutes: vd.duration_minutes ?? 0, product_title: vd.product_title });
+        setVoucherCode(code);
+        setPromoInput("");
+        return;
       }
-    } catch { setVoucherError("Erreur de validation."); }
-    finally { setVoucherLoading(false); }
-  }
-
-  async function validateCoupon() {
-    if (!couponCode.trim()) return;
-    setCouponLoading(true); setCouponError("");
-    try {
-      const r = await fetch(`/api/coupons/validate?code=${encodeURIComponent(couponCode.trim())}`);
-      const d = await r.json();
-      if (!r.ok || !d.valid) {
-        setCouponError(d.error ?? "Code invalide.");
-        setCouponData(null);
-      } else {
-        setCouponData({ code: d.code, type: d.type, value: d.value });
+      // Sinon essaie code promo
+      const cr = await fetch(`/api/coupons/validate?code=${encodeURIComponent(code)}`);
+      const cd = await cr.json();
+      if (cr.ok && cd.valid) {
+        setCouponData({ code: cd.code, type: cd.type, value: cd.value });
+        setCouponCode(code);
+        setPromoInput("");
+        return;
       }
-    } catch { setCouponError("Erreur de validation."); }
-    finally { setCouponLoading(false); }
+      setPromoError(vd.error ?? cd.error ?? "Code invalide ou déjà utilisé.");
+    } catch { setPromoError("Erreur de validation."); }
+    finally { setPromoLoading(false); }
   }
 
   function addSearchResult(r: NominatimResult) {
@@ -550,17 +546,21 @@ export default function VolSurMesurePage() {
         options: { data: { full_name: `${form.prenom} ${form.nom}`.trim() } },
       });
       if (error) { setSubmitError(error.message); setSubmitting(false); return; }
-      if (data.user) setUser(data.user);
+      if (data.user) {
+        setUser(data.user);
+        setSubmitting(false);
+        setFlowStep("recap");
+        return;
+      }
     } catch {
       setSubmitError("Erreur lors de la création du compte.");
       setSubmitting(false);
       return;
     }
-    await handleSubmit();
   }
 
   async function handleMainCTA() {
-    if (user) { handleSubmit(); return; }
+    if (user) { setFlowStep("recap"); return; }
     if (emailStatus === "new") { handleSignupAndContinue(); return; }
     if (emailStatus === "exists") { handleLoginRedirect(); return; }
     // email not yet checked — trigger check and wait for user to complete auth
@@ -615,7 +615,6 @@ export default function VolSurMesurePage() {
             { l: "Date",         v: formattedDate ? <span className="capitalize">{formattedDate}</span> : <span className="text-muted-foreground">Non sélectionnée</span> },
             { l: "Heure",        v: form.heure || <span className="text-muted-foreground">—</span> },
             { l: "Départ",       v: DEPART_NOM },
-            { l: "Lieux",        v: route.pois.length > 0 ? `${route.pois.length} lieu${route.pois.length > 1 ? "x" : ""}` : <span className="text-muted-foreground">—</span> },
             { l: "Temps estimé", v: route.totalMin > 0 ? `≈ ${route.totalMin} min` : "—" },
             { l: "Passagers",    v: form.passagers },
           ].map(({ l, v }) => (
@@ -624,6 +623,20 @@ export default function VolSurMesurePage() {
               <span className="font-semibold text-xs text-right">{v}</span>
             </div>
           ))}
+
+          {/* Lieux survolés — noms réels */}
+          {route.pois.length > 0 && (
+            <div className="pt-1.5 border-t border-border/50 space-y-1.5">
+              <p className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-wider">Lieux survolés</p>
+              {route.pois.map((p, i) => (
+                <div key={p.id} className="flex items-center gap-2">
+                  <span className="w-4 h-4 rounded-full bg-navy text-[#F2B705] text-[8px] font-black flex items-center justify-center shrink-0">{i + 1}</span>
+                  <span className="text-xs font-semibold text-foreground truncate">{p.nom}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
           {selectedStops.length > 0 && (
             <div className="pt-2.5 border-t border-border space-y-1.5">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Escales</p>
@@ -635,6 +648,51 @@ export default function VolSurMesurePage() {
               ))}
             </div>
           )}
+
+          {/* Code promotionnel ou bon cadeau — champ unifié */}
+          <div className="pt-2.5 border-t border-border space-y-2">
+            <p className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-wider">Bon cadeau · code promo</p>
+            {voucherData && (
+              <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-2.5 py-1.5">
+                <CheckCircle size={10} className="text-green-600 shrink-0" />
+                <span className="text-[11px] font-bold text-green-700 flex-1 truncate">{voucherData.code}</span>
+                <span className="text-[11px] font-bold text-green-600 shrink-0">−{voucherDiscount}&thinsp;€</span>
+                <button type="button" onClick={() => { setVoucherData(null); setVoucherCode(""); }}
+                  className="text-muted-foreground hover:text-destructive cursor-pointer shrink-0 ml-1">
+                  <X size={10} />
+                </button>
+              </div>
+            )}
+            {couponData && (
+              <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-2.5 py-1.5">
+                <CheckCircle size={10} className="text-blue-600 shrink-0" />
+                <span className="text-[11px] font-bold text-blue-700 flex-1 truncate">{couponData.code}</span>
+                <span className="text-[11px] font-bold text-blue-600 shrink-0">−{couponDiscount}&thinsp;€</span>
+                <button type="button" onClick={() => { setCouponData(null); setCouponCode(""); }}
+                  className="text-muted-foreground hover:text-destructive cursor-pointer shrink-0 ml-1">
+                  <X size={10} />
+                </button>
+              </div>
+            )}
+            {(!voucherData || !couponData) && (
+              <>
+                <div className="flex gap-1.5">
+                  <input type="text" value={promoInput}
+                    onChange={e => { setPromoInput(e.target.value.toUpperCase()); setPromoError(""); }}
+                    onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); validatePromoCode(); } }}
+                    placeholder="FLH-XXXX · PROMO2026…"
+                    className="flex-1 h-8 px-2.5 rounded-lg border border-border bg-input text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/35 min-w-0" />
+                  <button type="button" onClick={validatePromoCode}
+                    disabled={!promoInput.trim() || promoLoading}
+                    className="px-2.5 h-8 rounded-lg bg-navy text-white text-[11px] font-bold disabled:opacity-40 hover:bg-navy/80 transition-colors cursor-pointer flex items-center">
+                    {promoLoading ? <Loader2 size={10} className="animate-spin" /> : "OK"}
+                  </button>
+                </div>
+                {promoError && <p className="mt-1 text-[10px] text-destructive">{promoError}</p>}
+              </>
+            )}
+          </div>
+
           {totalAcompte > 0 && (
             <div className="pt-2.5 border-t border-border space-y-1.5">
               {/* Acompte brut */}
@@ -1183,7 +1241,7 @@ export default function VolSurMesurePage() {
                 {route.pois.map(p => (
                   <span key={p.id} className="flex items-center gap-1.5 shrink-0">
                     <ArrowRight size={9} className="text-muted-foreground/40" />
-                    <span className="text-foreground/75 font-medium hidden sm:block truncate max-w-[120px]">{p.nom}</span>
+                    <span className="text-foreground/75 font-medium truncate max-w-[80px] sm:max-w-[120px]">{p.nom}</span>
                   </span>
                 ))}
                 <ArrowRight size={9} className="text-muted-foreground/40 shrink-0" />
@@ -1475,8 +1533,8 @@ export default function VolSurMesurePage() {
                 </div>
               </div>
 
-              {/* 5. Bon cadeau / code promo */}
-              <div className="card-premium overflow-hidden">
+              {/* 5. Bon cadeau / code promo — mobile uniquement (disponible dans la sidebar sur desktop) */}
+              <div className="lg:hidden card-premium overflow-hidden">
                 <div className="px-6 pt-5 pb-4 border-b border-border flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-navy flex items-center justify-center shrink-0">
                     <span className="text-primary font-black text-[13px]">5</span>
@@ -1486,75 +1544,271 @@ export default function VolSurMesurePage() {
                     <p className="text-[11px] text-muted-foreground mt-0.5">optionnel</p>
                   </div>
                 </div>
-                <div className="p-5 space-y-5">
-                  {/* Voucher */}
-                  <div>
-                    <label className="block text-xs font-bold text-foreground uppercase tracking-[1.5px] mb-2">Code bon cadeau</label>
-                    {voucherData ? (
-                      <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-lg px-4 py-3">
-                        <CheckCircle size={14} className="text-green-600 shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-green-700">{voucherData.code}</p>
-                          <p className="text-xs text-green-600">{voucherData.product_title} · −{voucherDiscount}&thinsp;€ déduits</p>
-                        </div>
-                        <button type="button" onClick={() => { setVoucherData(null); setVoucherCode(""); }}
-                          className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer">
-                          <X size={14} />
-                        </button>
+                <div className="p-5 space-y-3">
+                  {voucherData && (
+                    <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+                      <CheckCircle size={14} className="text-green-600 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-green-700">{voucherData.code}</p>
+                        <p className="text-xs text-green-600">{voucherData.product_title} · −{voucherDiscount}&thinsp;€ déduits</p>
                       </div>
-                    ) : (
+                      <button type="button" onClick={() => { setVoucherData(null); setVoucherCode(""); }}
+                        className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer">
+                        <X size={14} />
+                      </button>
+                    </div>
+                  )}
+                  {couponData && (
+                    <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
+                      <CheckCircle size={14} className="text-blue-600 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-blue-700">{couponData.code}</p>
+                        <p className="text-xs text-blue-600">
+                          {couponData.type === "percentage"
+                            ? `−${couponData.value} % → −${couponDiscount} €`
+                            : `−${couponDiscount} €`}
+                        </p>
+                      </div>
+                      <button type="button" onClick={() => { setCouponData(null); setCouponCode(""); }}
+                        className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer">
+                        <X size={14} />
+                      </button>
+                    </div>
+                  )}
+                  {(!voucherData || !couponData) && (
+                    <div>
                       <div className="flex gap-2">
-                        <input type="text" value={voucherCode}
-                          onChange={e => setVoucherCode(e.target.value.toUpperCase())}
-                          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); validateVoucher(); } }}
-                          placeholder="FLH-XXXX-XXXX"
+                        <input type="text" value={promoInput}
+                          onChange={e => { setPromoInput(e.target.value.toUpperCase()); setPromoError(""); }}
+                          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); validatePromoCode(); } }}
+                          placeholder="Bon cadeau ou code promo"
                           className="flex-1 h-10 px-3.5 rounded-lg border border-border bg-input text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/35" />
-                        <button type="button" onClick={validateVoucher}
-                          disabled={!voucherCode.trim() || voucherLoading}
+                        <button type="button" onClick={validatePromoCode}
+                          disabled={!promoInput.trim() || promoLoading}
                           className="px-4 h-10 rounded-lg bg-navy text-white text-sm font-bold disabled:opacity-40 hover:bg-navy/80 transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1.5">
-                          {voucherLoading ? <Loader2 size={13} className="animate-spin" /> : "Valider"}
+                          {promoLoading ? <Loader2 size={13} className="animate-spin" /> : "Valider"}
                         </button>
                       </div>
-                    )}
-                    {voucherError && <p className="mt-2 text-xs text-destructive">{voucherError}</p>}
-                    <p className="mt-1.5 text-[10px] text-muted-foreground">Applicable uniquement sur le prix du vol, pas sur les taxes d&apos;escales.</p>
+                      {promoError && <p className="mt-2 text-xs text-destructive">{promoError}</p>}
+                      <p className="mt-1.5 text-[10px] text-muted-foreground">Fonctionne avec les bons cadeau et les codes promo.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {submitError && (
+                <div className="flex items-center gap-2.5 text-sm text-destructive bg-destructive/5 border border-destructive/20 px-4 py-3.5 rounded-lg">
+                  <AlertCircle size={14} className="shrink-0" /> {submitError}
+                </div>
+              )}
+
+              {/* Mobile CTA */}
+              <div className="lg:hidden">
+                <button type="button"
+                  disabled={!form.date || !form.heure || !form.prenom || !form.nom || !form.email || !form.poids_total || submitting || emailStatus === "checking"}
+                  onClick={handleMainCTA}
+                  className="w-full flex items-center justify-center gap-2 py-4 rounded-lg bg-primary text-primary-foreground text-sm font-black disabled:opacity-40 transition-all cursor-pointer shadow-gold">
+                  {submitting
+                    ? <><Loader2 size={14} className="animate-spin" /> {!user && emailStatus === "new" ? "Création…" : "Chargement…"}</>
+                    : !user && emailStatus === "exists"
+                    ? <><LogIn size={14} /> Se connecter pour continuer</>
+                    : !user && emailStatus === "new"
+                    ? <><UserPlus size={14} /> Créer mon compte et continuer</>
+                    : <>Voir le récapitulatif <ChevronRight size={15} /></>
+                  }
+                </button>
+              </div>
+            </div>
+
+            {/* ── RIGHT SIDEBAR ── */}
+            <div className="hidden lg:block lg:w-[300px] xl:w-[320px] shrink-0 sticky top-28 self-start space-y-4">
+              <ReserveSummary />
+
+              <button type="button"
+                disabled={!form.date || !form.heure || !form.prenom || !form.nom || !form.email || !form.poids_total || submitting || emailStatus === "checking"}
+                onClick={handleMainCTA}
+                className="w-full flex items-center justify-center gap-2 py-4 rounded-lg bg-primary text-primary-foreground text-sm font-black disabled:opacity-40 hover:brightness-105 transition-all shadow-gold cursor-pointer">
+                {submitting
+                  ? <><Loader2 size={14} className="animate-spin" /> {!user && emailStatus === "new" ? "Création…" : "Chargement…"}</>
+                  : !user && emailStatus === "exists"
+                  ? <><LogIn size={14} /> Se connecter pour continuer</>
+                  : !user && emailStatus === "new"
+                  ? <><UserPlus size={14} /> Créer mon compte et continuer</>
+                  : <>Voir le récapitulatif <ChevronRight size={15} /></>
+                }
+              </button>
+              <p className="text-center text-[10px] text-muted-foreground">
+                <Lock size={9} className="inline mr-1" />Paiement sécurisé, aucun débit immédiat
+              </p>
+
+              {/* Validation checklist */}
+              <div className="card-premium p-4">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px] mb-3">Checklist</p>
+                <div className="space-y-2">
+                  {[
+                    { ok: !!form.date && !!form.heure, label: "Date & heure sélectionnées" },
+                    { ok: !!form.poids_total,          label: "Poids renseigné" },
+                    { ok: !!form.prenom && !!form.nom && !!form.email, label: "Coordonnées complètes" },
+                  ].map(({ ok, label }) => (
+                    <div key={label} className={`flex items-center gap-2.5 text-xs transition-colors ${ok ? "text-green-600 font-medium" : "text-muted-foreground/50"}`}>
+                      <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 border transition-all ${ok ? "border-green-300 bg-green-50" : "border-border bg-white"}`}>
+                        <CheckCircle size={9} className={ok ? "text-green-500" : "text-muted-foreground/25"} />
+                      </div>
+                      {label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════ STEP 3 : RECAP ══════════════════════ */}
+      {flowStep === "recap" && (
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 py-10">
+
+          {/* ── Bande de navigation — même structure que step 2 */}
+          <div className="flex items-center gap-3 mb-6">
+            <button type="button" onClick={() => setFlowStep("reserve")}
+              className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-foreground cursor-pointer group shrink-0">
+              <div className="w-9 h-9 rounded-lg border border-border flex items-center justify-center group-hover:bg-navy group-hover:border-navy transition-all">
+                <ChevronLeft size={15} className="text-foreground group-hover:text-white transition-colors" />
+              </div>
+              <span className="hidden sm:block">Modifier la réservation</span>
+            </button>
+            <div className="flex-1 min-w-0 flex items-center gap-3 card-premium px-4 py-2.5 overflow-hidden">
+              <PlaneTakeoff size={13} className="text-foreground shrink-0" />
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-1 min-w-0 overflow-hidden">
+                <span className="text-foreground font-bold shrink-0">Charleroi</span>
+                {route.pois.map(p => (
+                  <span key={p.id} className="flex items-center gap-1.5 shrink-0">
+                    <ArrowRight size={9} className="text-muted-foreground/40" />
+                    <span className="text-foreground/75 font-medium truncate max-w-[80px] sm:max-w-[120px]">{p.nom}</span>
+                  </span>
+                ))}
+                <ArrowRight size={9} className="text-muted-foreground/40 shrink-0" />
+                <span className="text-foreground font-bold shrink-0">Charleroi</span>
+              </div>
+              <div className="flex items-center gap-3 shrink-0 border-l border-border pl-3">
+                {route.totalMin > 0 && <span className="text-foreground font-black text-sm">≈{route.totalMin}&thinsp;min</span>}
+                {prixEstime > 0 && <span className="text-muted-foreground text-xs font-semibold">{prixEstime}&thinsp;€</span>}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col lg:flex-row gap-6 lg:items-start">
+            {/* ── LEFT COLUMN */}
+            <div className="flex-1 min-w-0 space-y-4">
+
+              {/* Récap condensé — itinéraire + infos + coordonnées en une seule card */}
+              <div className="card-premium overflow-hidden">
+                {/* Header itinéraire */}
+                <div className="px-5 pt-4 pb-3 bg-navy/5 border-b border-border flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <PlaneTakeoff size={13} className="text-foreground shrink-0" />
+                    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm min-w-0">
+                      <span className="font-bold text-foreground">Charleroi</span>
+                      {route.pois.map(p => (
+                        <span key={p.id} className="flex items-center gap-1.5">
+                          <ArrowRight size={9} className="text-muted-foreground/40 shrink-0" />
+                          <span className="font-semibold text-foreground">{p.nom}</span>
+                        </span>
+                      ))}
+                      <span className="flex items-center gap-1.5">
+                        <ArrowRight size={9} className="text-muted-foreground/40 shrink-0" />
+                        <span className="font-bold text-foreground">Charleroi</span>
+                      </span>
+                    </div>
                   </div>
-                  {/* Coupon */}
-                  <div>
-                    <label className="block text-xs font-bold text-foreground uppercase tracking-[1.5px] mb-2">Code promo</label>
-                    {couponData ? (
-                      <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-lg px-4 py-3">
-                        <CheckCircle size={14} className="text-green-600 shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-green-700">{couponData.code}</p>
-                          <p className="text-xs text-green-600">
-                            {couponData.type === "percentage"
-                              ? `−${couponData.value} % → −${couponDiscount} €`
-                              : `−${couponDiscount} €`}
-                          </p>
-                        </div>
-                        <button type="button" onClick={() => { setCouponData(null); setCouponCode(""); }}
-                          className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer">
-                          <X size={14} />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex gap-2">
-                        <input type="text" value={couponCode}
-                          onChange={e => setCouponCode(e.target.value.toUpperCase())}
-                          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); validateCoupon(); } }}
-                          placeholder="WELCOME2026"
-                          className="flex-1 h-10 px-3.5 rounded-lg border border-border bg-input text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/35" />
-                        <button type="button" onClick={validateCoupon}
-                          disabled={!couponCode.trim() || couponLoading}
-                          className="px-4 h-10 rounded-lg bg-navy text-white text-sm font-bold disabled:opacity-40 hover:bg-navy/80 transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1.5">
-                          {couponLoading ? <Loader2 size={13} className="animate-spin" /> : "Valider"}
-                        </button>
-                      </div>
-                    )}
-                    {couponError && <p className="mt-2 text-xs text-destructive">{couponError}</p>}
-                    <p className="mt-1.5 text-[10px] text-muted-foreground">Appliqué sur le montant restant après le bon cadeau.</p>
+                  <button type="button" onClick={() => setFlowStep("reserve")}
+                    className="text-[11px] font-semibold text-primary hover:text-primary/80 cursor-pointer shrink-0">
+                    Modifier
+                  </button>
+                </div>
+
+                {/* Grille infos condensée */}
+                <div className="px-5 py-4 grid grid-cols-2 gap-x-6 gap-y-2.5 text-sm">
+                  {[
+                    ["Date",      formattedDate ? <span className="capitalize">{formattedDate}</span> : "—"],
+                    ["Heure",     form.heure || "—"],
+                    ["Passagers", form.passagers || "—"],
+                    ["Poids",     form.poids_total ? `${form.poids_total} kg` : "—"],
+                    ["Nom",       `${form.prenom} ${form.nom}`.trim()],
+                    ["Email",     form.email],
+                    ...(form.telephone ? [["Tél.", form.telephone]] : []),
+                    ...(selectedStops.length > 0 ? [["Escales", selectedStops.map(s => s.nom).join(", ")]] : []),
+                    ...(form.commentaire.trim() ? [["Remarque", form.commentaire.trim()]] : []),
+                  ].map(([label, value]) => (
+                    <div key={label as string} className="min-w-0">
+                      <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider mb-0.5">{label}</p>
+                      <p className="text-sm font-semibold text-foreground truncate">{value}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Stats vol */}
+                {(route.totalMin > 0 || route.distKm > 0) && (
+                  <div className="px-5 py-3 border-t border-border flex gap-4 text-xs text-muted-foreground font-medium">
+                    {route.totalMin > 0 && <span>≈ {route.totalMin} min</span>}
+                    {route.distKm > 0  && <span>{route.distKm} km</span>}
+                    {prixEstime > 0    && <span>≈ {prixEstime} € estimé</span>}
                   </div>
+                )}
+              </div>
+
+              {/* Prix & acompte avec explication */}
+              <div className="card-premium overflow-hidden">
+                <div className="px-5 pt-4 pb-3 border-b border-border">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px]">Prix</p>
+                </div>
+                <div className="p-5 space-y-2 text-sm">
+                  {/* Ligne vol */}
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-muted-foreground">Vol estimé <span className="text-[10px]">({prixHeure} €/h · ≈ {route.totalMin} min)</span></span>
+                    <span className="font-semibold text-foreground shrink-0 ml-2">≈ {prixEstime} €</span>
+                  </div>
+                  {/* Ligne acompte */}
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-muted-foreground">Acompte <span className="text-[10px]">({acompteH} €/h)</span></span>
+                    <span className="font-semibold text-foreground shrink-0 ml-2">{acompte} €</span>
+                  </div>
+                  {/* Taxes */}
+                  {taxesEscalesTotal > 0 && (
+                    <div className="flex justify-between items-baseline">
+                      <span className="text-muted-foreground">Taxes d&apos;escale</span>
+                      <span className="font-semibold text-foreground shrink-0 ml-2">+ {taxesEscalesTotal} €</span>
+                    </div>
+                  )}
+                  {/* Réductions */}
+                  {voucherData && voucherDiscount > 0 && (
+                    <div className="flex justify-between items-center text-green-700">
+                      <span className="flex items-center gap-1.5 text-xs"><CheckCircle size={11} /> {voucherData.code}</span>
+                      <span className="font-semibold shrink-0 ml-2">− {voucherDiscount} €</span>
+                    </div>
+                  )}
+                  {couponData && couponDiscount > 0 && (
+                    <div className="flex justify-between items-center text-green-700">
+                      <span className="flex items-center gap-1.5 text-xs"><CheckCircle size={11} /> {couponData.code}</span>
+                      <span className="font-semibold shrink-0 ml-2">− {couponDiscount} €</span>
+                    </div>
+                  )}
+                  {/* Total */}
+                  <div className="flex justify-between items-baseline pt-2.5 border-t border-border">
+                    <span className="font-black text-foreground">
+                      {totalAcompteFinal === 0 ? "Couvert par voucher" : "Acompte à régler"}
+                    </span>
+                    <span className="font-black text-foreground text-lg shrink-0 ml-2">
+                      {totalAcompteFinal === 0 ? "0 €" : `${totalAcompteFinal} €`}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Explication acompte */}
+                <div className="mx-5 mb-5 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-amber-800 leading-relaxed space-y-1">
+                  <p className="font-bold flex items-center gap-1.5"><Info size={11} className="shrink-0" />Pourquoi un acompte ?</p>
+                  <p>L&apos;acompte sécurise votre créneau et couvre la préparation du vol. Il est <strong>déduit du solde</strong> à régler le jour du vol.</p>
+                  <p>Il est <strong>intégralement remboursé</strong> si Romain annule pour météo, ou si vous annulez plus de 48 h avant la date prévue.</p>
                 </div>
               </div>
 
@@ -1578,75 +1832,51 @@ export default function VolSurMesurePage() {
               </div>
 
               {submitError && (
-                <div className="flex items-center gap-2.5 text-sm text-destructive bg-destructive/5 border border-destructive/20 px-4 py-3.5 rounded-lg">
-                  <AlertCircle size={14} className="shrink-0" /> {submitError}
+                <div className="flex items-center gap-2.5 p-3.5 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                  <AlertCircle size={14} className="shrink-0" />{submitError}
                 </div>
               )}
 
               {/* Mobile CTA */}
               <div className="lg:hidden">
                 <button type="button"
-                  disabled={!form.date || !form.heure || !form.prenom || !form.nom || !form.email || !form.poids_total || !form.accept_cgp || submitting || emailStatus === "checking"}
-                  onClick={handleMainCTA}
+                  disabled={!form.accept_cgp || submitting}
+                  onClick={handleSubmit}
                   className="w-full flex items-center justify-center gap-2 py-4 rounded-lg bg-primary text-primary-foreground text-sm font-black disabled:opacity-40 transition-all cursor-pointer shadow-gold">
                   {submitting
-                    ? <><Loader2 size={14} className="animate-spin" /> {!user && emailStatus === "new" ? "Création…" : "Envoi…"}</>
-                    : !user && emailStatus === "exists"
-                    ? <><LogIn size={14} /> Se connecter et réserver</>
-                    : !user && emailStatus === "new"
-                    ? <><UserPlus size={14} /> Créer mon compte et réserver</>
-                    : <><Mail size={14} /> Recevoir mon lien de paiement</>
+                    ? <><Loader2 size={14} className="animate-spin" /> Envoi en cours…</>
+                    : <><Mail size={14} /> Confirmer et envoyer ma demande</>
                   }
                 </button>
+                <p className="text-center text-[10px] text-muted-foreground mt-3">
+                  <Lock size={9} className="inline mr-1" />Paiement sécurisé, aucun débit immédiat
+                </p>
               </div>
+
             </div>
 
-            {/* ── RIGHT SIDEBAR ── */}
+            {/* ── RIGHT SIDEBAR */}
             <div className="hidden lg:block lg:w-[300px] xl:w-[320px] shrink-0 sticky top-28 self-start space-y-4">
               <ReserveSummary />
 
               <button type="button"
-                disabled={!form.date || !form.heure || !form.prenom || !form.nom || !form.email || !form.poids_total || !form.accept_cgp || submitting || emailStatus === "checking"}
-                onClick={handleMainCTA}
+                disabled={!form.accept_cgp || submitting}
+                onClick={handleSubmit}
                 className="w-full flex items-center justify-center gap-2 py-4 rounded-lg bg-primary text-primary-foreground text-sm font-black disabled:opacity-40 hover:brightness-105 transition-all shadow-gold cursor-pointer">
                 {submitting
-                  ? <><Loader2 size={14} className="animate-spin" /> {!user && emailStatus === "new" ? "Création…" : "Envoi en cours…"}</>
-                  : !user && emailStatus === "exists"
-                  ? <><LogIn size={14} /> Se connecter et réserver</>
-                  : !user && emailStatus === "new"
-                  ? <><UserPlus size={14} /> Créer mon compte et réserver</>
-                  : <><Mail size={14} /> Recevoir mon lien de paiement</>
+                  ? <><Loader2 size={14} className="animate-spin" /> Envoi en cours…</>
+                  : <><Mail size={14} /> Confirmer et envoyer ma demande</>
                 }
               </button>
               <p className="text-center text-[10px] text-muted-foreground">
                 <Lock size={9} className="inline mr-1" />Paiement sécurisé, aucun débit immédiat
               </p>
-
-              {/* Validation checklist */}
-              <div className="card-premium p-4">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px] mb-3">Checklist</p>
-                <div className="space-y-2">
-                  {[
-                    { ok: !!form.date && !!form.heure, label: "Date & heure sélectionnées" },
-                    { ok: !!form.poids_total,          label: "Poids renseigné" },
-                    { ok: !!form.prenom && !!form.nom && !!form.email, label: "Coordonnées complètes" },
-                    { ok: form.accept_cgp,             label: "CGP acceptées" },
-                  ].map(({ ok, label }) => (
-                    <div key={label} className={`flex items-center gap-2.5 text-xs transition-colors ${ok ? "text-green-600 font-medium" : "text-muted-foreground/50"}`}>
-                      <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 border transition-all ${ok ? "border-green-300 bg-green-50" : "border-border bg-white"}`}>
-                        <CheckCircle size={9} className={ok ? "text-green-500" : "text-muted-foreground/25"} />
-                      </div>
-                      {label}
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* ══════════════════════ STEP 3 : DONE ══════════════════════ */}
+      {/* ══════════════════════ STEP 4 : DONE ══════════════════════ */}
       {flowStep === "done" && (
         <div className="max-w-lg mx-auto px-4 py-12 pb-16">
           <div className="space-y-4">
