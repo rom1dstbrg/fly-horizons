@@ -152,7 +152,6 @@ add(
     taxesEscales: 0,
     totalAcompte: 100,
     voucherCode: null,
-    paymentUrl: PAYMENT_URL,
   })
 );
 
@@ -179,7 +178,6 @@ add(
     taxesEscales: 0,
     totalAcompte: 0,
     voucherCode: "FLYH-X4K9-2026",
-    paymentUrl: null,
   })
 );
 
