@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationPaymentInvitationEmail, reservationConfirmationFreeEmail, postVolEmail, routeItineraireEmail, customEmail, rescheduleInviteEmail, rescheduleConfirmationEmail } from "@/lib/email-templates";
+import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationPaymentInvitationEmail, reservationConfirmationFreeEmail, postVolEmail, routeItineraireEmail, customEmail, rescheduleInviteEmail, rescheduleConfirmationEmail, reservationAutoAnnuleeEmail } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 
 async function checkAdmin() {
@@ -109,6 +109,44 @@ export async function updateStatutReservation(id: string, statut: string) {
       }
     }
 
+    if (statut === "annulee") {
+      const { data: resa } = await supabase
+        .from("reservations")
+        .select("date_vol, heure_vol, duree, clients(prenom, nom, email)")
+        .eq("id", id)
+        .single();
+      if (resa) {
+        const raw = resa.clients;
+        const c = Array.isArray(raw)
+          ? (raw[0] as { prenom: string; nom: string; email: string } | undefined) ?? null
+          : (raw as { prenom: string; nom: string; email: string } | null);
+        if (c) {
+          const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
+            weekday: "long", day: "numeric", month: "long", year: "numeric",
+          });
+          try {
+            await resend.emails.send({
+              from: EMAIL_FROM,
+              to: [c.email],
+              replyTo: EMAIL_REPLY_TO,
+              subject: `Fly Horizons — Réservation annulée — ${dateStr}`,
+              html: reservationAutoAnnuleeEmail({
+                prenom: c.prenom,
+                nom: c.nom,
+                dateStr,
+                heure: (resa.heure_vol ?? "—").slice(0, 5),
+                duree: resa.duree,
+                bookingUrl: "https://fly-horizons.com/reservation",
+                source: "admin",
+              }),
+            });
+          } catch (e) {
+            console.error("[updateStatutReservation] Erreur email annulation:", e);
+          }
+        }
+      }
+    }
+
     revalidatePath("/admin/vols");
     return { success: true };
   } catch {
@@ -129,17 +167,47 @@ export async function updateStatutReservationPerso(id: string, statut: string) {
     // Libérer le voucher réservé si on annule — le webhook session.expired ne le fait plus
     // pour les perso (pour permettre les nouvelles tentatives de paiement jusqu'à J-4).
     if (statut === "annulee") {
-      const { data: resaForVoucher } = await supabase
+      const { data: resaData } = await supabase
         .from("reservations")
-        .select("voucher_code")
+        .select("voucher_code, date_vol, heure_vol, duree, clients(prenom, nom, email)")
         .eq("id", id)
         .single();
-      if (resaForVoucher?.voucher_code) {
+      if (resaData?.voucher_code) {
         await supabase
           .from("voucher_codes")
           .update({ status: "unused" })
-          .eq("code", resaForVoucher.voucher_code)
+          .eq("code", resaData.voucher_code)
           .eq("status", "reserved");
+      }
+      if (resaData) {
+        const raw = resaData.clients;
+        const c = Array.isArray(raw)
+          ? (raw[0] as { prenom: string; nom: string; email: string } | undefined) ?? null
+          : (raw as { prenom: string; nom: string; email: string } | null);
+        if (c) {
+          const dateStr = new Date(resaData.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
+            weekday: "long", day: "numeric", month: "long", year: "numeric",
+          });
+          try {
+            await resend.emails.send({
+              from: EMAIL_FROM,
+              to: [c.email],
+              replyTo: EMAIL_REPLY_TO,
+              subject: `Fly Horizons — Réservation annulée — ${dateStr}`,
+              html: reservationAutoAnnuleeEmail({
+                prenom: c.prenom,
+                nom: c.nom,
+                dateStr,
+                heure: (resaData.heure_vol ?? "—").slice(0, 5),
+                duree: resaData.duree,
+                bookingUrl: "https://fly-horizons.com/vol-sur-mesure",
+                source: "admin",
+              }),
+            });
+          } catch (e) {
+            console.error("[updateStatutReservationPerso] Erreur email annulation:", e);
+          }
+        }
       }
     }
 

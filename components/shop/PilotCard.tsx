@@ -15,10 +15,10 @@ export default function PilotCard() {
             </p>
             <div>
               <h2 className="text-[#0b2238] text-4xl sm:text-5xl font-black leading-[1.05] tracking-tight">
-                Romain<br />DESTANBERG
+                Romain
               </h2>
               <p className="text-[#0b2238]/50 text-sm mt-3">
-                Fondateur &amp; Pilote, Fly Horizons
+                Pilote et fondateur de Fly Horizons
               </p>
             </div>
             <p className="text-[#0b2238]/60 text-base leading-relaxed">
@@ -41,7 +41,7 @@ export default function PilotCard() {
             shadow-[0_8px_32px_rgba(11,34,56,0.12)]">
             <Image
               src="/photo-pilote.jpg"
-              alt="Romain DESTANBERG, Fondateur & Pilote Fly Horizons"
+              alt="Romain, pilote et fondateur de Fly Horizons"
               fill
               className="object-cover object-top"
               sizes="(max-width: 768px) 100vw, 50vw"

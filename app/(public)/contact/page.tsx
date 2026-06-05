@@ -5,7 +5,7 @@ import { ChatWidget } from "@/components/chat/ChatWidget";
 
 export const metadata = {
   title: "Contact · Fly Horizons",
-  description: "Une question sur votre réservation ou votre vol ? Contactez Romain, fondateur de Fly Horizons. Réponse personnelle sous 24 h.",
+  description: "Une question sur votre réservation ou votre vol ? Contactez Fly Horizons. Réponse personnelle sous 24 h.",
 };
 
 export default function ContactPage() {
@@ -26,7 +26,7 @@ export default function ContactPage() {
                 <span className="text-primary">Écrivez-nous.</span>
               </h1>
               <p className="text-foreground/60 text-sm leading-relaxed max-w-sm">
-                Romain vous répond personnellement sous 24&nbsp;h.
+                Nous vous répondons personnellement sous 24&nbsp;h.
                 Pas de support externalisé, pas de réponse automatique.
               </p>
             </div>

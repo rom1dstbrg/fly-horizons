@@ -296,7 +296,7 @@ export default async function HomePage() {
                   },
                   {
                     icon: <PlaneTakeoff size={14} />,
-                    title: "Romain valide votre route sous 24 h",
+                    title: "Notre pilote valide votre route sous 24 h",
                     desc: "Il vérifie la faisabilité de l'espace aérien et vous confirme avec possibilité d'ajuster.",
                   },
                 ].map(({ icon, title, desc }) => (
@@ -340,7 +340,7 @@ export default async function HomePage() {
 
             {/* Aperçu du configurateur */}
             <div className="hidden md:flex flex-col">
-              <div className="rounded-t-2xl overflow-hidden border border-white/12 border-b-0 shadow-[0_24px_64px_rgba(0,0,0,0.55)]">
+              <div className="rounded-2xl overflow-hidden border border-white/12 shadow-[0_24px_64px_rgba(0,0,0,0.55)]">
                 <Image
                   src="/vol-sur-mesure.png"
                   alt="Aperçu de l'outil de planification vol sur mesure"

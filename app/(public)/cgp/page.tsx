@@ -185,7 +185,9 @@ Conservation : Les données sont conservées pendant la durée nécessaire à l'
 
 Droits RGPD : Conformément au Règlement (UE) 2016/679 (RGPD) et à la loi belge du 30 juillet 2018, le Client dispose d'un droit d'accès, de rectification, d'effacement, de limitation du traitement et d'opposition. Ces droits peuvent être exercés en envoyant un e-mail à info@fly-horizons.com.
 
-Réclamation : En cas de problème non résolu, le Client peut introduire une réclamation auprès de l'Autorité de protection des données (APD) : www.autoriteprotectiondonnees.be.`,
+Réclamation : En cas de problème non résolu, le Client peut introduire une réclamation auprès de l'Autorité de protection des données (APD) : www.autoriteprotectiondonnees.be.
+
+Pour la politique complète de protection des données (sous-traitants, durées de conservation, cookies), consultez fly-horizons.com/politique-de-confidentialite.`,
   },
   {
     title: "15. Droit applicable et règlement des litiges",
@@ -255,7 +257,7 @@ export default function CgpPage() {
           <div className="mt-8 bg-navy rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div className="flex-1">
               <p className="text-sm font-bold text-white mb-0.5">Une question sur ces conditions ?</p>
-              <p className="text-xs text-white/50">Romain répond personnellement sous 24 h.</p>
+              <p className="text-xs text-white/50">Réponse personnelle sous 24 h.</p>
             </div>
             <a
               href="/contact"

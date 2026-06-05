@@ -1,0 +1,203 @@
+{
+  "_comment": "Brand style guide for Fly Horizons — use this file to generate flyers, social posts, or any visual content consistent with the brand identity.",
+
+  "brand": {
+    "name": "Fly Horizons",
+    "tagline": "Volez autrement.",
+    "type": "Hélitreuillage et vols en hélicoptère privés, Belgique",
+    "operator": "Romain Destanberg, pilote",
+    "tone": "Premium, sobre, humain, confiant",
+    "style_reference": "Rivian, Linear, Arc — premium minimal éditorial"
+  },
+
+  "colors": {
+    "navy": {
+      "hex": "#0b2238",
+      "usage": "Main dark background, headlines, footer. The dominant dark color."
+    },
+    "gold": {
+      "hex": "#F2B705",
+      "hover": "#e6a800",
+      "usage": "Primary CTA, eyebrow labels, accent on key title words, price tags, badges."
+    },
+    "white": {
+      "hex": "#ffffff",
+      "usage": "Primary section backgrounds, cards, forms."
+    },
+    "light_gray": {
+      "hex": "#f5f5f7",
+      "usage": "Alternate section backgrounds, testimonial card backgrounds."
+    },
+    "secondary": {
+      "hex": "#edf0f7",
+      "usage": "Alternate sections, input backgrounds."
+    },
+    "foreground": {
+      "hex": "#1e2535",
+      "usage": "Body text on light backgrounds."
+    },
+    "muted": {
+      "hex": "#64748b",
+      "usage": "Secondary / supporting text."
+    },
+    "rule": "Only 3 colors dominate any design: navy, gold, white. Never introduce new accent colors."
+  },
+
+  "typography": {
+    "font_family": "Poppins (Google Fonts) — sole typeface for all text",
+    "headlines": {
+      "H1": { "size": "56px", "weight": 900, "line_height": 1.0, "note": "Always font-black (900). Never font-extrabold (800)." },
+      "H2": { "size": "40px", "weight": 900, "line_height": 1.05 },
+      "H3": { "size": "24px", "weight": 900 }
+    },
+    "eyebrow_label": {
+      "size": "11px",
+      "weight": 700,
+      "transform": "UPPERCASE",
+      "letter_spacing": "3px",
+      "color": "#F2B705",
+      "usage": "Short label above every section title (e.g. 'NOS VOLS', 'RÉSERVATION', 'CONTACT')"
+    },
+    "body": {
+      "size": "13–16px",
+      "weight": "400–500",
+      "line_height": "1.6–1.65"
+    },
+    "rules": [
+      "Titles (H1/H2) are always weight 900 — no exceptions.",
+      "Gold accent is used only on key words within a title, not the full title.",
+      "Eyebrow labels are always uppercase, gold, widely tracked."
+    ]
+  },
+
+  "visual_style": {
+    "philosophy": "Confident, spacious, editorial. Big headlines that own the page. No decorative clutter. Premium without being cold.",
+    "layout": "Generous whitespace. Full-bleed navy sections alternating with white or light-gray sections.",
+    "section_rhythm": ["white", "light_gray (#f5f5f7)", "navy (#0b2238)", "white", "light_gray"],
+    "transitions": "SVG wave shapes between navy and light sections — smooth organic curve, not a hard line.",
+    "container": "Max width 1400px, centered, with generous horizontal padding.",
+    "cards": {
+      "product_cards": "Photo-dominant (aspect ratio 4:3 or 3:4). Dark gradient overlay from bottom. White text. Gold price.",
+      "testimonial_cards": "Light gray background (#f5f5f7), gold top accent bar, body text at 70% opacity."
+    },
+    "imagery": {
+      "mood": "Aerial views, golden hour light, Belgian countryside and Ardennes, dramatic sky, helicopter in flight or on the ground.",
+      "photography_style": "Rich, cinematic, warm tones. Not flat or desaturated.",
+      "angle": "Low altitude aerial shots preferred. Horizon line visible.",
+      "avoid": "Stock-looking photos, blue-sky-only compositions with no ground, overly saturated HDR."
+    }
+  },
+
+  "flyer_layouts": {
+    "generic_rules": [
+      "Always include: brand name 'Fly Horizons', gold eyebrow label, bold headline, short CTA.",
+      "Dark (navy) background flyers: white headline, one gold accent word, ghost button CTA.",
+      "Light background flyers: navy headline, gold eyebrow, navy CTA button with gold background.",
+      "Never use more than 2 typefaces — use only Poppins at different weights.",
+      "Price or duration badge: dark circle/pill with gold text, positioned top-left of product image."
+    ],
+    "recommended_compositions": [
+      {
+        "name": "Hero dark (paysage)",
+        "background": "Full-bleed aerial photo with dark navy overlay (opacity ~60%)",
+        "elements": [
+          "Top-left: 'FLY HORIZONS' logotype in white Poppins 700",
+          "Center: Eyebrow label in gold uppercase + tracking",
+          "Center: Large H1 headline (2 lines max) in white Poppins 900",
+          "One keyword in the headline colored #F2B705",
+          "Bottom-center: Gold CTA button 'Réserver maintenant'"
+        ]
+      },
+      {
+        "name": "Produit vol (carré)",
+        "background": "Aerial photo full bleed",
+        "elements": [
+          "Bottom gradient overlay: black/90 to transparent (bottom-to-top)",
+          "Top-left badge: '45 MIN' in gold Poppins 900 on black/40 blur pill",
+          "Bottom-left: Product name in white Poppins 700",
+          "Bottom-left: Price in white Poppins 900 (large)",
+          "Bottom-right: Small gold arrow or CTA"
+        ]
+      },
+      {
+        "name": "Témoignage (story)",
+        "background": "#f5f5f7 light gray",
+        "elements": [
+          "Top: Small gold bar (8px × 32px, rounded)",
+          "Body: Quote text in #1e2535, Poppins 400, large size",
+          "Bottom: Name in #0b2238 Poppins 700 + location/date in gold Poppins 600 small",
+          "Corner: Small 'Fly Horizons' wordmark in navy"
+        ]
+      },
+      {
+        "name": "Offre promotionnelle (format portrait A4)",
+        "background": "Navy #0b2238 full bleed with subtle aerial photo texture at low opacity",
+        "elements": [
+          "Top: Eyebrow 'OFFRE SPÉCIALE' in gold uppercase",
+          "Center: Bold headline Poppins 900 white, 2–3 lines",
+          "Center: One line of detail text in white/70",
+          "Center: Price or discount in gold, very large",
+          "Bottom: Gold CTA button + website URL in white/50 small"
+        ]
+      }
+    ]
+  },
+
+  "copy_guidelines": {
+    "voice": {
+      "website_public": "Nous — 'Nous vous accueillons', 'Contactez-nous'",
+      "pilot_steps_personal": "Romain (third person) — 'Romain confirme votre créneau', 'Romain analyse votre route'",
+      "direct_emails": "Je + signature 'Romain' — personal, direct"
+    },
+    "style_rules": [
+      "No em-dashes (— or –). Use commas, colons, semicolons, periods instead.",
+      "No AI-sounding phrases: 'il convient de noter', 'dans ce contexte', 'ainsi que'.",
+      "Short, confident sentences. One idea per sentence.",
+      "Headlines: maximum 6 words, bold claim.",
+      "CTAs: active verb + concrete benefit. Examples: 'Réserver mon vol', 'Voir les disponibilités', 'Découvrir les vols'."
+    ],
+    "headline_examples": [
+      "Survolez la Belgique autrement.",
+      "Votre vol, votre route, votre moment.",
+      "L'hélicoptère à portée de main.",
+      "Un ciel sans limite.",
+      "Le cadeau qui restera pour toujours."
+    ],
+    "cta_examples": [
+      "Réserver maintenant",
+      "Voir les disponibilités",
+      "Offrir un bon de vol",
+      "Voler avec nous",
+      "Découvrir nos vols"
+    ]
+  },
+
+  "dont_list": [
+    "No blobs, circles or decorative background shapes",
+    "No heavy drop shadows — maximum 0 8px 32px rgba(11,34,56,0.11)",
+    "No multiple decorative borders on a single element",
+    "No large quotation marks (7rem+) in testimonials",
+    "No font weight below 900 for main headlines",
+    "No colors outside the defined palette — especially no bright blues, reds, or greens",
+    "No busy or cluttered compositions — whitespace is a feature, not a waste",
+    "No lowercase-only or all-caps (except eyebrow labels) in body text",
+    "No gradients on backgrounds except: navy-to-dark-navy in hero, or photo overlays",
+    "No rounded corners smaller than 10px on interactive elements"
+  ],
+
+  "dalle_prompt_templates": {
+    "_note": "Use these as base prompts for DALL-E or Midjourney image generation.",
+    "aerial_golden_hour": "Aerial drone photograph over Belgian countryside at golden hour, warm amber light, green fields and forest, small villages, dramatic horizon, cinematic color grading, no text overlay, 4:3 aspect ratio, editorial photography style",
+    "helicopter_in_flight": "Helicopter flying low over Belgian Ardennes landscape, golden hour lighting, rich warm tones, dramatic sky with light clouds, aerial perspective, cinematic quality, no text, wide angle",
+    "interior_cockpit": "Modern helicopter cockpit interior, pilot in uniform, aerial view through windshield showing Belgian landscape below, warm natural light, premium aesthetic, shallow depth of field, no text",
+    "landing_field": "Helicopter on a private landing pad in a Belgian meadow, green grass, golden hour, luxury feel, no people, clean composition, premium editorial style, no text"
+  },
+
+  "social_media_sizes": {
+    "instagram_square": "1080×1080px",
+    "instagram_story": "1080×1920px",
+    "instagram_portrait": "1080×1350px",
+    "facebook_post": "1200×630px",
+    "a4_flyer_print": "2480×3508px at 300dpi"
+  }
+}

@@ -447,6 +447,7 @@ export function AccountClient({
                       onClick={() => setEditingProfile(true)}
                       className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0 cursor-pointer"
                       title="Modifier le profil"
+                      aria-label="Modifier le profil"
                     >
                       <Pencil size={15} />
                     </button>
@@ -884,6 +885,7 @@ export function AccountClient({
                           type="button"
                           onClick={() => setShowPw((s) => !s)}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                          aria-label={showPw ? "Masquer le mot de passe" : "Afficher le mot de passe"}
                         >
                           {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
                         </button>
@@ -910,6 +912,7 @@ export function AccountClient({
                           type="button"
                           onClick={() => setShowConfirm((s) => !s)}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                          aria-label={showConfirm ? "Masquer la confirmation" : "Afficher la confirmation"}
                         >
                           {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
                         </button>

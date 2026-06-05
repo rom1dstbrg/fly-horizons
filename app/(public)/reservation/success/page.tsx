@@ -151,7 +151,7 @@ export default async function ReservationSuccessPage({ searchParams }: Props) {
               <CloudRain size={13} className="text-muted-foreground" />
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              <strong className="text-foreground">Météo :</strong> en cas de conditions défavorables, le vol est reporté sans frais. Romain vous recontacte pour fixer une nouvelle date.
+              <strong className="text-foreground">Météo :</strong> en cas de conditions défavorables, le vol est reporté sans frais. Nous vous recontactons pour fixer une nouvelle date.
             </p>
           </div>
 

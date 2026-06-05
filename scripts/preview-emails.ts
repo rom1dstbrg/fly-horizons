@@ -21,18 +21,36 @@ const ORDER_REF = "FH-2026-0587";
 
 // ── Email list ────────────────────────────────────────────────────────────────
 
-const emails: Array<{ id: string; label: string; html: string }> = [];
+interface EmailMeta {
+  id: string;
+  label: string;
+  trigger: string;
+  recipient: "client" | "admin";
+  how: "automatique" | "admin" | "webhook" | "client";
+  html: string;
+}
 
-function add(id: string, label: string, html: string) {
-  emails.push({ id, label, html });
+const emails: EmailMeta[] = [];
+
+function add(
+  id: string,
+  label: string,
+  trigger: string,
+  recipient: EmailMeta["recipient"],
+  how: EmailMeta["how"],
+  html: string
+) {
+  emails.push({ id, label, trigger, recipient, how, html });
 }
 
 // ── BOUTIQUE ──────────────────────────────────────────────────────────────────
 
-// 1a. Confirmation de commande — sans codes (cadeau)
 add(
   "order-confirmation",
   "1a · Confirmation commande (cadeau)",
+  "Stripe webhook checkout.session.completed — achat de vouchers à offrir. Les codes ne sont PAS dans cet email ; ils sont envoyés séparément via 4a/4b.",
+  "client",
+  "webhook",
   et.orderConfirmationEmail({
     orderRef: ORDER_REF,
     customerEmail: EMAIL,
@@ -54,10 +72,12 @@ add(
   })
 );
 
-// 1b. Confirmation de commande — avec codes inclus (achat pour soi-même)
 add(
   "order-confirmation-with-codes",
   "1b · Confirmation commande + codes",
+  "Stripe webhook checkout.session.completed — achat pour soi-même. Les codes voucher sont inclus directement dans cet email (pas d'email 4a/4b séparé).",
+  "client",
+  "webhook",
   et.orderConfirmationEmail({
     orderRef: ORDER_REF,
     customerEmail: EMAIL,
@@ -78,10 +98,12 @@ add(
   })
 );
 
-// 4a. Vouchers — 1 code
 add(
   "voucher-single",
   "4a · Voucher (1 code)",
+  "Envoi manuel depuis l'admin OU automatique après achat cadeau (1a) — 1 seul code à transmettre au bénéficiaire.",
+  "client",
+  "admin",
   et.voucherEmail({
     orderRef: ORDER_REF,
     customerName: PRENOM,
@@ -89,10 +111,12 @@ add(
   })
 );
 
-// 4b. Vouchers — 2 codes
 add(
   "voucher-multi",
   "4b · Vouchers (2 codes)",
+  "Envoi manuel depuis l'admin OU automatique après achat cadeau (1a) — plusieurs codes dans un même email.",
+  "client",
+  "admin",
   et.voucherEmail({
     orderRef: ORDER_REF,
     customerName: PRENOM,
@@ -105,10 +129,12 @@ add(
 
 // ── VOL SUR MESURE ────────────────────────────────────────────────────────────
 
-// 5a. Vol sur mesure devis — avec acompte estimé (pas de paiement immédiat)
 add(
   "vsm-quote-payment",
   "5a · Vol sur mesure (acompte)",
+  "Admin → panel admin → bouton « Envoyer le devis » — vol sur mesure avec acompte > 0. Contient le lien de paiement Stripe.",
+  "client",
+  "admin",
   et.volSurMesureQuoteEmail({
     prenom: PRENOM,
     nom: NOM,
@@ -130,10 +156,12 @@ add(
   })
 );
 
-// 5b. Vol sur mesure devis — couvert par voucher
 add(
   "vsm-quote-voucher",
   "5b · Vol sur mesure (voucher)",
+  "Admin → panel admin → bouton « Envoyer le devis » — vol sur mesure intégralement couvert par un voucher. Aucun paiement requis, pas de lien Stripe.",
+  "client",
+  "admin",
   et.volSurMesureQuoteEmail({
     prenom: PRENOM,
     nom: NOM,
@@ -155,10 +183,12 @@ add(
   })
 );
 
-// 8. Acompte vol sur mesure reçu
 add(
   "vsm-acompte",
   "8 · Acompte vol sur mesure",
+  "Stripe webhook checkout.session.completed — le client vient de payer l'acompte vol sur mesure. Confirme la réception du paiement et rappelle les prochaines étapes.",
+  "client",
+  "webhook",
   et.volSurMesureAcompteEmail({
     prenom: PRENOM,
     nom: NOM,
@@ -173,10 +203,12 @@ add(
 
 // ── RÉSERVATIONS STANDARD ─────────────────────────────────────────────────────
 
-// 6. Réservation couverte par voucher
 add(
   "resa-free",
   "6 · Réservation (voucher)",
+  "Client soumet une réservation standard avec un code voucher valide — vol intégralement couvert. Envoyé immédiatement à la soumission du formulaire /reservation.",
+  "client",
+  "client",
   et.reservationConfirmationFreeEmail({
     prenom: PRENOM,
     nom: NOM,
@@ -190,10 +222,12 @@ add(
   })
 );
 
-// 7. Réservation paiement reçu
 add(
   "resa-paid",
   "7 · Réservation (paiement reçu)",
+  "Stripe webhook checkout.session.completed — le client vient de payer une réservation standard. Confirme le paiement et la réservation.",
+  "client",
+  "webhook",
   et.reservationPaymentConfirmationEmail({
     prenom: PRENOM,
     nom: NOM,
@@ -208,10 +242,12 @@ add(
   })
 );
 
-// 14. Invitation au paiement
 add(
   "payment-invitation",
   "14 · Invitation paiement",
+  "Admin → panel admin → bouton « Inviter au paiement » — envoyé manuellement quand la réservation est prête à être payée (date/heure confirmées).",
+  "client",
+  "admin",
   et.reservationPaymentInvitationEmail({
     prenom: PRENOM,
     nom: NOM,
@@ -224,10 +260,12 @@ add(
   })
 );
 
-// 14c. Rappel de paiement — T-72h
 add(
   "payment-reminder",
   "14c · Rappel paiement (T-72h)",
+  "Cron automatique — déclenché 72 h avant le vol si le paiement n'a toujours pas été reçu. Dernier rappel avant annulation automatique.",
+  "client",
+  "automatique",
   et.reservationPaymentReminderEmail({
     prenom: PRENOM,
     nom: NOM,
@@ -240,10 +278,12 @@ add(
   })
 );
 
-// 14d. Annulation automatique — délai de paiement dépassé
 add(
   "auto-annulee",
   "14d · Annulation automatique",
+  "Cron automatique — déclenché si le délai de paiement est dépassé sans paiement reçu. La réservation est annulée et le créneau libéré.",
+  "client",
+  "automatique",
   et.reservationAutoAnnuleeEmail({
     prenom: PRENOM,
     nom: NOM,
@@ -251,15 +291,35 @@ add(
     heure: HEURE,
     duree: 60,
     bookingUrl: BOOKING_URL,
+    source: "auto",
+  })
+);
+
+add(
+  "admin-annulee",
+  "14f · Annulation manuelle (admin)",
+  "Admin → panel admin → changement de statut « Annulée » depuis la fiche réservation. Envoyé automatiquement pour toute annulation manuelle, standard ou vol sur mesure.",
+  "client",
+  "admin",
+  et.reservationAutoAnnuleeEmail({
+    prenom: PRENOM,
+    nom: NOM,
+    dateStr: DATE_STR,
+    heure: HEURE,
+    duree: 60,
+    bookingUrl: BOOKING_URL,
+    source: "admin",
   })
 );
 
 // ── SUIVI DE VOL ──────────────────────────────────────────────────────────────
 
-// 9a. Date confirmée — sans route
 add(
   "date-confirmee-no-route",
   "9a · Date confirmée (sans route)",
+  "Admin → panel admin → changement de statut « Date confirmée » — sans itinéraire encore défini. Le client sait que la date est fixée.",
+  "client",
+  "admin",
   et.reservationDateConfirmeeEmail({
     prenom: PRENOM,
     dateStr: DATE_STR,
@@ -269,10 +329,12 @@ add(
   })
 );
 
-// 9b. Date confirmée — avec route
 add(
   "date-confirmee-route",
   "9b · Date confirmée (avec route)",
+  "Admin → panel admin → changement de statut « Date confirmée » — avec itinéraire déjà composé. Le client voit la route et peut la visualiser.",
+  "client",
+  "admin",
   et.reservationDateConfirmeeEmail({
     prenom: PRENOM,
     dateStr: DATE_STR,
@@ -282,10 +344,12 @@ add(
   })
 );
 
-// 10a. Heure confirmée — sans route
 add(
   "heure-confirmee-no-route",
   "10a · Heure confirmée (sans route)",
+  "Admin → panel admin → changement de statut « Heure confirmée » — sans itinéraire. Le client a maintenant la date ET l'heure exacte.",
+  "client",
+  "admin",
   et.reservationHeureConfirmeeEmail({
     prenom: PRENOM,
     dateStr: DATE_STR,
@@ -296,10 +360,12 @@ add(
   })
 );
 
-// 10b. Heure confirmée — avec route
 add(
   "heure-confirmee-route",
   "10b · Heure confirmée (avec route)",
+  "Admin → panel admin → changement de statut « Heure confirmée » — avec itinéraire. Envoi complet : date, heure et route.",
+  "client",
+  "admin",
   et.reservationHeureConfirmeeEmail({
     prenom: PRENOM,
     dateStr: DATE_STR,
@@ -310,10 +376,12 @@ add(
   })
 );
 
-// 14e. Rappel J-2 avant le vol
 add(
   "flight-reminder",
   "14e · Rappel J-2",
+  "Cron automatique — envoyé 2 jours avant le vol. Rappelle la date, l'heure, les infos pratiques et le lien vers l'espace client.",
+  "client",
+  "automatique",
   et.flightReminderEmail({
     prenom: PRENOM,
     dateStr: DATE_STR,
@@ -324,10 +392,12 @@ add(
   })
 );
 
-// 15. Post-vol
 add(
   "post-vol",
   "15 · Post-vol (remerciement)",
+  "Admin → panel admin → bouton « Marquer le vol comme terminé » — envoyé après le vol. Contient le lien vers l'enquête de satisfaction.",
+  "client",
+  "admin",
   et.postVolEmail({
     prenom: PRENOM,
     dateStr: DATE_STR,
@@ -336,10 +406,12 @@ add(
   })
 );
 
-// 16. Satisfaction — résultat admin
 add(
   "satisfaction",
   "16 · Satisfaction (résultat admin)",
+  "Automatique — le client soumet l'enquête de satisfaction (lien dans l'email 15). Les résultats sont envoyés à l'admin uniquement.",
+  "admin",
+  "automatique",
   et.satisfactionResultEmail({
     prenom: PRENOM,
     nom: NOM,
@@ -357,10 +429,12 @@ add(
 
 // ── ITINÉRAIRES ───────────────────────────────────────────────────────────────
 
-// 17a. Itinéraire texte (ancien flux)
 add(
   "route-itineraire",
   "17a · Itinéraire (ancien flux texte)",
+  "Admin → panel admin → champ texte libre « Itinéraire ». Ancien flux — envoie l'itinéraire sous forme de texte simple. Remplacé par 17b pour les VSM.",
+  "client",
+  "admin",
   et.routeItineraireEmail({
     prenom: PRENOM,
     dateStr: DATE_STR,
@@ -370,10 +444,12 @@ add(
   })
 );
 
-// 17b. Proposition d'itinéraire (nouveau flux waypoints)
 add(
   "route-proposal",
   "17b · Proposition d'itinéraire (carte)",
+  "Admin → Route Editor → bouton « Proposer l'itinéraire » — nouveau flux waypoints. Contient une carte interactive et les commentaires du pilote. Le client peut valider ou demander une modification (→ 18a/18b).",
+  "client",
+  "admin",
   et.routeProposalEmail({
     prenom: PRENOM,
     dateStr: DATE_STR,
@@ -388,10 +464,12 @@ add(
   })
 );
 
-// 18a. Retour itinéraire (validé) — notif admin
 add(
   "route-feedback-validated",
   "18a · Retour itinéraire (validé)",
+  "Automatique — le client clique « Valider » dans l'email 17b. Notification admin : l'itinéraire est accepté, passer à l'étape suivante (paiement → email 19).",
+  "admin",
+  "client",
   et.routeFeedbackAdminEmail({
     clientPrenom: PRENOM,
     clientNom: NOM,
@@ -404,10 +482,12 @@ add(
   })
 );
 
-// 18b. Retour itinéraire (modification demandée) — notif admin
 add(
   "route-feedback-modification",
   "18b · Retour itinéraire (modification)",
+  "Automatique — le client clique « Demander une modification » dans l'email 17b. Notification admin avec le commentaire du client. Retourner dans le Route Editor puis renvoyer 17b.",
+  "admin",
+  "client",
   et.routeFeedbackAdminEmail({
     clientPrenom: PRENOM,
     clientNom: NOM,
@@ -421,10 +501,12 @@ add(
   })
 );
 
-// 19. Lien de paiement (après validation itinéraire perso)
 add(
   "payment-link",
   "19 · Lien de paiement (après itinéraire)",
+  "Admin → panel admin → bouton « Envoyer le lien de paiement » — après validation de l'itinéraire VSM (18a). Contient le lien Stripe pour régler le solde.",
+  "client",
+  "admin",
   et.paymentLinkEmail({
     prenom: PRENOM,
     dateStr: DATE_STR,
@@ -436,10 +518,12 @@ add(
 
 // ── REPORT ────────────────────────────────────────────────────────────────────
 
-// 20. Invitation à reporter
 add(
   "reschedule-invite",
   "20 · Invitation à reporter",
+  "Admin → panel admin → bouton « Inviter à reporter » — envoyé manuellement, typiquement suite à une météo défavorable. Contient un lien vers l'espace client pour choisir une nouvelle date.",
+  "client",
+  "admin",
   et.rescheduleInviteEmail({
     prenom: PRENOM,
     dateStr: DATE_STR,
@@ -448,10 +532,12 @@ add(
   })
 );
 
-// 21. Confirmation de report
 add(
   "reschedule-confirmation",
   "21 · Confirmation de report",
+  "Automatique — le client a sélectionné une nouvelle date depuis son espace client (lien dans l'email 20). Confirme l'ancienne et la nouvelle date.",
+  "client",
+  "client",
   et.rescheduleConfirmationEmail({
     prenom: PRENOM,
     oldDateStr: DATE_STR,
@@ -463,10 +549,12 @@ add(
 
 // ── CONTACT ───────────────────────────────────────────────────────────────────
 
-// 11. Contact — notification interne
 add(
   "contact-notif",
   "11 · Contact (notif interne)",
+  "Automatique — le visiteur soumet le formulaire /contact. Notification interne : nom, email, sujet et message du visiteur.",
+  "admin",
+  "automatique",
   et.contactNotificationEmail({
     nom: PRENOM + " " + NOM,
     email: EMAIL,
@@ -476,10 +564,12 @@ add(
   })
 );
 
-// 12. Contact — accusé de réception
 add(
   "contact-ack",
   "12 · Contact (accusé réception)",
+  "Automatique — envoyé au visiteur en même temps que 11. Confirme la bonne réception de son message et annonce une réponse sous 24 h.",
+  "client",
+  "automatique",
   et.contactAcknowledgmentEmail({
     nom: PRENOM + " " + NOM,
     email: EMAIL,
@@ -489,10 +579,12 @@ add(
   })
 );
 
-// 13. Contact — réponse admin
 add(
   "contact-reply",
   "13 · Contact (réponse admin)",
+  "Admin → panel admin → champ réponse + bouton « Envoyer » — réponse personnalisée au message de contact. Le client reçoit la réponse avec son message original en dessous.",
+  "client",
+  "admin",
   et.contactReplyEmail({
     nom: PRENOM + " " + NOM,
     email: EMAIL,
@@ -504,10 +596,12 @@ add(
 
 // ── EMAIL LIBRE ───────────────────────────────────────────────────────────────
 
-// 22a. Email libre — report météo (avec lien de report)
 add(
   "custom-meteo",
   "22a · Email libre (report météo)",
+  "Admin → panel admin → onglet « Email libre » — message entièrement personnalisé. Ici : report météo avec lien de report intégré. Peut contenir n'importe quel texte.",
+  "client",
+  "admin",
   et.customEmail({
     subject: `Fly Horizons — Votre vol du ${DATE_STR}`,
     body:
@@ -516,10 +610,12 @@ add(
   })
 );
 
-// 22b. Email libre — vol maintenu
 add(
   "custom-vol-maintenu",
   "22b · Email libre (vol maintenu)",
+  "Admin → panel admin → onglet « Email libre » — message entièrement personnalisé. Ici : confirmation météo favorable, vol maintenu comme prévu.",
+  "client",
+  "admin",
   et.customEmail({
     subject: `Fly Horizons — Vol confirmé pour le ${DATE_STR}`,
     body:
@@ -528,6 +624,37 @@ add(
 );
 
 // ── Build HTML ────────────────────────────────────────────────────────────────
+
+const HOW_COLORS: Record<EmailMeta["how"], string> = {
+  automatique: "#16a34a",
+  webhook:     "#0369a1",
+  admin:       "#7c3aed",
+  client:      "#b45309",
+};
+
+const HOW_LABELS: Record<EmailMeta["how"], string> = {
+  automatique: "Automatique",
+  webhook:     "Stripe webhook",
+  admin:       "Action admin",
+  client:      "Action client",
+};
+
+const RECIPIENT_COLORS: Record<EmailMeta["recipient"], string> = {
+  client: "#0b2238",
+  admin:  "#dc2626",
+};
+
+function metaBar(e: EmailMeta): string {
+  const how = `<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:${HOW_COLORS[e.how]}22;color:${HOW_COLORS[e.how]};border:1px solid ${HOW_COLORS[e.how]}55;">${HOW_LABELS[e.how]}</span>`;
+  const recipient = `<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:${RECIPIENT_COLORS[e.recipient]}18;color:${RECIPIENT_COLORS[e.recipient]};border:1px solid ${RECIPIENT_COLORS[e.recipient]}44;">→ ${e.recipient === "admin" ? "Admin" : "Client"}</span>`;
+  return `<div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;">${how}${recipient}</div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">${e.trigger}</p>
+  </div>
+</div>`;
+}
 
 const sidebarLinks = emails
   .map(
@@ -541,6 +668,7 @@ const iframes = emails
     (e) =>
       `<div id="panel-${e.id}" class="email-panel" style="display:none;">
   <h2 class="panel-title">${e.label}</h2>
+  ${metaBar(e)}
   <iframe class="email-frame" srcdoc="${e.html.replace(/&/g, "&amp;").replace(/"/g, "&quot;")}" frameborder="0" onload="resizeIframe(this)"></iframe>
 </div>`
   )
@@ -607,7 +735,7 @@ const html = `<!DOCTYPE html>
     color: #64748b;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
   }
   .email-frame {
     width: 100%;

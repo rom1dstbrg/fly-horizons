@@ -421,7 +421,7 @@ export default function CheckoutPage() {
                         {coupon.applies_to === "voucher" ? " · sur les vols" : coupon.applies_to === "physical" ? " · sur les accessoires" : ""}
                       </p>
                     </div>
-                    <button onClick={() => setCoupon(null)} className="text-muted-foreground hover:text-destructive transition-colors ml-2 cursor-pointer">
+                    <button onClick={() => setCoupon(null)} className="text-muted-foreground hover:text-destructive transition-colors ml-2 cursor-pointer" aria-label="Retirer le code promo">
                       <X size={14} />
                     </button>
                   </div>

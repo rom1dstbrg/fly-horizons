@@ -43,7 +43,7 @@ export default function AboutPage() {
             <div className="order-2 md:order-none md:col-start-1 md:row-start-1 md:row-span-2 relative aspect-[4/5] md:aspect-auto rounded-lg overflow-hidden shadow-xl">
               <Image
                 src="/photo-pilote.jpg"
-                alt="Romain DESTANBERG, Fondateur & Pilote Fly Horizons"
+                alt="Romain, pilote et fondateur de Fly Horizons"
                 fill
                 className="object-cover object-top"
                 sizes="(max-width: 768px) 100vw, 460px"

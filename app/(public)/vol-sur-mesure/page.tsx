@@ -658,7 +658,8 @@ export default function VolSurMesurePage() {
                 <span className="text-[11px] font-bold text-green-700 flex-1 truncate">{voucherData.code}</span>
                 <span className="text-[11px] font-bold text-green-600 shrink-0">−{voucherDiscount}&thinsp;€</span>
                 <button type="button" onClick={() => { setVoucherData(null); setVoucherCode(""); }}
-                  className="text-muted-foreground hover:text-destructive cursor-pointer shrink-0 ml-1">
+                  className="text-muted-foreground hover:text-destructive cursor-pointer shrink-0 ml-1"
+                  aria-label="Retirer le voucher">
                   <X size={10} />
                 </button>
               </div>
@@ -669,7 +670,8 @@ export default function VolSurMesurePage() {
                 <span className="text-[11px] font-bold text-blue-700 flex-1 truncate">{couponData.code}</span>
                 <span className="text-[11px] font-bold text-blue-600 shrink-0">−{couponDiscount}&thinsp;€</span>
                 <button type="button" onClick={() => { setCouponData(null); setCouponCode(""); }}
-                  className="text-muted-foreground hover:text-destructive cursor-pointer shrink-0 ml-1">
+                  className="text-muted-foreground hover:text-destructive cursor-pointer shrink-0 ml-1"
+                  aria-label="Retirer le code promo">
                   <X size={10} />
                 </button>
               </div>
@@ -970,7 +972,7 @@ export default function VolSurMesurePage() {
                 {[
                   { n: 1, title: "Tracez votre itinéraire",   desc: "Cliquez sur la carte pour ajouter vos points de passage." },
                   { n: 2, title: "Découvrez le prix estimé",  desc: "Le prix se met à jour en temps réel en fonction de votre parcours." },
-                  { n: 3, title: "Soumettez votre demande", desc: "Envoyez votre itinéraire à Romain — aucun paiement maintenant." },
+                  { n: 3, title: "Soumettez votre demande", desc: "Envoyez votre itinéraire — aucun paiement maintenant." },
                 ].map(({ n, title, desc }) => (
                   <div key={n} className="flex items-start gap-3 px-5 py-3.5">
                     <div className="w-6 h-6 rounded-full bg-navy text-white flex items-center justify-center text-[11px] font-black shrink-0 mt-0.5">{n}</div>
@@ -1390,13 +1392,13 @@ export default function VolSurMesurePage() {
                     {weightWarn && !weightCrit && (
                       <div className="mt-2.5 flex items-start gap-2.5 bg-amber-50 border border-amber-200 px-3.5 py-3 rounded-lg text-sm text-amber-800">
                         <AlertTriangle size={14} className="shrink-0 mt-0.5 text-amber-500" />
-                        <p>Le poids dépasse la limite recommandée de {MAX_WEIGHT} kg. Vous pouvez continuer votre demande, Romain vérifiera la faisabilité avant de vous envoyer le lien de paiement.</p>
+                        <p>Le poids dépasse la limite recommandée de {MAX_WEIGHT} kg. Vous pouvez continuer votre demande, la faisabilité sera vérifiée avant de vous envoyer le lien de paiement.</p>
                       </div>
                     )}
                     {weightCrit && (
                       <div className="mt-2.5 flex items-start gap-2.5 bg-red-50 border border-red-200 px-3.5 py-3 rounded-lg text-sm text-red-800">
                         <AlertCircle size={14} className="shrink-0 mt-0.5 text-red-500" />
-                        <p>Le poids total est très élevé ({CRIT_WEIGHT} kg+). Vous pouvez continuer, mais Romain vous contactera pour confirmer la faisabilité avant toute suite.</p>
+                        <p>Le poids total est très élevé ({CRIT_WEIGHT} kg+). Vous pouvez continuer, nous vous contacterons pour confirmer la faisabilité avant toute suite.</p>
                       </div>
                     )}
                   </div>
@@ -1411,7 +1413,7 @@ export default function VolSurMesurePage() {
                   </div>
                   <div>
                     <h2 className="text-[15px] font-black text-foreground leading-tight">Vos coordonnées</h2>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">Romain vous contacte ici pour confirmer le vol</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Nous vous contactons ici pour confirmer le vol</p>
                   </div>
                 </div>
                 <div className="p-6">
@@ -1516,7 +1518,7 @@ export default function VolSurMesurePage() {
                     <span className="text-primary font-black text-[13px]">4</span>
                   </div>
                   <h2 className="text-[15px] font-black text-foreground leading-tight">
-                    Un mot pour Romain ? <span className="text-sm font-normal text-muted-foreground">(optionnel)</span>
+                    Un commentaire ? <span className="text-sm font-normal text-muted-foreground">(optionnel)</span>
                   </h2>
                 </div>
                 <div className="p-5">
@@ -1808,7 +1810,7 @@ export default function VolSurMesurePage() {
                 <div className="mx-5 mb-5 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-amber-800 leading-relaxed space-y-1">
                   <p className="font-bold flex items-center gap-1.5"><Info size={11} className="shrink-0" />Pourquoi un acompte ?</p>
                   <p>L&apos;acompte sécurise votre créneau et couvre la préparation du vol. Il est <strong>déduit du solde</strong> à régler le jour du vol.</p>
-                  <p>Il est <strong>intégralement remboursé</strong> si Romain annule pour météo, ou si vous annulez plus de 48 h avant la date prévue.</p>
+                  <p>Il est <strong>intégralement remboursé</strong> si le vol est annulé pour météo, ou si vous annulez plus de 48 h avant la date prévue.</p>
                 </div>
               </div>
 
@@ -1898,7 +1900,7 @@ export default function VolSurMesurePage() {
                 <div className="flex items-start gap-2.5">
                   <Info size={13} className="text-[#0b2238] mt-0.5 shrink-0" />
                   <p className="text-xs text-[#0b2238]/80 leading-relaxed">
-                    Romain analyse votre demande et vous envoie la route définitive sous 24&nbsp;h.{" "}
+                    Notre pilote analyse votre demande et vous envoie la route définitive sous 24&nbsp;h.{" "}
                     <strong>L&apos;acompte{acompte > 0 ? ` (≈ ${acompte} €)` : ""} ne sera demandé qu&apos;après votre validation.</strong>
                   </p>
                 </div>
@@ -1913,13 +1915,13 @@ export default function VolSurMesurePage() {
                   },
                   {
                     num: 2, done: false,
-                    title: "Romain analyse votre route",
-                    desc: "Dans les 24 h, Romain étudie la faisabilité de votre itinéraire. Si certaines zones ne peuvent pas être survolées (espace aérien, restrictions), il vous en informe et propose des alternatives.",
+                    title: "Notre pilote analyse votre route",
+                    desc: "Dans les 24 h, la faisabilité de votre itinéraire est étudiée. Si certaines zones ne peuvent pas être survolées (espace aérien, restrictions), nous vous en informons et proposons des alternatives.",
                   },
                   {
                     num: 3, done: false,
                     title: "Validation & paiement de l'acompte",
-                    desc: `Vous recevez la route définitive par email. Après votre accord, Romain vous envoie un lien pour régler l'acompte${acompte > 0 ? ` (≈ ${acompte} €)` : ""} et confirmer le créneau.`,
+                    desc: `Vous recevez la route définitive par email. Après votre accord, un lien de paiement vous est envoyé pour régler l'acompte${acompte > 0 ? ` (≈ ${acompte} €)` : ""} et confirmer le créneau.`,
                   },
                   {
                     num: 4, done: false,
@@ -1971,7 +1973,7 @@ export default function VolSurMesurePage() {
                   <CloudRain size={13} className="text-muted-foreground" />
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  <strong className="text-foreground">Météo :</strong> si les conditions ne permettent pas de voler, le vol est reporté sans frais. Romain décide jusqu&apos;à 2 h avant.
+                  <strong className="text-foreground">Météo :</strong> si les conditions ne permettent pas de voler, le vol est reporté sans frais. La décision est prise jusqu&apos;à 2 h avant.
                 </p>
               </div>
             </div>

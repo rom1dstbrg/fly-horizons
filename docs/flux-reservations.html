@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Flux Réservations — Fly Horizons</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f8ff; color: #1e293b; line-height: 1.6; }
+  .page { max-width: 960px; margin: 0 auto; padding: 48px 32px; }
+
+  /* Header */
+  .doc-header { text-align: center; margin-bottom: 56px; }
+  .doc-header .logo { font-size: 11px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: #F2B705; margin-bottom: 12px; }
+  .doc-header h1 { font-size: 32px; font-weight: 800; color: #0b2238; margin-bottom: 8px; }
+  .doc-header .subtitle { font-size: 14px; color: #64748b; }
+
+  /* Section */
+  .section { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 40px; overflow: hidden; }
+  .section-header { background: #0b2238; padding: 20px 28px; display: flex; align-items: center; gap: 14px; }
+  .section-header .badge { background: #F2B705; color: #0b2238; font-size: 10px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; white-space: nowrap; }
+  .section-header h2 { font-size: 18px; font-weight: 800; color: #fff; }
+  .section-header .desc { font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 2px; }
+  .section-body { padding: 0; }
+
+  /* Step */
+  .step { display: flex; gap: 0; border-bottom: 1px solid #f1f5f9; }
+  .step:last-child { border-bottom: none; }
+  .step-num { flex-shrink: 0; width: 56px; display: flex; align-items: flex-start; justify-content: center; padding-top: 22px; }
+  .step-num span { width: 26px; height: 26px; border-radius: 50%; background: #F2B705; color: #0b2238; font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+  .step-content { flex: 1; padding: 18px 24px 18px 4px; }
+  .step-title { font-size: 14px; font-weight: 700; color: #0b2238; margin-bottom: 6px; }
+  .step-body { font-size: 13px; color: #475569; }
+
+  /* Actor tag */
+  .actor { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 2px 8px; border-radius: 4px; margin-right: 6px; vertical-align: middle; }
+  .actor-client { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+  .actor-admin  { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+  .actor-system { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+  .actor-stripe { background: #faf5ff; color: #6b21a8; border: 1px solid #e9d5ff; }
+
+  /* Email card */
+  .emails { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .email-card { display: flex; align-items: flex-start; gap: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; }
+  .email-card .icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .email-card .to { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; margin-bottom: 2px; }
+  .email-card .subject { font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 2px; }
+  .email-card .note { font-size: 11px; color: #64748b; }
+  .email-card.to-client { border-left: 3px solid #F2B705; }
+  .email-card.to-admin  { border-left: 3px solid #0b2238; }
+
+  /* Statut badge */
+  .statut { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 3px 8px; border-radius: 4px; }
+  .s-pending  { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+  .s-wait     { background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; }
+  .s-ok       { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+  .s-info     { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+  .s-done     { background: #faf5ff; color: #6b21a8; border: 1px solid #e9d5ff; }
+  .s-amber    { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
+
+  /* Arrow connector */
+  .connector { text-align: center; font-size: 18px; color: #cbd5e1; padding: 4px 0; }
+
+  /* Sub-list */
+  ul.detail { margin-top: 8px; padding-left: 16px; }
+  ul.detail li { font-size: 12px; color: #64748b; margin-bottom: 3px; }
+  ul.detail li strong { color: #475569; }
+
+  /* Branch */
+  .branch { margin-top: 10px; display: flex; gap: 10px; }
+  .branch-box { flex: 1; border-radius: 8px; padding: 10px 14px; border: 1px solid; }
+  .branch-yes { background: #f0fdf4; border-color: #bbf7d0; }
+  .branch-no  { background: #f8fafc; border-color: #e2e8f0; }
+  .branch-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .branch-yes .branch-label { color: #16a34a; }
+  .branch-no  .branch-label { color: #64748b; }
+  .branch-body { font-size: 12px; color: #475569; }
+
+  /* Note box */
+  .note-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 14px; margin-top: 10px; font-size: 12px; color: #78350f; }
+  .note-box strong { color: #92400e; }
+  .note-box.info { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
+  .note-box.info strong { color: #1e40af; }
+
+  /* Comparison table */
+  .compare { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+  .compare th { background: #f8fafc; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; padding: 8px 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+  .compare td { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; vertical-align: top; color: #475569; }
+  .compare tr:last-child td { border-bottom: none; }
+  .compare td:first-child { font-weight: 600; color: #1e293b; width: 160px; }
+
+  /* Pill tag */
+  .pill { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; margin: 1px; }
+  .pill-new { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+  .pill-removed { background: #fef2f2; color: #b91c1c; border-color: #fecaca; text-decoration: line-through; }
+
+  @media print {
+    body { background: white; }
+    .page { padding: 24px 16px; }
+    .section { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="doc-header">
+    <div class="logo">Fly Horizons · Documentation interne</div>
+    <h1>Flux des réservations</h1>
+    <div class="subtitle">Détail complet des deux circuits — de la demande au vol — avec tous les emails déclenchés</div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!--  RÉSERVATION STANDARD                                         -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div>
+        <div class="badge">Circuit 1</div>
+        <h2>Réservation à durée fixe</h2>
+        <div class="desc">/reservation · type_resa = "standard"</div>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <!-- Étape 1 -->
+      <div class="step">
+        <div class="step-num"><span>1</span></div>
+        <div class="step-content">
+          <div class="step-title"><span class="actor actor-client">Client</span> Choisit un créneau et remplit le formulaire</div>
+          <div class="step-body">
+            Sur <strong>/reservation</strong> : durée (pack), date, heure, passagers, poids total, commentaire, code voucher ou code promo en option.
+            <ul class="detail">
+              <li>Les créneaux disponibles sont calculés par <strong>/api/reservation/slots</strong> (en tenant compte des réservations existantes + tampon 30 min).</li>
+              <li>Règle : minimum <strong>J-2</strong> (48h d'avance).</li>
+              <li>Si un voucher est appliqué, sa durée est déduite du temps facturable → le montant baisse.</li>
+            </ul>
+          </div>
+          <div class="branch" style="margin-top:10px;">
+            <div class="branch-box branch-yes">
+              <div class="branch-label">Montant &gt; 0 €</div>
+              <div class="branch-body">→ Appel <strong>/api/reservation/checkout</strong> → Stripe Checkout<br>Statut créé : <span class="statut s-pending">payment_pending</span></div>
+            </div>
+            <div class="branch-box branch-no">
+              <div class="branch-label">Montant = 0 € (voucher couvre tout)</div>
+              <div class="branch-body">→ Appel <strong>/api/reservation/submit</strong><br>Statut créé : <span class="statut s-wait">en_attente</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Étape 2a -->
+      <div class="step">
+        <div class="step-num"><span>2a</span></div>
+        <div class="step-content">
+          <div class="step-title"><span class="actor actor-stripe">Stripe</span> Paiement immédiat (si montant &gt; 0)</div>
+          <div class="step-body">
+            Le client est redirigé vers Stripe Checkout (session expire en 30 min).
+            Après paiement réussi → webhook <strong>checkout.session.completed</strong> → statut passe à <span class="statut s-wait">en_attente</span>.
+          </div>
+          <div class="emails">
+            <div class="email-card to-client">
+              <div class="icon">✉️</div>
+              <div>
+                <div class="to">→ Client</div>
+                <div class="subject">Confirmation de paiement — Fly Horizons</div>
+                <div class="note">Récapitulatif : date, heure, durée, passagers, montant payé. Numéro de réservation.</div>
+              </div>
+            </div>
+            <div class="email-card to-admin">
+              <div class="icon">🔔</div>
+              <div>
+                <div class="to">→ Admin (info@fly-horizons.com)</div>
+                <div class="subject">[Réservation payée] Prénom Nom — date à heure</div>
+                <div class="note">Résumé client + montant payé.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Étape 2b -->
+      <div class="step">
+        <div class="step-num"><span>2b</span></div>
+        <div class="step-content">
+          <div class="step-title"><span class="actor actor-system">Système</span> Réservation gratuite (voucher total)</div>
+          <div class="step-body">La réservation est créée directement, le voucher est marqué "used".</div>
+          <div class="emails">
+            <div class="email-card to-client">
+              <div class="icon">✉️</div>
+              <div>
+                <div class="to">→ Client</div>
+                <div class="subject">Demande de réservation reçue — Fly Horizons</div>
+                <div class="note">Confirmation de réception, récapitulatif du vol, mention du voucher utilisé. Numéro de réservation.</div>
+              </div>
+            </div>
+            <div class="email-card to-admin">
+              <div class="icon">🔔</div>
+              <div>
+                <div class="to">→ Admin</div>
+                <div class="subject">[Réservation] Prénom Nom — date à heure</div>
+                <div class="note">Résumé complet avec tous les champs.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Étape 3 -->
+      <div class="step">
+        <div class="step-num"><span>3</span></div>
+        <div class="step-content">
+          <div class="step-title"><span class="actor actor-admin">Admin</span> Prépare et envoie la route au client <span class="pill pill-new">Nouveau flux</span></div>
+          <div class="step-body">
+            Dans le drawer de la réservation (section <strong>Route</strong>), l'admin trace l'itinéraire sur la carte interactive — même outil que pour les vols sur mesure :
+            <ul class="detail">
+              <li><strong>Cliquer sur la carte</strong> pour ajouter des waypoints numérotés, glisser pour déplacer, cliquer un point pour le supprimer. Bouton plein écran (⤢) disponible pour tracer plus confortablement.</li>
+              <li><strong>Sauvegarder</strong> : enregistre les waypoints dans le champ <code>final_waypoints</code> (JSONB) — sauvegarde locale sans envoi. Les points sont rechargés à la prochaine ouverture du drawer.</li>
+              <li><strong>ForeFlight</strong> : copie la route au format <code>EBCI 50.4592N 04.4538E … EBCI</code> en un clic.</li>
+              <li>Ajouter un message libre (commentaire du pilote), puis cliquer <strong>"Envoyer au client"</strong>.</li>
+            </ul>
+            <div class="note-box info" style="margin-top:8px;">
+              <strong>Même système que le vol sur mesure :</strong> crée une entrée dans <code>route_proposals</code> (statut <em>pending</em>), génère un token UUID unique, envoie l'email ci-dessous.
+            </div>
+          </div>
+          <div class="emails">
+            <div class="email-card to-client">
+              <div class="icon">🗺️</div>
+              <div>
+                <div class="to">→ Client</div>
+                <div class="subject">Fly Horizons — Votre itinéraire personnalisé pour le [date]</div>
+                <div class="note">Message du pilote, liste numérotée des points de survol, bouton menant à /vol/proposition/[token].</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Étape 3b -->
+      <div class="step">
+        <div class="step-num"><span>3b</span></div>
+        <div class="step-content">
+          <div class="step-title"><span class="actor actor-client">Client</span> Consulte et répond sur <strong>/vol/proposition/[token]</strong></div>
+          <div class="step-body">
+            Page identique à celle du vol sur mesure : message du pilote, carte Leaflet avec le tracé, liste ordonnée EBCI → waypoints → EBCI.
+          </div>
+          <div class="branch">
+            <div class="branch-box branch-yes">
+              <div class="branch-label">✅ J'accepte cet itinéraire</div>
+              <div class="branch-body">Statut proposal → <strong>accepted</strong><br>Notification admin par email.</div>
+            </div>
+            <div class="branch-box branch-no">
+              <div class="branch-label">✏️ Demander une modification</div>
+              <div class="branch-body">Statut proposal → <strong>modification_requested</strong><br>Le commentaire client apparaît dans le drawer → admin retrace et renvoie (retour étape 3).</div>
+            </div>
+          </div>
+          <div class="emails" style="margin-top:10px;">
+            <div class="email-card to-admin">
+              <div class="icon">🔔</div>
+              <div>
+                <div class="to">→ Admin</div>
+                <div class="subject">[Route acceptée ✓] ou [Route modification demandée] Prénom Nom</div>
+                <div class="note">Notification de la réponse client (commentaire joint si modification).</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Étape 4 -->
+      <div class="step">
+        <div class="step-num"><span>4</span></div>
+        <div class="step-content">
+          <div class="step-title"><span class="actor actor-admin">Admin</span> Confirme date + heure → statut <span class="statut s-ok">heure_confirmee</span></div>
+          <div class="step-body">
+            Bouton unique <strong>"Confirmer date + heure, envoyer l'email"</strong> depuis le drawer. Déclenche l'email ci-dessous.
+            <ul class="detail">
+              <li><strong>Prérequis</strong> : au moins une <code>route_proposal</code> envoyée (ou l'ancien champ texte <code>route</code> renseigné pour les réservations antérieures). Bloqué sinon côté client et côté serveur.</li>
+              <li>Accessible depuis <span class="statut s-wait">en_attente</span> ou <span class="statut s-pending">acompte_recu</span>.</li>
+              <li>Le statut intermédiaire <span class="statut s-info">date_confirmee</span> n'est plus un objectif direct — il reste atteignable en revenant en arrière depuis <span class="statut s-ok">heure_confirmee</span> ("Revenir planification").</li>
+            </ul>
+          </div>
+          <div class="emails">
+            <div class="email-card to-client">
+              <div class="icon">🕐</div>
+              <div>
+                <div class="to">→ Client</div>
+                <div class="subject">Votre créneau horaire est confirmé — Fly Horizons</div>
+                <div class="note">Date + heure + durée. Lien /vol/itineraire/[token] pour les réservations avec route texte legacy.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Étape 5 (optionnel) -->
+      <div class="step">
+        <div class="step-num"><span>5</span></div>
+        <div class="step-content">
+          <div class="step-title"><span class="actor actor-admin">Admin</span> Report de vol (optionnel)</div>
+          <div class="step-body">Si météo défavorable ou autre. Génère un token de report unique.</div>
+          <div class="emails">
+            <div class="email-card to-client">
+              <div class="icon">🔄</div>
+              <div>
+                <div class="to">→ Client</div>
+                <div class="subject">Votre vol est reporté — Fly Horizons</div>
+                <div class="note">Explication + lien /reservation/reporter/[token] valable 30 jours. L'acompte est conservé.</div>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:8px; font-size:12px; color:#475569;">Quand le client choisit sa nouvelle date via le lien :</div>
+          <div class="emails" style="margin-top:6px;">
+            <div class="email-card to-client">
+              <div class="icon">✅</div>
+              <div>
+                <div class="to">→ Client</div>
+                <div class="subject">Votre report est confirmé — Fly Horizons</div>
+                <div class="note">Ancienne date barrée, nouvelle date confirmée.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Étape 6 -->
+      <div class="step">
+        <div class="step-num"><span>6</span></div>
+        <div class="step-content">
+          <div class="step-title"><span class="actor actor-admin">Admin</span> Vol effectué → statut <span class="statut s-done">vol_effectue</span></div>
+          <div class="step-body"></div>
+          <div class="emails">
+            <div class="email-card to-client">
+              <div class="icon">🛬</div>
+              <div>
+                <div class="to">→ Client</div>
+                <div class="subject">Merci pour votre vol — Fly Horizons</div>
+                <div class="note">Email post-vol avec lien vers le sondage de satisfaction /satisfaction/[id].</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /section-body -->
+  </div><!-- /section standard -->
+
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!--  VOL SUR MESURE                                               -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div>
+        <div class="badge">Circuit 2</div>
+        <h2>Vol sur mesure</h2>
+        <div class="desc">/vol-sur-mesure · type_resa = "perso"</div>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <!-- Étape 1 -->
+      <div class="step">
+        <div class="step-num"><span>1</span></div>
+        <div class="step-content">
+          <div class="step-title"><span class="actor actor-client">Client</span> Configure son vol sur la carte interactive</div>
+          <div class="step-body">
+            Sur <strong>/vol-sur-mesure</strong> : place des waypoints sur la carte Leaflet, choisit le style (direct ou pittoresque), sélectionne les escales avec taxes aéroportuaires, puis remplit ses coordonnées, date, heure, passagers, poids, voucher/coupon.
+            <ul class="detail">
+              <li>Les waypoints sont <strong>géocodés côté serveur</strong> (Nominatim) si leur nom n'est pas renseigné.</li>
+              <li>Le prix estimé = (prix_heure / 60) × durée − déduction voucher − code promo + taxes escales.</li>
+              <li>L'acompte = ~(acompte_perso_heure / 60) × durée.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Étape 2 -->
+      <div class="step">
+        <div class="step-num"><span>2</span></div>
+        <div class="step-content">
+          <div class="step-title"><span class="actor actor-system">Système</span> Création de la réservation → <strong>/api/vol-sur-mesure/checkout</strong></div>
+          <div class="step-body">
+            La réservation est créée avec statut <span class="statut s-wait">en_attente</span>. Un <strong>payment_token</strong> (UUID) est généré si l'acompte &gt; 0.
+          </div>
+          <div class="emails">
+            <div class="email-card to-client">
+              <div class="icon">📋</div>
+              <div>
+                <div class="to">→ Client</div>
+                <div class="subject">Votre demande de vol sur mesure — Fly Horizons</div>
+                <div class="note">Devis complet : date, heure, durée estimée, distance, style de vol, escales, détail du calcul du prix. Si acompte &gt; 0 : lien de paiement immédiat inclus.</div>
+              </div>
+            </div>
+            <div class="email-card to-admin">
+              <div class="icon">🔔</div>
+              <div>
+                <div class="to">→ Admin</div>
+                <div class="subject">[Nouvelle demande vol sur mesure] Prénom Nom — date</div>
+                <div class="note">Résumé + acompte + lien de paiement généré.</div>
+              </div>
+            </div>
+          </div>
+          <div class="note-box" style="margin-top:10px;">
+            <strong>Note :</strong> Le lien de paiement envoyé ici est immédiat (avant proposition de route). Il est possible que le client paie dès réception du devis.
+          </div>
+        </div>
+      </div>
+
+      <!-- Étape 3 -->
+      <div class="step">
+        <div class="step-num"><span>3</span></div>
+        <div class="step-content">
+          <div class="step-title"><span class="actor actor-admin">Admin</span> Prépare la route dans /admin/vols</div>
+          <div class="step-body">
+            Dans le drawer, onglet <strong>Route</strong> :
+            <ul class="detail">
+              <li>La carte affiche la route demandée par le client (points gris, tracé gris) en référence.</li>
+              <li>L'admin clique <strong>"Route client"</strong> → waypoints copiés dans l'éditeur et <strong>optimisés</strong> (nearest-neighbor + 2-opt).</li>
+              <li>Ajustements manuels (glisser, ajouter, supprimer), inversion d'ordre possible.</li>
+              <li>Les <strong>escales</strong> apparaissent en overlay (code ICAO + taxe).</li>
+              <li><strong>Sauvegarder</strong> enregistre dans <code>final_waypoints</code> ; <strong>ForeFlight</strong> copie <code>EBCI … EBCI</code>.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Étape 4 -->
+      <div class="step">
+        <div class="step-num"><span>4</span></div>
+        <div class="step-content">
+          <div class="step-title"><span class="actor actor-admin">Admin</span> Envoie la proposition de route au client</div>
+          <div class="step-body">
+            Depuis le drawer : bouton <strong>"Envoyer au client"</strong>, avec un commentaire libre (message pilote).<br>
+            Crée une entrée dans <code>route_proposals</code> (statut <span class="statut s-pending">pending</span>) avec un UUID unique.
+            <div class="note-box info" style="margin-top:8px;">
+              <strong>Snapshot prix :</strong> la <code>duree</code> et l'<code>acompte</code> en vigueur dans la réservation au moment de l'envoi sont capturés dans <code>route_proposals</code>. Ce sont ces valeurs — pas l'estimé initial du client — qui seront utilisées dans le mail de paiement si la route est acceptée.
+            </div>
+          </div>
+          <div class="emails">
+            <div class="email-card to-client">
+              <div class="icon">🗺️</div>
+              <div>
+                <div class="to">→ Client</div>
+                <div class="subject">Fly Horizons — Votre itinéraire personnalisé pour le [date]</div>
+                <div class="note">Message du pilote, liste numérotée des points de survol, bouton "Voir la carte et répondre →" menant à /vol/proposition/[token].</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Étape 5 -->
+      <div class="step">
+        <div class="step-num"><span>5</span></div>
+        <div class="step-content">
+          <div class="step-title"><span class="actor actor-client">Client</span> Consulte et répond sur /vol/proposition/[token]</div>
+          <div class="step-body">
+            Page légère fond blanc : message du pilote, carte Leaflet avec le tracé, timeline EBCI → waypoints numérotés → retour EBCI.
+          </div>
+          <div class="branch">
+            <div class="branch-box branch-yes">
+              <div class="branch-label">✅ J'accepte</div>
+              <div class="branch-body">Statut proposal → <strong>accepted</strong><br>→ voir étape 6</div>
+            </div>
+            <div class="branch-box branch-no">
+              <div class="branch-label">✏️ Demander une modification</div>
+              <div class="branch-body">Statut proposal → <strong>modification_requested</strong><br>Le client décrit ses souhaits → voir étape 5b</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Étape 5b -->
+      <div class="step">
+        <div class="step-num"><span>5b</span></div>
+        <div class="step-content">
+          <div class="step-title"><span class="actor actor-admin">Admin</span> Reçoit la demande de modification</div>
+          <div class="step-body">L'admin reçoit un email, corrige la route dans le drawer, et renvoie une nouvelle proposition (retour à l'étape 4).</div>
+          <div class="emails">
+            <div class="email-card to-admin">
+              <div class="icon">🔔</div>
+              <div>
+                <div class="to">→ Admin</div>
+                <div class="subject">[Route modification demandée] Prénom Nom</div>
+                <div class="note">Commentaire du client joint.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Étape 6 -->
+      <div class="step">
+        <div class="step-num"><span>6</span></div>
+        <div class="step-content">
+          <div class="step-title"><span class="actor actor-system">Système</span> Acceptation → envoi du lien de paiement</div>
+          <div class="step-body">
+            Déclenché automatiquement quand le client accepte, <strong>si acompte &gt; 0 et pas encore payé</strong>.<br>
+            Si le client avait déjà payé via le lien immédiat du devis initial, aucun nouvel email de paiement n'est envoyé (évite la double facturation).<br>
+            Si le <code>payment_token</code> manque, un nouveau token est généré automatiquement.
+          </div>
+          <div class="emails">
+            <div class="email-card to-client">
+              <div class="icon">💳</div>
+              <div>
+                <div class="to">→ Client</div>
+                <div class="subject">Fly Horizons — Finalisez votre réservation</div>
+                <div class="note">Date, durée, montant de l'acompte, bouton "Payer mon acompte →" menant à /api/vol-sur-mesure/pay/[token].</div>
+              </div>
+            </div>
+            <div class="email-card to-admin">
+              <div class="icon">🔔</div>
+              <div>
+                <div class="to">→ Admin</div>
+                <div class="subject">[Route acceptée ✓] Prénom Nom</div>
+                <div class="note">Notification simple d'acceptation.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Étape 7 -->
+      <div class="step">
+        <div class="step-num"><span>7</span></div>
+        <div class="step-content">
+          <div class="step-title"><span class="actor actor-client">Client</span> Paie l'acompte via Stripe</div>
+          <div class="step-body">
+            /api/vol-sur-mesure/pay/[token] → session Stripe Checkout → webhook → statut <span class="statut s-ok">acompte_recu</span>, <code>payment_token</code> effacé.
+          </div>
+          <div class="emails">
+            <div class="email-card to-client">
+              <div class="icon">✅</div>
+              <div>
+                <div class="to">→ Client</div>
+                <div class="subject">Confirmation de paiement — Vol sur mesure Fly Horizons</div>
+                <div class="note">Récapitulatif : date, heure, durée estimée, montant payé, numéro de réservation.</div>
+              </div>
+            </div>
+            <div class="email-card to-admin">
+              <div class="icon">🔔</div>
+              <div>
+                <div class="to">→ Admin</div>
+                <div class="subject">[Vol sur mesure payé] Prénom Nom — date</div>
+                <div class="note">Confirmation de paiement + nombre de waypoints.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Étape 8 -->
+      <div class="step">
+        <div class="step-num"><span>8</span></div>
+        <div class="step-content">
+          <div class="step-title"><span class="actor actor-admin">Admin</span> Confirmation de la date → statut <span class="statut s-info">date_confirmee</span></div>
+          <div class="step-body">La route est déjà connue du client (via la proposition). Email de confirmation de date sans itinéraire.</div>
+          <div class="emails">
+            <div class="email-card to-client">
+              <div class="icon">📅</div>
+              <div>
+                <div class="to">→ Client</div>
+                <div class="subject">Votre date de vol est confirmée — Fly Horizons</div>
+                <div class="note">Date confirmée, durée.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Étape 9 -->
+      <div class="step">
+        <div class="step-num"><span>9</span></div>
+        <div class="step-content">
+          <div class="step-title"><span class="actor actor-admin">Admin</span> Confirmation de l'heure → statut <span class="statut s-ok">heure_confirmee</span></div>
+          <div class="emails">
+            <div class="email-card to-client">
+              <div class="icon">🕐</div>
+              <div>
+                <div class="to">→ Client</div>
+                <div class="subject">Votre créneau horaire est confirmé — Fly Horizons</div>
+                <div class="note">Date + heure + durée estimée.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Étape 10 -->
+      <div class="step">
+        <div class="step-num"><span>10</span></div>
+        <div class="step-content">
+          <div class="step-title"><span class="actor actor-admin">Admin</span> Vol effectué → statut <span class="statut s-done">vol_effectue</span></div>
+          <div class="emails">
+            <div class="email-card to-client">
+              <div class="icon">🛬</div>
+              <div>
+                <div class="to">→ Client</div>
+                <div class="subject">Merci pour votre vol — Fly Horizons</div>
+                <div class="note">Email post-vol avec lien sondage de satisfaction /satisfaction/[id].</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /section-body -->
+  </div><!-- /section perso -->
+
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!--  TABLEAU COMPARATIF                                           -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div>
+        <div class="badge">Synthèse</div>
+        <h2>Comparaison des deux circuits</h2>
+      </div>
+    </div>
+    <div class="section-body" style="padding:24px;">
+      <table class="compare">
+        <thead>
+          <tr>
+            <th>Point de comparaison</th>
+            <th>Réservation fixe</th>
+            <th>Vol sur mesure</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Paiement</td><td>Immédiat via Stripe Checkout</td><td>Différé — après acceptation de la route</td></tr>
+          <tr><td>Statut initial</td><td>payment_pending (ou en_attente si voucher)</td><td>en_attente</td></tr>
+          <tr><td>Après paiement</td><td>en_attente</td><td>acompte_recu</td></tr>
+          <tr><td>Itinéraire</td><td>Carte Leaflet tracée par l'admin, sauvegardée en <code>final_waypoints</code>, proposée via <code>route_proposals</code>, validée sur <strong>/vol/proposition/[token]</strong></td><td>Identique — même outil, même table, même page client</td></tr>
+          <tr><td>ForeFlight</td><td colspan="2">Bouton copie <code>EBCI coord1 coord2 … EBCI</code> depuis le drawer (les deux circuits)</td></tr>
+          <tr><td>Confirmation statut</td><td>Un seul bouton : <strong>"Confirmer date + heure"</strong> → heure_confirmee directement depuis en_attente ou acompte_recu</td><td>Deux étapes : date_confirmee puis heure_confirmee</td></tr>
+          <tr><td>Boucle route</td><td>Aller-retour possible si modification demandée (même que vol sur mesure)</td><td>Possible aller-retour (modification → nouvelle proposition)</td></tr>
+          <tr><td>Statut intermédiaire date_confirmee</td><td>Accessible en revenant en arrière depuis heure_confirmee ("Revenir planification") — non déclenché en avant</td><td>Déclenché manuellement par l'admin après paiement acompte</td></tr>
+          <tr><td>Voucher</td><td>Déduit du prix direct, paiement Stripe réduit</td><td>Déduit de l'acompte, peut couvrir intégralement</td></tr>
+          <tr><td>Code promo</td><td>Appliqué sur le prix Stripe</td><td>Appliqué sur l'acompte</td></tr>
+          <tr><td>Post-vol</td><td colspan="2">Email avec lien sondage satisfaction /satisfaction/[id]</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!--  LISTE COMPLÈTE DES EMAILS                                    -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div>
+        <div class="badge">Référence</div>
+        <h2>Tous les emails système</h2>
+        <div class="desc">Déclencheurs et destinataires</div>
+      </div>
+    </div>
+    <div class="section-body" style="padding:24px;">
+      <table class="compare">
+        <thead>
+          <tr><th>Email</th><th>Circuit</th><th>Déclenché par</th><th>Destinataire</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Demande de réservation reçue</td><td>Fixe (gratuit)</td><td>submit API</td><td>Client</td></tr>
+          <tr><td>Confirmation de paiement</td><td>Fixe</td><td>Webhook Stripe</td><td>Client</td></tr>
+          <tr><td>Votre itinéraire personnalisé</td><td>Fixe + Mesure</td><td>Admin → "Envoyer au client" (route_proposals)</td><td>Client</td></tr>
+          <tr><td>Votre date de vol est confirmée</td><td>Mesure (+ Fixe legacy)</td><td>Admin → date_confirmee</td><td>Client</td></tr>
+          <tr><td>Votre créneau horaire est confirmé</td><td>Fixe + Mesure</td><td>Admin → heure_confirmee</td><td>Client</td></tr>
+          <tr><td>Votre vol est reporté</td><td>Fixe + Mesure</td><td>Admin (email libre avec lien report)</td><td>Client</td></tr>
+          <tr><td>Votre report est confirmé</td><td>Fixe + Mesure</td><td>Client choisit nouvelle date</td><td>Client</td></tr>
+          <tr><td>Merci pour votre vol (post-vol)</td><td>Fixe + Mesure</td><td>Admin → vol_effectue</td><td>Client</td></tr>
+          <tr><td>Email libre stylisé</td><td>Fixe + Mesure</td><td>Admin (saisie manuelle)</td><td>Client</td></tr>
+          <tr><td>Invitation paiement (renvoi)</td><td>Fixe</td><td>Admin (bouton renvoi)</td><td>Client</td></tr>
+          <tr><td>Votre demande de vol sur mesure (devis)</td><td>Mesure</td><td>Checkout API</td><td>Client</td></tr>
+          <tr><td>Finalisez votre réservation (acompte)</td><td>Mesure</td><td>Client accepte la route</td><td>Client</td></tr>
+          <tr><td>Confirmation de paiement vol sur mesure</td><td>Mesure</td><td>Webhook Stripe</td><td>Client</td></tr>
+          <tr><td>Notifications admin (toutes)</td><td>Fixe + Mesure</td><td>Chaque action clé (paiement, réponse route, etc.)</td><td>Admin</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div style="text-align:center; font-size:11px; color:#94a3b8; padding-top:16px; padding-bottom:32px;">
+    Fly Horizons · Généré depuis le code source · fly-horizons.com
+  </div>
+
+</div>
+</body>
+</html>

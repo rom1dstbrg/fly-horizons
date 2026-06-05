@@ -93,7 +93,7 @@ export default async function NosOffresPage() {
                   {
                     n: "3",
                     icon: <PlaneTakeoff size={13} />,
-                    title: "Romain valide votre itinéraire sous 24 h",
+                    title: "Notre pilote valide votre itinéraire sous 24 h",
                     desc: "Il vérifie la faisabilité (espaces aériens, restrictions) et vous envoie la route définitive avec possibilité d'ajustement.",
                   },
                 ].map(({ n, icon, title, desc }) => (
@@ -110,6 +110,17 @@ export default async function NosOffresPage() {
                     </div>
                   </div>
                 ))}
+              </div>
+
+              {/* Image mobile */}
+              <div className="block lg:hidden rounded-lg overflow-hidden border border-white/12 shadow-[0_8px_32px_rgba(0,0,0,0.4)] mb-7">
+                <Image
+                  src="/vol-sur-mesure.png"
+                  alt="Aperçu de l'outil de planification vol sur mesure"
+                  width={900}
+                  height={600}
+                  className="w-full h-auto"
+                />
               </div>
 
               {/* Tags */}

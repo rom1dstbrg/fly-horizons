@@ -104,7 +104,7 @@ export default function VolSurMesureSuccessPage() {
               <CloudRain size={13} className="text-muted-foreground" />
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              <strong className="text-foreground">Météo :</strong> si les conditions ne permettent pas de voler, le vol est reporté sans frais. Romain décide jusqu&apos;à 2 h avant.
+              <strong className="text-foreground">Météo :</strong> si les conditions ne permettent pas de voler, le vol est reporté sans frais. La décision est prise jusqu&apos;à 2 h avant le départ.
             </p>
           </div>
 

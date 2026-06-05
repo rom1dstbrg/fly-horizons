@@ -436,7 +436,7 @@ export default function ReservationPage() {
     <div className="flex-1 bg-gradient-navy pb-16">
       <div className="h-[84px]" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6">
 
         {/* Page header */}
         <div className="mb-4">
@@ -472,7 +472,8 @@ export default function ReservationPage() {
                     <div className="flex items-center justify-between mb-4">
                       <button type="button"
                         onClick={() => { const ny = calMonth === 1 ? calYear - 1 : calYear; const nm = calMonth === 1 ? 12 : calMonth - 1; setCalYear(ny); setCalMonth(nm); loadMonth(ny, nm); }}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-foreground/40 hover:text-foreground hover:bg-secondary transition-all border border-border cursor-pointer">
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-foreground/40 hover:text-foreground hover:bg-secondary transition-all border border-border cursor-pointer"
+                        aria-label="Mois précédent">
                         <ChevronLeft size={15} />
                       </button>
                       <span className="text-sm font-bold text-foreground">
@@ -480,7 +481,8 @@ export default function ReservationPage() {
                       </span>
                       <button type="button"
                         onClick={() => { const ny = calMonth === 12 ? calYear + 1 : calYear; const nm = calMonth === 12 ? 1 : calMonth + 1; setCalYear(ny); setCalMonth(nm); loadMonth(ny, nm); }}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-foreground/40 hover:text-foreground hover:bg-secondary transition-all border border-border cursor-pointer">
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-foreground/40 hover:text-foreground hover:bg-secondary transition-all border border-border cursor-pointer"
+                        aria-label="Mois suivant">
                         <ChevronRight size={15} />
                       </button>
                     </div>
@@ -612,7 +614,8 @@ export default function ReservationPage() {
                                     className="w-full h-10 px-4 pr-10 rounded-lg border border-border bg-input text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/35"
                                   />
                                   <button type="button" onClick={() => setShowInlinePassword(v => !v)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer">
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                                    aria-label={showInlinePassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}>
                                     {showInlinePassword ? <EyeOff size={14} /> : <Eye size={14} />}
                                   </button>
                                 </div>
@@ -629,7 +632,8 @@ export default function ReservationPage() {
                                     className="w-full h-10 px-4 pr-10 rounded-lg border border-border bg-input text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/35"
                                   />
                                   <button type="button" onClick={() => setShowInlinePasswordConfirm(v => !v)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer">
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                                    aria-label={showInlinePasswordConfirm ? "Masquer la confirmation" : "Afficher la confirmation"}>
                                     {showInlinePasswordConfirm ? <EyeOff size={14} /> : <Eye size={14} />}
                                   </button>
                                 </div>
@@ -1008,7 +1012,7 @@ function CodeField({ codeInput, voucher, coupon, discount, codeLoading, codeErro
             ? `${voucher.product_title} · −${discount} €`
             : `${coupon!.code} · −${coupon!.type === "percentage" ? `${coupon!.value}%` : `${coupon!.value} €`}`}
         </p>
-        <button type="button" onClick={onClear} className="shrink-0 text-foreground/30 hover:text-red-500 transition-colors cursor-pointer">
+        <button type="button" onClick={onClear} className="shrink-0 text-foreground/30 hover:text-red-500 transition-colors cursor-pointer" aria-label="Retirer le code">
           <X size={size === "lg" ? 14 : 13} />
         </button>
       </div>

@@ -564,7 +564,7 @@ export function volSurMesureQuoteEmail(props: VolSurMesureQuoteEmailProps): stri
       Des questions ? R&eacute;pondez &agrave; cet email ou &eacute;crivez-nous &agrave;
       <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a>.<br>
       &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord,
-      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
+      <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>`;
 
   return emailBase(body, `Votre vol sur mesure — ${dateStr}`);
@@ -622,7 +622,7 @@ export function reservationConfirmationFreeEmail(p: ReservationConfirmationProps
 
     <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">
       &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord,
-      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
+      <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
 
     ${p.reservationId
@@ -740,7 +740,7 @@ export function volSurMesureAcompteEmail(p: VolSurMesureAcompteProps): string {
     <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">
       Fly Horizons vous contactera sous 24&nbsp;h pour affiner votre itin&eacute;raire et confirmer votre date de vol. Des questions : r&eacute;pondez &agrave; cet email, Romain vous r&eacute;pondra rapidement.<br>
       &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord,
-      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
+      <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
 
     ${p.reservationId
@@ -794,7 +794,7 @@ export function reservationDateConfirmeeEmail(p: ReservationDateConfirmeeProps):
 
     <p class="em-body" style="margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;">
       Des questions ? R&eacute;pondez directement &agrave; cet email, Romain vous r&eacute;pondra rapidement.<br>
-      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
+      <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
 
     ${!p.route ? ctaButton(`${SITE_URL}/access-ebci`, "Plan d'accès →") : ""}
@@ -871,7 +871,7 @@ export function reservationHeureConfirmeeEmail(p: ReservationHeureConfirmeeProps
 
     <p class="em-body" style="margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;">
       Beau temps et bon vol ! Rendez-vous &agrave; l&rsquo;a&eacute;roport,
-      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
+      <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
 
     ${ctaButton(`${SITE_URL}/access-ebci`, "Plan d'accès →")}
@@ -974,7 +974,7 @@ export function contactReplyEmail({ nom, sujet, reponse }: ContactReplyProps): s
     ${ctaButton(`${SITE_URL}/contact`, "Nous recontacter")}
 
     <p class="em-muted" style="margin:24px 0 0;font-size:14px;color:#334155;text-align:center;">
-      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
+      <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>`;
 
   return emailBase(body, `Réponse de Fly Horizons — ${sujet}`);
@@ -1031,7 +1031,7 @@ export function reservationPaymentInvitationEmail(p: ReservationPaymentInvitatio
       Des questions ? R&eacute;pondez &agrave; cet email ou &eacute;crivez-nous &agrave;
       <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a>.<br>
       &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord,
-      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
+      <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>`;
 
   return emailBase(body, `Votre réservation — ${p.dateStr}`);
@@ -1099,7 +1099,7 @@ export function reservationPaymentReminderEmail(p: ReservationPaymentReminderEma
       Des questions ? R&eacute;pondez &agrave; cet email ou &eacute;crivez-nous &agrave;
       <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a>.<br>
       &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord,
-      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
+      <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>`;
 
   return emailBase(body, `Rappel — Confirmez votre vol du ${p.dateStr}`);
@@ -1114,9 +1114,20 @@ export interface ReservationAutoAnnuleeEmailProps {
   heure: string;
   duree: number;
   bookingUrl: string; // lien pour réserver à nouveau
+  source?: "auto" | "admin"; // "auto" = délai dépassé ; "admin" = annulation manuelle
 }
 
 export function reservationAutoAnnuleeEmail(p: ReservationAutoAnnuleeEmailProps): string {
+  const isAdmin = p.source === "admin";
+
+  const introSuffix = isAdmin
+    ? `a &eacute;t&eacute; annul&eacute;e.`
+    : `a &eacute;t&eacute; annul&eacute;e automatiquement car le paiement n&rsquo;a pas &eacute;t&eacute; re&ccedil;u avant la date limite.`;
+
+  const noticeText = isAdmin
+    ? `Le cr&eacute;neau a &eacute;t&eacute; lib&eacute;r&eacute;. Si un paiement avait &eacute;t&eacute; effectu&eacute;, nous vous contacterons pour le remboursement.`
+    : `Le cr&eacute;neau a &eacute;t&eacute; remis en vente. Aucun montant n&rsquo;a &eacute;t&eacute; pr&eacute;lev&eacute;.`;
+
   const rows: Array<[string, string]> = [
     ["Date", `<span style="text-transform:capitalize;">${esc(p.dateStr)}</span>`],
     ["Heure de départ", esc(p.heure)],
@@ -1127,7 +1138,7 @@ export function reservationAutoAnnuleeEmail(p: ReservationAutoAnnuleeEmailProps)
   const body = `
     <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">R&eacute;servation annul&eacute;e</p>
     <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Votre r&eacute;servation a &eacute;t&eacute; annul&eacute;e</h1>
-    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">Bonjour <strong style="color:#0b2238;">${esc(p.prenom)} ${esc(p.nom)}</strong>, votre r&eacute;servation du <strong style="color:#0b2238;text-transform:capitalize;">${esc(p.dateStr)}</strong> a &eacute;t&eacute; annul&eacute;e automatiquement car le paiement n&rsquo;a pas &eacute;t&eacute; re&ccedil;u avant la date limite.</p>
+    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">Bonjour <strong style="color:#0b2238;">${esc(p.prenom)} ${esc(p.nom)}</strong>, votre r&eacute;servation du <strong style="color:#0b2238;text-transform:capitalize;">${esc(p.dateStr)}</strong> ${introSuffix}</p>
 
     ${separator()}
     ${label("R&eacute;servation annul&eacute;e")}
@@ -1139,7 +1150,7 @@ export function reservationAutoAnnuleeEmail(p: ReservationAutoAnnuleeEmailProps)
       <tr>
         <td style="background-color:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:14px 18px;">
           <p style="margin:0;font-size:13px;color:#991b1b;line-height:1.6;">
-            Le cr&eacute;neau a &eacute;t&eacute; remis en vente. Aucun montant n&rsquo;a &eacute;t&eacute; pr&eacute;lev&eacute;.
+            ${noticeText}
           </p>
         </td>
       </tr>
@@ -1222,7 +1233,7 @@ export function flightReminderEmail(p: FlightReminderEmailProps): string {
       Une question de derni&egrave;re minute ? R&eacute;pondez directement &agrave; cet email ou &eacute;crivez-nous &agrave;
       <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a>.<br>
       &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord,
-      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
+      <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>`;
 
   return emailBase(body, `Rappel — Votre vol le ${p.dateStr} — Fly Horizons`);
@@ -1251,7 +1262,7 @@ export function postVolEmail(p: PostVolEmailProps): string {
     ${ctaButton(p.surveyUrl, "Donner mon avis")}
     <p class="em-muted" style="margin:20px 0 0;font-size:13px;color:#334155;line-height:1.7;text-align:center;">
       &Agrave; bient&ocirc;t,
-      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
+      <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>`;
   return emailBase(body, "Merci pour votre vol — Fly Horizons");
 }
@@ -1478,7 +1489,7 @@ export function routeItineraireEmail(p: RouteItineraireEmailProps): string {
     <p class="em-body" style="margin:0;font-size:14px;color:#334155;line-height:1.7;">
       Des ajustements ? Pas de souci, r&eacute;pondez &agrave; cet email ou utilisez le bouton ci-dessus.<br>
       &Agrave; tr&egrave;s bient&ocirc;t,
-      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
+      <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>`;
 
   return emailBase(body, "Votre itinéraire de vol — Fly Horizons");
@@ -1553,7 +1564,7 @@ export function routeProposalEmail(p: RouteProposalEmailProps): string {
       Vous pouvez visualiser le trac&eacute; sur la carte, accepter l&rsquo;itin&eacute;raire ou nous demander des ajustements.<br>
       Ce lien est personnel et valable uniquement pour cette proposition.<br><br>
       &Agrave; bient&ocirc;t,<br>
-      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
+      <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>`;
 
   return emailBase(body, `Votre itinéraire personnalisé — Fly Horizons`);
@@ -1605,7 +1616,7 @@ export function paymentLinkEmail(p: PaymentLinkEmailProps): string {
     <p class="em-body" style="margin:0;font-size:13px;color:#334155;line-height:1.7;">
       Le solde sera calcul&eacute; apr&egrave;s votre vol selon la dur&eacute;e r&eacute;elle. Si l&rsquo;acompte vers&eacute; d&eacute;passe le montant final, la diff&eacute;rence vous est rembours&eacute;e sous 24&nbsp;h.<br><br>
       &Agrave; tr&egrave;s bient&ocirc;t,<br>
-      <strong class="em-dark" style="color:#0b2238;">Romain, Fly Horizons</strong>
+      <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>`;
 
   return emailBase(body, `Finalisez votre réservation — Fly Horizons`);

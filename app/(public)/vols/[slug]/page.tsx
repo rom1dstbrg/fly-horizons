@@ -62,7 +62,7 @@ const STEPS = [
     num: "04",
     icon: <PlaneTakeoff size={14} />,
     title: "À vous le ciel",
-    desc: "Décollage, montée en altitude, panorama sur la Belgique. Romain commente chaque repère tout au long du trajet et répond à toutes vos questions.",
+    desc: "Décollage, montée en altitude, panorama sur la Belgique. Votre pilote commente chaque repère tout au long du trajet et répond à toutes vos questions.",
   },
 ];
 

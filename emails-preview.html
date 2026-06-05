@@ -59,7 +59,7 @@
     color: #64748b;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
   }
   .email-frame {
     width: 100%;
@@ -87,7 +87,7 @@
 <nav id="sidebar">
   <div id="sidebar-header">
     <h1>Fly Horizons</h1>
-    <p>31 emails</p>
+    <p>32 emails</p>
   </div>
   <a href="#order-confirmation" onclick="showEmail('order-confirmation');return false;" id="link-order-confirmation" class="nav-link">1a · Confirmation commande (cadeau)</a>
 <a href="#order-confirmation-with-codes" onclick="showEmail('order-confirmation-with-codes');return false;" id="link-order-confirmation-with-codes" class="nav-link">1b · Confirmation commande + codes</a>
@@ -101,6 +101,7 @@
 <a href="#payment-invitation" onclick="showEmail('payment-invitation');return false;" id="link-payment-invitation" class="nav-link">14 · Invitation paiement</a>
 <a href="#payment-reminder" onclick="showEmail('payment-reminder');return false;" id="link-payment-reminder" class="nav-link">14c · Rappel paiement (T-72h)</a>
 <a href="#auto-annulee" onclick="showEmail('auto-annulee');return false;" id="link-auto-annulee" class="nav-link">14d · Annulation automatique</a>
+<a href="#admin-annulee" onclick="showEmail('admin-annulee');return false;" id="link-admin-annulee" class="nav-link">14f · Annulation manuelle (admin)</a>
 <a href="#date-confirmee-no-route" onclick="showEmail('date-confirmee-no-route');return false;" id="link-date-confirmee-no-route" class="nav-link">9a · Date confirmée (sans route)</a>
 <a href="#date-confirmee-route" onclick="showEmail('date-confirmee-route');return false;" id="link-date-confirmee-route" class="nav-link">9b · Date confirmée (avec route)</a>
 <a href="#heure-confirmee-no-route" onclick="showEmail('heure-confirmee-no-route');return false;" id="link-heure-confirmee-no-route" class="nav-link">10a · Heure confirmée (sans route)</a>
@@ -130,6 +131,13 @@
 
   <div id="panel-order-confirmation" class="email-panel" style="display:none;">
   <h2 class="panel-title">1a · Confirmation commande (cadeau)</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0369a122;color:#0369a1;border:1px solid #0369a155;">Stripe webhook</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Stripe webhook checkout.session.completed — achat de vouchers à offrir. Les codes ne sont PAS dans cet email ; ils sont envoyés séparément via 4a/4b.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -313,6 +321,13 @@
 
 <div id="panel-order-confirmation-with-codes" class="email-panel" style="display:none;">
   <h2 class="panel-title">1b · Confirmation commande + codes</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0369a122;color:#0369a1;border:1px solid #0369a155;">Stripe webhook</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Stripe webhook checkout.session.completed — achat pour soi-même. Les codes voucher sont inclus directement dans cet email (pas d'email 4a/4b séparé).</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -491,6 +506,13 @@
 
 <div id="panel-voucher-single" class="email-panel" style="display:none;">
   <h2 class="panel-title">4a · Voucher (1 code)</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#7c3aed22;color:#7c3aed;border:1px solid #7c3aed55;">Action admin</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Envoi manuel depuis l'admin OU automatique après achat cadeau (1a) — 1 seul code à transmettre au bénéficiaire.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -644,6 +666,13 @@
 
 <div id="panel-voucher-multi" class="email-panel" style="display:none;">
   <h2 class="panel-title">4b · Vouchers (2 codes)</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#7c3aed22;color:#7c3aed;border:1px solid #7c3aed55;">Action admin</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Envoi manuel depuis l'admin OU automatique après achat cadeau (1a) — plusieurs codes dans un même email.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -825,6 +854,13 @@
 
 <div id="panel-vsm-quote-payment" class="email-panel" style="display:none;">
   <h2 class="panel-title">5a · Vol sur mesure (acompte)</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#7c3aed22;color:#7c3aed;border:1px solid #7c3aed55;">Action admin</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Admin → panel admin → bouton « Envoyer le devis » — vol sur mesure avec acompte > 0. Contient le lien de paiement Stripe.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -914,12 +950,12 @@
         <td class=&quot;em-muted&quot; style=&quot;padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;&quot;>Prix estim&amp;eacute; du vol (~75&amp;nbsp;min)</td>
         <td class=&quot;em-muted&quot; style=&quot;padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;text-align:right;&quot;>380&amp;nbsp;&amp;euro;</td>
       </tr>
-
+      
       <tr>
         <td class=&quot;em-muted&quot; style=&quot;padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;&quot;>Montant facturable</td>
         <td class=&quot;em-muted&quot; style=&quot;padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;text-align:right;&quot;>380&amp;nbsp;&amp;euro;</td>
       </tr>
-
+      
       <tr>
         <td class=&quot;em-dark&quot; style=&quot;padding:11px 0;font-size:14px;font-weight:700;color:#0b2238;&quot;>Acompte estim&amp;eacute;</td>
         <td class=&quot;em-gold&quot; style=&quot;padding:11px 0;font-size:18px;font-weight:800;color:#F2B705;text-align:right;&quot;>100&amp;nbsp;&amp;euro;</td>
@@ -941,7 +977,7 @@
       Des questions ? R&amp;eacute;pondez &amp;agrave; cet email ou &amp;eacute;crivez-nous &amp;agrave;
       <a href=&quot;mailto:info@fly-horizons.com&quot; style=&quot;color:#F2B705;font-weight:600;text-decoration:none;&quot;>info@fly-horizons.com</a>.<br>
       &amp;Agrave; tr&amp;egrave;s bient&amp;ocirc;t &amp;agrave; bord,
-      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, Fly Horizons</strong>
+      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
           </td>
         </tr>
@@ -969,6 +1005,13 @@
 
 <div id="panel-vsm-quote-voucher" class="email-panel" style="display:none;">
   <h2 class="panel-title">5b · Vol sur mesure (voucher)</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#7c3aed22;color:#7c3aed;border:1px solid #7c3aed55;">Action admin</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Admin → panel admin → bouton « Envoyer le devis » — vol sur mesure intégralement couvert par un voucher. Aucun paiement requis, pas de lien Stripe.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -1066,7 +1109,7 @@
         <td class=&quot;em-muted&quot; style=&quot;padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;&quot;>Montant facturable</td>
         <td class=&quot;em-muted&quot; style=&quot;padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;text-align:right;&quot;>0&amp;nbsp;&amp;euro;</td>
       </tr>
-
+      
       <tr>
         <td class=&quot;em-dark&quot; style=&quot;padding:11px 0;font-size:14px;font-weight:700;color:#0b2238;&quot;>Acompte estim&amp;eacute;</td>
         <td class=&quot;em-gold&quot; style=&quot;padding:11px 0;font-size:18px;font-weight:800;color:#F2B705;text-align:right;&quot;>0&amp;nbsp;&amp;euro;</td>
@@ -1081,7 +1124,7 @@
       Des questions ? R&amp;eacute;pondez &amp;agrave; cet email ou &amp;eacute;crivez-nous &amp;agrave;
       <a href=&quot;mailto:info@fly-horizons.com&quot; style=&quot;color:#F2B705;font-weight:600;text-decoration:none;&quot;>info@fly-horizons.com</a>.<br>
       &amp;Agrave; tr&amp;egrave;s bient&amp;ocirc;t &amp;agrave; bord,
-      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, Fly Horizons</strong>
+      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
           </td>
         </tr>
@@ -1109,6 +1152,13 @@
 
 <div id="panel-vsm-acompte" class="email-panel" style="display:none;">
   <h2 class="panel-title">8 · Acompte vol sur mesure</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0369a122;color:#0369a1;border:1px solid #0369a155;">Stripe webhook</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Stripe webhook checkout.session.completed — le client vient de payer l'acompte vol sur mesure. Confirme la réception du paiement et rappelle les prochaines étapes.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -1194,7 +1244,7 @@
     <p class=&quot;em-body&quot; style=&quot;margin:0;font-size:14px;color:#334155;line-height:1.7;&quot;>
       Fly Horizons vous contactera sous 24&amp;nbsp;h pour affiner votre itin&amp;eacute;raire et confirmer votre date de vol. Des questions : r&amp;eacute;pondez &amp;agrave; cet email, Romain vous r&amp;eacute;pondra rapidement.<br>
       &amp;Agrave; tr&amp;egrave;s bient&amp;ocirc;t &amp;agrave; bord,
-      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, Fly Horizons</strong>
+      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
 
     <table width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; style=&quot;margin-top:28px;&quot;>
@@ -1245,6 +1295,13 @@
 
 <div id="panel-resa-free" class="email-panel" style="display:none;">
   <h2 class="panel-title">6 · Réservation (voucher)</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#b4530922;color:#b45309;border:1px solid #b4530955;">Action client</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Client soumet une réservation standard avec un code voucher valide — vol intégralement couvert. Envoyé immédiatement à la soumission du formulaire /reservation.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -1339,7 +1396,7 @@
 
     <p class=&quot;em-body&quot; style=&quot;margin:0;font-size:14px;color:#334155;line-height:1.7;&quot;>
       &amp;Agrave; tr&amp;egrave;s bient&amp;ocirc;t &amp;agrave; bord,
-      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, Fly Horizons</strong>
+      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
 
     <table width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; style=&quot;margin-top:28px;&quot;>
@@ -1390,6 +1447,13 @@
 
 <div id="panel-resa-paid" class="email-panel" style="display:none;">
   <h2 class="panel-title">7 · Réservation (paiement reçu)</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0369a122;color:#0369a1;border:1px solid #0369a155;">Stripe webhook</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Stripe webhook checkout.session.completed — le client vient de payer une réservation standard. Confirme le paiement et la réservation.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -1535,6 +1599,13 @@
 
 <div id="panel-payment-invitation" class="email-panel" style="display:none;">
   <h2 class="panel-title">14 · Invitation paiement</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#7c3aed22;color:#7c3aed;border:1px solid #7c3aed55;">Action admin</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Admin → panel admin → bouton « Inviter au paiement » — envoyé manuellement quand la réservation est prête à être payée (date/heure confirmées).</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -1623,7 +1694,7 @@
       Des questions ? R&amp;eacute;pondez &amp;agrave; cet email ou &amp;eacute;crivez-nous &amp;agrave;
       <a href=&quot;mailto:info@fly-horizons.com&quot; style=&quot;color:#F2B705;font-weight:600;text-decoration:none;&quot;>info@fly-horizons.com</a>.<br>
       &amp;Agrave; tr&amp;egrave;s bient&amp;ocirc;t &amp;agrave; bord,
-      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, Fly Horizons</strong>
+      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
           </td>
         </tr>
@@ -1651,6 +1722,13 @@
 
 <div id="panel-payment-reminder" class="email-panel" style="display:none;">
   <h2 class="panel-title">14c · Rappel paiement (T-72h)</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#16a34a22;color:#16a34a;border:1px solid #16a34a55;">Automatique</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Cron automatique — déclenché 72 h avant le vol si le paiement n'a toujours pas été reçu. Dernier rappel avant annulation automatique.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -1750,7 +1828,7 @@
       Des questions ? R&amp;eacute;pondez &amp;agrave; cet email ou &amp;eacute;crivez-nous &amp;agrave;
       <a href=&quot;mailto:info@fly-horizons.com&quot; style=&quot;color:#F2B705;font-weight:600;text-decoration:none;&quot;>info@fly-horizons.com</a>.<br>
       &amp;Agrave; tr&amp;egrave;s bient&amp;ocirc;t &amp;agrave; bord,
-      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, Fly Horizons</strong>
+      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
           </td>
         </tr>
@@ -1778,6 +1856,13 @@
 
 <div id="panel-auto-annulee" class="email-panel" style="display:none;">
   <h2 class="panel-title">14d · Annulation automatique</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#16a34a22;color:#16a34a;border:1px solid #16a34a55;">Automatique</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Cron automatique — déclenché si le délai de paiement est dépassé sans paiement reçu. La réservation est annulée et le créneau libéré.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -1900,8 +1985,146 @@
 </html>" frameborder="0" onload="resizeIframe(this)"></iframe>
 </div>
 
+<div id="panel-admin-annulee" class="email-panel" style="display:none;">
+  <h2 class="panel-title">14f · Annulation manuelle (admin)</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#7c3aed22;color:#7c3aed;border:1px solid #7c3aed55;">Action admin</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Admin → panel admin → changement de statut « Annulée » depuis la fiche réservation. Envoyé automatiquement pour toute annulation manuelle, standard ou vol sur mesure.</p>
+  </div>
+</div>
+  <iframe class="email-frame" srcdoc="<!DOCTYPE html>
+<html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
+<head>
+<meta charset=&quot;UTF-8&quot;>
+<meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1.0&quot;>
+<meta name=&quot;color-scheme&quot; content=&quot;light only&quot;>
+<meta name=&quot;supported-color-schemes&quot; content=&quot;light only&quot;>
+<title>Réservation annulée — samedi 24 mai 2026</title>
+<style>
+  :root { color-scheme: light only; }
+  html, body { color-scheme: light only !important; background-color: #0b2238 !important; }
+  [data-ogsc] .em-card { background-color: #fefefe !important; }
+  [data-ogsc] .em-bg { background-color: #0b2238 !important; }
+  [data-ogsc] .em-dark { color: #0b2238 !important; }
+  [data-ogsc] .em-muted { color: #64748b !important; }
+  [data-ogsc] .em-gold { color: #F2B705 !important; }
+  [data-ogsc] .em-body { color: #334155 !important; }
+  [data-ogsc] .em-btn { background-color: #F2B705 !important; color: #0b2238 !important; }
+  [data-ogsc] .em-sep { border-color: #e8ecf4 !important; }
+  @media (prefers-color-scheme: dark) {
+    html, body { color-scheme: light only !important; background-color: #0b2238 !important; }
+  }
+</style>
+</head>
+<body style=&quot;margin:0;padding:0;background-color:#0b2238;font-family:'Segoe UI',Arial,sans-serif;&quot;>
+<table class=&quot;em-bg&quot; width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; bgcolor=&quot;#0b2238&quot; style=&quot;background-color:#0b2238;padding:40px 16px;&quot;>
+  <tr>
+    <td align=&quot;center&quot;>
+      <table width=&quot;560&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; style=&quot;max-width:560px;width:100%;&quot;>
+
+        <!-- Logo -->
+        <tr>
+          <td bgcolor=&quot;#0b2238&quot; style=&quot;background-color:#0b2238;padding:0 0 28px;text-align:center;&quot;>
+            <img src=&quot;https://fly-horizons.com/logo-email.png&quot; alt=&quot;Fly Horizons&quot; width=&quot;160&quot;
+              style=&quot;display:block;margin:0 auto;width:160px;height:auto;border:0;outline:none;&quot; />
+          </td>
+        </tr>
+
+        <!-- Card -->
+        <tr>
+          <td class=&quot;em-card&quot; bgcolor=&quot;#fefefe&quot; style=&quot;background-color:#fefefe;border-radius:16px;padding:40px 36px;&quot;>
+            
+    <p class=&quot;em-gold&quot; style=&quot;margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;&quot;>R&amp;eacute;servation annul&amp;eacute;e</p>
+    <h1 class=&quot;em-dark&quot; style=&quot;margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;&quot;>Votre r&amp;eacute;servation a &amp;eacute;t&amp;eacute; annul&amp;eacute;e</h1>
+    <p class=&quot;em-muted&quot; style=&quot;margin:0 0 28px;font-size:14px;color:#64748b;&quot;>Bonjour <strong style=&quot;color:#0b2238;&quot;>Sophie Marchal</strong>, votre r&amp;eacute;servation du <strong style=&quot;color:#0b2238;text-transform:capitalize;&quot;>samedi 24 mai 2026</strong> a &amp;eacute;t&amp;eacute; annul&amp;eacute;e.</p>
+
+    <hr class=&quot;em-sep&quot; style=&quot;border:none;border-top:1px solid #e8ecf4;margin:28px 0;&quot;>
+    <p class=&quot;em-muted&quot; style=&quot;margin:0 0 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.12em;&quot;>R&amp;eacute;servation annul&amp;eacute;e</p>
+    <table width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; style=&quot;margin-bottom:28px;&quot;>
+    
+    <tr>
+      <td class=&quot;em-muted&quot; style=&quot;padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;&quot;>Date</td>
+      <td class=&quot;em-dark&quot; style=&quot;padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;font-weight:700;color:#0b2238;text-align:right;&quot;><span style=&quot;text-transform:capitalize;&quot;>samedi 24 mai 2026</span></td>
+    </tr>
+    <tr>
+      <td class=&quot;em-muted&quot; style=&quot;padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;&quot;>Heure de départ</td>
+      <td class=&quot;em-dark&quot; style=&quot;padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;font-weight:700;color:#0b2238;text-align:right;&quot;>09h30</td>
+    </tr>
+    <tr>
+      <td class=&quot;em-muted&quot; style=&quot;padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;&quot;>Durée du vol</td>
+      <td class=&quot;em-dark&quot; style=&quot;padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;font-weight:700;color:#0b2238;text-align:right;&quot;>1h</td>
+    </tr>
+    <tr>
+      <td class=&quot;em-muted&quot; style=&quot;padding:11px 0;font-size:13px;color:#64748b;&quot;>Départ / retour</td>
+      <td class=&quot;em-dark&quot; style=&quot;padding:11px 0;font-size:13px;font-weight:700;color:#0b2238;text-align:right;&quot;>Charleroi EBCI</td>
+    </tr>
+  </table>
+
+    <hr class=&quot;em-sep&quot; style=&quot;border:none;border-top:1px solid #e8ecf4;margin:28px 0;&quot;>
+
+    <table width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; style=&quot;margin-bottom:20px;&quot;>
+      <tr>
+        <td style=&quot;background-color:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:14px 18px;&quot;>
+          <p style=&quot;margin:0;font-size:13px;color:#991b1b;line-height:1.6;&quot;>
+            Le cr&amp;eacute;neau a &amp;eacute;t&amp;eacute; lib&amp;eacute;r&amp;eacute;. Si un paiement avait &amp;eacute;t&amp;eacute; effectu&amp;eacute;, nous vous contacterons pour le remboursement.
+          </p>
+        </td>
+      </tr>
+    </table>
+
+    <table width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; style=&quot;margin-bottom:28px;&quot;>
+      <tr>
+        <td style=&quot;text-align:center;padding:8px 0;&quot;>
+          <p class=&quot;em-muted&quot; style=&quot;margin:0 0 16px;font-size:13px;color:#64748b;&quot;>Vous souhaitez tout de m&amp;ecirc;me voler&amp;nbsp;? Effectuez une nouvelle r&amp;eacute;servation directement sur notre site.</p>
+          <a href=&quot;https://fly-horizons.com/reservation&quot; class=&quot;em-btn&quot;
+            style=&quot;display:inline-block;background-color:#0b2238;color:#ffffff;font-size:14px;font-weight:800;padding:14px 36px;border-radius:10px;text-decoration:none;&quot;>
+            R&amp;eacute;server &amp;agrave; nouveau
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <p class=&quot;em-body&quot; style=&quot;margin:0;font-size:14px;color:#334155;line-height:1.7;&quot;>
+      Une question ? R&amp;eacute;pondez &amp;agrave; cet email ou contactez-nous &amp;agrave;
+      <a href=&quot;mailto:info@fly-horizons.com&quot; style=&quot;color:#F2B705;font-weight:600;text-decoration:none;&quot;>info@fly-horizons.com</a>.<br>
+      Bonne journ&amp;eacute;e,
+      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Fly Horizons</strong>
+    </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td bgcolor=&quot;#0b2238&quot; style=&quot;background-color:#0b2238;padding:28px 0 0;text-align:center;&quot;>
+            <p style=&quot;margin:0 0 4px;font-size:12px;color:#4e7096;&quot;>
+              Fly Horizons &amp;mdash; <a href=&quot;https://fly-horizons.com&quot; style=&quot;color:#4e7096;text-decoration:none;&quot;>fly-horizons.com</a>
+            </p>
+            <p style=&quot;margin:0;font-size:11px;color:#2d4f6e;&quot;>
+              Une question ? &amp;Eacute;crivez-nous :
+              <a href=&quot;mailto:info@fly-horizons.com&quot; style=&quot;color:#2d4f6e;text-decoration:none;&quot;>info@fly-horizons.com</a>
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>" frameborder="0" onload="resizeIframe(this)"></iframe>
+</div>
+
 <div id="panel-date-confirmee-no-route" class="email-panel" style="display:none;">
   <h2 class="panel-title">9a · Date confirmée (sans route)</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#7c3aed22;color:#7c3aed;border:1px solid #7c3aed55;">Action admin</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Admin → panel admin → changement de statut « Date confirmée » — sans itinéraire encore défini. Le client sait que la date est fixée.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -1972,7 +2195,7 @@
 
     <p class=&quot;em-body&quot; style=&quot;margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;&quot;>
       Des questions ? R&amp;eacute;pondez directement &amp;agrave; cet email, Romain vous r&amp;eacute;pondra rapidement.<br>
-      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, Fly Horizons</strong>
+      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
 
     <table width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; style=&quot;margin-top:28px;&quot;>
@@ -2017,6 +2240,13 @@
 
 <div id="panel-date-confirmee-route" class="email-panel" style="display:none;">
   <h2 class="panel-title">9b · Date confirmée (avec route)</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#7c3aed22;color:#7c3aed;border:1px solid #7c3aed55;">Action admin</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Admin → panel admin → changement de statut « Date confirmée » — avec itinéraire déjà composé. Le client voit la route et peut la visualiser.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -2096,7 +2326,7 @@
 
     <p class=&quot;em-body&quot; style=&quot;margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;&quot;>
       Des questions ? R&amp;eacute;pondez directement &amp;agrave; cet email, Romain vous r&amp;eacute;pondra rapidement.<br>
-      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, Fly Horizons</strong>
+      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
 
     
@@ -2132,6 +2362,13 @@
 
 <div id="panel-heure-confirmee-no-route" class="email-panel" style="display:none;">
   <h2 class="panel-title">10a · Heure confirmée (sans route)</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#7c3aed22;color:#7c3aed;border:1px solid #7c3aed55;">Action admin</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Admin → panel admin → changement de statut « Heure confirmée » — sans itinéraire. Le client a maintenant la date ET l'heure exacte.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -2213,7 +2450,7 @@
 
     <p class=&quot;em-body&quot; style=&quot;margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;&quot;>
       Beau temps et bon vol ! Rendez-vous &amp;agrave; l&amp;rsquo;a&amp;eacute;roport,
-      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, Fly Horizons</strong>
+      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
 
     <table width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; style=&quot;margin-top:28px;&quot;>
@@ -2258,6 +2495,13 @@
 
 <div id="panel-heure-confirmee-route" class="email-panel" style="display:none;">
   <h2 class="panel-title">10b · Heure confirmée (avec route)</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#7c3aed22;color:#7c3aed;border:1px solid #7c3aed55;">Action admin</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Admin → panel admin → changement de statut « Heure confirmée » — avec itinéraire. Envoi complet : date, heure et route.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -2348,7 +2592,7 @@
 
     <p class=&quot;em-body&quot; style=&quot;margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;&quot;>
       Beau temps et bon vol ! Rendez-vous &amp;agrave; l&amp;rsquo;a&amp;eacute;roport,
-      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, Fly Horizons</strong>
+      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
 
     <table width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; style=&quot;margin-top:28px;&quot;>
@@ -2393,6 +2637,13 @@
 
 <div id="panel-flight-reminder" class="email-panel" style="display:none;">
   <h2 class="panel-title">14e · Rappel J-2</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#16a34a22;color:#16a34a;border:1px solid #16a34a55;">Automatique</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Cron automatique — envoyé 2 jours avant le vol. Rappelle la date, l'heure, les infos pratiques et le lien vers l'espace client.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -2499,7 +2750,7 @@
       Une question de derni&amp;egrave;re minute ? R&amp;eacute;pondez directement &amp;agrave; cet email ou &amp;eacute;crivez-nous &amp;agrave;
       <a href=&quot;mailto:info@fly-horizons.com&quot; style=&quot;color:#F2B705;font-weight:600;text-decoration:none;&quot;>info@fly-horizons.com</a>.<br>
       &amp;Agrave; tr&amp;egrave;s bient&amp;ocirc;t &amp;agrave; bord,
-      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, Fly Horizons</strong>
+      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
           </td>
         </tr>
@@ -2527,6 +2778,13 @@
 
 <div id="panel-post-vol" class="email-panel" style="display:none;">
   <h2 class="panel-title">15 · Post-vol (remerciement)</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#7c3aed22;color:#7c3aed;border:1px solid #7c3aed55;">Action admin</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Admin → panel admin → bouton « Marquer le vol comme terminé » — envoyé après le vol. Contient le lien vers l'enquête de satisfaction.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -2590,7 +2848,7 @@
   </table>
     <p class=&quot;em-muted&quot; style=&quot;margin:20px 0 0;font-size:13px;color:#334155;line-height:1.7;text-align:center;&quot;>
       &amp;Agrave; bient&amp;ocirc;t,
-      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, Fly Horizons</strong>
+      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
           </td>
         </tr>
@@ -2618,6 +2876,13 @@
 
 <div id="panel-satisfaction" class="email-panel" style="display:none;">
   <h2 class="panel-title">16 · Satisfaction (résultat admin)</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#16a34a22;color:#16a34a;border:1px solid #16a34a55;">Automatique</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#dc262618;color:#dc2626;border:1px solid #dc262644;">→ Admin</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Automatique — le client soumet l'enquête de satisfaction (lien dans l'email 15). Les résultats sont envoyés à l'admin uniquement.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -2709,6 +2974,13 @@
 
 <div id="panel-route-itineraire" class="email-panel" style="display:none;">
   <h2 class="panel-title">17a · Itinéraire (ancien flux texte)</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#7c3aed22;color:#7c3aed;border:1px solid #7c3aed55;">Action admin</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Admin → panel admin → champ texte libre « Itinéraire ». Ancien flux — envoie l'itinéraire sous forme de texte simple. Remplacé par 17b pour les VSM.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -2789,7 +3061,7 @@
     <p class=&quot;em-body&quot; style=&quot;margin:0;font-size:14px;color:#334155;line-height:1.7;&quot;>
       Des ajustements ? Pas de souci, r&amp;eacute;pondez &amp;agrave; cet email ou utilisez le bouton ci-dessus.<br>
       &amp;Agrave; tr&amp;egrave;s bient&amp;ocirc;t,
-      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, Fly Horizons</strong>
+      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
           </td>
         </tr>
@@ -2817,6 +3089,13 @@
 
 <div id="panel-route-proposal" class="email-panel" style="display:none;">
   <h2 class="panel-title">17b · Proposition d'itinéraire (carte)</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#7c3aed22;color:#7c3aed;border:1px solid #7c3aed55;">Action admin</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Admin → Route Editor → bouton « Proposer l'itinéraire » — nouveau flux waypoints. Contient une carte interactive et les commentaires du pilote. Le client peut valider ou demander une modification (→ 18a/18b).</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -2939,7 +3218,7 @@
       Vous pouvez visualiser le trac&amp;eacute; sur la carte, accepter l&amp;rsquo;itin&amp;eacute;raire ou nous demander des ajustements.<br>
       Ce lien est personnel et valable uniquement pour cette proposition.<br><br>
       &amp;Agrave; bient&amp;ocirc;t,<br>
-      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, Fly Horizons</strong>
+      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
           </td>
         </tr>
@@ -2967,6 +3246,13 @@
 
 <div id="panel-route-feedback-validated" class="email-panel" style="display:none;">
   <h2 class="panel-title">18a · Retour itinéraire (validé)</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#b4530922;color:#b45309;border:1px solid #b4530955;">Action client</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#dc262618;color:#dc2626;border:1px solid #dc262644;">→ Admin</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Automatique — le client clique « Valider » dans l'email 17b. Notification admin : l'itinéraire est accepté, passer à l'étape suivante (paiement → email 19).</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -3076,6 +3362,13 @@
 
 <div id="panel-route-feedback-modification" class="email-panel" style="display:none;">
   <h2 class="panel-title">18b · Retour itinéraire (modification)</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#b4530922;color:#b45309;border:1px solid #b4530955;">Action client</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#dc262618;color:#dc2626;border:1px solid #dc262644;">→ Admin</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Automatique — le client clique « Demander une modification » dans l'email 17b. Notification admin avec le commentaire du client. Retourner dans le Route Editor puis renvoyer 17b.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -3185,6 +3478,13 @@
 
 <div id="panel-payment-link" class="email-panel" style="display:none;">
   <h2 class="panel-title">19 · Lien de paiement (après itinéraire)</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#7c3aed22;color:#7c3aed;border:1px solid #7c3aed55;">Action admin</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Admin → panel admin → bouton « Envoyer le lien de paiement » — après validation de l'itinéraire VSM (18a). Contient le lien Stripe pour régler le solde.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -3271,7 +3571,7 @@
     <p class=&quot;em-body&quot; style=&quot;margin:0;font-size:13px;color:#334155;line-height:1.7;&quot;>
       Le solde sera calcul&amp;eacute; apr&amp;egrave;s votre vol selon la dur&amp;eacute;e r&amp;eacute;elle. Si l&amp;rsquo;acompte vers&amp;eacute; d&amp;eacute;passe le montant final, la diff&amp;eacute;rence vous est rembours&amp;eacute;e sous 24&amp;nbsp;h.<br><br>
       &amp;Agrave; tr&amp;egrave;s bient&amp;ocirc;t,<br>
-      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, Fly Horizons</strong>
+      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
           </td>
         </tr>
@@ -3299,6 +3599,13 @@
 
 <div id="panel-reschedule-invite" class="email-panel" style="display:none;">
   <h2 class="panel-title">20 · Invitation à reporter</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#7c3aed22;color:#7c3aed;border:1px solid #7c3aed55;">Action admin</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Admin → panel admin → bouton « Inviter à reporter » — envoyé manuellement, typiquement suite à une météo défavorable. Contient un lien vers l'espace client pour choisir une nouvelle date.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -3394,6 +3701,13 @@
 
 <div id="panel-reschedule-confirmation" class="email-panel" style="display:none;">
   <h2 class="panel-title">21 · Confirmation de report</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#b4530922;color:#b45309;border:1px solid #b4530955;">Action client</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Automatique — le client a sélectionné une nouvelle date depuis son espace client (lien dans l'email 20). Confirme l'ancienne et la nouvelle date.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -3503,6 +3817,13 @@
 
 <div id="panel-contact-notif" class="email-panel" style="display:none;">
   <h2 class="panel-title">11 · Contact (notif interne)</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#16a34a22;color:#16a34a;border:1px solid #16a34a55;">Automatique</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#dc262618;color:#dc2626;border:1px solid #dc262644;">→ Admin</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Automatique — le visiteur soumet le formulaire /contact. Notification interne : nom, email, sujet et message du visiteur.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -3608,6 +3929,13 @@ Merci d'avance.</p>
 
 <div id="panel-contact-ack" class="email-panel" style="display:none;">
   <h2 class="panel-title">12 · Contact (accusé réception)</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#16a34a22;color:#16a34a;border:1px solid #16a34a55;">Automatique</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Automatique — envoyé au visiteur en même temps que 11. Confirme la bonne réception de son message et annonce une réponse sous 24 h.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -3700,6 +4028,13 @@ Merci d'avance.</p>
 
 <div id="panel-contact-reply" class="email-panel" style="display:none;">
   <h2 class="panel-title">13 · Contact (réponse admin)</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#7c3aed22;color:#7c3aed;border:1px solid #7c3aed55;">Action admin</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Admin → panel admin → champ réponse + bouton « Envoyer » — réponse personnalisée au message de contact. Le client reçoit la réponse avec son message original en dessous.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -3771,7 +4106,7 @@ N'hésitez pas à me contacter pour définir une date !</p>
   </table>
 
     <p class=&quot;em-muted&quot; style=&quot;margin:24px 0 0;font-size:14px;color:#334155;text-align:center;&quot;>
-      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, Fly Horizons</strong>
+      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
           </td>
         </tr>
@@ -3799,6 +4134,13 @@ N'hésitez pas à me contacter pour définir une date !</p>
 
 <div id="panel-custom-meteo" class="email-panel" style="display:none;">
   <h2 class="panel-title">22a · Email libre (report météo)</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#7c3aed22;color:#7c3aed;border:1px solid #7c3aed55;">Action admin</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Admin → panel admin → onglet « Email libre » — message entièrement personnalisé. Ici : report météo avec lien de report intégré. Peut contenir n'importe quel texte.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>
@@ -3891,6 +4233,13 @@ N'hésitez pas à me contacter pour définir une date !</p>
 
 <div id="panel-custom-vol-maintenu" class="email-panel" style="display:none;">
   <h2 class="panel-title">22b · Email libre (vol maintenu)</h2>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
+  <div style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#7c3aed22;color:#7c3aed;border:1px solid #7c3aed55;">Action admin</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Admin → panel admin → onglet « Email libre » — message entièrement personnalisé. Ici : confirmation météo favorable, vol maintenu comme prévu.</p>
+  </div>
+</div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
 <head>

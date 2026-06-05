@@ -309,8 +309,8 @@ const THEMES: Theme[] = [
       },
       {
         q: "J'ai peur de voler, est-ce fait pour moi ?",
-        aText: "C'est une préoccupation très courante, et Romain l'entend souvent. Ce que vous ressentez est parfaitement normal : beaucoup de passagers montent à bord avec une certaine appréhension, et la grande majorité repart surpris de s'être sentis à l'aise dès les premières minutes. La différence avec un vol commercial : vous n'êtes pas enfermé dans une cabine. Vous êtes dans le cockpit, vous voyez ce que fait le pilote, vous comprenez ce qui se passe. Ce sentiment de transparence change tout. Les vols se déroulent à altitude modérée (600 à 1 000 m), à allure douce, loin des turbulences des altitudes commerciales. Si vous avez envie de redescendre ou si vous vous sentez mal à l'aise, vous le dites. Si vous avez le moindre doute, contactez-nous avant de réserver : Romain vous répond directement et prend le temps de vous expliquer.",
-        a: <>C&apos;est une préoccupation très courante, et Romain l&apos;entend souvent. Ce que vous ressentez est parfaitement normal : beaucoup de passagers montent à bord avec une certaine appréhension, et la grande majorité repart surpris de s&apos;être sentis à l&apos;aise dès les premières minutes.<br /><br />La différence avec un vol commercial : vous n&apos;êtes pas enfermé dans une cabine. Vous êtes dans le cockpit, vous voyez ce que fait le pilote, vous comprenez ce qui se passe : ce sentiment de transparence change tout. Les vols se déroulent à altitude modérée (600 à 1 000 m), à allure douce, loin des turbulences des altitudes commerciales.<br /><br />Si vous ressentez un inconfort pendant le vol, vous le dites et on s&apos;adapte. Si vous avez le moindre doute avant de réserver, <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link> : Romain vous répond directement.</>,
+        aText: "C'est une préoccupation très courante, et nous l'entendons souvent. Ce que vous ressentez est parfaitement normal : beaucoup de passagers montent à bord avec une certaine appréhension, et la grande majorité repart surpris de s'être sentis à l'aise dès les premières minutes. La différence avec un vol commercial : vous n'êtes pas enfermé dans une cabine. Vous êtes dans le cockpit, vous voyez ce que fait le pilote, vous comprenez ce qui se passe. Ce sentiment de transparence change tout. Les vols se déroulent à altitude modérée (600 à 1 000 m), à allure douce, loin des turbulences des altitudes commerciales. Si vous avez envie de redescendre ou si vous vous sentez mal à l'aise, vous le dites. Si vous avez le moindre doute, contactez-nous avant de réserver : nous vous répondons directement et prenons le temps de vous expliquer.",
+        a: <>C&apos;est une préoccupation très courante, et nous l&apos;entendons souvent. Ce que vous ressentez est parfaitement normal : beaucoup de passagers montent à bord avec une certaine appréhension, et la grande majorité repart surpris de s&apos;être sentis à l&apos;aise dès les premières minutes.<br /><br />La différence avec un vol commercial : vous n&apos;êtes pas enfermé dans une cabine. Vous êtes dans le cockpit, vous voyez ce que fait le pilote, vous comprenez ce qui se passe : ce sentiment de transparence change tout. Les vols se déroulent à altitude modérée (600 à 1 000 m), à allure douce, loin des turbulences des altitudes commerciales.<br /><br />Si vous ressentez un inconfort pendant le vol, vous le dites et on s&apos;adapte. Si vous avez le moindre doute avant de réserver, <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link> : nous vous répondons directement.</>,
       },
       {
         q: "Les passagers sont-ils assurés pendant le vol ?",
@@ -444,6 +444,7 @@ export default function FaqPage() {
               <button
                 onClick={() => { setSearch(""); setOpenKey(null); }}
                 className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                aria-label="Effacer la recherche"
               >
                 <X size={14} />
               </button>
@@ -517,7 +518,7 @@ export default function FaqPage() {
             </div>
             <div className="flex-1 text-center sm:text-left">
               <p className="text-sm font-bold text-white">Vous ne trouvez pas votre réponse ?</p>
-              <p className="text-xs text-white/50 mt-0.5">Romain vous répond personnellement sous 24 h.</p>
+              <p className="text-xs text-white/50 mt-0.5">Nous vous répondons personnellement sous 24 h.</p>
             </div>
             <Link
               href="/contact"
