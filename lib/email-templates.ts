@@ -455,7 +455,7 @@ export function voucherEmail(props: VoucherEmailProps): string {
   return emailBase(body, `Vos vouchers Fly Horizons — #${orderRef}`);
 }
 
-// ── 5. Vol sur mesure — devis + lien de paiement ──────────────────────────────
+// ── 5. Vol sur mesure — confirmation de demande (sans paiement) ───────────────
 
 export interface VolSurMesureQuoteEmailProps {
   prenom: string;
@@ -519,27 +519,25 @@ export function volSurMesureQuoteEmail(props: VolSurMesureQuoteEmailProps): stri
 
   const ctaSection = paymentUrl
     ? `${separator()}
-    ${label("Comment fonctionne l&rsquo;acompte ?")}
+    ${label("Et apr&egrave;s ?")}
     <p class="em-body" style="margin:0 0 12px;font-size:13px;color:#334155;line-height:1.7;">
-      Le temps de vol r&eacute;el peut varier selon la m&eacute;t&eacute;o, les instructions du contr&ocirc;le a&eacute;rien ou les contraintes op&eacute;rationnelles du jour. Pour tenir compte de ces variations, l&rsquo;acompte demand&eacute; est volontairement fix&eacute; au-dessus du montant final estim&eacute;.
+      Romain va analyser votre itin&eacute;raire et vous envoyer une <strong>proposition de route d&eacute;finitive</strong> sous 24&nbsp;h.
     </p>
-    <p class="em-body" style="margin:0 0 28px;font-size:13px;color:#334155;line-height:1.7;">
-      Apr&egrave;s votre vol, la dur&eacute;e r&eacute;elle est calcul&eacute;e et le montant d&eacute;finitif &eacute;tabli. Si l&rsquo;acompte vers&eacute; d&eacute;passe ce montant, la diff&eacute;rence vous est rembours&eacute;e sous 24&nbsp;h.
+    <p class="em-body" style="margin:0 0 20px;font-size:13px;color:#334155;line-height:1.7;">
+      Une fois la route valid&eacute;e, vous recevrez un lien de paiement pour r&eacute;gler l&rsquo;acompte estim&eacute;&nbsp;(${totalAcompte}&nbsp;&euro;). <strong>Aucun paiement n&rsquo;est demand&eacute; avant cette &eacute;tape.</strong>
     </p>
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
       <tr>
-        <td style="border:2px solid #F2B705;border-radius:12px;padding:28px 24px;text-align:center;">
-          <p class="em-muted" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.1em;">Acompte &agrave; r&eacute;gler</p>
-          <p class="em-dark" style="margin:0 0 20px;font-size:42px;font-weight:800;color:#0b2238;line-height:1;">${totalAcompte}&nbsp;&euro;</p>
-          <a href="${esc(paymentUrl)}" class="em-btn"
-            style="display:inline-block;background-color:#F2B705;color:#0b2238;font-size:14px;font-weight:800;padding:14px 36px;border-radius:10px;text-decoration:none;">
-            Payer mon acompte, ${totalAcompte}&nbsp;&euro;
-          </a>
-          <p class="em-muted" style="margin:14px 0 0;font-size:11px;color:#94a3b8;">Paiement s&eacute;curis&eacute; par Stripe, carte bancaire</p>
+        <td style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;">
+          <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;line-height:1.8;">
+            &bull;&nbsp;L&rsquo;acompte est d&eacute;duit du solde &agrave; r&eacute;gler le jour du vol.<br>
+            &bull;&nbsp;Si Romain annule pour m&eacute;t&eacute;o ou contrainte op&eacute;rationnelle, l&rsquo;acompte est int&eacute;gralement rembours&eacute;.<br>
+            &bull;&nbsp;Si vous annulez plus de 48&nbsp;h avant la date pr&eacute;vue, l&rsquo;acompte est int&eacute;gralement rembours&eacute;.
+          </p>
         </td>
       </tr>
     </table>`
-    : `${callout("Votre vol est enti&egrave;rement couvert par votre voucher, aucun paiement requis. La dur&eacute;e r&eacute;elle du vol peut varier selon la m&eacute;t&eacute;o ou les contraintes a&eacute;riennes. Si la dur&eacute;e r&eacute;elle est inf&eacute;rieure &agrave; l&rsquo;estimation, aucun frais suppl&eacute;mentaire ne s&rsquo;applique. Fly Horizons vous recontactera sous 24&nbsp;h pour pr&eacute;ciser les d&eacute;tails de votre vol.")}`;
+    : `${callout("Votre vol est enti&egrave;rement couvert par votre voucher &mdash; aucun paiement requis. Romain vous contactera sous 24&nbsp;h pour vous envoyer la route d&eacute;finitive.")}`;
 
   const body = `
     <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Vol sur mesure</p>
@@ -629,8 +627,8 @@ export function reservationConfirmationFreeEmail(p: ReservationConfirmationProps
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
       <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">A&eacute;roport de Charleroi (EBCI), Rue des Fr&egrave;res Wright 8, Gosselies</td></tr>
       <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Pr&eacute;sentez-vous <strong>15 minutes avant</strong> le d&eacute;collage. Romain vous accueillera &agrave; l&rsquo;accueil.</td></tr>
-      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">&#128101; <strong>Maximum 3 passagers</strong> par vol (avion l&eacute;ger), sans exception.</td></tr>
-      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">&#9925; En cas de m&eacute;t&eacute;o d&eacute;favorable, le vol est report&eacute; sans frais ni p&eacute;nalit&eacute;.</td></tr>
+      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;"><strong>Maximum 3 passagers</strong> par vol (avion l&eacute;ger), sans exception.</td></tr>
+      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">En cas de m&eacute;t&eacute;o d&eacute;favorable, le vol est report&eacute; sans frais ni p&eacute;nalit&eacute;.</td></tr>
       <tr><td class="em-body" style="padding:8px 0;font-size:13px;color:#334155;">Questions : <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a> &middot; <a href="${SITE_URL}/faq" style="color:#F2B705;font-weight:600;text-decoration:none;">FAQ</a></td></tr>
     </table>
 
@@ -686,8 +684,8 @@ export function reservationPaymentConfirmationEmail(p: ReservationPaymentConfirm
       <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">A&eacute;roport de Charleroi (EBCI), Rue des Fr&egrave;res Wright 8, Gosselies</td></tr>
       <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Pr&eacute;sentez-vous <strong>15 minutes avant</strong> le d&eacute;collage. Romain vous accueillera &agrave; l&rsquo;accueil.</td></tr>
       <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Casques audio fournis. Habillez-vous confortablement, aucun &eacute;quipement sp&eacute;cifique n&rsquo;est n&eacute;cessaire.</td></tr>
-      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">&#128101; <strong>Maximum 3 passagers</strong> par vol (avion l&eacute;ger), sans exception.</td></tr>
-      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">&#9925; En cas de m&eacute;t&eacute;o d&eacute;favorable, le vol est report&eacute; sans frais ni p&eacute;nalit&eacute;.</td></tr>
+      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;"><strong>Maximum 3 passagers</strong> par vol (avion l&eacute;ger), sans exception.</td></tr>
+      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">En cas de m&eacute;t&eacute;o d&eacute;favorable, le vol est report&eacute; sans frais ni p&eacute;nalit&eacute;.</td></tr>
       <tr><td class="em-body" style="padding:8px 0;font-size:13px;color:#334155;">Questions : <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a> &middot; <a href="${SITE_URL}/faq" style="color:#F2B705;font-weight:600;text-decoration:none;">FAQ</a></td></tr>
     </table>
 
@@ -1088,7 +1086,7 @@ export function reservationPaymentReminderEmail(p: ReservationPaymentReminderEma
       <tr>
         <td style="background-color:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:14px 18px;">
           <p style="margin:0;font-size:13px;color:#991b1b;line-height:1.6;">
-            <strong>&#9888;&#65039; Votre lien de paiement expire le ${esc(p.deadlineStr)}.</strong><br>
+            <strong>Votre lien de paiement expire le ${esc(p.deadlineStr)}.</strong><br>
             Pass&eacute; ce d&eacute;lai, votre r&eacute;servation sera automatiquement annul&eacute;e et le cr&eacute;neau remis en vente.
           </p>
         </td>
@@ -1216,13 +1214,13 @@ export function flightReminderEmail(p: FlightReminderEmailProps): string {
       <tr>
         <td style="background-color:#f8fafc;border-radius:10px;padding:18px 20px;">
           <p style="margin:0 0 10px;font-size:13px;color:#334155;line-height:1.7;">
-            &#8987; <strong style="color:#0b2238;">Arrivez 15 minutes avant</strong> l&rsquo;heure de d&eacute;part.
+            <strong style="color:#0b2238;">Arrivez 15 minutes avant</strong> l&rsquo;heure de d&eacute;part.
           </p>
           <p style="margin:0 0 10px;font-size:13px;color:#334155;line-height:1.7;">
-            &#129516; Pr&eacute;voir des <strong style="color:#0b2238;">v&ecirc;tements chauds</strong> en cabine, m&ecirc;me en &eacute;t&eacute;.
+            Pr&eacute;voir des <strong style="color:#0b2238;">v&ecirc;tements chauds</strong> en cabine, m&ecirc;me en &eacute;t&eacute;.
           </p>
           <p style="margin:0;font-size:13px;color:#334155;line-height:1.7;">
-            &#128196; Aucun document sp&eacute;cifique requis. Romain sera sur place pour vous accueillir.
+            Aucun document sp&eacute;cifique requis. Romain sera sur place pour vous accueillir.
           </p>
         </td>
       </tr>
@@ -1541,7 +1539,7 @@ export function routeProposalEmail(p: RouteProposalEmailProps): string {
         <td style="padding:9px 0;border-bottom:1px solid #f1f5f9;vertical-align:middle;">
           <div style="display:flex;align-items:center;gap:10px;">
             <div style="width:22px;height:22px;background:#0b2238;border:2px solid #F2B705;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <span style="font-size:10px;color:#F2B705;">✈</span>
+              <span style="font-size:11px;font-weight:800;color:#F2B705;">&rarr;</span>
             </div>
             <span class="em-muted" style="font-size:13px;color:#64748b;font-weight:600;">Charleroi EBCI &mdash; D&eacute;part</span>
           </div>
@@ -1552,7 +1550,7 @@ export function routeProposalEmail(p: RouteProposalEmailProps): string {
         <td style="padding:9px 0;vertical-align:middle;">
           <div style="display:flex;align-items:center;gap:10px;">
             <div style="width:22px;height:22px;background:#0b2238;border:2px solid #F2B705;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <span style="font-size:10px;color:#F2B705;">✈</span>
+              <span style="font-size:11px;font-weight:800;color:#F2B705;">&larr;</span>
             </div>
             <span class="em-muted" style="font-size:13px;color:#64748b;font-weight:600;">Charleroi EBCI &mdash; Retour</span>
           </div>

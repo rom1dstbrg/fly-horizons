@@ -970,7 +970,7 @@ export default function VolSurMesurePage() {
                 {[
                   { n: 1, title: "Tracez votre itinéraire",   desc: "Cliquez sur la carte pour ajouter vos points de passage." },
                   { n: 2, title: "Découvrez le prix estimé",  desc: "Le prix se met à jour en temps réel en fonction de votre parcours." },
-                  { n: 3, title: "Réservez votre expérience", desc: "Validez votre itinéraire et réglez votre acompte en ligne." },
+                  { n: 3, title: "Soumettez votre demande", desc: "Envoyez votre itinéraire à Romain — aucun paiement maintenant." },
                 ].map(({ n, title, desc }) => (
                   <div key={n} className="flex items-start gap-3 px-5 py-3.5">
                     <div className="w-6 h-6 rounded-full bg-navy text-white flex items-center justify-center text-[11px] font-black shrink-0 mt-0.5">{n}</div>
@@ -1796,7 +1796,7 @@ export default function VolSurMesurePage() {
                   {/* Total */}
                   <div className="flex justify-between items-baseline pt-2.5 border-t border-border">
                     <span className="font-black text-foreground">
-                      {totalAcompteFinal === 0 ? "Couvert par voucher" : "Acompte à régler"}
+                      {totalAcompteFinal === 0 ? "Couvert par voucher" : "Acompte estimé"}
                     </span>
                     <span className="font-black text-foreground text-lg shrink-0 ml-2">
                       {totalAcompteFinal === 0 ? "0 €" : `${totalAcompteFinal} €`}
@@ -1849,7 +1849,7 @@ export default function VolSurMesurePage() {
                   }
                 </button>
                 <p className="text-center text-[10px] text-muted-foreground mt-3">
-                  <Lock size={9} className="inline mr-1" />Paiement sécurisé, aucun débit immédiat
+                  Aucun paiement maintenant — l&apos;acompte sera demandé après validation de la route
                 </p>
               </div>
 
@@ -1869,7 +1869,7 @@ export default function VolSurMesurePage() {
                 }
               </button>
               <p className="text-center text-[10px] text-muted-foreground">
-                <Lock size={9} className="inline mr-1" />Paiement sécurisé, aucun débit immédiat
+                Aucun paiement maintenant — l&apos;acompte sera demandé après validation de la route
               </p>
             </div>
           </div>
@@ -1894,16 +1894,15 @@ export default function VolSurMesurePage() {
                 </div>
               </div>
 
-              {acompte > 0 && (
-                <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
-                  <div className="flex items-start gap-2.5">
-                    <Lock size={13} className="text-amber-600 mt-0.5 shrink-0" />
-                    <p className="text-xs text-amber-800 leading-relaxed">
-                      Un <strong>lien de paiement de l&apos;acompte ({acompte}&thinsp;€)</strong> vous a été envoyé par email. Le créneau sera confirmé dès réception.
-                    </p>
-                  </div>
+              <div className="mb-4 bg-[#f5f8ff] border border-[#0b2238]/10 rounded-lg px-4 py-3">
+                <div className="flex items-start gap-2.5">
+                  <Info size={13} className="text-[#0b2238] mt-0.5 shrink-0" />
+                  <p className="text-xs text-[#0b2238]/80 leading-relaxed">
+                    Romain analyse votre demande et vous envoie la route définitive sous 24&nbsp;h.{" "}
+                    <strong>L&apos;acompte{acompte > 0 ? ` (≈ ${acompte} €)` : ""} ne sera demandé qu&apos;après votre validation.</strong>
+                  </p>
                 </div>
-              )}
+              </div>
 
               <div className="space-y-0">
                 {[
@@ -1919,8 +1918,8 @@ export default function VolSurMesurePage() {
                   },
                   {
                     num: 3, done: false,
-                    title: "Validation de l'itinéraire",
-                    desc: "Vous recevez la route définitive par email. Vous pouvez demander des ajustements avant de donner votre accord.",
+                    title: "Validation & paiement de l'acompte",
+                    desc: `Vous recevez la route définitive par email. Après votre accord, Romain vous envoie un lien pour régler l'acompte${acompte > 0 ? ` (≈ ${acompte} €)` : ""} et confirmer le créneau.`,
                   },
                   {
                     num: 4, done: false,

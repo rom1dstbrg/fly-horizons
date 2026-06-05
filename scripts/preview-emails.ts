@@ -12,9 +12,11 @@ const HEURE = "09h30";
 const ROUTE =
   "Charleroi EBCI → survol de Namur et de la Citadelle → descente sur la vallée de la Meuse → Dinant et le rocher Bayard → retour EBCI via Philippeville";
 const ROUTE_URL = "https://fly-horizons.com/vol/itineraire/preview-token-123";
-const ACCESS_URL = "https://fly-horizons.com/access-ebci";
 const SURVEY_URL = "https://fly-horizons.com/satisfaction/abc123";
 const PAYMENT_URL = "https://buy.stripe.com/preview_test_xxx";
+const RESCHEDULE_URL = "https://fly-horizons.com/account/reservations/preview-resa-id";
+const ACCOUNT_URL = "https://fly-horizons.com/account/reservations/preview-resa-id";
+const BOOKING_URL = "https://fly-horizons.com/reservation";
 const ORDER_REF = "FH-2026-0587";
 
 // ── Email list ────────────────────────────────────────────────────────────────
@@ -24,6 +26,8 @@ const emails: Array<{ id: string; label: string; html: string }> = [];
 function add(id: string, label: string, html: string) {
   emails.push({ id, label, html });
 }
+
+// ── BOUTIQUE ──────────────────────────────────────────────────────────────────
 
 // 1a. Confirmation de commande — sans codes (cadeau)
 add(
@@ -99,7 +103,9 @@ add(
   })
 );
 
-// 5a. Vol sur mesure devis — avec paiement
+// ── VOL SUR MESURE ────────────────────────────────────────────────────────────
+
+// 5a. Vol sur mesure devis — avec acompte estimé (pas de paiement immédiat)
 add(
   "vsm-quote-payment",
   "5a · Vol sur mesure (acompte)",
@@ -149,6 +155,24 @@ add(
   })
 );
 
+// 8. Acompte vol sur mesure reçu
+add(
+  "vsm-acompte",
+  "8 · Acompte vol sur mesure",
+  et.volSurMesureAcompteEmail({
+    prenom: PRENOM,
+    nom: NOM,
+    dateStr: DATE_STR,
+    heure: HEURE,
+    dureeEstimee: 75,
+    voucherCode: null,
+    montantPaye: 100,
+    reservationId: "760c8d6c-1bf2-485f-b527-6198fea4907f",
+  })
+);
+
+// ── RÉSERVATIONS STANDARD ─────────────────────────────────────────────────────
+
 // 6. Réservation couverte par voucher
 add(
   "resa-free",
@@ -184,21 +208,53 @@ add(
   })
 );
 
-// 8. Acompte vol sur mesure reçu
+// 14. Invitation au paiement
 add(
-  "vsm-acompte",
-  "8 · Acompte vol sur mesure",
-  et.volSurMesureAcompteEmail({
+  "payment-invitation",
+  "14 · Invitation paiement",
+  et.reservationPaymentInvitationEmail({
     prenom: PRENOM,
     nom: NOM,
     dateStr: DATE_STR,
     heure: HEURE,
-    dureeEstimee: 75,
+    duree: 60,
+    montant: 320,
+    paymentUrl: PAYMENT_URL,
     voucherCode: null,
-    montantPaye: 100,
-    reservationId: "760c8d6c-1bf2-485f-b527-6198fea4907f",
   })
 );
+
+// 14c. Rappel de paiement — T-72h
+add(
+  "payment-reminder",
+  "14c · Rappel paiement (T-72h)",
+  et.reservationPaymentReminderEmail({
+    prenom: PRENOM,
+    nom: NOM,
+    dateStr: DATE_STR,
+    heure: HEURE,
+    duree: 60,
+    montant: 320,
+    paymentUrl: PAYMENT_URL,
+    deadlineStr: "jeudi 21 mai 2026 à 09h30",
+  })
+);
+
+// 14d. Annulation automatique — délai de paiement dépassé
+add(
+  "auto-annulee",
+  "14d · Annulation automatique",
+  et.reservationAutoAnnuleeEmail({
+    prenom: PRENOM,
+    nom: NOM,
+    dateStr: DATE_STR,
+    heure: HEURE,
+    duree: 60,
+    bookingUrl: BOOKING_URL,
+  })
+);
+
+// ── SUIVI DE VOL ──────────────────────────────────────────────────────────────
 
 // 9a. Date confirmée — sans route
 add(
@@ -254,6 +310,159 @@ add(
   })
 );
 
+// 14e. Rappel J-2 avant le vol
+add(
+  "flight-reminder",
+  "14e · Rappel J-2",
+  et.flightReminderEmail({
+    prenom: PRENOM,
+    dateStr: DATE_STR,
+    heure: HEURE,
+    duree: 60,
+    type_resa: "standard",
+    accountUrl: ACCOUNT_URL,
+  })
+);
+
+// 15. Post-vol
+add(
+  "post-vol",
+  "15 · Post-vol (remerciement)",
+  et.postVolEmail({
+    prenom: PRENOM,
+    dateStr: DATE_STR,
+    duree: 65,
+    surveyUrl: SURVEY_URL,
+  })
+);
+
+// 16. Satisfaction — résultat admin
+add(
+  "satisfaction",
+  "16 · Satisfaction (résultat admin)",
+  et.satisfactionResultEmail({
+    prenom: PRENOM,
+    nom: NOM,
+    dateStr: DATE_STR,
+    duree: 65,
+    noteGlobale: 5,
+    noteAccueil: 4,
+    notePilote: 5,
+    commentaire:
+      "Expérience absolument incroyable ! Romain est un pilote formidable, très rassurant et passionné. Je recommande sans hésiter à toute ma famille.",
+    pointsAmelioration:
+      "Le briefing avant le vol était un peu rapide — j'aurais aimé un peu plus d'explications sur les manœuvres. Rien de grave, juste une petite suggestion !",
+  })
+);
+
+// ── ITINÉRAIRES ───────────────────────────────────────────────────────────────
+
+// 17a. Itinéraire texte (ancien flux)
+add(
+  "route-itineraire",
+  "17a · Itinéraire (ancien flux texte)",
+  et.routeItineraireEmail({
+    prenom: PRENOM,
+    dateStr: DATE_STR,
+    duree: 60,
+    route: ROUTE,
+    routeUrl: ROUTE_URL,
+  })
+);
+
+// 17b. Proposition d'itinéraire (nouveau flux waypoints)
+add(
+  "route-proposal",
+  "17b · Proposition d'itinéraire (carte)",
+  et.routeProposalEmail({
+    prenom: PRENOM,
+    dateStr: DATE_STR,
+    waypoints: [
+      { lat: 50.467, lng: 4.867, nom: "Citadelle de Namur" },
+      { lat: 50.259, lng: 4.912, nom: "Dinant — Rocher Bayard" },
+      { lat: 50.119, lng: 4.459, nom: "Couvin" },
+    ],
+    adminComment:
+      "J'ai tracé un parcours qui passe par les trois points que vous m'avez indiqués. On longera la Meuse sur le retour, la vue est magnifique à cette heure-là. Dites-moi si vous souhaitez ajuster quelque chose !",
+    responseUrl: "https://fly-horizons.com/vol/proposition/preview-token-abc",
+  })
+);
+
+// 18a. Retour itinéraire (validé) — notif admin
+add(
+  "route-feedback-validated",
+  "18a · Retour itinéraire (validé)",
+  et.routeFeedbackAdminEmail({
+    clientPrenom: PRENOM,
+    clientNom: NOM,
+    clientEmail: EMAIL,
+    resaId: "resa-abc-123",
+    dateStr: DATE_STR,
+    type: "validated",
+    feedback: null,
+    adminUrl: "https://fly-horizons.com/admin/vols?tab=reservations",
+  })
+);
+
+// 18b. Retour itinéraire (modification demandée) — notif admin
+add(
+  "route-feedback-modification",
+  "18b · Retour itinéraire (modification)",
+  et.routeFeedbackAdminEmail({
+    clientPrenom: PRENOM,
+    clientNom: NOM,
+    clientEmail: EMAIL,
+    resaId: "resa-abc-123",
+    dateStr: DATE_STR,
+    type: "modification_requested",
+    feedback:
+      "Je souhaiterais plutôt survoler le lac de Nismes et la région de l'Entre-Sambre-et-Meuse. Est-ce possible de passer par Couvin ?",
+    adminUrl: "https://fly-horizons.com/admin/vols?tab=reservations",
+  })
+);
+
+// 19. Lien de paiement (après validation itinéraire perso)
+add(
+  "payment-link",
+  "19 · Lien de paiement (après itinéraire)",
+  et.paymentLinkEmail({
+    prenom: PRENOM,
+    dateStr: DATE_STR,
+    duree: 75,
+    acompte: 120,
+    paymentUrl: PAYMENT_URL,
+  })
+);
+
+// ── REPORT ────────────────────────────────────────────────────────────────────
+
+// 20. Invitation à reporter
+add(
+  "reschedule-invite",
+  "20 · Invitation à reporter",
+  et.rescheduleInviteEmail({
+    prenom: PRENOM,
+    dateStr: DATE_STR,
+    duree: 60,
+    rescheduleUrl: RESCHEDULE_URL,
+  })
+);
+
+// 21. Confirmation de report
+add(
+  "reschedule-confirmation",
+  "21 · Confirmation de report",
+  et.rescheduleConfirmationEmail({
+    prenom: PRENOM,
+    oldDateStr: DATE_STR,
+    newDateStr: "dimanche 14 juin 2026",
+    duree: 60,
+    accountUrl: ACCOUNT_URL,
+  })
+);
+
+// ── CONTACT ───────────────────────────────────────────────────────────────────
+
 // 11. Contact — notification interne
 add(
   "contact-notif",
@@ -293,121 +502,28 @@ add(
   })
 );
 
-// 14b. Rappel J-2
-add(
-  "flight-reminder",
-  "14b · Rappel J-2 avant le vol",
-  et.flightReminderEmail({
-    prenom: PRENOM,
-    dateStr: DATE_STR,
-    heure: HEURE,
-    duree: 60,
-    type_resa: "standard",
-    accountUrl: "https://fly-horizons.com/account",
-  })
-);
+// ── EMAIL LIBRE ───────────────────────────────────────────────────────────────
 
-// 14. Invitation au paiement
+// 22a. Email libre — report météo (avec lien de report)
 add(
-  "payment-invitation",
-  "14 · Invitation paiement",
-  et.reservationPaymentInvitationEmail({
-    prenom: PRENOM,
-    nom: NOM,
-    dateStr: DATE_STR,
-    heure: HEURE,
-    duree: 60,
-    montant: 320,
-    paymentUrl: PAYMENT_URL,
-    voucherCode: null,
-  })
-);
-
-// 15. Post-vol
-add(
-  "post-vol",
-  "15 · Post-vol (remerciement)",
-  et.postVolEmail({
-    prenom: PRENOM,
-    dateStr: DATE_STR,
-    duree: 65,
-    surveyUrl: SURVEY_URL,
-  })
-);
-
-// 16. Satisfaction — résultat admin
-add(
-  "satisfaction",
-  "16 · Satisfaction (résultat admin)",
-  et.satisfactionResultEmail({
-    prenom: PRENOM,
-    nom: NOM,
-    dateStr: DATE_STR,
-    duree: 65,
-    noteGlobale: 5,
-    noteAccueil: 4,
-    notePilote: 5,
-    commentaire:
-      "Expérience absolument incroyable ! Romain est un pilote formidable, très rassurant et passionné. Je recommande sans hésiter à toute ma famille.",
-    pointsAmelioration:
-      "Le briefing avant le vol était un peu rapide — j'aurais aimé un peu plus d'explications sur les manœuvres. Rien de grave, juste une petite suggestion !",
-  })
-);
-
-// 17. Route — proposition itinéraire
-add(
-  "route-proposal",
-  "17 · Itinéraire proposé",
-  et.routeProposalEmail({
-    prenom: PRENOM,
-    dateStr: DATE_STR,
-    duree: 60,
-    route: ROUTE,
-    routeUrl: ROUTE_URL,
-  })
-);
-
-// 18a. Route — retour admin (validé)
-add(
-  "route-feedback-validated",
-  "18a · Retour itinéraire (validé)",
-  et.routeFeedbackAdminEmail({
-    clientPrenom: PRENOM,
-    clientNom: NOM,
-    clientEmail: EMAIL,
-    resaId: "resa-abc-123",
-    dateStr: DATE_STR,
-    type: "validated",
-    feedback: null,
-    adminUrl: "https://fly-horizons.com/admin/vols?tab=reservations",
-  })
-);
-
-// 18b. Route — retour admin (modification)
-add(
-  "route-feedback-modification",
-  "18b · Retour itinéraire (modification)",
-  et.routeFeedbackAdminEmail({
-    clientPrenom: PRENOM,
-    clientNom: NOM,
-    clientEmail: EMAIL,
-    resaId: "resa-abc-123",
-    dateStr: DATE_STR,
-    type: "modification_requested",
-    feedback:
-      "Je souhaiterais plutôt survoler le lac de Nismes et la région de l'Entre-Sambre-et-Meuse. Est-ce possible de passer par Couvin ?",
-    adminUrl: "https://fly-horizons.com/admin/vols?tab=reservations",
-  })
-);
-
-// 19. Email libre
-add(
-  "custom-email",
-  "19 · Email libre",
+  "custom-meteo",
+  "22a · Email libre (report météo)",
   et.customEmail({
-    subject: "Votre vol est reporté — nouvelle date à confirmer",
+    subject: `Fly Horizons — Votre vol du ${DATE_STR}`,
     body:
-      "Bonjour Sophie,\n\nEn raison des conditions météorologiques prévues ce samedi, nous devons reporter votre vol du 24 mai.\n\nVotre sécurité est notre priorité absolue — nous ne décollons jamais dans des conditions incertaines.\n\nJe vous proposerai de nouvelles dates dans les 24 heures. Toutes vos réservations et paiements sont bien conservés.\n\nDésolé pour la gêne occasionnée, et à très bientôt !\n\nRomain — Fly Horizons",
+      `Bonjour ${PRENOM},\n\nJ'ai suivi les prévisions pour le ${DATE_STR} et les conditions ne permettent malheureusement pas de voler en sécurité. Je préfère reporter plutôt que de vous faire prendre des risques ou de vous faire passer une mauvaise expérience.\n\nVotre acompte est bien conservé, aucun frais ne vous est facturé.\n\nVous pouvez choisir votre nouvelle date directement depuis votre espace client en cliquant sur le bouton de report ci-dessous.\n\nÀ très vite,\nRomain`,
+    rescheduleUrl: RESCHEDULE_URL,
+  })
+);
+
+// 22b. Email libre — vol maintenu
+add(
+  "custom-vol-maintenu",
+  "22b · Email libre (vol maintenu)",
+  et.customEmail({
+    subject: `Fly Horizons — Vol confirmé pour le ${DATE_STR}`,
+    body:
+      `Bonjour ${PRENOM},\n\nBonne nouvelle, j'ai vérifié la météo pour le ${DATE_STR} et tout est au vert. Le vol est bien maintenu comme prévu.\n\nRendez-vous à l'aéroport de Charleroi (EBCI) 15 minutes avant l'heure convenue. N'hésitez pas si vous avez une question avant votre arrivée.\n\nÀ très bientôt,\nRomain`,
   })
 );
 
@@ -456,6 +572,14 @@ const html = `<!DOCTYPE html>
   }
   #sidebar-header h1 { font-size: 13px; font-weight: 800; color: #F2B705; letter-spacing: 0.08em; text-transform: uppercase; }
   #sidebar-header p  { font-size: 11px; color: #4e7096; margin-top: 2px; }
+  .nav-section {
+    padding: 10px 16px 4px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #4e7096;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
   .nav-link {
     display: block;
     padding: 8px 16px;
@@ -535,19 +659,13 @@ const html = `<!DOCTYPE html>
   }
 
   function showEmail(id) {
-    // Hide all panels
     document.querySelectorAll('.email-panel').forEach(function(p) { p.style.display = 'none'; });
-    // Deactivate all links
     document.querySelectorAll('.nav-link').forEach(function(a) { a.classList.remove('active'); });
-    // Show selected
     var panel = document.getElementById('panel-' + id);
     panel.style.display = 'block';
     document.getElementById('link-' + id).classList.add('active');
-    // Hide empty state
     document.getElementById('empty-state').style.display = 'none';
-    // Update hash
     history.replaceState(null, '', '#' + id);
-    // Resize iframe now that the panel is visible (scrollHeight is 0 when hidden)
     var iframe = panel.querySelector('iframe');
     if (iframe) {
       resizeIframe(iframe);
@@ -555,7 +673,6 @@ const html = `<!DOCTYPE html>
     }
   }
 
-  // On load: open from hash or first email
   (function() {
     var hash = location.hash.slice(1);
     var target = hash && document.getElementById('panel-' + hash) ? hash : '${emails[0]?.id ?? ""}';
