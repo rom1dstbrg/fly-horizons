@@ -46,11 +46,13 @@ export async function GET(request: NextRequest) {
   const debut = `${y}-${String(m).padStart(2, "0")}-01`;
   const fin = `${y}-${String(m).padStart(2, "0")}-${new Date(y, m, 0).getDate()}`;
 
-  const [{ data: plages }, { data: joursIndiv }, { data: resas }] = await Promise.all([
+  const [{ data: plages }, { data: joursIndiv }, { data: resas }, { data: minJoursSetting }] = await Promise.all([
     supabase.from("disponibilites").select("*").lte("date_debut", fin).gte("date_fin", debut).eq("actif", true),
     supabase.from("disponibilites_jours").select("*").gte("date", debut).lte("date", fin),
     supabase.from("reservations").select("date_vol, heure_vol, duree").gte("date_vol", debut).lte("date_vol", fin).neq("statut", "annulee"),
+    supabase.from("crm_settings").select("value").eq("key", "reservation_min_jours").maybeSingle(),
   ]);
+  const minJours = parseInt((minJoursSetting as { value?: string } | null)?.value ?? "2") || 2;
 
   const resasByDate: Record<string, Array<{ heure_vol: string | null; duree: number }>> = {};
   (resas ?? []).forEach((r) => {

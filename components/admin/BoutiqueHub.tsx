@@ -67,7 +67,7 @@ function ProductTable({ products, showStock }: { products: Product[]; showStock:
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-md bg-muted overflow-hidden shrink-0 border border-border">
                     {product.images?.[0]?.url ? (
-                      <Image src={[...(product.images ?? [])].sort((a: {position?: number}, b: {position?: number}) => (a.position ?? 0) - (b.position ?? 0))[0].url} alt={product.title} width={40} height={40} className="w-full h-full object-cover" unoptimized />
+                      <Image src={[...(product.images ?? [])].sort((a, b) => ((a as {position?: number}).position ?? 0) - ((b as {position?: number}).position ?? 0))[0].url} alt={product.title} width={40} height={40} className="w-full h-full object-cover" unoptimized />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">—</div>
                     )}

@@ -88,10 +88,10 @@ export default async function AdminDashboardPage() {
       .not("status", "in", "(cancelled,refunded)"),
     // Réservations — tous les champs requis par DrawerReservation
     supabase.from("reservations").select(
-      "id, date_vol, heure_vol, duree, statut, type_resa, created_at, " +
-      "voucher_code, coupon_code, payment_status, commentaire, acompte, paye, payment_token, " +
-      "route, route_token, route_status, route_feedback, passagers, poids_total, " +
-      "clients(id, prenom, nom, email, telephone)"
+      `id, date_vol, heure_vol, duree, statut, type_resa, created_at,
+       voucher_code, coupon_code, payment_status, commentaire, acompte, paye, payment_token,
+       route, route_token, route_status, route_feedback, passagers, poids_total,
+       clients(id, prenom, nom, email, telephone)`
     ).order("created_at", { ascending: false }),
     supabase.from("clients").select("email"),
     supabase.from("voucher_codes").select("id", { count: "exact", head: true }).eq("status", "unused"),
@@ -99,7 +99,8 @@ export default async function AdminDashboardPage() {
       .eq("statut", "nouveau").order("created_at", { ascending: false }).limit(5),
   ]);
 
-  const allResas  = reservations ?? [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const allResas  = (reservations ?? []) as any[];
   const resaStd   = allResas.filter(r => r.type_resa === "standard");
   const resaPerso = allResas.filter(r => r.type_resa === "perso");
 
