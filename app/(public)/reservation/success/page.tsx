@@ -48,7 +48,7 @@ const STEPS_PAY_LATER = [
     num: 2,
     done: false,
     title: "Réglez dans les 24 h pour confirmer",
-    desc: "Ouvrez le lien de paiement reçu par email et réglez l'acompte. Votre créneau n'est sécurisé qu'après paiement ; les disponibilités peuvent évoluer.",
+    desc: "Ouvrez le lien de paiement reçu par email et réglez la provision. Votre créneau n'est sécurisé qu'après paiement ; les disponibilités peuvent évoluer.",
   },
   {
     num: 3,

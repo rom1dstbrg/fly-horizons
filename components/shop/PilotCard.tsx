@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react";
 export default function PilotCard() {
   return (
     <section className="bg-white py-20 sm:py-28 border-t border-[#e0e5ef]">
-      <div className="max-w-6xl mx-auto px-4 sm:px-8">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-20 items-center">
 
           {/* Texte — colonne gauche */}

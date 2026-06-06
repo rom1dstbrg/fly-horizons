@@ -1,21 +1,22 @@
 ﻿"use client";
 
 import { useState, useMemo } from "react";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import Link from "next/link";
 import {
   ChevronDown, Search, MessageCircle, X,
   CalendarCheck, CreditCard, Gift, CloudRain, PlaneTakeoff, Users,
 } from "lucide-react";
-import { ChatWidget } from "@/components/chat/ChatWidget";
 
 // ── Recherche intelligente ──────────────────────────────────────────────────
 
 const SYNONYMS: Record<string, string[]> = {
   prix:        ["tarif", "cout", "combien", "cher", "montant"],
   tarif:       ["prix", "cout", "combien"],
-  payer:       ["paiement", "acompte", "regler", "stripe", "carte", "virement"],
-  paiement:    ["payer", "acompte", "stripe", "carte", "regler"],
-  acompte:     ["payer", "paiement", "depot", "garantie"],
+  payer:       ["paiement", "provision", "acompte", "regler", "stripe", "carte", "virement"],
+  paiement:    ["payer", "provision", "acompte", "stripe", "carte", "regler"],
+  acompte:     ["provision", "payer", "paiement", "depot", "garantie"],
+  provision:   ["payer", "paiement", "acompte", "depot", "garantie"],
   annuler:     ["annulation", "rembours", "reporter", "report", "modifier"],
   annulation:  ["annuler", "rembours", "reporter", "modifier"],
   reporter:    ["report", "modifier", "decaler", "annuler", "annulation"],
@@ -111,8 +112,8 @@ const THEMES: Theme[] = [
     items: [
       {
         q: "Comment réserver un vol en durée fixe ?",
-        aText: "Rendez-vous sur la page Nos offres, choisissez votre durée de vol : 30, 60, 90 ou 120 minutes. Cliquez sur Réserver, sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis choisissez votre mode de paiement. La réservation est confirmée dès que l'acompte est reçu.",
-        a: <>Rendez-vous sur la page <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Nos offres</Link>, choisissez votre durée : 30, 60, 90 ou 120 minutes. Sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis choisissez votre mode de paiement. La réservation est confirmée dès que l'acompte est reçu.</>,
+        aText: "Rendez-vous sur la page Nos offres, choisissez votre durée de vol : 30, 60, 90 ou 120 minutes. Cliquez sur Réserver, sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis choisissez votre mode de paiement. La réservation est confirmée dès que la provision est reçue.",
+        a: <>Rendez-vous sur la page <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Nos offres</Link>, choisissez votre durée : 30, 60, 90 ou 120 minutes. Sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis choisissez votre mode de paiement. La réservation est confirmée dès que la provision est reçue.</>,
       },
       {
         q: "Comment fonctionne le vol sur mesure ?",
@@ -141,25 +142,25 @@ const THEMES: Theme[] = [
       },
       {
         q: "Mon itinéraire vol sur mesure peut-il être refusé ou modifié ?",
-        aText: "Un itinéraire peut être refusé ou adapté pour des raisons de sécurité, de météo ou de réglementation d'espace aérien (zones interdites, trafic contrôlé). Dans ce cas, le pilote propose une alternative adaptée avant le vol. Si aucune solution ne convient, la réservation est annulée et l'acompte remboursé intégralement. Pour les zones ou destinations importantes pour vous, signalez-les à la réservation : le pilote vérifiera la faisabilité en amont.",
-        a: <>Un itinéraire peut être refusé ou adapté pour des raisons de sécurité, de météo ou de réglementation d&apos;espace aérien (zones interdites, trafic contrôlé). Dans ce cas, le pilote propose une alternative avant le vol. Si aucune solution ne convient, la réservation est annulée et l&apos;acompte remboursé intégralement. Pour les destinations importantes pour vous, signalez-les à la <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">réservation</Link> : le pilote vérifiera la faisabilité en amont.</>,
+        aText: "Un itinéraire peut être refusé ou adapté pour des raisons de sécurité, de météo ou de réglementation d'espace aérien (zones interdites, trafic contrôlé). Dans ce cas, le pilote propose une alternative adaptée avant le vol. Si aucune solution ne convient, la réservation est annulée et la provision remboursée intégralement. Pour les zones ou destinations importantes pour vous, signalez-les à la réservation : le pilote vérifiera la faisabilité en amont.",
+        a: <>Un itinéraire peut être refusé ou adapté pour des raisons de sécurité, de météo ou de réglementation d&apos;espace aérien (zones interdites, trafic contrôlé). Dans ce cas, le pilote propose une alternative avant le vol. Si aucune solution ne convient, la réservation est annulée et la provision remboursée intégralement. Pour les destinations importantes pour vous, signalez-les à la <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">réservation</Link> : le pilote vérifiera la faisabilité en amont.</>,
       },
     ],
   },
   {
     id: "paiement",
-    title: "Paiement et acompte",
+    title: "Paiement et provision",
     Icon: CreditCard,
     items: [
       {
-        q: "Comment fonctionne le paiement de l'acompte ?",
-        aText: "Lors de la réservation, deux options s'offrent à vous. Payer maintenant : l'acompte est débité immédiatement via Stripe, le créneau est sécurisé sur-le-champ. Payer plus tard : un email avec un lien de paiement Stripe vous est envoyé. Aucune saisie de carte n'est effectuée sur ce site dans ce cas.",
-        a: "Lors de la réservation, deux options s'offrent à vous : payer maintenant (l'acompte est débité immédiatement via Stripe, le créneau est sécurisé sur-le-champ) ou payer plus tard (un email avec un lien de paiement vous est envoyé, aucune saisie de carte sur ce site).",
+        q: "Comment fonctionne le paiement de la provision ?",
+        aText: "Lors de la réservation, deux options s'offrent à vous. Payer maintenant : la provision est débitée immédiatement via Stripe, le créneau est sécurisé sur-le-champ. Payer plus tard : un email avec un lien de paiement Stripe vous est envoyé. Aucune saisie de carte n'est effectuée sur ce site dans ce cas.",
+        a: "Lors de la réservation, deux options s'offrent à vous : payer maintenant (la provision est débitée immédiatement via Stripe, le créneau est sécurisé sur-le-champ) ou payer plus tard (un email avec un lien de paiement vous est envoyé, aucune saisie de carte sur ce site).",
       },
       {
         q: "Mon créneau est-il garanti si je choisis de payer plus tard ?",
-        aText: "Non. Tant que l'acompte n'est pas reçu, le créneau n'est pas sécurisé. Un autre client peut réserver la même date et payer avant vous. Dès que vous réglez via le lien reçu par email, le créneau vous est attribué définitivement. Il est donc conseillé de payer le plus tôt possible.",
-        a: "Non. Tant que l'acompte n'est pas reçu, le créneau n'est pas sécurisé. Un autre client peut réserver la même date et payer avant vous. Dès que vous réglez via le lien reçu par email, le créneau vous est attribué définitivement.",
+        aText: "Non. Tant que la provision n'est pas reçue, le créneau n'est pas sécurisé. Un autre client peut réserver la même date et payer avant vous. Dès que vous réglez via le lien reçu par email, le créneau vous est attribué définitivement. Il est donc conseillé de payer le plus tôt possible.",
+        a: "Non. Tant que la provision n'est pas reçue, le créneau n'est pas sécurisé. Un autre client peut réserver la même date et payer avant vous. Dès que vous réglez via le lien reçu par email, le créneau vous est attribué définitivement.",
       },
       {
         q: "Quels moyens de paiement sont acceptés ?",
@@ -172,9 +173,9 @@ const THEMES: Theme[] = [
         a: "Le prix final est calculé à partir du compteur HOBBS de l'avion (temps moteur réel). Formule : tarif horaire ÷ 60 × minutes réelles. Si le vol est plus court que la durée réservée, la différence vous est remboursée sous 24 heures. Si le vol est plus long, le supplément vous est facturé dans les mêmes délais. Aucune surprise : le tarif horaire est communiqué avant la réservation.",
       },
       {
-        q: "Un bon cadeau peut-il couvrir l'acompte en totalité ?",
-        aText: "Oui. Si le bon cadeau couvre la totalité de l'acompte, aucun paiement supplémentaire n'est demandé et le créneau est immédiatement confirmé. S'il ne couvre qu'une partie, le bénéficiaire règle le solde via Stripe.",
-        a: "Oui. Si le bon cadeau couvre la totalité de l'acompte, aucun paiement supplémentaire n'est demandé et le créneau est immédiatement confirmé. S'il ne couvre qu'une partie, le bénéficiaire règle le solde via Stripe.",
+        q: "Un bon cadeau peut-il couvrir la provision en totalité ?",
+        aText: "Oui. Si le bon cadeau couvre la totalité de la provision, aucun paiement supplémentaire n'est demandé et le créneau est immédiatement confirmé. S'il ne couvre qu'une partie, le bénéficiaire règle le solde via Stripe.",
+        a: "Oui. Si le bon cadeau couvre la totalité de la provision, aucun paiement supplémentaire n'est demandé et le créneau est immédiatement confirmé. S'il ne couvre qu'une partie, le bénéficiaire règle le solde via Stripe.",
       },
     ],
   },
@@ -190,13 +191,13 @@ const THEMES: Theme[] = [
       },
       {
         q: "Comment le bénéficiaire utilise-t-il le bon cadeau ?",
-        aText: "Il se rend sur la page de réservation, choisit une date et un horaire, remplit ses informations, puis entre son code au moment du paiement. Le code est déduit automatiquement de l'acompte.",
-        a: "Il se rend sur la page de réservation, choisit une date et un horaire disponibles, remplit ses informations, puis entre son code au moment du paiement. Le code est déduit automatiquement de l'acompte.",
+        aText: "Il se rend sur la page de réservation, choisit une date et un horaire, remplit ses informations, puis entre son code au moment du paiement. Le code est déduit automatiquement de la provision.",
+        a: "Il se rend sur la page de réservation, choisit une date et un horaire disponibles, remplit ses informations, puis entre son code au moment du paiement. Le code est déduit automatiquement de la provision.",
       },
       {
         q: "Un bon cadeau est-il utilisable pour un vol sur mesure ?",
-        aText: "Oui. Le code est valable pour n'importe quelle formule de vol, durée fixe ou itinéraire libre. Il est déduit de l'acompte quelle que soit la formule choisie.",
-        a: "Oui. Le code est valable pour n'importe quelle formule : durée fixe ou vol sur mesure. Il est déduit de l'acompte quelle que soit la formule choisie.",
+        aText: "Oui. Le code est valable pour n'importe quelle formule de vol, durée fixe ou itinéraire libre. Il est déduit de la provision quelle que soit la formule choisie.",
+        a: "Oui. Le code est valable pour n'importe quelle formule : durée fixe ou vol sur mesure. Il est déduit de la provision quelle que soit la formule choisie.",
       },
       {
         q: "Quelle est la durée de validité d'un bon cadeau ?",
@@ -222,8 +223,8 @@ const THEMES: Theme[] = [
       },
       {
         q: "Puis-je annuler ou reporter mon vol ?",
-        aText: "Oui. Annulation sans frais jusqu'à 48 heures avant le vol. En deçà de 48 heures, des frais de replanning pouvant aller jusqu'à 50 € peuvent s'appliquer pour couvrir les démarches administratives. En cas d'absence sans prévenir (no-show), l'acompte est conservé et aucun remboursement n'est effectué. Pour reporter votre vol, connectez-vous à votre espace client : un lien de report vous sera proposé.",
-        a: <>Annulation sans frais jusqu'à 48 heures avant le vol. En deçà, des frais de replanning jusqu'à 50 € peuvent s'appliquer. En cas d'absence sans prévenir, l'acompte est conservé. Pour reporter, connectez-vous à votre <Link href="/account" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">espace client</Link> ou <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link>.</>,
+        aText: "Oui. Annulation sans frais jusqu'à 48 heures avant le vol. En deçà de 48 heures, des frais de replanning pouvant aller jusqu'à 50 € peuvent s'appliquer pour couvrir les démarches administratives. En cas d'absence sans prévenir (no-show), la provision est conservée et aucun remboursement n'est effectué. Pour reporter votre vol, connectez-vous à votre espace client : un lien de report vous sera proposé.",
+        a: <>Annulation sans frais jusqu'à 48 heures avant le vol. En deçà, des frais de replanning jusqu'à 50 € peuvent s'appliquer. En cas d'absence sans prévenir, la provision est conservée. Pour reporter, connectez-vous à votre <Link href="/account" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">espace client</Link> ou <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link>.</>,
       },
       {
         q: "Combien de temps avant le vol dois-je arriver ?",
@@ -242,13 +243,13 @@ const THEMES: Theme[] = [
       },
       {
         q: "Que se passe-t-il si je suis en retard le jour du vol ?",
-        aText: "Prévenez-nous dès que possible par téléphone ou email. Un léger retard de quelques minutes peut généralement être absorbé. Au-delà de 15 minutes, le créneau peut être compromis selon la disponibilité du planning. En cas d'absence sans prévenir (no-show), l'acompte reste acquis et aucun remboursement ne peut être effectué.",
-        a: <>Prévenez-nous dès que possible. Un léger retard peut être absorbé. Au-delà de 15 minutes, le créneau peut être compromis. En cas d'absence sans prévenir, l'acompte reste acquis. <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Nous contacter</Link>.</>,
+        aText: "Prévenez-nous dès que possible par téléphone ou email. Un léger retard de quelques minutes peut généralement être absorbé. Au-delà de 15 minutes, le créneau peut être compromis selon la disponibilité du planning. En cas d'absence sans prévenir (no-show), la provision reste acquise et aucun remboursement ne peut être effectué.",
+        a: <>Prévenez-nous dès que possible. Un léger retard peut être absorbé. Au-delà de 15 minutes, le créneau peut être compromis. En cas d'absence sans prévenir, la provision reste acquise. <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Nous contacter</Link>.</>,
       },
       {
         q: "Comment suivre l'état de ma réservation ?",
-        aText: "Connectez-vous à votre espace client : vous y retrouvez le statut de votre réservation en temps réel (en attente, acompte reçu, date confirmée, heure confirmée). Chaque changement de statut vous est également notifié par email.",
-        a: <>Connectez-vous à votre <Link href="/account" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">espace client</Link> : vous y retrouvez le statut en temps réel (en attente, acompte reçu, date confirmée, heure confirmée). Chaque changement vous est notifié par email.</>,
+        aText: "Connectez-vous à votre espace client : vous y retrouvez le statut de votre réservation en temps réel (en attente, provision reçue, date confirmée, heure confirmée). Chaque changement de statut vous est également notifié par email.",
+        a: <>Connectez-vous à votre <Link href="/account" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">espace client</Link> : vous y retrouvez le statut en temps réel (en attente, provision reçue, date confirmée, heure confirmée). Chaque changement vous est notifié par email.</>,
       },
       {
         q: "À quelle heure décollera-t-on exactement ?",
@@ -257,8 +258,8 @@ const THEMES: Theme[] = [
       },
       {
         q: "Dans quel délai ma réservation est-elle confirmée ?",
-        aText: "La réservation est validée dans un délai maximum de 48 heures après réception de l'acompte, en pratique souvent en 2 à 4 heures. Vous recevez un email de confirmation dès que le pilote a vérifié la disponibilité et les conditions de vol.",
-        a: "La réservation est validée dans un délai maximum de 48 heures après réception de l'acompte, en pratique souvent en 2 à 4 heures. Vous recevez un email de confirmation dès que le pilote a validé la disponibilité.",
+        aText: "La réservation est validée dans un délai maximum de 48 heures après réception de la provision, en pratique souvent en 2 à 4 heures. Vous recevez un email de confirmation dès que le pilote a vérifié la disponibilité et les conditions de vol.",
+        a: "La réservation est validée dans un délai maximum de 48 heures après réception de la provision, en pratique souvent en 2 à 4 heures. Vous recevez un email de confirmation dès que le pilote a validé la disponibilité.",
       },
       {
         q: "Peut-on voler dans d'autres pays que la Belgique ?",
@@ -435,7 +436,7 @@ export default function FaqPage() {
             <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <input
               type="text"
-              placeholder="Rechercher : acompte, bon cadeau, météo, annulation…"
+              placeholder="Rechercher : provision, bon cadeau, météo, annulation…"
               value={search}
               onChange={(e) => { setSearch(e.target.value); setOpenKey(null); setActiveTheme(null); }}
               className="w-full pl-9 pr-9 py-2.5 text-sm bg-white border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
@@ -528,12 +529,10 @@ export default function FaqPage() {
             </Link>
           </div>
 
-          {/* Assistant IA flottant */}
-          <ChatWidget />
-
         </div>
       </section>
 
+      <ChatWidget />
     </main>
   );
 }

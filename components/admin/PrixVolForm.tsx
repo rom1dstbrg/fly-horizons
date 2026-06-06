@@ -54,7 +54,7 @@ export function PrixVolForm({ prixHeure, acomptePersoHeure }: { prixHeure: numbe
 
         <div className="flex-1 max-w-[220px]">
           <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-            Acompte vol sur mesure (€/60 min)
+            Provision vol sur mesure (€/60 min)
           </label>
           <div className="relative">
             <input

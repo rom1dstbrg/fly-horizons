@@ -1,6 +1,7 @@
 ﻿import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import {
   Clock, Route, Zap, PlaneTakeoff, ArrowRight, MousePointerClick,
   EuroIcon, Users, MapPin,
@@ -244,6 +245,7 @@ export default async function NosOffresPage() {
         </div>
       </div>
 
+      <ChatWidget />
     </main>
   );
 }

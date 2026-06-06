@@ -12,15 +12,15 @@ export function VouchersSection({ vouchers, showSeeAll = false }: VouchersSectio
 
   return (
     <section className="py-20 bg-[#f5f5f7]">
-      <div className="max-w-[80rem] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
         {/* Header */}
         <div className="mb-10 flex items-end justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold text-[#F2B705] uppercase tracking-widest mb-2">
+            <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-2">
               Services
             </p>
-            <h2 className="text-3xl font-bold text-[#0b2238]">
+            <h2 className="text-4xl sm:text-5xl font-black text-[#0b2238] leading-none tracking-tight">
               Vouchers
             </h2>
             <p className="text-[#0b2238]/50 text-sm mt-2 max-w-lg">

@@ -8,7 +8,7 @@ const STEPS = [
     num: 1,
     done: true,
     title: "Demande envoyée",
-    desc: "Votre acompte a bien été reçu et votre itinéraire enregistré. Un email de confirmation vient d'être envoyé.",
+    desc: "Votre provision a bien été reçue et votre itinéraire enregistré. Un email de confirmation vient d'être envoyé.",
   },
   {
     num: 2,

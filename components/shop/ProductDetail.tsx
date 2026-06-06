@@ -23,7 +23,7 @@ export function ProductDetail({ product, relatedProducts = [], backHref, backLab
   const [added, setAdded] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
 
-  const images = product.images ?? [];
+  const images = [...(product.images ?? [])].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
   const mainImage = images[activeImage]?.url ?? null;
   const isVoucher = product.product_type === "voucher" ||
     (product.voucher_duration_minutes != null && product.voucher_duration_minutes > 0);
@@ -47,7 +47,7 @@ export function ProductDetail({ product, relatedProducts = [], backHref, backLab
   return (
     <main className="flex-1 bg-[#f5f5f7] pb-16">
       <div className="h-[84px]" />
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
         {/* Breadcrumb */}
         <div className="mb-8">

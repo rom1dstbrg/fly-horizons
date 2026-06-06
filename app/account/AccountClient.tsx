@@ -119,7 +119,7 @@ const RESA_STATUS: Record<string, { label: string; color: string }> = {
   vol_effectue:     { label: "Vol effectué",       color: "text-purple-600 bg-purple-50 border-purple-200" },
   annulee:          { label: "Annulée",            color: "text-red-600 bg-red-50 border-red-200" },
   en_attente_perso: { label: "En cours",           color: "text-yellow-600 bg-yellow-50 border-yellow-200" },
-  acompte_recu:     { label: "Acompte reçu",      color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
+  acompte_recu:     { label: "Provision reçue",    color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
 };
 
 const ORDER_STATUS: Record<string, { label: string; color: string }> = {
@@ -673,16 +673,16 @@ export function AccountClient({
                               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:brightness-105 transition-all"
                             >
                               <CreditCard size={12} />
-                              {isPerso ? "Payer l'acompte" : "Finaliser le paiement"}{resa.acompte != null ? ` · ${resa.acompte} €` : ""}
+                              {isPerso ? "Régler la provision" : "Finaliser le paiement"}{resa.acompte != null ? ` · ${resa.acompte} €` : ""}
                             </Link>
                           </div>
                         )}
 
-                        {/* Acompte payé */}
+                        {/* Provision payée */}
                         {isPaid && resa.acompte != null && (
                           <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-border text-xs text-green-600 font-medium">
                             <CheckCircle size={12} className="shrink-0" />
-                            Acompte payé · {resa.acompte} €
+                            Provision payée · {resa.acompte} €
                           </div>
                         )}
 

@@ -21,7 +21,7 @@ const QUICK_LINKS = [
   { href: "/admin/vols?tab=sur-mesure",        label: "Vols sur mesure",      icon: Route,           group: "Navigation" },
   { href: "/admin/vols?tab=disponibilites",    label: "Disponibilités",       icon: CalendarDays,    group: "Navigation" },
   { href: "/admin/boutique",                   label: "Vouchers",             icon: Ticket,          group: "Navigation" },
-  { href: "/admin/boutique?tab=produits",      label: "Produits",             icon: Package,         group: "Navigation" },
+  { href: "/admin/boutique?tab=produits",      label: "Offres",               icon: Package,         group: "Navigation" },
   { href: "/admin/boutique?tab=coupons",       label: "Coupons",              icon: Tag,             group: "Navigation" },
   { href: "/admin/clients",                    label: "Clients",              icon: Users,           group: "Navigation" },
   { href: "/admin/contacts",                   label: "Messages",             icon: MessageSquare,   group: "Navigation" },

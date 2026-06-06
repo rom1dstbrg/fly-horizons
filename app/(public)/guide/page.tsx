@@ -47,10 +47,10 @@ const QUESTIONS = [
   },
   {
     q: "Un bon cadeau peut-il être utilisé pour un vol sur mesure ?",
-    a: "Oui. Le code est valable pour n'importe quelle formule de vol. Il est déduit de l'acompte au moment de la réservation.",
+    a: "Oui. Le code est valable pour n'importe quelle formule de vol. Il est déduit de la provision au moment de la réservation.",
   },
   {
-    q: "Que se passe-t-il si je ne paie pas l'acompte tout de suite ?",
+    q: "Que se passe-t-il si je ne règle pas la provision tout de suite ?",
     a: "Votre créneau n'est pas sécurisé. Un autre client peut réserver la même date et la même heure et payer avant vous. Dès que vous payez via le lien reçu par email, le créneau vous est attribué définitivement.",
   },
   {
@@ -202,7 +202,7 @@ export default function GuidePage() {
                   {
                     n: "05", Icon: Mail,
                     title: "Confirmation par email",
-                    desc: "Dès que l'acompte est reçu, un email de confirmation vous est envoyé avec tous les détails. Vous pouvez aussi retrouver votre réservation dans votre espace client à tout moment.",
+                    desc: "Dès que la provision est reçue, un email de confirmation vous est envoyé avec tous les détails. Vous pouvez aussi retrouver votre réservation dans votre espace client à tout moment.",
                   },
                   {
                     n: "06", Icon: PlaneTakeoff,
@@ -312,8 +312,8 @@ export default function GuidePage() {
                   },
                   {
                     n: "05", Icon: CreditCard,
-                    title: "Paiement de l'acompte",
-                    desc: "L'acompte est calculé sur la base de votre itinéraire estimé. Vous pouvez payer immédiatement ou recevoir un lien par email.",
+                    title: "Règlement de la provision",
+                    desc: "La provision est calculée sur la base de votre itinéraire estimé. Vous pouvez régler immédiatement ou recevoir un lien par email.",
                     payment: true,
                   },
                   {
@@ -404,7 +404,7 @@ export default function GuidePage() {
                   {
                     n: "04", Icon: Lock,
                     title: "Le créneau est sécurisé",
-                    desc: "Si le bon cadeau couvre la totalité de l'acompte, aucun paiement supplémentaire n'est demandé et le créneau est immédiatement confirmé. S'il ne couvre qu'une partie, le bénéficiaire règle le solde de l'acompte via Stripe.",
+                    desc: "Si le bon cadeau couvre la totalité de la provision, aucun paiement supplémentaire n'est demandé et le créneau est immédiatement confirmé. S'il ne couvre qu'une partie, le bénéficiaire règle le solde via Stripe.",
                   },
                   {
                     n: "05", Icon: PlaneTakeoff,
@@ -438,7 +438,7 @@ export default function GuidePage() {
 
               <NoteCard icon={<BadgeCheck size={14} />} color="blue">
                 Un bon cadeau est valable pour une réservation à durée fixe ou pour un vol sur mesure.
-                Il est déductible de l'acompte quelle que soit la formule choisie.
+                Il est déductible de la provision quelle que soit la formule choisie.
               </NoteCard>
             </section>
 
@@ -544,7 +544,7 @@ function PaymentBlock() {
         </div>
         <ul className="space-y-1">
           {[
-            "L'acompte est débité immédiatement via Stripe.",
+            "La provision est débitée immédiatement via Stripe.",
             "Le créneau est sécurisé sur-le-champ.",
             "Confirmation reçue dans la minute.",
           ].map((t) => (
@@ -565,7 +565,7 @@ function PaymentBlock() {
           {[
             "Un email avec un lien Stripe vous est envoyé.",
             "Aucune saisie de carte sur ce site.",
-            "Attention : le créneau n'est pas garanti tant que l'acompte n'est pas reçu.",
+            "Attention : le créneau n'est pas garanti tant que la provision n'est pas reçue.",
           ].map((t) => (
             <li key={t} className="flex items-start gap-1.5 text-xs text-muted-foreground">
               <span className="w-1 h-1 rounded-full bg-muted-foreground/50 shrink-0 mt-1.5" />

@@ -15,8 +15,11 @@ import {
   WifiOff,
   AlertTriangle,
   MapPin,
+  Map,
   CheckCircle,
   Navigation,
+  PlaneTakeoff,
+  PlaneLanding,
   RotateCcw,
   Loader2,
 } from "lucide-react";
@@ -44,6 +47,8 @@ export interface ReservationData {
   waypoints?: Array<{ lat: number; lng: number; nom: string }> | null;
   latestProposalToken?: string | null;
   latestProposalStatus?: string | null;
+  latestProposalWaypoints?: Array<{ lat: number; lng: number; nom?: string }> | null;
+  packTitle?: string | null;
 }
 
 const ROUTE_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
@@ -157,9 +162,9 @@ const PERSO_TIMELINE = [
   PROPOSAL_STEP,
   {
     key: "acompte_recu",
-    label: "Acompte reçu",
-    desc: () => "En attente de votre paiement",
-    doneDesc: () => "Acompte confirmé",
+    label: "Provision reçue",
+    desc: () => "En attente de votre règlement",
+    doneDesc: () => "Provision confirmée",
   },
   ...DATE_STEPS,
 ];
@@ -272,7 +277,7 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
 
   return (
     <main className="min-h-screen bg-gradient-navy pt-24 pb-16">
-      <div className="max-w-2xl mx-auto px-4">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
         {/* Back link */}
         <Link
@@ -283,14 +288,14 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
           Mon compte
         </Link>
 
-        {/* Header card */}
-        <div className="card-premium p-6 mb-5">
-          <div className="flex items-start justify-between gap-4">
-            <div>
+        {/* ── Header — pleine largeur ───────────────────────────────────── */}
+        <div className="card-premium p-6 mb-6">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="flex-1 min-w-0">
               <p className="text-xs text-muted-foreground mb-1">
-                {isPerso ? "Vol sur mesure" : "Baptême de l'air"} · #{resa.id.slice(0, 8).toUpperCase()}
+                {isPerso ? "Vol sur mesure" : (resa.packTitle ?? "Baptême de l'air")} · #{resa.id.slice(0, 8).toUpperCase()}
               </p>
-              <h1 className="text-xl font-bold text-foreground">
+              <h1 className="text-xl lg:text-2xl font-bold text-foreground">
                 {resa.statut === "vol_effectue"
                   ? "Vol effectué"
                   : isCancelled
@@ -314,6 +319,12 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
                   <span className="text-sm text-muted-foreground flex items-center gap-1">
                     <Calendar size={13} className="opacity-60" />
                     {formatHeure(resa.heure_vol)}
+                  </span>
+                )}
+                {resa.distance_km && (
+                  <span className="text-sm text-muted-foreground flex items-center gap-1">
+                    <Navigation size={13} className="opacity-60" />
+                    {resa.distance_km} km
                   </span>
                 )}
               </div>
@@ -348,12 +359,12 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
 
           {/* Payment link */}
           {hasPaymentLink && (
-            <div className="mt-4 pt-4 border-t border-border flex items-center gap-3">
+            <div className="mt-4 pt-4 border-t border-border flex items-center gap-3 flex-wrap">
               <CreditCard size={15} className="text-primary shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-foreground">{isPerso ? "Acompte requis" : "Paiement requis"}</p>
+                <p className="text-xs font-medium text-foreground">{isPerso ? "Provision requise" : "Paiement requis"}</p>
                 <p className="text-xs text-muted-foreground">
-                  {isPerso ? "Réglez l'acompte pour confirmer votre vol" : "Réglez le montant pour confirmer votre réservation"}
+                  {isPerso ? "Réglez la provision pour confirmer votre vol" : "Réglez le montant pour confirmer votre réservation"}
                 </p>
               </div>
               <Link
@@ -366,362 +377,364 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
           )}
         </div>
 
-        {/* Cancelled state */}
-        {isCancelled ? (
-          <div className="card-premium p-6 !border-red-200">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-red-50 border border-red-200 flex items-center justify-center shrink-0">
-                <AlertTriangle size={18} className="text-red-500" />
+        {/* ── Grille deux colonnes (desktop) ───────────────────────────── */}
+        <div className="lg:grid lg:grid-cols-[1fr_340px] lg:gap-8 lg:items-start">
+
+          {/* ── Colonne gauche : contenu principal ───────────────────── */}
+          <div className="space-y-5">
+
+            {/* Annulée */}
+            {isCancelled && (
+              <div className="card-premium p-6 !border-red-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-red-50 border border-red-200 flex items-center justify-center shrink-0">
+                    <AlertTriangle size={18} className="text-red-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-red-600">Réservation annulée</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Cette réservation a été annulée. Contactez-nous si vous avez des questions.
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-border">
+                  <Link href="/contact" className="text-xs font-semibold text-foreground hover:text-primary transition-colors">
+                    Nous contacter →
+                  </Link>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-semibold text-red-600">Réservation annulée</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Cette réservation a été annulée. Contactez-nous si vous avez des questions.
-                </p>
-              </div>
-            </div>
-            <div className="mt-4 pt-4 border-t border-border">
-              <Link
-                href="/contact"
-                className="text-xs font-semibold text-foreground hover:text-primary transition-colors"
-              >
-                Nous contacter →
-              </Link>
-            </div>
-          </div>
-        ) : (
-          /* Timeline */
-          <div className="card-premium p-6">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-6">
-              Suivi de votre réservation
-            </p>
+            )}
 
-            <div className="space-y-0">
-              {timeline.map((step, i) => {
-                const isVirtual = "isVirtual" in step && step.isVirtual;
-                let isCompleted: boolean;
-                let isCurrent: boolean;
-                let description: string | null;
-
-                if (isVirtual && step.key === "route_proposal") {
-                  const proposalStatus = resa.latestProposalStatus;
-                  const hasProposal = !!resa.latestProposalToken;
-
-                  if (isPerso) {
-                    // Completed when reservation has moved past en_attente_perso
-                    isCompleted = currentRank > (STATUS_RANK["en_attente_perso"] ?? 1);
-                    isCurrent = !isCompleted && hasProposal;
-                  } else {
-                    isCompleted = proposalStatus === "accepted" || currentRank >= (STATUS_RANK["date_confirmee"] ?? 3);
-                    isCurrent = !isCompleted && hasProposal;
-                  }
-
-                  if (isCompleted) description = "Itinéraire validé";
-                  else if (proposalStatus === "modification_requested") description = "Modification en cours de traitement";
-                  else if (proposalStatus === "pending") description = "En attente de votre validation";
-                  else description = "En attente de la proposition de votre pilote";
-                } else {
-                  const stepFn = step as { key: string; label: string; desc: (r: ReservationData) => string | null; doneDesc: (r: ReservationData) => string | null };
-                  const stepRank = STATUS_RANK[step.key] ?? i;
-                  isCompleted = stepRank < currentRank;
-                  isCurrent = stepRank === currentRank;
-                  description = isCompleted ? stepFn.doneDesc(resa) : stepFn.desc(resa);
-                }
-
-                const isFlashing = flashId === step.key;
-                const isLast = i === timeline.length - 1;
-
-                return (
-                  <div key={step.key} className="flex gap-4">
-                    {/* Dot + line column */}
-                    <div className="flex flex-col items-center">
-                      <div
-                        className={`w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-500 ${
-                          isFlashing
-                            ? "bg-primary border-primary scale-110"
-                            : isCompleted
-                            ? "bg-green-500 border-green-500"
-                            : isCurrent
-                            ? "bg-navy border-navy"
-                            : "bg-card border-border"
-                        }`}
-                      >
-                        {isCompleted && (
-                          <Check size={13} className="text-white" strokeWidth={2.5} />
-                        )}
-                        {isCurrent && !isCompleted && (
-                          <span className="w-2.5 h-2.5 rounded-full bg-white animate-pulse" />
-                        )}
-                      </div>
-                      {!isLast && (
-                        <div
-                          className={`w-px flex-1 my-1 min-h-[28px] transition-colors duration-500 ${
-                            isCompleted ? "bg-green-200" : "bg-border"
-                          }`}
-                        />
-                      )}
+            {/* Route ancienne système */}
+            {resa.route && (
+              <div className="card-premium p-6">
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+                      <MapPin size={14} className="text-foreground" />
                     </div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Itinéraire proposé</p>
+                  </div>
+                  {resa.route_status && ROUTE_STATUS_CONFIG[resa.route_status] && (
+                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${ROUTE_STATUS_CONFIG[resa.route_status].color}`}>
+                      {ROUTE_STATUS_CONFIG[resa.route_status].label}
+                    </span>
+                  )}
+                </div>
+                <div className="bg-secondary border border-border rounded-lg px-4 py-3">
+                  <p className="text-sm text-foreground whitespace-pre-line leading-relaxed">{resa.route}</p>
+                </div>
+                {resa.route_feedback && (
+                  <div className="mt-3 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    <p className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider mb-1">Votre retour</p>
+                    <p className="text-xs text-amber-700 leading-relaxed">{resa.route_feedback}</p>
+                  </div>
+                )}
+                {resa.route_status === "sent" && resa.route_token && (
+                  <div className="mt-4">
+                    <Link href={`/vol/itineraire/${resa.route_token}`} className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-navy text-white rounded-lg text-xs font-bold hover:bg-navy/90 transition-colors">
+                      Valider ou modifier la route →
+                    </Link>
+                  </div>
+                )}
+                {resa.route_status === "validated" && (
+                  <div className="mt-4 flex items-center gap-1.5 text-green-600 text-xs font-medium">
+                    <CheckCircle size={13} />
+                    Vous avez validé cet itinéraire
+                  </div>
+                )}
+              </div>
+            )}
 
-                    {/* Content column */}
-                    <div className={`flex-1 pb-6 ${isLast ? "pb-0" : ""}`}>
-                      <p
-                        className={`text-sm font-semibold leading-tight transition-colors duration-300 ${
-                          isFlashing
-                            ? "text-primary"
-                            : isCompleted
-                            ? "text-green-700"
-                            : isCurrent
-                            ? "text-foreground"
-                            : "text-muted-foreground"
-                        }`}
-                      >
-                        {step.label}
-                      </p>
-                      {description && (
-                        <p
-                          className={`text-xs mt-0.5 capitalize transition-colors duration-300 ${
-                            isCompleted
-                              ? "text-green-600/70"
-                              : isCurrent
-                              ? "text-muted-foreground"
-                              : "text-muted-foreground"
-                          }`}
-                        >
-                          {description}
-                        </p>
-                      )}
+            {/* Proposition de route (nouveau système) */}
+            {resa.latestProposalToken && (
+              <div className={`card-premium p-6 ${resa.latestProposalStatus === "pending" ? "!border-primary/30" : ""}`}>
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${resa.latestProposalStatus === "accepted" ? "bg-green-50" : "bg-secondary"}`}>
+                      <MapPin size={14} className={resa.latestProposalStatus === "accepted" ? "text-green-600" : "text-foreground"} />
                     </div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                      {resa.latestProposalStatus === "accepted" ? "Itinéraire confirmé" : "Votre itinéraire de vol"}
+                    </p>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Route proposée */}
-        {resa.route && (
-          <div className="card-premium p-6 mt-5">
-            <div className="flex items-center justify-between gap-3 mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center shrink-0">
-                  <MapPin size={14} className="text-foreground" />
+                  {resa.latestProposalStatus === "pending" && (
+                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full border text-primary bg-primary/5 border-primary/20">
+                      À valider
+                    </span>
+                  )}
+                  {resa.latestProposalStatus === "accepted" && (
+                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full border text-green-700 bg-green-50 border-green-200">
+                      Confirmé ✓
+                    </span>
+                  )}
+                  {resa.latestProposalStatus === "modification_requested" && (
+                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full border text-amber-700 bg-amber-50 border-amber-200">
+                      Révision en cours
+                    </span>
+                  )}
                 </div>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                  Itinéraire proposé
-                </p>
-              </div>
-              {resa.route_status && ROUTE_STATUS_CONFIG[resa.route_status] && (
-                <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${ROUTE_STATUS_CONFIG[resa.route_status].color}`}>
-                  {ROUTE_STATUS_CONFIG[resa.route_status].label}
-                </span>
-              )}
-            </div>
 
-            <div className="bg-secondary border border-border rounded-lg px-4 py-3">
-              <p className="text-sm text-foreground whitespace-pre-line leading-relaxed">
-                {resa.route}
-              </p>
-            </div>
+                {resa.latestProposalStatus === "pending" && (
+                  <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+                    Votre pilote a préparé votre itinéraire personnalisé. C&apos;est le parcours que vous allez réaliser — consultez-le et confirmez-le.
+                  </p>
+                )}
+                {resa.latestProposalStatus === "modification_requested" && (
+                  <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+                    Votre pilote prépare un nouvel itinéraire en tenant compte de vos souhaits.
+                  </p>
+                )}
+                {resa.latestProposalStatus === "accepted" && (
+                  <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+                    Votre itinéraire est confirmé. Votre pilote a tout ce qu&apos;il faut pour préparer le vol.
+                  </p>
+                )}
 
-            {resa.route_feedback && (
-              <div className="mt-3 bg-amber-50 border border-amber-200 rounded-lg p-3">
-                <p className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider mb-1">Votre retour</p>
-                <p className="text-xs text-amber-700 leading-relaxed">{resa.route_feedback}</p>
-              </div>
-            )}
-
-            {resa.route_status === "sent" && resa.route_token && (
-              <div className="mt-4">
-                <Link
-                  href={`/vol/itineraire/${resa.route_token}`}
-                  className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-navy text-white rounded-lg text-xs font-bold hover:bg-navy/90 transition-colors"
-                >
-                  Valider ou modifier la route →
-                </Link>
-              </div>
-            )}
-
-            {resa.route_status === "validated" && (
-              <div className="mt-4 flex items-center gap-1.5 text-green-600 text-xs font-medium">
-                <CheckCircle size={13} />
-                Vous avez validé cet itinéraire
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Proposition de route (nouveau système) */}
-        {resa.latestProposalToken && (
-          <div className="card-premium p-6 mt-5">
-            <div className="flex items-center justify-between gap-3 mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center shrink-0">
-                  <MapPin size={14} className="text-foreground" />
-                </div>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                  Itinéraire proposé
-                </p>
-              </div>
-              {resa.latestProposalStatus === "pending" && (
-                <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full border text-amber-700 bg-amber-50 border-amber-200">
-                  En attente de votre réponse
-                </span>
-              )}
-              {resa.latestProposalStatus === "accepted" && (
-                <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full border text-green-700 bg-green-50 border-green-200">
-                  Accepté ✓
-                </span>
-              )}
-              {resa.latestProposalStatus === "modification_requested" && (
-                <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full border text-amber-700 bg-amber-50 border-amber-200">
-                  Modification demandée
-                </span>
-              )}
-            </div>
-
-            {resa.latestProposalStatus === "modification_requested" && (
-              <p className="text-xs text-muted-foreground mb-4">
-                Votre pilote prépare un nouvel itinéraire tenant compte de vos souhaits.
-              </p>
-            )}
-
-            <Link
-              href={`/vol/proposition/${resa.latestProposalToken}`}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-xs font-bold hover:brightness-105 transition-all"
-            >
-              <MapPin size={12} />
-              {resa.latestProposalStatus === "pending" ? "Voir et répondre" : "Revoir l'itinéraire"}
-            </Link>
-          </div>
-        )}
-
-        {/* Waypoints — vol sur mesure uniquement */}
-        {isPerso && resa.waypoints && resa.waypoints.length > 0 && (() => {
-          const wps = resa.waypoints!;
-          const mapsUrl = `https://www.google.com/maps/dir/50.4592,4.4538/${wps.map(w => `${w.lat},${w.lng}`).join("/")}/50.4592,4.4538`;
-          return (
-            <div className="card-premium p-6 mt-5">
-              <div className="flex items-center gap-2 mb-5">
-                <div className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center shrink-0">
-                  <MapPin size={14} className="text-foreground" />
-                </div>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                  Lieux à survoler
-                </p>
-              </div>
-
-              <ol className="space-y-0">
-                {/* Départ EBCI */}
-                <li className="flex gap-3">
-                  <div className="flex flex-col items-center">
-                    <div className="w-8 h-8 rounded-full bg-navy flex items-center justify-center shrink-0 text-primary text-base leading-none">✈</div>
-                    <div className="w-px flex-1 bg-primary/40 my-1 min-h-[24px]" />
-                  </div>
-                  <div className="pb-4 pt-1">
-                    <p className="text-sm font-semibold text-foreground">Charleroi EBCI</p>
-                    <p className="text-xs text-muted-foreground">Départ</p>
-                  </div>
-                </li>
-
-                {wps.map((wp, i) => {
-                  const isLastWp = i === wps.length - 1;
+                {/* Waypoints intégrés */}
+                {resa.latestProposalWaypoints && resa.latestProposalWaypoints.length > 0 && (() => {
+                  const wps = resa.latestProposalWaypoints!;
                   return (
-                    <li key={i} className="flex gap-3">
-                      <div className="flex flex-col items-center">
-                        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0 text-primary-foreground text-sm font-bold leading-none">{i + 1}</div>
-                        {!isLastWp && <div className="w-px flex-1 bg-primary/40 my-1 min-h-[24px]" />}
-                        {isLastWp && <div className="w-px flex-1 bg-primary/40 my-1 min-h-[24px]" />}
-                      </div>
-                      <div className="pb-4 pt-1">
-                        <p className="text-sm font-semibold text-foreground">{wp.nom}</p>
-                        <p className="text-xs text-muted-foreground">≈ 2 min d&apos;observation</p>
-                      </div>
-                    </li>
+                    <ol className="space-y-0 mb-5">
+                      <li className="flex gap-3">
+                        <div className="flex flex-col items-center">
+                          <div className="w-7 h-7 rounded-full bg-navy flex items-center justify-center shrink-0">
+                            <PlaneTakeoff size={13} className="text-primary" />
+                          </div>
+                          <div className="w-px flex-1 bg-border my-1 min-h-[20px]" />
+                        </div>
+                        <div className="pb-3 pt-1">
+                          <p className="text-sm font-semibold text-foreground">Charleroi EBCI</p>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">Départ</p>
+                        </div>
+                      </li>
+                      {wps.map((wp, i) => (
+                        <li key={i} className="flex gap-3">
+                          <div className="flex flex-col items-center">
+                            <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center shrink-0 text-[11px] font-black text-primary-foreground">
+                              {i + 1}
+                            </div>
+                            <div className="w-px flex-1 bg-border my-1 min-h-[20px]" />
+                          </div>
+                          <div className="pb-3 pt-1">
+                            <p className="text-sm font-semibold text-foreground">{wp.nom?.trim() || `Point ${i + 1}`}</p>
+                          </div>
+                        </li>
+                      ))}
+                      <li className="flex gap-3">
+                        <div className="w-7 h-7 rounded-full bg-navy flex items-center justify-center shrink-0">
+                          <PlaneLanding size={13} className="text-primary" />
+                        </div>
+                        <div className="pt-1">
+                          <p className="text-sm font-semibold text-foreground">Charleroi EBCI</p>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">Retour</p>
+                        </div>
+                      </li>
+                    </ol>
                   );
-                })}
+                })()}
 
-                {/* Retour EBCI */}
-                <li className="flex gap-3">
-                  <div className="flex flex-col items-center">
-                    <div className="w-8 h-8 rounded-full bg-navy flex items-center justify-center shrink-0 text-primary text-base leading-none">✈</div>
-                  </div>
-                  <div className="pt-1">
-                    <p className="text-sm font-semibold text-foreground">Charleroi EBCI</p>
-                    <p className="text-xs text-muted-foreground">Retour</p>
-                  </div>
-                </li>
-              </ol>
-
-              <div className="mt-5 pt-4 border-t border-border flex flex-wrap gap-2">
                 <Link
-                  href={`/account/reservations/${resa.id}/carte`}
+                  href={`/vol/proposition/${resa.latestProposalToken}`}
                   className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-xs font-bold hover:brightness-105 transition-all"
                 >
-                  <MapPin size={12} />
-                  Carte interactive
+                  <Map size={13} />
+                  Afficher sur la carte
                 </Link>
-                <a
-                  href={mapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-navy text-white rounded-lg text-xs font-bold hover:bg-navy/90 transition-colors"
-                >
-                  <MapPin size={12} />
-                  Google Maps
-                </a>
               </div>
-            </div>
-          );
-        })()}
+            )}
 
-        {/* Accès EBCI — visible dès que la date est confirmée */}
-        {["date_confirmee", "heure_confirmee", "vol_effectue"].includes(resa.statut) && (
-          <div className="card-premium p-5 mt-5 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center shrink-0">
-              <Navigation size={16} className="text-foreground" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground">Comment accéder à l&apos;aérodrome ?</p>
-              <p className="text-xs text-muted-foreground mt-0.5">GPS, parking, accueil : tout est détaillé sur notre page d&apos;accès.</p>
-            </div>
-            <Link
-              href="/access-ebci"
-              className="shrink-0 text-xs font-bold text-foreground hover:text-primary transition-colors"
-            >
-              Voir →
-            </Link>
+            {/* Waypoints — sans proposition (vol sur mesure) */}
+            {isPerso && !resa.latestProposalToken && resa.waypoints && resa.waypoints.length > 0 && (() => {
+              const wps = resa.waypoints!;
+              return (
+                <div className="card-premium p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+                      <MapPin size={14} className="text-foreground" />
+                    </div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Vos destinations souhaitées</p>
+                  </div>
+                  <ol className="space-y-0">
+                    <li className="flex gap-3">
+                      <div className="flex flex-col items-center">
+                        <div className="w-7 h-7 rounded-full bg-navy flex items-center justify-center shrink-0">
+                          <PlaneTakeoff size={13} className="text-primary" />
+                        </div>
+                        <div className="w-px flex-1 bg-border my-1 min-h-[20px]" />
+                      </div>
+                      <div className="pb-3 pt-1">
+                        <p className="text-sm font-semibold text-foreground">Charleroi EBCI</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">Départ</p>
+                      </div>
+                    </li>
+                    {wps.map((wp, i) => (
+                      <li key={i} className="flex gap-3">
+                        <div className="flex flex-col items-center">
+                          <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center shrink-0 text-[11px] font-black text-primary-foreground">
+                            {i + 1}
+                          </div>
+                          <div className="w-px flex-1 bg-border my-1 min-h-[20px]" />
+                        </div>
+                        <div className="pb-3 pt-1">
+                          <p className="text-sm font-semibold text-foreground">{wp.nom}</p>
+                        </div>
+                      </li>
+                    ))}
+                    <li className="flex gap-3">
+                      <div className="w-7 h-7 rounded-full bg-navy flex items-center justify-center shrink-0">
+                        <PlaneLanding size={13} className="text-primary" />
+                      </div>
+                      <div className="pt-1">
+                        <p className="text-sm font-semibold text-foreground">Charleroi EBCI</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">Retour</p>
+                      </div>
+                    </li>
+                  </ol>
+                  <div className="mt-5 pt-4 border-t border-border">
+                    <Link
+                      href={`/account/reservations/${resa.id}/carte`}
+                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-xs font-bold hover:brightness-105 transition-all"
+                    >
+                      <Map size={13} />
+                      Afficher sur la carte
+                    </Link>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
-        )}
 
-        {/* Reporter mon vol */}
-        {canReschedule && (
-          <div className="card-premium p-5 mt-5 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0">
-              <RotateCcw size={16} className="text-amber-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground">Besoin de reporter votre vol ?</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Vous pouvez choisir une nouvelle date jusqu&apos;à 48 h avant le décollage, sans frais.</p>
-            </div>
-            <button
-              type="button"
-              onClick={handleReschedule}
-              disabled={rescheduling}
-              className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-500 text-white text-xs font-bold hover:bg-amber-600 transition-colors disabled:opacity-50 cursor-pointer"
-            >
-              {rescheduling ? <Loader2 size={12} className="animate-spin" /> : <RotateCcw size={12} />}
-              Reporter
-            </button>
+          {/* ── Colonne droite : suivi + actions (sticky desktop) ─────── */}
+          <div className="space-y-4 mt-5 lg:mt-0 lg:sticky lg:top-[100px]">
+
+            {/* Timeline */}
+            {!isCancelled && (
+              <div className="card-premium p-6">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-5">
+                  Suivi de votre réservation
+                </p>
+                <div className="space-y-0">
+                  {timeline.map((step, i) => {
+                    const isVirtual = "isVirtual" in step && step.isVirtual;
+                    let isCompleted: boolean;
+                    let isCurrent: boolean;
+                    let description: string | null;
+
+                    if (isVirtual && step.key === "route_proposal") {
+                      const proposalStatus = resa.latestProposalStatus;
+                      const hasProposal = !!resa.latestProposalToken;
+                      if (isPerso) {
+                        isCompleted = currentRank > (STATUS_RANK["en_attente_perso"] ?? 1);
+                        isCurrent = !isCompleted && hasProposal;
+                      } else {
+                        isCompleted = proposalStatus === "accepted" || currentRank >= (STATUS_RANK["date_confirmee"] ?? 3);
+                        isCurrent = !isCompleted && hasProposal;
+                      }
+                      if (isCompleted) description = "Itinéraire validé";
+                      else if (proposalStatus === "modification_requested") description = "Modification en cours de traitement";
+                      else if (proposalStatus === "pending") description = "En attente de votre validation";
+                      else description = "En attente de la proposition de votre pilote";
+                    } else {
+                      const stepFn = step as { key: string; label: string; desc: (r: ReservationData) => string | null; doneDesc: (r: ReservationData) => string | null };
+                      const stepRank = STATUS_RANK[step.key] ?? i;
+                      isCompleted = stepRank < currentRank;
+                      isCurrent = stepRank === currentRank;
+                      description = isCompleted ? stepFn.doneDesc(resa) : stepFn.desc(resa);
+                    }
+
+                    const isFlashing = flashId === step.key;
+                    const isLast = i === timeline.length - 1;
+
+                    return (
+                      <div key={step.key} className="flex gap-4">
+                        <div className="flex flex-col items-center">
+                          <div
+                            className={`w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-500 ${
+                              isFlashing
+                                ? "bg-primary border-primary scale-110"
+                                : isCompleted
+                                ? "bg-green-500 border-green-500"
+                                : isCurrent
+                                ? "bg-navy border-navy"
+                                : "bg-card border-border"
+                            }`}
+                          >
+                            {isCompleted && <Check size={13} className="text-white" strokeWidth={2.5} />}
+                            {isCurrent && !isCompleted && <span className="w-2.5 h-2.5 rounded-full bg-white animate-pulse" />}
+                          </div>
+                          {!isLast && (
+                            <div className={`w-px flex-1 my-1 min-h-[28px] transition-colors duration-500 ${isCompleted ? "bg-green-200" : "bg-border"}`} />
+                          )}
+                        </div>
+                        <div className={`flex-1 ${isLast ? "pb-0" : "pb-5"}`}>
+                          <p className={`text-sm font-semibold leading-tight transition-colors duration-300 ${
+                            isFlashing ? "text-primary" : isCompleted ? "text-green-700" : isCurrent ? "text-foreground" : "text-muted-foreground"
+                          }`}>
+                            {step.label}
+                          </p>
+                          {description && (
+                            <p className={`text-xs mt-0.5 capitalize transition-colors duration-300 ${
+                              isCompleted ? "text-green-600/70" : "text-muted-foreground"
+                            }`}>
+                              {description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Accès EBCI */}
+            {["date_confirmee", "heure_confirmee", "vol_effectue"].includes(resa.statut) && (
+              <div className="card-premium p-4 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                  <Navigation size={15} className="text-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground">Accès à l&apos;aérodrome</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">GPS, parking, accueil</p>
+                </div>
+                <Link href="/access-ebci" className="shrink-0 text-xs font-bold text-foreground hover:text-primary transition-colors">
+                  Voir →
+                </Link>
+              </div>
+            )}
+
+            {/* Reporter mon vol */}
+            {canReschedule && (
+              <div className="card-premium p-4 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0">
+                  <RotateCcw size={15} className="text-amber-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground">Reporter le vol</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Jusqu&apos;à 48 h avant, sans frais</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleReschedule}
+                  disabled={rescheduling}
+                  className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 text-white text-xs font-bold hover:bg-amber-600 transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  {rescheduling ? <Loader2 size={12} className="animate-spin" /> : <RotateCcw size={12} />}
+                  Reporter
+                </button>
+              </div>
+            )}
+
+            {/* Contact */}
+            <p className="text-center text-xs text-muted-foreground pt-1">
+              Une question ?{" "}
+              <Link href="/contact" className="text-foreground font-semibold hover:text-primary transition-colors">
+                Contactez-nous
+              </Link>
+            </p>
           </div>
-        )}
-
-        {/* Contact footer */}
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          Une question ?{" "}
-          <Link href="/contact" className="text-foreground font-semibold hover:text-primary transition-colors">
-            Contactez-nous
-          </Link>
-        </p>
+        </div>
 
       </div>
     </main>

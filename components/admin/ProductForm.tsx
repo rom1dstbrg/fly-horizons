@@ -17,9 +17,9 @@ interface ProductFormProps {
 
 const VOUCHER_DURATIONS = [
   { value: 30,  label: "30 min",   sub: "Découverte" },
-  { value: 60,  label: "1 heure",  sub: "Initiation" },
-  { value: 90,  label: "1 h 30",   sub: "Exploration" },
-  { value: 120, label: "2 heures", sub: "Grand vol" },
+  { value: 60,  label: "1 heure",  sub: "Exploration" },
+  { value: 90,  label: "1 h 30",   sub: "Immersion" },
+  { value: 120, label: "2 heures", sub: "Ultime" },
 ];
 
 export function ProductForm({ product }: ProductFormProps) {

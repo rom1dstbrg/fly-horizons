@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -8,8 +8,8 @@ import type { User as SupabaseUser } from "@supabase/supabase-js";
 import {
   MapPin, Clock, Search, Trash2, ChevronRight, ChevronLeft,
   Check, CheckCircle, Loader2, AlertCircle, AlertTriangle,
-  Mail, Lock, Eye, EyeOff, Zap, PlaneTakeoff, X, Info,
-  Navigation, Star, Plus, CalendarDays, CloudRain,
+  Mail, Lock, Eye, EyeOff, Zap, PlaneTakeoff, PlaneLanding, X, Info,
+  Route, Star, Plus, CalendarDays, CloudRain,
   ArrowRight, ShieldCheck, Monitor, UserPlus, LogIn,
 } from "lucide-react";
 import type {
@@ -160,9 +160,10 @@ export default function VolSurMesurePage() {
     sessionStorage.setItem("vsm_pois", JSON.stringify(route.pois));
   }, [route.pois]);
 
-  // ── Scroll vers le haut à chaque changement d'étape
+  // ── Scroll vers le haut + reset sheet à chaque changement d'étape
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
+    setMobileSheetExpanded(false);
   }, [flowStep]);
 
   // ── Lorsqu'on revient sur "build", la carte (CSS hidden → visible) doit recalculer sa taille
@@ -236,6 +237,7 @@ export default function VolSurMesurePage() {
   const [availableStops, setAvailableStops] = useState<Stopover[]>([]);
   const [selectedStops,  setSelectedStops]  = useState<Stopover[]>([]);
   const [stopsOpen,      setStopsOpen]      = useState(false);
+  const [mobileSheetExpanded, setMobileSheetExpanded] = useState(false);
 
   // ── Voucher / coupon (état interne pour le calcul et la sérialisation)
   const [voucherCode,  setVoucherCode]  = useState("");
@@ -280,7 +282,7 @@ export default function VolSurMesurePage() {
       .in("key", ["prix_heure", "acompte_perso_heure"])
       .then(({ data }) => {
         data?.forEach(({ key, value }) => {
-          if (key === "prix_heure")         setPrixHeure(parseFloat(value));
+          if (key === "prix_heure")          setPrixHeure(parseFloat(value));
           if (key === "acompte_perso_heure") setAcompteH(parseFloat(value));
         });
       });
@@ -697,9 +699,9 @@ export default function VolSurMesurePage() {
 
           {totalAcompte > 0 && (
             <div className="pt-2.5 border-t border-border space-y-1.5">
-              {/* Acompte brut */}
+              {/* Provision brute */}
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Acompte</span>
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Provision</span>
                 <span className={`font-black text-foreground ${(voucherDiscount > 0 || couponDiscount > 0) ? "text-sm line-through opacity-40" : "text-2xl"}`}>
                   {totalAcompte}&thinsp;€
                 </span>
@@ -764,92 +766,51 @@ export default function VolSurMesurePage() {
       {/* ══════════════════════ STEP 1 : BUILD ══════════════════════ */}
       {/* Toujours monté (CSS hidden) pour préserver les POIs Leaflet au retour */}
       {/* pb-[72px] lg:pb-0 : espace pour la barre CTA fixe sur mobile */}
-      <div className={flowStep === "build" ? "flex flex-col pb-[72px] lg:pb-0" : "hidden"} style={{ height: "calc(100vh - 84px)" }}>
-
-          {/* Sub-header : style de vol mobile uniquement */}
-          <div className="lg:hidden bg-[#f5f5f7] border-b border-border px-4 pt-2.5 pb-2">
-            <div className="flex gap-2 w-full max-w-[820px] mx-auto">
-              {STYLE_OPTIONS.map(o => (
-                <button key={o.key} type="button"
-                  onClick={() => setStyleMode(o.key)}
-                  className={[
-                    "flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] font-bold border transition-all cursor-pointer",
-                    styleMode === o.key
-                      ? "bg-[#0b2238] text-[#F2B705] border-[#0b2238]"
-                      : "bg-white text-muted-foreground border-border",
-                  ].join(" ")}>
-                  <span className={styleMode === o.key ? "text-[#F2B705]" : "text-muted-foreground"}>{o.icon}</span>
-                  {o.label}
-                </button>
-              ))}
-            </div>
-          </div>
+      <div className={flowStep === "build" ? "relative flex flex-col" : "hidden"} style={{ height: "calc(100vh - 84px)" }}>
 
           {/* Main area */}
-          <div className="flex-1 min-h-0 bg-[#f5f5f7] p-3 flex gap-3 overflow-hidden">
+          <div className="flex-1 min-h-0 bg-[#f5f5f7] p-3 pb-[148px] lg:pb-3 flex gap-3 overflow-hidden">
             {/* Left: carte + instructions */}
             <div className="flex flex-col flex-1 min-w-0 gap-3">
 
               {/* Card 1 — Carte */}
               <div className="flex-1 min-h-0 relative rounded-2xl shadow-[0_2px_16px_rgba(0,0,0,0.10)] border border-black/6" style={{ isolation: "isolate" }}>
 
-                  {/* Carte + popup — overflow-hidden pour coins arrondis */}
+                  {/* Carte + popup desktop — overflow-hidden pour coins arrondis */}
                   <div className="absolute inset-0 overflow-hidden rounded-2xl">
+                  {/* Desktop uniquement : modal overlay sur la carte */}
                   {popupVisible && route.pois.length === 0 && (
-                    <div className="absolute inset-0 flex items-center justify-center z-[500] bg-black/20 backdrop-blur-sm p-4">
-                      <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-sm w-full shadow-2xl border border-border pointer-events-auto text-center">
-
-                        {/* Icône */}
+                    <div className="hidden lg:flex absolute inset-0 items-center justify-center z-[500] bg-black/20 backdrop-blur-sm p-4">
+                      <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl border border-border pointer-events-auto text-center">
                         <div className="w-14 h-14 rounded-2xl bg-[#0b2238] flex items-center justify-center mx-auto mb-5">
-                          <Navigation size={22} className="text-[#F2B705]" />
+                          <Route size={22} className="text-[#F2B705]" />
                         </div>
-
-                        {/* Titre */}
                         <p className="text-[#F2B705] text-[10px] font-bold tracking-[3px] uppercase mb-2">Vol sur mesure</p>
-                        <h2 className="text-[#0b2238] text-xl font-extrabold leading-snug mb-3">
-                          Dessinez votre propre aventure
-                        </h2>
+                        <h2 className="text-[#0b2238] text-xl font-extrabold leading-snug mb-3">Tracez votre itinéraire</h2>
                         <p className="text-foreground/60 text-sm leading-relaxed mb-5">
-                          Ajoutez les lieux à survoler sur la carte. On calcule
-                          l&apos;itinéraire, la durée et le prix en temps réel.
+                          Cliquez sur la carte pour ajouter les endroits à survoler. Le prix s&apos;affiche en temps réel selon la durée du vol.
                         </p>
-
-                        {/* Points */}
                         <div className="flex flex-col gap-2 mb-6 text-left">
-                          {[
-                            "Jusqu'à 3 passagers à bord",
-                            "Prix calculé à la minute réelle",
-                            "Annulation gratuite jusqu'à 48h",
-                          ].map(p => (
+                          {["Départ et retour depuis Charleroi (EBCI)","1 à 3 passagers maximum","Facturé à la minute de vol réelle","Aucun paiement immédiat — demande sans engagement"].map(p => (
                             <div key={p} className="flex items-center gap-2.5 text-sm text-foreground/65">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#F2B705] shrink-0" />
-                              {p}
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#F2B705] shrink-0" />{p}
                             </div>
                           ))}
                         </div>
-
-                        {/* Notice ordinateur recommandé */}
                         <div className="flex items-start gap-2.5 bg-secondary border border-border rounded-lg px-3.5 py-2.5 mb-5 text-left">
                           <Monitor size={14} className="text-[#0b2238] shrink-0 mt-0.5" />
                           <p className="text-[11px] text-[#0b2238]/65 leading-relaxed">
-                            Pour une expérience optimale, utiliser un{" "}
-                            <span className="font-semibold text-[#0b2238]">ordinateur</span>{" "}
-                            est recommandé — le système de traçage est complexe.
+                            Pour une expérience optimale, utiliser un <span className="font-semibold text-[#0b2238]">ordinateur</span> est recommandé — le système de traçage est complexe.
                           </p>
                         </div>
-
-                        {/* CTA */}
-                        <button
-                          type="button"
+                        <button type="button"
                           onClick={() => { setPopupVisible(false); sessionStorage.setItem("vsm_popup_seen", "1"); }}
-                          className="w-full py-3 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:brightness-105 transition-all shadow-gold cursor-pointer"
-                        >
+                          className="w-full py-3 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:brightness-105 transition-all shadow-gold cursor-pointer">
                           Compris, tracer ma route
                         </button>
                         <p className="mt-3 text-[10px] text-muted-foreground/50 flex items-center gap-1 justify-center">
                           <Lock size={9} className="shrink-0" />Aucun paiement à cette étape
                         </p>
-
                       </div>
                     </div>
                   )}
@@ -1167,7 +1128,7 @@ export default function VolSurMesurePage() {
               <div className="shrink-0 px-5 py-5 bg-card border-t border-border">
                 {taxesEscalesTotal > 0 && acompte > 0 && (
                   <div className="flex items-center justify-between mb-3 text-xs text-muted-foreground">
-                    <span>Acompte + taxes escales</span>
+                    <span>Provision + taxes escales</span>
                     <span className="font-bold text-foreground">{totalAcompte}&thinsp;€</span>
                   </div>
                 )}
@@ -1190,34 +1151,224 @@ export default function VolSurMesurePage() {
             </div>
           </div>
 
-          {/* Mobile CTA */}
-          <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border px-4 pt-2.5 pb-4 z-40">
-            {route.pois.length > 0 && (
-              <div className="flex items-center justify-between mb-2.5">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-xs font-bold text-[#0b2238] shrink-0">
-                    {route.pois.length} lieu{route.pois.length > 1 ? "x" : ""}
-                  </span>
-                  {route.totalMin > 0 && (
-                    <span className="text-xs text-muted-foreground truncate">
-                      · ≈{route.totalMin} min · {route.distKm} km
-                    </span>
-                  )}
+          {/* ── Mobile popup — page complète sous le header ─────── */}
+          {popupVisible && route.pois.length === 0 && (
+            <div className="lg:hidden absolute inset-0 bg-[#f5f5f7] z-[600] overflow-y-auto flex flex-col items-center justify-center p-5">
+              <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-sm border border-border text-center">
+                <div className="w-14 h-14 rounded-2xl bg-[#0b2238] flex items-center justify-center mx-auto mb-5">
+                  <Route size={22} className="text-[#F2B705]" />
                 </div>
-                {prixEstime > 0 && (
-                  <span className="text-sm font-black text-[#0b2238] shrink-0">{prixEstime}&thinsp;€</span>
+                <p className="text-[#F2B705] text-[10px] font-bold tracking-[3px] uppercase mb-2">Vol sur mesure</p>
+                <h2 className="text-[#0b2238] text-xl font-extrabold leading-snug mb-3">Tracez votre itinéraire</h2>
+                <p className="text-foreground/60 text-sm leading-relaxed mb-5">
+                  Appuyez sur la carte pour ajouter les endroits à survoler. Le prix s&apos;affiche en temps réel selon la durée du vol.
+                </p>
+                <div className="flex flex-col gap-2 mb-6 text-left">
+                  {["Départ et retour depuis Charleroi (EBCI)","1 à 3 passagers maximum","Facturé à la minute de vol réelle, pas au forfait","Aucun paiement ici — Romain confirme sous 24h"].map(p => (
+                    <div key={p} className="flex items-center gap-2.5 text-sm text-foreground/65">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#F2B705] shrink-0" />{p}
+                    </div>
+                  ))}
+                </div>
+                <button type="button"
+                  onClick={() => { setPopupVisible(false); sessionStorage.setItem("vsm_popup_seen", "1"); }}
+                  className="w-full py-3.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:brightness-105 transition-all shadow-gold cursor-pointer mb-3">
+                  Commencer
+                </button>
+                <p className="text-[10px] text-muted-foreground/50 flex items-center gap-1 justify-center">
+                  <Lock size={9} className="shrink-0" />Aucun paiement à cette étape
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* ── Mobile bottom sheet ──────────────────────────────── */}
+          <div
+            className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border rounded-t-2xl shadow-[0_-4px_24px_rgba(0,0,0,0.10)] transition-[height] duration-300 ease-in-out overflow-hidden"
+            style={{ height: mobileSheetExpanded ? "65vh" : "148px" }}
+          >
+            {/* Handle */}
+            <button
+              type="button"
+              className="w-full flex items-center justify-center pt-2.5 pb-1 cursor-pointer"
+              onClick={() => setMobileSheetExpanded(v => !v)}
+              aria-label={mobileSheetExpanded ? "Réduire" : "Voir plus d'options"}
+            >
+              <div className="w-10 h-1 rounded-full bg-muted-foreground/25" />
+            </button>
+
+            {/* Collapsed */}
+            {!mobileSheetExpanded && (
+              <div className="px-4 pt-1">
+                {route.pois.length > 0 ? (
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-xs font-bold text-[#0b2238] shrink-0">
+                        {route.pois.length} lieu{route.pois.length > 1 ? "x" : ""}
+                      </span>
+                      {route.totalMin > 0 && (
+                        <span className="text-xs text-muted-foreground truncate">· ≈{route.totalMin} min · {route.distKm} km</span>
+                      )}
+                    </div>
+                    {prixEstime > 0 && (
+                      <span className="text-sm font-black text-[#0b2238] shrink-0">{prixEstime}&thinsp;€</span>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground mb-3 text-center">
+                    Appuyez sur la carte pour ajouter un lieu{" "}
+                    <span className="font-semibold text-foreground">· ↑ Options</span>
+                  </p>
                 )}
+                <button
+                  type="button"
+                  disabled={route.pois.length === 0}
+                  onClick={() => setFlowStep("reserve")}
+                  className="w-full flex items-center justify-center gap-2 py-3.5 rounded-lg bg-primary text-primary-foreground text-sm font-black disabled:opacity-40 cursor-pointer transition-all shadow-gold"
+                >
+                  {route.pois.length === 0
+                    ? "Ajoutez un lieu sur la carte"
+                    : <>Continuer ma réservation <ChevronRight size={15} /></>
+                  }
+                </button>
               </div>
             )}
-            <button type="button"
-              disabled={route.pois.length === 0}
-              onClick={() => setFlowStep("reserve")}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-lg bg-primary text-primary-foreground text-sm font-black disabled:opacity-40 cursor-pointer transition-all shadow-gold">
-              {route.pois.length === 0
-                ? "Ajoutez un lieu sur la carte"
-                : <>Continuer ma réservation <ChevronRight size={15} /></>
-              }
-            </button>
+
+            {/* Expanded */}
+            {mobileSheetExpanded && (
+              <div className="flex flex-col overflow-hidden" style={{ height: "calc(65vh - 44px)" }}>
+                <div className="flex-1 overflow-y-auto px-4 space-y-4 pb-2">
+
+                  {/* Stats */}
+                  {route.totalMin > 0 && (
+                    <div className="flex items-center justify-between py-2 border-b border-border">
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1"><Clock size={11} />≈{route.totalMin} min</span>
+                        {route.distKm > 0 && <span className="flex items-center gap-1"><MapPin size={11} />{route.distKm} km</span>}
+                      </div>
+                      {prixEstime > 0 && <span className="text-sm font-black text-[#0b2238]">{prixEstime}&thinsp;€</span>}
+                    </div>
+                  )}
+
+                  {/* Style de vol */}
+                  <div>
+                    <p className="text-[9px] font-black text-foreground/40 uppercase tracking-[2px] mb-2">Style de vol</p>
+                    <div className="flex gap-2">
+                      {STYLE_OPTIONS.map(o => (
+                        <button key={o.key} type="button"
+                          onClick={() => setStyleMode(o.key)}
+                          className={[
+                            "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-bold border transition-all cursor-pointer",
+                            styleMode === o.key
+                              ? "bg-[#0b2238] text-[#F2B705] border-[#0b2238]"
+                              : "bg-secondary text-muted-foreground border-border",
+                          ].join(" ")}>
+                          <span className={styleMode === o.key ? "text-[#F2B705]" : "text-muted-foreground"}>{o.icon}</span>
+                          {o.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Parcours */}
+                  <div>
+                    <p className="text-[9px] font-black text-foreground/40 uppercase tracking-[2px] mb-2">Votre parcours</p>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2 bg-navy rounded-lg px-3 py-2">
+                        <PlaneTakeoff size={11} className="text-[#F2B705] shrink-0" />
+                        <span className="text-xs font-bold text-white flex-1">Charleroi EBCI</span>
+                        <span className="text-[9px] font-bold text-[#F2B705] uppercase tracking-wide">Départ</span>
+                      </div>
+                      {route.pois.length === 0 ? (
+                        <p className="text-[11px] text-muted-foreground italic px-1">Aucun lieu — appuyez sur la carte pour en ajouter</p>
+                      ) : (
+                        route.pois.map(poi => (
+                          <div key={poi.id} className="flex items-center gap-2 bg-secondary rounded-lg px-3 py-2 border border-border">
+                            <span className="text-xs font-bold text-foreground flex-1 truncate">{poi.nom}</span>
+                            <button type="button" onClick={() => mapRef.current?.removePOI(poi.id)}
+                              className="shrink-0 w-6 h-6 rounded-md flex items-center justify-center hover:bg-red-50 text-muted-foreground/40 hover:text-red-500 transition-all cursor-pointer">
+                              <X size={12} />
+                            </button>
+                          </div>
+                        ))
+                      )}
+                      {route.pois.length > 0 && (
+                        <div className="flex items-center gap-2 bg-navy rounded-lg px-3 py-2">
+                          <PlaneLanding size={11} className="text-[#F2B705] shrink-0" />
+                          <span className="text-xs font-bold text-white flex-1">Charleroi EBCI</span>
+                          <span className="text-[9px] font-bold text-[#F2B705] uppercase tracking-wide">Retour</span>
+                        </div>
+                      )}
+                    </div>
+                    {route.pois.length > 0 && (
+                      <button type="button" onClick={() => mapRef.current?.clearAll()}
+                        className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground/60 hover:text-destructive transition-colors cursor-pointer">
+                        <Trash2 size={10} />Tout effacer
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Escales */}
+                  {availableStops.length > 0 && (
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-[9px] font-black text-foreground/40 uppercase tracking-[2px]">Escales</p>
+                        {availableStops.some(s => !selectedStops.find(ss => ss.id === s.id)) && (
+                          <button type="button" onClick={() => setStopsOpen(v => !v)}
+                            className="flex items-center gap-1 text-xs font-bold text-primary cursor-pointer">
+                            <Plus size={11} />Ajouter
+                          </button>
+                        )}
+                      </div>
+                      {selectedStops.length === 0 && !stopsOpen && (
+                        <p className="text-[11px] text-muted-foreground italic">Aucune escale</p>
+                      )}
+                      {selectedStops.map(s => (
+                        <div key={s.id} className="flex items-center gap-2 bg-secondary rounded-lg px-2.5 py-1.5 border border-border mb-1.5">
+                          <span className="font-mono text-[10px] font-bold text-[#0b2238] shrink-0">{s.icao}</span>
+                          <span className="flex-1 text-[11px] text-foreground/70 truncate">{s.nom}</span>
+                          {s.taxe > 0 && <span className="text-[10px] font-bold text-[#0b2238] shrink-0">+{s.taxe}€</span>}
+                          <button type="button" onClick={() => removeStop(s.id)}
+                            className="text-muted-foreground/40 hover:text-destructive transition-colors cursor-pointer shrink-0">
+                            <X size={10} />
+                          </button>
+                        </div>
+                      ))}
+                      {stopsOpen && (
+                        <div className="rounded-lg overflow-hidden border border-border mt-1">
+                          {availableStops
+                            .filter(s => !selectedStops.find(ss => ss.id === s.id))
+                            .map((s, i, arr) => (
+                              <button key={s.id} type="button" onClick={() => addStop(s)}
+                                className={`w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-primary/5 text-left transition-colors cursor-pointer ${i < arr.length - 1 ? "border-b border-border" : ""}`}>
+                                <span className="font-mono text-[10px] font-bold text-[#0b2238] shrink-0 w-11">{s.icao}</span>
+                                <span className="flex-1 text-[11px] text-foreground/80 truncate">{s.nom}</span>
+                                {s.taxe > 0 && <span className="text-[10px] text-muted-foreground shrink-0">+{s.taxe}€</span>}
+                              </button>
+                            ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                </div>
+
+                {/* CTA en bas du sheet */}
+                <div className="px-4 pb-6 pt-3 border-t border-border shrink-0">
+                  <button
+                    type="button"
+                    disabled={route.pois.length === 0}
+                    onClick={() => { setMobileSheetExpanded(false); setFlowStep("reserve"); }}
+                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-lg bg-primary text-primary-foreground text-sm font-black disabled:opacity-40 cursor-pointer transition-all shadow-gold"
+                  >
+                    {route.pois.length === 0
+                      ? "Ajoutez un lieu sur la carte"
+                      : <>Continuer ma réservation <ChevronRight size={15} /></>
+                    }
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1770,9 +1921,9 @@ export default function VolSurMesurePage() {
                     <span className="text-muted-foreground">Vol estimé <span className="text-[10px]">({prixHeure} €/h · ≈ {route.totalMin} min)</span></span>
                     <span className="font-semibold text-foreground shrink-0 ml-2">≈ {prixEstime} €</span>
                   </div>
-                  {/* Ligne acompte */}
+                  {/* Ligne provision */}
                   <div className="flex justify-between items-baseline">
-                    <span className="text-muted-foreground">Acompte <span className="text-[10px]">({acompteH} €/h)</span></span>
+                    <span className="text-muted-foreground">Provision <span className="text-[10px]">({acompteH} €/h)</span></span>
                     <span className="font-semibold text-foreground shrink-0 ml-2">{acompte} €</span>
                   </div>
                   {/* Taxes */}
@@ -1798,7 +1949,7 @@ export default function VolSurMesurePage() {
                   {/* Total */}
                   <div className="flex justify-between items-baseline pt-2.5 border-t border-border">
                     <span className="font-black text-foreground">
-                      {totalAcompteFinal === 0 ? "Couvert par voucher" : "Acompte estimé"}
+                      {totalAcompteFinal === 0 ? "Couvert par voucher" : "Provision estimée"}
                     </span>
                     <span className="font-black text-foreground text-lg shrink-0 ml-2">
                       {totalAcompteFinal === 0 ? "0 €" : `${totalAcompteFinal} €`}
@@ -1806,11 +1957,11 @@ export default function VolSurMesurePage() {
                   </div>
                 </div>
 
-                {/* Explication acompte */}
+                {/* Explication provision */}
                 <div className="mx-5 mb-5 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-amber-800 leading-relaxed space-y-1">
-                  <p className="font-bold flex items-center gap-1.5"><Info size={11} className="shrink-0" />Pourquoi un acompte ?</p>
-                  <p>L&apos;acompte sécurise votre créneau et couvre la préparation du vol. Il est <strong>déduit du solde</strong> à régler le jour du vol.</p>
-                  <p>Il est <strong>intégralement remboursé</strong> si le vol est annulé pour météo, ou si vous annulez plus de 48 h avant la date prévue.</p>
+                  <p className="font-bold flex items-center gap-1.5"><Info size={11} className="shrink-0" />Pourquoi une provision ?</p>
+                  <p>La provision couvre le coût réel du vol, calculé <strong>après le vol</strong> selon la durée effectivement réalisée. Si elle dépasse le montant dû, la différence est remboursée.</p>
+                  <p>Elle est <strong>intégralement remboursée</strong> si le vol est annulé pour météo, ou si vous annulez plus de 48 h avant la date prévue.</p>
                 </div>
               </div>
 
@@ -1851,7 +2002,7 @@ export default function VolSurMesurePage() {
                   }
                 </button>
                 <p className="text-center text-[10px] text-muted-foreground mt-3">
-                  Aucun paiement maintenant — l&apos;acompte sera demandé après validation de la route
+                  Aucun paiement maintenant — la provision sera demandée après validation de la route
                 </p>
               </div>
 
@@ -1871,7 +2022,7 @@ export default function VolSurMesurePage() {
                 }
               </button>
               <p className="text-center text-[10px] text-muted-foreground">
-                Aucun paiement maintenant — l&apos;acompte sera demandé après validation de la route
+                Aucun paiement maintenant — la provision sera demandée après validation de la route
               </p>
             </div>
           </div>
@@ -1901,7 +2052,7 @@ export default function VolSurMesurePage() {
                   <Info size={13} className="text-[#0b2238] mt-0.5 shrink-0" />
                   <p className="text-xs text-[#0b2238]/80 leading-relaxed">
                     Notre pilote analyse votre demande et vous envoie la route définitive sous 24&nbsp;h.{" "}
-                    <strong>L&apos;acompte{acompte > 0 ? ` (≈ ${acompte} €)` : ""} ne sera demandé qu&apos;après votre validation.</strong>
+                    <strong>La provision{acompte > 0 ? ` (≈ ${acompte} €)` : ""} ne sera demandée qu&apos;après votre validation.</strong>
                   </p>
                 </div>
               </div>
@@ -1920,8 +2071,8 @@ export default function VolSurMesurePage() {
                   },
                   {
                     num: 3, done: false,
-                    title: "Validation & paiement de l'acompte",
-                    desc: `Vous recevez la route définitive par email. Après votre accord, un lien de paiement vous est envoyé pour régler l'acompte${acompte > 0 ? ` (≈ ${acompte} €)` : ""} et confirmer le créneau.`,
+                    title: "Validation & règlement de la provision",
+                    desc: `Vous recevez la route définitive par email. Après votre accord, un lien de paiement vous est envoyé pour régler la provision${acompte > 0 ? ` (≈ ${acompte} €)` : ""} et confirmer le créneau.`,
                   },
                   {
                     num: 4, done: false,

@@ -65,9 +65,8 @@ export async function GET(request: NextRequest) {
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  // Règle J-2 : minimum 48h d'avance
   const minBookable = new Date(today);
-  minBookable.setDate(minBookable.getDate() + 2);
+  minBookable.setDate(minBookable.getDate() + minJours);
   const daysInMonth = new Date(y, m, 0).getDate();
   const available: string[] = [];
   const unavailable: string[] = [];

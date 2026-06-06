@@ -11,6 +11,13 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      { source: "/vols/aventure-60-min", destination: "/vols/exploration-60-min", permanent: true },
+      { source: "/vols/voyage-90-min",   destination: "/vols/immersion-90-min",   permanent: true },
+    ];
+  },
+
   async headers() {
     return [
       {

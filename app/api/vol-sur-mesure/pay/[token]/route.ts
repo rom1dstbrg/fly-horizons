@@ -87,7 +87,7 @@ export async function GET(
           price_data: {
             currency: "eur",
             product_data: {
-              name: `Acompte vol sur mesure — ~${resa.duree} min`,
+              name: `Provision vol sur mesure — ~${resa.duree} min`,
               description: `${dateStr} à ${resa.heure_vol} · ${c.prenom} ${c.nom}`,
             },
             unit_amount: Math.round(totalAcompte * 100),

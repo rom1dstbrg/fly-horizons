@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
 
-    // ── Vol sur mesure (acompte) ──────────────────────────────
+    // ── Vol sur mesure (provision) ────────────────────────────
     if (session.metadata?.type === "reservation_perso") {
       const { reservationId, voucherId, voucherCode, couponCode, paymentToken } = session.metadata;
       if (reservationId) {
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
           await resend.emails.send({
             from: EMAIL_FROM, to: [EMAIL_REPLY_TO],
             subject: `[Vol sur mesure payé] ${c.prenom} ${c.nom} — ${resa.date_vol}`,
-            html: `<p>${c.prenom} ${c.nom} (${c.email}) a payé l'acompte pour un vol sur mesure le <strong>${resa.date_vol} à ${resa.heure_vol}</strong>, ~${resa.duree} min, ${resa.distance_km ?? "?"} km.</p><p>Waypoints : ${(resa.waypoints ?? []).length} points.</p>`,
+            html: `<p>${c.prenom} ${c.nom} (${c.email}) a réglé la provision pour un vol sur mesure le <strong>${resa.date_vol} à ${resa.heure_vol}</strong>, ~${resa.duree} min, ${resa.distance_km ?? "?"} km.</p><p>Waypoints : ${(resa.waypoints ?? []).length} points.</p>`,
           });
         }
       }

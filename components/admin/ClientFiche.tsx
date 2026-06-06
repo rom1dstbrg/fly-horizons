@@ -220,7 +220,7 @@ export function ClientFiche({
           { label: "Réservations",    value: reservations.length, color: "text-blue-600" },
           { label: "Vols effectués",  value: volsEffectues,       color: "text-purple-600" },
           { label: "Vouchers actifs", value: vouchersActifs,      color: "text-emerald-600" },
-          { label: "Acomptes",        value: `${totalAcomptes} €`, color: "text-navy" },
+          { label: "Provisions",       value: `${totalAcomptes} €`, color: "text-navy" },
         ].map(({ label, value, color }) => (
           <div key={label} className="bg-card rounded-xl border border-border p-4 text-center">
             <p className={`text-2xl font-bold ${color}`}>{value}</p>

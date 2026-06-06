@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { toForeFlight, buildForeFlightRoute } from "@/lib/foreflight";
-import { routeProposalEmail, paymentLinkEmail } from "@/lib/email-templates";
+import { routeProposalEmail, paymentLinkEmail, routeFeedbackAdminEmail } from "@/lib/email-templates";
 
 async function checkAdmin() {
   const supabase = await createClient();
@@ -375,24 +375,34 @@ export async function respondToRouteProposal(
       }
     }
 
+    const rawUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+    const siteUrl = rawUrl.startsWith("http://localhost") || rawUrl.startsWith("http://127")
+      ? rawUrl
+      : "https://fly-horizons.com";
+    const dateStr = new Date((resa?.date_vol ?? "") + "T12:00:00Z").toLocaleDateString("fr-BE", {
+      weekday: "long", day: "numeric", month: "long", year: "numeric",
+    });
+
     // Notification admin
     await resend.emails.send({
       from: EMAIL_FROM,
       to: [EMAIL_REPLY_TO],
       subject: `[Route ${status === "accepted" ? "acceptée ✓" : "modification demandée"}] ${client?.prenom ?? ""} ${client?.nom ?? ""}`,
-      html: `<p><strong>${client?.prenom} ${client?.nom}</strong> a ${status === "accepted" ? "accepté" : "demandé une modification pour"} la proposition de route.</p>${clientComment ? `<p><strong>Commentaire :</strong> ${clientComment}</p>` : ""}`,
+      html: routeFeedbackAdminEmail({
+        clientPrenom: client?.prenom ?? "",
+        clientNom: client?.nom ?? "",
+        clientEmail: client?.email ?? "",
+        resaId: resa?.id ?? "",
+        dateStr,
+        type: status === "accepted" ? "validated" : "modification_requested",
+        feedback: clientComment ?? null,
+        adminUrl: `${siteUrl}/admin/reservations/${resa?.id ?? ""}`,
+      }),
     });
 
     // Lien de paiement au client — uniquement vol sur mesure non encore payé avec acompte
     if (isPerso && !alreadyPaid && status === "accepted" && client?.email && paymentToken && proposalAcompte > 0) {
-      const rawUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
-      const siteUrl = rawUrl.startsWith("http://localhost") || rawUrl.startsWith("http://127")
-        ? rawUrl
-        : "https://fly-horizons.com";
       const paymentUrl = `${siteUrl}/api/vol-sur-mesure/pay/${paymentToken}`;
-      const dateStr = new Date((resa?.date_vol ?? "") + "T12:00:00Z").toLocaleDateString("fr-BE", {
-        weekday: "long", day: "numeric", month: "long", year: "numeric",
-      });
 
       await resend.emails.send({
         from: EMAIL_FROM,

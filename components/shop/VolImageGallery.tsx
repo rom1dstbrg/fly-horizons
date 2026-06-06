@@ -6,14 +6,15 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { formatDuration } from "@/lib/vouchers";
 
 interface VolImageGalleryProps {
-  images: { url: string }[];
+  images: { url: string; position?: number }[];
   title: string;
   duree: number;
 }
 
 const AUTOPLAY_MS = 5000;
 
-export function VolImageGallery({ images, title, duree }: VolImageGalleryProps) {
+export function VolImageGallery({ images: rawImages, title, duree }: VolImageGalleryProps) {
+  const images = [...rawImages].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
   const [active, setActive] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 

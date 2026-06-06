@@ -248,7 +248,7 @@ export async function POST(request: NextRequest) {
           <li>Date : ${dateStr} à ${heure}</li>
           <li>Durée estimée : ~${effectiveDureMin} min · ${distKm ?? "?"} km</li>
           ${styleLabel ? `<li><strong>Style de vol : ${styleLabel}</strong></li>` : ""}
-          <li>Acompte : ${finalAcompte} €${discount > 0 ? ` (voucher −${discount} €)` : ""}${couponDiscountAmount > 0 ? ` (code promo −${couponDiscountAmount} €)` : ""}</li>
+          <li>Provision : ${finalAcompte} €${discount > 0 ? ` (voucher −${discount} €)` : ""}${couponDiscountAmount > 0 ? ` (code promo −${couponDiscountAmount} €)` : ""}</li>
           <li>Réservation : ${resa.id}</li>
         </ul>
         ${paymentUrl ? `<p>Lien de paiement (sera envoyé automatiquement après validation de la route) : <a href="${paymentUrl}">${paymentUrl}</a></p>` : "<p>Vol entièrement couvert par voucher — aucun paiement requis.</p>"}`,

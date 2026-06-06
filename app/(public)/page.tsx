@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronDown, Gift, Route, Lock, Users, Clock, PlaneTakeoff, Zap, ArrowRight, MousePointerClick } from "lucide-react";
+import { ChevronDown, Route, Lock, Users, Clock, PlaneTakeoff, Zap, ArrowRight, MousePointerClick } from "lucide-react";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import { createClient } from "@/lib/supabase/server";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
@@ -58,12 +59,23 @@ export const revalidate = 300;
 export default async function HomePage() {
   const supabase = await createClient();
 
-  const { data: packs } = await supabase
-    .from("products")
-    .select("*, images:product_images(*)")
-    .eq("active", true)
-    .eq("product_type", "voucher")
-    .order("voucher_duration_minutes", { ascending: true });
+  const [
+    { data: packs },
+    { data: crmSettings },
+  ] = await Promise.all([
+    supabase.from("products")
+      .select("*, images:product_images(*)")
+      .eq("active", true).eq("product_type", "voucher")
+      .order("voucher_duration_minutes", { ascending: true }),
+    supabase.from("crm_settings")
+      .select("key, value")
+      .in("key", ["welcome_code", "welcome_discount_type", "welcome_discount_value"]),
+  ]);
+
+  const welcomeCode          = crmSettings?.find(s => s.key === "welcome_code")?.value ?? "WELCOME2026";
+  const welcomeDiscountType  = crmSettings?.find(s => s.key === "welcome_discount_type")?.value ?? "percentage";
+  const welcomeDiscountRaw   = crmSettings?.find(s => s.key === "welcome_discount_value")?.value ?? "10";
+  const welcomeDiscountLabel = welcomeDiscountType === "percentage" ? `−${welcomeDiscountRaw}%` : `−${welcomeDiscountRaw} €`;
 
   return (
     <main className="bg-gradient-navy">
@@ -110,7 +122,7 @@ export default async function HomePage() {
               href="#nos-vols"
               className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-[#F2B705] text-[#0b2238] rounded-lg font-bold text-sm hover:bg-[#e6a800] transition-all shadow-[0_8px_30px_rgba(242,183,5,.35)] hover:-translate-y-0.5 active:translate-y-0"
             >
-              <Gift size={16} />
+              <PlaneTakeoff size={16} />
               Réserver un vol
             </a>
             <a
@@ -125,8 +137,8 @@ export default async function HomePage() {
           <div className="mt-6 flex flex-col items-center gap-1.5">
             <p className="text-sm text-white/80">
               Utilisez le code{" "}
-              <span className="font-mono font-black text-[#F2B705] bg-[#F2B705]/10 border border-[#F2B705]/30 rounded px-2 py-0.5">WELCOME2026</span>
-              {" "}pour −10%
+              <span className="font-mono font-black text-[#F2B705] bg-[#F2B705]/10 border border-[#F2B705]/30 rounded px-2 py-0.5">{welcomeCode}</span>
+              {" "}pour {welcomeDiscountLabel}
             </p>
             <p className="text-[11px] text-white/55">* valable une seule fois · applicable lors de votre réservation.</p>
           </div>
@@ -408,6 +420,7 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <ChatWidget />
     </main>
   );
 }

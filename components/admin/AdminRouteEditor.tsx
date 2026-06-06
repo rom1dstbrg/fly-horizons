@@ -111,13 +111,27 @@ export function AdminRouteEditor({ waypoints, onChange, clientWaypoints = [], st
       .addTo(map)
       .bindTooltip("Charleroi EBCI · Départ & Retour", { direction: "top" });
 
-    map.on("click", (e: L.LeafletMouseEvent) => {
-      const newWp: WaypointDraft = {
-        lat: e.latlng.lat.toFixed(5),
-        lng: e.latlng.lng.toFixed(5),
-        nom: "",
-      };
-      onChangeRef.current([...waypointsRef.current, newWp]);
+    map.on("click", async (e: L.LeafletMouseEvent) => {
+      const lat = e.latlng.lat.toFixed(5);
+      const lng = e.latlng.lng.toFixed(5);
+      onChangeRef.current([...waypointsRef.current, { lat, lng, nom: "" }]);
+      try {
+        const resp = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=fr`
+        );
+        const data = await resp.json() as { name?: string; address?: Record<string, string> };
+        const nom = data.address?.city ?? data.address?.town ?? data.address?.municipality ?? data.address?.village ?? data.name ?? "";
+        if (!nom) return;
+        const cur = waypointsRef.current;
+        for (let i = cur.length - 1; i >= 0; i--) {
+          if (cur[i].lat === lat && cur[i].lng === lng && cur[i].nom === "") {
+            const updated = [...cur];
+            updated[i] = { ...updated[i], nom };
+            onChangeRef.current(updated);
+            return;
+          }
+        }
+      } catch { /* nom stays empty */ }
     });
 
     mapRef.current = map;

@@ -131,8 +131,8 @@ add(
 
 add(
   "vsm-quote-payment",
-  "5a · Vol sur mesure (acompte)",
-  "Admin → panel admin → bouton « Envoyer le devis » — vol sur mesure avec acompte > 0. Contient le lien de paiement Stripe.",
+  "5a · Vol sur mesure (provision)",
+  "Admin → panel admin → bouton « Envoyer le devis » — vol sur mesure avec provision > 0. Contient le lien de paiement Stripe.",
   "client",
   "admin",
   et.volSurMesureQuoteEmail({
@@ -183,8 +183,8 @@ add(
 
 add(
   "vsm-acompte",
-  "8 · Acompte vol sur mesure",
-  "Stripe webhook checkout.session.completed — le client vient de payer l'acompte vol sur mesure. Confirme la réception du paiement et rappelle les prochaines étapes.",
+  "8 · Provision vol sur mesure",
+  "Stripe webhook checkout.session.completed — le client vient de régler la provision vol sur mesure. Confirme la réception du paiement et rappelle les prochaines étapes.",
   "client",
   "webhook",
   et.volSurMesureAcompteEmail({
@@ -194,8 +194,17 @@ add(
     heure: HEURE,
     dureeEstimee: 75,
     voucherCode: null,
-    montantPaye: 100,
+    montantPaye: 420,
     reservationId: "760c8d6c-1bf2-485f-b527-6198fea4907f",
+    breakdown: {
+      coutVol: 380,
+      dureeMin: 75,
+      distKm: 142,
+      provisionMarge: 40,
+      taxesEscales: 0,
+      total: 420,
+      totalLabel: "Provision réglée",
+    },
   })
 );
 
@@ -255,6 +264,15 @@ add(
     montant: 320,
     paymentUrl: PAYMENT_URL,
     voucherCode: null,
+    breakdown: {
+      coutVol: 360,
+      dureeMin: 60,
+      provisionMarge: 0,
+      taxesEscales: 0,
+      couponDiscount: 40,
+      couponCode: "PROMO10",
+      total: 320,
+    },
   })
 );
 
@@ -273,6 +291,13 @@ add(
     montant: 320,
     paymentUrl: PAYMENT_URL,
     deadlineStr: "jeudi 21 mai 2026 à 09h30",
+    breakdown: {
+      coutVol: 360,
+      dureeMin: 60,
+      couponDiscount: 40,
+      couponCode: "PROMO10",
+      total: 320,
+    },
   })
 );
 
@@ -312,35 +337,6 @@ add(
 
 // ── SUIVI DE VOL ──────────────────────────────────────────────────────────────
 
-add(
-  "date-confirmee-no-route",
-  "9a · Date confirmée (sans route)",
-  "Admin → panel admin → changement de statut « Date confirmée » — sans itinéraire encore défini. Le client sait que la date est fixée.",
-  "client",
-  "admin",
-  et.reservationDateConfirmeeEmail({
-    prenom: PRENOM,
-    dateStr: DATE_STR,
-    duree: 60,
-    route: null,
-    routeUrl: null,
-  })
-);
-
-add(
-  "date-confirmee-route",
-  "9b · Date confirmée (avec route)",
-  "Admin → panel admin → changement de statut « Date confirmée » — avec itinéraire déjà composé. Le client voit la route et peut la visualiser.",
-  "client",
-  "admin",
-  et.reservationDateConfirmeeEmail({
-    prenom: PRENOM,
-    dateStr: DATE_STR,
-    duree: 60,
-    route: ROUTE,
-    routeUrl: ROUTE_URL,
-  })
-);
 
 add(
   "heure-confirmee-no-route",
@@ -509,8 +505,17 @@ add(
     prenom: PRENOM,
     dateStr: DATE_STR,
     duree: 75,
-    acompte: 120,
+    acompte: 420,
     paymentUrl: PAYMENT_URL,
+    breakdown: {
+      coutVol: 380,
+      dureeMin: 75,
+      distKm: 142,
+      provisionMarge: 40,
+      taxesEscales: 0,
+      total: 420,
+      totalLabel: "Provision à régler",
+    },
   })
 );
 
@@ -603,7 +608,7 @@ add(
   et.customEmail({
     subject: `Fly Horizons — Votre vol du ${DATE_STR}`,
     body:
-      `Bonjour ${PRENOM},\n\nJ'ai suivi les prévisions pour le ${DATE_STR} et les conditions ne permettent malheureusement pas de voler en sécurité. Je préfère reporter plutôt que de vous faire prendre des risques ou de vous faire passer une mauvaise expérience.\n\nVotre acompte est bien conservé, aucun frais ne vous est facturé.\n\nVous pouvez choisir votre nouvelle date directement depuis votre espace client en cliquant sur le bouton de report ci-dessous.\n\nÀ très vite,\nRomain`,
+      `Bonjour ${PRENOM},\n\nJ'ai suivi les prévisions pour le ${DATE_STR} et les conditions ne permettent malheureusement pas de voler en sécurité. Je préfère reporter plutôt que de vous faire prendre des risques ou de vous faire passer une mauvaise expérience.\n\nVotre provision est bien conservée, aucun frais ne vous est facturé.\n\nVous pouvez choisir votre nouvelle date directement depuis votre espace client en cliquant sur le bouton de report ci-dessous.\n\nÀ très vite,\nRomain`,
     rescheduleUrl: RESCHEDULE_URL,
   })
 );

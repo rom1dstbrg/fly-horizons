@@ -96,11 +96,55 @@ export async function deleteShippingCountry(id: string) {
   }
 }
 
+export async function updateOperationalSettings({
+  welcome_code,
+  welcome_discount_type,
+  welcome_discount_value,
+}: {
+  welcome_code: string;
+  welcome_discount_type: "percentage" | "fixed";
+  welcome_discount_value: number;
+}) {
+  try {
+    await checkAdmin();
+    const newCode = welcome_code.trim().toUpperCase();
+    if (!newCode) return { error: "Code invalide" };
+    if (isNaN(welcome_discount_value) || welcome_discount_value <= 0) return { error: "Remise invalide" };
+
+    const adminSupabase = createAdminClient();
+
+    const { data: oldRow } = await adminSupabase
+      .from("crm_settings").select("value").eq("key", "welcome_code").single();
+    const oldCode = (oldRow?.value as string | undefined)?.toUpperCase();
+
+    await Promise.all([
+      adminSupabase.from("crm_settings").upsert({ key: "welcome_code",           value: newCode }),
+      adminSupabase.from("crm_settings").upsert({ key: "welcome_discount_type",  value: welcome_discount_type }),
+      adminSupabase.from("crm_settings").upsert({ key: "welcome_discount_value", value: String(welcome_discount_value) }),
+    ]);
+
+    if (oldCode && oldCode !== newCode) {
+      await adminSupabase.from("coupons").update({ active: false }).eq("code", oldCode);
+    }
+
+    await adminSupabase.from("coupons").upsert(
+      { code: newCode, type: welcome_discount_type, value: welcome_discount_value, active: true, max_uses_per_user: 1 },
+      { onConflict: "code" }
+    );
+
+    revalidatePath("/admin/settings");
+    revalidatePath("/");
+    return { success: true };
+  } catch {
+    return { error: "Erreur serveur" };
+  }
+}
+
 export async function updatePrixVol(prixHeure: number, acomptePersoHeure: number) {
   try {
     await checkAdmin();
     if (isNaN(prixHeure) || prixHeure <= 0) return { error: "Prix invalide" };
-    if (isNaN(acomptePersoHeure) || acomptePersoHeure < 0) return { error: "Acompte invalide" };
+    if (isNaN(acomptePersoHeure) || acomptePersoHeure < 0) return { error: "Provision invalide" };
     const adminSupabase = createAdminClient();
     await adminSupabase
       .from("crm_settings")

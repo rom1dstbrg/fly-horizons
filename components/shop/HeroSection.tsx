@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Calendar, Gift, ChevronDown } from "lucide-react";
+import { PlaneTakeoff, Gift, ChevronDown } from "lucide-react";
 
 export function HeroSection() {
   return (
@@ -20,18 +20,18 @@ export function HeroSection() {
       <div className="absolute inset-0 bg-black/55" />
 
       {/* Contenu */}
-      <div className="relative z-10 max-w-[80rem] mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <div className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 text-center">
 
         {/* Badge */}
         <div className="inline-flex items-center gap-2 bg-[#F2B705]/10 border border-[#F2B705]/30 rounded-full px-4 py-1.5 mb-6">
           <span className="w-1.5 h-1.5 rounded-full bg-[#F2B705] animate-pulse" />
-          <span className="text-[#F2B705] text-xs font-semibold tracking-widest uppercase">
+          <span className="text-[#F2B705] text-xs font-bold tracking-[3px] uppercase">
             Boutique officielle
           </span>
         </div>
 
         {/* Titre */}
-        <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-4 leading-tight">
+        <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white mb-4 leading-tight">
           Fly{" "}
           <span className="text-[#F2B705]">Horizons</span>
         </h1>
@@ -46,7 +46,7 @@ export function HeroSection() {
             href="/reservation"
             className="inline-flex items-center justify-center gap-2 h-12 px-8 bg-[#F2B705] text-[#0b2238] rounded-xl font-semibold text-sm hover:bg-[#e6a800] transition-colors shadow-[0_6px_24px_rgba(242,183,5,.35)]"
           >
-            <Calendar size={18} />
+            <PlaneTakeoff size={18} />
             Réserver une date
           </Link>
 

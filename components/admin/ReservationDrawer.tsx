@@ -48,7 +48,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
 
 J'ai suivi les prévisions pour le ${dateStr} et les conditions ne permettent malheureusement pas de voler en sécurité. Je préfère reporter plutôt que de vous faire prendre des risques ou de vous faire passer une mauvaise expérience.
 
-Votre acompte est bien conservé, aucun frais ne vous est facturé.
+Votre provision est bien conservée, aucun frais ne vous est facturé.
 
 Vous pouvez choisir votre nouvelle date directement depuis votre espace client en cliquant sur le bouton de report ci-dessous.
 
@@ -100,7 +100,7 @@ const FIELD_LABELS: Record<string, string> = {
   duree:              "Durée",
   passagers:          "Passagers",
   poids_total:        "Poids total",
-  acompte:            "Acompte",
+  acompte:            "Provision",
   paye:               "Montant payé",
   payment_status:     "Statut paiement",
   voucher_code:       "Code voucher",
@@ -927,12 +927,12 @@ export function ReservationDrawer({
                             Marquer vol effectué
                           </button>
                           <button
-                            onClick={() => changeStatut("date_confirmee")}
+                            onClick={() => changeStatut("en_attente")}
                             disabled={isPending}
                             className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-50 cursor-pointer"
                           >
                             <ChevronRight size={14} className="rotate-180" />
-                            Revenir planification
+                            Revenir en attente
                           </button>
                         </>
                       )}
@@ -1121,7 +1121,7 @@ export function ReservationDrawer({
                     <InputField label="Poids total (kg)">
                       <input type="number" value={draftPoids} onChange={e => setDraftPoids(e.target.value)} min={0} placeholder="—" className={inputCls} />
                     </InputField>
-                    <InputField label="Acompte (€)">
+                    <InputField label="Provision (€)">
                       <input type="number" value={draftAcompte} onChange={e => setDraftAcompte(e.target.value)} min={0} placeholder="—" className={inputCls} />
                     </InputField>
                     <InputField label="Montant encaissé (€)">

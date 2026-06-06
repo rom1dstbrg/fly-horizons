@@ -90,7 +90,8 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
   if (!vol) notFound();
 
   const duree = vol.voucher_duration_minutes ?? 60;
-  const image = vol.images?.[0]?.url ?? null;
+  const sortedImages = [...(vol.images ?? [])].sort((a: { position?: number }, b: { position?: number }) => (a.position ?? 0) - (b.position ?? 0));
+  const image = sortedImages[0]?.url ?? null;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
 
   const productSchema = {
@@ -130,7 +131,7 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
             {/* ── Gauche : galerie ── */}
             <div>
               <VolImageGallery
-                images={vol.images ?? []}
+                images={sortedImages}
                 title={vol.title}
                 duree={duree}
               />

@@ -27,7 +27,7 @@ type Product = {
 
 const TABS = [
   { key: "vouchers",  label: "Vouchers",  icon: Ticket  },
-  { key: "produits",  label: "Produits",  icon: Package },
+  { key: "produits",  label: "Offres",    icon: Package },
   { key: "coupons",   label: "Coupons",   icon: Tag     },
 ];
 
@@ -67,7 +67,7 @@ function ProductTable({ products, showStock }: { products: Product[]; showStock:
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-md bg-muted overflow-hidden shrink-0 border border-border">
                     {product.images?.[0]?.url ? (
-                      <Image src={product.images[0].url} alt={product.title} width={40} height={40} className="w-full h-full object-cover" unoptimized />
+                      <Image src={[...(product.images ?? [])].sort((a: {position?: number}, b: {position?: number}) => (a.position ?? 0) - (b.position ?? 0))[0].url} alt={product.title} width={40} height={40} className="w-full h-full object-cover" unoptimized />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">—</div>
                     )}
@@ -149,7 +149,7 @@ export function BoutiqueHub({
           { label: "Vouchers total",    value: stats.vouchersTotal,    color: "text-navy" },
           { label: "Disponibles",       value: stats.vouchersDispos,   color: "text-emerald-600" },
           { label: "Utilisés",          value: stats.vouchersUtilises, color: "text-purple-600" },
-          { label: "Produits actifs",   value: stats.produitsActifs,   color: "text-blue-600" },
+          { label: "Offres actives",    value: stats.produitsActifs,   color: "text-blue-600" },
           { label: "Coupons",           value: stats.coupons,          color: "text-amber-600" },
         ].map(({ label, value, color }) => (
           <div key={label} className="bg-card rounded-xl border border-border p-4 text-center">

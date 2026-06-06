@@ -38,7 +38,7 @@ const NAVIGATION: NavEntry[] = [
   { type: "link", id: "disponibilites", icon: Clock,           label: "Disponibilités", href: "/admin/vols?tab=disponibilites", tab: "disponibilites", tabBase: "/admin/vols"     },
   { type: "section", label: "Boutique" },
   { type: "link", id: "vouchers",  icon: Ticket,  label: "Vouchers",  href: "/admin/boutique",               tab: "vouchers",  tabBase: "/admin/boutique" },
-  { type: "link", id: "produits",  icon: Package, label: "Produits",  href: "/admin/boutique?tab=produits",  tab: "produits",  tabBase: "/admin/boutique" },
+  { type: "link", id: "produits",  icon: Package, label: "Offres",    href: "/admin/boutique?tab=produits",  tab: "produits",  tabBase: "/admin/boutique" },
   { type: "link", id: "coupons",   icon: Tag,     label: "Coupons",   href: "/admin/boutique?tab=coupons",   tab: "coupons",   tabBase: "/admin/boutique" },
   { type: "section", label: "" },
   { type: "link", id: "clients",        icon: Users,         label: "Clients",        href: "/admin/clients"  },

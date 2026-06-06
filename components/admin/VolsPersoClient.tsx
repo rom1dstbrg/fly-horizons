@@ -76,7 +76,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
 
 J'ai suivi les prévisions pour le ${dateStr} et les conditions ne permettent malheureusement pas de voler en sécurité. Je préfère reporter plutôt que de vous faire prendre des risques ou de vous faire passer une mauvaise expérience.
 
-Votre acompte est bien conservé, aucun frais ne vous est facturé.
+Votre provision est bien conservée, aucun frais ne vous est facturé.
 
 Vous pouvez choisir votre nouvelle date directement depuis votre espace client en cliquant sur le bouton de report ci-dessous.
 
@@ -128,7 +128,7 @@ const FIELD_LABELS: Record<string, string> = {
   duree:              "Durée",
   passagers:          "Passagers",
   poids_total:        "Poids total",
-  acompte:            "Acompte",
+  acompte:            "Provision",
   paye:               "Montant payé",
   payment_status:     "Statut paiement",
   voucher_code:       "Code voucher",
@@ -149,6 +149,30 @@ type ProposalItem = {
 };
 
 type WaypointDraft = { lat: string; lng: string; nom: string };
+
+// Calcule la durée estimée d'une route (même formule que la page vol-sur-mesure)
+const EBCI_GEO = { lat: 50.4592, lng: 4.4538 };
+const VSM_SPEED_KMH = 185.2;
+const VSM_OBS_MIN_PP = 4;
+
+function calcRouteStats(wps: WaypointDraft[]): { distKm: number; totalMin: number } | null {
+  const valid = wps
+    .map(wp => ({ lat: parseFloat(wp.lat), lng: parseFloat(wp.lng) }))
+    .filter(wp => !isNaN(wp.lat) && !isNaN(wp.lng));
+  if (!valid.length) return null;
+  const pts = [EBCI_GEO, ...valid, EBCI_GEO];
+  let dist = 0;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i], b = pts[i + 1];
+    const dLat = (b.lat - a.lat) * Math.PI / 180;
+    const dLng = (b.lng - a.lng) * Math.PI / 180;
+    const x = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+    dist += 6371 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+  }
+  const distKm = Math.round(dist * 10) / 10;
+  const transitMin = Math.round((distKm / VSM_SPEED_KMH) * 60);
+  return { distKm, totalMin: transitMin + valid.length * VSM_OBS_MIN_PP };
+}
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -175,10 +199,12 @@ function VolsPersoDrawer({
   reservation,
   onClose,
   onStatusChange,
+  onFieldsChange,
 }: {
   reservation: Reservation | null;
   onClose: () => void;
   onStatusChange: (id: string, statut: string) => void;
+  onFieldsChange: (id: string, fields: Partial<Reservation>) => void;
 }) {
   const [isPending, startTransition] = useTransition();
   const [emailPending, startEmailTransition] = useTransition();
@@ -225,6 +251,12 @@ function VolsPersoDrawer({
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
+
+  // Stats calculées depuis la route finale en cours d'édition
+  const routeStats = calcRouteStats(finalWpDrafts);
+  const estimatedAcompte = (routeStats && reservation?.acompte && reservation?.duree)
+    ? Math.round((reservation.acompte / reservation.duree) * routeStats.totalMin)
+    : null;
 
   // Reset on reservation change
   useEffect(() => {
@@ -349,6 +381,21 @@ function VolsPersoDrawer({
     });
   }
 
+  function applyRouteDuration() {
+    if (!routeStats || !reservation) return;
+    setDraftDuree(String(routeStats.totalMin));
+    if (estimatedAcompte !== null) setDraftAcompte(String(estimatedAcompte));
+    startTransition(async () => {
+      const res = await updateReservationAllFields(
+        reservation.id, {},
+        { duree: routeStats.totalMin, ...(estimatedAcompte !== null ? { acompte: estimatedAcompte } : {}) }
+      );
+      if (res.error) { showFeedback("Erreur lors de la mise à jour", false); return; }
+      onFieldsChange(reservation.id, { duree: routeStats.totalMin, ...(estimatedAcompte !== null ? { acompte: estimatedAcompte } : {}) });
+      showFeedback("Durée et provision enregistrées ✓");
+    });
+  }
+
   function saveFinalRoute() {
     if (!reservation) return;
     const parsed = finalWpDrafts
@@ -389,11 +436,25 @@ function VolsPersoDrawer({
       : clientWps;
     if (toSend.length === 0) { showFeedback("Aucun waypoint à envoyer", false); return; }
     startTransition(async () => {
+      // Recalculer durée + acompte depuis la route finale et enregistrer AVANT le snapshot
+      if (routeStats && wps.length > 0) {
+        const newDuree = routeStats.totalMin;
+        const newAcompte = (reservation.acompte && reservation.duree)
+          ? Math.round((reservation.acompte / reservation.duree) * newDuree)
+          : null;
+        setDraftDuree(String(newDuree));
+        if (newAcompte !== null) setDraftAcompte(String(newAcompte));
+        await updateReservationAllFields(
+          reservation.id, {},
+          { duree: newDuree, ...(newAcompte !== null ? { acompte: newAcompte } : {}) }
+        );
+        onFieldsChange(reservation.id, { duree: newDuree, ...(newAcompte !== null ? { acompte: newAcompte } : {}) });
+      }
       const r = await sendRouteProposalToClient(reservation.id, toSend, proposalComment);
       if (r.error) { showFeedback("Erreur : " + r.error, false); return; }
       showFeedback("Proposition envoyée au client ✓");
       setProposalComment("");
-      setProposalsLoaded(false); // refresh proposals on next render
+      setProposalsLoaded(false);
     });
   }
 
@@ -683,34 +744,24 @@ function VolsPersoDrawer({
                   <div className="space-y-2">
 
                     {r.statut === "en_attente" && (
-                      <>
-                        <button
-                          onClick={() => doChangeStatut("date_confirmee")}
-                          disabled={isPending}
-                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 cursor-pointer"
-                        >
-                          {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
-                          Confirmer la date, envoyer l&apos;email
-                        </button>
-                        <button
-                          onClick={() => doChangeStatut("heure_confirmee")}
-                          disabled={isPending}
-                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 cursor-pointer"
-                        >
-                          {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
-                          Confirmer date + heure, envoyer l&apos;email
-                        </button>
-                      </>
+                      <button
+                        onClick={() => doChangeStatut("heure_confirmee")}
+                        disabled={isPending}
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 cursor-pointer"
+                      >
+                        {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                        Confirmer date + heure, envoyer l&apos;email
+                      </button>
                     )}
 
                     {r.statut === "acompte_recu" && (
                       <button
-                        onClick={() => doChangeStatut("date_confirmee")}
+                        onClick={() => doChangeStatut("heure_confirmee")}
                         disabled={isPending}
-                        className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 cursor-pointer"
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 cursor-pointer"
                       >
                         {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
-                        Confirmer la date, envoyer l&apos;email
+                        Confirmer date + heure, envoyer l&apos;email
                       </button>
                     )}
 
@@ -746,12 +797,12 @@ function VolsPersoDrawer({
                           Marquer vol effectué
                         </button>
                         <button
-                          onClick={() => doChangeStatut("date_confirmee")}
+                          onClick={() => doChangeStatut("en_attente")}
                           disabled={isPending}
                           className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-50 cursor-pointer"
                         >
                           <ChevronRight size={14} className="rotate-180" />
-                          Revenir planification
+                          Revenir en attente
                         </button>
                       </>
                     )}
@@ -875,7 +926,7 @@ function VolsPersoDrawer({
                     <InputField label="Poids total (kg)">
                       <input type="number" value={draftPoids} onChange={e => setDraftPoids(e.target.value)} min={0} placeholder="—" className={inputCls} />
                     </InputField>
-                    <InputField label="Acompte (€)">
+                    <InputField label="Provision (€)">
                       <input type="number" value={draftAcompte} onChange={e => setDraftAcompte(e.target.value)} min={0} placeholder="—" className={inputCls} />
                     </InputField>
                     <InputField label="Montant encaissé (€)">
@@ -1076,6 +1127,26 @@ function VolsPersoDrawer({
                       stopovers={r.stopovers ?? []}
                       height="320px"
                     />
+                  )}
+
+                  {/* Route stats + apply */}
+                  {routeStats && (
+                    <div className="flex items-center gap-2 mt-2 text-xs">
+                      <span className="text-muted-foreground">{routeStats.distKm} km</span>
+                      <span className="font-semibold text-foreground">~{routeStats.totalMin} min</span>
+                      {estimatedAcompte !== null && (
+                        <span className="text-muted-foreground">· ~{estimatedAcompte} €</span>
+                      )}
+                      {(routeStats.totalMin !== parseInt(draftDuree) || (estimatedAcompte !== null && estimatedAcompte !== parseInt(draftAcompte))) && (
+                        <button
+                          onClick={applyRouteDuration}
+                          disabled={isPending}
+                          className="ml-1 px-2 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-bold hover:bg-primary/20 transition-colors cursor-pointer disabled:opacity-40"
+                        >
+                          Appliquer
+                        </button>
+                      )}
+                    </div>
                   )}
 
                   <div className="flex items-center gap-2 mt-3">
@@ -1344,7 +1415,7 @@ function ReservationCard({
               {r.passagers} pax{r.poids_total ? ` · ${r.poids_total} kg` : ""}
             </p>
             {r.acompte != null && (
-              <p className="text-xs text-primary font-semibold">Acompte : {r.acompte} €</p>
+              <p className="text-xs text-primary font-semibold">Provision : {r.acompte} €</p>
             )}
           </div>
           {client && (
@@ -1370,6 +1441,11 @@ export function VolsPersoClient({ reservations: initial }: { reservations: Reser
   function handleStatusChange(id: string, statut: string) {
     setReservations(prev => prev.map(r => r.id === id ? { ...r, statut } : r));
     setDrawer(prev => prev?.id === id ? { ...prev, statut } : prev);
+  }
+
+  function handleFieldsChange(id: string, fields: Partial<Reservation>) {
+    setReservations(prev => prev.map(r => r.id === id ? { ...r, ...fields } : r));
+    setDrawer(prev => prev?.id === id ? { ...prev, ...fields } : prev);
   }
 
   async function handleDelete(id: string) {
@@ -1406,6 +1482,7 @@ export function VolsPersoClient({ reservations: initial }: { reservations: Reser
         reservation={drawer}
         onClose={() => setDrawer(null)}
         onStatusChange={handleStatusChange}
+        onFieldsChange={handleFieldsChange}
       />
     </>
   );

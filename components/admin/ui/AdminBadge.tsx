@@ -19,7 +19,7 @@ const CLASSES: Record<BadgeVariant, string> = {
   danger:    "bg-red-100     text-red-700     border-red-200",
   secondary: "bg-gray-100    text-gray-500    border-gray-200",
   orange:    "bg-orange-100  text-orange-700  border-orange-200",
-  emerald:   "bg-emerald-100 text-emerald-700 border-emerald-200",
+  emerald:   "bg-emerald-100 text-emerald-700 border-emerald-200", // Provision reçue / Répondu
 };
 
 export function AdminBadge({
@@ -57,7 +57,7 @@ export const STATUT_RESA: Record<string, { label: string; variant: BadgeVariant 
 
 export const STATUT_PERSO: Record<string, { label: string; variant: BadgeVariant }> = {
   en_attente:      { label: "En attente",   variant: "warning" },
-  acompte_recu:    { label: "Acompte reçu", variant: "emerald" },
+  acompte_recu:    { label: "Provision reçue", variant: "emerald" },
   date_confirmee:  { label: "Date ✓",       variant: "info"    },
   heure_confirmee: { label: "Heure ✓",      variant: "success" },
   vol_effectue:    { label: "Vol effectué", variant: "primary" },

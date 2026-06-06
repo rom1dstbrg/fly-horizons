@@ -73,9 +73,9 @@ Durée indicative : La durée du pack est indicative et correspond à une durée
     title: "6. Vols sur mesure",
     content: `Les vols sur mesure permettent au Client de définir son propre itinéraire (waypoints, escales) au départ de Charleroi (EBCI). Le prix est calculé en fonction de la durée estimée du vol au tarif horaire en vigueur.
 
-Processus : Le Client soumet sa demande via le formulaire vol sur mesure. Un devis est établi et un acompte est demandé pour confirmer la réservation. Le solde est déterminé après le vol, selon la durée de vol réelle.
+Processus : Le Client soumet sa demande via le formulaire vol sur mesure. Un devis est établi et une provision est demandée pour confirmer la réservation. Le montant définitif est déterminé après le vol, selon la durée effectivement réalisée.
 
-Acompte : L'acompte versé lors de la confirmation est imputable sur le coût total du vol. En cas d'annulation par le Client, l'acompte n'est pas remboursé (voir article 10).
+Provision : La provision versée lors de la confirmation couvre le coût réel du vol. Si la provision dépasse le montant dû après le vol, la différence est remboursée au Client. En cas d'annulation par le Client, la provision n'est pas remboursée (voir article 10).
 
 Taxes d'atterrissage : Les taxes d'escale (redevances des aéroports visités) sont dues en sus du tarif horaire et sont à la charge du Client. Elles sont indiquées dans le devis.
 
@@ -133,7 +133,7 @@ Annulation entre 24 et 48 heures avant le vol : La situation est traitée au cas
 
 Non-présentation sans avertissement (no-show) : Si le Client ne se présente pas au vol sans avoir prévenu Fly Horizons avant l'heure du vol, aucun remboursement ni aucun crédit ne sera accordé.
 
-Acompte vol sur mesure : L'acompte versé lors de la confirmation d'un vol sur mesure est non remboursable, quelle que soit la raison de l'annulation par le Client.
+Provision vol sur mesure : La provision versée lors de la confirmation d'un vol sur mesure est non remboursable, quelle que soit la raison de l'annulation par le Client.
 
 ANNULATION OU REPORT PAR FLY HORIZONS
 

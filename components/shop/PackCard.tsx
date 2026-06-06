@@ -14,13 +14,13 @@ interface PackBase {
   short_description: string | null;
   price: number;
   voucher_duration_minutes: number | null;
-  images?: { url: string }[] | null;
+  images?: { url: string; position?: number }[] | null;
 }
 
 // ── Version "lien" — landing page & nos-offres ─────────────────────────
 export function PackCard({ pack, isPopular }: { pack: PackBase; isPopular?: boolean }) {
   const duree = pack.voucher_duration_minutes ?? 60;
-  const image = pack.images?.[0]?.url ?? null;
+  const image = [...(pack.images ?? [])].sort((a, b) => (a.position ?? 0) - (b.position ?? 0))[0]?.url ?? null;
 
   return (
     <Link href={`/vols/${pack.slug}`} className="group block focus-visible:outline-none">
@@ -82,7 +82,7 @@ export function PackBuyCard({ pack }: { pack: PackBase }) {
   const [added, setAdded] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
   const duree = pack.voucher_duration_minutes ?? 60;
-  const image = pack.images?.[0]?.url ?? null;
+  const image = [...(pack.images ?? [])].sort((a, b) => (a.position ?? 0) - (b.position ?? 0))[0]?.url ?? null;
 
   function handleAdd(e: React.MouseEvent) {
     e.preventDefault();

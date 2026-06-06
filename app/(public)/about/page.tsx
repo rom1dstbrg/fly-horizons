@@ -1,6 +1,7 @@
 ﻿import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import {
   BadgeCheck, ShieldCheck, Eye, Users, Gauge,
   MountainSnow, Headphones, Route, ArrowRight, MapPin, Clock,
@@ -236,6 +237,7 @@ export default function AboutPage() {
         </div>
       </section>
 
+      <ChatWidget />
     </main>
   );
 }

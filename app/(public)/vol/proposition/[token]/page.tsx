@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PropositionForm } from "./PropositionForm";
+import { enrichWaypointNames } from "@/lib/geocode";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -51,7 +52,7 @@ export default async function PropositionPage({ params }: PageProps) {
       prenom={client?.prenom ?? ""}
       dateStr={dateStr}
       duree={proposalDuree}
-      waypoints={(proposal.waypoints as Array<{ lat: number; lng: number; nom?: string }> | null) ?? []}
+      waypoints={await enrichWaypointNames((proposal.waypoints as Array<{ lat: number; lng: number; nom?: string }> | null) ?? [])}
       adminComment={proposal.admin_comment ?? ""}
       alreadyResponded={proposal.status !== "pending"}
       existingStatus={proposal.status}

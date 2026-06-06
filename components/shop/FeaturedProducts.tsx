@@ -9,14 +9,14 @@ interface FeaturedProductsProps {
 export function FeaturedProducts({ products }: FeaturedProductsProps) {
   return (
     <section className="py-20 bg-[#f5f5f7]">
-      <div className="max-w-[80rem] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
         <div className="flex items-end justify-between mb-10">
           <div>
-            <p className="text-xs font-semibold text-[#F2B705] uppercase tracking-widest mb-2">
+            <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-2">
               Nos vols
             </p>
-            <h2 className="text-3xl font-bold text-[#0b2238]">
+            <h2 className="text-4xl sm:text-5xl font-black text-[#0b2238] leading-none tracking-tight">
               Réservez votre expérience
             </h2>
             <p className="text-[#0b2238]/50 text-sm mt-2 max-w-md">
