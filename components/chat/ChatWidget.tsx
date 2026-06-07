@@ -15,7 +15,7 @@ const WELCOME: Message = {
     "Bonjour ! Je suis l'assistant Fly Horizons. Posez-moi vos questions sur nos vols, les tarifs, les bons cadeaux ou tout ce dont vous avez besoin.",
 };
 
-export function ChatWidget() {
+export function ChatWidget({ mobileVisible = false }: { mobileVisible?: boolean }) {
   const [open, setOpen]           = useState(false);
   const [messages, setMessages]   = useState<Message[]>([WELCOME]);
   const [input, setInput]         = useState("");
@@ -84,9 +84,9 @@ export function ChatWidget() {
     <>
       {/* ── Panneau ─────────────────────────────────────────────────────── */}
       <div
-        className="fixed bottom-6 right-6 z-50 w-[360px] max-w-[calc(100vw-3rem)] bg-white rounded-2xl overflow-hidden flex flex-col"
+        className={`fixed bottom-6 left-3 right-3 sm:left-auto sm:right-6 sm:w-[360px] z-50 bg-white rounded-2xl overflow-hidden flex flex-col ${mobileVisible ? "" : "hidden sm:flex"}`}
         style={{
-          maxHeight: "50vh",
+          maxHeight: "55vh",
           boxShadow: "0 12px 48px rgba(11,34,56,.22), 0 2px 8px rgba(11,34,56,.08)",
           borderTop: "2.5px solid #F2B705",
           transform: open ? "translateY(0)" : "translateY(calc(100% + 1.5rem))",
@@ -179,7 +179,7 @@ export function ChatWidget() {
       <button
         onClick={() => setOpen(true)}
         aria-label="Ouvrir le chat"
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 bg-[#F2B705] text-[#0b2238] rounded-full pl-4 pr-5 py-3 font-bold text-sm shadow-[0_4px_20px_rgba(242,183,5,.45)] hover:bg-[#e6a800] hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer"
+        className={`fixed bottom-6 right-6 z-50 flex items-center gap-2.5 bg-[#F2B705] text-[#0b2238] rounded-full p-3.5 sm:pl-4 sm:pr-5 sm:py-3 font-bold text-sm shadow-[0_4px_20px_rgba(242,183,5,.45)] hover:bg-[#e6a800] hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer ${mobileVisible ? "" : "hidden sm:flex"}`}
         style={{
           opacity: open ? 0 : 1,
           transform: open ? "scale(0.9) translateY(4px)" : "scale(1) translateY(0)",
@@ -187,8 +187,8 @@ export function ChatWidget() {
           pointerEvents: open ? "none" : "auto",
         }}
       >
-        <PlaneTakeoff size={15} className="shrink-0" />
-        Une question ?
+        <PlaneTakeoff size={16} className="shrink-0" />
+        <span className="hidden sm:inline">Une question ?</span>
       </button>
     </>
   );

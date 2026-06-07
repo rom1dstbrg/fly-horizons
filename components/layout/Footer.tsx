@@ -44,112 +44,235 @@ export function Footer() {
 
   return (
     <footer className="bg-navy border-t border-white/5 mt-auto">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 py-10">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
-        {/* ── Grille principale ── */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-10 pb-10 border-b border-white/5">
+        {/* ════════════════════════════════
+            VERSION MOBILE  (< lg)
+        ════════════════════════════════ */}
+        <div className="lg:hidden py-8 space-y-6">
 
-          {/* ── Marque ── */}
-          <div className="col-span-2 md:col-span-3 lg:col-span-1">
+          {/* Logo + réseaux */}
+          <div className="flex items-center justify-between">
             <Link href="/" className="inline-block">
               <Image src="/fly-horizons-logo-white.svg" alt="Fly Horizons"
-                width={160} height={40} className="block h-8 w-auto object-contain" unoptimized />
+                width={140} height={36} className="block h-7 w-auto object-contain" unoptimized />
             </Link>
-            <p className="text-white/45 text-sm leading-relaxed max-w-xs mt-4">
-              Baptêmes de l&apos;air et vols sur mesure en avion léger depuis Charleroi · EBCI.
-              Organisés dans le cadre du partage de frais réglementé (NCO.GEN.104).
-            </p>
-            <div className="mt-4 flex items-center gap-2">
+            <div className="flex items-center gap-2">
               {SOCIALS.map(({ href, label, icon }) => (
                 <a key={href} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/8 border border-white/8 hover:border-white/20 transition-all">
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/8 border border-white/8 transition-all">
                   {icon}
                 </a>
               ))}
             </div>
           </div>
 
-          {/* ── Nos services ── */}
-          <div>
-            <p className={hd}>Nos services</p>
-            <ul className="space-y-2.5">
-              {SERVICES.map(({ href, label }) => (
-                <li key={href}><Link href={href} className={lnk}>{label}</Link></li>
-              ))}
-            </ul>
-          </div>
+          {/* Tagline */}
+          <p className="text-white/35 text-xs leading-relaxed">
+            Baptêmes de l&apos;air en avion léger depuis Charleroi (EBCI).
+            Partage de frais réglementé NCO.GEN.104.
+          </p>
 
-          {/* ── Informations ── */}
-          <div>
-            <p className={hd}>Informations</p>
-            <ul className="space-y-2.5">
-              {INFOS.map(({ href, label }) => (
-                <li key={href}><Link href={href} className={lnk}>{label}</Link></li>
-              ))}
-            </ul>
-          </div>
+          {/* Séparateur gold */}
+          <div className="h-px bg-gradient-to-r from-primary/40 via-primary/10 to-transparent" />
 
-          {/* ── Mon espace ── */}
-          <div>
-            <p className={hd}>Mon espace</p>
-            <ul className="space-y-2.5">
-              {[
-                { href: "/account", label: "Mon compte" },
-                { href: "/login",   label: "Connexion" },
-              ].map(({ href, label }) => (
-                <li key={href}><Link href={href} className={lnk}>{label}</Link></li>
-              ))}
-            </ul>
-          </div>
-
-          {/* ── Contact ── */}
-          <div>
-            <p className={hd}>Contact</p>
-            <div className="space-y-3">
-              <div className="flex items-start gap-2.5">
-                <Mail size={13} className="text-primary shrink-0 mt-0.5" />
-                <a href="mailto:info@fly-horizons.com" className="text-sm text-white/45 hover:text-white transition-colors">
-                  info@fly-horizons.com
-                </a>
-              </div>
-              <div className="flex items-start gap-2.5">
-                <MapPin size={13} className="text-primary shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm text-white/45">Aéroport de Charleroi</p>
-                  <p className="text-xs text-white/25 mt-0.5">EBCI · Gosselies, Belgique</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-2.5">
-                <Clock size={13} className="text-primary shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm text-white/45">7j/7 sur réservation</p>
-                  <p className="text-xs text-white/25 mt-0.5">Réponse email sous 24 h</p>
-                </div>
-              </div>
+          {/* Liens de navigation — 2 colonnes */}
+          <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+            {/* Colonne gauche : Vols */}
+            <div>
+              <p className="text-[9px] font-bold text-primary/70 uppercase tracking-[2px] mb-3">Vols</p>
+              <ul className="space-y-2.5">
+                {SERVICES.map(({ href, label }) => (
+                  <li key={href}><Link href={href} className="text-sm text-white/50 hover:text-white transition-colors">{label}</Link></li>
+                ))}
+              </ul>
             </div>
+
+            {/* Colonne droite : Infos */}
+            <div>
+              <p className="text-[9px] font-bold text-primary/70 uppercase tracking-[2px] mb-3">Informations</p>
+              <ul className="space-y-2.5">
+                {INFOS.map(({ href, label }) => (
+                  <li key={href}><Link href={href} className="text-sm text-white/50 hover:text-white transition-colors">{label}</Link></li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Colonne gauche : Mon espace */}
+            <div>
+              <p className="text-[9px] font-bold text-primary/70 uppercase tracking-[2px] mb-3">Mon espace</p>
+              <ul className="space-y-2.5">
+                {[
+                  { href: "/account", label: "Mon compte" },
+                  { href: "/login",   label: "Connexion" },
+                ].map(({ href, label }) => (
+                  <li key={href}><Link href={href} className="text-sm text-white/50 hover:text-white transition-colors">{label}</Link></li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Colonne droite : Contact */}
+            <div>
+              <p className="text-[9px] font-bold text-primary/70 uppercase tracking-[2px] mb-3">Contact</p>
+              <ul className="space-y-2.5">
+                <li>
+                  <a href="mailto:info@fly-horizons.com" className="text-sm text-white/50 hover:text-white transition-colors">
+                    info@fly-horizons.com
+                  </a>
+                </li>
+                <li><Link href="/contact" className="text-sm text-white/50 hover:text-white transition-colors">Formulaire de contact</Link></li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Séparateur */}
+          <div className="h-px bg-white/5" />
+
+          {/* Infos pratiques compactes */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2.5">
+              <MapPin size={11} className="text-primary/60 shrink-0" />
+              <span className="text-xs text-white/30">Charleroi EBCI · Gosselies, Belgique</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <Clock size={11} className="text-primary/60 shrink-0" />
+              <span className="text-xs text-white/30">7j/7 sur réservation · Réponse email sous 24 h</span>
+            </div>
+          </div>
+
+          {/* Séparateur */}
+          <div className="h-px bg-white/5" />
+
+          {/* Barre de bas mobile */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-1.5 text-[11px] text-white/20">
+              <Lock size={9} />
+              <span>Paiement sécurisé</span>
+              <span className="text-primary/70 font-semibold">Stripe</span>
+            </div>
+            <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-[11px] text-white/25">
+              <Link href="/cgp" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">CGP</Link>
+              <span className="text-white/10">·</span>
+              <Link href="/politique-de-confidentialite" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">Confidentialité</Link>
+              <span className="text-white/10">·</span>
+              <Link href="/contact" className="hover:text-white/60 transition-colors">Contact</Link>
+            </div>
+            <p className="text-[11px] text-white/15">© {year} Fly Horizons. Tous droits réservés.</p>
           </div>
 
         </div>
 
-        {/* ── Barre de bas ── */}
-        <div className="pt-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-white/25">
-            © {year} Fly Horizons. Tous droits réservés.
-          </p>
-          <div className="flex items-center gap-4 text-xs text-white/25">
-            <div className="flex items-center gap-3">
-              <Link href="/cgp" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">Conditions générales</Link>
-              <span>·</span>
-              <Link href="/politique-de-confidentialite" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">Confidentialité</Link>
-              <span>·</span>
-              <Link href="/contact" className="hover:text-white/60 transition-colors">Contact</Link>
+        {/* ════════════════════════════════
+            VERSION DESKTOP  (≥ lg)
+        ════════════════════════════════ */}
+        <div className="hidden lg:block py-10">
+
+          {/* Grille principale */}
+          <div className="grid lg:grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-10 pb-10 border-b border-white/5">
+
+            {/* Marque */}
+            <div>
+              <Link href="/" className="inline-block">
+                <Image src="/fly-horizons-logo-white.svg" alt="Fly Horizons"
+                  width={160} height={40} className="block h-8 w-auto object-contain" unoptimized />
+              </Link>
+              <p className="text-white/45 text-sm leading-relaxed max-w-xs mt-4">
+                Baptêmes de l&apos;air et vols sur mesure en avion léger depuis Charleroi · EBCI.
+                Organisés dans le cadre du partage de frais réglementé (NCO.GEN.104).
+              </p>
+              <div className="mt-4 flex items-center gap-2">
+                {SOCIALS.map(({ href, label, icon }) => (
+                  <a key={href} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/8 border border-white/8 hover:border-white/20 transition-all">
+                    {icon}
+                  </a>
+                ))}
+              </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Lock size={9} />
-              <span>Paiement sécurisé</span>
-              <span className="text-primary font-semibold">Stripe</span>
+
+            {/* Nos services */}
+            <div>
+              <p className={hd}>Nos services</p>
+              <ul className="space-y-2.5">
+                {SERVICES.map(({ href, label }) => (
+                  <li key={href}><Link href={href} className={lnk}>{label}</Link></li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Informations */}
+            <div>
+              <p className={hd}>Informations</p>
+              <ul className="space-y-2.5">
+                {INFOS.map(({ href, label }) => (
+                  <li key={href}><Link href={href} className={lnk}>{label}</Link></li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Mon espace */}
+            <div>
+              <p className={hd}>Mon espace</p>
+              <ul className="space-y-2.5">
+                {[
+                  { href: "/account", label: "Mon compte" },
+                  { href: "/login",   label: "Connexion" },
+                ].map(({ href, label }) => (
+                  <li key={href}><Link href={href} className={lnk}>{label}</Link></li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Contact */}
+            <div>
+              <p className={hd}>Contact</p>
+              <div className="space-y-3">
+                <div className="flex items-start gap-2.5">
+                  <Mail size={13} className="text-primary shrink-0 mt-0.5" />
+                  <a href="mailto:info@fly-horizons.com" className="text-sm text-white/45 hover:text-white transition-colors">
+                    info@fly-horizons.com
+                  </a>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <MapPin size={13} className="text-primary shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-white/45">Aéroport de Charleroi</p>
+                    <p className="text-xs text-white/25 mt-0.5">EBCI · Gosselies, Belgique</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <Clock size={13} className="text-primary shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-white/45">7j/7 sur réservation</p>
+                    <p className="text-xs text-white/25 mt-0.5">Réponse email sous 24 h</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Barre de bas desktop */}
+          <div className="pt-5 flex items-center justify-between gap-3">
+            <p className="text-xs text-white/25">
+              © {year} Fly Horizons. Tous droits réservés.
+            </p>
+            <div className="flex items-center gap-4 text-xs text-white/25">
+              <div className="flex items-center gap-3">
+                <Link href="/cgp" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">Conditions générales</Link>
+                <span>·</span>
+                <Link href="/politique-de-confidentialite" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">Confidentialité</Link>
+                <span>·</span>
+                <Link href="/contact" className="hover:text-white/60 transition-colors">Contact</Link>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Lock size={9} />
+                <span>Paiement sécurisé</span>
+                <span className="text-primary font-semibold">Stripe</span>
+              </div>
             </div>
           </div>
+
         </div>
 
       </div>

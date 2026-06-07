@@ -477,7 +477,7 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
 
                 {resa.latestProposalStatus === "pending" && (
                   <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-                    Votre pilote a préparé votre itinéraire personnalisé. C&apos;est le parcours que vous allez réaliser — consultez-le et confirmez-le.
+                    Votre pilote a préparé votre itinéraire personnalisé. C&apos;est le parcours que vous allez réaliser ; consultez-le et confirmez-le.
                   </p>
                 )}
                 {resa.latestProposalStatus === "modification_requested" && (

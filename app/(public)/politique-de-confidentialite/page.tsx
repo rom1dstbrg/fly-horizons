@@ -14,7 +14,7 @@ const SECTIONS = [
     content: `Les données personnelles collectées sur fly-horizons.com sont traitées par :
 
 Nom : DESTANBERG Romain
-Activité : Fly Horizons — vols en partage de coûts (NCO.GEN.104)
+Activité : Fly Horizons, vols en partage de coûts (NCO.GEN.104)
 E-mail : info@fly-horizons.com
 Site web : fly-horizons.com
 
@@ -61,11 +61,11 @@ Base légale : intérêt légitime (art. 6.1.f RGPD).`,
     title: "4. Destinataires des données",
     content: `Vos données ne sont jamais vendues ni cédées à des tiers à des fins commerciales. Elles peuvent être transmises aux sous-traitants techniques suivants, dans le strict cadre de leur mission :
 
-Stripe (stripe.com) — traitement des paiements en ligne. Données transmises : e-mail, montant, identifiant de commande. Stripe est certifié PCI-DSS niveau 1.
+Stripe (stripe.com) : traitement des paiements en ligne. Données transmises : e-mail, montant, identifiant de commande. Stripe est certifié PCI-DSS niveau 1.
 
-Supabase (supabase.com) — hébergement de la base de données. Les données sont stockées sur des serveurs situés en Europe (région EU-West).
+Supabase (supabase.com) : hébergement de la base de données. Les données sont stockées sur des serveurs situés en Europe (région EU-West).
 
-Resend (resend.com) — envoi des e-mails transactionnels (confirmations, bons de vol, rappels). Données transmises : prénom, nom, e-mail, contenu de l'e-mail.
+Resend (resend.com) : envoi des e-mails transactionnels (confirmations, bons de vol, rappels). Données transmises : prénom, nom, e-mail, contenu de l'e-mail.
 
 Ces prestataires agissent en tant que sous-traitants au sens du RGPD. Ils s'engagent contractuellement à traiter vos données uniquement sur instruction de Fly Horizons et à mettre en place les mesures de sécurité appropriées.
 
@@ -130,7 +130,7 @@ Vous pouvez à tout moment supprimer les cookies via les paramètres de votre na
     title: "9. Réclamations",
     content: `Si vous estimez que le traitement de vos données personnelles par Fly Horizons ne respecte pas la réglementation applicable, vous avez le droit d'introduire une réclamation auprès de l'autorité de contrôle compétente :
 
-Autorité de protection des données (APD) — Belgique
+Autorité de protection des données (APD), Belgique
 Site web : www.autoriteprotectiondonnees.be
 Adresse : Rue de la Presse 35, 1000 Bruxelles
 Tél. : +32 2 274 48 00
@@ -171,7 +171,7 @@ export default function PolitiqueConfidentialitePage() {
             </h1>
             <p className="text-muted-foreground text-sm leading-relaxed max-w-2xl mb-10">
               Fly Horizons s&apos;engage à protéger vos données personnelles conformément au Règlement
-              Général sur la Protection des Données (RGPD — Règlement UE 2016/679) et à la loi belge
+              Général sur la Protection des Données (RGPD, Règlement UE 2016/679) et à la loi belge
               du 30 juillet 2018.
             </p>
 
@@ -210,7 +210,7 @@ export default function PolitiqueConfidentialitePage() {
           <div className="mt-8 bg-navy rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div className="flex-1">
               <p className="text-sm font-bold text-white mb-0.5">Une question sur vos données ?</p>
-              <p className="text-xs text-white/50">Envoyez un e-mail à info@fly-horizons.com — réponse sous 48 h.</p>
+              <p className="text-xs text-white/50">Envoyez un e-mail à info@fly-horizons.com, réponse sous 48 h.</p>
             </div>
             <a
               href="mailto:info@fly-horizons.com"

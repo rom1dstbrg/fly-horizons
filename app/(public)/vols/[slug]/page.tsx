@@ -44,7 +44,7 @@ const STEPS = [
     num: "01",
     icon: <CalendarCheck size={14} />,
     title: "Réservation en ligne",
-    desc: "Choisissez votre durée et réglez en sécurité. La confirmation et votre bon de vol arrivent par email dans la minute — pour vous ou à offrir.",
+    desc: "Choisissez votre durée et réglez en sécurité. La confirmation et votre bon de vol arrivent par email dans la minute, pour vous ou pour l'offrir.",
   },
   {
     num: "02",

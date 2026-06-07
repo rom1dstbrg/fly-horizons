@@ -532,7 +532,7 @@ export default function FaqPage() {
         </div>
       </section>
 
-      <ChatWidget />
+      <ChatWidget mobileVisible />
     </main>
   );
 }

@@ -791,7 +791,7 @@ export default function VolSurMesurePage() {
                           Cliquez sur la carte pour ajouter les endroits à survoler. Le prix s&apos;affiche en temps réel selon la durée du vol.
                         </p>
                         <div className="flex flex-col gap-2 mb-6 text-left">
-                          {["Départ et retour depuis Charleroi (EBCI)","1 à 3 passagers maximum","Facturé à la minute de vol réelle","Aucun paiement immédiat — demande sans engagement"].map(p => (
+                          {["Départ et retour depuis Charleroi (EBCI)","1 à 3 passagers maximum","Facturé à la minute de vol réelle","Aucun paiement immédiat, demande sans engagement"].map(p => (
                             <div key={p} className="flex items-center gap-2.5 text-sm text-foreground/65">
                               <span className="w-1.5 h-1.5 rounded-full bg-[#F2B705] shrink-0" />{p}
                             </div>
@@ -800,7 +800,7 @@ export default function VolSurMesurePage() {
                         <div className="flex items-start gap-2.5 bg-secondary border border-border rounded-lg px-3.5 py-2.5 mb-5 text-left">
                           <Monitor size={14} className="text-[#0b2238] shrink-0 mt-0.5" />
                           <p className="text-[11px] text-[#0b2238]/65 leading-relaxed">
-                            Pour une expérience optimale, utiliser un <span className="font-semibold text-[#0b2238]">ordinateur</span> est recommandé — le système de traçage est complexe.
+                            Pour une expérience optimale, utiliser un <span className="font-semibold text-[#0b2238]">ordinateur</span> est recommandé ; le système de traçage est complexe.
                           </p>
                         </div>
                         <button type="button"
@@ -933,7 +933,7 @@ export default function VolSurMesurePage() {
                 {[
                   { n: 1, title: "Tracez votre itinéraire",   desc: "Cliquez sur la carte pour ajouter vos points de passage." },
                   { n: 2, title: "Découvrez le prix estimé",  desc: "Le prix se met à jour en temps réel en fonction de votre parcours." },
-                  { n: 3, title: "Soumettez votre demande", desc: "Envoyez votre itinéraire — aucun paiement maintenant." },
+                  { n: 3, title: "Soumettez votre demande", desc: "Envoyez votre itinéraire. Aucun paiement à cette étape." },
                 ].map(({ n, title, desc }) => (
                   <div key={n} className="flex items-start gap-3 px-5 py-3.5">
                     <div className="w-6 h-6 rounded-full bg-navy text-white flex items-center justify-center text-[11px] font-black shrink-0 mt-0.5">{n}</div>
@@ -1164,7 +1164,7 @@ export default function VolSurMesurePage() {
                   Appuyez sur la carte pour ajouter les endroits à survoler. Le prix s&apos;affiche en temps réel selon la durée du vol.
                 </p>
                 <div className="flex flex-col gap-2 mb-6 text-left">
-                  {["Départ et retour depuis Charleroi (EBCI)","1 à 3 passagers maximum","Facturé à la minute de vol réelle, pas au forfait","Aucun paiement ici — Romain confirme sous 24h"].map(p => (
+                  {["Départ et retour depuis Charleroi (EBCI)","1 à 3 passagers maximum","Facturé à la minute de vol réelle, pas au forfait","Aucun paiement ici. Romain confirme sous 24h."].map(p => (
                     <div key={p} className="flex items-center gap-2.5 text-sm text-foreground/65">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#F2B705] shrink-0" />{p}
                     </div>
@@ -1280,7 +1280,7 @@ export default function VolSurMesurePage() {
                         <span className="text-[9px] font-bold text-[#F2B705] uppercase tracking-wide">Départ</span>
                       </div>
                       {route.pois.length === 0 ? (
-                        <p className="text-[11px] text-muted-foreground italic px-1">Aucun lieu — appuyez sur la carte pour en ajouter</p>
+                        <p className="text-[11px] text-muted-foreground italic px-1">Aucun lieu ; appuyez sur la carte pour en ajouter</p>
                       ) : (
                         route.pois.map(poi => (
                           <div key={poi.id} className="flex items-center gap-2 bg-secondary rounded-lg px-3 py-2 border border-border">
@@ -2002,7 +2002,7 @@ export default function VolSurMesurePage() {
                   }
                 </button>
                 <p className="text-center text-[10px] text-muted-foreground mt-3">
-                  Aucun paiement maintenant — la provision sera demandée après validation de la route
+                  Aucun paiement maintenant. La provision sera demandée après validation de la route.
                 </p>
               </div>
 
@@ -2022,7 +2022,7 @@ export default function VolSurMesurePage() {
                 }
               </button>
               <p className="text-center text-[10px] text-muted-foreground">
-                Aucun paiement maintenant — la provision sera demandée après validation de la route
+                Aucun paiement maintenant. La provision sera demandée après validation de la route.
               </p>
             </div>
           </div>

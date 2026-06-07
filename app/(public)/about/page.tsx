@@ -76,7 +76,7 @@ export default function AboutPage() {
                 <p>
                   Chaque vol est préparé avec vous : itinéraire adapté à la météo et à vos envies,
                   briefing sécurité complet avant le départ, casques audio fournis pour suivre
-                  le vol en temps réel. La sécurité n&apos;est pas un argument de vente — c&apos;est
+                  le vol en temps réel. La sécurité n&apos;est pas un argument de vente ; c&apos;est
                   simplement la façon dont je travaille.
                 </p>
               </div>

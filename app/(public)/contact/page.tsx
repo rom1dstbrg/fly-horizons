@@ -85,7 +85,7 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <ChatWidget />
+      <ChatWidget mobileVisible />
     </main>
   );
 }
