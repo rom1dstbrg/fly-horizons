@@ -105,7 +105,13 @@
       "Bash(Get-ChildItem app\\\\\\(public\\\\\\) -Name)",
       "Bash(npm ls *)",
       "Read(//root/.npm/**)",
-      "Bash(npm root *)"
+      "Bash(npm root *)",
+      "Bash(Get-Date *)",
+      "Bash(layout\\\\.tsx\")",
+      "Bash(grep -v \"//.*max-w\")",
+      "Bash(python *)",
+      "Bash(npx ts-node *)",
+      "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")"
     ]
   }
 }

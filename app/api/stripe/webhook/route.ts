@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
               voucherCode: voucherCode || null,
               montantPaye,
               reservationId: reservationId,
+              dateISO: resa.date_vol,
             }),
           });
           await resend.emails.send({
@@ -133,6 +134,7 @@ export async function POST(request: NextRequest) {
               voucherCode: voucherCode || null,
               montantPaye,
               reservationId: reservationId,
+              dateISO: resa.date_vol,
             }),
           });
 
@@ -235,11 +237,16 @@ export async function POST(request: NextRequest) {
           });
         }
       } else {
-        // Décrémenter le stock pour les produits physiques
-        await adminSupabase
-          .from("products")
-          .update({ stock: Math.max(0, product.stock - item.quantity) })
-          .eq("id", item.product_id);
+        // Décrémentation atomique côté DB pour éviter les race conditions entre webhooks parallèles.
+        // SQL requis dans Supabase (à exécuter une seule fois) :
+        // CREATE OR REPLACE FUNCTION decrement_product_stock(p_product_id uuid, p_qty int)
+        // RETURNS void LANGUAGE sql AS $$
+        //   UPDATE products SET stock = GREATEST(0, stock - p_qty) WHERE id = p_product_id;
+        // $$;
+        await adminSupabase.rpc("decrement_product_stock", {
+          p_product_id: item.product_id,
+          p_qty: item.quantity,
+        });
       }
     }
 
@@ -312,11 +319,11 @@ export async function POST(request: NextRequest) {
     const { orderId, voucherId, reservationId, type, paymentToken } = session.metadata ?? {};
 
     // Release any voucher that was atomically reserved for this session.
-    // Exception : réservations perso — le voucher est réservé dès le checkout (pas à la création
-    // de la session Stripe) et doit rester "reserved" jusqu'au paiement. Le client peut
-    // recliquer son lien de paiement autant de fois que nécessaire jusqu'à J-4 ; libérer le
-    // voucher ici casserait les tentatives suivantes.
-    if (voucherId && type !== "reservation_perso") {
+    // Exceptions où le voucher doit rester "reserved" :
+    // - réservations perso : voucher réservé dès la création, pas à la session Stripe
+    // - paiement différé (paymentToken présent) : le client peut recliquer son lien ; la
+    //   réservation reste active et le cron restituera le voucher si elle est annulée
+    if (voucherId && type !== "reservation_perso" && !paymentToken) {
       await adminSupabase
         .from("voucher_codes")
         .update({ status: "unused" })

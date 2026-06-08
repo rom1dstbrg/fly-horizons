@@ -2,18 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { reservationPaymentReminderEmail, reservationAutoAnnuleeEmail } from "@/lib/email-templates";
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-/** Retourne le timestamp (ms) du vol à partir de date_vol + heure_vol en heure de Bruxelles. */
-function flightTimestamp(dateVol: string, heureVol: string | null): number {
-  const heure = (heureVol ?? "00:00").slice(0, 5);
-  // Europe/Brussels : UTC+2 en été (CEST), UTC+1 en hiver (CET).
-  // On utilise +02:00 comme approximation — l'écart d'1h sur la borne de 48h est acceptable.
-  return new Date(`${dateVol}T${heure}:00+02:00`).getTime();
-}
-
-// ── Handler ───────────────────────────────────────────────────────────────────
+import { brusselsTimestamp } from "@/lib/utils";
 
 /**
  * POST /api/cron/payment-deadline
@@ -40,7 +29,7 @@ export async function POST(request: NextRequest) {
   // ── Récupération des réservations en attente de paiement ─────────────────
   const { data: reservations, error } = await supabase
     .from("reservations")
-    .select("id, date_vol, heure_vol, duree, acompte, payment_token, clients(prenom, nom, email)")
+    .select("id, date_vol, heure_vol, duree, acompte, payment_token, voucher_code, clients(prenom, nom, email)")
     .eq("statut", "payment_pending")
     .eq("type_resa", "standard")
     .not("payment_token", "is", null);
@@ -59,7 +48,7 @@ export async function POST(request: NextRequest) {
   const errors: string[] = [];
 
   for (const resa of reservations) {
-    const flight = flightTimestamp(resa.date_vol, resa.heure_vol);
+    const flight = brusselsTimestamp(resa.date_vol, resa.heure_vol);
     const hoursUntil = (flight - now) / (1000 * 60 * 60);
 
     // ── Annulation : vol dans moins de 48h ───────────────────────────────
@@ -73,6 +62,14 @@ export async function POST(request: NextRequest) {
       if (!cancelErr) {
         cancelled++;
         console.log(`[cron/payment-deadline] Annulée: ${resa.id} (vol dans ${hoursUntil.toFixed(1)}h)`);
+
+        // Restituer le voucher s'il y en avait un (il est resté "reserved" jusqu'ici)
+        if (resa.voucher_code) {
+          await supabase.from("voucher_codes")
+            .update({ status: "unused" })
+            .eq("code", resa.voucher_code)
+            .eq("status", "reserved");
+        }
 
         // Email d'annulation au client
         const raw = resa.clients;

@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { reservationConfirmationFreeEmail } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { rateLimit, getIp } from "@/lib/rate-limit";
+import { escapeHtml } from "@/lib/utils";
 
 export async function POST(request: NextRequest) {
   const { allowed } = rateLimit(`reservation-submit:${getIp(request)}`, 5, 60_000);
@@ -71,6 +72,32 @@ export async function POST(request: NextRequest) {
       if (cliErr) return NextResponse.json({ error: "Erreur création client" }, { status: 500 });
     }
 
+    // ── Vérification de disponibilité du créneau ─────────────────────────
+    const { data: conflicts } = await supabase
+      .from("reservations")
+      .select("id, heure_vol, duree")
+      .eq("date_vol", date)
+      .neq("statut", "annulee");
+
+    const dureeMins = parseInt(duree);
+    const newStart = parseInt(heure.slice(0, 2)) * 60 + parseInt(heure.slice(3, 5));
+    const newEnd   = newStart + dureeMins;
+
+    const taken = (conflicts ?? []).some(r => {
+      if (!r.heure_vol) return false;
+      const [rh, rm] = r.heure_vol.split(":").map(Number);
+      const rStart = rh * 60 + rm;
+      const rEnd   = rStart + r.duree + 30;
+      return newEnd + 30 > rStart && newStart < rEnd;
+    });
+
+    if (taken) {
+      if (voucherId) {
+        await supabase.from("voucher_codes").update({ status: "unused" }).eq("id", voucherId).eq("status", "reserved");
+      }
+      return NextResponse.json({ error: "Ce créneau vient d'être réservé. Veuillez en choisir un autre." }, { status: 409 });
+    }
+
     // Créer la réservation
     const { data: resa, error: resaErr } = await supabase
       .from("reservations")
@@ -127,22 +154,28 @@ export async function POST(request: NextRequest) {
 
     // Notification admin
     const passagersCount = passengers ? parseInt(passengers) : 1;
+    const ePrenom = escapeHtml(prenom);
+    const eNom = escapeHtml(nom);
+    const eEmail = escapeHtml(email);
+    const eTel = escapeHtml(telephone || "—");
+    const eVoucher = voucher_code ? escapeHtml(voucher_code.toUpperCase().trim()) : null;
+    const eComment = commentaire ? escapeHtml(commentaire) : null;
     await resend.emails.send({
       from: EMAIL_FROM,
       to: [EMAIL_REPLY_TO],
-      subject: `[Réservation] ${prenom} ${nom} — ${date} à ${heure}`,
+      subject: `[Réservation] ${ePrenom} ${eNom} — ${date} à ${heure}`,
       html: `<p><strong>✈️ Nouvelle réservation</strong></p>
 <table style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;">
-  <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Client</td><td><strong>${prenom} ${nom}</strong> (${clientId})</td></tr>
-  <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Email</td><td><a href="mailto:${email}">${email}</a></td></tr>
-  <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Téléphone</td><td>${telephone || "—"}</td></tr>
+  <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Client</td><td><strong>${ePrenom} ${eNom}</strong> (${clientId})</td></tr>
+  <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Email</td><td><a href="mailto:${eEmail}">${eEmail}</a></td></tr>
+  <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Téléphone</td><td>${eTel}</td></tr>
   <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Date</td><td><strong>${dateStr}</strong></td></tr>
   <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Heure</td><td><strong>${heure}</strong></td></tr>
   <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Durée</td><td>${duree} min</td></tr>
   <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Passagers</td><td>${passagersCount}</td></tr>
   ${poids_total ? `<tr><td style="padding:4px 12px 4px 0;color:#64748b;">Poids total</td><td>${poids_total} kg</td></tr>` : ""}
-  ${voucher_code ? `<tr><td style="padding:4px 12px 4px 0;color:#64748b;">Voucher</td><td style="color:#16a34a;font-weight:600;">${voucher_code.toUpperCase().trim()} ✓</td></tr>` : ""}
-  ${commentaire ? `<tr><td style="padding:4px 12px 4px 0;color:#64748b;vertical-align:top;">Remarque</td><td style="font-style:italic;">${commentaire}</td></tr>` : ""}
+  ${eVoucher ? `<tr><td style="padding:4px 12px 4px 0;color:#64748b;">Voucher</td><td style="color:#16a34a;font-weight:600;">${eVoucher} ✓</td></tr>` : ""}
+  ${eComment ? `<tr><td style="padding:4px 12px 4px 0;color:#64748b;vertical-align:top;">Remarque</td><td style="font-style:italic;">${eComment}</td></tr>` : ""}
 </table>`,
     });
 

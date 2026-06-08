@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { brusselsTimestamp } from "@/lib/utils";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-04-22.dahlia",
@@ -41,7 +42,7 @@ export async function GET(
   // Si le vol est dans moins de 48h, on annule la réservation et on redirige.
   // Le cron fait normalement ce travail, mais le pay-link est une 2ème ligne de défense.
   const heure = (resa.heure_vol ?? "00:00").slice(0, 5);
-  const flightTime = new Date(`${resa.date_vol}T${heure}:00+02:00`).getTime();
+  const flightTime = brusselsTimestamp(resa.date_vol, resa.heure_vol);
   const hoursUntilFlight = (flightTime - Date.now()) / (1000 * 60 * 60);
 
   if (hoursUntilFlight < 48) {

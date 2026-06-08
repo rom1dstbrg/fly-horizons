@@ -67,7 +67,7 @@ export function PackCard({ pack, isPopular }: { pack: PackBase; isPopular?: bool
               px-3 py-2 rounded-lg backdrop-blur-sm shrink-0
               group-hover:bg-[#F2B705] group-hover:text-[#0b2238] group-hover:border-transparent
               transition-all duration-300">
-              Réserver
+              Plus d&apos;infos
               <ArrowRight size={11} className="group-hover:translate-x-0.5 transition-transform" />
             </span>
           </div>

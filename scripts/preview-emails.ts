@@ -8,6 +8,7 @@ const PRENOM = "Sophie";
 const NOM = "Marchal";
 const EMAIL = "sophie.marchal@example.com";
 const DATE_STR = "samedi 24 mai 2026";
+const DATE_ISO = "2026-05-24";
 const HEURE = "09h30";
 const ROUTE =
   "Charleroi EBCI → survol de Namur et de la Citadelle → descente sur la vallée de la Meuse → Dinant et le rocher Bayard → retour EBCI via Philippeville";
@@ -196,6 +197,7 @@ add(
     voucherCode: null,
     montantPaye: 420,
     reservationId: "760c8d6c-1bf2-485f-b527-6198fea4907f",
+    dateISO: DATE_ISO,
     breakdown: {
       coutVol: 380,
       dureeMin: 75,
@@ -246,6 +248,7 @@ add(
     voucherCode: null,
     montantPaye: 320,
     reservationId: "760c8d6c-1bf2-485f-b527-6198fea4907f",
+    dateISO: DATE_ISO,
   })
 );
 
@@ -351,6 +354,7 @@ add(
     duree: 60,
     route: null,
     routeUrl: null,
+    dateISO: DATE_ISO,
   })
 );
 
@@ -367,6 +371,7 @@ add(
     duree: 60,
     route: ROUTE,
     routeUrl: ROUTE_URL,
+    dateISO: DATE_ISO,
   })
 );
 
@@ -383,6 +388,7 @@ add(
     duree: 60,
     type_resa: "standard",
     accountUrl: ACCOUNT_URL,
+    dateISO: DATE_ISO,
   })
 );
 

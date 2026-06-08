@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendFlightReminder } from "@/lib/email-service";
-
-/** Retourne le timestamp (ms) du vol à partir de date_vol + heure_vol en heure de Bruxelles. */
-function flightTimestamp(dateVol: string, heureVol: string | null): number {
-  const heure = (heureVol ?? "00:00").slice(0, 5);
-  return new Date(`${dateVol}T${heure}:00+02:00`).getTime();
-}
+import { brusselsTimestamp } from "@/lib/utils";
 
 /**
  * POST /api/cron/flight-reminder
@@ -48,7 +43,7 @@ export async function POST(request: NextRequest) {
   const errors: string[] = [];
 
   for (const resa of reservations) {
-    const flight = flightTimestamp(resa.date_vol, resa.heure_vol);
+    const flight = brusselsTimestamp(resa.date_vol, resa.heure_vol);
     const hoursUntil = (flight - now) / (1000 * 60 * 60);
 
     // Fenêtre 47-48h : envoi unique pour un cron horaire
@@ -75,6 +70,7 @@ export async function POST(request: NextRequest) {
         duree: resa.duree,
         type_resa: resa.type_resa === "perso" ? "perso" : "standard",
         accountUrl: `${siteUrl}/account/reservations/${resa.id}`,
+        dateISO: resa.date_vol,
       });
       sent++;
       console.log(`[cron/flight-reminder] Rappel envoyé : ${resa.id} (vol dans ${hoursUntil.toFixed(1)}h)`);

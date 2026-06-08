@@ -14,9 +14,13 @@ async function checkAdmin() {
   if (profile?.role !== "admin") throw new Error("Non autorisé");
 }
 
+const VALID_STATUTS_STD = ["en_attente", "date_confirmee", "heure_confirmee", "vol_effectue", "annulee", "payment_pending"] as const;
+const VALID_STATUTS_PERSO = ["en_attente", "acompte_recu", "date_confirmee", "heure_confirmee", "solde", "vol_effectue", "annulee"] as const;
+
 export async function updateStatutReservation(id: string, statut: string) {
   try {
     await checkAdmin();
+    if (!(VALID_STATUTS_STD as readonly string[]).includes(statut)) return { error: "Statut invalide" };
     const supabase = createAdminClient();
 
     // For heure_confirmee, route is required on standard reservations
@@ -90,7 +94,7 @@ export async function updateStatutReservation(id: string, statut: string) {
             to: [client.email],
             replyTo: EMAIL_REPLY_TO,
             subject: "Fly Horizons — Votre créneau horaire est confirmé",
-            html: reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, route: resa.route, routeUrl }),
+            html: reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, route: resa.route, routeUrl, dateISO: resa.date_vol }),
           });
         } else {
           await resend.emails.send({
@@ -157,6 +161,7 @@ export async function updateStatutReservation(id: string, statut: string) {
 export async function updateStatutReservationPerso(id: string, statut: string) {
   try {
     await checkAdmin();
+    if (!(VALID_STATUTS_PERSO as readonly string[]).includes(statut)) return { error: "Statut invalide" };
     const supabase = createAdminClient();
 
     const extra: Record<string, string> = {};
@@ -241,7 +246,7 @@ export async function updateStatutReservationPerso(id: string, statut: string) {
             to: [client.email],
             replyTo: EMAIL_REPLY_TO,
             subject: "Fly Horizons — Votre créneau horaire est confirmé",
-            html: reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree }),
+            html: reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, dateISO: resa.date_vol }),
           });
         } else {
           await resend.emails.send({
@@ -286,7 +291,7 @@ export async function sendEmailConfirmation(id: string, type: "date" | "heure") 
       : "Fly Horizons — Votre créneau horaire est confirmé";
     const html = type === "date"
       ? reservationDateConfirmeeEmail({ prenom: client.prenom, dateStr, duree: resa.duree })
-      : reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree });
+      : reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, dateISO: resa.date_vol });
     const { error: emailError } = await resend.emails.send({ from: EMAIL_FROM, to: [client.email], replyTo: EMAIL_REPLY_TO, subject, html });
     if (emailError) {
       console.error("Resend sendEmailConfirmation error:", emailError);
@@ -355,14 +360,18 @@ export async function createAdminReservation(data: {
     const prixHeure = parseFloat(settings?.find(s => s.key === "prix_heure")?.value ?? "254");
 
     let voucherDuration = 0;
+    let voucherId: string | null = null;
     if (data.voucher_code) {
-      const { data: voucher } = await supabase
+      const { data: claimed } = await supabase
         .from("voucher_codes")
-        .select("duration_minutes")
+        .update({ status: "reserved" })
         .eq("code", data.voucher_code.toUpperCase().trim())
         .eq("status", "unused")
+        .select("id, duration_minutes")
         .maybeSingle();
-      if (voucher) voucherDuration = voucher.duration_minutes ?? 0;
+      if (!claimed) return { error: "Code voucher invalide ou déjà utilisé" };
+      voucherDuration = claimed.duration_minutes ?? 0;
+      voucherId = claimed.id;
     }
 
     const billableMins = Math.max(0, data.duree - voucherDuration);
@@ -393,7 +402,16 @@ export async function createAdminReservation(data: {
       .select()
       .single();
 
-    if (resaErr) return { error: "Erreur création réservation" };
+    if (resaErr) {
+      if (voucherId) {
+        await supabase.from("voucher_codes").update({ status: "unused" }).eq("id", voucherId).eq("status", "reserved");
+      }
+      return { error: "Erreur création réservation" };
+    }
+
+    if (voucherId) {
+      await supabase.from("voucher_codes").update({ status: "used", used_at: new Date().toISOString() }).eq("id", voucherId);
+    }
 
     const rawUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
     const siteUrl = rawUrl.startsWith("http://localhost") || rawUrl.startsWith("http://127")
@@ -739,6 +757,28 @@ export async function rescheduleReservation(token: string, newDate: string, newH
     const pickedDate = new Date(newDate + "T12:00:00Z");
     if (pickedDate < minDate) return { error: "La date doit être au moins 48 h à l'avance" };
     if (!newHeure) return { error: "Veuillez sélectionner un créneau horaire" };
+
+    // ── Vérification de disponibilité du nouveau créneau ────────────────────
+    const { data: conflicts } = await supabase
+      .from("reservations")
+      .select("id, heure_vol, duree")
+      .eq("date_vol", newDate)
+      .neq("statut", "annulee")
+      .neq("id", resa.id);
+
+    const [nh, nm] = newHeure.split(":").map(Number);
+    const newStart = nh * 60 + nm;
+    const newEnd   = newStart + resa.duree;
+
+    const taken = (conflicts ?? []).some(r => {
+      if (!r.heure_vol) return false;
+      const [rh, rm] = r.heure_vol.split(":").map(Number);
+      const rStart = rh * 60 + rm;
+      const rEnd   = rStart + r.duree + 30;
+      return newEnd + 30 > rStart && newStart < rEnd;
+    });
+
+    if (taken) return { error: "Ce créneau est déjà pris. Veuillez en choisir un autre." };
 
     const client = resa.clients as { prenom: string; nom: string; email: string } | null;
     if (!client?.email) return { error: "Email client introuvable" };

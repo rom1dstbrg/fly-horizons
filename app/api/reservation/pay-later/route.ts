@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { reservationPaymentInvitationEmail } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { rateLimit, getIp } from "@/lib/rate-limit";
+import { escapeHtml } from "@/lib/utils";
 
 export async function POST(request: NextRequest) {
   const { allowed } = rateLimit(`reservation-pay-later:${getIp(request)}`, 5, 60_000);
@@ -185,12 +186,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Erreur création réservation" }, { status: 500 });
     }
 
-    // ── Finaliser le voucher (used) ──────────────────────────────────
-    // On marque used immédiatement comme dans le flux admin (envoyer_paiement).
-    // Le webhook n'a donc rien à faire côté voucher pour ce flux.
-    if (voucherId) {
-      await supabase.from("voucher_codes").update({ status: "used", used_at: new Date().toISOString() }).eq("id", voucherId);
-    }
+    // Le voucher reste "reserved" jusqu'au paiement effectif.
+    // Le webhook checkout.session.completed le marquera "used".
+    // Le cron payment-deadline le restaurera "unused" si la réservation est annulée.
 
     // ── Email client ─────────────────────────────────────────────────
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -226,24 +224,31 @@ export async function POST(request: NextRequest) {
 
     // ── Notification admin ───────────────────────────────────────────
     const passagersCount = passengers ? parseInt(passengers) : 1;
+    const ePrenom = escapeHtml(prenom);
+    const eNom = escapeHtml(nom);
+    const eEmail = escapeHtml(email);
+    const eTel = escapeHtml(telephone || "—");
+    const eVoucher = resolvedVoucherCode ? escapeHtml(resolvedVoucherCode) : null;
+    const eCoupon = appliedCouponCode ? escapeHtml(appliedCouponCode) : null;
+    const eComment = commentaire ? escapeHtml(commentaire) : null;
     await resend.emails.send({
       from: EMAIL_FROM,
       to: [EMAIL_REPLY_TO],
-      subject: `[Réservation — Payer plus tard] ${prenom} ${nom} — ${date} à ${heure}`,
+      subject: `[Réservation — Payer plus tard] ${ePrenom} ${eNom} — ${date} à ${heure}`,
       html: `<p><strong>✈️ Nouvelle réservation (paiement différé)</strong></p>
 <table style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;">
-  <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Client</td><td><strong>${prenom} ${nom}</strong> (${clientId})</td></tr>
-  <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Email</td><td><a href="mailto:${email}">${email}</a></td></tr>
-  <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Téléphone</td><td>${telephone || "—"}</td></tr>
+  <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Client</td><td><strong>${ePrenom} ${eNom}</strong> (${clientId})</td></tr>
+  <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Email</td><td><a href="mailto:${eEmail}">${eEmail}</a></td></tr>
+  <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Téléphone</td><td>${eTel}</td></tr>
   <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Date</td><td><strong>${dateStr}</strong></td></tr>
   <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Heure</td><td><strong>${heure}</strong></td></tr>
   <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Durée</td><td>${dureeMins} min</td></tr>
   <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Passagers</td><td>${passagersCount}</td></tr>
   ${poids_total ? `<tr><td style="padding:4px 12px 4px 0;color:#64748b;">Poids total</td><td>${poids_total} kg</td></tr>` : ""}
   <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Montant</td><td><strong style="color:#e85d04;">${finalPrice} €</strong> (en attente de paiement)</td></tr>
-  ${resolvedVoucherCode ? `<tr><td style="padding:4px 12px 4px 0;color:#64748b;">Voucher</td><td style="color:#16a34a;font-weight:600;">${resolvedVoucherCode} ✓</td></tr>` : ""}
-  ${appliedCouponCode ? `<tr><td style="padding:4px 12px 4px 0;color:#64748b;">Coupon</td><td style="color:#16a34a;font-weight:600;">${appliedCouponCode} ✓</td></tr>` : ""}
-  ${commentaire ? `<tr><td style="padding:4px 12px 4px 0;color:#64748b;vertical-align:top;">Remarque</td><td style="font-style:italic;">${commentaire}</td></tr>` : ""}
+  ${eVoucher ? `<tr><td style="padding:4px 12px 4px 0;color:#64748b;">Voucher</td><td style="color:#16a34a;font-weight:600;">${eVoucher} ✓</td></tr>` : ""}
+  ${eCoupon ? `<tr><td style="padding:4px 12px 4px 0;color:#64748b;">Coupon</td><td style="color:#16a34a;font-weight:600;">${eCoupon} ✓</td></tr>` : ""}
+  ${eComment ? `<tr><td style="padding:4px 12px 4px 0;color:#64748b;vertical-align:top;">Remarque</td><td style="font-style:italic;">${eComment}</td></tr>` : ""}
 </table>`,
     });
 

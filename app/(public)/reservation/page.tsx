@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -9,7 +9,6 @@ import type { User as SupabaseUser } from "@supabase/supabase-js";
 import {
   ChevronLeft, ChevronRight, Clock, Lock,
   CheckCircle, AlertCircle, AlertTriangle, Loader2, ArrowRight, X,
-  Eye, EyeOff, LogIn, UserPlus, ShieldCheck,
 } from "lucide-react";
 import { formatDuration } from "@/lib/vouchers";
 
@@ -30,7 +29,7 @@ interface FormState {
   product: VolProduct | null;
   date: string; heure: string;
   prenom: string; nom: string; email: string; telephone: string;
-  passengers: number; poids_total: string; commentaire: string;
+  passengers: number; poids_total: string; poids_unknown: boolean; commentaire: string;
   codeInput: string;
   voucher: VoucherInfo | null;
   coupon: CouponInfo | null;
@@ -76,7 +75,7 @@ export default function ReservationPage() {
   const [form, setForm] = useState<FormState>({
     product: null, date: "", heure: "",
     prenom: "", nom: "", email: "", telephone: "",
-    passengers: 0, poids_total: "", commentaire: "",
+    passengers: 0, poids_total: "", poids_unknown: false, commentaire: "",
     codeInput: "", voucher: null, coupon: null,
     accept_cgp: false,
   });
@@ -98,14 +97,6 @@ export default function ReservationPage() {
 
   // ── Auth state
   const [user, setUser] = useState<SupabaseUser | null>(null);
-  type EmailStatus = "idle" | "checking" | "new" | "exists";
-  const [emailStatus,               setEmailStatus]               = useState<EmailStatus>("idle");
-  const [inlinePassword,            setInlinePassword]            = useState("");
-  const [inlinePasswordConfirm,     setInlinePasswordConfirm]     = useState("");
-  const [showInlinePassword,        setShowInlinePassword]        = useState(false);
-  const [showInlinePasswordConfirm, setShowInlinePasswordConfirm] = useState(false);
-  const [shouldRestoreForm,         setShouldRestoreForm]         = useState(false);
-  const restoredFromSessionRef = useRef(false);
 
   // ── Data ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -116,22 +107,21 @@ export default function ReservationPage() {
 
     if (!dureeParam) { router.replace("/nos-offres"); return; }
 
-    // Restore form saved before login redirect
+    // Restore form saved before optional login redirect
     try {
       const saved = sessionStorage.getItem("rsv_state");
       if (saved) {
-        const { prenom, nom, email, telephone, passengers, poids_total, commentaire, date, heure } =
+        const { prenom, nom, email, telephone, passengers, poids_total, poids_unknown, commentaire, date, heure } =
           JSON.parse(saved) as Partial<FormState>;
         setForm(f => ({
           ...f,
           prenom: prenom ?? f.prenom, nom: nom ?? f.nom,
           email: email ?? f.email, telephone: telephone ?? f.telephone,
           passengers: passengers ?? f.passengers, poids_total: poids_total ?? f.poids_total,
+          poids_unknown: poids_unknown ?? f.poids_unknown,
           commentaire: commentaire ?? f.commentaire,
           date: date ?? f.date, heure: heure ?? f.heure,
         }));
-        setShouldRestoreForm(true);
-        restoredFromSessionRef.current = true;
         sessionStorage.removeItem("rsv_state");
       }
     } catch { /* ignore */ }
@@ -184,7 +174,6 @@ export default function ReservationPage() {
     sb.auth.getUser().then(({ data: { user: authUser } }) => {
       if (!authUser) return;
       setUser(authUser);
-      if (restoredFromSessionRef.current) return;
       sb.from("profiles").select("full_name, phone").eq("id", authUser.id).single()
         .then(({ data }) => {
           const p = (data?.full_name ?? "").split(" ");
@@ -240,71 +229,15 @@ export default function ReservationPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.product]);
 
-  // Navigate to infos step once user is set after login redirect
-  useEffect(() => {
-    if (user && shouldRestoreForm && form.product) {
-      setShouldRestoreForm(false);
-      setStep("infos");
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, shouldRestoreForm, form.product]);
-
   // ── Auth helpers ─────────────────────────────────────────────────
-  async function checkEmail() {
-    const email = form.email.trim();
-    if (!email || !email.includes("@")) return;
-    if (user) return;
-    setEmailStatus("checking");
-    try {
-      const r = await fetch("/api/auth/check-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      const d = await r.json();
-      setEmailStatus(d.exists ? "exists" : "new");
-    } catch {
-      setEmailStatus("idle");
-    }
-  }
-
   function handleLoginRedirect() {
     const search = window.location.search;
     sessionStorage.setItem("rsv_state", JSON.stringify({
       prenom: form.prenom, nom: form.nom, email: form.email, telephone: form.telephone,
-      passengers: form.passengers, poids_total: form.poids_total, commentaire: form.commentaire,
+      passengers: form.passengers, poids_total: form.poids_total, poids_unknown: form.poids_unknown, commentaire: form.commentaire,
       date: form.date, heure: form.heure,
     }));
     window.location.href = `/login?redirectTo=${encodeURIComponent(`/reservation${search}`)}`;
-  }
-
-  async function handleSignupAndContinue() {
-    if (inlinePassword.length < 8) {
-      setSubmitError("Le mot de passe doit contenir au moins 8 caractères.");
-      return;
-    }
-    if (inlinePassword !== inlinePasswordConfirm) {
-      setSubmitError("Les mots de passe ne correspondent pas.");
-      return;
-    }
-    setSubmitting(true);
-    setSubmitError("");
-    try {
-      const sb = createClient();
-      const { data, error } = await sb.auth.signUp({
-        email: form.email.trim(),
-        password: inlinePassword,
-        options: { data: { full_name: `${form.prenom} ${form.nom}`.trim() } },
-      });
-      if (error) { setSubmitError(error.message); setSubmitting(false); return; }
-      if (data.user) setUser(data.user);
-      setSubmitting(false);
-    } catch {
-      setSubmitError("Erreur lors de la création du compte.");
-      setSubmitting(false);
-      return;
-    }
-    setStep("paiement");
   }
 
   async function applyCode(override?: string) {
@@ -343,7 +276,7 @@ export default function ReservationPage() {
     const payload = {
       prenom: form.prenom, nom: form.nom, email: form.email, telephone: form.telephone,
       duree, date: form.date, heure: form.heure,
-      passengers: form.passengers, poids_total: form.poids_total ? parseInt(form.poids_total) : null,
+      passengers: form.passengers, poids_total: form.poids_unknown ? null : (form.poids_total ? parseInt(form.poids_total) : null),
       voucher_code: form.voucher?.code,
       coupon_code: form.coupon?.code || undefined,
       commentaire: form.commentaire || undefined,
@@ -366,7 +299,7 @@ export default function ReservationPage() {
   const stepIndex = STEPS.findIndex(s => s.key === step);
 
   const MAX_WEIGHT  = 190;
-  const CRIT_WEIGHT = 220;
+  const CRIT_WEIGHT = 250;
   const weightKg    = parseInt(form.poids_total) || 0;
   const weightWarn  = weightKg > MAX_WEIGHT && weightKg < CRIT_WEIGHT;
   const weightCrit  = weightKg >= CRIT_WEIGHT;
@@ -376,19 +309,12 @@ export default function ReservationPage() {
 
   const ctaDisabled =
     step === "datetime" ? !form.date || !form.heure :
-    step === "infos"    ? !form.prenom || !form.nom || !form.email || !form.poids_total || !form.passengers || submitting || emailStatus === "checking" :
+    step === "infos"    ? !form.prenom || !form.nom || !form.email || !form.passengers || submitting :
                           !form.accept_cgp || submitting || codeLoading;
 
   async function handleCTA() {
     if (step === "datetime") { setStep("infos"); return; }
-    if (step === "infos") {
-      if (user) { setStep("paiement"); return; }
-      if (emailStatus === "new") { handleSignupAndContinue(); return; }
-      if (emailStatus === "exists") { handleLoginRedirect(); return; }
-      // email not yet checked — trigger check, then user sees inline auth block
-      await checkEmail();
-      return;
-    }
+    if (step === "infos") { setStep("paiement"); return; }
     handleSubmit();
   }
 
@@ -566,90 +492,19 @@ export default function ReservationPage() {
                     <Field label="Nom" required value={form.nom} onChange={v => setForm(f => ({ ...f, nom: v }))} placeholder="Dupont" />
                     <div className="sm:col-span-2">
                       <Field label="Email" required type="email" value={form.email}
-                        onChange={v => { setForm(f => ({ ...f, email: v })); setEmailStatus("idle"); }}
-                        placeholder="jean@exemple.com"
-                        onBlur={checkEmail} />
+                        onChange={v => setForm(f => ({ ...f, email: v }))}
+                        placeholder="jean@exemple.com" />
+                      {!user && (
+                        <p className="mt-1.5 text-xs text-foreground/40">
+                          Déjà client ?{" "}
+                          <button type="button" onClick={handleLoginRedirect}
+                            className="text-primary hover:underline font-medium cursor-pointer">
+                            Connectez-vous
+                          </button>{" "}
+                          pour pré-remplir vos informations.
+                        </p>
+                      )}
                     </div>
-
-                    {/* Inline auth block */}
-                    {!user && emailStatus !== "idle" && (
-                      <div className="sm:col-span-2">
-                        {emailStatus === "checking" && (
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground py-1">
-                            <Loader2 size={12} className="animate-spin" /> Vérification…
-                          </div>
-                        )}
-                        {emailStatus === "exists" && (
-                          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3.5">
-                            <p className="text-sm font-bold text-amber-900 flex items-center gap-2 mb-1">
-                              <LogIn size={14} className="shrink-0" /> Un compte existe déjà avec cet email
-                            </p>
-                            <p className="text-xs text-amber-700 mb-3">
-                              Connectez-vous pour finaliser votre réservation. Votre parcours sera sauvegardé.
-                            </p>
-                            <button type="button" onClick={handleLoginRedirect}
-                              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#0b2238] text-white text-sm font-bold hover:bg-[#0b2238]/80 transition-colors cursor-pointer">
-                              <LogIn size={13} /> Se connecter
-                            </button>
-                          </div>
-                        )}
-                        {emailStatus === "new" && (
-                          <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-4 space-y-3">
-                            <p className="text-sm font-bold text-foreground flex items-center gap-2">
-                              <UserPlus size={14} className="shrink-0 text-primary" /> Créez votre compte Fly Horizons
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              Un compte est nécessaire pour accéder à vos bons de vol et gérer vos réservations.
-                            </p>
-                            <div className="space-y-2.5">
-                              <div>
-                                <label className="block text-xs font-bold text-foreground uppercase tracking-[1.5px] mb-1.5">
-                                  Mot de passe <span className="text-primary">*</span>
-                                </label>
-                                <div className="relative">
-                                  <input type={showInlinePassword ? "text" : "password"}
-                                    value={inlinePassword}
-                                    onChange={e => setInlinePassword(e.target.value)}
-                                    placeholder="8 caractères minimum"
-                                    className="w-full h-10 px-4 pr-10 rounded-lg border border-border bg-input text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/35"
-                                  />
-                                  <button type="button" onClick={() => setShowInlinePassword(v => !v)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
-                                    aria-label={showInlinePassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}>
-                                    {showInlinePassword ? <EyeOff size={14} /> : <Eye size={14} />}
-                                  </button>
-                                </div>
-                              </div>
-                              <div>
-                                <label className="block text-xs font-bold text-foreground uppercase tracking-[1.5px] mb-1.5">
-                                  Confirmer <span className="text-primary">*</span>
-                                </label>
-                                <div className="relative">
-                                  <input type={showInlinePasswordConfirm ? "text" : "password"}
-                                    value={inlinePasswordConfirm}
-                                    onChange={e => setInlinePasswordConfirm(e.target.value)}
-                                    placeholder="Répétez le mot de passe"
-                                    className="w-full h-10 px-4 pr-10 rounded-lg border border-border bg-input text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/35"
-                                  />
-                                  <button type="button" onClick={() => setShowInlinePasswordConfirm(v => !v)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
-                                    aria-label={showInlinePasswordConfirm ? "Masquer la confirmation" : "Afficher la confirmation"}>
-                                    {showInlinePasswordConfirm ? <EyeOff size={14} /> : <Eye size={14} />}
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                            <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                              <ShieldCheck size={9} className="shrink-0 text-green-500" />
-                              Vos données restent confidentielles.
-                            </p>
-                          </div>
-                        )}
-                        {submitError && (
-                          <p className="text-xs text-destructive mt-1">{submitError}</p>
-                        )}
-                      </div>
-                    )}
 
                     <div className="sm:col-span-2">
                       <Field label="Téléphone" type="tel" value={form.telephone} onChange={v => setForm(f => ({ ...f, telephone: v }))} placeholder="+32 470 00 00 00" />
@@ -686,25 +541,57 @@ export default function ReservationPage() {
 
                     <div>
                       <label className="block text-sm font-semibold text-foreground mb-2">
-                        Poids total des passagers <span className="text-foreground/40 font-normal">(kg, requis)</span>
+                        Poids total des passagers <span className="text-foreground/40 font-normal">(kg, facultatif)</span>
                       </label>
-                      <div className="flex items-center gap-3">
-                        <input type="number" value={form.poids_total} required min={1} max={500} placeholder="ex : 160"
-                          onChange={e => setForm(f => ({ ...f, poids_total: e.target.value }))}
-                          className="w-36 h-10 px-3 rounded-lg border border-border bg-input text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-foreground/30" />
-                        <span className="text-sm text-foreground/50">kg</span>
-                      </div>
-                      <p className="mt-2 text-xs text-foreground/40">Total passagers, requis pour le calcul masse &amp; centrage (max {MAX_WEIGHT} kg).</p>
-                      {weightWarn && !weightCrit && (
-                        <div className="mt-2.5 flex items-start gap-2.5 bg-amber-50 border border-amber-200 px-3.5 py-3 rounded-lg text-sm text-amber-800">
-                          <AlertTriangle size={14} className="shrink-0 mt-0.5 text-amber-500" />
-                          <p>Le poids total dépasse la limite recommandée de {MAX_WEIGHT} kg. Vous pouvez continuer votre réservation, mais votre pilote vérifiera la faisabilité selon la configuration du vol.</p>
+
+                      {!form.poids_unknown && (
+                        <div className="flex items-center gap-3">
+                          <input type="number" value={form.poids_total} min={1} max={500} placeholder="ex : 160"
+                            onChange={e => setForm(f => ({ ...f, poids_total: e.target.value }))}
+                            className="w-36 h-10 px-3 rounded-lg border border-border bg-input text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-foreground/30" />
+                          <span className="text-sm text-foreground/50">kg</span>
                         </div>
                       )}
-                      {weightCrit && (
-                        <div className="mt-2.5 flex items-start gap-2.5 bg-red-50 border border-red-200 px-3.5 py-3 rounded-lg text-sm text-red-800">
-                          <AlertCircle size={14} className="shrink-0 mt-0.5 text-red-500" />
-                          <p>Le poids total est très élevé ({CRIT_WEIGHT} kg+). Vous pouvez continuer, mais le vol dépendra des conditions exactes. Votre pilote vous contactera pour confirmer la faisabilité.</p>
+
+                      {form.poids_unknown && (
+                        <div className="flex items-center gap-2 bg-green-50 border border-green-100 px-3.5 py-2.5 rounded-lg">
+                          <CheckCircle size={14} className="text-green-600 shrink-0" />
+                          <span className="text-sm font-medium text-green-800">Certifié inférieur à 250 kg</span>
+                        </div>
+                      )}
+
+                      <label className="flex items-start gap-2.5 mt-2.5 cursor-pointer group">
+                        <input type="checkbox" checked={form.poids_unknown}
+                          onChange={e => setForm(f => ({ ...f, poids_unknown: e.target.checked, poids_total: e.target.checked ? "" : f.poids_total }))}
+                          className="sr-only" />
+                        <div className={[
+                          "mt-0.5 w-4 h-4 rounded border-2 shrink-0 flex items-center justify-center transition-all duration-150",
+                          form.poids_unknown
+                            ? "bg-primary border-primary"
+                            : "border-border bg-input group-hover:border-primary/60",
+                        ].join(" ")}>
+                          {form.poids_unknown && (
+                            <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
+                              <path d="M1 3.5L3.5 6L8 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          )}
+                        </div>
+                        <span className="text-xs text-foreground/50 group-hover:text-foreground/70 transition-colors leading-relaxed">
+                          Je ne connais pas le poids exact, je certifie ne pas dépasser 250 kg
+                        </span>
+                      </label>
+
+
+                      {!form.poids_unknown && weightWarn && !weightCrit && (
+                        <div className="mt-2.5 flex items-start gap-2.5 bg-blue-50 border border-blue-100 px-3.5 py-3 rounded-lg text-sm text-blue-800">
+                          <AlertTriangle size={14} className="shrink-0 mt-0.5 text-blue-400" />
+                          <p>Poids un peu élevé — pas de problème, votre pilote vérifiera les conditions le jour J et vous tiendra informé si besoin.</p>
+                        </div>
+                      )}
+                      {!form.poids_unknown && weightCrit && (
+                        <div className="mt-2.5 flex items-start gap-2.5 bg-blue-50 border border-blue-100 px-3.5 py-3 rounded-lg text-sm text-blue-800">
+                          <AlertCircle size={14} className="shrink-0 mt-0.5 text-blue-400" />
+                          <p>Pour ce poids, votre pilote vous contactera avant le vol pour confirmer ensemble. <a href="/contact" className="underline font-semibold hover:brightness-90">Contactez-nous</a> si vous souhaitez vérifier dès maintenant.</p>
                         </div>
                       )}
                     </div>
@@ -753,7 +640,7 @@ export default function ReservationPage() {
                     {[
                       { l: "Passager principal", v: `${form.prenom} ${form.nom}` },
                       { l: "Email",              v: form.email },
-                      { l: "Passagers / Masse",  v: `${form.passengers} pax · ${form.poids_total} kg` },
+                      { l: "Passagers / Masse",  v: form.poids_unknown ? `${form.passengers} pax · certifié < 250 kg` : form.poids_total ? `${form.passengers} pax · ${form.poids_total} kg` : `${form.passengers} pax` },
                       { l: "Aéroport",           v: "Charleroi · EBCI" },
                     ].map(({ l, v }) => (
                       <div key={l}>
@@ -838,22 +725,15 @@ export default function ReservationPage() {
               <div className="flex flex-col items-end gap-2">
                 <button type="button" disabled={ctaDisabled} onClick={handleCTA}
                   className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-primary text-primary-foreground rounded-lg text-sm font-black transition-all disabled:opacity-30 hover:brightness-105 shadow-gold hover:-translate-y-px active:translate-y-0 active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed">
-                  {(submitting || codeLoading || emailStatus === "checking") && <Loader2 size={14} className="animate-spin" />}
+                  {(submitting || codeLoading) && <Loader2 size={14} className="animate-spin" />}
                   {step === "paiement" && !submitting && price > 0 && <Lock size={13} />}
                   {step === "paiement" && !submitting && price === 0 && <CheckCircle size={13} />}
-                  {step === "infos" && !submitting && !user && emailStatus === "exists" && <LogIn size={13} />}
-                  {step === "infos" && !submitting && !user && emailStatus === "new" && <UserPlus size={13} />}
                   <span>
                     {step === "datetime" && (form.date && form.heure ? "Continuer" : form.date ? "Sélectionnez un créneau" : "Sélectionnez une date")}
-                    {step === "infos" && (
-                      submitting ? "Création du compte…" :
-                      !user && emailStatus === "exists" ? "Se connecter et continuer" :
-                      !user && emailStatus === "new"    ? "Créer mon compte et continuer" :
-                      "Continuer vers le paiement"
-                    )}
+                    {step === "infos" && (submitting ? "En cours…" : "Continuer vers le paiement")}
                     {step === "paiement" && (submitting ? "Traitement en cours…" : price === 0 ? "Confirmer gratuitement" : `Payer ${price} € en toute sécurité`)}
                   </span>
-                  {!submitting && step !== "paiement" && emailStatus !== "checking" && <ChevronRight size={15} />}
+                  {!submitting && step !== "paiement" && <ChevronRight size={15} />}
                 </button>
 
               </div>

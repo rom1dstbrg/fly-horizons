@@ -252,6 +252,62 @@ function callout(text: string): string {
   return `<p class="em-body" style="margin:0 0 28px;font-size:13px;color:#334155;line-height:1.7;border-left:3px solid #F2B705;padding:2px 0 2px 16px;">${text}</p>`;
 }
 
+function addToCalendarBlock(dateISO: string, heure: string, dureeMin: number): string {
+  const parts = heure.replace("h", ":").split(":");
+  const startH = parseInt(parts[0] ?? "0", 10);
+  const startM = parseInt(parts[1] ?? "0", 10);
+  if (isNaN(startH) || isNaN(startM)) return "";
+
+  const endTotal = startH * 60 + startM + dureeMin;
+  const endH = Math.floor(endTotal / 60) % 24;
+  const endM = endTotal % 60;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const dateCompact = dateISO.replace(/-/g, "");
+
+  const gcalDates = `${dateCompact}T${pad(startH)}${pad(startM)}00/${dateCompact}T${pad(endH)}${pad(endM)}00`;
+  const outlookStart = `${dateISO}T${pad(startH)}:${pad(startM)}:00`;
+  const outlookEnd   = `${dateISO}T${pad(endH)}:${pad(endM)}:00`;
+
+  const title    = encodeURIComponent(`Vol Fly Horizons (${dureeMin} min)`);
+  const details  = encodeURIComponent("Vol en avion léger avec Romain — Fly Horizons");
+  const location = encodeURIComponent("Aéroport de Charleroi (EBCI), Rue des Frères Wright 8, Gosselies");
+
+  const googleUrl  = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${gcalDates}&details=${details}&location=${location}`;
+  const outlookUrl = `https://outlook.live.com/calendar/0/deeplink/compose?subject=${title}&startdt=${outlookStart}&enddt=${outlookEnd}&body=${details}&location=${location}`;
+  const appleUrl   = `${SITE_URL}/api/ical?date=${dateISO}&heure=${encodeURIComponent(heure)}&duree=${dureeMin}`;
+
+  return `${separator()}
+  <p class="em-muted" style="margin:0 0 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.12em;">Ajouter &agrave; mon agenda</p>
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;">
+    <tr>
+      <td align="center">
+        <table cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="padding-right:8px;">
+              <a href="${esc(googleUrl)}"
+                style="display:inline-block;background-color:#f1f5f9;color:#0b2238;font-size:12px;font-weight:700;padding:10px 16px;border-radius:8px;text-decoration:none;border:1.5px solid #e2e8f0;">
+                Google
+              </a>
+            </td>
+            <td style="padding-right:8px;">
+              <a href="${esc(appleUrl)}"
+                style="display:inline-block;background-color:#f1f5f9;color:#0b2238;font-size:12px;font-weight:700;padding:10px 16px;border-radius:8px;text-decoration:none;border:1.5px solid #e2e8f0;">
+                Apple
+              </a>
+            </td>
+            <td>
+              <a href="${esc(outlookUrl)}"
+                style="display:inline-block;background-color:#f1f5f9;color:#0b2238;font-size:12px;font-weight:700;padding:10px 16px;border-radius:8px;text-decoration:none;border:1.5px solid #e2e8f0;">
+                Outlook
+              </a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>`;
+}
+
 // ── 1. Confirmation commande ──────────────────────────────────────────────────
 
 export function orderConfirmationEmail(props: OrderConfirmationProps): string {
@@ -666,6 +722,7 @@ export interface ReservationConfirmationProps {
   poids_total?: number | null;
   voucherCode?: string | null;
   reservationId?: string | null;
+  dateISO?: string | null;
 }
 
 export function reservationConfirmationFreeEmail(p: ReservationConfirmationProps): string {
@@ -779,7 +836,9 @@ export function reservationPaymentConfirmationEmail(p: ReservationPaymentConfirm
           { href: `${SITE_URL}/account/reservations/${p.reservationId}`, text: "Suivre ma réservation" },
           { href: `${SITE_URL}/access-ebci`, text: "Plan d'accès" }
         )
-      : secondaryButton(`${SITE_URL}/access-ebci`, "Plan d'accès")}`;
+      : secondaryButton(`${SITE_URL}/access-ebci`, "Plan d'accès")}
+
+    ${p.dateISO ? addToCalendarBlock(p.dateISO, p.heure, p.duree) : ""}`;
 
   return emailBase(body, "Paiement confirmé — Fly Horizons");
 }
@@ -796,6 +855,7 @@ export interface VolSurMesureAcompteProps {
   montantPaye: number;
   reservationId?: string | null;
   breakdown?: EmailPriceBreakdown | null;
+  dateISO?: string | null;
 }
 
 export function volSurMesureAcompteEmail(p: VolSurMesureAcompteProps): string {
@@ -847,7 +907,9 @@ export function volSurMesureAcompteEmail(p: VolSurMesureAcompteProps): string {
           { href: `${SITE_URL}/account/reservations/${p.reservationId}`, text: "Suivre ma réservation" },
           { href: `${SITE_URL}/access-ebci`, text: "Plan d'accès" }
         )
-      : secondaryButton(`${SITE_URL}/access-ebci`, "Plan d'accès")}`;
+      : secondaryButton(`${SITE_URL}/access-ebci`, "Plan d'accès")}
+
+    ${p.dateISO ? addToCalendarBlock(p.dateISO, p.heure, p.dureeEstimee) : ""}`;
 
   return emailBase(body, "Provision reçue — Vol sur mesure Fly Horizons");
 }
@@ -860,6 +922,16 @@ export interface ReservationDateConfirmeeProps {
   duree: number;
   route?: string | null;
   routeUrl?: string | null;
+}
+
+export interface ReservationHeureConfirmeeProps {
+  prenom: string;
+  dateStr: string;
+  heure: string;
+  duree: number;
+  route?: string | null;
+  routeUrl?: string | null;
+  dateISO?: string | null;
 }
 
 export function reservationDateConfirmeeEmail(p: ReservationDateConfirmeeProps): string {
@@ -913,15 +985,6 @@ export function reservationDateConfirmeeEmail(p: ReservationDateConfirmeeProps):
 
 // ── 10. Créneau horaire confirmé (admin) ──────────────────────────────────────
 
-export interface ReservationHeureConfirmeeProps {
-  prenom: string;
-  dateStr: string;
-  heure: string;
-  duree: number;
-  route?: string | null;
-  routeUrl?: string | null;
-}
-
 export function reservationHeureConfirmeeEmail(p: ReservationHeureConfirmeeProps): string {
   const routeSection = p.route && p.routeUrl ? `
     ${separator()}
@@ -970,6 +1033,8 @@ export function reservationHeureConfirmeeEmail(p: ReservationHeureConfirmeeProps
     </p>
 
     ${secondaryButton(`${SITE_URL}/access-ebci`, "Plan d'accès")}
+
+    ${p.dateISO ? addToCalendarBlock(p.dateISO, p.heure, p.duree) : ""}
 
     ${separator()}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;text-align:center;">
@@ -1295,6 +1360,7 @@ export interface FlightReminderEmailProps {
   duree: number;
   type_resa: "standard" | "perso";
   accountUrl: string;
+  dateISO?: string | null;
 }
 
 export function flightReminderEmail(p: FlightReminderEmailProps): string {
@@ -1334,7 +1400,9 @@ export function flightReminderEmail(p: FlightReminderEmailProps): string {
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
       Une question de derni&egrave;re minute ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
-    </p>`;
+    </p>
+
+    ${p.dateISO ? addToCalendarBlock(p.dateISO, p.heure, p.duree) : ""}`;
 
   return emailBase(body, `Rappel — Votre vol le ${p.dateStr} — Fly Horizons`);
 }
