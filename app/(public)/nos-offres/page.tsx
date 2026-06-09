@@ -1,10 +1,10 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import {
   Clock, Route, Zap, PlaneTakeoff, ArrowRight, MousePointerClick,
-  EuroIcon, Users, MapPin,
+  EuroIcon, Users,
 } from "lucide-react";
 import { PackCard } from "@/components/shop/PackCard";
 
@@ -38,26 +38,79 @@ export default async function NosOffresPage() {
     <main className="bg-gradient-navy">
 
       {/* ══════════════════════════════════════════
-          HERO — Vol sur mesure
+          HERO — Vols à durée fixe
       ══════════════════════════════════════════ */}
-      <div className="bg-[#0b2238] pt-[98px] pb-0 relative overflow-hidden">
+      <div className="bg-[#f5f5f7] pt-[98px] pb-0">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-12 pb-10">
 
-        <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6">
+          {/* En-tête */}
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 mb-4">
+              <Clock size={13} className="text-[#F2B705]" />
+              <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px]">Au départ de Charleroi (EBCI)</p>
+            </div>
+            <h1 className="text-5xl sm:text-6xl font-black text-foreground leading-none tracking-tight mb-4">
+              Choisissez votre durée.<br />
+              <span className="text-[#0b2238]">On s&apos;occupe du reste.</span>
+            </h1>
+            <div className="w-10 h-0.5 bg-[#F2B705] mx-auto mt-5 mb-4 rounded-full" />
+            <p className="text-muted-foreground text-sm max-w-lg mx-auto leading-relaxed">
+              30, 60, 90 ou 120 minutes de vol depuis Charleroi. Prix fixe, réservation en quelques clics, jusqu&apos;à 3 passagers.
+            </p>
+          </div>
+
+          {/* Grille packs */}
+          {(!packs || packs.length === 0) ? (
+            <div className="text-center py-16 text-muted-foreground text-sm">
+              Aucun vol disponible pour le moment.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+              {packs.map((pack, index) => (
+                <PackCard key={pack.id} pack={pack} isPopular={index === 1} />
+              ))}
+            </div>
+          )}
+
+          <div className="mt-12 text-center">
+            <p className="text-sm text-muted-foreground">
+              Vous avez un itinéraire précis en tête ?{" "}
+              <Link href="/vol-sur-mesure" className="text-foreground font-semibold hover:underline">
+                Créez un vol entièrement sur mesure →
+              </Link>
+            </p>
+          </div>
+
+        </div>
+
+        {/* Vague de transition clair → navy */}
+        <div className="relative h-12 overflow-hidden bg-[#0b2238]">
+          <svg viewBox="0 0 1440 48" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,0 L0,24 Q360,48 720,24 Q1080,0 1440,24 L1440,0 Z" fill="#f5f5f7"/>
+          </svg>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════════
+          SECTION — Vol sur mesure
+      ══════════════════════════════════════════ */}
+      <div className="bg-[#0b2238] pb-0 relative overflow-hidden">
+
+        <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 py-14">
 
           {/* Eyebrow label */}
           <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-6">
             Vol sur mesure
           </p>
 
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start pb-12">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
 
             {/* Texte gauche */}
             <div>
-              <h1 className="text-5xl sm:text-6xl font-black text-white leading-none mb-4">
-                Vous choisissez<br />
-                où vous allez.<br />
-                <span className="text-[#F2B705]">On calcule le reste.</span>
-              </h1>
+              <h2 className="text-4xl sm:text-5xl font-black text-white leading-none mb-4">
+                Volez où vous voulez.<br />
+                <span className="text-[#F2B705]">Payez ce que vous volez.</span>
+              </h2>
               <p className="text-white/60 text-sm leading-relaxed mb-6 max-w-md">
                 Contrairement aux vols à durée fixe, ici c&apos;est votre itinéraire qui
                 détermine le prix. Tracez votre route sur la carte : durée et tarif s&apos;affichent
@@ -94,7 +147,7 @@ export default async function NosOffresPage() {
                   {
                     n: "3",
                     icon: <PlaneTakeoff size={13} />,
-                    title: "Notre pilote valide votre itinéraire sous 24 h",
+                    title: "Votre pilote valide votre itinéraire sous 24 h",
                     desc: "Il vérifie la faisabilité (espaces aériens, restrictions) et vous envoie la route définitive avec possibilité d'ajustement.",
                   },
                 ].map(({ n, icon, title, desc }) => (
@@ -172,7 +225,7 @@ export default async function NosOffresPage() {
           </div>
         </div>
 
-        {/* Vague de transition */}
+        {/* Vague de transition navy → clair */}
         <div className="relative h-12 overflow-hidden">
           <svg viewBox="0 0 1440 48" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
             <path d="M0,48 L0,24 Q360,0 720,24 Q1080,48 1440,24 L1440,48 Z" fill="#f5f5f7"/>
@@ -181,67 +234,31 @@ export default async function NosOffresPage() {
       </div>
 
       {/* ══════════════════════════════════════════
-          SECTION — Vols à durée fixe
+          Demande particulière
       ══════════════════════════════════════════ */}
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 py-14">
-
-        {/* En-tête */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 mb-3">
-            <Clock size={13} className="text-[#F2B705]" />
-            <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px]">Durée fixe</p>
-          </div>
-          <h2 className="text-3xl sm:text-4xl font-black text-foreground">
-            Vous préférez une durée prédéfinie ?
+      <div className="bg-[#f5f5f7] py-16">
+        <div className="max-w-[860px] mx-auto px-4 sm:px-6 text-center">
+          <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-4">Demande particulière</p>
+          <h2 className="text-3xl sm:text-4xl font-black text-foreground leading-tight mb-4">
+            Vous avez une idée en tête ?
           </h2>
-          <div className="w-10 h-0.5 bg-[#F2B705] mx-auto mt-4 mb-3 rounded-full" />
-          <p className="text-muted-foreground text-sm mt-0 max-w-lg mx-auto">
-            Choisissez votre durée de vol : 30, 60, 90 ou 120 minutes.
-            La date se fixe quand vous êtes prêt.
+          <p className="text-muted-foreground text-sm leading-relaxed mb-8 max-w-md mx-auto">
+            Anniversaire, demande en mariage, vol en groupe, itinéraire spécial... Contactez-nous et on s&apos;adapte.
           </p>
-        </div>
-
-        {/* Grille packs */}
-        {(!packs || packs.length === 0) ? (
-          <div className="text-center py-16 text-muted-foreground text-sm">
-            Aucun vol disponible pour le moment.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-            {packs.map((pack, index) => (
-              <PackCard key={pack.id} pack={pack} isPopular={index === 1} />
+          <div className="flex flex-wrap justify-center gap-2.5 mb-8">
+            {["Anniversaire", "Demande en mariage", "Vol en groupe", "Itinéraire spécial", "Cadeau original"].map((tag) => (
+              <span key={tag} className="px-4 py-2 bg-white border border-border rounded-full text-sm font-medium text-foreground shadow-sm">
+                {tag}
+              </span>
             ))}
           </div>
-        )}
-
-        <div className="mt-12 text-center">
-          <p className="text-sm text-muted-foreground">
-            Vous avez un itinéraire précis en tête ?{" "}
-            <Link href="/vol-sur-mesure" className="text-foreground font-semibold hover:underline">
-              Créez un vol entièrement sur mesure →
-            </Link>
-          </p>
-        </div>
-      </div>
-
-      {/* ══════════════════════════════════════════
-          Réassurance
-      ══════════════════════════════════════════ */}
-      <div className="border-t border-border bg-card">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 py-6">
-          <div className="flex flex-wrap justify-center gap-6">
-            {[
-              { icon: <Users size={14} className="text-foreground" />, text: "Jusqu'à 3 passagers" },
-              { icon: <MapPin size={14} className="text-foreground" />, text: "Depuis Charleroi (EBCI)" },
-              { icon: <Clock size={14} className="text-foreground" />, text: "Durées de 30 min à 2 h+" },
-              { icon: <Route size={14} className="text-foreground" />, text: "Itinéraire flexible" },
-            ].map(({ icon, text }) => (
-              <div key={text} className="flex items-center gap-2 text-sm text-muted-foreground">
-                {icon}
-                {text}
-              </div>
-            ))}
-          </div>
+          <Link
+            href="/contact"
+            className="inline-flex items-center gap-2 px-7 py-3.5 bg-[#F2B705] text-[#0b2238] font-black text-sm rounded-lg hover:bg-[#e6a800] transition-colors shadow-md shadow-[#F2B705]/20"
+          >
+            Nous contacter
+            <ArrowRight size={15} />
+          </Link>
         </div>
       </div>
 

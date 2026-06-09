@@ -308,7 +308,7 @@ export default async function HomePage() {
                   },
                   {
                     icon: <PlaneTakeoff size={14} />,
-                    title: "Notre pilote valide votre route sous 24 h",
+                    title: "Votre pilote valide votre itinéraire sous 24 h",
                     desc: "Il vérifie la faisabilité de l'espace aérien et vous confirme avec possibilité d'ajuster.",
                   },
                 ].map(({ icon, title, desc }) => (
