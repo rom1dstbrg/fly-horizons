@@ -41,7 +41,7 @@ export default async function NosOffresPage() {
           HERO — Vols à durée fixe
       ══════════════════════════════════════════ */}
       <div className="bg-[#f5f5f7] pt-[98px] pb-0">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-12 pb-10">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-2 sm:pt-12 pb-10">
 
           {/* En-tête */}
           <div className="text-center mb-10">

@@ -211,7 +211,7 @@ export default function CgpPage() {
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
           {/* En-tête */}
-          <div className="mb-10 pt-12">
+          <div className="mb-10 pt-2 sm:pt-12">
             <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-4">Légal</p>
             <h1 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight mb-4">
               Conditions Générales<br />

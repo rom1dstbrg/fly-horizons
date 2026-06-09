@@ -14,7 +14,7 @@ export default function ContactPage() {
 
       {/* ══ INTRO ══ */}
       <section className="pt-[98px] pb-20 sm:pb-28">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-12">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-2 sm:pt-12">
 
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-x-20 items-start">
 

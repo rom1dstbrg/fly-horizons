@@ -10,6 +10,7 @@ import {
 import { PremiumPlaneIcon } from "@/components/admin/PremiumPlaneIcon";
 import { formatPrice } from "@/lib/utils";
 import { DashboardCalendar } from "@/components/admin/DashboardCalendar";
+import { MetarWidget } from "@/components/admin/MetarWidget";
 
 export const metadata = { title: "Cockpit — Admin" };
 
@@ -75,12 +76,15 @@ export default async function AdminDashboardPage() {
   const tomorrowStr = new Date(now.getTime() + 86400000).toISOString().split("T")[0];
   const monthStart  = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
+  const thirtyDaysFromNow = new Date(now.getTime() + 30 * 86400000).toISOString();
+
   const [
     { data: monthOrders },
     { data: reservations },
     { data: allClients },
     { count: vouchersDispoCount },
     { data: newContacts },
+    { data: vouchersExpiring },
   ] = await Promise.all([
     // CA du mois uniquement (pas besoin de tout l'historique)
     supabase.from("orders").select("id, total, status, created_at")
@@ -97,6 +101,13 @@ export default async function AdminDashboardPage() {
     supabase.from("voucher_codes").select("id", { count: "exact", head: true }).eq("status", "unused"),
     supabase.from("contacts").select("id, prenom, nom, created_at")
       .eq("statut", "nouveau").order("created_at", { ascending: false }).limit(5),
+    supabase.from("voucher_codes")
+      .select("id, code, recipient_name, product_title, expires_at")
+      .eq("status", "unused")
+      .not("expires_at", "is", null)
+      .gte("expires_at", now.toISOString())
+      .lte("expires_at", thirtyDaysFromNow)
+      .order("expires_at", { ascending: true }),
   ]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -118,14 +129,23 @@ export default async function AdminDashboardPage() {
   ).length;
   const newContactsCount = newContacts?.length ?? 0;
 
+  const expiringList = vouchersExpiring ?? [];
+  const expiringCritical = expiringList.filter(v => {
+    const days = Math.ceil((new Date(v.expires_at).getTime() - now.getTime()) / 86400000);
+    return days <= 7;
+  }).length;
+  const expiringCount = expiringList.length;
+
   const urgentItems: ActionItem[] = [
-    ...(paymentPending  > 0 ? [{ label: `${paymentPending} paiement${paymentPending > 1 ? "s" : ""} en attente de confirmation`, href: "/admin/vols", icon: AlertTriangle }] : []),
-    ...(volsDemainSansH > 0 ? [{ label: `${volsDemainSansH} vol${volsDemainSansH > 1 ? "s" : ""} demain sans heure confirmée`,    href: "/admin/vols", icon: AlertTriangle }] : []),
+    ...(paymentPending    > 0 ? [{ label: `${paymentPending} paiement${paymentPending > 1 ? "s" : ""} en attente de confirmation`,                         href: "/admin/vols",           icon: AlertTriangle }] : []),
+    ...(volsDemainSansH   > 0 ? [{ label: `${volsDemainSansH} vol${volsDemainSansH > 1 ? "s" : ""} demain sans heure confirmée`,                           href: "/admin/vols",           icon: AlertTriangle }] : []),
+    ...(expiringCritical  > 0 ? [{ label: `${expiringCritical} voucher${expiringCritical > 1 ? "s" : ""} expirent dans moins de 7 jours`,                  href: "/admin/boutique?tab=vouchers", icon: AlertTriangle }] : []),
   ];
   const todayItems: ActionItem[] = [
-    ...(enAttenteStd   > 0 ? [{ label: `${enAttenteStd} réservation${enAttenteStd > 1 ? "s" : ""} standard sans date`,                            href: "/admin/vols",      icon: AlertCircle   }] : []),
-    ...(enAttentePerso > 0 ? [{ label: `${enAttentePerso} vol${enAttentePerso > 1 ? "s" : ""} sur mesure en attente`,                              href: "/admin/vols",      icon: AlertCircle   }] : []),
-    ...(newContactsCount > 0 ? [{ label: `${newContactsCount} message${newContactsCount > 1 ? "s" : ""} non lu${newContactsCount > 1 ? "s" : ""}`, href: "/admin/contacts",  icon: MessageSquare }] : []),
+    ...(enAttenteStd    > 0 ? [{ label: `${enAttenteStd} réservation${enAttenteStd > 1 ? "s" : ""} standard sans date`,                                    href: "/admin/vols",           icon: AlertCircle   }] : []),
+    ...(enAttentePerso  > 0 ? [{ label: `${enAttentePerso} vol${enAttentePerso > 1 ? "s" : ""} sur mesure en attente`,                                     href: "/admin/vols",           icon: AlertCircle   }] : []),
+    ...(newContactsCount > 0 ? [{ label: `${newContactsCount} message${newContactsCount > 1 ? "s" : ""} non lu${newContactsCount > 1 ? "s" : ""}`,         href: "/admin/contacts",       icon: MessageSquare }] : []),
+    ...(!expiringCritical && expiringCount > 0 ? [{ label: `${expiringCount} voucher${expiringCount > 1 ? "s" : ""} expirent dans moins de 30 jours`,      href: "/admin/boutique?tab=vouchers", icon: AlertCircle }] : []),
   ];
   const allActionItems = [...urgentItems, ...todayItems];
   const isUrgent = urgentItems.length > 0;
@@ -171,7 +191,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* ── MAIN GRID ────────────────────────────────────────────────── */}
-      <div className="grid lg:grid-cols-[1fr_280px] gap-5 items-start">
+      <div className="grid lg:grid-cols-[7fr_3fr] gap-5 items-start">
 
         {/* ── GAUCHE : À traiter + Calendrier ──────────────────────── */}
         <div className="space-y-5">
@@ -316,6 +336,12 @@ export default async function AdminDashboardPage() {
               </div>
             </div>
           )}
+
+          {/* METAR / TAF */}
+          <div>
+            <SectionTitle>Météo · EBCI</SectionTitle>
+            <MetarWidget />
+          </div>
 
           {/* Actions rapides */}
           <div>

@@ -20,7 +20,7 @@ export default function AboutPage() {
 
       {/* ══ ROMAIN ══ */}
       <section className="bg-secondary pt-[98px] pb-20 sm:pb-28">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-10">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-2 sm:pt-12">
 
           {/*
             Mobile  : 1-header · 2-photo · 3-body (order utilities)

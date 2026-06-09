@@ -98,7 +98,7 @@ export default function GuidePage() {
 
       {/* ── Hero ── */}
       <div className="pt-[98px] pb-12">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-12">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-2 sm:pt-12">
           <p className="text-primary text-[10px] font-black tracking-[3px] uppercase mb-3">Fly Horizons</p>
           <h1 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight mb-4">
             Tout ce que vous voulez savoir

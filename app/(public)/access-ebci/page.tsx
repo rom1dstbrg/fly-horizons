@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, Car, Bus, Clock, Navigation, ParkingSquare, AlertTriangle, KeyRound } from "lucide-react";
+import { Navigation, ParkingSquare, KeyRound } from "lucide-react";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import type { Metadata } from "next";
 
@@ -45,7 +45,7 @@ export default function AccessEbciPage() {
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
           {/* En-tête */}
-          <div className="mb-8 pt-12">
+          <div className="mb-8 pt-2 sm:pt-12">
             <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-4">Point de rendez-vous</p>
             <h1 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight mb-4">
               Plan d&apos;accès
@@ -65,84 +65,37 @@ export default function AccessEbciPage() {
             </a>
           </div>
 
-          {/* Rdv + parking */}
-          <div className="bg-card rounded-2xl border border-border p-6 mb-5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-
-              <div className="flex gap-3.5">
-                <div className="w-9 h-9 rounded-xl bg-secondary border border-border flex items-center justify-center shrink-0 mt-0.5">
-                  <MapPin size={15} className="text-primary" />
-                </div>
-                <div>
-                  <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide mb-0.5">Point de rendez-vous</p>
-                  <p className="text-sm font-semibold text-foreground">Aéroport de Charleroi (EBCI)</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">GPS : 50.4579° N, 4.4541° E</p>
-                  <a
-                    href={GMAPS_DIR}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 mt-2 text-xs text-foreground font-semibold hover:text-primary transition-colors cursor-pointer"
-                  >
-                    <Navigation size={11} />
-                    Itinéraire GPS
-                  </a>
-                </div>
-              </div>
-
-              <div className="flex gap-3.5">
-                <div className="w-9 h-9 rounded-xl bg-secondary border border-border flex items-center justify-center shrink-0 mt-0.5">
-                  <ParkingSquare size={15} className="text-primary" />
-                </div>
-                <div>
-                  <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide mb-0.5">Parking</p>
-                  <p className="text-sm font-semibold text-foreground">Parking à code</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">À 50 m du point de rendez-vous</p>
-                  <a
-                    href={GMAPS_PARK}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 mt-2 text-xs text-foreground font-semibold hover:text-primary transition-colors cursor-pointer"
-                  >
-                    <Navigation size={11} />
-                    Voir le parking
-                  </a>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
           {/* Plan parking + codes */}
           <div className="bg-card rounded-2xl border border-border overflow-hidden mb-5">
             <div className="bg-secondary border-b border-border px-5 py-2.5">
               <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px]">Vue aérienne · accès parking</span>
             </div>
-            <div className="relative">
-              <Image
-                src="/access-ebci/access-ebci-plan.png"
-                alt="Vue aérienne de l'accès au parking"
-                width={800}
-                height={420}
-                className="w-full object-cover"
-                unoptimized
-              />
-              {/* Codes d'accès en overlay */}
-              <div className="absolute top-3 right-3">
-                <div className="bg-navy/90 backdrop-blur-sm border border-primary/40 rounded-xl px-4 py-3 shadow-lg">
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <KeyRound size={11} className="text-primary" />
-                    <span className="text-[10px] font-bold text-primary uppercase tracking-[1.5px]">Code parking</span>
-                  </div>
-                  <div className="flex gap-2">
-                    {PARK_CODES.map((code) => (
-                      <span key={code} className="px-3 py-1.5 bg-primary/20 border border-primary/50 rounded-lg text-primary font-black text-lg tracking-widest">
-                        {code}
-                      </span>
-                    ))}
-                  </div>
-                  <p className="text-[10px] text-muted-foreground mt-1.5">Si l&apos;un ne fonctionne pas, essayez l&apos;autre</p>
-                </div>
+            <Image
+              src="/access-ebci/access-ebci-plan.png"
+              alt="Vue aérienne de l'accès au parking"
+              width={800}
+              height={420}
+              className="w-full object-cover"
+              unoptimized
+            />
+            {/* Codes d'accès en bande */}
+            <div className="border-t border-border px-4 sm:px-5 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+              <div className="flex items-center gap-2">
+                <KeyRound size={14} className="text-primary shrink-0" />
+                <span className="text-xs font-bold text-foreground uppercase tracking-wide">Code parking</span>
               </div>
+              <div className="flex items-center gap-3">
+                {PARK_CODES.map((code, i) => (
+                  <React.Fragment key={code}>
+                    {i > 0 && <span className="text-muted-foreground text-sm">ou</span>}
+                    <span className="px-4 py-1.5 bg-secondary border border-border rounded-lg text-foreground font-black text-xl tracking-widest">
+                      {code}
+                    </span>
+                  </React.Fragment>
+                ))}
+                <span className="hidden sm:inline text-xs text-muted-foreground">Si l&apos;un ne fonctionne pas, essayez l&apos;autre</span>
+              </div>
+              <p className="sm:hidden text-xs text-muted-foreground">Si l&apos;un ne fonctionne pas, essayez l&apos;autre</p>
             </div>
           </div>
 
@@ -155,7 +108,7 @@ export default function AccessEbciPage() {
               <h2 className="font-bold text-foreground">Accéder au parking</h2>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
               {STEPS.map(({ src, alt, label }, i) => (
                 <div key={i} className="flex flex-col gap-2">
                   <div className="relative rounded-xl overflow-hidden border border-border">
@@ -177,29 +130,6 @@ export default function AccessEbciPage() {
             </div>
           </div>
 
-          {/* En voiture */}
-          <div className="bg-card rounded-2xl border border-border p-6 mb-5">
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-8 h-8 rounded-xl bg-secondary border border-border flex items-center justify-center shrink-0">
-                <Car size={14} className="text-primary" />
-              </div>
-              <h2 className="font-bold text-foreground">En voiture</h2>
-            </div>
-
-            <div className="bg-secondary border border-border rounded-lg px-4 py-3 mb-4">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px] mb-1">Adresse GPS</p>
-              <p className="text-sm font-mono font-semibold text-foreground">Aéroport de Charleroi (EBCI)</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Gosselies, 6041 Charleroi, Belgique</p>
-            </div>
-
-            <div className="flex items-start gap-2.5">
-              <AlertTriangle size={13} className="text-primary mt-0.5 shrink-0" />
-              <p className="text-xs text-muted-foreground">
-                Ne pas suivre les panneaux <strong className="text-foreground font-semibold">«&nbsp;Terminal passagers&nbsp;»</strong>. L&apos;accès aviation légère est distinct, à l&apos;écart du terminal commercial.
-              </p>
-            </div>
-          </div>
-
           {/* Photo point de rendez-vous */}
           <div className="bg-card rounded-2xl border border-border overflow-hidden mb-5">
             <div className="bg-secondary border-b border-border px-5 py-2.5">
@@ -218,32 +148,6 @@ export default function AccessEbciPage() {
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Vous pouvez patienter devant le bâtiment ou entrer dans le terminal, accessible au public.
                 Vous y trouverez des <strong className="text-foreground font-semibold">toilettes</strong> et un <strong className="text-foreground font-semibold">distributeur de boissons</strong>.
-              </p>
-            </div>
-          </div>
-
-          {/* En transports */}
-          <div className="bg-card rounded-2xl border border-border p-6 mb-5">
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-8 h-8 rounded-xl bg-secondary border border-border flex items-center justify-center shrink-0">
-                <Bus size={14} className="text-primary" />
-              </div>
-              <h2 className="font-bold text-foreground">En transports en commun</h2>
-            </div>
-
-            <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-              Depuis <strong className="text-foreground font-semibold">Charleroi-Sud</strong>, prenez le bus TEC <strong className="text-foreground font-semibold">ligne 68 ou 68A</strong> direction Aéroport.
-              Descendre à l&apos;arrêt <strong className="text-foreground font-semibold">Gosselies Aéroport</strong> (environ 20 min), puis 5 minutes à pied jusqu&apos;au point de rendez-vous.
-            </p>
-
-            <div className="flex items-start gap-2.5">
-              <Clock size={13} className="text-primary mt-0.5 shrink-0" />
-              <p className="text-xs text-muted-foreground">
-                Consultez les horaires en temps réel sur{" "}
-                <a href="https://www.infotec.be" target="_blank" rel="noopener noreferrer"
-                  className="text-foreground font-semibold hover:text-primary transition-colors">
-                  infotec.be
-                </a>.
               </p>
             </div>
           </div>

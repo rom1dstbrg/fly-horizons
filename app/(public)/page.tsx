@@ -274,7 +274,7 @@ export default async function HomePage() {
           </svg>
         </div>
 
-        <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-12">
+        <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-2 sm:pt-12">
 
           <div className="mb-6">
             <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px]">Vol sur mesure</p>
