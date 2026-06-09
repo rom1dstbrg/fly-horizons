@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Navigation, ParkingSquare, KeyRound } from "lucide-react";
+import { Navigation, ParkingSquare, KeyRound, MapPin } from "lucide-react";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import type { Metadata } from "next";
 
@@ -66,49 +66,56 @@ export default function AccessEbciPage() {
           </div>
 
           {/* Plan parking + codes */}
-          <div className="bg-card rounded-2xl border border-border overflow-hidden mb-5">
-            <div className="bg-secondary border-b border-border px-5 py-2.5">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px]">Vue aérienne · accès parking</span>
+          <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 mb-5">
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="w-8 h-8 rounded-xl bg-secondary border border-border flex items-center justify-center shrink-0">
+                <ParkingSquare size={14} className="text-primary" />
+              </div>
+              <h2 className="font-bold text-foreground">Vue aérienne · accès parking</h2>
             </div>
-            <Image
-              src="/access-ebci/access-ebci-plan.png"
-              alt="Vue aérienne de l'accès au parking"
-              width={800}
-              height={420}
-              className="w-full object-cover"
-              unoptimized
-            />
-            {/* Codes d'accès en bande */}
-            <div className="border-t border-border px-4 sm:px-5 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-              <div className="flex items-center gap-2">
-                <KeyRound size={14} className="text-primary shrink-0" />
-                <span className="text-xs font-bold text-foreground uppercase tracking-wide">Code parking</span>
+            <div className="flex flex-col gap-3">
+              <div className="rounded-xl overflow-hidden border border-border">
+                <Image
+                  src="/access-ebci/access-ebci-plan.png"
+                  alt="Vue aérienne de l'accès au parking"
+                  width={800}
+                  height={420}
+                  className="w-full object-cover"
+                  unoptimized
+                />
               </div>
-              <div className="flex items-center gap-3">
-                {PARK_CODES.map((code, i) => (
-                  <React.Fragment key={code}>
-                    {i > 0 && <span className="text-muted-foreground text-sm">ou</span>}
-                    <span className="px-4 py-1.5 bg-secondary border border-border rounded-lg text-foreground font-black text-xl tracking-widest">
-                      {code}
-                    </span>
-                  </React.Fragment>
-                ))}
-                <span className="hidden sm:inline text-xs text-muted-foreground">Si l&apos;un ne fonctionne pas, essayez l&apos;autre</span>
+              {/* Codes d'accès */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+                <div className="flex items-center gap-2">
+                  <KeyRound size={14} className="text-primary shrink-0" />
+                  <span className="text-xs font-bold text-foreground uppercase tracking-wide">Code parking</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  {PARK_CODES.map((code, i) => (
+                    <React.Fragment key={code}>
+                      {i > 0 && <span className="text-muted-foreground text-sm">ou</span>}
+                      <span className="px-4 py-1.5 bg-secondary border border-border rounded-lg text-foreground font-black text-xl tracking-widest">
+                        {code}
+                      </span>
+                    </React.Fragment>
+                  ))}
+                  <span className="hidden sm:inline text-xs text-muted-foreground">Si l&apos;un ne fonctionne pas, essayez l&apos;autre</span>
+                </div>
+                <p className="sm:hidden text-xs text-muted-foreground">Si l&apos;un ne fonctionne pas, essayez l&apos;autre</p>
               </div>
-              <p className="sm:hidden text-xs text-muted-foreground">Si l&apos;un ne fonctionne pas, essayez l&apos;autre</p>
             </div>
           </div>
 
           {/* Comment accéder au parking : 4 étapes */}
-          <div className="bg-card rounded-2xl border border-border p-6 mb-5">
-            <div className="flex items-center gap-2.5 mb-5">
+          <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 mb-5">
+            <div className="flex items-center gap-2.5 mb-4">
               <div className="w-8 h-8 rounded-xl bg-secondary border border-border flex items-center justify-center shrink-0">
                 <ParkingSquare size={14} className="text-primary" />
               </div>
               <h2 className="font-bold text-foreground">Accéder au parking</h2>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {STEPS.map(({ src, alt, label }, i) => (
                 <div key={i} className="flex flex-col gap-2">
                   <div className="relative rounded-xl overflow-hidden border border-border">
@@ -131,24 +138,31 @@ export default function AccessEbciPage() {
           </div>
 
           {/* Photo point de rendez-vous */}
-          <div className="bg-card rounded-2xl border border-border overflow-hidden mb-5">
-            <div className="bg-secondary border-b border-border px-5 py-2.5">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px]">Vue au sol · point de rendez-vous</span>
+          <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 mb-5">
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="w-8 h-8 rounded-xl bg-secondary border border-border flex items-center justify-center shrink-0">
+                <MapPin size={14} className="text-primary" />
+              </div>
+              <h2 className="font-bold text-foreground">Vue au sol · point de rendez-vous</h2>
             </div>
-            <Image
-              src="/access-ebci/access-ebci-metting-point.png"
-              alt="Point de rendez-vous, vue au sol"
-              width={800}
-              height={380}
-              className="w-full object-cover"
-              unoptimized
-            />
-            <div className="px-5 py-4 border-t border-border space-y-1.5">
-              <p className="text-xs font-semibold text-foreground">En attendant votre vol</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Vous pouvez patienter devant le bâtiment ou entrer dans le terminal, accessible au public.
-                Vous y trouverez des <strong className="text-foreground font-semibold">toilettes</strong> et un <strong className="text-foreground font-semibold">distributeur de boissons</strong>.
-              </p>
+            <div className="flex flex-col gap-3">
+              <div className="rounded-xl overflow-hidden border border-border">
+                <Image
+                  src="/access-ebci/access-ebci-metting-point.png"
+                  alt="Point de rendez-vous, vue au sol"
+                  width={800}
+                  height={380}
+                  className="w-full object-cover"
+                  unoptimized
+                />
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-foreground">En attendant votre vol</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Vous pouvez patienter devant le bâtiment ou entrer dans le terminal, accessible au public.
+                  Vous y trouverez des <strong className="text-foreground font-semibold">toilettes</strong> et un <strong className="text-foreground font-semibold">distributeur de boissons</strong>.
+                </p>
+              </div>
             </div>
           </div>
 
