@@ -42,7 +42,7 @@ export const metadata: Metadata = {
       "Baptême de l'air et vols privés en avion léger depuis Charleroi. Jusqu'à 3 passagers, itinéraire 100 % libre.",
     images: [
       {
-        url: "/photo-pilote.jpg",
+        url: "/gallery/10.jpg",
         width: 1200,
         height: 630,
         alt: "Fly Horizons, baptême de l'air en Belgique",
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     title: "Fly Horizons, baptême de l'air en Belgique",
     description:
       "Vols privés en avion léger depuis Charleroi. Itinéraire libre, jusqu'à 3 passagers.",
-    images: ["/photo-pilote.jpg"],
+    images: ["/gallery/10.jpg"],
   },
   icons: {
     icon: [
