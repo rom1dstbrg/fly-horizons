@@ -19,12 +19,13 @@ const GMAPS_EMBED = `https://maps.google.com/maps?q=${MEET_COORDS}&z=17&t=k&outp
 
 const PARK_CODES = ["1477", "2022"];
 
-const STEPS: { src: string; label: React.ReactNode }[] = [
-  { src: "/access-ebci/access-ebci-step-1.png", label: "Depuis le rond-point, prendre la direction de l'aérodrome" },
-  { src: "/access-ebci/access-ebci-step-2.png", label: "Suivre la route jusqu'à l'entrée du parking" },
-  { src: "/access-ebci/access-ebci-step-3.png", label: "Prendre la direction du parking P31" },
+const STEPS: { src: string; alt: string; label: React.ReactNode }[] = [
+  { src: "/access-ebci/access-ebci-step-1.png", alt: "Depuis le rond-point, prendre la direction de l'aérodrome", label: "Depuis le rond-point, prendre la direction de l'aérodrome" },
+  { src: "/access-ebci/access-ebci-step-2.png", alt: "Suivre la route jusqu'à l'entrée du parking", label: "Suivre la route jusqu'à l'entrée du parking" },
+  { src: "/access-ebci/access-ebci-step-3.png", alt: "Prendre la direction du parking P31", label: "Prendre la direction du parking P31" },
   {
     src: "/access-ebci/access-ebci-step-4.png",
+    alt: "Saisir le code à la barrière",
     label: (
       <>
         Saisir le code à la barrière.{" "}
@@ -155,12 +156,12 @@ export default function AccessEbciPage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {STEPS.map(({ src, label }, i) => (
+              {STEPS.map(({ src, alt, label }, i) => (
                 <div key={i} className="flex flex-col gap-2">
                   <div className="relative rounded-xl overflow-hidden border border-border">
                     <Image
                       src={src}
-                      alt={label}
+                      alt={alt}
                       width={400}
                       height={280}
                       className="w-full object-cover"
