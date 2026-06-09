@@ -1,6 +1,8 @@
+import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, Car, Bus, Clock, Navigation, ParkingSquare, AlertTriangle } from "lucide-react";
+import { MapPin, Car, Bus, Clock, Navigation, ParkingSquare, AlertTriangle, KeyRound } from "lucide-react";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -9,11 +11,30 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-const MEET_COORDS  = "50.45787645919888,4.454058485690142";
-const PARK_COORDS  = "50.45750455237072,4.453501387085746";
-const GMAPS_DIR    = `https://www.google.com/maps/dir/?api=1&destination=${MEET_COORDS}`;
-const GMAPS_PARK   = `https://www.google.com/maps?q=${PARK_COORDS}`;
-const GMAPS_EMBED  = `https://maps.google.com/maps?q=${MEET_COORDS}&z=17&t=k&output=embed`;
+const MEET_COORDS = "50.45787645919888,4.454058485690142";
+const PARK_COORDS = "50.45774619491722,4.45481899614136";
+const GMAPS_DIR   = `https://www.google.com/maps/dir/?api=1&destination=${MEET_COORDS}`;
+const GMAPS_PARK  = `https://www.google.com/maps?q=${PARK_COORDS}`;
+const GMAPS_EMBED = `https://maps.google.com/maps?q=${MEET_COORDS}&z=17&t=k&output=embed`;
+
+const PARK_CODES = ["1477", "2022"];
+
+const STEPS: { src: string; label: React.ReactNode }[] = [
+  { src: "/access-ebci/access-ebci-step-1.png", label: "Depuis le rond-point, prendre la direction de l'aérodrome" },
+  { src: "/access-ebci/access-ebci-step-2.png", label: "Suivre la route jusqu'à l'entrée du parking" },
+  { src: "/access-ebci/access-ebci-step-3.png", label: "Prendre la direction du parking P31" },
+  {
+    src: "/access-ebci/access-ebci-step-4.png",
+    label: (
+      <>
+        Saisir le code à la barrière.{" "}
+        <span className="font-semibold text-foreground">
+          Codes : {PARK_CODES.join(" ou ")}
+        </span>
+      </>
+    ),
+  },
+];
 
 export default function AccessEbciPage() {
   return (
@@ -36,7 +57,7 @@ export default function AccessEbciPage() {
               href={GMAPS_DIR}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3.5 bg-primary text-primary-foreground font-black text-sm rounded-lg hover:brightness-105 transition-all shadow-gold"
+              className="inline-flex items-center gap-2 px-6 py-3.5 bg-primary text-primary-foreground font-black text-sm rounded-lg hover:brightness-105 transition-all shadow-gold cursor-pointer"
             >
               <Navigation size={16} />
               Lancer l&apos;itinéraire GPS
@@ -53,13 +74,13 @@ export default function AccessEbciPage() {
                 </div>
                 <div>
                   <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide mb-0.5">Point de rendez-vous</p>
-                  <p className="text-sm font-semibold text-foreground">Aéroport de Charleroi</p>
+                  <p className="text-sm font-semibold text-foreground">Aéroport de Charleroi (EBCI)</p>
                   <p className="text-xs text-muted-foreground mt-0.5">GPS : 50.4579° N, 4.4541° E</p>
                   <a
                     href={GMAPS_DIR}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 mt-2 text-xs text-foreground font-semibold hover:text-primary transition-colors"
+                    className="inline-flex items-center gap-1 mt-2 text-xs text-foreground font-semibold hover:text-primary transition-colors cursor-pointer"
                   >
                     <Navigation size={11} />
                     Itinéraire GPS
@@ -73,13 +94,13 @@ export default function AccessEbciPage() {
                 </div>
                 <div>
                   <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide mb-0.5">Parking</p>
-                  <p className="text-sm font-semibold text-foreground">Parking visiteurs (gratuit)</p>
+                  <p className="text-sm font-semibold text-foreground">Parking à code</p>
                   <p className="text-xs text-muted-foreground mt-0.5">À 50 m du point de rendez-vous</p>
                   <a
                     href={GMAPS_PARK}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 mt-2 text-xs text-foreground font-semibold hover:text-primary transition-colors"
+                    className="inline-flex items-center gap-1 mt-2 text-xs text-foreground font-semibold hover:text-primary transition-colors cursor-pointer"
                   >
                     <Navigation size={11} />
                     Voir le parking
@@ -90,94 +111,101 @@ export default function AccessEbciPage() {
             </div>
           </div>
 
-          {/* Image aérienne */}
+          {/* Plan parking + codes */}
           <div className="bg-card rounded-2xl border border-border overflow-hidden mb-5">
             <div className="bg-secondary border-b border-border px-5 py-2.5">
               <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px]">Vue aérienne · accès parking</span>
             </div>
             <div className="relative">
               <Image
-                src="/access-ebci-plan.png"
+                src="/access-ebci/access-ebci-plan.png"
                 alt="Vue aérienne de l'accès au parking"
                 width={800}
                 height={420}
                 className="w-full object-cover"
                 unoptimized
               />
-              <div className="absolute bottom-3 left-3 flex flex-wrap gap-1.5">
-                {["Parking visiteur", "Gratuit", "H24 / 7j"].map((tag) => (
-                  <span key={tag} className="px-2.5 py-1 text-[11px] font-bold rounded-full bg-navy/80 text-primary border border-primary/30 backdrop-blur-sm">
-                    {tag}
-                  </span>
-                ))}
+              {/* Codes d'accès en overlay */}
+              <div className="absolute top-3 right-3">
+                <div className="bg-navy/90 backdrop-blur-sm border border-primary/40 rounded-xl px-4 py-3 shadow-lg">
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <KeyRound size={11} className="text-primary" />
+                    <span className="text-[10px] font-bold text-primary uppercase tracking-[1.5px]">Code parking</span>
+                  </div>
+                  <div className="flex gap-2">
+                    {PARK_CODES.map((code) => (
+                      <span key={code} className="px-3 py-1.5 bg-primary/20 border border-primary/50 rounded-lg text-primary font-black text-lg tracking-widest">
+                        {code}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-1.5">Si l&apos;un ne fonctionne pas, essayez l&apos;autre</p>
+                </div>
               </div>
+            </div>
+          </div>
+
+          {/* Comment accéder au parking : 4 étapes */}
+          <div className="bg-card rounded-2xl border border-border p-6 mb-5">
+            <div className="flex items-center gap-2.5 mb-5">
+              <div className="w-8 h-8 rounded-xl bg-secondary border border-border flex items-center justify-center shrink-0">
+                <ParkingSquare size={14} className="text-primary" />
+              </div>
+              <h2 className="font-bold text-foreground">Accéder au parking</h2>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {STEPS.map(({ src, label }, i) => (
+                <div key={i} className="flex flex-col gap-2">
+                  <div className="relative rounded-xl overflow-hidden border border-border">
+                    <Image
+                      src={src}
+                      alt={label}
+                      width={400}
+                      height={280}
+                      className="w-full object-cover"
+                      unoptimized
+                    />
+                    <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-navy/90 border border-primary/40 flex items-center justify-center">
+                      <span className="text-[10px] font-black text-primary">{i + 1}</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-snug">{label}</p>
+                </div>
+              ))}
             </div>
           </div>
 
           {/* En voiture */}
           <div className="bg-card rounded-2xl border border-border p-6 mb-5">
-            <div className="flex items-center gap-2.5 mb-5">
+            <div className="flex items-center gap-2.5 mb-4">
               <div className="w-8 h-8 rounded-xl bg-secondary border border-border flex items-center justify-center shrink-0">
                 <Car size={14} className="text-primary" />
               </div>
               <h2 className="font-bold text-foreground">En voiture</h2>
             </div>
 
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px] mb-3">Adresse à encoder dans le GPS</p>
-            <div className="bg-secondary border border-border rounded-lg px-4 py-3 mb-5">
+            <div className="bg-secondary border border-border rounded-lg px-4 py-3 mb-4">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px] mb-1">Adresse GPS</p>
               <p className="text-sm font-mono font-semibold text-foreground">Aéroport de Charleroi (EBCI)</p>
               <p className="text-xs text-muted-foreground mt-0.5">Gosselies, 6041 Charleroi, Belgique</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Ou coordonnées GPS directes :{" "}
-                <span className="font-mono text-muted-foreground">50.4579, 4.4541</span>
-              </p>
             </div>
 
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px] mb-3">Depuis les grands axes</p>
-            <div className="space-y-3">
-              {[
-                {
-                  from: "Depuis Bruxelles",
-                  route: "A54 → sortie 21 « Gosselies / Aéroport » → suivre « Aérodrome / Aviation générale »",
-                },
-                {
-                  from: "Depuis Namur",
-                  route: "E42 → A54 → sortie 21 « Gosselies / Aéroport » → suivre « Aérodrome »",
-                },
-                {
-                  from: "Depuis Mons",
-                  route: "A54 direction Bruxelles → sortie 21 « Gosselies / Aéroport »",
-                },
-                {
-                  from: "Depuis Liège",
-                  route: "E42 direction Namur → A54 → sortie 21 « Gosselies / Aéroport »",
-                },
-              ].map((d) => (
-                <div key={d.from} className="flex gap-3 py-2.5 border-b border-border last:border-0">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">{d.from}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{d.route}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-4 pt-4 border-t border-border flex items-start gap-2.5">
+            <div className="flex items-start gap-2.5">
               <AlertTriangle size={13} className="text-primary mt-0.5 shrink-0" />
               <p className="text-xs text-muted-foreground">
-                Ne pas suivre les panneaux « Terminal passagers ». L&apos;aéroport aviation légère est un accès distinct, situé à l&apos;écart du terminal commercial.
+                Ne pas suivre les panneaux <strong className="text-foreground font-semibold">«&nbsp;Terminal passagers&nbsp;»</strong>. L&apos;accès aviation légère est distinct, à l&apos;écart du terminal commercial.
               </p>
             </div>
           </div>
 
-          {/* Image — point de rendez-vous au sol */}
+          {/* Photo point de rendez-vous */}
           <div className="bg-card rounded-2xl border border-border overflow-hidden mb-5">
             <div className="bg-secondary border-b border-border px-5 py-2.5">
               <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px]">Vue au sol · point de rendez-vous</span>
             </div>
             <Image
-              src="/access-ebci-building.png"
+              src="/access-ebci/access-ebci-metting-point.png"
               alt="Point de rendez-vous, vue au sol"
               width={800}
               height={380}
@@ -195,47 +223,22 @@ export default function AccessEbciPage() {
 
           {/* En transports */}
           <div className="bg-card rounded-2xl border border-border p-6 mb-5">
-            <div className="flex items-center gap-2.5 mb-5">
+            <div className="flex items-center gap-2.5 mb-4">
               <div className="w-8 h-8 rounded-xl bg-secondary border border-border flex items-center justify-center shrink-0">
                 <Bus size={14} className="text-primary" />
               </div>
               <h2 className="font-bold text-foreground">En transports en commun</h2>
             </div>
 
-            <div className="space-y-4">
-              {[
-                {
-                  n: "1",
-                  title: "Train jusqu'à Charleroi-Sud",
-                  desc: "Toutes les grandes villes belges sont connectées à Charleroi-Sud par la SNCB.",
-                },
-                {
-                  n: "2",
-                  title: "Bus TEC ligne 68 / 68A, direction Aéroport",
-                  desc: <>Depuis l&apos;arrêt <strong className="text-foreground font-semibold">Charleroi-Sud</strong>, prenez le bus TEC ligne&nbsp;68 ou&nbsp;68A. Descendre à l&apos;arrêt <strong className="text-foreground font-semibold">Gosselies Aéroport</strong>. Durée : environ 20 minutes.</>,
-                },
-                {
-                  n: "3",
-                  title: "Depuis l'arrêt, rejoindre l'aéroport à pied",
-                  desc: "Environ 5 minutes à pied depuis l'arrêt de bus jusqu'au point de rendez-vous.",
-                },
-              ].map(({ n, title, desc }) => (
-                <div key={n} className="flex gap-3.5">
-                  <div className="w-7 h-7 rounded-lg bg-navy flex items-center justify-center shrink-0 text-[10px] font-black text-primary mt-0.5">
-                    {n}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">{title}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+              Depuis <strong className="text-foreground font-semibold">Charleroi-Sud</strong>, prenez le bus TEC <strong className="text-foreground font-semibold">ligne 68 ou 68A</strong> direction Aéroport.
+              Descendre à l&apos;arrêt <strong className="text-foreground font-semibold">Gosselies Aéroport</strong> (environ 20 min), puis 5 minutes à pied jusqu&apos;au point de rendez-vous.
+            </p>
 
-            <div className="mt-5 pt-4 border-t border-border flex items-start gap-2.5">
+            <div className="flex items-start gap-2.5">
               <Clock size={13} className="text-primary mt-0.5 shrink-0" />
               <p className="text-xs text-muted-foreground">
-                Prévoyez une marge en cas de retard. Consultez les horaires en temps réel sur{" "}
+                Consultez les horaires en temps réel sur{" "}
                 <a href="https://www.infotec.be" target="_blank" rel="noopener noreferrer"
                   className="text-foreground font-semibold hover:text-primary transition-colors">
                   infotec.be
@@ -263,7 +266,7 @@ export default function AccessEbciPage() {
             href={GMAPS_DIR}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full py-3.5 bg-primary text-primary-foreground font-black text-sm rounded-lg hover:brightness-105 transition-all shadow-gold"
+            className="flex items-center justify-center gap-2 w-full py-3.5 bg-primary text-primary-foreground font-black text-sm rounded-lg hover:brightness-105 transition-all shadow-gold cursor-pointer"
           >
             <Navigation size={16} />
             Lancer l&apos;itinéraire GPS
@@ -286,6 +289,7 @@ export default function AccessEbciPage() {
         </div>
       </section>
 
+      <ChatWidget />
     </main>
   );
 }

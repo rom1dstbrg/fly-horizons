@@ -134,6 +134,14 @@ export function ChatWidget({ mobileVisible = false }: { mobileVisible?: boolean 
                     Accéder à la page contact →
                   </Link>
                 )}
+                {msg.role === "assistant" && msg.content.includes("access-ebci") && (
+                  <Link
+                    href="/access-ebci"
+                    className="block mt-2 text-xs font-semibold text-[#F2B705] hover:underline"
+                  >
+                    Voir le plan d&apos;accès →
+                  </Link>
+                )}
               </div>
             </div>
           ))}
