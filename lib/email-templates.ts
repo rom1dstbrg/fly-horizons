@@ -53,7 +53,7 @@ export function fmtDuration(minutes: number): string {
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL?.startsWith("http://localhost")
   ? process.env.NEXT_PUBLIC_SITE_URL
   : "https://fly-horizons.com";
-const LOGO_URL = "https://fly-horizons.com/logo-email.png";
+const LOGO_URL = "https://fly-horizons.com/logo-header.png";
 
 // ── Base ──────────────────────────────────────────────────────────────────────
 
@@ -68,9 +68,9 @@ function emailBase(bodyContent: string, title: string): string {
 <title>${esc(title)}</title>
 <style>
   :root { color-scheme: light only; }
-  html, body { color-scheme: light only !important; background-color: #0b2238 !important; }
-  [data-ogsc] .em-card { background-color: #fefefe !important; }
-  [data-ogsc] .em-bg { background-color: #0b2238 !important; }
+  html, body { color-scheme: light only !important; background-color: #ffffff !important; }
+  [data-ogsc] .em-card { background-color: #ffffff !important; }
+  [data-ogsc] .em-bg { background-color: #ffffff !important; }
   [data-ogsc] .em-dark { color: #0b2238 !important; }
   [data-ogsc] .em-muted { color: #64748b !important; }
   [data-ogsc] .em-gold { color: #F2B705 !important; }
@@ -78,40 +78,36 @@ function emailBase(bodyContent: string, title: string): string {
   [data-ogsc] .em-btn { background-color: #F2B705 !important; color: #0b2238 !important; }
   [data-ogsc] .em-sep { border-color: #e8ecf4 !important; }
   @media (prefers-color-scheme: dark) {
-    html, body { color-scheme: light only !important; background-color: #0b2238 !important; }
+    html, body { color-scheme: light only !important; background-color: #ffffff !important; }
   }
 </style>
 </head>
-<body style="margin:0;padding:0;background-color:#0b2238;font-family:'Segoe UI',Arial,sans-serif;">
-<table class="em-bg" width="100%" cellpadding="0" cellspacing="0" bgcolor="#0b2238" style="background-color:#0b2238;padding:40px 16px;">
+<body style="margin:0;padding:0;background-color:#ffffff;font-family:'Segoe UI',Arial,sans-serif;">
+<table class="em-bg" width="100%" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="background-color:#ffffff;padding:40px 16px;">
   <tr>
     <td align="center">
       <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
 
         <!-- Logo -->
         <tr>
-          <td bgcolor="#0b2238" style="background-color:#0b2238;padding:0 0 28px;text-align:center;">
-            <img src="${LOGO_URL}" alt="Fly Horizons" width="160"
-              style="display:block;margin:0 auto;width:160px;height:auto;border:0;outline:none;" />
+          <td bgcolor="#ffffff" style="background-color:#ffffff;padding:0 0 24px;text-align:center;">
+            <img src="${LOGO_URL}" alt="Fly Horizons" width="140"
+              style="display:block;margin:0 auto;width:140px;height:auto;border:0;outline:none;" />
           </td>
         </tr>
 
         <!-- Card -->
         <tr>
-          <td class="em-card" bgcolor="#fefefe" style="background-color:#fefefe;border-radius:16px;padding:40px 36px;">
+          <td class="em-card" bgcolor="#ffffff" style="background-color:#ffffff;border:1px solid #e8ecf4;border-radius:12px;padding:40px 36px;">
             ${bodyContent}
           </td>
         </tr>
 
         <!-- Footer -->
         <tr>
-          <td bgcolor="#0b2238" style="background-color:#0b2238;padding:28px 0 0;text-align:center;">
-            <p style="margin:0 0 4px;font-size:12px;color:#4e7096;">
-              Fly Horizons &mdash; <a href="https://fly-horizons.com" style="color:#4e7096;text-decoration:none;">fly-horizons.com</a>
-            </p>
-            <p style="margin:0;font-size:11px;color:#2d4f6e;">
-              Une question ? &Eacute;crivez-nous :
-              <a href="mailto:info@fly-horizons.com" style="color:#2d4f6e;text-decoration:none;">info@fly-horizons.com</a>
+          <td bgcolor="#ffffff" style="background-color:#ffffff;padding:20px 0 0;text-align:center;">
+            <p style="margin:0;font-size:11px;color:#94a3b8;">
+              Fly Horizons &mdash; <a href="https://fly-horizons.com" style="color:#94a3b8;text-decoration:none;">fly-horizons.com</a> &middot; <a href="mailto:info@fly-horizons.com" style="color:#94a3b8;text-decoration:none;">info@fly-horizons.com</a>
             </p>
           </td>
         </tr>
