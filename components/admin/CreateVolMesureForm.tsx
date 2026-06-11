@@ -100,6 +100,7 @@ export function CreateVolMesureForm({ clients, prixHeure }: Props) {
         distance_km:      distanceKm ? parseFloat(distanceKm) : null,
         commentaire:      commentaire || undefined,
         taxes_escales:    taxesEscales ? parseFloat(taxesEscales) : null,
+        envoyer_paiement: false,
         send_email:       envoyerPaiement,
         montant_override: !isNaN(override) && override >= 0 ? override : null,
       });
