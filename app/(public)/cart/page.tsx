@@ -14,7 +14,7 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <main className="min-h-screen bg-gradient-navy pt-24 pb-16">
+      <main className="min-h-screen bg-gradient-navy pt-[98px] pb-16">
         <div className="container-shop max-w-2xl">
           <div className="text-center py-20 space-y-6">
             <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mx-auto">
@@ -41,7 +41,7 @@ export default function CartPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-navy pt-24 pb-16">
+    <main className="min-h-screen bg-gradient-navy pt-[98px] pb-16">
       <div className="container-shop">
 
         {/* Header */}

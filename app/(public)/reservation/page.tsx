@@ -360,7 +360,7 @@ export default function ReservationPage() {
 
   return (
     <div className="flex-1 bg-gradient-navy pb-16">
-      <div className="h-[84px]" />
+      <div className="h-[98px]" />
 
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6">
 

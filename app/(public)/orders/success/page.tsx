@@ -4,7 +4,7 @@ import { ClearCart } from "@/components/shop/ClearCart";
 
 export default function OrderSuccessPage() {
   return (
-    <main className="flex-1 flex items-center justify-center bg-gradient-navy px-4 pt-[86px] pb-16">
+    <main className="flex-1 flex items-center justify-center bg-gradient-navy px-4 pt-[98px] pb-16">
       <div className="max-w-md w-full space-y-3">
 
         {/* ── Confirmation ── */}

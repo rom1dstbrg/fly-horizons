@@ -32,7 +32,7 @@ const STEPS = [
 
 export default function VolSurMesureSuccessPage() {
   return (
-    <main className="flex-1 flex items-center justify-center bg-[#f5f5f7] px-4 pt-[86px] pb-16">
+    <main className="flex-1 flex items-center justify-center bg-[#f5f5f7] px-4 pt-[98px] pb-16">
       <div className="max-w-lg w-full space-y-3">
 
         {/* ── En-tête ── */}

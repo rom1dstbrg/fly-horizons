@@ -173,13 +173,22 @@ export default async function AdminDashboardPage() {
           <h1 className="text-2xl font-bold text-foreground tracking-tight">{greeting}, Romain</h1>
           <p className="text-sm text-muted-foreground mt-0.5 capitalize">{dateLabel}</p>
         </div>
-        <Link
-          href="/admin/reservations/new"
-          className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-navy text-white text-sm font-semibold hover:brightness-90 transition-colors shadow-sm shrink-0"
-        >
-          <Plus size={15} />
-          Nouvelle réservation
-        </Link>
+        <div className="hidden sm:flex items-center gap-2 shrink-0">
+          <Link
+            href="/admin/reservations/new"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          >
+            <Plus size={15} />
+            Nouvelle réservation
+          </Link>
+          <Link
+            href="/admin/reservations/new-mesure"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          >
+            <Route size={15} />
+            Nouveau vol sur mesure
+          </Link>
+        </div>
       </div>
 
       {/* ── KPIs ─────────────────────────────────────────────────────── */}
@@ -348,8 +357,8 @@ export default async function AdminDashboardPage() {
             <SectionTitle>Actions rapides</SectionTitle>
             <div className="bg-card rounded-xl border border-border overflow-hidden">
               {([
-                { href: "/admin/reservations/new",        icon: Plus,         label: "Nouvelle réservation", color: "text-navy" },
-                { href: "/admin/vols?tab=sur-mesure",     icon: Route,        label: "Vols sur mesure",      color: "text-emerald-600" },
+                { href: "/admin/reservations/new",        icon: Plus,         label: "Nouvelle réservation",    color: "text-navy" },
+                { href: "/admin/reservations/new-mesure", icon: Route,        label: "Nouveau vol sur mesure",  color: "text-emerald-600" },
                 { href: "/admin/boutique?tab=vouchers",   icon: Ticket,       label: "Nouveau voucher",      color: "text-purple-600" },
                 { href: "/admin/boutique?tab=produits",   icon: Package,      label: "Nouvelle offre",       color: "text-amber-600" },
                 { href: "/admin/boutique?tab=coupons",    icon: Tag,          label: "Nouveau coupon",       color: "text-blue-600" },

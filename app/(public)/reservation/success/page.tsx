@@ -70,7 +70,7 @@ export default async function ReservationSuccessPage({ searchParams }: Props) {
   const steps = isPayLater ? STEPS_PAY_LATER : STEPS_NORMAL;
 
   return (
-    <main className="flex-1 flex items-center justify-center bg-gradient-navy px-4 pt-[86px] pb-16">
+    <main className="flex-1 flex items-center justify-center bg-gradient-navy px-4 pt-[98px] pb-16">
       <div className="max-w-lg w-full space-y-3">
 
         {/* ── En-tête ── */}

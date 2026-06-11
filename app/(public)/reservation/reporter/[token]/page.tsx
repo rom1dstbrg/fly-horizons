@@ -18,7 +18,7 @@ export default async function ReporterPage({ params }: PageProps) {
 
   if (!resa) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-gradient-navy px-4 pt-[86px] pb-16">
+      <div className="flex-1 flex flex-col items-center justify-center bg-gradient-navy px-4 pt-[98px] pb-16">
         <div className="max-w-md w-full text-center space-y-4">
           <div className="w-14 h-14 rounded-lg bg-secondary border border-border flex items-center justify-center mx-auto">
             <XCircle size={24} className="text-foreground/30" />
@@ -39,7 +39,7 @@ export default async function ReporterPage({ params }: PageProps) {
 
   if (["annulee", "vol_effectue"].includes(resa.statut)) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-gradient-navy px-4 pt-[86px] pb-16">
+      <div className="flex-1 flex flex-col items-center justify-center bg-gradient-navy px-4 pt-[98px] pb-16">
         <div className="max-w-md w-full text-center space-y-4">
           <div className="w-14 h-14 rounded-lg bg-secondary border border-border flex items-center justify-center mx-auto">
             <AlertCircle size={24} className="text-foreground/30" />

@@ -221,7 +221,7 @@ export default function CheckoutPage() {
   if (items.length === 0) return null;
 
   return (
-    <main className="min-h-screen bg-gradient-navy pt-24 pb-16">
+    <main className="min-h-screen bg-gradient-navy pt-[98px] pb-16">
       <div className="container-shop">
 
         {/* Header */}

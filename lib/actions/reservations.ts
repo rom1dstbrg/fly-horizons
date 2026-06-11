@@ -469,6 +469,129 @@ export async function createAdminReservation(data: {
   }
 }
 
+export async function createAdminVolMesure(data: {
+  client_id?: string;
+  prenom?: string;
+  nom?: string;
+  email?: string;
+  telephone?: string;
+  date_vol: string;
+  heure_vol: string;
+  duree: number;
+  passagers: number;
+  poids_total?: number | null;
+  distance_km?: number | null;
+  commentaire?: string;
+  taxes_escales?: number | null;
+  waypoints?: { lat: number; lng: number; nom: string }[];
+  stopovers?: { icao: string; nom: string; taxe: number }[];
+  montant_override?: number | null;
+  envoyer_paiement: boolean;
+  send_email: boolean;
+}) {
+  try {
+    await checkAdmin();
+    const supabase = createAdminClient();
+
+    let clientId = data.client_id;
+    if (!clientId) {
+      if (!data.prenom || !data.nom || !data.email) {
+        return { error: "Prénom, nom et email obligatoires pour un nouveau client" };
+      }
+      const { data: newId } = await supabase.rpc("next_client_id");
+      if (!newId) return { error: "Erreur génération ID client" };
+      const { error: cliErr } = await supabase.from("clients").insert({
+        id: newId, prenom: data.prenom, nom: data.nom,
+        email: data.email, telephone: data.telephone || null,
+      });
+      if (cliErr) return { error: "Erreur création client" };
+      clientId = newId;
+    }
+
+    const { data: client } = await supabase.from("clients").select("*").eq("id", clientId).single();
+    if (!client) return { error: "Client introuvable" };
+
+    const { data: settings } = await supabase
+      .from("crm_settings").select("key, value").in("key", ["prix_heure", "acompte_perso_heure"]);
+    const prixHeure  = parseFloat(settings?.find(s => s.key === "prix_heure")?.value  ?? "254");
+    const acompteH   = parseFloat(settings?.find(s => s.key === "acompte_perso_heure")?.value ?? "300");
+
+    const acompteBase = Math.round((acompteH / 60) * data.duree);
+    const taxes       = data.taxes_escales ?? 0;
+    const montant     = data.montant_override != null
+      ? data.montant_override
+      : acompteBase + taxes;
+
+    const paymentToken = data.envoyer_paiement && montant > 0 ? crypto.randomUUID() : null;
+    const statut       = data.envoyer_paiement && montant > 0 ? "payment_pending" : "en_attente";
+
+    const rawUrl  = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+    const siteUrl = rawUrl.startsWith("http://localhost") || rawUrl.startsWith("http://127")
+      ? rawUrl : "https://fly-horizons.com";
+
+    const { data: resa, error: resaErr } = await supabase
+      .from("reservations")
+      .insert({
+        client_id:    clientId,
+        date_vol:     data.date_vol,
+        heure_vol:    data.heure_vol,
+        duree:        data.duree,
+        passagers:    data.passagers,
+        poids_total:  data.poids_total  || null,
+        commentaire:  data.commentaire  || null,
+        distance_km:  data.distance_km  || null,
+        taxes_escales: taxes > 0 ? taxes : null,
+        waypoints:    data.waypoints?.length ? data.waypoints   : null,
+        stopovers:    data.stopovers?.length  ? data.stopovers  : null,
+        statut,
+        type_resa:    "perso",
+        acompte:      montant > 0 ? montant : null,
+        payment_token: paymentToken,
+      })
+      .select()
+      .single();
+
+    if (resaErr) return { error: "Erreur création réservation" };
+
+    const dateStr = new Date(data.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
+      weekday: "long", day: "numeric", month: "long", year: "numeric",
+    });
+
+    if (data.send_email) {
+      if (paymentToken && montant > 0) {
+        const paymentUrl = `${siteUrl}/api/reservation/pay/${paymentToken}`;
+        await resend.emails.send({
+          from: EMAIL_FROM, to: [client.email], replyTo: EMAIL_REPLY_TO,
+          subject: "Votre vol sur mesure — Lien de paiement Fly Horizons",
+          html: reservationPaymentInvitationEmail({
+            prenom: client.prenom, nom: client.nom, dateStr,
+            heure: data.heure_vol, duree: data.duree,
+            montant, paymentUrl, voucherCode: null,
+          }),
+        });
+      } else {
+        await resend.emails.send({
+          from: EMAIL_FROM, to: [client.email], replyTo: EMAIL_REPLY_TO,
+          subject: "Votre vol sur mesure est enregistré — Fly Horizons",
+          html: reservationConfirmationFreeEmail({
+            prenom: client.prenom, nom: client.nom, dateStr,
+            heure: data.heure_vol, duree: data.duree,
+            passengers: data.passagers, poids_total: data.poids_total ?? null,
+            voucherCode: null, reservationId: resa.id,
+          }),
+        });
+      }
+    }
+
+    revalidatePath("/admin/vols");
+    revalidatePath("/admin/clients");
+    return { success: true, reservationId: resa.id };
+  } catch (e) {
+    console.error("createAdminVolMesure error:", e);
+    return { error: "Erreur serveur" };
+  }
+}
+
 export async function updateReservationDateHeure(id: string, fields: {
   date_vol?: string;
   heure_vol?: string | null;

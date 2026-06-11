@@ -7,6 +7,7 @@ import { VolDetailClient } from "@/components/shop/VolDetailClient";
 import { VolImageGallery } from "@/components/shop/VolImageGallery";
 import { PackCard } from "@/components/shop/PackCard";
 import { BackLink } from "@/components/shop/BackLink";
+import { VolStickyBar } from "@/components/shop/VolStickyBar";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -122,7 +123,7 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
 
       {/* ══════ SPLIT — galerie gauche / info droite ══════ */}
       <div className="pt-[98px] bg-gradient-navy">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-6 pb-20">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-2 sm:pt-12 pb-20">
 
           <BackLink />
 
@@ -216,7 +217,7 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
       )}
 
       {/* ══════ VOL SUR MESURE — blanc ══════ */}
-      <div className="bg-card border-t border-border py-14">
+      <div className="bg-card border-t border-border pt-14 pb-[88px]">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div>
             <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-3">Vol sur mesure</p>
@@ -237,6 +238,11 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
           </Link>
         </div>
       </div>
+
+      <VolStickyBar
+        id={vol.id} slug={vol.slug} title={vol.title}
+        price={vol.price} duree={duree} image_url={image}
+      />
 
     </main>
   );

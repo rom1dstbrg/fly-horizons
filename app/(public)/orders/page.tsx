@@ -59,7 +59,7 @@ export default async function OrdersPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-navy pt-24 pb-16">
+    <main className="min-h-screen bg-gradient-navy pt-[98px] pb-16">
       <div className="container-shop max-w-3xl">
 
         <div className="mb-8">

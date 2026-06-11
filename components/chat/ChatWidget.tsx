@@ -195,7 +195,8 @@ export function ChatWidget({ mobileVisible = false }: { mobileVisible?: boolean 
           pointerEvents: open ? "none" : "auto",
         }}
       >
-        <PlaneTakeoff size={16} className="shrink-0" />
+        <span className="sm:hidden text-base font-black leading-none">?</span>
+        <PlaneTakeoff size={16} className="hidden sm:block shrink-0" />
         <span className="hidden sm:inline">Une question ?</span>
       </button>
     </>

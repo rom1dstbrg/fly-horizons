@@ -761,12 +761,12 @@ export default function VolSurMesurePage() {
   // ─────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#f5f5f7]">
-      <div className="h-[84px]" />
+      <div className="h-[98px]" />
 
       {/* ══════════════════════ STEP 1 : BUILD ══════════════════════ */}
       {/* Toujours monté (CSS hidden) pour préserver les POIs Leaflet au retour */}
       {/* pb-[72px] lg:pb-0 : espace pour la barre CTA fixe sur mobile */}
-      <div className={flowStep === "build" ? "relative flex flex-col" : "hidden"} style={{ height: "calc(100vh - 84px)" }}>
+      <div className={flowStep === "build" ? "relative flex flex-col" : "hidden"} style={{ height: "calc(100vh - 98px)" }}>
 
           {/* Main area */}
           <div className="flex-1 min-h-0 bg-[#f5f5f7] p-3 pb-[148px] lg:pb-3 flex gap-3 overflow-hidden">
