@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { Suspense } from "react";
 import Link from "next/link";
 import {
   AlertTriangle, AlertCircle, CheckCircle2,
@@ -349,7 +350,13 @@ export default async function AdminDashboardPage() {
           {/* METAR / TAF */}
           <div>
             <SectionTitle>Météo · EBCI</SectionTitle>
-            <MetarWidget />
+            <Suspense fallback={
+              <div className="bg-card rounded-xl border border-border px-4 py-3">
+                <p className="text-xs text-muted-foreground">Chargement météo...</p>
+              </div>
+            }>
+              <MetarWidget />
+            </Suspense>
           </div>
 
           {/* Actions rapides */}

@@ -7,7 +7,7 @@ type MetarJson = {
   wdir: number | "VRB" | null;
   wspd: number | null;
   wgst: number | null;
-  visib: string | null;
+  visib: string | number | null;
   clouds: { cover: string; base: number }[] | null;
   altim: number | null;
   obsTime: number | null;
@@ -32,17 +32,18 @@ function worstSky(clouds: { cover: string }[] | null): string {
   ).cover;
 }
 
-function parseVisSM(visib: string | null): number {
-  if (!visib) return Infinity;
-  if (visib === "9999" || visib.includes("+")) return 10;
-  const n = parseFloat(visib);
+function parseVisSM(visib: string | number | null): number {
+  if (visib == null) return Infinity;
+  const s = String(visib);
+  if (s === "9999" || s.includes("+")) return 10;
+  const n = parseFloat(s);
   if (isNaN(n)) return Infinity;
   if (n > 100) return n / 1609.34; // meters → SM
   return n; // already in SM
 }
 
 function flightRules(
-  visib: string | null,
+  visib: string | number | null,
   clouds: { cover: string; base: number }[] | null,
 ): { label: "VFR" | "MVFR" | "IFR" | "LIFR"; bg: string; text: string } {
   const visSM = parseVisSM(visib);
@@ -59,16 +60,17 @@ function flightRules(
   return   { label: "VFR",  bg: "bg-green-500",   text: "text-white" };
 }
 
-function formatVis(visib: string | null): string {
-  if (!visib) return "—";
-  if (visib === "9999" || visib.includes("+")) return ">10 km";
-  const n = parseFloat(visib);
+function formatVis(visib: string | number | null): string {
+  if (visib == null) return "—";
+  const s = String(visib);
+  if (s === "9999" || s.includes("+")) return ">10 km";
+  const n = parseFloat(s);
   if (!isNaN(n)) {
     if (n > 100) return n >= 9999 ? ">10 km" : `${(n / 1000).toFixed(1)} km`;
     if (n >= 6)  return ">10 km";
     return `${(n * 1.852).toFixed(1)} km`;
   }
-  return visib;
+  return s;
 }
 
 // ── component ─────────────────────────────────────────────────────────────────
