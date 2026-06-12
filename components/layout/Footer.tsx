@@ -149,7 +149,7 @@ export function Footer() {
           <div className="h-px bg-white/5" />
 
           {/* Infos pratiques compactes */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col items-center gap-2">
             <div className="flex items-center gap-2.5">
               <MapPin size={11} className="shrink-0" />
               <span className="text-xs text-white/30">Charleroi EBCI · Gosselies, Belgique</span>
@@ -164,20 +164,20 @@ export function Footer() {
           <div className="h-px bg-white/5" />
 
           {/* Barre de bas mobile */}
-          <div className="space-y-3">
+          <div className="flex flex-col items-center gap-2.5 text-center">
+            <p className="text-[11px] text-white/25">© {year} Fly Horizons. Tous droits réservés.</p>
+            <div className="flex items-center gap-2.5 text-[11px] text-white/25">
+              <Link href="/cgp" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">Conditions générales</Link>
+              <span className="text-white/15">·</span>
+              <Link href="/politique-de-confidentialite" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">Confidentialité</Link>
+              <span className="text-white/15">·</span>
+              <Link href="/contact" className="hover:text-white/60 transition-colors">Contact</Link>
+            </div>
             <div className="flex items-center gap-1.5 text-[11px] text-white/20">
               <Lock size={9} />
               <span>Paiement sécurisé</span>
               <span className="text-primary/70 font-semibold">Stripe</span>
             </div>
-            <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-[11px] text-white/25">
-              <Link href="/cgp" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">CGP</Link>
-              <span className="text-white/10">·</span>
-              <Link href="/politique-de-confidentialite" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">Confidentialité</Link>
-              <span className="text-white/10">·</span>
-              <Link href="/contact" className="hover:text-white/60 transition-colors">Contact</Link>
-            </div>
-            <p className="text-[11px] text-white/15">© {year} Fly Horizons. Tous droits réservés.</p>
           </div>
 
         </div>
