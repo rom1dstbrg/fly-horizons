@@ -187,7 +187,7 @@ export function ChatWidget({ mobileVisible = false }: { mobileVisible?: boolean 
       <button
         onClick={() => setOpen(true)}
         aria-label="Ouvrir le chat"
-        className={`fixed bottom-6 right-6 z-50 flex items-center gap-2.5 bg-[#F2B705] text-[#0b2238] rounded-full p-3.5 sm:pl-4 sm:pr-5 sm:py-3 font-bold text-sm shadow-[0_4px_20px_rgba(242,183,5,.45)] hover:bg-[#e6a800] hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer ${mobileVisible ? "" : "hidden sm:flex"}`}
+        className={`fixed bottom-6 right-6 z-50 flex items-center justify-center gap-2.5 bg-[#F2B705] text-[#0b2238] rounded-full w-14 h-14 sm:w-auto sm:h-auto sm:pl-4 sm:pr-5 sm:py-3 font-bold text-sm shadow-[0_4px_20px_rgba(242,183,5,.45)] hover:bg-[#e6a800] hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer ${mobileVisible ? "" : "hidden sm:flex"}`}
         style={{
           opacity: open ? 0 : 1,
           transform: open ? "scale(0.9) translateY(4px)" : "scale(1) translateY(0)",
@@ -195,7 +195,7 @@ export function ChatWidget({ mobileVisible = false }: { mobileVisible?: boolean 
           pointerEvents: open ? "none" : "auto",
         }}
       >
-        <span className="sm:hidden text-base font-black leading-none">?</span>
+        <span className="sm:hidden text-xl font-black leading-none">?</span>
         <PlaneTakeoff size={16} className="hidden sm:block shrink-0" />
         <span className="hidden sm:inline">Une question ?</span>
       </button>

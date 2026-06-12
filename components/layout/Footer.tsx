@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Mail, MapPin, Lock, Clock } from "lucide-react";
+import { FaPlane, FaRoute, FaUser, FaCircleQuestion, FaBookOpen, FaMap, FaCircleUser, FaRightToBracket, FaEnvelope } from "react-icons/fa6";
+import type { IconType } from "react-icons";
 
 function IconFacebook({ size = 16 }: { size?: number }) {
   return (
@@ -20,16 +22,21 @@ function IconInstagram({ size = 16 }: { size?: number }) {
   );
 }
 
-const SERVICES = [
-  { href: "/nos-offres",     label: "Nos offres" },
-  { href: "/vol-sur-mesure", label: "Vol sur mesure" },
+const SERVICES: { href: string; label: string; icon: IconType }[] = [
+  { href: "/nos-offres",     label: "Nos offres",     icon: FaPlane },
+  { href: "/vol-sur-mesure", label: "Vol sur mesure", icon: FaRoute },
 ];
 
-const INFOS = [
-  { href: "/about",       label: "À propos" },
-  { href: "/faq",         label: "FAQ" },
-  { href: "/guide",       label: "Guide passager" },
-  { href: "/access-ebci", label: "Plan d'accès · EBCI" },
+const INFOS: { href: string; label: string; icon: IconType }[] = [
+  { href: "/about",       label: "À propos",            icon: FaUser },
+  { href: "/faq",         label: "FAQ",                 icon: FaCircleQuestion },
+  { href: "/guide",       label: "Guide passager",      icon: FaBookOpen },
+  { href: "/access-ebci", label: "Plan d'accès · EBCI", icon: FaMap },
+];
+
+const MON_ESPACE: { href: string; label: string; icon: IconType }[] = [
+  { href: "/account", label: "Mon compte", icon: FaCircleUser },
+  { href: "/login",   label: "Connexion",  icon: FaRightToBracket },
 ];
 
 const SOCIALS = [
@@ -82,8 +89,12 @@ export function Footer() {
             <div>
               <p className="text-[9px] font-bold text-primary/70 uppercase tracking-[2px] mb-3">Vols</p>
               <ul className="space-y-2.5">
-                {SERVICES.map(({ href, label }) => (
-                  <li key={href}><Link href={href} className="text-sm text-white/50 hover:text-white transition-colors">{label}</Link></li>
+                {SERVICES.map(({ href, label, icon: Icon }) => (
+                  <li key={href}>
+                    <Link href={href} className="flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors">
+                      <Icon size={12} className="shrink-0" />{label}
+                    </Link>
+                  </li>
                 ))}
               </ul>
             </div>
@@ -92,8 +103,12 @@ export function Footer() {
             <div>
               <p className="text-[9px] font-bold text-primary/70 uppercase tracking-[2px] mb-3">Informations</p>
               <ul className="space-y-2.5">
-                {INFOS.map(({ href, label }) => (
-                  <li key={href}><Link href={href} className="text-sm text-white/50 hover:text-white transition-colors">{label}</Link></li>
+                {INFOS.map(({ href, label, icon: Icon }) => (
+                  <li key={href}>
+                    <Link href={href} className="flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors">
+                      <Icon size={12} className="shrink-0" />{label}
+                    </Link>
+                  </li>
                 ))}
               </ul>
             </div>
@@ -102,11 +117,12 @@ export function Footer() {
             <div>
               <p className="text-[9px] font-bold text-primary/70 uppercase tracking-[2px] mb-3">Mon espace</p>
               <ul className="space-y-2.5">
-                {[
-                  { href: "/account", label: "Mon compte" },
-                  { href: "/login",   label: "Connexion" },
-                ].map(({ href, label }) => (
-                  <li key={href}><Link href={href} className="text-sm text-white/50 hover:text-white transition-colors">{label}</Link></li>
+                {MON_ESPACE.map(({ href, label, icon: Icon }) => (
+                  <li key={href}>
+                    <Link href={href} className="flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors">
+                      <Icon size={12} className="shrink-0" />{label}
+                    </Link>
+                  </li>
                 ))}
               </ul>
             </div>
@@ -116,11 +132,15 @@ export function Footer() {
               <p className="text-[9px] font-bold text-primary/70 uppercase tracking-[2px] mb-3">Contact</p>
               <ul className="space-y-2.5">
                 <li>
-                  <a href="mailto:info@fly-horizons.com" className="text-sm text-white/50 hover:text-white transition-colors">
-                    info@fly-horizons.com
+                  <a href="mailto:info@fly-horizons.com" className="flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors">
+                    <FaEnvelope size={12} className="shrink-0" />info@fly-horizons.com
                   </a>
                 </li>
-                <li><Link href="/contact" className="text-sm text-white/50 hover:text-white transition-colors">Formulaire de contact</Link></li>
+                <li>
+                  <Link href="/contact" className="flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors">
+                    <FaEnvelope size={12} className="shrink-0" />Formulaire de contact
+                  </Link>
+                </li>
               </ul>
             </div>
           </div>
@@ -131,11 +151,11 @@ export function Footer() {
           {/* Infos pratiques compactes */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2.5">
-              <MapPin size={11} className="text-primary/60 shrink-0" />
+              <MapPin size={11} className="shrink-0" />
               <span className="text-xs text-white/30">Charleroi EBCI · Gosselies, Belgique</span>
             </div>
             <div className="flex items-center gap-2.5">
-              <Clock size={11} className="text-primary/60 shrink-0" />
+              <Clock size={11} className="shrink-0" />
               <span className="text-xs text-white/30">7j/7 sur réservation · Réponse email sous 24 h</span>
             </div>
           </div>
@@ -194,8 +214,12 @@ export function Footer() {
             <div>
               <p className={hd}>Nos services</p>
               <ul className="space-y-2.5">
-                {SERVICES.map(({ href, label }) => (
-                  <li key={href}><Link href={href} className={lnk}>{label}</Link></li>
+                {SERVICES.map(({ href, label, icon: Icon }) => (
+                  <li key={href}>
+                    <Link href={href} className={lnk + " flex items-center gap-2"}>
+                      <Icon size={12} className="shrink-0" />{label}
+                    </Link>
+                  </li>
                 ))}
               </ul>
             </div>
@@ -204,8 +228,12 @@ export function Footer() {
             <div>
               <p className={hd}>Informations</p>
               <ul className="space-y-2.5">
-                {INFOS.map(({ href, label }) => (
-                  <li key={href}><Link href={href} className={lnk}>{label}</Link></li>
+                {INFOS.map(({ href, label, icon: Icon }) => (
+                  <li key={href}>
+                    <Link href={href} className={lnk + " flex items-center gap-2"}>
+                      <Icon size={12} className="shrink-0" />{label}
+                    </Link>
+                  </li>
                 ))}
               </ul>
             </div>
@@ -214,11 +242,12 @@ export function Footer() {
             <div>
               <p className={hd}>Mon espace</p>
               <ul className="space-y-2.5">
-                {[
-                  { href: "/account", label: "Mon compte" },
-                  { href: "/login",   label: "Connexion" },
-                ].map(({ href, label }) => (
-                  <li key={href}><Link href={href} className={lnk}>{label}</Link></li>
+                {MON_ESPACE.map(({ href, label, icon: Icon }) => (
+                  <li key={href}>
+                    <Link href={href} className={lnk + " flex items-center gap-2"}>
+                      <Icon size={12} className="shrink-0" />{label}
+                    </Link>
+                  </li>
                 ))}
               </ul>
             </div>

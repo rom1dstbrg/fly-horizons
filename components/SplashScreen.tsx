@@ -36,6 +36,7 @@ export function SplashScreen() {
         width={260}
         height={70}
         priority
+        style={{ height: "auto" }}
       />
       <div className="mt-10 w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
     </div>
