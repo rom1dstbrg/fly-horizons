@@ -182,6 +182,18 @@ function secondaryButton(href: string, text: string): string {
   </table>`;
 }
 
+function nextStep(text: string): string {
+  return `
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0 28px;">
+    <tr>
+      <td style="background:#fffbeb;border:1.5px solid #fde68a;border-left:4px solid #F2B705;border-radius:8px;padding:16px 20px;">
+        <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#b45309;text-transform:uppercase;letter-spacing:0.15em;">&#9658;&nbsp;Prochaine &eacute;tape</p>
+        <p style="margin:0;font-size:13px;color:#334155;line-height:1.65;">${text}</p>
+      </td>
+    </tr>
+  </table>`;
+}
+
 export interface EmailPriceBreakdown {
   coutVol: number;
   dureeMin?: number | null;
@@ -395,19 +407,22 @@ export function orderConfirmationEmail(props: OrderConfirmationProps): string {
     ${voucherCodes && voucherCodes.length > 0 ? `
     ${separator()}
     ${label("Vos bons de vol")}
-    <p class="em-muted" style="margin:0 0 20px;font-size:13px;color:#64748b;">Renseignez ces codes lors de votre r&eacute;servation sur fly-horizons.com.</p>
-    ${voucherCodes.map(v => `
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
+    <p class="em-muted" style="margin:0 0 20px;font-size:13px;color:#64748b;">Scannez le QR code ou rendez-vous sur fly-horizons.com/reservation et saisissez votre code.</p>
+    ${voucherCodes.map(v => {
+      const rawCode = v.code.replace(/[^A-Z0-9]/gi, "").toUpperCase();
+      const reservationUrl = `${SITE_URL}/reservation?duree=${v.duration_minutes}&code=${rawCode}`;
+      return `
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:14px;">
       <tr>
-        <td style="background:#f8fafc;border:2px solid #F2B705;border-radius:10px;padding:16px 20px;">
-          <p class="em-muted" style="margin:0 0 4px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;">${esc(v.product_title)}</p>
-          <p class="em-dark" style="margin:0;font-family:'Courier New',monospace;font-size:20px;font-weight:800;color:#0b2238;letter-spacing:0.08em;">${esc(v.code)}</p>
+        <td style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:18px 24px;text-align:center;">
+          <p style="margin:0 0 4px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:2.5px;">Votre code</p>
+          <p style="margin:0 0 6px;font-family:-apple-system,'Segoe UI',Arial,sans-serif;font-size:22px;font-weight:900;color:#062548;letter-spacing:5px;text-transform:uppercase;">${esc(v.code)}</p>
+          <p style="margin:0 0 16px;font-size:10px;color:#94a3b8;">${esc(v.product_title)}</p>
+          <a href="${reservationUrl}" style="display:inline-block;background-color:#F2B705;color:#062548;font-size:13px;font-weight:800;padding:11px 26px;border-radius:8px;text-decoration:none;">R&eacute;server mon vol</a>
         </td>
       </tr>
-    </table>`).join("")}
-    <div style="text-align:center;margin-top:20px;">
-      <a href="${SITE_URL}/reservation" class="em-btn" style="display:inline-block;background-color:#F2B705;color:#0b2238;font-size:14px;font-weight:800;padding:14px 40px;border-radius:10px;text-decoration:none;">R&eacute;server mon vol</a>
-    </div>` : ""}
+    </table>`;
+    }).join("")}` : ""}
 
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:36px;">
       <tr><td style="border-top:2px dashed #e8ecf4;height:0;padding:0;"></td></tr>
@@ -488,36 +503,17 @@ export function voucherEmail(props: VoucherEmailProps): string {
   const codeCards = codes.map((c) => {
     const rawCode = c.code.replace(/[^A-Z0-9]/gi, "").toUpperCase();
     const reservationUrl = `${SITE_URL}/reservation?duree=${c.duration_minutes}&code=${rawCode}`;
+    const validityStr = c.expires_at
+      ? `Valable jusqu&rsquo;au ${new Date(c.expires_at).toLocaleDateString("fr-BE", { day: "numeric", month: "long", year: "numeric" })}`
+      : "Valable 12 mois &agrave; compter de la date d&rsquo;achat";
     return `
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
       <tr>
-        <td style="border:2px solid #F2B705;border-radius:12px;padding:28px 24px;text-align:center;">
-          <p class="em-gold" style="margin:0 0 6px;font-size:10px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.2em;">
-            VOUCHER VOL &mdash; FLY HORIZONS
-          </p>
-          <p class="em-dark" style="margin:0 0 4px;font-size:52px;font-weight:800;color:#0b2238;line-height:1;">
-            ${c.duration_minutes}&nbsp;min
-          </p>
-          <p class="em-muted" style="margin:0 0 24px;font-size:13px;color:#64748b;">${esc(c.product_title)}</p>
-          <p class="em-muted" style="margin:0 0 8px;font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.1em;">Votre code</p>
-          <p class="em-gold" style="margin:0 0 14px;font-size:26px;font-weight:800;font-family:'Courier New',Courier,monospace;color:#F2B705;letter-spacing:0.15em;background-color:#0b2238;display:inline-block;padding:10px 24px;border-radius:8px;">
-            ${esc(c.code)}
-          </p>
-          <p class="em-muted" style="margin:0;font-size:11px;color:#94a3b8;">${
-            c.expires_at
-              ? `Valable jusqu&rsquo;au ${new Date(c.expires_at).toLocaleDateString("fr-BE", { day: "numeric", month: "long", year: "numeric" })}`
-              : "Valable 12 mois &agrave; compter de la date d&rsquo;achat"
-          }</p>
-          <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px;">
-            <tr>
-              <td align="center">
-                <a href="${esc(reservationUrl)}" class="em-btn"
-                  style="display:inline-block;background-color:#F2B705;color:#0b2238;font-size:13px;font-weight:800;padding:12px 28px;border-radius:8px;text-decoration:none;">
-                  Réserver mon vol avec ce code
-                </a>
-              </td>
-            </tr>
-          </table>
+        <td style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:20px 24px;text-align:center;">
+          <p style="margin:0 0 4px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:2.5px;">Votre code</p>
+          <p style="margin:0 0 6px;font-family:-apple-system,'Segoe UI',Arial,sans-serif;font-size:24px;font-weight:900;color:#062548;letter-spacing:5px;text-transform:uppercase;">${esc(c.code)}</p>
+          <p style="margin:0 0 16px;font-size:10px;color:#94a3b8;">${esc(c.product_title)} &middot; ${validityStr}</p>
+          <a href="${esc(reservationUrl)}" style="display:inline-block;background-color:#F2B705;color:#062548;font-size:13px;font-weight:800;padding:11px 26px;border-radius:8px;text-decoration:none;">R&eacute;server mon vol</a>
         </td>
       </tr>
     </table>`;
@@ -745,7 +741,9 @@ export function reservationConfirmationFreeEmail(p: ReservationConfirmationProps
     ${label("D&eacute;tails du vol")}
     ${infoRows(rows)}
 
-    ${callout("Votre vol est enti&egrave;rement pris en charge par votre voucher, aucun paiement suppl&eacute;mentaire requis. Fly Horizons vous appellera dans les prochains jours pour convenir de votre cr&eacute;neau. En cas de m&eacute;t&eacute;o d&eacute;favorable, le vol est report&eacute; sans frais.")}
+    ${callout("Votre vol est enti&egrave;rement pris en charge par votre voucher, aucun paiement suppl&eacute;mentaire requis. En cas de m&eacute;t&eacute;o d&eacute;favorable, le vol est report&eacute; sans frais.")}
+
+    ${nextStep("Je vous enverrai votre itin&eacute;raire de vol dans les prochains jours, avec les lieux que nous survolerons.")}
 
     ${separator()}
     ${label("Informations pratiques")}
@@ -806,6 +804,8 @@ export function reservationPaymentConfirmationEmail(p: ReservationPaymentConfirm
     ${label("D&eacute;tails du vol")}
     ${infoRows(rows)}
 
+    ${nextStep("Je vous enverrai votre itin&eacute;raire de vol dans les prochains jours, avec les lieux que nous survolerons.")}
+
     ${separator()}
     ${label("Informations pratiques")}
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
@@ -818,7 +818,6 @@ export function reservationPaymentConfirmationEmail(p: ReservationPaymentConfirm
     </table>
 
     <p class="em-body" style="margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;">
-      Je vous contacterai dans les prochains jours pour convenir de votre cr&eacute;neau.<br>
       &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord,<br>
       <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
@@ -888,8 +887,9 @@ export function volSurMesureAcompteEmail(p: VolSurMesureAcompteProps): string {
       Apr&egrave;s votre vol, la dur&eacute;e r&eacute;elle est mesur&eacute;e et le montant d&eacute;finitif calcul&eacute;. Si la provision d&eacute;passe ce montant, la diff&eacute;rence vous est rembours&eacute;e sous 24&nbsp;h. En cas de m&eacute;t&eacute;o d&eacute;favorable, le vol est report&eacute; sans frais ni p&eacute;nalit&eacute;.
     </p>
 
+    ${nextStep(`C&rsquo;est tout bon&nbsp;! Rendez-vous le <strong>${esc(p.dateStr)}</strong> &agrave; <strong>${esc(p.heure)}</strong> &agrave; l&rsquo;a&eacute;roport de Charleroi (EBCI). Pr&eacute;sentez-vous 15&nbsp;min avant le d&eacute;collage.`)}
+
     <p class="em-body" style="margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;">
-      Je vous contacterai sous 24&nbsp;h pour affiner votre itin&eacute;raire et confirmer votre date de vol.<br>
       &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord,<br>
       <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
@@ -955,7 +955,9 @@ export function reservationDateConfirmeeEmail(p: ReservationDateConfirmeeProps):
       ["Lieu", "Aéroport de Charleroi (EBCI)"],
     ])}
 
-    ${callout("Votre date est bloqu&eacute;e dans notre planning. Fly Horizons vous recontactera quelques jours avant pour confirmer votre cr&eacute;neau horaire, en fonction de la m&eacute;t&eacute;o. Si les conditions ne permettent pas le vol ce jour-l&agrave;, il sera report&eacute; sans frais suppl&eacute;mentaires.")}
+    ${callout("Votre date est bloqu&eacute;e dans notre planning. Si les conditions m&eacute;t&eacute;o ne permettent pas le vol ce jour-l&agrave;, il sera report&eacute; sans frais suppl&eacute;mentaires.")}
+
+    ${!p.route ? nextStep("Je vous confirmerai l&rsquo;heure exacte du d&eacute;part et vous enverrai l&rsquo;itin&eacute;raire pr&eacute;vu quelques jours avant votre vol.") : ""}
 
     ${routeSection}
 
@@ -1018,6 +1020,10 @@ export function reservationHeureConfirmeeEmail(p: ReservationHeureConfirmeeProps
       <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Le vol se d&eacute;roule par beau temps. En cas de m&eacute;t&eacute;o d&eacute;favorable, je vous contacterai au plus t&ocirc;t.</td></tr>
       <tr><td class="em-body" style="padding:8px 0;font-size:13px;color:#334155;">Questions : <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a> &middot; <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a></td></tr>
     </table>
+
+    ${!p.route
+      ? nextStep("Je vous enverrai votre itin&eacute;raire de vol avant le jour J, avec les lieux que nous survolerons.")
+      : nextStep(`C&rsquo;est tout bon&nbsp;! Rendez-vous le <strong>${esc(p.dateStr)}</strong> &agrave; <strong>${esc(p.heure)}</strong> &agrave; l&rsquo;a&eacute;roport de Charleroi (EBCI). Pr&eacute;sentez-vous 15&nbsp;min avant le d&eacute;collage.`)}
 
     <p class="em-body" style="margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;">
       Beau temps et bon vol, rendez-vous &agrave; l&rsquo;a&eacute;roport.<br>
@@ -1615,9 +1621,8 @@ export function rescheduleConfirmationEmail(p: {
       ["Nouvelle date", `<span style="text-transform:capitalize;color:#16a34a;font-weight:700;">${esc(p.newDateStr)}</span>`],
       ["Dur&eacute;e", `${p.duree}&nbsp;min`],
     ])}
-    <p class="em-body" style="margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;">
-      Nous confirmerons votre cr&eacute;neau au plus vite. Votre provision reste acquise.
-    </p>
+    ${nextStep("Je confirmerai votre nouveau cr&eacute;neau horaire dans les prochains jours. Votre provision reste acquise.")}
+
     ${ctaButton(p.accountUrl, "Voir ma réservation")}
     <p class="em-body" style="margin:20px 0 12px;font-size:14px;color:#334155;line-height:1.7;">
       &Agrave; tr&egrave;s bient&ocirc;t,<br>

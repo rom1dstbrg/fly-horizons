@@ -20,9 +20,10 @@ const ACCOUNT_URL = "https://fly-horizons.com/account/reservations/preview-resa-
 const BOOKING_URL = "https://fly-horizons.com/reservation";
 const ORDER_REF = "FH-2026-0587";
 
-// ── Email list ────────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface EmailMeta {
+  type?: "email";
   id: string;
   label: string;
   trigger: string;
@@ -31,7 +32,19 @@ interface EmailMeta {
   html: string;
 }
 
+interface SectionMeta {
+  type: "section";
+  label: string;
+}
+
+type NavItem = EmailMeta | SectionMeta;
+
+const items: NavItem[] = [];
 const emails: EmailMeta[] = [];
+
+function section(label: string) {
+  items.push({ type: "section", label });
+}
 
 function add(
   id: string,
@@ -41,15 +54,21 @@ function add(
   how: EmailMeta["how"],
   html: string
 ) {
-  emails.push({ id, label, trigger, recipient, how, html });
+  const e: EmailMeta = { type: "email", id, label, trigger, recipient, how, html };
+  items.push(e);
+  emails.push(e);
 }
 
-// ── BOUTIQUE ──────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// BOUTIQUE — achat de vouchers
+// ─────────────────────────────────────────────────────────────────────────────
+
+section("Boutique");
 
 add(
   "order-confirmation",
-  "1a · Confirmation commande (cadeau)",
-  "Stripe webhook checkout.session.completed — achat de vouchers à offrir. Les codes ne sont PAS dans cet email ; ils sont envoyés séparément via 4a/4b.",
+  "Commande reçue — cadeau",
+  "Stripe webhook checkout.session.completed — achat de vouchers à offrir. Les codes ne sont PAS dans cet email ; ils sont envoyés séparément (→ « Envoi des codes »).",
   "client",
   "webhook",
   et.orderConfirmationEmail({
@@ -65,18 +84,15 @@ add(
     discountAmount: 0,
     total: 36500,
     couponCode: null,
-    shippingAddress: {
-      full_name: PRENOM + " " + NOM,
-      email: EMAIL,
-    },
+    shippingAddress: { full_name: PRENOM + " " + NOM, email: EMAIL },
     orderDate: "24 mai 2026",
   })
 );
 
 add(
   "order-confirmation-with-codes",
-  "1b · Confirmation commande + codes",
-  "Stripe webhook checkout.session.completed — achat pour soi-même. Les codes voucher sont inclus directement dans cet email (pas d'email 4a/4b séparé).",
+  "Commande reçue — codes inclus",
+  "Stripe webhook checkout.session.completed — achat pour soi-même. Les codes voucher sont inclus directement dans cet email (pas d'email séparé).",
   "client",
   "webhook",
   et.orderConfirmationEmail({
@@ -101,8 +117,8 @@ add(
 
 add(
   "voucher-single",
-  "4a · Voucher (1 code)",
-  "Envoi manuel depuis l'admin OU automatique après achat cadeau (1a) — 1 seul code à transmettre au bénéficiaire.",
+  "Envoi du code voucher",
+  "Envoi manuel depuis l'admin OU automatique après achat cadeau — 1 seul code à transmettre au bénéficiaire.",
   "client",
   "admin",
   et.voucherEmail({
@@ -114,8 +130,8 @@ add(
 
 add(
   "voucher-multi",
-  "4b · Vouchers (2 codes)",
-  "Envoi manuel depuis l'admin OU automatique après achat cadeau (1a) — plusieurs codes dans un même email.",
+  "Envoi des codes voucher — plusieurs",
+  "Envoi manuel depuis l'admin OU automatique après achat cadeau — plusieurs codes dans un même email.",
   "client",
   "admin",
   et.voucherEmail({
@@ -128,94 +144,16 @@ add(
   })
 );
 
-// ── VOL SUR MESURE ────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// RÉSERVATION STANDARD — vol à durée fixe
+// ─────────────────────────────────────────────────────────────────────────────
 
-add(
-  "vsm-quote-payment",
-  "5a · Vol sur mesure (provision)",
-  "Admin → panel admin → bouton « Envoyer le devis » — vol sur mesure avec provision > 0. Contient le lien de paiement Stripe.",
-  "client",
-  "admin",
-  et.volSurMesureQuoteEmail({
-    prenom: PRENOM,
-    nom: NOM,
-    date: "2026-05-24",
-    heure: HEURE,
-    dureMin: 75,
-    distKm: 142,
-    reservationId: "preview-resa-id",
-    styleVol: "Itinéraire direct",
-    stopovers: [],
-    prixEstime: 380,
-    discount: 0,
-    prixBillable: 380,
-    acompte: 100,
-    taxesEscales: 0,
-    totalAcompte: 100,
-    voucherCode: null,
-  })
-);
-
-add(
-  "vsm-quote-voucher",
-  "5b · Vol sur mesure (voucher)",
-  "Admin → panel admin → bouton « Envoyer le devis » — vol sur mesure intégralement couvert par un voucher. Aucun paiement requis, pas de lien Stripe.",
-  "client",
-  "admin",
-  et.volSurMesureQuoteEmail({
-    prenom: PRENOM,
-    nom: NOM,
-    date: "2026-05-24",
-    heure: HEURE,
-    dureMin: 60,
-    distKm: 110,
-    reservationId: "preview-resa-id",
-    styleVol: "Parcours pittoresque",
-    stopovers: [],
-    prixEstime: 300,
-    discount: 300,
-    prixBillable: 0,
-    acompte: 0,
-    taxesEscales: 0,
-    totalAcompte: 0,
-    voucherCode: "FLYH-X4K9-2026",
-  })
-);
-
-add(
-  "vsm-acompte",
-  "8 · Provision vol sur mesure",
-  "Stripe webhook checkout.session.completed — le client vient de régler la provision vol sur mesure. Confirme la réception du paiement et rappelle les prochaines étapes.",
-  "client",
-  "webhook",
-  et.volSurMesureAcompteEmail({
-    prenom: PRENOM,
-    nom: NOM,
-    dateStr: DATE_STR,
-    heure: HEURE,
-    dureeEstimee: 75,
-    voucherCode: null,
-    montantPaye: 420,
-    reservationId: "760c8d6c-1bf2-485f-b527-6198fea4907f",
-    dateISO: DATE_ISO,
-    breakdown: {
-      coutVol: 380,
-      dureeMin: 75,
-      distKm: 142,
-      provisionMarge: 40,
-      taxesEscales: 0,
-      total: 420,
-      totalLabel: "Provision réglée",
-    },
-  })
-);
-
-// ── RÉSERVATIONS STANDARD ─────────────────────────────────────────────────────
+section("Réservation standard");
 
 add(
   "resa-free",
-  "6 · Réservation (voucher)",
-  "Client soumet une réservation standard avec un code voucher valide — vol intégralement couvert. Envoyé immédiatement à la soumission du formulaire /reservation.",
+  "Réservation confirmée — voucher",
+  "Client soumet une réservation avec un code voucher valide — vol entièrement couvert. Envoyé immédiatement à la soumission du formulaire /reservation.",
   "client",
   "client",
   et.reservationConfirmationFreeEmail({
@@ -233,8 +171,8 @@ add(
 
 add(
   "resa-paid",
-  "7 · Réservation (paiement reçu)",
-  "Stripe webhook checkout.session.completed — le client vient de payer une réservation standard. Confirme le paiement et la réservation.",
+  "Réservation confirmée — paiement reçu",
+  "Stripe webhook checkout.session.completed — le client vient de payer une réservation standard.",
   "client",
   "webhook",
   et.reservationPaymentConfirmationEmail({
@@ -254,8 +192,8 @@ add(
 
 add(
   "payment-invitation",
-  "14 · Invitation paiement",
-  "Admin → panel admin → bouton « Inviter au paiement » — envoyé manuellement quand la réservation est prête à être payée (date/heure confirmées).",
+  "Invitation au paiement",
+  "Admin → bouton « Inviter au paiement » — envoyé manuellement quand la réservation est prête à être payée.",
   "client",
   "admin",
   et.reservationPaymentInvitationEmail({
@@ -281,8 +219,8 @@ add(
 
 add(
   "payment-reminder",
-  "14c · Rappel paiement (T-72h)",
-  "Cron automatique — déclenché 72 h avant le vol si le paiement n'a toujours pas été reçu. Dernier rappel avant annulation automatique.",
+  "Rappel paiement — J-3",
+  "Cron automatique — déclenché 72 h avant le vol si le paiement n'a toujours pas été reçu.",
   "client",
   "automatique",
   et.reservationPaymentReminderEmail({
@@ -304,47 +242,117 @@ add(
   })
 );
 
-add(
-  "auto-annulee",
-  "14d · Annulation automatique",
-  "Cron automatique — déclenché si le délai de paiement est dépassé sans paiement reçu. La réservation est annulée et le créneau libéré.",
-  "client",
-  "automatique",
-  et.reservationAutoAnnuleeEmail({
-    prenom: PRENOM,
-    nom: NOM,
-    dateStr: DATE_STR,
-    heure: HEURE,
-    duree: 60,
-    bookingUrl: BOOKING_URL,
-    source: "auto",
-  })
-);
+// ─────────────────────────────────────────────────────────────────────────────
+// VOL SUR MESURE
+// ─────────────────────────────────────────────────────────────────────────────
+
+section("Vol sur mesure");
 
 add(
-  "admin-annulee",
-  "14f · Annulation manuelle (admin)",
-  "Admin → panel admin → changement de statut « Annulée » depuis la fiche réservation. Envoyé automatiquement pour toute annulation manuelle, standard ou vol sur mesure.",
+  "vsm-quote-payment",
+  "Devis envoyé — avec provision",
+  "Admin → bouton « Envoyer le devis » — vol sur mesure avec provision > 0. Contient le lien de paiement Stripe.",
   "client",
   "admin",
-  et.reservationAutoAnnuleeEmail({
+  et.volSurMesureQuoteEmail({
+    prenom: PRENOM,
+    nom: NOM,
+    date: "2026-05-24",
+    heure: HEURE,
+    dureMin: 75,
+    distKm: 142,
+    reservationId: "preview-resa-id",
+    styleVol: "Itinéraire direct",
+    stopovers: [],
+    prixEstime: 380,
+    discount: 0,
+    prixBillable: 380,
+    acompte: 100,
+    taxesEscales: 0,
+    totalAcompte: 100,
+    voucherCode: null,
+  })
+);
+
+add(
+  "vsm-quote-voucher",
+  "Devis envoyé — couvert par voucher",
+  "Admin → bouton « Envoyer le devis » — vol sur mesure entièrement couvert par un voucher. Aucun paiement requis.",
+  "client",
+  "admin",
+  et.volSurMesureQuoteEmail({
+    prenom: PRENOM,
+    nom: NOM,
+    date: "2026-05-24",
+    heure: HEURE,
+    dureMin: 60,
+    distKm: 110,
+    reservationId: "preview-resa-id",
+    styleVol: "Parcours pittoresque",
+    stopovers: [],
+    prixEstime: 300,
+    discount: 300,
+    prixBillable: 0,
+    acompte: 0,
+    taxesEscales: 0,
+    totalAcompte: 0,
+    voucherCode: "FLYH-X4K9-2026",
+  })
+);
+
+add(
+  "vsm-acompte",
+  "Provision reçue — vol confirmé",
+  "Stripe webhook checkout.session.completed — le client vient de régler la provision vol sur mesure. Route déjà définie, date confirmée.",
+  "client",
+  "webhook",
+  et.volSurMesureAcompteEmail({
     prenom: PRENOM,
     nom: NOM,
     dateStr: DATE_STR,
     heure: HEURE,
-    duree: 60,
-    bookingUrl: BOOKING_URL,
-    source: "admin",
+    dureeEstimee: 75,
+    voucherCode: null,
+    montantPaye: 420,
+    reservationId: "760c8d6c-1bf2-485f-b527-6198fea4907f",
+    dateISO: DATE_ISO,
+    breakdown: {
+      coutVol: 380,
+      dureeMin: 75,
+      distKm: 142,
+      provisionMarge: 40,
+      taxesEscales: 0,
+      total: 420,
+      totalLabel: "Provision réglée",
+    },
   })
 );
 
-// ── SUIVI DE VOL ──────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// SUIVI DU VOL — confirmations admin
+// ─────────────────────────────────────────────────────────────────────────────
 
+section("Suivi du vol");
+
+add(
+  "date-confirmee",
+  "Date confirmée",
+  "Admin → changement de statut « Date confirmée » — la date est bloquée dans le planning. L'heure et l'itinéraire seront envoyés plus tard.",
+  "client",
+  "admin",
+  et.reservationDateConfirmeeEmail({
+    prenom: PRENOM,
+    dateStr: DATE_STR,
+    duree: 60,
+    route: null,
+    routeUrl: null,
+  })
+);
 
 add(
   "heure-confirmee-no-route",
-  "10a · Heure confirmée (sans route)",
-  "Admin → panel admin → changement de statut « Heure confirmée » — sans itinéraire. Le client a maintenant la date ET l'heure exacte.",
+  "Heure confirmée — itinéraire à venir",
+  "Admin → changement de statut « Heure confirmée » — sans itinéraire. Le client a maintenant la date ET l'heure exacte, l'itinéraire sera envoyé avant le vol.",
   "client",
   "admin",
   et.reservationHeureConfirmeeEmail({
@@ -360,8 +368,8 @@ add(
 
 add(
   "heure-confirmee-route",
-  "10b · Heure confirmée (avec route)",
-  "Admin → panel admin → changement de statut « Heure confirmée » — avec itinéraire. Envoi complet : date, heure et route.",
+  "Heure confirmée — avec itinéraire",
+  "Admin → changement de statut « Heure confirmée » — avec itinéraire joint. Envoi complet : date, heure et parcours. Prochain step : le vol.",
   "client",
   "admin",
   et.reservationHeureConfirmeeEmail({
@@ -377,8 +385,8 @@ add(
 
 add(
   "flight-reminder",
-  "14e · Rappel J-2",
-  "Cron automatique — envoyé 2 jours avant le vol. Rappelle la date, l'heure, les infos pratiques et le lien vers l'espace client.",
+  "Rappel avant vol — J-2",
+  "Cron automatique — envoyé 2 jours avant le vol. Rappelle la date, l'heure et les infos pratiques.",
   "client",
   "automatique",
   et.flightReminderEmail({
@@ -394,8 +402,8 @@ add(
 
 add(
   "post-vol",
-  "15 · Post-vol (remerciement)",
-  "Admin → panel admin → bouton « Marquer le vol comme terminé » — envoyé après le vol. Contient le lien vers l'enquête de satisfaction.",
+  "Remerciement post-vol",
+  "Admin → bouton « Marquer le vol comme terminé » — envoyé après le vol. Contient le lien vers l'enquête de satisfaction.",
   "client",
   "admin",
   et.postVolEmail({
@@ -408,8 +416,8 @@ add(
 
 add(
   "satisfaction",
-  "16 · Satisfaction (résultat admin)",
-  "Automatique — le client soumet l'enquête de satisfaction (lien dans l'email 15). Les résultats sont envoyés à l'admin uniquement.",
+  "Résultat satisfaction → admin",
+  "Automatique — le client soumet l'enquête de satisfaction. Les résultats sont envoyés à l'admin uniquement.",
   "admin",
   "automatique",
   et.satisfactionResultEmail({
@@ -427,12 +435,16 @@ add(
   })
 );
 
-// ── ITINÉRAIRES ───────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// ITINÉRAIRE — proposition et validation
+// ─────────────────────────────────────────────────────────────────────────────
+
+section("Itinéraire");
 
 add(
   "route-itineraire",
-  "17a · Itinéraire (ancien flux texte)",
-  "Admin → panel admin → champ texte libre « Itinéraire ». Ancien flux — envoie l'itinéraire sous forme de texte simple. Remplacé par 17b pour les VSM.",
+  "Itinéraire envoyé — texte libre",
+  "Admin → champ texte libre « Itinéraire ». Ancien flux — envoie le parcours sous forme de texte. Remplacé par la carte pour les VSM.",
   "client",
   "admin",
   et.routeItineraireEmail({
@@ -446,8 +458,8 @@ add(
 
 add(
   "route-proposal",
-  "17b · Proposition d'itinéraire (carte)",
-  "Admin → Route Editor → bouton « Proposer l'itinéraire » — nouveau flux waypoints. Contient une carte interactive et les commentaires du pilote. Le client peut valider ou demander une modification (→ 18a/18b).",
+  "Proposition d'itinéraire — carte",
+  "Admin → Route Editor → bouton « Proposer l'itinéraire » — nouveau flux waypoints. Le client peut valider ou demander une modification.",
   "client",
   "admin",
   et.routeProposalEmail({
@@ -466,8 +478,8 @@ add(
 
 add(
   "route-feedback-validated",
-  "18a · Retour itinéraire (validé)",
-  "Automatique — le client clique « Valider » dans l'email 17b. Notification admin : l'itinéraire est accepté, passer à l'étape suivante (paiement → email 19).",
+  "Client valide l'itinéraire → admin",
+  "Automatique — le client clique « Valider » dans la proposition. Notification admin : passer à l'étape suivante (lien de paiement).",
   "admin",
   "client",
   et.routeFeedbackAdminEmail({
@@ -484,8 +496,8 @@ add(
 
 add(
   "route-feedback-modification",
-  "18b · Retour itinéraire (modification)",
-  "Automatique — le client clique « Demander une modification » dans l'email 17b. Notification admin avec le commentaire du client. Retourner dans le Route Editor puis renvoyer 17b.",
+  "Client demande une modification → admin",
+  "Automatique — le client demande un ajustement. Notification admin avec le commentaire. Retourner dans le Route Editor puis renvoyer la proposition.",
   "admin",
   "client",
   et.routeFeedbackAdminEmail({
@@ -503,8 +515,8 @@ add(
 
 add(
   "payment-link",
-  "19 · Lien de paiement (après itinéraire)",
-  "Admin → panel admin → bouton « Envoyer le lien de paiement » — après validation de l'itinéraire VSM (18a). Contient le lien Stripe pour régler le solde.",
+  "Lien de paiement — après itinéraire validé",
+  "Admin → bouton « Envoyer le lien de paiement » — après validation de l'itinéraire VSM. Contient le lien Stripe pour régler la provision.",
   "client",
   "admin",
   et.paymentLinkEmail({
@@ -525,12 +537,50 @@ add(
   })
 );
 
-// ── REPORT ────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// ANNULATIONS & REPORTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+section("Annulations & reports");
+
+add(
+  "auto-annulee",
+  "Annulation automatique — paiement non reçu",
+  "Cron automatique — déclenché si le délai de paiement est dépassé. La réservation est annulée et le créneau libéré.",
+  "client",
+  "automatique",
+  et.reservationAutoAnnuleeEmail({
+    prenom: PRENOM,
+    nom: NOM,
+    dateStr: DATE_STR,
+    heure: HEURE,
+    duree: 60,
+    bookingUrl: BOOKING_URL,
+    source: "auto",
+  })
+);
+
+add(
+  "admin-annulee",
+  "Annulation manuelle — admin",
+  "Admin → changement de statut « Annulée » depuis la fiche réservation.",
+  "client",
+  "admin",
+  et.reservationAutoAnnuleeEmail({
+    prenom: PRENOM,
+    nom: NOM,
+    dateStr: DATE_STR,
+    heure: HEURE,
+    duree: 60,
+    bookingUrl: BOOKING_URL,
+    source: "admin",
+  })
+);
 
 add(
   "reschedule-invite",
-  "20 · Invitation à reporter",
-  "Admin → panel admin → bouton « Inviter à reporter » — envoyé manuellement, typiquement suite à une météo défavorable. Contient un lien vers l'espace client pour choisir une nouvelle date.",
+  "Invitation à reporter le vol",
+  "Admin → bouton « Inviter à reporter » — typiquement suite à une météo défavorable. Contient un lien pour choisir une nouvelle date.",
   "client",
   "admin",
   et.rescheduleInviteEmail({
@@ -543,8 +593,8 @@ add(
 
 add(
   "reschedule-confirmation",
-  "21 · Confirmation de report",
-  "Automatique — le client a sélectionné une nouvelle date depuis son espace client (lien dans l'email 20). Confirme l'ancienne et la nouvelle date.",
+  "Report confirmé",
+  "Automatique — le client a sélectionné une nouvelle date depuis son espace client. Confirme l'ancienne et la nouvelle date.",
   "client",
   "client",
   et.rescheduleConfirmationEmail({
@@ -556,12 +606,16 @@ add(
   })
 );
 
-// ── CONTACT ───────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// CONTACT
+// ─────────────────────────────────────────────────────────────────────────────
+
+section("Contact");
 
 add(
   "contact-notif",
-  "11 · Contact (notif interne)",
-  "Automatique — le visiteur soumet le formulaire /contact. Notification interne : nom, email, sujet et message du visiteur.",
+  "Nouveau message → admin",
+  "Automatique — le visiteur soumet le formulaire /contact. Notification interne avec nom, email, sujet et message.",
   "admin",
   "automatique",
   et.contactNotificationEmail({
@@ -575,8 +629,8 @@ add(
 
 add(
   "contact-ack",
-  "12 · Contact (accusé réception)",
-  "Automatique — envoyé au visiteur en même temps que 11. Confirme la bonne réception de son message et annonce une réponse sous 24 h.",
+  "Accusé réception → client",
+  "Automatique — envoyé au visiteur en même temps que la notification admin. Confirme la réception et annonce une réponse sous 24 h.",
   "client",
   "automatique",
   et.contactAcknowledgmentEmail({
@@ -590,8 +644,8 @@ add(
 
 add(
   "contact-reply",
-  "13 · Contact (réponse admin)",
-  "Admin → panel admin → champ réponse + bouton « Envoyer » — réponse personnalisée au message de contact. Le client reçoit la réponse avec son message original en dessous.",
+  "Réponse admin → client",
+  "Admin → champ réponse + bouton « Envoyer » — réponse personnalisée au message de contact.",
   "client",
   "admin",
   et.contactReplyEmail({
@@ -603,12 +657,16 @@ add(
   })
 );
 
-// ── EMAIL LIBRE ───────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// EMAILS LIBRES
+// ─────────────────────────────────────────────────────────────────────────────
+
+section("Emails libres");
 
 add(
   "custom-meteo",
-  "22a · Email libre (report météo)",
-  "Admin → panel admin → onglet « Email libre » — message entièrement personnalisé. Ici : report météo avec lien de report intégré. Peut contenir n'importe quel texte.",
+  "Report météo",
+  "Admin → onglet « Email libre » — message personnalisé avec lien de report intégré. Typiquement utilisé pour un report météo.",
   "client",
   "admin",
   et.customEmail({
@@ -621,8 +679,8 @@ add(
 
 add(
   "custom-vol-maintenu",
-  "22b · Email libre (vol maintenu)",
-  "Admin → panel admin → onglet « Email libre » — message entièrement personnalisé. Ici : confirmation météo favorable, vol maintenu comme prévu.",
+  "Vol maintenu — météo OK",
+  "Admin → onglet « Email libre » — message personnalisé confirmant que la météo est favorable et le vol maintenu.",
   "client",
   "admin",
   et.customEmail({
@@ -665,11 +723,14 @@ function metaBar(e: EmailMeta): string {
 </div>`;
 }
 
-const sidebarLinks = emails
-  .map(
-    (e) =>
-      `<a href="#${e.id}" onclick="showEmail('${e.id}');return false;" id="link-${e.id}" class="nav-link">${e.label}</a>`
-  )
+const sidebarLinks = items
+  .map((item) => {
+    if (item.type === "section") {
+      return `<div class="nav-section">${item.label}</div>`;
+    }
+    const e = item as EmailMeta;
+    return `<a href="#${e.id}" onclick="showEmail('${e.id}');return false;" id="link-${e.id}" class="nav-link">${e.label}</a>`;
+  })
   .join("\n");
 
 const iframes = emails
@@ -710,7 +771,7 @@ const html = `<!DOCTYPE html>
   #sidebar-header h1 { font-size: 13px; font-weight: 800; color: #F2B705; letter-spacing: 0.08em; text-transform: uppercase; }
   #sidebar-header p  { font-size: 11px; color: #4e7096; margin-top: 2px; }
   .nav-section {
-    padding: 10px 16px 4px;
+    padding: 14px 16px 4px;
     font-size: 10px;
     font-weight: 700;
     color: #4e7096;
