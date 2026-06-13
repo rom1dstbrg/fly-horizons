@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getItineraires } from "@/lib/actions/itineraires";
 import { AdminVolMesureFlow } from "@/components/admin/AdminVolMesureFlow";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
@@ -8,10 +9,11 @@ export const metadata = { title: "Nouveau vol sur mesure — Admin" };
 export default async function NewVolMesurePage() {
   const supabase = createAdminClient();
 
-  const [{ data: clients }, { data: settings }, { data: stopovers }] = await Promise.all([
+  const [{ data: clients }, { data: settings }, { data: stopovers }, itineraires] = await Promise.all([
     supabase.from("clients").select("id, prenom, nom, email, telephone").order("nom"),
     supabase.from("crm_settings").select("key, value").in("key", ["prix_heure", "acompte_perso_heure"]),
     supabase.from("stopovers").select("id, icao, nom, taxe, lat, lng").eq("actif", true).order("nom"),
+    getItineraires(),
   ]);
 
   const prixHeure = parseFloat(settings?.find(s => s.key === "prix_heure")?.value ?? "254");
@@ -34,6 +36,7 @@ export default async function NewVolMesurePage() {
         stopovers={stopovers ?? []}
         prixHeure={prixHeure}
         acompteH={acompteH}
+        itineraires={itineraires}
       />
     </div>
   );

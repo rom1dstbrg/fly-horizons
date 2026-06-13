@@ -9,11 +9,12 @@ import {
   Check, Loader2, Mail,
   PlaneTakeoff, Plus,
   Users, UserPlus, ArrowRight, Link2, BanknoteIcon,
-  Star,
+  Star, Navigation, ChevronDown,
 } from "lucide-react";
 import type {
   AdventureRouteData, AdventureMapHandle, POI,
 } from "@/components/vol-sur-mesure/LeafletMapAdventure";
+import type { Itineraire } from "@/lib/actions/itineraires";
 
 const LeafletMapAdventure = dynamic(
   () => import("@/components/vol-sur-mesure/LeafletMapAdventure"),
@@ -49,9 +50,10 @@ interface Props {
   stopovers: Stopover[];
   prixHeure: number;
   acompteH: number;
+  itineraires?: Itineraire[];
 }
 
-export function AdminVolMesureFlow({ clients, stopovers: availableStops, prixHeure, acompteH }: Props) {
+export function AdminVolMesureFlow({ clients, stopovers: availableStops, prixHeure, acompteH, itineraires = [] }: Props) {
   const router  = useRouter();
   const mapRef  = useRef<AdventureMapHandle | null>(null);
   const searchRef      = useRef<HTMLDivElement>(null);
@@ -168,6 +170,31 @@ export function AdminVolMesureFlow({ clients, stopovers: availableStops, prixHeu
 
   // ── Mode paiement
   const [envoyerPaiement, setEnvoyerPaiement] = useState(true);
+
+  // ── Itinéraires enregistrés
+  const [showItinModal, setShowItinModal] = useState(false);
+  const [itinShowAll,   setItinShowAll]   = useState(false);
+
+  const itinFiltered = itinShowAll
+    ? itineraires
+    : itineraires.filter(it =>
+        it.duree_estimee == null ||
+        (it.duree_estimee >= (route.totalMin > 0 ? route.totalMin - 15 : 0) &&
+         it.duree_estimee <= (route.totalMin > 0 ? route.totalMin + 15 : 999))
+      );
+
+  function applyItineraire(itin: Itineraire) {
+    mapRef.current?.clearAll();
+    itin.waypoints.forEach((wp, i) => {
+      mapRef.current?.addPOI({
+        id: `itin-${itin.id}-${i}`,
+        lat: wp.lat,
+        lng: wp.lng,
+        nom: wp.nom,
+      });
+    });
+    setShowItinModal(false);
+  }
 
   // ── Modal + submit
   const [showModal,  setShowModal]  = useState(false);
@@ -366,6 +393,26 @@ export function AdminVolMesureFlow({ clients, stopovers: availableStops, prixHeu
                 </div>
               ))}
             </div>
+
+            {/* Itinéraire enregistré */}
+            {itineraires.length > 0 && (
+              <div className="px-4 py-3 border-b border-border">
+                <button
+                  type="button"
+                  onClick={() => { setItinShowAll(route.totalMin === 0); setShowItinModal(true); }}
+                  className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border border-border bg-secondary hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer group"
+                >
+                  <div className="flex items-center gap-2">
+                    <Navigation size={13} className="text-primary shrink-0" />
+                    <span className="text-xs font-bold text-foreground">Itinéraire enregistré</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] text-muted-foreground">{itineraires.length}</span>
+                    <ChevronDown size={12} className="text-muted-foreground group-hover:text-primary transition-colors" />
+                  </div>
+                </button>
+              </div>
+            )}
 
             {/* Parcours */}
             <div className="px-4 py-4 border-b border-border">
@@ -690,6 +737,111 @@ export function AdminVolMesureFlow({ clients, stopovers: availableStops, prixHeu
           </div>
         </div>
       </div>
+
+      {/* ══ MODAL : choisir un itinéraire ══ */}
+      {showItinModal && (
+        <div className="fixed inset-0 bg-black/50 z-[2000] flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md shadow-2xl border border-border flex flex-col max-h-[85vh]">
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Navigation size={15} className="text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-foreground">Itinéraires enregistrés</h3>
+                  <p className="text-[10px] text-muted-foreground">Cliquez pour charger sur la carte</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowItinModal(false)}
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Filter toggle */}
+            <div className="px-5 py-3 border-b border-border shrink-0 flex items-center justify-between">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
+                {itinShowAll
+                  ? `${itineraires.length} itinéraire${itineraires.length !== 1 ? "s" : ""}`
+                  : route.totalMin > 0
+                    ? `Compatibles ±15 min (~${route.totalMin} min)`
+                    : `${itineraires.length} itinéraire${itineraires.length !== 1 ? "s" : ""}`
+                }
+              </p>
+              {itineraires.length > 0 && route.totalMin > 0 && (
+                <button
+                  onClick={() => setItinShowAll(v => !v)}
+                  className={`text-[10px] font-bold px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+                    itinShowAll
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-secondary"
+                  }`}
+                >
+                  {itinShowAll ? "Filtre durée" : "Afficher tout"}
+                </button>
+              )}
+            </div>
+
+            {/* List */}
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              {itinFiltered.length === 0 ? (
+                <div className="py-10 text-center px-5">
+                  <p className="text-sm text-muted-foreground">Aucun itinéraire compatible</p>
+                  <button
+                    onClick={() => setItinShowAll(true)}
+                    className="mt-2 text-xs font-bold text-primary hover:underline cursor-pointer"
+                  >
+                    Afficher tous les itinéraires
+                  </button>
+                </div>
+              ) : (
+                itinFiltered.map((itin, i) => (
+                  <button
+                    key={itin.id}
+                    type="button"
+                    onClick={() => applyItineraire(itin)}
+                    className={`w-full text-left px-5 py-4 hover:bg-primary/5 transition-colors cursor-pointer ${
+                      i < itinFiltered.length - 1 ? "border-b border-border" : ""
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <p className="text-sm font-bold text-foreground">{itin.nom}</p>
+                      {itin.duree_estimee && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-primary/10 text-primary rounded-md px-2 py-0.5 shrink-0">
+                          <Clock size={9} />
+                          ~{itin.duree_estimee >= 60
+                            ? `${Math.floor(itin.duree_estimee / 60)}h${String(itin.duree_estimee % 60).padStart(2, "0")}`
+                            : `${itin.duree_estimee} min`}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      {itin.waypoints.slice(0, 5).map((wp, wi) => (
+                        <span key={wi} className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                          {wi > 0 && <span className="text-muted-foreground/40">›</span>}
+                          {wp.nom}
+                        </span>
+                      ))}
+                      {itin.waypoints.length > 5 && (
+                        <span className="text-[10px] text-muted-foreground/60">+{itin.waypoints.length - 5}</span>
+                      )}
+                    </div>
+                    {itin.notes && (
+                      <p className="text-[10px] text-muted-foreground/70 mt-1.5 line-clamp-1 italic">
+                        {itin.notes}
+                      </p>
+                    )}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ══ MODAL : envoyer email ? ══ */}
       {showModal && (
