@@ -62,6 +62,7 @@ export default async function HomePage() {
   const [
     { data: packs },
     { data: crmSettings },
+    { data: galleryRows },
   ] = await Promise.all([
     supabase.from("products")
       .select("*, images:product_images(*)")
@@ -70,7 +71,17 @@ export default async function HomePage() {
     supabase.from("crm_settings")
       .select("key, value")
       .in("key", ["welcome_code", "welcome_discount_type", "welcome_discount_value"]),
+    supabase.from("gallery_images")
+      .select("storage_path, alt")
+      .order("display_order", { ascending: true })
+      .limit(5),
   ]);
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const galleryPreview = (galleryRows ?? []).map(row => ({
+    src: `${supabaseUrl}/storage/v1/object/public/gallery/${row.storage_path}`,
+    alt: row.alt,
+  }));
 
   const welcomeCode          = crmSettings?.find(s => s.key === "welcome_code")?.value ?? "WELCOME2026";
   const welcomeDiscountType  = crmSettings?.find(s => s.key === "welcome_discount_type")?.value ?? "percentage";
@@ -366,14 +377,60 @@ export default async function HomePage() {
           </div>
         </div>
 
-        {/* Vague bas — navy → card */}
+        {/* Vague bas — navy → blanc */}
         <div className="relative h-12 overflow-hidden">
           <svg viewBox="0 0 1440 48" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0,48 L0,24 Q360,0 720,24 Q1080,48 1440,24 L1440,48 Z" fill="#edf0f7" />
+            <path d="M0,48 L0,24 Q360,0 720,24 Q1080,48 1440,24 L1440,48 Z" fill="#ffffff" />
           </svg>
         </div>
 
       </section>
+
+      {/* ═══ GALERIE ═══ */}
+      {galleryPreview.length > 0 && (
+        <section className="bg-white py-20 sm:py-28">
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
+
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-10">
+              <div>
+                <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-4">Galerie</p>
+                <h2 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight">
+                  Vols en images
+                </h2>
+              </div>
+              <Link
+                href="/galerie"
+                className="shrink-0 inline-flex items-center gap-2 text-sm font-semibold text-foreground/60 hover:text-foreground transition-colors"
+              >
+                Voir toute la galerie
+                <ArrowRight size={15} />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+              {galleryPreview.map((img, i) => (
+                <Link
+                  key={img.src}
+                  href="/galerie"
+                  className={`relative overflow-hidden rounded-xl group cursor-pointer ${
+                    i === 0 ? "col-span-2 lg:col-span-1 row-span-2 aspect-[4/5]" : "aspect-video"
+                  }`}
+                >
+                  <Image
+                    src={img.src}
+                    alt={img.alt}
+                    fill
+                    sizes="(max-width: 640px) 50vw, 33vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
+                </Link>
+              ))}
+            </div>
+
+          </div>
+        </section>
+      )}
 
       {/* ═══ AVIS CLIENTS ═══ */}
       <section className="bg-secondary py-20 sm:py-28">

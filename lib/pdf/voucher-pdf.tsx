@@ -1,161 +1,32 @@
 import React from "react";
-import { Document, Page, Text, View, Image, StyleSheet } from "@react-pdf/renderer";
+import { Document, Page, Text, View, Image } from "@react-pdf/renderer";
 import QRCode from "qrcode";
 
-const NAVY = "#0b2238";
-const GOLD = "#F2B705";
-const WHITE = "#ffffff";
+const NAVY   = "#0b2238";
+const GOLD   = "#F2B705";
+const WHITE  = "#ffffff";
+const SLATE  = "#334155";
+const MUTED  = "#64748b";
+const BG     = "#f8fafc";
+const BORDER = "#e2e8f0";
 
-const s = StyleSheet.create({
-  page: {
-    fontFamily: "Helvetica",
-    flexDirection: "column",
-  },
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-  // ── Header ──────────────────────────────────────────────────────────
-  header: {
-    backgroundColor: NAVY,
-    paddingLeft: 32,
-    paddingRight: 32,
-    paddingTop: 28,
-    paddingBottom: 28,
-  },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 22,
-  },
-  brand: {
-    color: WHITE,
-    fontSize: 9,
-    fontFamily: "Helvetica-Bold",
-    letterSpacing: 3,
-  },
-  logoImg: {
-    width: 100,
-    height: 28,
-    objectFit: "contain" as unknown as undefined,
-  },
-  badge: {
-    backgroundColor: GOLD,
-    color: NAVY,
-    fontSize: 7,
-    fontFamily: "Helvetica-Bold",
-    letterSpacing: 1,
-    paddingLeft: 8,
-    paddingRight: 8,
-    paddingTop: 4,
-    paddingBottom: 4,
-  },
-  title: {
-    color: WHITE,
-    fontSize: 38,
-    fontFamily: "Helvetica-Bold",
-    textAlign: "center",
-    lineHeight: 1,
-    marginBottom: 8,
-  },
-  subtitle: {
-    color: GOLD,
-    fontSize: 13,
-    fontFamily: "Helvetica-Bold",
-    textAlign: "center",
-    letterSpacing: 0.3,
-  },
+function formatDurationBadge(minutes: number): string {
+  if (minutes < 60) return `${minutes} MIN DE VOL`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m === 0 ? `${h}H DE VOL` : `${h}H${String(m).padStart(2, "0")} DE VOL`;
+}
 
-  // ── Gold divider ─────────────────────────────────────────────────────
-  goldBar: {
-    backgroundColor: GOLD,
-    height: 4,
-  },
+function formatDurationLabel(minutes: number): string {
+  if (minutes < 60) return `Vol de ${minutes} minutes`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m === 0 ? `Vol de ${h}h` : `Vol de ${h}h${String(m).padStart(2, "0")}`;
+}
 
-  // ── Body ─────────────────────────────────────────────────────────────
-  body: {
-    flex: 1,
-    backgroundColor: WHITE,
-    paddingLeft: 32,
-    paddingRight: 32,
-    paddingTop: 28,
-    paddingBottom: 24,
-    flexDirection: "column",
-  },
-
-  codeLabel: {
-    color: "#aaaaaa",
-    fontSize: 7.5,
-    fontFamily: "Helvetica-Bold",
-    letterSpacing: 2,
-    textAlign: "center",
-    marginBottom: 10,
-  },
-  codeBox: {
-    backgroundColor: NAVY,
-    paddingTop: 14,
-    paddingBottom: 14,
-    marginBottom: 26,
-  },
-  codeText: {
-    color: GOLD,
-    fontSize: 20,
-    fontFamily: "Courier-Bold",
-    letterSpacing: 2,
-    textAlign: "center",
-  },
-
-  qrHint: {
-    color: "#999999",
-    fontSize: 8,
-    textAlign: "center",
-    marginBottom: 14,
-    lineHeight: 1.4,
-  },
-  qrWrap: {
-    alignSelf: "center",
-    borderWidth: 3,
-    borderColor: NAVY,
-    borderStyle: "solid",
-    padding: 5,
-    marginBottom: 12,
-  },
-  qrImg: {
-    width: 108,
-    height: 108,
-  },
-  qrUrl: {
-    color: NAVY,
-    fontSize: 8,
-    fontFamily: "Helvetica-Bold",
-    textAlign: "center",
-    letterSpacing: 0.3,
-  },
-
-  expiry: {
-    color: "#cccccc",
-    fontSize: 7,
-    textAlign: "center",
-    marginTop: "auto" as unknown as number,
-    paddingTop: 14,
-  },
-
-  // ── Footer ────────────────────────────────────────────────────────────
-  footer: {
-    backgroundColor: GOLD,
-    paddingLeft: 32,
-    paddingRight: 32,
-    paddingTop: 10,
-    paddingBottom: 10,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  footerText: {
-    color: NAVY,
-    fontSize: 7.5,
-    fontFamily: "Helvetica-Bold",
-    letterSpacing: 0.8,
-  },
-});
+// ── Component ─────────────────────────────────────────────────────────────────
 
 interface VoucherPDFProps {
   code: string;
@@ -165,67 +36,194 @@ interface VoucherPDFProps {
   qrCodeDataUrl: string;
 }
 
-function formatDurationBadge(minutes: number): string {
-  if (minutes < 60) return `${minutes} MIN`;
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return m === 0 ? `${h}H` : `${h}H${String(m).padStart(2, "0")}`;
-}
-
 function VoucherPDF({ code, duration_minutes, product_title, expiresAtStr, qrCodeDataUrl }: VoucherPDFProps) {
-  const durationLabel =
-    duration_minutes >= 60
-      ? `Vol de ${duration_minutes / 60}h en ULM`
-      : `Vol de ${duration_minutes} minutes en ULM`;
-
-  const displayTitle = product_title || durationLabel;
-  const durationBadge = formatDurationBadge(duration_minutes);
+  const title = product_title || formatDurationLabel(duration_minutes);
+  const badge = formatDurationBadge(duration_minutes);
 
   return (
     <Document>
-      <Page size="A5" style={s.page}>
+      <Page size="A5" style={{ fontFamily: "Helvetica", backgroundColor: WHITE }}>
 
-        {/* Header navy */}
-        <View style={s.header}>
-          <View style={s.headerRow}>
-            <Image src="https://fly-horizons.com/logo-email.png" style={s.logoImg} />
+        {/* ── Header navy ────────────────────────────────────────────────── */}
+        <View style={{
+          backgroundColor: NAVY,
+          paddingTop: 18, paddingBottom: 18,
+          paddingLeft: 28, paddingRight: 28,
+          alignItems: "center",
+        }}>
+          <Image
+            src="https://fly-horizons.com/logo-email.png"
+            style={{ width: 100, height: 20, marginBottom: 10 }}
+          />
+          <Text style={{
+            color: GOLD, fontSize: 11,
+            fontFamily: "Helvetica-Bold",
+            textAlign: "center",
+            letterSpacing: 0.4,
+            marginBottom: 8,
+          }}>
+            {title}
+          </Text>
+          <View style={{
+            backgroundColor: GOLD,
+            paddingLeft: 12, paddingRight: 12,
+            paddingTop: 4, paddingBottom: 4,
+          }}>
+            <Text style={{ color: NAVY, fontSize: 8.5, fontFamily: "Helvetica-Bold", letterSpacing: 1.5 }}>
+              {badge}
+            </Text>
           </View>
-          <Text style={s.title}>BON DE VOL</Text>
-          <Text style={s.subtitle}>{displayTitle}</Text>
         </View>
 
-        {/* Gold bar */}
-        <View style={s.goldBar} />
+        {/* ── Gold bar ───────────────────────────────────────────────────── */}
+        <View style={{ backgroundColor: GOLD, height: 3 }} />
 
-        {/* Body white */}
-        <View style={s.body}>
-          <Text style={s.codeLabel}>VOTRE CODE D&apos;ACCÈS</Text>
+        {/* ���─ Body ───────��──────────────────────────────────────────────── */}
+        <View style={{ paddingLeft: 24, paddingRight: 24, paddingTop: 18, paddingBottom: 14 }}>
 
-          <View style={s.codeBox}>
-            <Text style={s.codeText}>{code}</Text>
+          {/* Code */}
+          <Text style={{
+            color: MUTED, fontSize: 7,
+            fontFamily: "Helvetica-Bold",
+            letterSpacing: 2, textAlign: "center",
+            marginBottom: 6,
+          }}>
+            VOTRE CODE D&apos;ACCÈS
+          </Text>
+          <View style={{
+            backgroundColor: NAVY,
+            paddingTop: 11, paddingBottom: 11,
+            marginBottom: 16, borderRadius: 3,
+          }}>
+            <Text style={{
+              color: GOLD, fontSize: 20,
+              fontFamily: "Courier-Bold",
+              letterSpacing: 3, textAlign: "center",
+            }}>
+              {code}
+            </Text>
           </View>
 
-          <Text style={s.qrHint}>Scannez pour réserver votre vol</Text>
+          {/* Two columns: QR | Steps */}
+          <View style={{ flexDirection: "row", marginBottom: 14 }}>
 
-          <View style={s.qrWrap}>
-            <Image src={qrCodeDataUrl} style={s.qrImg} />
+            {/* Left — QR */}
+            <View style={{ width: "36%", alignItems: "center", paddingRight: 14 }}>
+              <View style={{ borderWidth: 2, borderColor: NAVY, padding: 3, marginBottom: 5 }}>
+                <Image src={qrCodeDataUrl} style={{ width: 76, height: 76 }} />
+              </View>
+              <Text style={{
+                color: NAVY, fontSize: 7,
+                fontFamily: "Helvetica-Bold",
+                textAlign: "center", letterSpacing: 0.3,
+                marginBottom: 3,
+              }}>
+                fly-horizons.com
+              </Text>
+              <Text style={{ color: MUTED, fontSize: 6.5, textAlign: "center", lineHeight: 1.4 }}>
+                Scannez pour réserver
+              </Text>
+            </View>
+
+            {/* Right — Steps */}
+            <View style={{ flex: 1 }}>
+              <Text style={{
+                color: NAVY, fontSize: 7.5,
+                fontFamily: "Helvetica-Bold",
+                letterSpacing: 1, marginBottom: 9,
+              }}>
+                COMMENT UTILISER CE BON
+              </Text>
+
+              {[
+                "Rendez-vous sur fly-horizons.com/reservation ou scannez le QR code.",
+                "Choisissez votre date et saisissez votre code lors de la réservation.",
+                "Présentez-vous 15 min avant le décollage à l'aéroport de Charleroi (EBCI).",
+              ].map((text, i) => (
+                <View key={i} style={{ flexDirection: "row", marginBottom: i < 2 ? 7 : 0, alignItems: "flex-start" }}>
+                  <View style={{
+                    backgroundColor: GOLD,
+                    width: 14, height: 14,
+                    marginRight: 7, flexShrink: 0,
+                    paddingTop: 2,
+                  }}>
+                    <Text style={{ color: NAVY, fontSize: 7, fontFamily: "Helvetica-Bold", textAlign: "center" }}>
+                      {i + 1}
+                    </Text>
+                  </View>
+                  <Text style={{ color: SLATE, fontSize: 7.5, lineHeight: 1.45, flex: 1 }}>
+                    {text}
+                  </Text>
+                </View>
+              ))}
+            </View>
           </View>
 
-          <Text style={s.qrUrl}>fly-horizons.com/reservation</Text>
+          {/* Divider */}
+          <View style={{ borderTopWidth: 1, borderTopColor: BORDER, marginBottom: 12 }} />
 
-          <Text style={s.expiry}>Valable jusqu&apos;au {expiresAtStr} · 1 vol inclus</Text>
+          {/* Infos pratiques */}
+          <View style={{
+            backgroundColor: BG,
+            borderWidth: 1, borderColor: BORDER,
+            borderLeftWidth: 3, borderLeftColor: GOLD,
+            paddingLeft: 12, paddingRight: 12,
+            paddingTop: 10, paddingBottom: 10,
+            borderRadius: 2,
+          }}>
+            <Text style={{
+              color: NAVY, fontSize: 7.5,
+              fontFamily: "Helvetica-Bold",
+              letterSpacing: 1, marginBottom: 8,
+            }}>
+              INFORMATIONS PRATIQUES
+            </Text>
+
+            {[
+              ["Lieu", "Aéroport de Charleroi (EBCI) — Rue des Frères Wright 8, 6041 Gosselies"],
+              ["Arrivée", "Présentez-vous 15 min avant le décollage. Romain vous accueillera sur place."],
+              ["Tenue", "Vêtements confortables. Prévoir une couche chaude, même en été."],
+              ["Météo", "Vol par beau temps uniquement. En cas de conditions défavorables, reporté sans frais."],
+            ].map(([label, value], i, arr) => (
+              <View key={i} style={{ flexDirection: "row", marginBottom: i < arr.length - 1 ? 5 : 0 }}>
+                <Text style={{ color: NAVY, fontSize: 7.5, fontFamily: "Helvetica-Bold", width: 40, flexShrink: 0 }}>
+                  {label}
+                </Text>
+                <Text style={{ color: MUTED, fontSize: 7.5, flex: 1, lineHeight: 1.45 }}>
+                  {value}
+                </Text>
+              </View>
+            ))}
+          </View>
+
         </View>
 
-        {/* Footer gold */}
-        <View style={s.footer}>
-          <Text style={s.footerText}>fly-horizons.com</Text>
-          <Text style={s.footerText}>info@fly-horizons.com</Text>
+        {/* ── Footer navy ────────────────────────────────────────────────── */}
+        <View style={{
+          backgroundColor: NAVY,
+          paddingLeft: 24, paddingRight: 24,
+          paddingTop: 9, paddingBottom: 9,
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}>
+          <Text style={{ color: GOLD, fontSize: 7, fontFamily: "Helvetica-Bold", letterSpacing: 0.5 }}>
+            fly-horizons.com
+          </Text>
+          <Text style={{ color: "#4e7096", fontSize: 7, letterSpacing: 0.2 }}>
+            Valable jusqu&apos;au {expiresAtStr} · 1 vol inclus
+          </Text>
+          <Text style={{ color: "#4e7096", fontSize: 7 }}>
+            info@fly-horizons.com
+          </Text>
         </View>
 
       </Page>
     </Document>
   );
 }
+
+// ── Public interface ──────��───────────────────────────────────────────────────
 
 export interface VoucherPDFParams {
   code: string;
@@ -237,11 +235,10 @@ export interface VoucherPDFParams {
 export async function generateVoucherPDFBuffer(params: VoucherPDFParams): Promise<Buffer> {
   const { renderToBuffer } = await import("@react-pdf/renderer");
 
-  // QR code → page réservation avec duree + code pré-remplis
   const reservationUrl = `https://fly-horizons.com/reservation?duree=${params.duration_minutes}&code=${encodeURIComponent(params.code)}`;
 
   const qrCodeDataUrl = await QRCode.toDataURL(reservationUrl, {
-    width: 220,
+    width: 180,
     margin: 1,
     color: { dark: NAVY, light: WHITE },
   });

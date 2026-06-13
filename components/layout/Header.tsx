@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
-import { ShoppingBag, User, Menu, X, Home, Route, Mail, Ticket, HelpCircle, Info } from "lucide-react";
+import { ShoppingBag, User, Menu, X, Home, Route, Mail, Ticket, HelpCircle, Info, Images } from "lucide-react";
 import { CartCount } from "@/components/shop/CartCount";
 import { createClient } from "@/lib/supabase/client";
 import { useCartStore } from "@/store/cart";
@@ -150,6 +150,10 @@ export function Header() {
             <Link href="/vol-sur-mesure" className="flex items-center gap-2.5 text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
               <Route size={16} className="text-muted-foreground" />
               Vol sur mesure
+            </Link>
+            <Link href="/galerie" className="flex items-center gap-2.5 text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
+              <Images size={16} className="text-muted-foreground" />
+              Galerie
             </Link>
             <Link href="/about" className="flex items-center gap-2.5 text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
               <Info size={16} className="text-muted-foreground" />

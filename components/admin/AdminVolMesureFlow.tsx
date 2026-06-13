@@ -4,12 +4,13 @@ import dynamic from "next/dynamic";
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createAdminVolMesure } from "@/lib/actions/reservations";
+import { createItineraire, incrementItineraireUsage } from "@/lib/actions/itineraires";
 import {
   MapPin, Clock, Search, Trash2, X,
   Check, Loader2, Mail,
   PlaneTakeoff, Plus,
   Users, UserPlus, ArrowRight, Link2, BanknoteIcon,
-  Star, Navigation, ChevronDown,
+  Star, Navigation, ChevronDown, BookmarkPlus,
 } from "lucide-react";
 import type {
   AdventureRouteData, AdventureMapHandle, POI,
@@ -175,6 +176,38 @@ export function AdminVolMesureFlow({ clients, stopovers: availableStops, prixHeu
   const [showItinModal, setShowItinModal] = useState(false);
   const [itinShowAll,   setItinShowAll]   = useState(false);
 
+  // ── Sauvegarder comme itinéraire
+  const [showSaveItin,  setShowSaveItin]  = useState(false);
+  const [saveItinNom,   setSaveItinNom]   = useState("");
+  const [saveItinDuree, setSaveItinDuree] = useState("");
+  const [savingItin,    setSavingItin]    = useState(false);
+  const [saveItinOk,    setSaveItinOk]    = useState(false);
+
+  function openSaveItin() {
+    const suggested = route.pois.length > 0
+      ? route.pois.map(p => p.nom).join(" – ")
+      : "";
+    const closest = [30, 60, 90, 120].reduce((prev, curr) =>
+      Math.abs(curr - route.totalMin) < Math.abs(prev - route.totalMin) ? curr : prev, 60);
+    setSaveItinNom(suggested);
+    setSaveItinDuree(route.totalMin > 0 ? String(closest) : "");
+    setSaveItinOk(false);
+    setShowSaveItin(true);
+  }
+
+  async function handleSaveItin() {
+    if (!saveItinNom.trim()) return;
+    setSavingItin(true);
+    await createItineraire({
+      nom: saveItinNom.trim(),
+      waypoints: route.pois.map(p => ({ lat: p.lat, lng: p.lng, nom: p.nom })),
+      duree_estimee: saveItinDuree ? parseInt(saveItinDuree) : null,
+    });
+    setSavingItin(false);
+    setSaveItinOk(true);
+    setTimeout(() => setShowSaveItin(false), 1200);
+  }
+
   const itinFiltered = itinShowAll
     ? itineraires
     : itineraires.filter(it =>
@@ -193,6 +226,7 @@ export function AdminVolMesureFlow({ clients, stopovers: availableStops, prixHeu
         nom: wp.nom,
       });
     });
+    incrementItineraireUsage(itin.id);
     setShowItinModal(false);
   }
 
@@ -416,7 +450,60 @@ export function AdminVolMesureFlow({ clients, stopovers: availableStops, prixHeu
 
             {/* Parcours */}
             <div className="px-4 py-4 border-b border-border">
-              <p className="text-[9px] font-black text-foreground/40 uppercase tracking-[2px] mb-2.5">Parcours</p>
+              <div className="flex items-center justify-between mb-2.5">
+                <p className="text-[9px] font-black text-foreground/40 uppercase tracking-[2px]">Parcours</p>
+                {route.pois.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={openSaveItin}
+                    className="flex items-center gap-1 text-[10px] font-bold text-primary hover:text-primary/80 transition-colors cursor-pointer"
+                  >
+                    <BookmarkPlus size={11} /> Sauvegarder
+                  </button>
+                )}
+              </div>
+
+              {/* Save as itinéraire inline form */}
+              {showSaveItin && (
+                <div className="mb-3 p-3 rounded-lg border border-primary/30 bg-primary/5 space-y-2">
+                  <p className="text-[10px] font-bold text-primary uppercase tracking-wide">Sauvegarder comme itinéraire</p>
+                  <input
+                    value={saveItinNom}
+                    onChange={e => setSaveItinNom(e.target.value)}
+                    placeholder="Nom de l'itinéraire"
+                    className="w-full h-7 px-2 rounded-md border border-input bg-background text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                  />
+                  <select
+                    value={saveItinDuree}
+                    onChange={e => setSaveItinDuree(e.target.value)}
+                    className="w-full h-7 px-2 rounded-md border border-input bg-background text-xs focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
+                  >
+                    <option value="">— Durée —</option>
+                    <option value="30">30 min</option>
+                    <option value="60">1h</option>
+                    <option value="90">1h30</option>
+                    <option value="120">2h</option>
+                  </select>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleSaveItin}
+                      disabled={savingItin || !saveItinNom.trim()}
+                      className="flex-1 flex items-center justify-center gap-1.5 h-7 rounded-md bg-primary text-primary-foreground text-[11px] font-bold disabled:opacity-40 cursor-pointer hover:brightness-105 transition-all"
+                    >
+                      {savingItin ? <Loader2 size={11} className="animate-spin" /> : saveItinOk ? <Check size={11} /> : <BookmarkPlus size={11} />}
+                      {saveItinOk ? "Enregistré !" : "Enregistrer"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowSaveItin(false)}
+                      className="px-3 h-7 rounded-md border border-border text-[11px] text-muted-foreground hover:bg-secondary cursor-pointer transition-colors"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              )}
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2.5">
                   <div className="w-3 h-3 rounded-full bg-[#F2B705] shrink-0 ring-4 ring-[#F2B705]/15" />

@@ -25,6 +25,7 @@ export interface Itineraire {
   stopovers: { icao: string; nom: string; taxe: number }[];
   duree_estimee: number | null;
   notes: string | null;
+  utilisations: number;
   created_at: string;
 }
 
@@ -78,6 +79,14 @@ export async function updateItineraire(id: string, data: {
   if (error) return { error: error.message };
   revalidatePath("/admin/itineraires");
   return { success: true };
+}
+
+export async function incrementItineraireUsage(id: string) {
+  const supabase = createAdminClient();
+  const { data } = await supabase.from("itineraires").select("utilisations").eq("id", id).single();
+  if (data) {
+    await supabase.from("itineraires").update({ utilisations: data.utilisations + 1 }).eq("id", id);
+  }
 }
 
 export async function deleteItineraire(id: string) {

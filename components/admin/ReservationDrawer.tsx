@@ -26,7 +26,7 @@ import {
 } from "@/lib/actions/reservation-edit";
 import type { WaypointDraft } from "@/components/admin/AdminRouteEditor";
 import { toForeFlight } from "@/lib/foreflight";
-import { getItineraires } from "@/lib/actions/itineraires";
+import { getItineraires, incrementItineraireUsage } from "@/lib/actions/itineraires";
 import type { Itineraire } from "@/lib/actions/itineraires";
 
 const AdminRouteEditorDynamic = dynamic(
@@ -259,6 +259,7 @@ export function ReservationDrawer({
       lng: String(wp.lng),
       nom: wp.nom,
     })));
+    incrementItineraireUsage(itin.id);
     setShowItinModal(false);
   }
 
@@ -374,8 +375,9 @@ export function ReservationDrawer({
   function changeStatut(statut: string) {
     if (!reservation) return;
     const isStandard = reservation.type_resa !== "perso";
-    if (statut === "heure_confirmee" && isStandard && !localRouteStatus) {
-      showFeedback("Envoyez la route au client avant de confirmer la date + heure", false);
+    const hasRoute = !!localRouteStatus || routeDraft.length > 0;
+    if (statut === "heure_confirmee" && isStandard && !hasRoute) {
+      showFeedback("Ajoutez une route sur la carte avant de confirmer la date + heure", false);
       return;
     }
     doChangeStatut(statut);

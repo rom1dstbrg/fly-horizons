@@ -1,0 +1,1 @@
+ALTER TABLE itineraires ADD COLUMN IF NOT EXISTS utilisations int NOT NULL DEFAULT 0;

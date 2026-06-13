@@ -4,9 +4,10 @@ import dynamic from "next/dynamic";
 import { useRef, useState, useEffect } from "react";
 import {
   Plus, Pencil, Trash2, MapPin, Clock, X, Check, Loader2,
-  BookMarked, ChevronLeft, AlignLeft, Search,
+  BookMarked, ChevronLeft, AlignLeft, Search, Copy, BookCopy, BarChart2,
 } from "lucide-react";
 import type { AdventureRouteData, AdventureMapHandle, POI } from "@/components/vol-sur-mesure/LeafletMapAdventure";
+import { buildForeFlightRoute } from "@/lib/foreflight";
 
 interface NominatimResult {
   place_id: number;
@@ -29,6 +30,39 @@ interface Props {
 
 type Mode = "list" | "create" | "edit";
 
+const EBCI_COORD = { lat: 50.4592, lng: 4.4538 };
+
+function ItineraireMapThumb({ waypoints }: { waypoints: { lat: number; lng: number }[] }) {
+  const pts = [EBCI_COORD, ...waypoints, EBCI_COORD];
+  const lats = pts.map(p => p.lat);
+  const lngs = pts.map(p => p.lng);
+  let minLat = Math.min(...lats), maxLat = Math.max(...lats);
+  let minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
+  if (maxLat - minLat < 0.08) { const c = (maxLat + minLat) / 2; minLat = c - 0.08; maxLat = c + 0.08; }
+  if (maxLng - minLng < 0.08) { const c = (maxLng + minLng) / 2; minLng = c - 0.08; maxLng = c + 0.08; }
+  const W = 100, H = 64, P = 0.12;
+  const rLat = maxLat - minLat, rLng = maxLng - minLng;
+  function proj(lat: number, lng: number): [number, number] {
+    return [
+      Math.round(P * W + ((lng - minLng) / rLng) * W * (1 - 2 * P)),
+      Math.round(H - P * H - ((lat - minLat) / rLat) * H * (1 - 2 * P)),
+    ];
+  }
+  const pp = pts.map(p => proj(p.lat, p.lng));
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <rect width={W} height={H} fill="#0b2238" />
+      <polyline points={pp.map(([x, y]) => `${x},${y}`).join(" ")}
+        fill="none" stroke="#F2B705" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+      {pp.map(([x, y], i) => {
+        const isEBCI = i === 0 || i === pp.length - 1;
+        return <circle key={i} cx={x} cy={y} r={isEBCI ? 3 : 2}
+          fill={isEBCI ? "#F2B705" : "white"} stroke="#0b2238" strokeWidth="0.5" />;
+      })}
+    </svg>
+  );
+}
+
 function formatDuree(min: number | null): string | null {
   if (!min) return null;
   if (min >= 60) return `${Math.floor(min / 60)}h${String(min % 60).padStart(2, "0")}`;
@@ -41,8 +75,10 @@ export function ItinerairesManager({ itineraires }: Props) {
 
   const [mode, setMode] = useState<Mode>("list");
   const [editId, setEditId] = useState<string | null>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<number | null>(null);
+  const [deleteId,      setDeleteId]      = useState<string | null>(null);
+  const [activeTab,     setActiveTab]     = useState<number | null>(null);
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
+  const [copiedItinId,  setCopiedItinId]  = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -183,6 +219,25 @@ export function ItinerairesManager({ itineraires }: Props) {
     exitToList();
   }
 
+  async function handleDuplicate(itin: Itineraire) {
+    setDuplicatingId(itin.id);
+    await createItineraire({
+      nom: `${itin.nom} (copie)`,
+      waypoints: itin.waypoints,
+      duree_estimee: itin.duree_estimee,
+      notes: itin.notes,
+    });
+    setDuplicatingId(null);
+    router.refresh();
+  }
+
+  function handleCopyForeFlight(itin: Itineraire) {
+    const text = buildForeFlightRoute(itin.waypoints);
+    navigator.clipboard.writeText(text);
+    setCopiedItinId(itin.id);
+    setTimeout(() => setCopiedItinId(null), 2000);
+  }
+
   async function handleDelete(id: string) {
     setDeleting(true);
     await deleteItineraire(id);
@@ -283,37 +338,66 @@ export function ItinerairesManager({ itineraires }: Props) {
 
                 return (
                   <div key={itin.id}>
-                    <div className={`flex items-start gap-0 group ${i < displayed.length - 1 && deleteId !== itin.id ? "border-b border-border" : ""}`}>
+                    <div className={`flex items-stretch gap-0 group ${i < displayed.length - 1 && deleteId !== itin.id ? "border-b border-border" : ""}`}>
                       {/* Duration color bar */}
-                      <div className={`w-1 self-stretch shrink-0 ${col ? col.bar : "bg-muted-foreground/20"}`} />
+                      <div className={`w-1 shrink-0 ${col ? col.bar : "bg-muted-foreground/20"}`} />
 
-                      <div className="flex-1 min-w-0 px-4 py-3">
-                        <div className="flex items-start justify-between gap-3">
+                      {/* Map thumbnail */}
+                      <div className="w-[90px] shrink-0 self-stretch bg-[#0b2238] overflow-hidden">
+                        <ItineraireMapThumb waypoints={itin.waypoints} />
+                      </div>
+
+                      <div className="flex-1 min-w-0 px-3 py-2.5">
+                        <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
-                            {/* Name + duration badge */}
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-sm font-bold text-foreground">{itin.nom}</span>
+                            {/* Name + badges */}
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-sm font-bold text-foreground leading-tight">{itin.nom}</span>
                               {itin.duree_estimee && col && (
-                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${col.badge}`}>
+                                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${col.badge}`}>
                                   {DUREE_LABELS[itin.duree_estimee]}
                                 </span>
                               )}
-                              <span className="text-[10px] text-muted-foreground/60">
-                                {itin.waypoints.length} point{itin.waypoints.length !== 1 ? "s" : ""}
+                              <span className="text-[10px] text-muted-foreground/50">
+                                {itin.waypoints.length} pt{itin.waypoints.length !== 1 ? "s" : ""}
                               </span>
+                              {itin.utilisations > 0 && (
+                                <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground/50">
+                                  <BarChart2 size={8} />
+                                  {itin.utilisations}×
+                                </span>
+                              )}
                             </div>
                             {/* Route inline */}
                             <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{routePreview}</p>
-                            {/* Notes */}
                             {itin.notes && (
-                              <p className="text-[10px] text-muted-foreground/60 mt-0.5 truncate italic flex items-center gap-1">
+                              <p className="text-[10px] text-muted-foreground/50 mt-0.5 truncate italic flex items-center gap-1">
                                 <AlignLeft size={9} className="shrink-0" />{itin.notes}
                               </p>
                             )}
                           </div>
 
                           {/* Actions */}
-                          <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => handleCopyForeFlight(itin)}
+                              title="Copier ForeFlight"
+                              className="p-1.5 rounded-lg hover:bg-secondary transition-colors cursor-pointer text-muted-foreground hover:text-foreground"
+                            >
+                              {copiedItinId === itin.id
+                                ? <Check size={12} className="text-emerald-500" />
+                                : <Copy size={12} />}
+                            </button>
+                            <button
+                              onClick={() => handleDuplicate(itin)}
+                              title="Dupliquer"
+                              disabled={duplicatingId === itin.id}
+                              className="p-1.5 rounded-lg hover:bg-secondary transition-colors cursor-pointer text-muted-foreground hover:text-foreground disabled:opacity-40"
+                            >
+                              {duplicatingId === itin.id
+                                ? <Loader2 size={12} className="animate-spin" />
+                                : <BookCopy size={12} />}
+                            </button>
                             <button
                               onClick={() => enterEdit(itin)}
                               title="Modifier"

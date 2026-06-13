@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Mail, MapPin, Lock, Clock } from "lucide-react";
-import { FaPlane, FaRoute, FaUser, FaCircleQuestion, FaBookOpen, FaMap, FaCircleUser, FaRightToBracket, FaEnvelope } from "react-icons/fa6";
+import { FaPlane, FaRoute, FaUser, FaCircleQuestion, FaBookOpen, FaMap, FaCircleUser, FaRightToBracket, FaEnvelope, FaImages } from "react-icons/fa6";
 import type { IconType } from "react-icons";
 
 function IconFacebook({ size = 16 }: { size?: number }) {
@@ -32,6 +32,7 @@ const INFOS: { href: string; label: string; icon: IconType }[] = [
   { href: "/faq",         label: "FAQ",                 icon: FaCircleQuestion },
   { href: "/guide",       label: "Guide passager",      icon: FaBookOpen },
   { href: "/access-ebci", label: "Plan d'accès · EBCI", icon: FaMap },
+  { href: "/galerie",     label: "Galerie",             icon: FaImages },
 ];
 
 const MON_ESPACE: { href: string; label: string; icon: IconType }[] = [
