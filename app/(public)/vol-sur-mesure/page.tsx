@@ -97,6 +97,21 @@ export default function VolSurMesurePage() {
     setTimeout(() => setSearchPulse(false), 1400);
   }
 
+  // ── Calendar closed
+  const [calendarClosed, setCalendarClosed] = useState(false);
+  const [closedMessage,  setClosedMessage]  = useState("");
+  useEffect(() => {
+    fetch("/api/site-settings")
+      .then(r => r.json())
+      .then(d => {
+        if (d.calendar_closed === "true") {
+          setCalendarClosed(true);
+          setClosedMessage(d.calendar_closed_message ?? "");
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // ── Popup d'accueil
   const [popupVisible, setPopupVisible] = useState(false);
 
@@ -759,6 +774,22 @@ export default function VolSurMesurePage() {
   // ─────────────────────────────────────────────────────────────
   // RENDER
   // ─────────────────────────────────────────────────────────────
+  if (calendarClosed) {
+    return (
+      <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white border border-border rounded-2xl p-8 text-center space-y-4 shadow-sm">
+          <p className="text-2xl font-black text-foreground">Réservations suspendues</p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            {closedMessage || "Les réservations sont temporairement suspendues. Contactez-nous pour toute demande."}
+          </p>
+          <Link href="/contact" className="inline-block mt-2 px-6 py-2.5 rounded-xl bg-[#0b2238] text-white text-sm font-bold hover:bg-[#0b2238]/90 transition-colors">
+            Nous contacter
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f5f5f7]">
       <div className="h-[98px]" />

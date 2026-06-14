@@ -131,19 +131,9 @@ const THEMES: Theme[] = [
         a: <>Oui. Vous pouvez réserver directement au nom d'une autre personne, ou lui offrir un <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">bon cadeau</Link> qu'elle utilisera elle-même pour choisir sa date.</>,
       },
       {
-        q: "Puis-je réserver pour une occasion spéciale ?",
-        aText: "Oui. Pour un anniversaire, une demande en mariage ou toute autre occasion particulière, contactez-nous via le formulaire de contact. Nous adaptons l'expérience selon vos souhaits.",
-        a: <>Oui. Pour un anniversaire, une demande en mariage ou toute autre occasion particulière, <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link>. Nous adaptons l'expérience selon vos souhaits.</>,
-      },
-      {
         q: "Combien de temps à l'avance faut-il réserver ?",
         aText: "Les réservations sont possibles jusqu'à 48 heures avant le vol au minimum. En dessous de ce délai, le calendrier n'affiche plus de créneaux disponibles. Pour une demande de dernière minute, rendez-vous sur la page Contact : nous répondrons le plus rapidement possible. En période chargée (printemps, été), il est conseillé de réserver plusieurs semaines à l'avance pour avoir le choix des dates.",
         a: <>Les réservations sont possibles jusqu&apos;à 48 heures avant le vol au minimum. En dessous de ce délai, le calendrier n&apos;affiche plus de créneaux disponibles. Pour une demande de dernière minute, rendez-vous sur la <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">page Contact</Link> : nous répondrons le plus rapidement possible. En période chargée (printemps, été), il est conseillé de réserver plusieurs semaines à l&apos;avance pour avoir le choix des dates.</>,
-      },
-      {
-        q: "Mon itinéraire vol sur mesure peut-il être refusé ou modifié ?",
-        aText: "Un itinéraire peut être refusé ou adapté pour des raisons de sécurité, de météo ou de réglementation d'espace aérien (zones interdites, trafic contrôlé). Dans ce cas, le pilote propose une alternative adaptée avant le vol. Si aucune solution ne convient, la réservation est annulée et la provision remboursée intégralement. Pour les zones ou destinations importantes pour vous, signalez-les à la réservation : le pilote vérifiera la faisabilité en amont.",
-        a: <>Un itinéraire peut être refusé ou adapté pour des raisons de sécurité, de météo ou de réglementation d&apos;espace aérien (zones interdites, trafic contrôlé). Dans ce cas, le pilote propose une alternative avant le vol. Si aucune solution ne convient, la réservation est annulée et la provision remboursée intégralement. Pour les destinations importantes pour vous, signalez-les à la <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">réservation</Link> : le pilote vérifiera la faisabilité en amont.</>,
       },
     ],
   },
@@ -242,29 +232,9 @@ const THEMES: Theme[] = [
         a: <>En cas de grossesse, consultez votre médecin avant de réserver. Pour toute condition médicale particulière (problème cardiaque, claustrophobie, traitement lourd, handicap moteur), signalez-le lors de la réservation ou <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link> : nous évaluerons ensemble la faisabilité.</>,
       },
       {
-        q: "Que se passe-t-il si je suis en retard le jour du vol ?",
-        aText: "Prévenez-nous dès que possible par téléphone ou email. Un léger retard de quelques minutes peut généralement être absorbé. Au-delà de 15 minutes, le créneau peut être compromis selon la disponibilité du planning. En cas d'absence sans prévenir (no-show), la provision reste acquise et aucun remboursement ne peut être effectué.",
-        a: <>Prévenez-nous dès que possible. Un léger retard peut être absorbé. Au-delà de 15 minutes, le créneau peut être compromis. En cas d'absence sans prévenir, la provision reste acquise. <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Nous contacter</Link>.</>,
-      },
-      {
-        q: "Comment suivre l'état de ma réservation ?",
-        aText: "Connectez-vous à votre espace client : vous y retrouvez le statut de votre réservation en temps réel (en attente, provision reçue, date confirmée, heure confirmée). Chaque changement de statut vous est également notifié par email.",
-        a: <>Connectez-vous à votre <Link href="/account" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">espace client</Link> : vous y retrouvez le statut en temps réel (en attente, provision reçue, date confirmée, heure confirmée). Chaque changement vous est notifié par email.</>,
-      },
-      {
-        q: "À quelle heure décollera-t-on exactement ?",
-        aText: "L'heure précise est confirmée par le pilote dans les jours qui précèdent le vol, en fonction des conditions météo et du trafic. Vous recevez la confirmation par email et via votre espace client.",
-        a: "L'heure précise est confirmée par le pilote dans les jours qui précèdent le vol, en fonction des conditions météo et du trafic. Vous recevez la confirmation par email et via votre espace client.",
-      },
-      {
         q: "Dans quel délai ma réservation est-elle confirmée ?",
-        aText: "La réservation est validée dans un délai maximum de 48 heures après réception de la provision, en pratique souvent en 2 à 4 heures. Vous recevez un email de confirmation dès que le pilote a vérifié la disponibilité et les conditions de vol.",
-        a: "La réservation est validée dans un délai maximum de 48 heures après réception de la provision, en pratique souvent en 2 à 4 heures. Vous recevez un email de confirmation dès que le pilote a validé la disponibilité.",
-      },
-      {
-        q: "Peut-on voler dans d'autres pays que la Belgique ?",
-        aText: "Oui. Les vols peuvent s'étendre à la France, l'Allemagne, les Pays-Bas et le Royaume-Uni, dans les limites de l'espace aérien autorisé et selon les conditions météo. Signalez votre destination souhaitée lors de la réservation ou via le formulaire de contact : le pilote vérifie la faisabilité et les autorisations nécessaires.",
-        a: <>Oui. Les vols peuvent s&apos;étendre à la France, l&apos;Allemagne, les Pays-Bas et le Royaume-Uni, dans les limites autorisées. Signalez votre destination lors de la réservation ou via le <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">formulaire de contact</Link> : le pilote vérifie la faisabilité.</>,
+        aText: "La réservation est validée dans un délai maximum de 48 heures après réception de la provision, en pratique souvent en 2 à 4 heures. Vous recevez un email de confirmation dès que le pilote a validé la disponibilité. L'heure précise de décollage est communiquée dans les jours qui précèdent le vol, en fonction des conditions météo et du trafic.",
+        a: "La réservation est validée dans un délai maximum de 48 heures après réception de la provision, en pratique souvent en 2 à 4 heures. Vous recevez un email dès que le pilote a validé la disponibilité. L'heure précise de décollage est communiquée dans les jours qui précèdent le vol, en fonction des conditions météo et du trafic.",
       },
     ],
   },
@@ -289,19 +259,9 @@ const THEMES: Theme[] = [
         a: "Non. Il n'y a pas d'âge minimum. Un enfant peut monter à bord à condition d'être accompagné d'un adulte. Il peut même s'asseoir à l'avant, sous réserve de ne pas toucher aux commandes.",
       },
       {
-        q: "Faut-il des capacités physiques particulières ?",
-        aText: "Il faut pouvoir monter dans l'avion via un marchepied, ce qui équivaut à grimper 3 à 4 marches. Aucune autre aptitude physique particulière n'est requise.",
-        a: "Il faut pouvoir monter dans l'avion via un marchepied, ce qui équivaut à grimper 3 à 4 marches. Aucune autre aptitude physique particulière n'est requise.",
-      },
-      {
         q: "Le vol est-il bruyant ?",
         aText: "Non. Des casques antibruit sont fournis à bord pour tous les passagers. Ils permettent aussi de communiquer avec le pilote pendant tout le vol.",
         a: "Non. Des casques antibruit sont fournis à bord pour tous les passagers. Ils permettent aussi de communiquer avec le pilote pendant tout le vol.",
-      },
-      {
-        q: "Puis-je toucher les commandes de l'avion ?",
-        aText: "Oui, en phase de croisière et sous supervision du pilote. Vous sentez les réponses réelles de l'avion : tangage, roulis, gouverne de direction.",
-        a: "Oui, en phase de croisière et sous supervision du pilote. Vous sentez les réponses réelles de l'avion : tangage, roulis, gouverne de direction.",
       },
       {
         q: "À quelle altitude vole-t-on ? Est-ce impressionnant ?",
@@ -318,16 +278,6 @@ const THEMES: Theme[] = [
         aText: "Oui. L'avion utilisé (Diamond DA40) appartient à Air Academy New CAG (ATO-005, EBCI), école d'aviation certifiée. L'assurance de l'école couvre tous les occupants à bord. Ce vol est organisé dans le cadre du partage de frais réglementé par le règlement européen NCO.GEN.104 (aviation légère non commerciale). Pour toute question sur les garanties, contactez-nous avant de réserver.",
         a: <>Oui. L&apos;avion utilisé (Diamond DA40) appartient à Air Academy New CAG (ATO-005, EBCI), école d&apos;aviation certifiée. L&apos;assurance de l&apos;école couvre tous les occupants à bord. Ce vol est organisé dans le cadre du partage de frais réglementé par le règlement européen NCO.GEN.104 (aviation légère non commerciale). Pour toute question, <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link> avant de réserver.</>,
       },
-      {
-        q: "Peut-on prendre des photos et des vidéos pendant le vol ?",
-        aText: "Oui, sans restriction. Pensez à charger vos appareils avant le vol et à les sécuriser pour éviter tout incident à bord.",
-        a: "Oui, sans restriction. Pensez à charger vos appareils avant le vol et à les sécuriser (dragonne, pochette) pour éviter tout incident à bord.",
-      },
-      {
-        q: "Est-ce que je reçois un certificat après le vol ?",
-        aText: "Un certificat de baptême de l'air peut être délivré sur demande, sans frais supplémentaires. Signalez votre souhait avant ou après le vol.",
-        a: "Un certificat de baptême de l'air peut être délivré sur demande, sans frais supplémentaires. Signalez votre souhait avant ou après le vol.",
-      },
     ],
   },
   {
@@ -336,14 +286,9 @@ const THEMES: Theme[] = [
     Icon: Users,
     items: [
       {
-        q: "Comment créer un compte ?",
-        aText: "Un compte est créé automatiquement lors de votre première réservation ou commande. Vous pouvez aussi vous inscrire directement depuis la page de connexion. Votre compte vous donne accès au suivi de vos réservations, commandes et codes de vol.",
-        a: <>Un compte est créé automatiquement lors de votre première réservation ou commande. Vous pouvez aussi vous inscrire depuis la <Link href="/login" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">page de connexion</Link>.</>,
-      },
-      {
-        q: "Mes codes de vol sont-ils visibles dans mon compte ?",
-        aText: "Oui. Tous vos bons cadeaux achetés apparaissent dans la section Codes de vol de votre espace client, avec leur statut : disponible, réservé ou utilisé.",
-        a: <>Oui. Tous vos bons cadeaux apparaissent dans la section <Link href="/account" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Codes de vol</Link> de votre espace client, avec leur statut : disponible, réservé ou utilisé.</>,
+        q: "Comment suivre l'état de ma réservation ?",
+        aText: "Connectez-vous à votre espace client : vous y retrouvez le statut de votre réservation en temps réel (en attente, provision reçue, date confirmée, heure confirmée). Chaque changement de statut vous est également notifié par email.",
+        a: <>Connectez-vous à votre <Link href="/account" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">espace client</Link> : vous y retrouvez le statut en temps réel (en attente, provision reçue, date confirmée, heure confirmée). Chaque changement vous est notifié par email.</>,
       },
       {
         q: "Je n'ai pas reçu l'email de confirmation, que faire ?",
@@ -512,8 +457,22 @@ export default function FaqPage() {
             </div>
           ) : null}
 
+          {/* CTA chat */}
+          <div className="mt-10 bg-white border border-border rounded-lg p-5 flex flex-col sm:flex-row items-center gap-4">
+            <div className="flex-1 text-center sm:text-left">
+              <p className="text-sm font-bold text-foreground">Une question rapide ?</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Notre assistant répond instantanément, 24h/24.</p>
+            </div>
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent("fh:open-chat"))}
+              className="shrink-0 px-5 py-2.5 text-sm font-black bg-[#0b2238] text-white rounded-lg hover:bg-[#0b2238]/85 transition-colors cursor-pointer"
+            >
+              Poser une question →
+            </button>
+          </div>
+
           {/* CTA contact */}
-          <div className="mt-10 bg-navy rounded-lg p-6 flex flex-col sm:flex-row items-center gap-4">
+          <div className="mt-4 bg-navy rounded-lg p-6 flex flex-col sm:flex-row items-center gap-4">
             <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
               <MessageCircle size={16} className="text-primary" />
             </div>

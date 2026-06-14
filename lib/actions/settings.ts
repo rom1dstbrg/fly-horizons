@@ -140,6 +140,32 @@ export async function updateOperationalSettings({
   }
 }
 
+export async function updateSiteSettings({
+  calendar_closed,
+  calendar_closed_message,
+  chat_enabled,
+}: {
+  calendar_closed: boolean;
+  calendar_closed_message: string;
+  chat_enabled: boolean;
+}) {
+  try {
+    await checkAdmin();
+    const db = createAdminClient();
+    await Promise.all([
+      db.from("crm_settings").upsert({ key: "calendar_closed",         value: String(calendar_closed) }),
+      db.from("crm_settings").upsert({ key: "calendar_closed_message", value: calendar_closed_message.trim() }),
+      db.from("crm_settings").upsert({ key: "chat_enabled",            value: String(chat_enabled) }),
+    ]);
+    revalidatePath("/admin/settings");
+    revalidatePath("/reservation");
+    revalidatePath("/vol-sur-mesure");
+    return { success: true };
+  } catch {
+    return { error: "Erreur serveur" };
+  }
+}
+
 export async function updatePrixVol(prixHeure: number, acomptePersoHeure: number) {
   try {
     await checkAdmin();

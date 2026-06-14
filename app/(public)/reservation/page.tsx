@@ -94,9 +94,24 @@ export default function ReservationPage() {
   const [codeError,   setCodeError]   = useState("");
   const [submitting,   setSubmitting]   = useState(false);
   const [submitError,  setSubmitError]  = useState("");
+  const [calendarClosed,  setCalendarClosed]  = useState(false);
+  const [closedMessage,   setClosedMessage]   = useState("");
 
   // ── Auth state
   const [user, setUser] = useState<SupabaseUser | null>(null);
+
+  // ── Calendar closed check ────────────────────────────────────────
+  useEffect(() => {
+    fetch("/api/site-settings")
+      .then(r => r.json())
+      .then(d => {
+        if (d.calendar_closed === "true") {
+          setCalendarClosed(true);
+          setClosedMessage(d.calendar_closed_message ?? "");
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // ── Data ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -350,6 +365,22 @@ export default function ReservationPage() {
   }
 
   // ── Render ───────────────────────────────────────────────────────
+  if (calendarClosed) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-gradient-navy px-4">
+        <div className="max-w-md w-full bg-white/5 border border-white/10 rounded-2xl p-8 text-center space-y-4">
+          <p className="text-2xl font-black text-white">Réservations suspendues</p>
+          <p className="text-sm text-white/60 leading-relaxed">
+            {closedMessage || "Les réservations sont temporairement suspendues. Contactez-nous pour toute demande."}
+          </p>
+          <Link href="/contact" className="inline-block mt-2 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors">
+            Nous contacter
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   if (prodLoading || !form.product) {
     return (
       <div className="flex-1 flex items-center justify-center bg-gradient-navy">

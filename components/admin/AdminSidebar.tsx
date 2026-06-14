@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Users, MessageSquare, Settings, LogOut,
   Menu, X, ExternalLink, Search,
   CalendarCheck, Route, Clock, Navigation,
-  Package, Ticket, Tag, Images,
+  Package, Ticket, Tag, Images, Bot,
 } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 
@@ -31,21 +31,27 @@ const DEFAULT_TABS: Record<string, string> = {
 };
 
 const NAVIGATION: NavEntry[] = [
-  { type: "link", id: "dashboard",      icon: LayoutDashboard, label: "Vue globale",    href: "/admin",           exact: true },
+  { type: "link", id: "dashboard", icon: LayoutDashboard, label: "Vue globale", href: "/admin", exact: true },
+
   { type: "section", label: "Vols" },
-  { type: "link", id: "reservations",   icon: CalendarCheck,   label: "Réservations",   href: "/admin/vols",                    tab: "reservations",   tabBase: "/admin/vols"     },
-  { type: "link", id: "sur-mesure",     icon: Route,           label: "Sur mesure",     href: "/admin/vols?tab=sur-mesure",     tab: "sur-mesure",     tabBase: "/admin/vols"     },
-  { type: "link", id: "disponibilites", icon: Clock,           label: "Disponibilités", href: "/admin/vols?tab=disponibilites", tab: "disponibilites", tabBase: "/admin/vols"     },
-  { type: "link", id: "itineraires",    icon: Navigation,      label: "Itinéraires",    href: "/admin/itineraires" },
+  { type: "link", id: "reservations",   icon: CalendarCheck, label: "Réservations",   href: "/admin/vols",                    tab: "reservations",   tabBase: "/admin/vols" },
+  { type: "link", id: "sur-mesure",     icon: Route,         label: "Sur mesure",     href: "/admin/vols?tab=sur-mesure",     tab: "sur-mesure",     tabBase: "/admin/vols" },
+  { type: "link", id: "disponibilites", icon: Clock,         label: "Disponibilités", href: "/admin/vols?tab=disponibilites", tab: "disponibilites", tabBase: "/admin/vols" },
+  { type: "link", id: "itineraires",    icon: Navigation,    label: "Itinéraires",    href: "/admin/itineraires" },
+
   { type: "section", label: "Boutique" },
-  { type: "link", id: "vouchers",  icon: Ticket,  label: "Vouchers",  href: "/admin/boutique",               tab: "vouchers",  tabBase: "/admin/boutique" },
-  { type: "link", id: "produits",  icon: Package, label: "Offres",    href: "/admin/boutique?tab=produits",  tab: "produits",  tabBase: "/admin/boutique" },
-  { type: "link", id: "coupons",   icon: Tag,     label: "Coupons",   href: "/admin/boutique?tab=coupons",   tab: "coupons",   tabBase: "/admin/boutique" },
-  { type: "section", label: "" },
-  { type: "link", id: "galerie",         icon: Images,        label: "Galerie",        href: "/admin/galerie"  },
-  { type: "link", id: "clients",        icon: Users,         label: "Clients",        href: "/admin/clients"  },
-  { type: "link", id: "communications", icon: MessageSquare, label: "Communications", href: "/admin/contacts" },
-  { type: "link", id: "settings",       icon: Settings,      label: "Paramètres",     href: "/admin/settings" },
+  { type: "link", id: "vouchers", icon: Ticket,  label: "Vouchers", href: "/admin/boutique",              tab: "vouchers", tabBase: "/admin/boutique" },
+  { type: "link", id: "produits", icon: Package, label: "Offres",   href: "/admin/boutique?tab=produits", tab: "produits", tabBase: "/admin/boutique" },
+  { type: "link", id: "coupons",  icon: Tag,     label: "Coupons",  href: "/admin/boutique?tab=coupons",  tab: "coupons",  tabBase: "/admin/boutique" },
+
+  { type: "section", label: "CRM" },
+  { type: "link", id: "clients",  icon: Users,         label: "Clients",  href: "/admin/clients"  },
+  { type: "link", id: "contacts", icon: MessageSquare, label: "Contacts", href: "/admin/contacts" },
+  { type: "link", id: "chat",     icon: Bot,           label: "Assistant", href: "/admin/chat"     },
+
+  { type: "section", label: "Site" },
+  { type: "link", id: "galerie",   icon: Images,   label: "Galerie",    href: "/admin/galerie"  },
+  { type: "link", id: "settings",  icon: Settings, label: "Paramètres", href: "/admin/settings" },
 ];
 
 function isLinkActive(item: NavLink, pathname: string, currentTab: string | null): boolean {

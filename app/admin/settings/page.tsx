@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PrixVolForm } from "@/components/admin/PrixVolForm";
 import { OperationalSettingsForm } from "@/components/admin/OperationalSettingsForm";
+import { SiteSettingsForm } from "@/components/admin/SiteSettingsForm";
 import { PageHeader } from "@/components/admin/PageHeader";
 
 export const metadata = { title: "Parametres — Admin" };
@@ -19,6 +20,9 @@ export default async function AdminSettingsPage() {
   const welcomeCode           =            get("welcome_code",             "WELCOME2026");
   const welcomeDiscountType   =            get("welcome_discount_type",    "percentage") as "percentage" | "fixed";
   const welcomeDiscountValue  = parseFloat(get("welcome_discount_value",   "10"));
+  const calendarClosed        =            get("calendar_closed",          "false") === "true";
+  const calendarClosedMessage =            get("calendar_closed_message",  "");
+  const chatEnabled           =            get("chat_enabled",             "true") === "true";
 
   return (
     <div className="space-y-8 max-w-2xl">
@@ -33,6 +37,12 @@ export default async function AdminSettingsPage() {
         welcomeCode={welcomeCode}
         welcomeDiscountType={welcomeDiscountType}
         welcomeDiscountValue={welcomeDiscountValue}
+      />
+
+      <SiteSettingsForm
+        calendarClosed={calendarClosed}
+        calendarClosedMessage={calendarClosedMessage}
+        chatEnabled={chatEnabled}
       />
     </div>
   );

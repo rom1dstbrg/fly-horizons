@@ -21,12 +21,29 @@ export function ChatWidget({ mobileVisible = false }: { mobileVisible?: boolean 
   const [input, setInput]         = useState("");
   const [loading, setLoading]     = useState(false);
   const [sessionId, setSessionId] = useState<string | undefined>();
+  const [enabled, setEnabled]     = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef  = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const s = localStorage.getItem("fh_chat_session");
     if (s) setSessionId(s);
+    const cached = sessionStorage.getItem("fh_chat_enabled");
+    if (cached !== null) { setEnabled(cached === "true"); return; }
+    fetch("/api/site-settings")
+      .then(r => r.json())
+      .then(d => {
+        const val = d.chat_enabled !== "false";
+        setEnabled(val);
+        sessionStorage.setItem("fh_chat_enabled", String(val));
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    function onOpen() { setOpen(true); }
+    window.addEventListener("fh:open-chat", onOpen);
+    return () => window.removeEventListener("fh:open-chat", onOpen);
   }, []);
 
   useEffect(() => {
@@ -80,6 +97,8 @@ export function ChatWidget({ mobileVisible = false }: { mobileVisible?: boolean 
     }
   }
 
+  if (!enabled) return null;
+
   return (
     <>
       {/* ── Panneau ─────────────────────────────────────────────────────── */}
@@ -87,8 +106,7 @@ export function ChatWidget({ mobileVisible = false }: { mobileVisible?: boolean 
         className={`fixed bottom-6 left-3 right-3 sm:left-auto sm:right-6 sm:w-[360px] z-50 bg-white rounded-2xl overflow-hidden flex flex-col ${mobileVisible ? "" : "hidden sm:flex"}`}
         style={{
           maxHeight: "55vh",
-          boxShadow: "0 12px 48px rgba(11,34,56,.22), 0 2px 8px rgba(11,34,56,.08)",
-          borderTop: "2.5px solid #F2B705",
+          boxShadow: "0 8px 40px rgba(0,0,0,0.11), 0 2px 8px rgba(0,0,0,0.06)",
           transform: open ? "translateY(0)" : "translateY(calc(100% + 1.5rem))",
           opacity: open ? 1 : 0,
           transition: "transform 0.32s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease",
@@ -96,33 +114,25 @@ export function ChatWidget({ mobileVisible = false }: { mobileVisible?: boolean 
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3.5 bg-[#0b2238] shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-[#F2B705] flex items-center justify-center shrink-0">
-              <PlaneTakeoff size={14} className="text-[#0b2238]" />
-            </div>
-            <div>
-              <p className="text-sm font-black text-white leading-tight tracking-tight">Fly Horizons</p>
-              <p className="text-[10px] text-white/45 leading-tight mt-0.5">Assistant virtuel</p>
-            </div>
-          </div>
+        <div className="flex items-center justify-between px-4 py-3.5 bg-white border-b border-border shrink-0">
+          <p className="text-sm font-black text-[#0b2238] tracking-tight">Assistant Fly Horizons</p>
           <button
             onClick={() => setOpen(false)}
-            className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer"
+            className="p-1.5 text-foreground/30 hover:text-foreground transition-colors cursor-pointer"
           >
-            <X size={13} className="text-white/70" />
+            <X size={14} />
           </button>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-3 bg-[#f5f8ff]">
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-3 bg-[#f5f5f7]">
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               <div
-                className={`max-w-[82%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
+                className={`max-w-[82%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
                   msg.role === "user"
                     ? "bg-[#0b2238] text-white rounded-br-sm"
-                    : "bg-white border border-[#F2B705]/20 text-foreground rounded-bl-sm shadow-sm"
+                    : "bg-white border border-border text-foreground rounded-bl-sm shadow-sm"
                 }`}
               >
                 {msg.content}
@@ -147,11 +157,11 @@ export function ChatWidget({ mobileVisible = false }: { mobileVisible?: boolean 
           ))}
           {loading && (
             <div className="flex justify-start">
-              <div className="bg-white border border-[#F2B705]/20 shadow-sm rounded-xl rounded-bl-sm px-4 py-3">
+              <div className="bg-white border border-border shadow-sm rounded-2xl rounded-bl-sm px-4 py-3">
                 <div className="flex gap-1 items-center">
-                  <span className="w-1.5 h-1.5 bg-[#F2B705] rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <span className="w-1.5 h-1.5 bg-[#F2B705] rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <span className="w-1.5 h-1.5 bg-[#F2B705] rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                  <span className="w-1.5 h-1.5 bg-[#0b2238]/30 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-1.5 h-1.5 bg-[#0b2238]/30 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-1.5 h-1.5 bg-[#0b2238]/30 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                 </div>
               </div>
             </div>
@@ -171,14 +181,14 @@ export function ChatWidget({ mobileVisible = false }: { mobileVisible?: boolean 
             }}
             placeholder="Votre question…"
             disabled={loading}
-            className="flex-1 text-sm px-3.5 py-2 rounded-lg bg-[#f5f8ff] border border-border focus:outline-none focus:ring-1 focus:ring-[#F2B705]/40 focus:border-[#F2B705]/50 transition-colors text-foreground placeholder:text-muted-foreground disabled:opacity-50"
+            className="flex-1 text-sm px-3.5 py-2 rounded-xl bg-[#f5f5f7] border border-transparent focus:outline-none focus:border-[#0b2238]/20 transition-colors text-foreground placeholder:text-muted-foreground disabled:opacity-50"
           />
           <button
             onClick={sendMessage}
             disabled={!input.trim() || loading}
-            className="w-9 h-9 rounded-lg bg-[#0b2238] flex items-center justify-center shrink-0 hover:bg-[#0b2238]/80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            className="w-9 h-9 rounded-xl bg-[#0b2238] flex items-center justify-center shrink-0 hover:bg-[#0b2238]/85 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
-            <Send size={14} className="text-[#F2B705]" />
+            <Send size={13} className="text-white" />
           </button>
         </div>
       </div>
