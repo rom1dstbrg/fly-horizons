@@ -57,7 +57,7 @@ export function CreateVolMesureForm({ clients, prixHeure }: Props) {
     return clients.filter(c =>
       c.prenom.toLowerCase().includes(q) ||
       c.nom.toLowerCase().includes(q) ||
-      c.email.toLowerCase().includes(q)
+      (c.email ?? "").toLowerCase().includes(q)
     );
   }, [clients, clientSearch]);
 

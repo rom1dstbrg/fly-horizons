@@ -47,12 +47,12 @@ export function AdminBadge({
 // ── Status maps — source unique de vérité ──────────────────────
 
 export const STATUT_RESA: Record<string, { label: string; variant: BadgeVariant }> = {
-  payment_pending: { label: "Pmt. en att.",    variant: "orange"  },
-  en_attente:      { label: "En attente",      variant: "warning" },
-  date_confirmee:  { label: "Date confirmée",  variant: "info"    },
-  heure_confirmee: { label: "Heure confirmée", variant: "success" },
-  vol_effectue:    { label: "Vol effectué",    variant: "primary" },
-  annulee:         { label: "Annulée",         variant: "danger"  },
+  payment_pending: { label: "Att. paiement en ligne", variant: "orange"  },
+  en_attente:      { label: "À encaisser",            variant: "warning" },
+  date_confirmee:  { label: "Date confirmée",         variant: "info"    },
+  heure_confirmee: { label: "Heure confirmée",        variant: "success" },
+  vol_effectue:    { label: "Vol effectué",           variant: "primary" },
+  annulee:         { label: "Annulée",                variant: "danger"  },
 };
 
 export const STATUT_PERSO: Record<string, { label: string; variant: BadgeVariant }> = {

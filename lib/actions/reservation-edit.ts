@@ -93,6 +93,7 @@ type ReservationFields = {
   poids_total?: number | null;
   acompte?: number | null;
   paye?: number | null;
+  remboursement?: number | null;
   payment_status?: "paid" | "unpaid" | "partial" | "refunded";
   voucher_code?: string | null;
   coupon_code?: string | null;

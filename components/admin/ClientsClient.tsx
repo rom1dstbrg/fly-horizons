@@ -297,7 +297,7 @@ export function ClientsClient({ clients: initial }: { clients: Client[] }) {
     return (
       c.prenom.toLowerCase().includes(q) ||
       c.nom.toLowerCase().includes(q) ||
-      c.email.toLowerCase().includes(q) ||
+      (c.email ?? "").toLowerCase().includes(q) ||
       (c.telephone ?? "").includes(q)
     );
   });

@@ -1,22 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { ChevronDown, Download, Bot, User, Loader2 } from "lucide-react";
-
-interface ChatMessage {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  created_at: string;
-}
-
-interface ChatSession {
-  id: string;
-  last_message_at: string;
-  messages: ChatMessage[];
-}
+import { getChatSessions, type ChatSession } from "@/lib/actions/chat";
 
 export default function AdminChatPage() {
   const [sessions, setSessions]   = useState<ChatSession[]>([]);
@@ -24,45 +11,10 @@ export default function AdminChatPage() {
   const [openId, setOpenId]       = useState<string | null>(null);
 
   useEffect(() => {
-    async function load() {
-      const supabase = createClient();
-
-      const { data: sessionsRaw } = await supabase
-        .from("chat_sessions")
-        .select("id, last_message_at")
-        .order("last_message_at", { ascending: false })
-        .limit(200);
-
-      if (!sessionsRaw || sessionsRaw.length === 0) {
-        setLoading(false);
-        return;
-      }
-
-      const ids = sessionsRaw.map(s => s.id);
-      const { data: messagesRaw } = await supabase
-        .from("chat_messages")
-        .select("id, session_id, role, content, created_at")
-        .in("session_id", ids)
-        .order("created_at", { ascending: true });
-
-      const msgBySession: Record<string, ChatMessage[]> = {};
-      for (const m of messagesRaw ?? []) {
-        if (!msgBySession[m.session_id]) msgBySession[m.session_id] = [];
-        msgBySession[m.session_id].push(m as ChatMessage);
-      }
-
-      const result: ChatSession[] = sessionsRaw
-        .map(s => ({
-          id: s.id,
-          last_message_at: s.last_message_at,
-          messages: msgBySession[s.id] ?? [],
-        }))
-        .filter(s => s.messages.length > 0);
-
-      setSessions(result);
+    getChatSessions().then((data) => {
+      setSessions(data);
       setLoading(false);
-    }
-    load();
+    });
   }, []);
 
   function exportJson() {

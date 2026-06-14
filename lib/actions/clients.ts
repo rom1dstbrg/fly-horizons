@@ -24,6 +24,7 @@ export async function sendEmailToClient(clientId: string, subject: string, body:
       .eq("id", clientId)
       .single();
     if (!client) return { error: "Client introuvable" };
+    if (!client.email) return { error: "Ce client n'a pas d'email renseigné" };
     const { error: emailError } = await resend.emails.send({
       from: EMAIL_FROM,
       to: [client.email],

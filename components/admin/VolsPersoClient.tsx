@@ -6,6 +6,8 @@ import {
   updateStatutReservationPerso,
   sendCustomEmail,
   sendRescheduleInvite,
+  setAvionReserve,
+  recordCashPayment,
 } from "@/lib/actions/reservations";
 import {
   updateReservationAllFields,
@@ -24,7 +26,7 @@ import {
   CreditCard, Loader2, Send, Check, MapPin,
   Sparkles, RotateCcw, Zap, Wind, AlertTriangle,
   CheckCircle2, XCircle, ChevronRight, Copy, Plus, Trash2,
-  List, Map as MapIcon, ArrowUpDown,
+  List, Map as MapIcon, ArrowUpDown, ExternalLink, Banknote,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 
@@ -58,6 +60,7 @@ type Reservation = {
   created_at: string;
   date_confirmee_at: string | null;
   heure_confirmee_at: string | null;
+  avion_reserve?: boolean;
   clients: { id: string; prenom: string; nom: string; email: string; telephone: string | null } | null;
   route_proposals: Array<{ status: string; created_at: string }> | null;
 };
@@ -208,6 +211,10 @@ function VolsPersoDrawer({
 }) {
   const [isPending, startTransition] = useTransition();
   const [emailPending, startEmailTransition] = useTransition();
+  const [isReservePending, startReserveTransition] = useTransition();
+  const [avionReserve, setAvionReserveLocal] = useState(reservation?.avion_reserve ?? false);
+  const [isCashPending, startCashTransition] = useTransition();
+  const [cashMontant, setCashMontant] = useState("");
 
   // Tab
   const [activeTab, setActiveTab] = useState<Tab>("infos");
@@ -277,6 +284,8 @@ function VolsPersoDrawer({
     setDraftCouponCode(reservation.coupon_code ?? "");
     setDraftCommentaire(reservation.commentaire ?? "");
     setDraftStyleVol(reservation.style_vol ?? "");
+    setAvionReserveLocal(reservation.avion_reserve ?? false);
+    setCashMontant(reservation.acompte != null ? String(reservation.acompte) : "");
     // Final waypoints: load from saved state, or fall back to client route — always optimized
     const fw = reservation.final_waypoints ?? [];
     const rawDrafts = fw.length > 0
@@ -586,6 +595,72 @@ function VolsPersoDrawer({
                   )}
                 </div>
 
+                {/* Encart NewCAG */}
+                {r.statut !== "annulee" && (() => {
+                  const dureeNewCAG = Math.ceil(r.duree / 15) * 15 + 45;
+                  const h = Math.floor(dureeNewCAG / 60);
+                  const m = dureeNewCAG % 60;
+                  const dureeLabel = h > 0
+                    ? (m > 0 ? `${h}h${String(m).padStart(2, "0")}` : `${h}h`)
+                    : `${m} min`;
+                  const dateLabelNewCAG = r.date_vol
+                    ? new Date(r.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long" })
+                    : null;
+                  const toggle = (val: boolean) => {
+                    startReserveTransition(async () => {
+                      await setAvionReserve(r.id, val);
+                      setAvionReserveLocal(val);
+                    });
+                  };
+                  return avionReserve ? (
+                    <div className="bg-green-50 border border-green-200 rounded-xl p-3.5 flex items-start gap-3">
+                      <span className="text-green-500 mt-0.5 shrink-0">✓</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-green-800 mb-1">Avion réservé sur NewCAG</p>
+                        {dateLabelNewCAG && (
+                          <p className="text-[11px] text-green-700">{dateLabelNewCAG}{r.heure_vol ? ` à ${r.heure_vol}` : ""} — {dureeLabel}</p>
+                        )}
+                        <button
+                          onClick={() => toggle(false)}
+                          disabled={isReservePending}
+                          className="mt-2 text-[10px] text-green-600 hover:text-green-900 underline underline-offset-2 cursor-pointer transition-colors"
+                        >
+                          Annuler la réservation avion
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 space-y-2">
+                      <p className="text-xs font-semibold text-amber-800">Réserve l&apos;avion sur NewCAG avant de confirmer.</p>
+                      <div className="text-[11px] text-amber-700 space-y-0.5">
+                        {dateLabelNewCAG && (
+                          <p><span className="font-semibold">Date :</span> {dateLabelNewCAG}{r.heure_vol ? ` à ${r.heure_vol}` : ""}</p>
+                        )}
+                        <p><span className="font-semibold">Durée :</span> {dureeLabel} (arrondi ¼h + 45 min)</p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <a
+                          href="https://newcag.flymate.app/bookings"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 hover:text-amber-900 underline underline-offset-2 transition-colors"
+                        >
+                          Ouvrir NewCAG
+                          <ExternalLink size={10} />
+                        </a>
+                        <button
+                          onClick={() => toggle(true)}
+                          disabled={isReservePending}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-600 text-white text-[11px] font-semibold hover:bg-amber-700 transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          {isReservePending ? <Loader2 size={10} className="animate-spin" /> : null}
+                          Marquer comme réservé
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* Vol */}
                 <div>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-2">Vol</p>
@@ -752,6 +827,44 @@ function VolsPersoDrawer({
                         {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
                         Confirmer date + heure, envoyer l&apos;email
                       </button>
+                    )}
+
+                    {r.statut === "en_attente" && r.acompte != null && (
+                      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 space-y-2.5">
+                        <p className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+                          <Banknote size={11} />
+                          Paiement cash
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            min={0}
+                            step={0.01}
+                            value={cashMontant}
+                            onChange={e => setCashMontant(e.target.value)}
+                            placeholder={String(r.acompte)}
+                            className="flex-1 h-8 px-2.5 rounded-lg border border-emerald-200 bg-white text-sm font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                          />
+                          <span className="text-sm text-emerald-700 font-semibold shrink-0">€</span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const amount = parseFloat(cashMontant);
+                            if (!amount || amount <= 0) return;
+                            startCashTransition(async () => {
+                              const res = await recordCashPayment(r.id, amount);
+                              if (res.error) { showFeedback("Erreur : " + res.error, false); return; }
+                              onStatusChange(r.id, "acompte_recu");
+                              showFeedback("Paiement cash enregistré ✓");
+                            });
+                          }}
+                          disabled={isCashPending || !cashMontant || parseFloat(cashMontant) <= 0}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          {isCashPending ? <Loader2 size={14} className="animate-spin" /> : <Banknote size={14} />}
+                          Encaisser en cash
+                        </button>
+                      </div>
                     )}
 
                     {r.statut === "acompte_recu" && (

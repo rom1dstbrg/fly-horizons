@@ -6,7 +6,7 @@ import {
   ArrowRight, Route, MessageSquare, Ticket,
   Users, Plus, Package,
   CalendarDays, Tag, ChevronRight, CreditCard,
-  PlaneTakeoff,
+  PlaneTakeoff, TrendingUp, TrendingDown, WifiOff,
 } from "lucide-react";
 import { PremiumPlaneIcon } from "@/components/admin/PremiumPlaneIcon";
 import { formatPrice } from "@/lib/utils";
@@ -43,7 +43,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 
 function KPICard({ label, value, icon: Icon, accent = "navy", href }: {
   label: string; value: string;
-  icon: React.ElementType; accent?: "navy" | "gold" | "green" | "purple";
+  icon: React.ElementType; accent?: "navy" | "gold" | "green" | "purple" | "red";
   href?: string;
 }) {
   const c = {
@@ -51,6 +51,7 @@ function KPICard({ label, value, icon: Icon, accent = "navy", href }: {
     gold:   { bg: "bg-[#F2B705]/10",  val: "text-[#b88c00]" },
     green:  { bg: "bg-green-500/10",  val: "text-green-600" },
     purple: { bg: "bg-purple-500/10", val: "text-purple-600" },
+    red:    { bg: "bg-red-500/10",    val: "text-red-600" },
   }[accent];
 
   const inner = (
@@ -94,11 +95,11 @@ export default async function AdminDashboardPage() {
     // Réservations — tous les champs requis par DrawerReservation
     supabase.from("reservations").select(
       `id, date_vol, heure_vol, duree, statut, type_resa, created_at,
-       voucher_code, coupon_code, payment_status, commentaire, acompte, paye, payment_token,
-       route, route_token, route_status, route_feedback, passagers, poids_total,
+       voucher_code, coupon_code, payment_status, commentaire, acompte, paye, remboursement, payment_token,
+       route, route_token, route_status, route_feedback, passagers, poids_total, avion_reserve,
        clients(id, prenom, nom, email, telephone)`
     ).order("created_at", { ascending: false }),
-    supabase.from("clients").select("email"),
+    supabase.from("clients").select("id, email"),
     supabase.from("voucher_codes").select("id", { count: "exact", head: true }).eq("status", "unused"),
     supabase.from("contacts").select("id, prenom, nom, created_at")
       .eq("statut", "nouveau").order("created_at", { ascending: false }).limit(5),
@@ -117,9 +118,27 @@ export default async function AdminDashboardPage() {
   const resaPerso = allResas.filter(r => r.type_resa === "perso");
 
   // ── KPIs
-  const caMonth        = (monthOrders ?? []).reduce((s, o) => s + (o.total ?? 0), 0);
-  const resasThisMonth = allResas.filter(r => r.created_at >= monthStart && r.statut !== "annulee").length;
-  const clientsUniques = new Set((allClients ?? []).map(c => c.email.toLowerCase())).size;
+  const caMonthOrders   = (monthOrders ?? []).reduce((s, o) => s + (o.total ?? 0), 0);
+  const caMonthResas    = allResas
+    .filter(r => r.created_at >= monthStart && r.statut !== "annulee" && r.paye)
+    .reduce((s: number, r: { paye: number | null; remboursement?: number | null }) => s + (r.paye ?? 0) - (r.remboursement ?? 0), 0);
+  const caMonth         = caMonthOrders + caMonthResas;
+  const resasThisMonth  = allResas.filter(r => r.created_at >= monthStart && r.statut !== "annulee").length;
+  const clientsUniques  = new Set((allClients ?? []).map(c => c.email?.toLowerCase() ?? c.id)).size;
+
+  // ── Surplus / déficit global (vols effectués avec acompte renseigné)
+  // Pour les réservations payées par voucher (paye=0), l'acompte est considéré comme reçu
+  // car le voucher a déjà été comptabilisé dans le CA boutique au moment de l'achat.
+  const resasAvecBalance = allResas.filter(
+    (r: { statut: string; acompte: number | null }) =>
+      r.statut === "vol_effectue" && r.acompte != null
+  );
+  const totalDu   = resasAvecBalance.reduce((s: number, r: { acompte: number }) => s + r.acompte, 0);
+  const totalRecu = resasAvecBalance.reduce((s: number, r: { paye: number | null; acompte: number; voucher_code?: string | null; remboursement?: number | null }) => {
+    const recu = (r.paye != null && r.paye > 0) ? r.paye : (r.voucher_code ? r.acompte : 0);
+    return s + recu - (r.remboursement ?? 0);
+  }, 0);
+  const soldeGlobal = totalRecu - totalDu;
 
   // ── Actionnables
   const paymentPending   = resaStd.filter(r => r.statut === "payment_pending").length;
@@ -189,15 +208,22 @@ export default async function AdminDashboardPage() {
             <Route size={15} />
             Nouveau vol sur mesure
           </Link>
+          <Link
+            href="/admin/reservations/new-horsite"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          >
+            <WifiOff size={15} />
+            Hors site
+          </Link>
         </div>
       </div>
 
       {/* ── KPIs ─────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KPICard label="CA ce mois"     value={formatPrice(caMonth)}            icon={CreditCard}       accent="navy"   />
-        <KPICard label="Vols ce mois"   value={String(resasThisMonth)}          icon={PremiumPlaneIcon} accent="gold"   href="/admin/vols" />
-        <KPICard label="Clients"        value={String(clientsUniques)}          icon={Users}            accent="green"  href="/admin/clients" />
-        <KPICard label="Vouchers dispo" value={String(vouchersDispoCount ?? 0)} icon={Ticket}           accent="purple" href="/admin/boutique?tab=vouchers" />
+        <KPICard label="CA ce mois"  value={formatPrice(caMonth)}                                                            icon={CreditCard}                                   accent="navy"                              />
+        <KPICard label="Solde vols"  value={`${soldeGlobal >= 0 ? "+" : ""}${formatPrice(soldeGlobal)}`}                     icon={soldeGlobal >= 0 ? TrendingUp : TrendingDown} accent={soldeGlobal >= 0 ? "green" : "red"} />
+        <KPICard label="Vols ce mois" value={String(resasThisMonth)}                                                          icon={PremiumPlaneIcon}                             accent="gold"                              href="/admin/vols" />
+        <KPICard label="Clients"     value={String(clientsUniques)}                                                            icon={Users}                                        accent="green"                             href="/admin/clients" />
       </div>
 
       {/* ── MAIN GRID ────────────────────────────────────────────────── */}
@@ -364,8 +390,9 @@ export default async function AdminDashboardPage() {
             <SectionTitle>Actions rapides</SectionTitle>
             <div className="bg-card rounded-xl border border-border overflow-hidden">
               {([
-                { href: "/admin/reservations/new",        icon: Plus,         label: "Nouvelle réservation",    color: "text-navy" },
-                { href: "/admin/reservations/new-mesure", icon: Route,        label: "Nouveau vol sur mesure",  color: "text-emerald-600" },
+                { href: "/admin/reservations/new",          icon: Plus,    label: "Nouvelle réservation",   color: "text-navy" },
+                { href: "/admin/reservations/new-mesure",  icon: Route,   label: "Nouveau vol sur mesure", color: "text-emerald-600" },
+                { href: "/admin/reservations/new-horsite", icon: WifiOff, label: "Vol hors-site",          color: "text-slate-500" },
                 { href: "/admin/boutique?tab=vouchers",   icon: Ticket,       label: "Nouveau voucher",      color: "text-purple-600" },
                 { href: "/admin/boutique?tab=produits",   icon: Package,      label: "Nouvelle offre",       color: "text-amber-600" },
                 { href: "/admin/boutique?tab=coupons",    icon: Tag,          label: "Nouveau coupon",       color: "text-blue-600" },

@@ -8,13 +8,16 @@ import {
   Ticket, CreditCard, CheckCircle2, XCircle, ChevronRight,
   Loader2, Send, Check, MapPin, AlertTriangle,
   Copy, ExternalLink, Sparkles, RotateCcw, Calculator, ChevronDown,
-  Maximize2, Minimize2, Save, Navigation,
+  Maximize2, Minimize2, Save, Navigation, Banknote,
 } from "lucide-react";
 import {
   updateStatutReservation,
   updateStatutReservationPerso,
   sendCustomEmail,
+  setAvionReserve,
+  recordCashPayment,
   resendPaymentLinkAdmin,
+  sendPaymentLinkAdmin,
   sendRescheduleInvite,
 } from "@/lib/actions/reservations";
 import {
@@ -34,9 +37,14 @@ const AdminRouteEditorDynamic = dynamic(
   { ssr: false, loading: () => <div className="h-[280px] rounded-lg bg-secondary animate-pulse" /> }
 );
 import { AdminBadge, STATUT_RESA, STATUT_PERSO } from "@/components/admin/ui/AdminBadge";
+import type { BadgeVariant } from "@/components/admin/ui/AdminBadge";
 
-// Map fusionné : couvre standard + perso
-const STATUT_MAP = { ...STATUT_RESA, ...STATUT_PERSO };
+// Map fusionné : couvre standard + perso (acompte_recu = "Payé" pour les résa standard)
+const STATUT_MAP: Record<string, { label: string; variant: BadgeVariant }> = {
+  ...STATUT_RESA,
+  ...STATUT_PERSO,
+  acompte_recu: { label: "Payé", variant: "emerald" },
+};
 
 // ── Templates email prêts à l'emploi ──────────────────────────────────────────
 type EmailTemplate = { label: string; subject: (dateStr: string) => string; body: (prenom: string, dateStr: string) => string; includeReschedule?: boolean };
@@ -160,12 +168,14 @@ export interface DrawerReservation {
   commentaire: string | null;
   acompte: number | null;
   paye: number | null;
+  remboursement?: number | null;
   payment_token: string | null;
   created_at: string;
   route?: string | null;
   route_token?: string | null;
   route_status?: string | null;
   route_feedback?: string | null;
+  avion_reserve?: boolean;
   final_waypoints?: Array<{ lat: number; lng: number; nom?: string }> | null;
   clients: {
     id: string;
@@ -186,6 +196,10 @@ export function ReservationDrawer({
   onStatusChange?: (id: string, newStatut: string) => void;
 }) {
   const [isPending, startTransition] = useTransition();
+  const [isReservePending, startReserveTransition] = useTransition();
+  const [avionReserve, setAvionReserveLocal] = useState(reservation?.avion_reserve ?? false);
+  const [isCashPending, startCashTransition] = useTransition();
+  const [cashMontant, setCashMontant] = useState("");
 
   // Tab navigation
   const [activeTab, setActiveTab] = useState<Tab>("infos");
@@ -202,6 +216,7 @@ export function ReservationDrawer({
   const [draftPoids, setDraftPoids] = useState("");
   const [draftAcompte, setDraftAcompte] = useState("");
   const [draftPaye, setDraftPaye] = useState("");
+  const [draftRemboursement, setDraftRemboursement] = useState("");
   const [draftPaymentStatus, setDraftPaymentStatus] = useState<"paid" | "unpaid" | "partial" | "refunded">("unpaid");
   const [draftVoucherCode, setDraftVoucherCode] = useState("");
   const [draftCouponCode, setDraftCouponCode] = useState("");
@@ -277,6 +292,7 @@ export function ReservationDrawer({
     setDraftPoids(reservation.poids_total != null ? String(reservation.poids_total) : "");
     setDraftAcompte(reservation.acompte != null ? String(reservation.acompte) : "");
     setDraftPaye(reservation.paye != null ? String(reservation.paye) : "");
+    setDraftRemboursement(reservation.remboursement != null && reservation.remboursement > 0 ? String(reservation.remboursement) : "");
     setDraftPaymentStatus((reservation.payment_status ?? "unpaid") as "paid" | "unpaid" | "partial" | "refunded");
     setDraftVoucherCode(reservation.voucher_code ?? "");
     setDraftCouponCode(reservation.coupon_code ?? "");
@@ -287,6 +303,8 @@ export function ReservationDrawer({
     setLocalRouteStatus(reservation.route_status ?? null);
     setLocalRouteFeedback(reservation.route_feedback ?? null);
     setCalcOpen(false);
+    setAvionReserveLocal(reservation.avion_reserve ?? false);
+    setCashMontant(reservation.acompte != null ? String(reservation.acompte) : "");
     setCalcDureeReelle("");
     setActiveTab("infos");
     setHistoryLoaded(false);
@@ -404,7 +422,16 @@ export function ReservationDrawer({
           poids_total: draftPoids ? parseFloat(draftPoids) : null,
           acompte: draftAcompte ? parseFloat(draftAcompte) : null,
           paye: draftPaye ? parseFloat(draftPaye) : null,
-          payment_status: draftPaymentStatus,
+          remboursement: draftRemboursement ? parseFloat(draftRemboursement) : null,
+          payment_status: (() => {
+            const remb = parseFloat(draftRemboursement) || 0;
+            const paye = parseFloat(draftPaye) || 0;
+            const acompte = parseFloat(draftAcompte) || 0;
+            if (remb > 0) return "refunded" as const;
+            if (paye > 0 && paye >= acompte) return "paid" as const;
+            if (paye > 0) return "partial" as const;
+            return "unpaid" as const;
+          })(),
           voucher_code: draftVoucherCode.trim() || null,
           coupon_code: draftCouponCode.trim() || null,
           commentaire: draftCommentaire.trim() || null,
@@ -636,6 +663,78 @@ export function ReservationDrawer({
                   )}
                 </div>
 
+                {/* Encart NewCAG */}
+                {r.statut !== "annulee" && (
+                  r.type_resa === "perso" ||
+                  ["acompte_recu", "date_confirmee", "heure_confirmee", "vol_effectue"].includes(r.statut)
+                ) && (() => {
+                  const isPerso = r.type_resa === "perso";
+                  const dureeNewCAG = isPerso
+                    ? Math.ceil(r.duree / 15) * 15 + 45
+                    : r.duree + 60;
+                  const h = Math.floor(dureeNewCAG / 60);
+                  const m = dureeNewCAG % 60;
+                  const dureeLabel = h > 0
+                    ? (m > 0 ? `${h}h${String(m).padStart(2, "0")}` : `${h}h`)
+                    : `${m} min`;
+                  const dateLabel = r.date_vol
+                    ? new Date(r.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long" })
+                    : null;
+                  const toggle = (val: boolean) => {
+                    startReserveTransition(async () => {
+                      await setAvionReserve(r.id, val);
+                      setAvionReserveLocal(val);
+                    });
+                  };
+                  return avionReserve ? (
+                    <div className="bg-green-50 border border-green-200 rounded-xl p-3.5 flex items-start gap-3">
+                      <span className="text-green-500 mt-0.5 shrink-0">✓</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-green-800 mb-1">Avion réservé sur NewCAG</p>
+                        {dateLabel && (
+                          <p className="text-[11px] text-green-700">{dateLabel}{r.heure_vol ? ` à ${r.heure_vol}` : ""} — {dureeLabel}</p>
+                        )}
+                        <button
+                          onClick={() => toggle(false)}
+                          disabled={isReservePending}
+                          className="mt-2 text-[10px] text-green-600 hover:text-green-900 underline underline-offset-2 cursor-pointer transition-colors"
+                        >
+                          Annuler la réservation avion
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 space-y-2">
+                      <p className="text-xs font-semibold text-amber-800">Réserve l&apos;avion sur NewCAG avant de confirmer.</p>
+                      <div className="text-[11px] text-amber-700 space-y-0.5">
+                        {dateLabel && (
+                          <p><span className="font-semibold">Date :</span> {dateLabel}{r.heure_vol ? ` à ${r.heure_vol}` : ""}</p>
+                        )}
+                        <p><span className="font-semibold">Durée :</span> {dureeLabel}{isPerso ? " (arrondi ¼h + 45 min)" : " (vol + 60 min)"}</p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <a
+                          href="https://newcag.flymate.app/bookings"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 hover:text-amber-900 underline underline-offset-2 transition-colors"
+                        >
+                          Ouvrir NewCAG
+                          <ExternalLink size={10} />
+                        </a>
+                        <button
+                          onClick={() => toggle(true)}
+                          disabled={isReservePending}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-600 text-white text-[11px] font-semibold hover:bg-amber-700 transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          {isReservePending ? <Loader2 size={10} className="animate-spin" /> : null}
+                          Marquer comme réservé
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* Vol details */}
                 <div>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-2">Vol</p>
@@ -693,6 +792,20 @@ export function ReservationDrawer({
                             <span className="text-amber-600 text-xs">Pas encore encaissé</span>
                           </div>
                         )}
+                        {r.remboursement != null && r.remboursement > 0 && (
+                          <>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <RotateCcw size={13} className="text-blue-500" />
+                              <span className="text-blue-600 font-semibold">−{r.remboursement} € remboursé</span>
+                            </div>
+                            {r.paye != null && (
+                              <div className="flex items-center gap-1.5 mt-1 pt-1 border-t border-border">
+                                <span className="text-xs text-muted-foreground">Net :</span>
+                                <span className="font-semibold text-sm">{r.paye - r.remboursement} €</span>
+                              </div>
+                            )}
+                          </>
+                        )}
                       </Field>
                     )}
                     {r.payment_status && PAYMENT_STATUS_CONFIG[r.payment_status] && (
@@ -715,11 +828,6 @@ export function ReservationDrawer({
                         <span className="font-mono text-xs tracking-wider">{r.coupon_code}</span>
                       </Field>
                     )}
-                    <Field label="Type">
-                      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-secondary border border-border mt-0.5">
-                        {r.type_resa === "standard" ? "Standard" : "Sur mesure"}
-                      </span>
-                    </Field>
                   </div>
                 </div>
 
@@ -862,8 +970,16 @@ export function ReservationDrawer({
                       />
                     )}
 
-                    {/* Save + ForeFlight */}
-                    <div className="flex items-center gap-2 mt-2">
+                    {/* Message + boutons */}
+                    <textarea
+                      value={routeComment}
+                      onChange={e => setRouteComment(e.target.value)}
+                      rows={2}
+                      placeholder="Message pour le client (optionnel)…"
+                      className="w-full mt-2 px-2.5 py-2 rounded-lg border border-input bg-background text-xs resize-none focus:outline-none focus:ring-1 focus:ring-navy/30 placeholder:text-muted-foreground"
+                    />
+
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
                       <button
                         onClick={saveRoute}
                         disabled={isPending || routeDraft.length === 0}
@@ -873,32 +989,20 @@ export function ReservationDrawer({
                         Sauvegarder
                       </button>
                       <button
-                        onClick={copyForeFlight}
-                        disabled={routeDraft.length === 0}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-40 cursor-pointer"
-                      >
-                        <Copy size={11} />
-                        {foreFlightCopied ? "Copié !" : "ForeFlight"}
-                      </button>
-                    </div>
-
-                    {/* Message + send to client */}
-                    <textarea
-                      value={routeComment}
-                      onChange={e => setRouteComment(e.target.value)}
-                      rows={2}
-                      placeholder="Message pour le client (optionnel)…"
-                      className="w-full mt-2 px-2.5 py-2 rounded-lg border border-input bg-background text-xs resize-none focus:outline-none focus:ring-1 focus:ring-navy/30 placeholder:text-muted-foreground"
-                    />
-
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <button
                         onClick={sendRouteProposal}
                         disabled={isPending || routeDraft.length === 0}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-semibold hover:brightness-90 transition-colors disabled:opacity-40 cursor-pointer"
                       >
                         {isPending ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}
                         {localRouteStatus ? "Renvoyer au client" : "Envoyer au client"}
+                      </button>
+                      <button
+                        onClick={copyForeFlight}
+                        disabled={routeDraft.length === 0}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-40 cursor-pointer"
+                      >
+                        <Copy size={11} />
+                        {foreFlightCopied ? "Copié !" : "ForeFlight"}
                       </button>
                     </div>
 
@@ -916,166 +1020,8 @@ export function ReservationDrawer({
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-2">Actions</p>
                   <div className="space-y-2">
 
-                      {r.statut === "en_attente" && (
-                        <>
-                          <button
-                            onClick={() => changeStatut("heure_confirmee")}
-                            disabled={isPending}
-                            className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 cursor-pointer"
-                          >
-                            {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
-                            Confirmer date + heure, envoyer l&apos;email
-                          </button>
-                          {isStandard && !localRouteStatus && (
-                            <p className="text-xs text-amber-600 flex items-center gap-1.5 px-1">
-                              <AlertTriangle size={12} />
-                              Route requise pour confirmer la date + heure
-                            </p>
-                          )}
-                        </>
-                      )}
-
-                      {r.statut === "date_confirmee" && (
-                        <>
-                          <button
-                            onClick={() => changeStatut("heure_confirmee")}
-                            disabled={isPending}
-                            className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 cursor-pointer"
-                          >
-                            {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
-                            Confirmer l&apos;heure, envoyer l&apos;email
-                          </button>
-                          {isStandard && !localRouteStatus && (
-                            <p className="text-xs text-amber-600 flex items-center gap-1.5 px-1">
-                              <AlertTriangle size={12} />
-                              Route requise pour confirmer la date + heure
-                            </p>
-                          )}
-                          <button
-                            onClick={() => changeStatut("en_attente")}
-                            disabled={isPending}
-                            className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-50 cursor-pointer"
-                          >
-                            <ChevronRight size={14} className="rotate-180" />
-                            Revenir en attente
-                          </button>
-                        </>
-                      )}
-
-                      {r.statut === "heure_confirmee" && (
-                        <>
-                          <button
-                            onClick={() => changeStatut("vol_effectue")}
-                            disabled={isPending}
-                            className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-purple-500 text-white text-sm font-semibold hover:bg-purple-600 transition-colors disabled:opacity-50 cursor-pointer"
-                          >
-                            {isPending ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
-                            Marquer vol effectué
-                          </button>
-                          <button
-                            onClick={() => changeStatut("en_attente")}
-                            disabled={isPending}
-                            className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-50 cursor-pointer"
-                          >
-                            <ChevronRight size={14} className="rotate-180" />
-                            Revenir en attente
-                          </button>
-                        </>
-                      )}
-
-                      {r.statut === "vol_effectue" && (
-                        <div className="flex items-center gap-2.5 px-4 py-3 rounded-lg bg-purple-50 border border-purple-200">
-                          <CheckCircle2 size={14} className="text-purple-600" />
-                          <span className="text-sm text-purple-700 font-medium">Vol effectué, dossier clôturé</span>
-                        </div>
-                      )}
-
-                      {r.statut !== "annulee" && r.statut !== "vol_effectue" && (
-                        <button
-                          onClick={doSendRescheduleInvite}
-                          disabled={isPending}
-                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-amber-200 text-sm text-amber-600 hover:bg-amber-50 transition-colors disabled:opacity-50 cursor-pointer"
-                        >
-                          {isPending ? <Loader2 size={14} className="animate-spin" /> : <RotateCcw size={14} />}
-                          Proposer un report
-                        </button>
-                      )}
-
-                      {r.statut !== "annulee" && r.statut !== "vol_effectue" && (
-                        <button
-                          onClick={() => changeStatut("annulee")}
-                          disabled={isPending}
-                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-red-200 text-sm text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50 cursor-pointer"
-                        >
-                          <XCircle size={14} />
-                          Annuler la réservation
-                        </button>
-                      )}
-
-                      {r.statut === "annulee" && (
-                        <button
-                          onClick={() => changeStatut("en_attente")}
-                          disabled={isPending}
-                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-navy text-white text-sm font-semibold hover:brightness-90 transition-colors disabled:opacity-50 cursor-pointer"
-                        >
-                          <ChevronRight size={14} />
-                          Réactiver la réservation
-                        </button>
-                      )}
-
-                      {r.statut === "payment_pending" && (
-                        <div className="space-y-2">
-                          {r.payment_token && (
-                            <div className="bg-orange-50 border border-orange-200 rounded-xl p-3.5 space-y-2.5">
-                              <p className="text-[10px] font-bold text-orange-800 uppercase tracking-wider">Lien de paiement</p>
-                              <div className="flex items-center gap-2">
-                                <code className="flex-1 min-w-0 text-[10px] font-mono text-orange-900 bg-white border border-orange-200 rounded-lg px-2.5 py-1.5 truncate">
-                                  /api/reservation/pay/{r.payment_token.slice(0, 12)}…
-                                </code>
-                                <button
-                                  type="button"
-                                  onClick={copyPaymentLink}
-                                  title="Copier le lien"
-                                  className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white border border-orange-200 text-xs font-semibold text-orange-700 hover:bg-orange-100 transition-colors cursor-pointer"
-                                >
-                                  {linkCopied ? <Check size={11} className="text-green-600" /> : <Copy size={11} />}
-                                  {linkCopied ? "Copié" : "Copier"}
-                                </button>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <button
-                                  type="button"
-                                  onClick={doResendPaymentLink}
-                                  disabled={isPending}
-                                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors disabled:opacity-50 cursor-pointer"
-                                >
-                                  {isPending ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}
-                                  Renvoyer l&apos;email de paiement
-                                </button>
-                                <a
-                                  href={`/api/reservation/pay/${r.payment_token}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center gap-1 px-2.5 py-2 rounded-lg bg-white border border-orange-200 text-xs text-orange-700 hover:bg-orange-100 transition-colors"
-                                  title="Ouvrir le lien"
-                                >
-                                  <ExternalLink size={11} />
-                                </a>
-                              </div>
-                            </div>
-                          )}
-                          <button
-                            onClick={() => changeStatut("en_attente")}
-                            disabled={isPending}
-                            className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-navy text-white text-sm font-semibold hover:brightness-90 transition-colors disabled:opacity-50 cursor-pointer"
-                          >
-                            <Check size={14} />
-                            Marquer paiement reçu
-                          </button>
-                        </div>
-                      )}
-
-                      {r.statut === "acompte_recu" && (
+                    {r.statut === "acompte_recu" && (
+                      <>
                         <button
                           onClick={() => changeStatut("heure_confirmee")}
                           disabled={isPending}
@@ -1084,9 +1030,261 @@ export function ReservationDrawer({
                           {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
                           Confirmer date + heure, envoyer l&apos;email
                         </button>
-                      )}
-                    </div>
+                        <button
+                          onClick={doSendRescheduleInvite}
+                          disabled={isPending}
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-amber-200 text-sm text-amber-600 hover:bg-amber-50 transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          {isPending ? <Loader2 size={14} className="animate-spin" /> : <RotateCcw size={14} />}
+                          Proposer un report
+                        </button>
+                        <button
+                          onClick={() => changeStatut("annulee")}
+                          disabled={isPending}
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-red-200 text-sm text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          <XCircle size={14} />
+                          Annuler la réservation
+                        </button>
+                      </>
+                    )}
+
+                    {r.statut === "en_attente" && (
+                      <>
+                        <button
+                          onClick={() => changeStatut("heure_confirmee")}
+                          disabled={isPending}
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                          Confirmer date + heure, envoyer l&apos;email
+                        </button>
+                        {isStandard && !localRouteStatus && (
+                          <p className="text-xs text-amber-600 flex items-center gap-1.5 px-1">
+                            <AlertTriangle size={12} />
+                            Route requise pour confirmer la date + heure
+                          </p>
+                        )}
+                        {isStandard && (
+                          <button
+                            onClick={() => {
+                              startTransition(async () => {
+                                const res = await sendPaymentLinkAdmin(r.id);
+                                if (res.error) { showFeedback("Erreur : " + res.error, false); return; }
+                                onStatusChange?.(r.id, "payment_pending");
+                                showFeedback("Lien de paiement envoyé ✓");
+                              });
+                            }}
+                            disabled={isPending}
+                            className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-orange-200 text-sm text-orange-600 hover:bg-orange-50 transition-colors disabled:opacity-50 cursor-pointer"
+                          >
+                            {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                            Envoyer le lien de paiement
+                          </button>
+                        )}
+                        {r.acompte != null && (
+                          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 space-y-2.5">
+                            <p className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+                              <Banknote size={11} />
+                              Paiement cash
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <input type="number" min={0} step={0.01} value={cashMontant} onChange={e => setCashMontant(e.target.value)} placeholder={String(r.acompte)} className="flex-1 h-8 px-2.5 rounded-lg border border-emerald-200 bg-white text-sm font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-400" />
+                              <span className="text-sm text-emerald-700 font-semibold shrink-0">€</span>
+                            </div>
+                            <button onClick={() => { const amount = parseFloat(cashMontant); if (!amount || amount <= 0) return; startCashTransition(async () => { const res = await recordCashPayment(r.id, amount); if (res.error) { showFeedback("Erreur : " + res.error, false); return; } onStatusChange?.(r.id, "acompte_recu"); showFeedback("Paiement cash enregistré ✓"); }); }} disabled={isCashPending || !cashMontant || parseFloat(cashMontant) <= 0} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50 cursor-pointer">
+                              {isCashPending ? <Loader2 size={14} className="animate-spin" /> : <Banknote size={14} />}
+                              Encaisser en cash
+                            </button>
+                          </div>
+                        )}
+                        <button
+                          onClick={doSendRescheduleInvite}
+                          disabled={isPending}
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-amber-200 text-sm text-amber-600 hover:bg-amber-50 transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          {isPending ? <Loader2 size={14} className="animate-spin" /> : <RotateCcw size={14} />}
+                          Proposer un report
+                        </button>
+                        <button
+                          onClick={() => changeStatut("annulee")}
+                          disabled={isPending}
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-red-200 text-sm text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          <XCircle size={14} />
+                          Annuler la réservation
+                        </button>
+                      </>
+                    )}
+
+                    {r.statut === "date_confirmee" && (
+                      <>
+                        <button
+                          onClick={() => changeStatut("heure_confirmee")}
+                          disabled={isPending}
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                          Confirmer l&apos;heure, envoyer l&apos;email
+                        </button>
+                        {isStandard && !localRouteStatus && (
+                          <p className="text-xs text-amber-600 flex items-center gap-1.5 px-1">
+                            <AlertTriangle size={12} />
+                            Route requise pour confirmer la date + heure
+                          </p>
+                        )}
+                        <button
+                          onClick={() => changeStatut("en_attente")}
+                          disabled={isPending}
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          <ChevronRight size={14} className="rotate-180" />
+                          Revenir en attente
+                        </button>
+                        <button
+                          onClick={doSendRescheduleInvite}
+                          disabled={isPending}
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-amber-200 text-sm text-amber-600 hover:bg-amber-50 transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          {isPending ? <Loader2 size={14} className="animate-spin" /> : <RotateCcw size={14} />}
+                          Proposer un report
+                        </button>
+                        <button
+                          onClick={() => changeStatut("annulee")}
+                          disabled={isPending}
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-red-200 text-sm text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          <XCircle size={14} />
+                          Annuler la réservation
+                        </button>
+                      </>
+                    )}
+
+                    {r.statut === "heure_confirmee" && (
+                      <>
+                        <button
+                          onClick={() => changeStatut("vol_effectue")}
+                          disabled={isPending}
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-purple-500 text-white text-sm font-semibold hover:bg-purple-600 transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          {isPending ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+                          Marquer vol effectué
+                        </button>
+                        <button
+                          onClick={() => changeStatut("en_attente")}
+                          disabled={isPending}
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          <ChevronRight size={14} className="rotate-180" />
+                          Revenir en attente
+                        </button>
+                        <button
+                          onClick={doSendRescheduleInvite}
+                          disabled={isPending}
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-amber-200 text-sm text-amber-600 hover:bg-amber-50 transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          {isPending ? <Loader2 size={14} className="animate-spin" /> : <RotateCcw size={14} />}
+                          Proposer un report
+                        </button>
+                        <button
+                          onClick={() => changeStatut("annulee")}
+                          disabled={isPending}
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-red-200 text-sm text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          <XCircle size={14} />
+                          Annuler la réservation
+                        </button>
+                      </>
+                    )}
+
+                    {r.statut === "vol_effectue" && (
+                      <div className="flex items-center gap-2.5 px-4 py-3 rounded-lg bg-purple-50 border border-purple-200">
+                        <CheckCircle2 size={14} className="text-purple-600" />
+                        <span className="text-sm text-purple-700 font-medium">Vol effectué, dossier clôturé</span>
+                      </div>
+                    )}
+
+                    {r.statut === "payment_pending" && (
+                      <>
+                        {r.payment_token && (
+                          <div className="bg-orange-50 border border-orange-200 rounded-xl p-3.5 space-y-2.5">
+                            <p className="text-[10px] font-bold text-orange-800 uppercase tracking-wider">Lien de paiement</p>
+                            <div className="flex items-center gap-2">
+                              <code className="flex-1 min-w-0 text-[10px] font-mono text-orange-900 bg-white border border-orange-200 rounded-lg px-2.5 py-1.5 truncate">
+                                /api/reservation/pay/{r.payment_token.slice(0, 12)}…
+                              </code>
+                              <button type="button" onClick={copyPaymentLink} title="Copier le lien" className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white border border-orange-200 text-xs font-semibold text-orange-700 hover:bg-orange-100 transition-colors cursor-pointer">
+                                {linkCopied ? <Check size={11} className="text-green-600" /> : <Copy size={11} />}
+                                {linkCopied ? "Copié" : "Copier"}
+                              </button>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button type="button" onClick={doResendPaymentLink} disabled={isPending} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors disabled:opacity-50 cursor-pointer">
+                                {isPending ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}
+                                Renvoyer l&apos;email de paiement
+                              </button>
+                              <a href={`/api/reservation/pay/${r.payment_token}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 px-2.5 py-2 rounded-lg bg-white border border-orange-200 text-xs text-orange-700 hover:bg-orange-100 transition-colors" title="Ouvrir le lien">
+                                <ExternalLink size={11} />
+                              </a>
+                            </div>
+                          </div>
+                        )}
+                        <button
+                          onClick={() => changeStatut("acompte_recu")}
+                          disabled={isPending}
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-navy text-white text-sm font-semibold hover:brightness-90 transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          <Check size={14} />
+                          Marquer paiement reçu
+                        </button>
+                        {r.acompte != null && (
+                          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 space-y-2.5">
+                            <p className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+                              <Banknote size={11} />
+                              Paiement cash
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <input type="number" min={0} step={0.01} value={cashMontant} onChange={e => setCashMontant(e.target.value)} placeholder={String(r.acompte)} className="flex-1 h-8 px-2.5 rounded-lg border border-emerald-200 bg-white text-sm font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-400" />
+                              <span className="text-sm text-emerald-700 font-semibold shrink-0">€</span>
+                            </div>
+                            <button onClick={() => { const amount = parseFloat(cashMontant); if (!amount || amount <= 0) return; startCashTransition(async () => { const res = await recordCashPayment(r.id, amount); if (res.error) { showFeedback("Erreur : " + res.error, false); return; } onStatusChange?.(r.id, "acompte_recu"); showFeedback("Paiement cash enregistré ✓"); }); }} disabled={isCashPending || !cashMontant || parseFloat(cashMontant) <= 0} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50 cursor-pointer">
+                              {isCashPending ? <Loader2 size={14} className="animate-spin" /> : <Banknote size={14} />}
+                              Encaisser en cash
+                            </button>
+                          </div>
+                        )}
+                        <button
+                          onClick={doSendRescheduleInvite}
+                          disabled={isPending}
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-amber-200 text-sm text-amber-600 hover:bg-amber-50 transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          {isPending ? <Loader2 size={14} className="animate-spin" /> : <RotateCcw size={14} />}
+                          Proposer un report
+                        </button>
+                        <button
+                          onClick={() => changeStatut("annulee")}
+                          disabled={isPending}
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-red-200 text-sm text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          <XCircle size={14} />
+                          Annuler la réservation
+                        </button>
+                      </>
+                    )}
+
+                    {r.statut === "annulee" && (
+                      <button
+                        onClick={() => changeStatut("en_attente")}
+                        disabled={isPending}
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-navy text-white text-sm font-semibold hover:brightness-90 transition-colors disabled:opacity-50 cursor-pointer"
+                      >
+                        <ChevronRight size={14} />
+                        Réactiver la réservation
+                      </button>
+                    )}
+
                   </div>
+                </div>
 
                 {/* Free email */}
                 <div>
@@ -1167,23 +1365,14 @@ export function ReservationDrawer({
                     <InputField label="Poids total (kg)">
                       <input type="number" value={draftPoids} onChange={e => setDraftPoids(e.target.value)} min={0} placeholder="—" className={inputCls} />
                     </InputField>
-                    <InputField label="Provision (€)">
+                    <InputField label="Prix demandé au client (€)">
                       <input type="number" value={draftAcompte} onChange={e => setDraftAcompte(e.target.value)} min={0} placeholder="—" className={inputCls} />
                     </InputField>
-                    <InputField label="Montant encaissé (€)">
+                    <InputField label="Montant payé (€)">
                       <input type="number" value={draftPaye} onChange={e => setDraftPaye(e.target.value)} min={0} placeholder="—" className={inputCls} />
                     </InputField>
-                    <InputField label="Statut paiement">
-                      <select
-                        value={draftPaymentStatus}
-                        onChange={e => setDraftPaymentStatus(e.target.value as "paid" | "unpaid" | "partial" | "refunded")}
-                        className={inputCls}
-                      >
-                        <option value="unpaid">Non payé</option>
-                        <option value="paid">Payé</option>
-                        <option value="partial">Partiel</option>
-                        <option value="refunded">Remboursé</option>
-                      </select>
+                    <InputField label="Montant remboursé (€)">
+                      <input type="number" value={draftRemboursement} onChange={e => setDraftRemboursement(e.target.value)} min={0} placeholder="—" className={inputCls} />
                     </InputField>
                   </div>
                 </div>

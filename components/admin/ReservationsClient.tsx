@@ -5,7 +5,7 @@ import { deleteReservationStandard } from "@/lib/actions/delete";
 import { ReservationDrawer, type DrawerReservation } from "@/components/admin/ReservationDrawer";
 import { AdminBadge, STATUT_RESA } from "@/components/admin/ui/AdminBadge";
 import { AdminRowActions } from "@/components/admin/ui/AdminRowActions";
-import { MapPin } from "lucide-react";
+import { MapPin, Search, X } from "lucide-react";
 
 const FILTERS = ["Tous", "En attente", "Confirmées", "Effectuées", "Annulées"] as const;
 const FILTER_MAP: Record<string, string[] | null> = {
@@ -46,6 +46,9 @@ function ReservationCard({
               {client ? `${client.prenom} ${client.nom}` : "—"}
             </p>
             <AdminBadge variant={statut.variant} label={statut.label} />
+            {r.remboursement != null && r.remboursement > 0 && (
+              <AdminBadge variant="secondary" label={`Remboursé −${r.remboursement} €`} />
+            )}
             {r.route_status === "modification_requested" && (
               <AdminBadge variant="danger" label="Modif. demandée" />
             )}
@@ -91,6 +94,7 @@ function ReservationCard({
 export function ReservationsClient({ reservations: initial }: { reservations: Reservation[] }) {
   const [reservations, setReservations] = useState<Reservation[]>(initial);
   const [filter, setFilter] = useState<typeof FILTERS[number]>("Tous");
+  const [search, setSearch] = useState("");
   const [drawer, setDrawer] = useState<Reservation | null>(null);
 
   function handleStatusChange(id: string, newStatut: string) {
@@ -104,19 +108,50 @@ export function ReservationsClient({ reservations: initial }: { reservations: Re
     return result;
   }
 
-  const filtered = filter === "Tous"
-    ? reservations
-    : reservations.filter(r => (FILTER_MAP[filter] ?? []).includes(r.statut));
+  const searchTerm = search.trim().toLowerCase();
+  const filtered = reservations
+    .filter(r => filter === "Tous" || (FILTER_MAP[filter] ?? []).includes(r.statut))
+    .filter(r => {
+      if (!searchTerm) return true;
+      const name = `${r.clients?.prenom ?? ""} ${r.clients?.nom ?? ""}`.toLowerCase();
+      const email = (r.clients?.email ?? "").toLowerCase();
+      return name.includes(searchTerm) || email.includes(searchTerm);
+    });
 
   return (
     <>
       <div className="space-y-4">
+        {/* Recherche */}
+        <div className="relative">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Rechercher par nom ou email…"
+            className="w-full h-9 pl-9 pr-8 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-1 focus:ring-navy/30 placeholder:text-muted-foreground"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            >
+              <X size={13} />
+            </button>
+          )}
+        </div>
+
         <div className="flex flex-wrap gap-2">
           {FILTERS.map(f => {
             const values = FILTER_MAP[f];
-            const count = values === null
-              ? reservations.length
-              : reservations.filter(r => values.includes(r.statut)).length;
+            const base = values === null ? reservations : reservations.filter(r => values.includes(r.statut));
+            const count = searchTerm
+              ? base.filter(r => {
+                  const name = `${r.clients?.prenom ?? ""} ${r.clients?.nom ?? ""}`.toLowerCase();
+                  const email = (r.clients?.email ?? "").toLowerCase();
+                  return name.includes(searchTerm) || email.includes(searchTerm);
+                }).length
+              : base.length;
             return (
               <button key={f} onClick={() => setFilter(f)}
                 className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors cursor-pointer ${

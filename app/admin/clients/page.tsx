@@ -28,7 +28,7 @@ export default async function ClientsPage() {
   }>();
 
   for (const client of clients ?? []) {
-    const key = client.email.toLowerCase();
+    const key = (client.email ?? client.id).toLowerCase();
     const existing = emailMap.get(key);
     if (existing) {
       existing.reservations.push(...(client.reservations ?? []));

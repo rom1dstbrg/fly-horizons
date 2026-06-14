@@ -407,20 +407,22 @@ export default async function HomePage() {
               </Link>
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-3 lg:grid-rows-2 gap-3 lg:h-[540px]">
               {galleryPreview.map((img, i) => (
                 <Link
                   key={img.src}
                   href="/galerie"
                   className={`relative overflow-hidden rounded-xl group cursor-pointer ${
-                    i === 0 ? "col-span-2 lg:col-span-1 row-span-2 aspect-[4/5]" : "aspect-video"
-                  }`}
+                    i === 0
+                      ? "col-span-2 aspect-video lg:col-span-1 lg:row-span-2 lg:aspect-auto"
+                      : "aspect-video lg:aspect-auto"
+                  } ${i >= 3 ? "hidden lg:block" : ""}`}
                 >
                   <Image
                     src={img.src}
                     alt={img.alt}
                     fill
-                    sizes="(max-width: 640px) 50vw, 33vw"
+                    sizes="(max-width: 1024px) 100vw, 33vw"
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />

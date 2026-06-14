@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { rateLimit, getIp } from "@/lib/rate-limit";
 
 export async function GET(request: NextRequest) {
+  const { allowed } = rateLimit(`promo-validate:${getIp(request)}`, 20, 60_000);
+  if (!allowed) {
+    return NextResponse.json({ valid: false, error: "Trop de requêtes, veuillez patienter." }, { status: 429 });
+  }
+
   const code = request.nextUrl.searchParams.get("code")?.toUpperCase().trim();
   if (!code) {
     return NextResponse.json({ valid: false, error: "Code manquant" });

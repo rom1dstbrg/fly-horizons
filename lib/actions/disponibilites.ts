@@ -41,6 +41,28 @@ export async function createPlage(formData: FormData) {
   }
 }
 
+export async function updatePlage(id: string, formData: FormData) {
+  try {
+    await checkAdmin();
+    const db = createAdminClient();
+
+    const jours = formData.getAll("jours").map(Number);
+    const { error } = await db.from("disponibilites").update({
+      date_debut:  formData.get("date_debut") as string,
+      date_fin:    formData.get("date_fin") as string,
+      heure_debut: formData.get("heure_debut") as string,
+      heure_fin:   formData.get("heure_fin") as string,
+      jours:       jours.length ? jours : [0,1,2,3,4,5,6],
+    }).eq("id", id);
+
+    if (error) return { error: error.message };
+    revalidatePath("/admin/vols");
+    return { success: true };
+  } catch {
+    return { error: "Erreur serveur" };
+  }
+}
+
 export async function togglePlageActif(id: string, actif: boolean) {
   try {
     await checkAdmin();

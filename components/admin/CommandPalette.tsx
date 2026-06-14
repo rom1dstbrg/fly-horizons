@@ -27,6 +27,7 @@ const QUICK_LINKS = [
   { href: "/admin/contacts",                   label: "Messages",             icon: MessageSquare,   group: "Navigation" },
   { href: "/admin/settings",                   label: "Paramètres",           icon: Settings,        group: "Navigation" },
   { href: "/admin/reservations/new",           label: "Nouvelle réservation", icon: CalendarCheck,   group: "Actions rapides" },
+  { href: "/admin/reservations/new-horsite",   label: "Vol hors-site",        icon: Plane,           group: "Actions rapides" },
   { href: "/admin/boutique",                   label: "Nouveau voucher",      icon: Ticket,          group: "Actions rapides" },
   { href: "/admin/products/new",               label: "Nouveau produit",      icon: Package,         group: "Actions rapides" },
 ];

@@ -79,7 +79,7 @@ out center 1;`;
 export async function GET(req: NextRequest) {
   const icao = req.nextUrl.searchParams.get("icao")?.toUpperCase().trim();
 
-  if (!icao || icao.length !== 4) {
+  if (!icao || !/^[A-Z]{4}$/.test(icao)) {
     return NextResponse.json({ error: "Code ICAO invalide (4 lettres requis)" }, { status: 400 });
   }
 

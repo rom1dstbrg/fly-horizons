@@ -93,20 +93,6 @@ export function AdminRouteEditor({ waypoints, onChange, clientWaypoints = [], st
     layerSat.addTo(map);
     layerLabels.addTo(map);
 
-    L.control.layers(
-      { "Satellite": layerSat, "Carte": layerCarte },
-      { "Noms": layerLabels },
-      { position: "bottomleft", collapsed: false }
-    ).addTo(map);
-
-    map.on("baselayerchange", (e: L.LayersControlEvent) => {
-      if (e.name === "Satellite") {
-        if (!map.hasLayer(layerLabels)) layerLabels.addTo(map);
-      } else {
-        if (map.hasLayer(layerLabels)) map.removeLayer(layerLabels);
-      }
-    });
-
     L.marker([EBCI.lat, EBCI.lng], { icon: makeEBCIIcon(), interactive: false })
       .addTo(map)
       .bindTooltip("Charleroi EBCI · Départ & Retour", { direction: "top" });

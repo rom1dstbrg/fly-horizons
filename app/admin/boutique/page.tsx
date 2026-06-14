@@ -32,7 +32,7 @@ export default async function BoutiquePage() {
 
   // Index clients by email for phone/id enrichment
   const clientsByEmail = Object.fromEntries(
-    (rawClients ?? []).map(c => [c.email.toLowerCase(), c])
+    (rawClients ?? []).filter(c => c.email).map(c => [c.email.toLowerCase(), c])
   );
 
   const vouchers = (rawVouchers ?? []).map(v => {
@@ -66,7 +66,7 @@ export default async function BoutiquePage() {
   // Deduplicate clients by email
   const seen = new Set<string>();
   const clients = (rawClients ?? []).filter(c => {
-    const key = c.email.toLowerCase();
+    const key = (c.email ?? c.id).toLowerCase();
     if (seen.has(key)) return false;
     seen.add(key);
     return true;

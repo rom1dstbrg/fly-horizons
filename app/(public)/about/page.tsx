@@ -2,9 +2,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ChatWidget } from "@/components/chat/ChatWidget";
+import { DA40Section } from "@/components/about/DA40Section";
 import {
-  BadgeCheck, ShieldCheck, Eye, Users, Gauge,
-  MountainSnow, Headphones, Route, ArrowRight, MapPin, Clock,
+  BadgeCheck, ShieldCheck, Route, ArrowRight, MapPin, Clock,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -106,68 +106,7 @@ export default function AboutPage() {
       {/* ══ L'AVION ══ */}
       <section className="bg-white py-20 sm:py-28">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
-
-          {/*
-            Mobile  : 1-header · 2-photo · 3-body
-            Desktop : col-1 = photo (row-span-2) · col-2 row-1 = header · col-2 row-2 = body
-          */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-[1fr_480px] gap-x-10 lg:gap-x-16 gap-y-6 md:gap-y-8">
-
-            {/* 1. Header */}
-            <div className="order-1 md:col-start-2 md:row-start-1">
-              <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-4">L&apos;avion</p>
-              <h2 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight">
-                Diamond DA40
-              </h2>
-            </div>
-
-            {/* 2. Photo */}
-            <div className="order-2 md:order-none md:col-start-1 md:row-start-1 md:row-span-2 relative aspect-[4/3] md:aspect-auto rounded-lg overflow-hidden">
-              <Image
-                src="/da-40.webp"
-                alt="Diamond DA40 en vol"
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 50vw"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-              <div className="absolute bottom-4 left-5">
-                <p className="text-white/55 text-xs tracking-wide">Avion léger 4 places</p>
-              </div>
-            </div>
-
-            {/* 3. Body */}
-            <div className="order-3 md:order-none md:col-start-2 md:row-start-2">
-              <div className="mb-7">
-                {[
-                  { icon: <Eye size={14} />,         text: "Cockpit vitré, vue à 360°" },
-                  { icon: <Users size={14} />,        text: "Jusqu'à 3 passagers à bord" },
-                  { icon: <Gauge size={14} />,        text: "Vitesse de croisière : 120 kt (220 km/h)" },
-                  { icon: <MountainSnow size={14} />, text: "Altitude typique : 600 à 1 000 m" },
-                  { icon: <Headphones size={14} />,   text: "Casques antibruit fournis" },
-                ].map(({ icon, text }) => (
-                  <div key={text} className="flex items-center gap-3 py-3.5 border-b border-border/60 last:border-0">
-                    <span className="text-primary shrink-0">{icon}</span>
-                    <span className="text-sm text-foreground/70">{text}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="bg-secondary border border-border rounded-lg p-5 flex flex-col gap-2.5">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck size={14} className="text-primary shrink-0" />
-                  <p className="text-foreground text-sm font-black">Sécurité &amp; assurance</p>
-                </div>
-                <p className="text-foreground/60 text-sm leading-relaxed">
-                  L&apos;avion appartient à <strong className="text-foreground/85">Air Academy New CAG</strong>{" "}
-                  (ATO-005, EBCI). Leur assurance couvre tous les occupants. Les vols sont organisés dans
-                  le cadre du partage de frais réglementé par{" "}
-                  <strong className="text-foreground/85">NCO.GEN.104</strong>.
-                </p>
-              </div>
-            </div>
-
-          </div>
+          <DA40Section />
         </div>
       </section>
 

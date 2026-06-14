@@ -148,7 +148,7 @@ export function AdminVolMesureFlow({ clients, stopovers: availableStops, prixHeu
 
   const filteredClients = clients.filter(c => {
     const q = clientSearch.toLowerCase();
-    return c.prenom.toLowerCase().includes(q) || c.nom.toLowerCase().includes(q) || c.email.toLowerCase().includes(q);
+    return c.prenom.toLowerCase().includes(q) || c.nom.toLowerCase().includes(q) || (c.email ?? "").toLowerCase().includes(q);
   });
   const selectedClient = clients.find(c => c.id === selectedClientId);
 

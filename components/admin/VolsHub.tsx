@@ -47,8 +47,8 @@ export function VolsHub({
       {/* Stats summary */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {[
-          { label: "Pmt. att.",     value: statsStd.payment_pending,                                        color: "text-orange-500" },
-          { label: "En attente",    value: statsStd.en_attente + statsPerso.en_attente,                     color: "text-yellow-600" },
+          { label: "Pmt. en ligne",  value: statsStd.payment_pending,                                        color: "text-orange-500" },
+          { label: "À encaisser",   value: statsStd.en_attente + statsPerso.en_attente,                     color: "text-yellow-600" },
           { label: "Planification", value: (statsStd.date_confirmee ?? 0) + (statsPerso.date_confirmee ?? 0), color: "text-blue-600" },
           { label: "Confirmés",     value: confirmedCount,                                                  color: "text-green-600" },
           { label: "Effectués",     value: (statsStd.vol_effectue ?? 0) + (statsPerso.vol_effectue ?? 0),  color: "text-purple-600" },

@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { VolsHub } from "@/components/admin/VolsHub";
 import { PageHeader } from "@/components/admin/PageHeader";
 import Link from "next/link";
-import { Plus, Route } from "lucide-react";
+import { Plus, Route, WifiOff } from "lucide-react";
 
 export const metadata = { title: "Activité Vols — Admin" };
 
@@ -75,6 +75,14 @@ export default async function VolsPage({
               <Route size={15} />
               <span className="hidden sm:inline">Nouveau vol sur mesure</span>
               <span className="sm:hidden">Sur mesure</span>
+            </Link>
+            <Link
+              href="/admin/reservations/new-horsite"
+              className="inline-flex items-center gap-2 px-3 py-2 sm:px-4 rounded-md text-sm font-semibold border border-border text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            >
+              <WifiOff size={15} />
+              <span className="hidden sm:inline">Hors site</span>
+              <span className="sm:hidden">Hors site</span>
             </Link>
           </div>
         ) : undefined}

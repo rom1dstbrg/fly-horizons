@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Users, MessageSquare, Settings, LogOut,
   Menu, X, ExternalLink, Search,
   CalendarCheck, Route, Clock, Navigation,
-  Package, Ticket, Tag, Images, Bot,
+  Package, Ticket, Tag, Images, Bot, Receipt,
 } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 
@@ -48,6 +48,9 @@ const NAVIGATION: NavEntry[] = [
   { type: "link", id: "clients",  icon: Users,         label: "Clients",  href: "/admin/clients"  },
   { type: "link", id: "contacts", icon: MessageSquare, label: "Contacts", href: "/admin/contacts" },
   { type: "link", id: "chat",     icon: Bot,           label: "Assistant", href: "/admin/chat"     },
+
+  { type: "section", label: "Finances" },
+  { type: "link", id: "transactions", icon: Receipt, label: "Transactions", href: "/admin/transactions" },
 
   { type: "section", label: "Site" },
   { type: "link", id: "galerie",   icon: Images,   label: "Galerie",    href: "/admin/galerie"  },

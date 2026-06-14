@@ -71,7 +71,7 @@ function ClientPicker({ clients, onSelect }: {
   const [query, setQuery] = useState("");
   const suggestions = query.length >= 2
     ? clients.filter(c =>
-        c.email.toLowerCase().includes(query.toLowerCase()) ||
+        (c.email ?? "").toLowerCase().includes(query.toLowerCase()) ||
         `${c.prenom} ${c.nom}`.toLowerCase().includes(query.toLowerCase())
       ).slice(0, 5)
     : [];
