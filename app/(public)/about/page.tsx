@@ -5,6 +5,7 @@ import { ChatWidget } from "@/components/chat/ChatWidget";
 import { DA40Section } from "@/components/about/DA40Section";
 import {
   BadgeCheck, ShieldCheck, Route, ArrowRight, MapPin, Clock,
+  Banknote, Compass, Users,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -111,36 +112,56 @@ export default function AboutPage() {
       </section>
 
       {/* ══ L'APPROCHE ══ */}
-      <section className="bg-secondary py-20 sm:py-28">
+      <section className="bg-[#f5f5f7] py-20 sm:py-28 overflow-hidden">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
           <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-4">
             L&apos;approche Fly Horizons
           </p>
-          <h2 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight mb-12">
+          <h2 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight mb-16">
             Sans marge.<br />
             <span className="text-primary">Uniquement les frais réels.</span>
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
               {
+                num: "01",
+                icon: <Banknote size={22} />,
                 title: "Partage de frais",
                 text: "Les vols sont organisés dans le cadre réglementé du partage de frais (NCO.GEN.104). Chaque passager contribue aux coûts réels : carburant, redevances, maintenance.",
               },
               {
+                num: "02",
+                icon: <Compass size={22} />,
                 title: "Votre vol, vos règles",
                 text: "Destination, durée, nombre de passagers, escales : vous décidez de tout. Personne d'autre ne propose ça. L'itinéraire est composé avec vous, pas à votre place.",
               },
               {
+                num: "03",
+                icon: <Users size={22} />,
                 title: "Accessible à tous",
                 text: "L'aviation légère reste hors de portée pour beaucoup. Fly Horizons a été conçu pour changer ça, sans compromis sur la qualité ni sur la sécurité.",
               },
-            ].map(({ title, text }) => (
-              <div key={title} className="card-premium p-7 flex flex-col gap-4">
-                <div className="w-8 h-1 bg-primary rounded-full" />
-                <p className="text-foreground font-bold text-sm">{title}</p>
-                <p className="text-foreground/60 text-sm leading-relaxed flex-1">{text}</p>
+            ].map(({ num, icon, title, text }) => (
+              <div key={title} className="relative bg-white rounded-2xl p-8 flex flex-col gap-5 shadow-[0_2px_20px_rgba(0,0,0,0.06)] overflow-hidden">
+
+                {/* Numéro décoratif */}
+                <span className="absolute -top-3 right-4 text-[96px] font-black leading-none select-none pointer-events-none tabular-nums text-foreground/[0.05]">
+                  {num}
+                </span>
+
+                {/* Icône gold */}
+                <div className="relative z-10 w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-[#0b2238] shadow-[0_6px_24px_rgba(242,183,5,0.35)]">
+                  {icon}
+                </div>
+
+                {/* Texte */}
+                <div className="flex flex-col gap-1.5">
+                  <p className="text-foreground font-black text-[17px] leading-snug">{title}</p>
+                  <p className="text-foreground/60 text-sm leading-relaxed">{text}</p>
+                </div>
+
               </div>
             ))}
           </div>

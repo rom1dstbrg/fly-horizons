@@ -33,7 +33,7 @@ export function VolDetailClient({ id, slug, title, price, duree, image_url }: Vo
   }
 
   return (
-    <div className="space-y-5">
+    <div id="vol-cta" className="space-y-5">
 
       {/* Prix */}
       <div className="pb-5 border-b border-border">

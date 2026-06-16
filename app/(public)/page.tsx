@@ -435,7 +435,7 @@ export default async function HomePage() {
       )}
 
       {/* ═══ AVIS CLIENTS ═══ */}
-      <section className="bg-secondary py-20 sm:py-28">
+      <section className="bg-[#f5f5f7] py-20 sm:py-28">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
           <div className="mb-12">
@@ -447,7 +447,7 @@ export default async function HomePage() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
                 name: "Sophie M.",
@@ -465,13 +465,36 @@ export default async function HomePage() {
                 text: "J'ai choisi le vol sur mesure pour survoler les Fagnes. Voir le prix se calculer en temps réel m'a mis en confiance : aucune surprise au moment de payer. Pilote à l'écoute, réponse rapide, vol sans accroc. Je recommande sans hésiter.",
               },
             ].map(({ name, location, text }) => (
-              <div key={name} className="bg-card rounded-lg p-7 flex flex-col gap-5 shadow-[var(--sh-card)]">
-                <div className="w-8 h-1 bg-primary rounded-full" />
-                <p className="text-foreground/70 text-base leading-relaxed flex-1">{text}</p>
-                <div>
-                  <p className="text-foreground font-bold text-sm">{name}</p>
-                  <p className="text-primary text-xs font-semibold tracking-wide mt-0.5">{location}</p>
+              <div key={name} className="relative bg-white rounded-2xl p-8 flex flex-col gap-5 shadow-[0_2px_20px_rgba(0,0,0,0.06)] overflow-hidden">
+
+                {/* Guillemet décoratif */}
+                <span className="absolute top-3 right-6 text-[88px] font-black leading-none select-none pointer-events-none text-primary/12" style={{ fontFamily: "Georgia, serif" }}>
+                  &ldquo;
+                </span>
+
+                {/* Étoiles */}
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <svg key={i} className="w-4 h-4 fill-primary" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
                 </div>
+
+                {/* Texte */}
+                <p className="text-foreground/70 text-[15px] leading-relaxed flex-1">{text}</p>
+
+                {/* Auteur */}
+                <div className="flex items-center gap-3 pt-4 border-t border-border">
+                  <div className="w-9 h-9 rounded-full bg-[#0b2238] flex items-center justify-center shrink-0">
+                    <span className="text-white text-xs font-black">{name.charAt(0)}</span>
+                  </div>
+                  <div>
+                    <p className="text-foreground font-bold text-sm">{name}</p>
+                    <p className="text-primary text-[11px] font-semibold tracking-wide">{location}</p>
+                  </div>
+                </div>
+
               </div>
             ))}
           </div>

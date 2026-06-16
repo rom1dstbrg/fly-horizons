@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CalendarCheck, Gift, Check } from "lucide-react";
 import { useCartStore } from "@/store/cart";
 
@@ -16,7 +16,19 @@ interface VolStickyBarProps {
 
 export function VolStickyBar({ id, slug, title, price, duree, image_url }: VolStickyBarProps) {
   const [added, setAdded] = useState(false);
+  const [show, setShow] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
+
+  useEffect(() => {
+    const el = document.getElementById("vol-cta");
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setShow(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   function handleAddToCart() {
     addItem({ id, title, price, quantity: 1, image_url, slug, product_type: "voucher" });
@@ -25,7 +37,7 @@ export function VolStickyBar({ id, slug, title, price, duree, image_url }: VolSt
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50">
+    <div className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ${show ? "translate-y-0" : "translate-y-full"}`}>
       <div className="bg-white/96 backdrop-blur-md border-t border-border shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 h-[68px] flex items-center justify-between gap-4">
 

@@ -43,25 +43,25 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 const STEPS = [
   {
     num: "01",
-    icon: <CalendarCheck size={14} />,
+    icon: <CalendarCheck size={22} />,
     title: "Réservation en ligne",
     desc: "Choisissez votre durée et réglez en sécurité. La confirmation et votre bon de vol arrivent par email dans la minute, pour vous ou pour l'offrir.",
   },
   {
     num: "02",
-    icon: <Map size={14} />,
+    icon: <Map size={22} />,
     title: "Votre pilote trace la route",
     desc: "Romain, pilote et fondateur de Fly Horizons, vous contacte pour composer l'itinéraire ensemble. Namur, Bruxelles, les Ardennes... la route s'adapte à vos envies et à la météo du jour.",
   },
   {
     num: "03",
-    icon: <Headphones size={14} />,
+    icon: <Headphones size={22} />,
     title: "Briefing à Charleroi",
     desc: "Rendez-vous sur l'aérodrome de Charleroi (EBCI) : accueil personnalisé, briefing sécurité, casques audio fournis. Vous montez à bord en toute sérénité.",
   },
   {
     num: "04",
-    icon: <PlaneTakeoff size={14} />,
+    icon: <PlaneTakeoff size={22} />,
     title: "À vous le ciel",
     desc: "Décollage, montée en altitude, panorama sur la Belgique. Votre pilote commente chaque repère tout au long du trajet et répond à toutes vos questions.",
   },
@@ -165,31 +165,43 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
         </div>
       </div>
 
-      {/* ══════ COMMENT ÇA SE PASSE — style testimonials ══════ */}
-      <div className="bg-card py-20 sm:py-28">
+      {/* ══════ COMMENT ÇA SE PASSE ══════ */}
+      <div className="bg-[#f5f5f7] py-20 sm:py-28 overflow-hidden">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
           <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-4">
             Déroulement
           </p>
-          <h2 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight mb-12">
+          <h2 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight mb-16">
             Comment ça se passe
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
             {STEPS.map(({ num, icon, title, desc }) => (
-              <div key={num} className="bg-secondary rounded-lg p-7 flex flex-col gap-5">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 text-primary">
-                    {icon}
-                  </div>
-                  <div>
-                    <p className="text-foreground font-bold text-sm leading-snug">{title}</p>
-                    <p className="text-primary text-xs font-semibold tracking-wide mt-0.5">Étape {num}</p>
-                  </div>
+              <div key={num} className="relative flex flex-col gap-5">
+
+                {/* Numéro décoratif en arrière-plan */}
+                <span className="absolute -top-3 right-0 text-[96px] font-black leading-none select-none pointer-events-none tabular-nums text-foreground/[0.06]">
+                  {num}
+                </span>
+
+                {/* Icône gold proéminente */}
+                <div className="relative z-10 w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-[#0b2238] shadow-[0_6px_24px_rgba(242,183,5,0.35)]">
+                  {icon}
                 </div>
-                <p className="text-foreground/70 text-sm leading-relaxed flex-1">{desc}</p>
-                <div className="w-8 h-1 bg-primary rounded-full" />
+
+                {/* Texte */}
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-extrabold text-primary/70 uppercase tracking-[2.5px]">
+                    Étape {num}
+                  </span>
+                  <p className="text-foreground font-black text-[17px] leading-snug">
+                    {title}
+                  </p>
+                  <p className="text-foreground/60 text-sm leading-relaxed mt-1">
+                    {desc}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
