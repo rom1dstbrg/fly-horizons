@@ -1,3 +1,4 @@
+import React from "react";
 import Link from "next/link";
 import { Mail, MapPin, Clock, MessageCircle } from "lucide-react";
 import { ContactForm } from "@/components/shop/ContactForm";
@@ -9,11 +10,11 @@ export const metadata = {
   description: "Une question sur votre réservation ou votre vol ? Contactez Fly Horizons. Réponse personnelle sous 24 h.",
 };
 
-const CONTACT_ITEMS = [
+const CONTACT_ITEMS: { Icon: React.ElementType; label: string; value: string; href?: string }[] = [
   { Icon: Mail,   label: "Email",               value: "info@fly-horizons.com",        href: "mailto:info@fly-horizons.com" },
   { Icon: MapPin, label: "Aérodrome de départ", value: "Brussels South Charleroi · EBCI" },
   { Icon: Clock,  label: "Délai de réponse",    value: "Sous 24 h · 7 j/7" },
-] as const;
+];
 
 export default function ContactPage() {
   return (
