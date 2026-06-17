@@ -31,10 +31,10 @@ function VoucherPDF({ code, product_title, expiresAtStr, qrDataUrl, heroImageDat
       <Page size="A4" style={{ fontFamily: "Helvetica", backgroundColor: WHITE, flexDirection: "column" }}>
 
         {/* ── Hero photo ───────────────────────────────────────────── */}
-        <View style={{ height: 220, position: "relative" }}>
+        <View style={{ height: 195, position: "relative" }}>
           <Image
             src={heroImageDataUrl}
-            style={{ position: "absolute", top: 0, left: 0, width: 595, height: 220, objectFit: "cover" }}
+            style={{ position: "absolute", top: 0, left: 0, width: 595, height: 195, objectFit: "cover" }}
           />
           {/* Dark gradient overlay */}
           <View style={{
@@ -73,25 +73,22 @@ function VoucherPDF({ code, product_title, expiresAtStr, qrDataUrl, heroImageDat
         <View style={{ backgroundColor: GOLD, height: 3 }} />
 
         {/* ── Body ─────────────────────────────────────────────────── */}
-        <View style={{ flex: 1, paddingLeft: 32, paddingRight: 32, paddingTop: 22, paddingBottom: 18 }}>
+        <View style={{ flex: 1, paddingLeft: 32, paddingRight: 32, paddingTop: 14, paddingBottom: 14 }}>
 
           {/* Code */}
           <View style={{
             alignItems: "center",
-            paddingTop: 16, paddingBottom: 16, marginBottom: 18,
+            paddingTop: 11, paddingBottom: 11, marginBottom: 12,
             borderRadius: 12, borderWidth: 1, borderColor: BORDER,
           }}>
-            <Text style={{ fontSize: 7, fontFamily: "Helvetica-Bold", color: MUTED, letterSpacing: 2.5, marginBottom: 6 }}>
+            <Text style={{ fontSize: 7, fontFamily: "Helvetica-Bold", color: MUTED, letterSpacing: 2.5, marginBottom: 5 }}>
               VOTRE CODE
             </Text>
-            <Text style={{ fontSize: 24, fontFamily: "Courier-Bold", color: NAVY, letterSpacing: 5, marginBottom: 5 }}>
+            <Text style={{ fontSize: 24, fontFamily: "Courier-Bold", color: NAVY, letterSpacing: 5, marginBottom: 4 }}>
               {code}
             </Text>
-            <Text style={{ fontSize: 8, color: MUTED, marginBottom: 4 }}>
-              À saisir lors de la réservation
-            </Text>
-            <Text style={{ fontSize: 7.5, color: "#94a3b8" }}>
-              {`Valable jusqu'au ${expiresAtStr}`}
+            <Text style={{ fontSize: 8, color: MUTED }}>
+              À saisir lors de la réservation — valable jusqu&apos;au {expiresAtStr}
             </Text>
           </View>
 
@@ -99,8 +96,8 @@ function VoucherPDF({ code, product_title, expiresAtStr, qrDataUrl, heroImageDat
           <View style={{
             flexDirection: "row",
             backgroundColor: BG, borderRadius: 10, borderWidth: 1, borderColor: BORDER,
-            paddingLeft: 20, paddingRight: 20, paddingTop: 18, paddingBottom: 18,
-            marginBottom: 14,
+            paddingLeft: 20, paddingRight: 20, paddingTop: 14, paddingBottom: 14,
+            marginBottom: 10,
           }}>
             {/* QR code */}
             <View style={{ alignItems: "center", width: 115, paddingRight: 14 }}>
@@ -117,7 +114,7 @@ function VoucherPDF({ code, product_title, expiresAtStr, qrDataUrl, heroImageDat
 
             {/* Steps */}
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 7.5, fontFamily: "Helvetica-Bold", color: MUTED, letterSpacing: 1.5, marginBottom: 14 }}>
+              <Text style={{ fontSize: 7.5, fontFamily: "Helvetica-Bold", color: MUTED, letterSpacing: 1.5, marginBottom: 10 }}>
                 COMMENT RÉSERVER
               </Text>
               {([
@@ -125,7 +122,7 @@ function VoucherPDF({ code, product_title, expiresAtStr, qrDataUrl, heroImageDat
                 ["Choisissez votre date", "Sélectionnez un créneau disponible et saisissez votre code cadeau."],
                 ["Confirmation sous 48h", "Votre pilote valide votre créneau et vous envoie votre itinéraire de vol par email avant le décollage."],
               ] as [string, string][]).map(([title, desc], i) => (
-                <View key={i} style={{ flexDirection: "row", marginBottom: i < 2 ? 11 : 0 }}>
+                <View key={i} style={{ flexDirection: "row", marginBottom: i < 2 ? 8 : 0 }}>
                   <View style={{
                     backgroundColor: GOLD, width: 20, height: 20, borderRadius: 10,
                     marginRight: 10, flexShrink: 0, paddingTop: 3,
@@ -144,7 +141,7 @@ function VoucherPDF({ code, product_title, expiresAtStr, qrDataUrl, heroImageDat
           </View>
 
           {/* Info cards */}
-          <View style={{ flexDirection: "row", marginBottom: 14 }}>
+          <View style={{ flexDirection: "row", marginBottom: 10 }}>
             {([
               ["LIEU",        "Aéroport de Charleroi (EBCI)\nRue des Frères Wright 8\n6041 Gosselies"],
               ["AVANT LE VOL","Votre pilote confirme l'heure exacte et vous envoie votre itinéraire quelques jours avant le départ."],
@@ -153,7 +150,7 @@ function VoucherPDF({ code, product_title, expiresAtStr, qrDataUrl, heroImageDat
             ] as [string, string][]).map(([label, text], i) => (
               <View key={i} style={{
                 flex: 1, marginLeft: i > 0 ? 8 : 0,
-                paddingLeft: 11, paddingRight: 11, paddingTop: 12, paddingBottom: 12,
+                paddingLeft: 11, paddingRight: 11, paddingTop: 9, paddingBottom: 9,
                 borderWidth: 1, borderColor: BORDER, borderRadius: 8,
               }}>
                 <Text style={{ fontSize: 7.5, fontFamily: "Helvetica-Bold", color: NAVY, letterSpacing: 0.3, marginBottom: 6 }}>
@@ -166,7 +163,7 @@ function VoucherPDF({ code, product_title, expiresAtStr, qrDataUrl, heroImageDat
 
           {/* FAQ */}
           <View>
-            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 11 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
               <View style={{ flex: 1, height: 1, backgroundColor: BORDER }} />
               <Text style={{ fontSize: 7.5, fontFamily: "Helvetica-Bold", color: MUTED, letterSpacing: 2, marginLeft: 12, marginRight: 12 }}>
                 QUESTIONS FRÉQUENTES
@@ -183,7 +180,7 @@ function VoucherPDF({ code, product_title, expiresAtStr, qrDataUrl, heroImageDat
                 ] as [string, string][]).map(([q, a], i) => (
                   <View key={i} style={{
                     backgroundColor: BG, borderRadius: 7, borderWidth: 1, borderColor: BORDER,
-                    paddingLeft: 11, paddingRight: 11, paddingTop: 9, paddingBottom: 9,
+                    paddingLeft: 11, paddingRight: 11, paddingTop: 7, paddingBottom: 7,
                     marginBottom: i === 0 ? 7 : 0,
                   }}>
                     <Text style={{ fontSize: 7.5, fontFamily: "Helvetica-Bold", color: NAVY, marginBottom: 4 }}>{q}</Text>
@@ -200,7 +197,7 @@ function VoucherPDF({ code, product_title, expiresAtStr, qrDataUrl, heroImageDat
                 ] as [string, string][]).map(([q, a], i) => (
                   <View key={i} style={{
                     backgroundColor: BG, borderRadius: 7, borderWidth: 1, borderColor: BORDER,
-                    paddingLeft: 11, paddingRight: 11, paddingTop: 9, paddingBottom: 9,
+                    paddingLeft: 11, paddingRight: 11, paddingTop: 7, paddingBottom: 7,
                     marginBottom: i === 0 ? 7 : 0,
                   }}>
                     <Text style={{ fontSize: 7.5, fontFamily: "Helvetica-Bold", color: NAVY, marginBottom: 4 }}>{q}</Text>
