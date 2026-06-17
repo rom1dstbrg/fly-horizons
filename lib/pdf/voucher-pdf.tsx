@@ -2,219 +2,231 @@ import React from "react";
 import { Document, Page, Text, View, Image } from "@react-pdf/renderer";
 import QRCode from "qrcode";
 
-const NAVY   = "#0b2238";
-const GOLD   = "#F2B705";
+const NAVY   = "#062548";
+const GOLD   = "#F6C000";
 const WHITE  = "#ffffff";
 const SLATE  = "#334155";
 const MUTED  = "#64748b";
 const BG     = "#f8fafc";
-const BORDER = "#e2e8f0";
+const BORDER = "#f1f5f9";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function formatDurationBadge(minutes: number): string {
-  if (minutes < 60) return `${minutes} MIN DE VOL`;
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return m === 0 ? `${h}H DE VOL` : `${h}H${String(m).padStart(2, "0")} DE VOL`;
-}
-
-function formatDurationLabel(minutes: number): string {
+function formatTitle(minutes: number): string {
   if (minutes < 60) return `Vol de ${minutes} minutes`;
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
   return m === 0 ? `Vol de ${h}h` : `Vol de ${h}h${String(m).padStart(2, "0")}`;
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
-
-interface VoucherPDFProps {
+interface Props {
   code: string;
-  duration_minutes: number;
   product_title: string;
   expiresAtStr: string;
-  qrCodeDataUrl: string;
+  qrDataUrl: string;
+  heroImageDataUrl: string;
 }
 
-function VoucherPDF({ code, duration_minutes, product_title, expiresAtStr, qrCodeDataUrl }: VoucherPDFProps) {
-  const title = product_title || formatDurationLabel(duration_minutes);
-  const badge = formatDurationBadge(duration_minutes);
-
+function VoucherPDF({ code, product_title, expiresAtStr, qrDataUrl, heroImageDataUrl }: Props) {
   return (
     <Document>
-      <Page size="A5" style={{ fontFamily: "Helvetica", backgroundColor: WHITE }}>
+      <Page size="A4" style={{ fontFamily: "Helvetica", backgroundColor: WHITE, flexDirection: "column" }}>
 
-        {/* ── Header navy ────────────────────────────────────────────────── */}
-        <View style={{
-          backgroundColor: NAVY,
-          paddingTop: 18, paddingBottom: 18,
-          paddingLeft: 28, paddingRight: 28,
-          alignItems: "center",
-        }}>
+        {/* ── Hero photo ───────────────────────────────────────────── */}
+        <View style={{ height: 220, position: "relative" }}>
+          <Image
+            src={heroImageDataUrl}
+            style={{ position: "absolute", top: 0, left: 0, width: 595, height: 220, objectFit: "cover" }}
+          />
+          {/* Dark gradient overlay */}
+          <View style={{
+            position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: "rgba(6,37,72,0.72)",
+          }} />
+          {/* Logo */}
           <Image
             src="https://fly-horizons.com/logo-email.png"
-            style={{ width: 100, height: 20, marginBottom: 10 }}
+            style={{ position: "absolute", top: 20, left: 28, height: 20, width: 88, objectFit: "contain" }}
           />
-          <Text style={{
-            color: GOLD, fontSize: 11,
-            fontFamily: "Helvetica-Bold",
-            textAlign: "center",
-            letterSpacing: 0.4,
-            marginBottom: 8,
-          }}>
-            {title}
-          </Text>
-          <View style={{
-            backgroundColor: GOLD,
-            paddingLeft: 12, paddingRight: 12,
-            paddingTop: 4, paddingBottom: 4,
-          }}>
-            <Text style={{ color: NAVY, fontSize: 8.5, fontFamily: "Helvetica-Bold", letterSpacing: 1.5 }}>
-              {badge}
+          {/* Hero text */}
+          <View style={{ position: "absolute", bottom: 24, left: 28, right: 28 }}>
+            <View style={{
+              backgroundColor: GOLD,
+              paddingLeft: 13, paddingRight: 13, paddingTop: 4, paddingBottom: 4,
+              borderRadius: 20, alignSelf: "flex-start", marginBottom: 11,
+            }}>
+              <Text style={{ color: NAVY, fontSize: 8, fontFamily: "Helvetica-Bold", letterSpacing: 1.5 }}>
+                VOUCHER
+              </Text>
+            </View>
+            <Text style={{ color: WHITE, fontSize: 26, fontFamily: "Helvetica-Bold", marginBottom: 7, letterSpacing: -0.3 }}>
+              {product_title}
+            </Text>
+            <Text style={{ color: "rgba(255,255,255,0.75)", fontSize: 9.5, marginBottom: 4 }}>
+              Volez où vous voulez. À votre façon.
+            </Text>
+            <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 8.5, fontStyle: "italic" }}>
+              {"Baptême de l'air en avion léger depuis l'aéroport de Charleroi (EBCI)."}
             </Text>
           </View>
         </View>
 
-        {/* ── Gold bar ───────────────────────────────────────────────────── */}
+        {/* ── Gold bar ─────────────────────────────────────────────── */}
         <View style={{ backgroundColor: GOLD, height: 3 }} />
 
-        {/* ���─ Body ───────��──────────────────────────────────────────────── */}
-        <View style={{ paddingLeft: 24, paddingRight: 24, paddingTop: 18, paddingBottom: 14 }}>
+        {/* ── Body ─────────────────────────────────────────────────── */}
+        <View style={{ flex: 1, paddingLeft: 32, paddingRight: 32, paddingTop: 22, paddingBottom: 18 }}>
 
           {/* Code */}
-          <Text style={{
-            color: MUTED, fontSize: 7,
-            fontFamily: "Helvetica-Bold",
-            letterSpacing: 2, textAlign: "center",
-            marginBottom: 6,
-          }}>
-            VOTRE CODE D&apos;ACCÈS
-          </Text>
           <View style={{
-            backgroundColor: NAVY,
-            paddingTop: 11, paddingBottom: 11,
-            marginBottom: 16, borderRadius: 3,
+            alignItems: "center",
+            paddingTop: 16, paddingBottom: 16, marginBottom: 18,
+            borderRadius: 12, borderWidth: 1, borderColor: BORDER,
           }}>
-            <Text style={{
-              color: GOLD, fontSize: 20,
-              fontFamily: "Courier-Bold",
-              letterSpacing: 3, textAlign: "center",
-            }}>
+            <Text style={{ fontSize: 7, fontFamily: "Helvetica-Bold", color: MUTED, letterSpacing: 2.5, marginBottom: 6 }}>
+              VOTRE CODE
+            </Text>
+            <Text style={{ fontSize: 24, fontFamily: "Courier-Bold", color: NAVY, letterSpacing: 5, marginBottom: 5 }}>
               {code}
+            </Text>
+            <Text style={{ fontSize: 8, color: MUTED, marginBottom: 4 }}>
+              À saisir lors de la réservation
+            </Text>
+            <Text style={{ fontSize: 7.5, color: "#94a3b8" }}>
+              {`Valable jusqu'au ${expiresAtStr}`}
             </Text>
           </View>
 
-          {/* Two columns: QR | Steps */}
-          <View style={{ flexDirection: "row", marginBottom: 14 }}>
-
-            {/* Left — QR */}
-            <View style={{ width: "36%", alignItems: "center", paddingRight: 14 }}>
-              <View style={{ borderWidth: 2, borderColor: NAVY, padding: 3, marginBottom: 5 }}>
-                <Image src={qrCodeDataUrl} style={{ width: 76, height: 76 }} />
+          {/* QR + Steps */}
+          <View style={{
+            flexDirection: "row",
+            backgroundColor: BG, borderRadius: 10, borderWidth: 1, borderColor: BORDER,
+            paddingLeft: 20, paddingRight: 20, paddingTop: 18, paddingBottom: 18,
+            marginBottom: 14,
+          }}>
+            {/* QR code */}
+            <View style={{ alignItems: "center", width: 115, paddingRight: 14 }}>
+              <View style={{ borderWidth: 2, borderColor: NAVY, padding: 5, borderRadius: 6, marginBottom: 7 }}>
+                <Image src={qrDataUrl} style={{ width: 88, height: 88 }} />
               </View>
-              <Text style={{
-                color: NAVY, fontSize: 7,
-                fontFamily: "Helvetica-Bold",
-                textAlign: "center", letterSpacing: 0.3,
-                marginBottom: 3,
-              }}>
+              <Text style={{ fontSize: 7.5, fontFamily: "Helvetica-Bold", color: NAVY, marginBottom: 3 }}>
                 fly-horizons.com
               </Text>
-              <Text style={{ color: MUTED, fontSize: 6.5, textAlign: "center", lineHeight: 1.4 }}>
-                Scannez pour réserver
+              <Text style={{ fontSize: 7, color: MUTED, textAlign: "center", lineHeight: 1.4 }}>
+                {"Scannez pour\nréserver en ligne"}
               </Text>
             </View>
 
-            {/* Right — Steps */}
+            {/* Steps */}
             <View style={{ flex: 1 }}>
-              <Text style={{
-                color: NAVY, fontSize: 7.5,
-                fontFamily: "Helvetica-Bold",
-                letterSpacing: 1, marginBottom: 9,
-              }}>
-                COMMENT UTILISER CE BON
+              <Text style={{ fontSize: 7.5, fontFamily: "Helvetica-Bold", color: MUTED, letterSpacing: 1.5, marginBottom: 14 }}>
+                COMMENT RÉSERVER
               </Text>
-
-              {[
-                "Rendez-vous sur fly-horizons.com/reservation ou scannez le QR code.",
-                "Choisissez votre date et saisissez votre code lors de la réservation.",
-                "Présentez-vous 15 min avant le décollage à l'aéroport de Charleroi (EBCI).",
-              ].map((text, i) => (
-                <View key={i} style={{ flexDirection: "row", marginBottom: i < 2 ? 7 : 0, alignItems: "flex-start" }}>
+              {([
+                ["Accédez au formulaire", "Scannez le QR code ou rendez-vous sur fly-horizons.com/reservation."],
+                ["Choisissez votre date", "Sélectionnez un créneau disponible et saisissez votre code cadeau."],
+                ["Confirmation sous 48h", "Votre pilote valide votre créneau et vous envoie votre itinéraire de vol par email avant le décollage."],
+              ] as [string, string][]).map(([title, desc], i) => (
+                <View key={i} style={{ flexDirection: "row", marginBottom: i < 2 ? 11 : 0 }}>
                   <View style={{
-                    backgroundColor: GOLD,
-                    width: 14, height: 14,
-                    marginRight: 7, flexShrink: 0,
-                    paddingTop: 2,
+                    backgroundColor: GOLD, width: 20, height: 20, borderRadius: 10,
+                    marginRight: 10, flexShrink: 0, paddingTop: 3,
                   }}>
-                    <Text style={{ color: NAVY, fontSize: 7, fontFamily: "Helvetica-Bold", textAlign: "center" }}>
+                    <Text style={{ color: NAVY, fontSize: 8.5, fontFamily: "Helvetica-Bold", textAlign: "center" }}>
                       {i + 1}
                     </Text>
                   </View>
-                  <Text style={{ color: SLATE, fontSize: 7.5, lineHeight: 1.45, flex: 1 }}>
-                    {text}
-                  </Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 8.5, fontFamily: "Helvetica-Bold", color: NAVY, marginBottom: 2 }}>{title}</Text>
+                    <Text style={{ fontSize: 8, color: SLATE, lineHeight: 1.5 }}>{desc}</Text>
+                  </View>
                 </View>
               ))}
             </View>
           </View>
 
-          {/* Divider */}
-          <View style={{ borderTopWidth: 1, borderTopColor: BORDER, marginBottom: 12 }} />
-
-          {/* Infos pratiques */}
-          <View style={{
-            backgroundColor: BG,
-            borderWidth: 1, borderColor: BORDER,
-            borderLeftWidth: 3, borderLeftColor: GOLD,
-            paddingLeft: 12, paddingRight: 12,
-            paddingTop: 10, paddingBottom: 10,
-            borderRadius: 2,
-          }}>
-            <Text style={{
-              color: NAVY, fontSize: 7.5,
-              fontFamily: "Helvetica-Bold",
-              letterSpacing: 1, marginBottom: 8,
-            }}>
-              INFORMATIONS PRATIQUES
-            </Text>
-
-            {[
-              ["Lieu", "Aéroport de Charleroi (EBCI) — Rue des Frères Wright 8, 6041 Gosselies"],
-              ["Arrivée", "Présentez-vous 15 min avant le décollage. Romain vous accueillera sur place."],
-              ["Tenue", "Vêtements confortables. Prévoir une couche chaude, même en été."],
-              ["Météo", "Vol par beau temps uniquement. En cas de conditions défavorables, reporté sans frais."],
-            ].map(([label, value], i, arr) => (
-              <View key={i} style={{ flexDirection: "row", marginBottom: i < arr.length - 1 ? 5 : 0 }}>
-                <Text style={{ color: NAVY, fontSize: 7.5, fontFamily: "Helvetica-Bold", width: 40, flexShrink: 0 }}>
+          {/* Info cards */}
+          <View style={{ flexDirection: "row", marginBottom: 14 }}>
+            {([
+              ["LIEU",        "Aéroport de Charleroi (EBCI)\nRue des Frères Wright 8\n6041 Gosselies"],
+              ["AVANT LE VOL","Votre pilote confirme l'heure exacte et vous envoie votre itinéraire quelques jours avant le départ."],
+              ["TENUE",       "Vêtements confortables.\nPrévoir une couche chaude,\nmême en été."],
+              ["MÉTÉO",       "Vol par beau temps.\nReporté sans frais en cas\nde conditions défavorables."],
+            ] as [string, string][]).map(([label, text], i) => (
+              <View key={i} style={{
+                flex: 1, marginLeft: i > 0 ? 8 : 0,
+                paddingLeft: 11, paddingRight: 11, paddingTop: 12, paddingBottom: 12,
+                borderWidth: 1, borderColor: BORDER, borderRadius: 8,
+              }}>
+                <Text style={{ fontSize: 7.5, fontFamily: "Helvetica-Bold", color: NAVY, letterSpacing: 0.3, marginBottom: 6 }}>
                   {label}
                 </Text>
-                <Text style={{ color: MUTED, fontSize: 7.5, flex: 1, lineHeight: 1.45 }}>
-                  {value}
-                </Text>
+                <Text style={{ fontSize: 7.5, color: MUTED, lineHeight: 1.55 }}>{text}</Text>
               </View>
             ))}
           </View>
 
+          {/* FAQ */}
+          <View>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 11 }}>
+              <View style={{ flex: 1, height: 1, backgroundColor: BORDER }} />
+              <Text style={{ fontSize: 7.5, fontFamily: "Helvetica-Bold", color: MUTED, letterSpacing: 2, marginLeft: 12, marginRight: 12 }}>
+                QUESTIONS FRÉQUENTES
+              </Text>
+              <View style={{ flex: 1, height: 1, backgroundColor: BORDER }} />
+            </View>
+            <View style={{ flexDirection: "row" }}>
+              <View style={{ flex: 1, marginRight: 6 }}>
+                {([
+                  ["Mauvaise météo : que se passe-t-il ?",
+                   "Le vol est reporté sans frais. La décision appartient au pilote. Vous êtes prévenu par email ou téléphone dès que possible."],
+                  ["Combien de passagers à bord ?",
+                   "L'avion accueille le pilote et jusqu'à 3 passagers. Si vous êtes plus de 3, plusieurs vols seront nécessaires."],
+                ] as [string, string][]).map(([q, a], i) => (
+                  <View key={i} style={{
+                    backgroundColor: BG, borderRadius: 7, borderWidth: 1, borderColor: BORDER,
+                    paddingLeft: 11, paddingRight: 11, paddingTop: 9, paddingBottom: 9,
+                    marginBottom: i === 0 ? 7 : 0,
+                  }}>
+                    <Text style={{ fontSize: 7.5, fontFamily: "Helvetica-Bold", color: NAVY, marginBottom: 4 }}>{q}</Text>
+                    <Text style={{ fontSize: 7.5, color: MUTED, lineHeight: 1.55 }}>{a}</Text>
+                  </View>
+                ))}
+              </View>
+              <View style={{ flex: 1, marginLeft: 6 }}>
+                {([
+                  ["Puis-je annuler ou reporter ?",
+                   "Annulation sans frais jusqu'à 48h avant le vol. Pour reporter, connectez-vous à votre espace client sur fly-horizons.com."],
+                  ["Photos et vidéos pendant le vol ?",
+                   "Oui, sans restriction. Pensez à charger vos appareils avant le vol et à les sécuriser à bord."],
+                ] as [string, string][]).map(([q, a], i) => (
+                  <View key={i} style={{
+                    backgroundColor: BG, borderRadius: 7, borderWidth: 1, borderColor: BORDER,
+                    paddingLeft: 11, paddingRight: 11, paddingTop: 9, paddingBottom: 9,
+                    marginBottom: i === 0 ? 7 : 0,
+                  }}>
+                    <Text style={{ fontSize: 7.5, fontFamily: "Helvetica-Bold", color: NAVY, marginBottom: 4 }}>{q}</Text>
+                    <Text style={{ fontSize: 7.5, color: MUTED, lineHeight: 1.55 }}>{a}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </View>
+
         </View>
 
-        {/* ── Footer navy ────────────────────────────────────────────────── */}
+        {/* ── Footer ───────────────────────────────────────────────── */}
         <View style={{
           backgroundColor: NAVY,
-          paddingLeft: 24, paddingRight: 24,
-          paddingTop: 9, paddingBottom: 9,
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
+          paddingLeft: 32, paddingRight: 32, paddingTop: 11, paddingBottom: 11,
+          flexDirection: "row", justifyContent: "space-between", alignItems: "center",
         }}>
-          <Text style={{ color: GOLD, fontSize: 7, fontFamily: "Helvetica-Bold", letterSpacing: 0.5 }}>
-            fly-horizons.com
+          <Text style={{ color: GOLD, fontSize: 8, fontFamily: "Helvetica-Bold", letterSpacing: 1.5 }}>
+            FLY HORIZONS
           </Text>
-          <Text style={{ color: "#4e7096", fontSize: 7, letterSpacing: 0.2 }}>
-            Valable jusqu&apos;au {expiresAtStr} · 1 vol inclus
-          </Text>
-          <Text style={{ color: "#4e7096", fontSize: 7 }}>
+          <Text style={{ color: "#4e7096", fontSize: 7.5 }}>
             info@fly-horizons.com
+          </Text>
+          <Text style={{ color: "#4e7096", fontSize: 7.5 }}>
+            fly-horizons.com
           </Text>
         </View>
 
@@ -223,7 +235,7 @@ function VoucherPDF({ code, duration_minutes, product_title, expiresAtStr, qrCod
   );
 }
 
-// ── Public interface ──────��───────────────────────────────────────────────────
+// ── Public interface ──────────────────────────────────────────────────────────
 
 export interface VoucherPDFParams {
   code: string;
@@ -234,28 +246,39 @@ export interface VoucherPDFParams {
 
 export async function generateVoucherPDFBuffer(params: VoucherPDFParams): Promise<Buffer> {
   const { renderToBuffer } = await import("@react-pdf/renderer");
+  const fs   = await import("fs");
+  const path = await import("path");
 
   const reservationUrl = `https://fly-horizons.com/reservation?duree=${params.duration_minutes}&code=${encodeURIComponent(params.code)}`;
 
-  const qrCodeDataUrl = await QRCode.toDataURL(reservationUrl, {
-    width: 180,
+  const qrDataUrl = await QRCode.toDataURL(reservationUrl, {
+    width: 200,
     margin: 1,
-    color: { dark: NAVY, light: WHITE },
+    color: { dark: "#062548", light: "#ffffff" },
   });
 
   const expiresAtStr = params.expiresAt.toLocaleDateString("fr-BE", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
+    day: "numeric", month: "long", year: "numeric",
   });
+
+  // Hero image — filesystem first (local/Netlify), URL fallback
+  let heroImageDataUrl: string;
+  try {
+    const imgBuf = fs.default.readFileSync(path.default.join(process.cwd(), "public", "gallery", "2.png"));
+    heroImageDataUrl = "data:image/png;base64," + imgBuf.toString("base64");
+  } catch {
+    heroImageDataUrl = "https://fly-horizons.com/gallery/2.png";
+  }
+
+  const title = params.product_title || formatTitle(params.duration_minutes);
 
   return renderToBuffer(
     <VoucherPDF
       code={params.code}
-      duration_minutes={params.duration_minutes}
-      product_title={params.product_title}
+      product_title={title}
       expiresAtStr={expiresAtStr}
-      qrCodeDataUrl={qrCodeDataUrl}
+      qrDataUrl={qrDataUrl}
+      heroImageDataUrl={heroImageDataUrl}
     />
   );
 }
