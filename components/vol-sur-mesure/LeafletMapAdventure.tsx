@@ -3,6 +3,8 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { union } from "@turf/union";
+import { polygon as turfPoly, featureCollection } from "@turf/helpers";
 
 // ── Public types ───────────────────────────────────────────────
 export interface POI { id: string; lat: number; lng: number; nom: string }
@@ -191,6 +193,27 @@ function pointInPolygon(lat: number, lng: number, poly: [number, number][]): boo
   return inside;
 }
 
+/** [lat,lng][] → Turf ring [lng,lat][], anneau fermé */
+function toTurfRing(ring: [number, number][]): [number, number][] {
+  const r = ring.map(([lat, lng]): [number, number] => [lng, lat]);
+  if (r[0][0] !== r[r.length - 1][0] || r[0][1] !== r[r.length - 1][1]) r.push(r[0]);
+  return r;
+}
+
+/** Union de toutes les zones restreintes → polygones sans overlap */
+function mergeRestrictedZones(zones: RestrictedZone[]): { rings: [number, number][][] }[] {
+  const features = zones.map(z => turfPoly([toTurfRing(z.poly as [number, number][])]));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const merged: any = union(featureCollection(features));
+  if (!merged) return [];
+  const ll = (r: number[][]): [number, number][] => r.map(([lng, lat]) => [lat, lng]);
+  if (merged.geometry.type === "Polygon") {
+    return [{ rings: merged.geometry.coordinates.map(ll) }];
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return merged.geometry.coordinates.map((poly: any) => ({ rings: poly.map(ll) }));
+}
+
 // ── Zones restreintes définies manuellement ───────────────────
 //
 // EBR01 — BRUSSELS CITY  (source : AIP Belgique)
@@ -354,6 +377,234 @@ const RESTRICTED_ZONES: RestrictedZone[] = [
     // Cercle r=2 NM (3704 m), centre 503433N 0034952E
     name: "EBR12 : Chièvres",
     poly: arcPoints(50.575833, 3.831111, 3704, 0, 359.99, true, 48),
+  },
+  {
+    // EBR17B — LOMBARDSIJDE SECTOR BRAVO (zone de tir côtière, inclut EBR17A)
+    // 510907N 0024349E - 511139N 0023503E - arc r=7.5 NM CW centre 510839N 0024601E
+    //   → 511602N 0024819E - 511008N 0024631E
+    // Brg centre→from ≈305°, brg centre→to ≈9°, sweep 64° CW
+    name: "EBR17B : Lombardsijde",
+    poly: [
+      [51.15194, 2.73028],
+      ...arcPoints(51.14417, 2.76694, 13890, 305, 9, true, 12),
+      [51.16889, 2.77528],
+    ],
+  },
+  {
+    // EBR19 — MARCHE-EN-FAMENNE (zone de tir, actif lun-ven)
+    // 501820N 0052340E - 501642N 0052625E - 501506N 0052422E
+    //   - 501358N 0052105E - 501418N 0052046E - 501717N 0052059E
+    name: "EBR19 : Marche-en-Famenne",
+    poly: [
+      [50.30556, 5.39444],
+      [50.27833, 5.44028],
+      [50.25167, 5.40611],
+      [50.23278, 5.35139],
+      [50.23833, 5.34611],
+      [50.28806, 5.34972],
+    ],
+  },
+  {
+    // EBR20 — BRASSCHAAT (zone de tir, HX)
+    // 511827N 0043155E - 511857N 0043055E - 511957N 0043155E
+    //   - 512327N 0043655E - 512217N 0043855E
+    name: "EBR20 : Brasschaat",
+    poly: [
+      [51.30750, 4.53194],
+      [51.31583, 4.51528],
+      [51.33250, 4.53194],
+      [51.39083, 4.61528],
+      [51.37139, 4.64861],
+    ],
+  },
+  {
+    // EBR22 — CASTEAU / SHAPE (OTAN, PERM)
+    // Cercle r=4 NM (7408 m), centre 502957N 0035855E
+    name: "EBR22 : Casteau / SHAPE",
+    poly: arcPoints(50.49917, 3.98194, 7408, 0, 359.99, true, 48),
+  },
+  {
+    // EBR23 — DOEL (installation nucléaire, PERM)
+    // Cercle r=1 NM (1852 m), centre 511930N 0041532E
+    name: "EBR23 : Doel",
+    poly: arcPoints(51.32500, 4.25889, 1852, 0, 359.99, true, 48),
+  },
+  {
+    // EBR31 — WESTROZEBEKE-HOUTHULST (destruction explosifs, PERM)
+    // Cercle r=1.2 NM (2222 m), centre 505752N 0025735E
+    name: "EBR31 : Westrozebeke",
+    poly: arcPoints(50.96444, 2.95972, 2222, 0, 359.99, true, 48),
+  },
+  {
+    // EBR41A — LAGLAND-ARLON (zone de tir, lun-ven)
+    // 493901N 0054000E - 494053N 0054438E - 493939N 0054601E - 493745N 0054236E
+    name: "EBR41A : Lagland-Arlon (A)",
+    poly: [
+      [49.65028, 5.66667],
+      [49.68139, 5.74389],
+      [49.66083, 5.76694],
+      [49.62917, 5.71000],
+    ],
+  },
+  {
+    // EBR41B — LAGLAND-ARLON (zone de tir élargie)
+    // 493901N 0053945E - 494111N 0054259E - 494114N 0054724E
+    //   - 493939N 0054601E - 493745N 0054236E
+    name: "EBR41B : Lagland-Arlon (B)",
+    poly: [
+      [49.65028, 5.66250],
+      [49.68639, 5.71639],
+      [49.68722, 5.79000],
+      [49.66083, 5.76694],
+      [49.62917, 5.71000],
+    ],
+  },
+  {
+    // EBR42 — BEVERLO 01 (zone de tir, fréquemment actif)
+    // 510927N 0051530E - 510927N 0052125E - 510737N 0052125E - 510703N 0051530E
+    name: "EBR42 : Beverlo 01",
+    poly: [
+      [51.15750, 5.25833],
+      [51.15750, 5.35694],
+      [51.12694, 5.35694],
+      [51.11750, 5.25833],
+    ],
+  },
+  {
+    // EBR45 — BEVERLO 02 (démolition explosifs, HX)
+    // Cercle r=0.5 NM (926 m), centre 510438N 0052046E
+    name: "EBR45 : Beverlo 02",
+    poly: arcPoints(51.07722, 5.34611, 926, 0, 359.99, true, 32),
+  },
+  {
+    // EBR49 — ZUTENDAAL (fabrique cartouches + tir, PERM)
+    // Cercle r=0.5 NM (926 m), centre 505646N 0053603E
+    name: "EBR49 : Zutendaal",
+    poly: arcPoints(50.94611, 5.60083, 926, 0, 359.99, true, 32),
+  },
+  {
+    // EBR50 — CLERMONT-LEZ-HUY (poudrière, PERM)
+    // Cercle r=0.5 NM (926 m), centre 503342N 0052310E
+    name: "EBR50 : Clermont-lez-Huy",
+    poly: arcPoints(50.56167, 5.38611, 926, 0, 359.99, true, 32),
+  },
+  {
+    // EBR52 — PETIT-RŒULX (fabrique fulminate + tir, PERM)
+    // Cercle r=0.5 NM (926 m), centre 503354N 0041831E
+    name: "EBR52 : Petit-Rœulx",
+    poly: arcPoints(50.56500, 4.30861, 926, 0, 359.99, true, 32),
+  },
+  {
+    // EBR54 — ANTWERP HARBOUR (port d'Anvers, PERM)
+    // Polygone 27 points
+    name: "EBR54 : Port d'Anvers",
+    poly: [
+      [51.37722, 4.30417],
+      [51.37472, 4.24306],
+      [51.35222, 4.25333],
+      [51.34917, 4.26750],
+      [51.31667, 4.28500],
+      [51.30361, 4.23167],
+      [51.29361, 4.20944],
+      [51.26500, 4.19472],
+      [51.24778, 4.19806],
+      [51.24722, 4.18944],
+      [51.23944, 4.19000],
+      [51.24250, 4.24917],
+      [51.24111, 4.27000],
+      [51.22667, 4.34028],
+      [51.24250, 4.35278],
+      [51.23833, 4.39833],
+      [51.24194, 4.41194],
+      [51.24889, 4.41694],
+      [51.26028, 4.41917],
+      [51.26444, 4.41750],
+      [51.26444, 4.40528],
+      [51.27611, 4.40528],
+      [51.28778, 4.40917],
+      [51.29389, 4.40694],
+      [51.31167, 4.35667],
+      [51.33639, 4.34611],
+      [51.33333, 4.30778],
+    ],
+  },
+  {
+    // EBR55 — GHENT HARBOUR (port de Gand, PERM)
+    // Polygone 23 points
+    name: "EBR55 : Port de Gand",
+    poly: [
+      [51.07278, 3.73417],
+      [51.07583, 3.75056],
+      [51.08639, 3.75833],
+      [51.10639, 3.76194],
+      [51.10917, 3.80028],
+      [51.12500, 3.80361],
+      [51.18167, 3.83556],
+      [51.18694, 3.83306],
+      [51.19250, 3.82028],
+      [51.19222, 3.80833],
+      [51.21333, 3.80583],
+      [51.21056, 3.80111],
+      [51.19250, 3.79861],
+      [51.19472, 3.78389],
+      [51.19361, 3.77944],
+      [51.18056, 3.75806],
+      [51.17056, 3.75472],
+      [51.14389, 3.73889],
+      [51.13889, 3.74722],
+      [51.13250, 3.75361],
+      [51.12389, 3.74111],
+      [51.10444, 3.71917],
+      [51.09556, 3.72056],
+    ],
+  },
+  {
+    // EBR56 — ZEEBRUGGE HARBOUR (port de Zeebrugge, PERM)
+    // Polygone 23 points
+    name: "EBR56 : Port de Zeebrugge",
+    poly: [
+      [51.32750, 3.18472],
+      [51.35083, 3.16639],
+      [51.36472, 3.18833],
+      [51.36000, 3.22750],
+      [51.32611, 3.22972],
+      [51.29778, 3.26111],
+      [51.27306, 3.21389],
+      [51.24944, 3.22000],
+      [51.25056, 3.22722],
+      [51.24444, 3.22778],
+      [51.24389, 3.22361],
+      [51.22556, 3.22778],
+      [51.22222, 3.22361],
+      [51.22361, 3.21500],
+      [51.23750, 3.21194],
+      [51.24611, 3.20611],
+      [51.26861, 3.20083],
+      [51.27000, 3.21139],
+      [51.30750, 3.20194],
+      [51.31167, 3.19556],
+      [51.30000, 3.19333],
+      [51.31722, 3.17694],
+      [51.32722, 3.18111],
+    ],
+  },
+  {
+    // EBD37 — TRAINING SECTOR (secteur entraînement militaire, lun-ven)
+    // 503941N 0044955E - 503457N 0044956E - 502758N 0045957E - 502902N 0050637E
+    //   - (arc CW r=6.5 NM, approx ligne droite) - 503101N 0050701E
+    //   - 503357N 0050551E - 504355N 0051545E - 504709N 0050621E - 504157N 0045525E
+    name: "EBD37 : Secteur entraînement",
+    poly: [
+      [50.66139, 4.83194],
+      [50.58250, 4.83222],
+      [50.46611, 4.99917],
+      [50.48389, 5.11028],
+      [50.51694, 5.11694],
+      [50.56583, 5.09750],
+      [50.73194, 5.26250],
+      [50.78583, 5.10583],
+      [50.69917, 4.92361],
+    ],
   },
 ];
 
@@ -606,16 +857,16 @@ const LeafletMapAdventure = forwardRef<AdventureMapHandle, Props>(
         .bindTooltip("Charleroi EBCI · Départ et Retour", { direction: "top" });
 
       // ── Zones restreintes ─────────────────────────────────────
-      RESTRICTED_ZONES.forEach(zone => {
-        L.polygon(zone.poly as [number, number][], {
+      mergeRestrictedZones(RESTRICTED_ZONES).forEach(({ rings }) => {
+        L.polygon(rings as [number, number][][], {
           color:       "#ef4444",
           fillColor:   "#ef4444",
-          fillOpacity: 0.5,
+          fillOpacity: 0.18,
           weight:      2,
           dashArray:   "7 5",
           interactive: true,
         })
-          .bindTooltip(`🚫 ${zone.name} · Zone interdite`, { sticky: true })
+          .bindTooltip("🚫 Zone interdite", { sticky: true })
           .addTo(map);
       });
 
