@@ -8,9 +8,9 @@ import type { User as SupabaseUser } from "@supabase/supabase-js";
 import {
   MapPin, Clock, Search, Trash2, ChevronRight, ChevronLeft,
   Check, CheckCircle, Loader2, AlertCircle, AlertTriangle,
-  Mail, Lock, Eye, EyeOff, Zap, PlaneTakeoff, PlaneLanding, X, Info,
+  Mail, Lock, Eye, EyeOff, PlaneTakeoff, PlaneLanding, X, Info,
   Route, Star, Plus, CalendarDays, CloudRain,
-  ArrowRight, ShieldCheck, Monitor, UserPlus, LogIn,
+  ArrowRight, ShieldCheck, UserPlus, LogIn,
 } from "lucide-react";
 import type {
   AdventureRouteData, AdventureMapHandle, POI, StyleMode,
@@ -61,10 +61,6 @@ const DAYS_FR    = ["L","M","M","J","V","S","D"];
 const MAX_WEIGHT  = 190;
 const CRIT_WEIGHT = 220;
 
-const STYLE_OPTIONS: { key: StyleMode; icon: React.ReactNode; label: string; sub: string }[] = [
-  { key: "vues",   icon: <Eye size={14} />, label: "Vue panoramique",      sub: "Paysages & points d'intérêt" },
-  { key: "rapide", icon: <Zap size={14} />, label: "Itinéraire équilibré", sub: "Distance et temps optimisés" },
-];
 
 // ── Page ──────────────────────────────────────────────────────
 export default function VolSurMesurePage() {
@@ -647,7 +643,7 @@ export default function VolSurMesurePage() {
               <p className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-wider">Lieux survolés</p>
               {route.pois.map((p, i) => (
                 <div key={p.id} className="flex items-center gap-2">
-                  <span className="w-4 h-4 rounded-full bg-navy text-[#F2B705] text-[8px] font-black flex items-center justify-center shrink-0">{i + 1}</span>
+                  <span className="w-4 h-4 rounded-full bg-primary/10 text-primary text-[8px] font-black flex items-center justify-center shrink-0">{i + 1}</span>
                   <span className="text-xs font-semibold text-foreground truncate">{p.nom}</span>
                 </div>
               ))}
@@ -703,7 +699,7 @@ export default function VolSurMesurePage() {
                     className="flex-1 h-8 px-2.5 rounded-lg border border-border bg-input text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/35 min-w-0" />
                   <button type="button" onClick={validatePromoCode}
                     disabled={!promoInput.trim() || promoLoading}
-                    className="px-2.5 h-8 rounded-lg bg-navy text-white text-[11px] font-bold disabled:opacity-40 hover:bg-navy/80 transition-colors cursor-pointer flex items-center">
+                    className="px-2.5 h-8 rounded-lg bg-foreground text-background text-[11px] font-bold disabled:opacity-40 hover:bg-foreground/80 transition-colors cursor-pointer flex items-center">
                     {promoLoading ? <Loader2 size={10} className="animate-spin" /> : "OK"}
                   </button>
                 </div>
@@ -800,39 +796,33 @@ export default function VolSurMesurePage() {
       <div className={flowStep === "build" ? "relative flex flex-col" : "hidden"} style={{ height: "calc(100vh - 98px)" }}>
 
           {/* Main area */}
-          <div className="flex-1 min-h-0 bg-[#f5f5f7] p-3 pb-[148px] lg:pb-3 flex gap-3 overflow-hidden">
+          <div className="flex-1 min-h-0 bg-[#f5f5f7] px-3 pb-[148px] lg:pb-3 pt-1.5 flex gap-3 overflow-hidden">
             {/* Left: carte + instructions */}
             <div className="flex flex-col flex-1 min-w-0 gap-3">
 
               {/* Card 1 — Carte */}
-              <div className="flex-1 min-h-0 relative rounded-2xl shadow-[0_2px_16px_rgba(0,0,0,0.10)] border border-black/6" style={{ isolation: "isolate" }}>
+              <div className="flex-1 min-h-0 relative rounded-[10px] shadow-[0_2px_16px_rgba(0,0,0,0.10)] border border-border" style={{ isolation: "isolate" }}>
 
                   {/* Carte + popup desktop — overflow-hidden pour coins arrondis */}
-                  <div className="absolute inset-0 overflow-hidden rounded-2xl">
+                  <div className="absolute inset-0 overflow-hidden rounded-[10px]">
                   {/* Desktop uniquement : modal overlay sur la carte */}
                   {popupVisible && route.pois.length === 0 && (
                     <div className="hidden lg:flex absolute inset-0 items-center justify-center z-[500] bg-black/20 backdrop-blur-sm p-4">
                       <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl border border-border pointer-events-auto text-center">
-                        <div className="w-14 h-14 rounded-2xl bg-[#0b2238] flex items-center justify-center mx-auto mb-5">
-                          <Route size={22} className="text-[#F2B705]" />
+                        <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-5">
+                          <Route size={22} className="text-primary" />
                         </div>
-                        <p className="text-[#F2B705] text-[10px] font-bold tracking-[3px] uppercase mb-2">Vol sur mesure</p>
-                        <h2 className="text-[#0b2238] text-xl font-extrabold leading-snug mb-3">Tracez votre itinéraire</h2>
+                        <p className="text-primary text-[10px] font-bold tracking-[3px] uppercase mb-2">Vol sur mesure</p>
+                        <h2 className="text-foreground text-xl font-extrabold leading-snug mb-3">Tracez votre itinéraire</h2>
                         <p className="text-foreground/60 text-sm leading-relaxed mb-5">
                           Cliquez sur la carte pour ajouter les endroits à survoler. Le prix s&apos;affiche en temps réel selon la durée du vol.
                         </p>
                         <div className="flex flex-col gap-2 mb-6 text-left">
-                          {["Départ et retour depuis Charleroi (EBCI)","1 à 3 passagers maximum","Facturé à la minute de vol réelle","Aucun paiement immédiat, demande sans engagement"].map(p => (
+                          {["Départ et retour depuis Charleroi (EBCI)","1 à 3 passagers maximum","Facturé à la minute de vol réelle","Aucun paiement immédiat"].map(p => (
                             <div key={p} className="flex items-center gap-2.5 text-sm text-foreground/65">
                               <span className="w-1.5 h-1.5 rounded-full bg-[#F2B705] shrink-0" />{p}
                             </div>
                           ))}
-                        </div>
-                        <div className="flex items-start gap-2.5 bg-secondary border border-border rounded-lg px-3.5 py-2.5 mb-5 text-left">
-                          <Monitor size={14} className="text-[#0b2238] shrink-0 mt-0.5" />
-                          <p className="text-[11px] text-[#0b2238]/65 leading-relaxed">
-                            Pour une expérience optimale, utiliser un <span className="font-semibold text-[#0b2238]">ordinateur</span> est recommandé ; le système de traçage est complexe.
-                          </p>
                         </div>
                         <button type="button"
                           onClick={() => { setPopupVisible(false); sessionStorage.setItem("vsm_popup_seen", "1"); }}
@@ -898,8 +888,8 @@ export default function VolSurMesurePage() {
                               <button key={r.place_id} type="button"
                                 onClick={() => addSearchResult(r)}
                                 className="w-full flex items-start gap-3 px-4 py-3 hover:bg-primary/5 text-left transition-colors border-b border-border last:border-0 cursor-pointer group">
-                                <div className="w-7 h-7 rounded-lg bg-navy flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-primary transition-colors">
-                                  <MapPin size={12} className="text-primary group-hover:text-primary-foreground" />
+                                <div className="w-7 h-7 rounded-lg bg-secondary border border-border flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-primary/10 transition-colors">
+                                  <MapPin size={12} className="text-muted-foreground group-hover:text-primary" />
                                 </div>
                                 <div className="min-w-0 flex-1">
                                   <p className="text-sm font-bold text-foreground truncate">{r.display_name.split(",")[0]}</p>
@@ -967,7 +957,7 @@ export default function VolSurMesurePage() {
                   { n: 3, title: "Soumettez votre demande", desc: "Envoyez votre itinéraire. Aucun paiement à cette étape." },
                 ].map(({ n, title, desc }) => (
                   <div key={n} className="flex items-start gap-3 px-5 py-3.5">
-                    <div className="w-6 h-6 rounded-full bg-navy text-white flex items-center justify-center text-[11px] font-black shrink-0 mt-0.5">{n}</div>
+                    <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[11px] font-black shrink-0 mt-0.5">{n}</div>
                     <div>
                       <p className="text-[11px] font-bold text-foreground">{title}</p>
                       <p className="text-[10px] text-muted-foreground leading-relaxed mt-0.5">{desc}</p>
@@ -985,13 +975,9 @@ export default function VolSurMesurePage() {
 
                 {/* En-tête */}
                 <div className="px-6 pt-6 pb-5 border-b border-border">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-9 h-9 rounded-xl bg-[#0b2238] flex items-center justify-center shrink-0">
-                      <PlaneTakeoff size={16} className="text-[#F2B705]" />
-                    </div>
-                    <h2 className="text-xl font-black text-[#0b2238] leading-tight">Votre expérience</h2>
-                  </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
+                  <p className="text-[10px] font-black text-primary uppercase tracking-[3px] mb-1">Vol sur mesure</p>
+                  <h2 className="text-xl font-black text-foreground leading-tight">Votre expérience</h2>
+                  <p className="text-xs text-muted-foreground leading-relaxed mt-1">
                     Créez votre itinéraire et découvrez le prix estimé en temps réel.
                   </p>
                 </div>
@@ -1018,7 +1004,7 @@ export default function VolSurMesurePage() {
                       <p className="flex items-center justify-center gap-1 text-[7px] font-bold text-muted-foreground/70 uppercase tracking-[1.5px] mb-2">
                         {icon}{label}
                       </p>
-                      <p className="text-2xl font-black text-[#0b2238] leading-none">{main}</p>
+                      <p className="text-2xl font-black text-foreground leading-none">{main}</p>
                       {sub && <p className="text-[10px] text-muted-foreground mt-1">{sub}</p>}
                     </div>
                   ))}
@@ -1031,10 +1017,10 @@ export default function VolSurMesurePage() {
 
                     {/* Départ */}
                     <div className="flex items-center gap-2.5">
-                      <div className="w-3 h-3 rounded-full bg-[#F2B705] shrink-0 ring-4 ring-[#F2B705]/15" />
-                      <div className="flex-1 flex items-center justify-between bg-navy rounded-lg px-3.5 py-2.5">
-                        <span className="text-xs font-bold text-white">Charleroi (EBCI)</span>
-                        <span className="text-[9px] font-bold text-[#F2B705] uppercase tracking-wide">Départ</span>
+                      <div className="w-3 h-3 rounded-full bg-primary shrink-0 ring-4 ring-primary/15" />
+                      <div className="flex-1 flex items-center justify-between bg-secondary border border-border rounded-lg px-3.5 py-2.5">
+                        <span className="text-xs font-bold text-foreground">Charleroi (EBCI)</span>
+                        <span className="text-[9px] font-bold text-primary uppercase tracking-wide">Départ</span>
                       </div>
                     </div>
 
@@ -1046,12 +1032,12 @@ export default function VolSurMesurePage() {
                     ) : (
                       route.pois.map(poi => (
                         <div key={poi.id} className="flex items-center gap-2.5">
-                          <div className="w-3 h-3 rounded-full bg-white border-2 border-muted-foreground/30 shrink-0" />
-                          <div className="flex-1 flex items-center justify-between bg-navy rounded-lg px-3.5 py-2.5">
-                            <span className="text-xs font-bold text-white truncate flex-1 min-w-0 mr-2">{poi.nom}</span>
+                          <div className="w-3 h-3 rounded-full bg-border shrink-0" />
+                          <div className="flex-1 flex items-center justify-between bg-secondary border border-border rounded-lg px-3.5 py-2.5">
+                            <span className="text-xs font-bold text-foreground truncate flex-1 min-w-0 mr-2">{poi.nom}</span>
                             <button
                               onClick={() => mapRef.current?.removePOI(poi.id)}
-                              className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/8 hover:bg-red-500/20 text-white/35 hover:text-red-400 transition-all cursor-pointer border border-white/10 hover:border-red-400/30">
+                              className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-muted hover:bg-red-50 text-muted-foreground hover:text-red-500 transition-all cursor-pointer border border-border hover:border-red-200">
                               <X size={12} />
                               <span className="text-[9px] font-bold hidden xl:block">Retirer</span>
                             </button>
@@ -1063,10 +1049,10 @@ export default function VolSurMesurePage() {
                     {/* Arrivée */}
                     {route.pois.length > 0 && (
                       <div className="flex items-center gap-2.5">
-                        <div className="w-3 h-3 rounded-full bg-[#F2B705] shrink-0 ring-4 ring-[#F2B705]/15" />
-                        <div className="flex-1 flex items-center justify-between bg-navy rounded-lg px-3.5 py-2.5">
-                          <span className="text-xs font-bold text-white">Charleroi (EBCI)</span>
-                          <span className="text-[9px] font-bold text-[#F2B705] uppercase tracking-wide">Arrivée</span>
+                        <div className="w-3 h-3 rounded-full bg-primary shrink-0 ring-4 ring-primary/15" />
+                        <div className="flex-1 flex items-center justify-between bg-secondary border border-border rounded-lg px-3.5 py-2.5">
+                          <span className="text-xs font-bold text-foreground">Charleroi (EBCI)</span>
+                          <span className="text-[9px] font-bold text-primary uppercase tracking-wide">Arrivée</span>
                         </div>
                       </div>
                     )}
@@ -1125,26 +1111,6 @@ export default function VolSurMesurePage() {
                   </div>
                 )}
 
-                {/* Style de vol */}
-                <div className="px-5 py-4 border-b border-border">
-                  <h3 className="text-[9px] font-black text-foreground/40 uppercase tracking-[2px] mb-3">Style de vol</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {STYLE_OPTIONS.map(o => (
-                      <button key={o.key} type="button" onClick={() => setStyleMode(o.key)}
-                        className={[
-                          "flex flex-col items-start gap-1.5 px-3 py-3 rounded-lg border-2 text-left transition-all cursor-pointer",
-                          styleMode === o.key
-                            ? "border-primary bg-primary/5"
-                            : "border-border bg-card hover:border-primary/50",
-                        ].join(" ")}>
-                        <span className={styleMode === o.key ? "text-[#F2B705]" : "text-muted-foreground"}>{o.icon}</span>
-                        <p className={`text-[11px] font-bold leading-tight ${styleMode === o.key ? "text-[#0b2238]" : "text-foreground"}`}>{o.label}</p>
-                        <p className="text-[9px] text-muted-foreground leading-snug">{o.sub}</p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
                 {/* Notice légale */}
                 <div className="px-5 py-4 flex items-start gap-2.5">
                   <ShieldCheck size={13} className="text-muted-foreground/40 shrink-0 mt-0.5" />
@@ -1186,11 +1152,11 @@ export default function VolSurMesurePage() {
           {popupVisible && route.pois.length === 0 && (
             <div className="lg:hidden absolute inset-0 bg-[#f5f5f7] z-[600] overflow-y-auto flex flex-col items-center justify-center p-5">
               <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-sm border border-border text-center">
-                <div className="w-14 h-14 rounded-2xl bg-[#0b2238] flex items-center justify-center mx-auto mb-5">
-                  <Route size={22} className="text-[#F2B705]" />
+                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-5">
+                  <Route size={22} className="text-primary" />
                 </div>
-                <p className="text-[#F2B705] text-[10px] font-bold tracking-[3px] uppercase mb-2">Vol sur mesure</p>
-                <h2 className="text-[#0b2238] text-xl font-extrabold leading-snug mb-3">Tracez votre itinéraire</h2>
+                <p className="text-primary text-[10px] font-bold tracking-[3px] uppercase mb-2">Vol sur mesure</p>
+                <h2 className="text-foreground text-xl font-extrabold leading-snug mb-3">Tracez votre itinéraire</h2>
                 <p className="text-foreground/60 text-sm leading-relaxed mb-5">
                   Appuyez sur la carte pour ajouter les endroits à survoler. Le prix s&apos;affiche en temps réel selon la durée du vol.
                 </p>
@@ -1281,34 +1247,14 @@ export default function VolSurMesurePage() {
                     </div>
                   )}
 
-                  {/* Style de vol */}
-                  <div>
-                    <p className="text-[9px] font-black text-foreground/40 uppercase tracking-[2px] mb-2">Style de vol</p>
-                    <div className="flex gap-2">
-                      {STYLE_OPTIONS.map(o => (
-                        <button key={o.key} type="button"
-                          onClick={() => setStyleMode(o.key)}
-                          className={[
-                            "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-bold border transition-all cursor-pointer",
-                            styleMode === o.key
-                              ? "bg-[#0b2238] text-[#F2B705] border-[#0b2238]"
-                              : "bg-secondary text-muted-foreground border-border",
-                          ].join(" ")}>
-                          <span className={styleMode === o.key ? "text-[#F2B705]" : "text-muted-foreground"}>{o.icon}</span>
-                          {o.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
                   {/* Parcours */}
                   <div>
                     <p className="text-[9px] font-black text-foreground/40 uppercase tracking-[2px] mb-2">Votre parcours</p>
                     <div className="space-y-1.5">
-                      <div className="flex items-center gap-2 bg-navy rounded-lg px-3 py-2">
-                        <PlaneTakeoff size={11} className="text-[#F2B705] shrink-0" />
-                        <span className="text-xs font-bold text-white flex-1">Charleroi EBCI</span>
-                        <span className="text-[9px] font-bold text-[#F2B705] uppercase tracking-wide">Départ</span>
+                      <div className="flex items-center gap-2 bg-secondary border border-border rounded-lg px-3 py-2">
+                        <PlaneTakeoff size={11} className="text-primary shrink-0" />
+                        <span className="text-xs font-bold text-foreground flex-1">Charleroi EBCI</span>
+                        <span className="text-[9px] font-bold text-primary uppercase tracking-wide">Départ</span>
                       </div>
                       {route.pois.length === 0 ? (
                         <p className="text-[11px] text-muted-foreground italic px-1">Aucun lieu ; appuyez sur la carte pour en ajouter</p>
@@ -1324,10 +1270,10 @@ export default function VolSurMesurePage() {
                         ))
                       )}
                       {route.pois.length > 0 && (
-                        <div className="flex items-center gap-2 bg-navy rounded-lg px-3 py-2">
-                          <PlaneLanding size={11} className="text-[#F2B705] shrink-0" />
-                          <span className="text-xs font-bold text-white flex-1">Charleroi EBCI</span>
-                          <span className="text-[9px] font-bold text-[#F2B705] uppercase tracking-wide">Retour</span>
+                        <div className="flex items-center gap-2 bg-secondary border border-border rounded-lg px-3 py-2">
+                          <PlaneLanding size={11} className="text-primary shrink-0" />
+                          <span className="text-xs font-bold text-foreground flex-1">Charleroi EBCI</span>
+                          <span className="text-[9px] font-bold text-primary uppercase tracking-wide">Retour</span>
                         </div>
                       )}
                     </div>
@@ -1443,26 +1389,26 @@ export default function VolSurMesurePage() {
             <div className="flex-1 min-w-0 space-y-4">
 
               {/* Mobile — récap du vol (sidebar invisible sur mobile) */}
-              <div className="lg:hidden bg-[#0b2238] rounded-2xl p-4">
+              <div className="lg:hidden card-premium p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div>
-                    <p className="text-[8px] font-black text-white/35 uppercase tracking-[2.5px] mb-1">Votre vol</p>
-                    <p className="text-white font-black text-2xl leading-none">
+                    <p className="text-[8px] font-black text-muted-foreground uppercase tracking-[2.5px] mb-1">Votre vol</p>
+                    <p className="text-foreground font-black text-2xl leading-none">
                       {route.totalMin > 0 ? `≈ ${route.totalMin}` : "—"}
                       {route.totalMin > 0 && <span className="text-base font-bold ml-1">min</span>}
                     </p>
                   </div>
                   {prixEstime > 0 && (
                     <div className="text-right">
-                      <p className="text-[8px] font-black text-white/35 uppercase tracking-[2.5px] mb-1">Prix estimé</p>
-                      <p className="text-[#F2B705] font-black text-2xl leading-none">{prixEstime}&thinsp;€</p>
+                      <p className="text-[8px] font-black text-muted-foreground uppercase tracking-[2.5px] mb-1">Prix estimé</p>
+                      <p className="text-primary font-black text-2xl leading-none">{prixEstime}&thinsp;€</p>
                     </div>
                   )}
                 </div>
                 {route.pois.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 pt-2.5 border-t border-white/10">
+                  <div className="flex flex-wrap gap-1.5 pt-2.5 border-t border-border">
                     {route.pois.map(p => (
-                      <span key={p.id} className="bg-white/10 text-white/70 text-[10px] font-semibold px-2.5 py-1 rounded-lg">{p.nom}</span>
+                      <span key={p.id} className="bg-secondary border border-border text-foreground/70 text-[10px] font-semibold px-2.5 py-1 rounded-lg">{p.nom}</span>
                     ))}
                   </div>
                 )}
@@ -1470,10 +1416,7 @@ export default function VolSurMesurePage() {
 
               {/* 1. Date & heure */}
               <div className="card-premium overflow-hidden">
-                <div className="px-6 pt-5 pb-4 border-b border-border flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-navy flex items-center justify-center shrink-0">
-                    <span className="text-primary font-black text-[13px]">1</span>
-                  </div>
+                <div className="px-6 pt-5 pb-4 border-b border-border">
                   <h2 className="text-[15px] font-black text-foreground">Quand souhaitez-vous voler ?</h2>
                 </div>
                 <div className="p-5">
@@ -1536,10 +1479,7 @@ export default function VolSurMesurePage() {
 
               {/* 2. Participants */}
               <div ref={passengersRef} className="card-premium overflow-hidden">
-                <div className="px-6 pt-5 pb-4 border-b border-border flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-navy flex items-center justify-center shrink-0">
-                    <span className="text-primary font-black text-[13px]">2</span>
-                  </div>
+                <div className="px-6 pt-5 pb-4 border-b border-border">
                   <h2 className="text-[15px] font-black text-foreground">Participants</h2>
                 </div>
                 <div className="p-5 space-y-5">
@@ -1589,14 +1529,9 @@ export default function VolSurMesurePage() {
 
               {/* 3. Coordonnées */}
               <div className="card-premium overflow-hidden">
-                <div className="px-6 pt-5 pb-4 border-b border-border flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-navy flex items-center justify-center shrink-0">
-                    <span className="text-primary font-black text-[13px]">3</span>
-                  </div>
-                  <div>
-                    <h2 className="text-[15px] font-black text-foreground leading-tight">Vos coordonnées</h2>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">Nous vous contactons ici pour confirmer le vol</p>
-                  </div>
+                <div className="px-6 pt-5 pb-4 border-b border-border">
+                  <h2 className="text-[15px] font-black text-foreground leading-tight">Vos coordonnées</h2>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Nous vous contactons ici pour confirmer le vol</p>
                 </div>
                 <div className="p-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -1626,7 +1561,7 @@ export default function VolSurMesurePage() {
                               Connectez-vous pour finaliser votre réservation. Votre parcours sera sauvegardé.
                             </p>
                             <button type="button" onClick={handleLoginRedirect}
-                              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#0b2238] text-white text-sm font-bold hover:bg-[#0b2238]/80 transition-colors cursor-pointer">
+                              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-foreground text-background text-sm font-bold hover:bg-foreground/80 transition-colors cursor-pointer">
                               <LogIn size={13} /> Se connecter
                             </button>
                           </div>
@@ -1695,10 +1630,7 @@ export default function VolSurMesurePage() {
 
               {/* 4. Message pilote */}
               <div className="card-premium overflow-hidden">
-                <div className="px-6 pt-5 pb-4 border-b border-border flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-navy flex items-center justify-center shrink-0">
-                    <span className="text-primary font-black text-[13px]">4</span>
-                  </div>
+                <div className="px-6 pt-5 pb-4 border-b border-border">
                   <h2 className="text-[15px] font-black text-foreground leading-tight">
                     Un commentaire ? <span className="text-sm font-normal text-muted-foreground">(optionnel)</span>
                   </h2>
@@ -1719,14 +1651,9 @@ export default function VolSurMesurePage() {
 
               {/* 5. Bon cadeau / code promo — mobile uniquement (disponible dans la sidebar sur desktop) */}
               <div className="lg:hidden card-premium overflow-hidden">
-                <div className="px-6 pt-5 pb-4 border-b border-border flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-navy flex items-center justify-center shrink-0">
-                    <span className="text-primary font-black text-[13px]">5</span>
-                  </div>
-                  <div>
-                    <h2 className="text-[15px] font-black text-foreground leading-tight">Bon cadeau ou code promo</h2>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">optionnel</p>
-                  </div>
+                <div className="px-6 pt-5 pb-4 border-b border-border">
+                  <h2 className="text-[15px] font-black text-foreground leading-tight">Bon cadeau ou code promo</h2>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">optionnel</p>
                 </div>
                 <div className="p-5 space-y-3">
                   {voucherData && (
@@ -1769,7 +1696,7 @@ export default function VolSurMesurePage() {
                           className="flex-1 h-10 px-3.5 rounded-lg border border-border bg-input text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/35" />
                         <button type="button" onClick={validatePromoCode}
                           disabled={!promoInput.trim() || promoLoading}
-                          className="px-4 h-10 rounded-lg bg-navy text-white text-sm font-bold disabled:opacity-40 hover:bg-navy/80 transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1.5">
+                          className="px-4 h-10 rounded-lg bg-foreground text-background text-sm font-bold disabled:opacity-40 hover:bg-foreground/80 transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1.5">
                           {promoLoading ? <Loader2 size={13} className="animate-spin" /> : "Valider"}
                         </button>
                       </div>
@@ -1888,7 +1815,7 @@ export default function VolSurMesurePage() {
               {/* Récap condensé — itinéraire + infos + coordonnées en une seule card */}
               <div className="card-premium overflow-hidden">
                 {/* Header itinéraire */}
-                <div className="px-5 pt-4 pb-3 bg-navy/5 border-b border-border flex items-center justify-between gap-3">
+                <div className="px-5 pt-4 pb-3 bg-secondary/60 border-b border-border flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <PlaneTakeoff size={13} className="text-foreground shrink-0" />
                     <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm min-w-0">
@@ -1999,7 +1926,7 @@ export default function VolSurMesurePage() {
               {/* CGP */}
               <div className={`rounded-lg border-2 p-5 transition-all ${form.accept_cgp ? "bg-primary/5 border-primary/20" : "bg-card border-border"}`}>
                 <label className="flex items-start gap-3.5 cursor-pointer">
-                  <div className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${form.accept_cgp ? "bg-navy border-navy" : "border-border bg-card"}`}>
+                  <div className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${form.accept_cgp ? "bg-primary border-primary" : "border-border bg-card"}`}>
                     {form.accept_cgp && <Check size={11} className="text-primary" />}
                     <input type="checkbox" checked={form.accept_cgp}
                       onChange={e => setForm(f => ({ ...f, accept_cgp: e.target.checked }))}
