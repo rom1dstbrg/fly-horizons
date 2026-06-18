@@ -16,11 +16,14 @@ import { VoucherDrawer, type DrawerVoucher } from "@/components/admin/VoucherDra
 type VoucherCode = DrawerVoucher;
 
 function getPaymentBadge(voucher: VoucherCode) {
-  if (!voucher.order_id) return { label: "Offert", className: "bg-blue-50 text-blue-700 border-blue-200" };
-  const s = voucher.order?.status;
-  if (s === "pending")                        return { label: "En attente",  className: "bg-yellow-50 text-yellow-700 border-yellow-200" };
-  if (s === "cancelled" || s === "refunded")  return { label: "Annulé",      className: "bg-red-50 text-red-600 border-red-200" };
-  return                                             { label: "Payé",        className: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+  if (voucher.order_id) {
+    const s = voucher.order?.status;
+    if (s === "pending")                        return { label: "En attente",  className: "bg-yellow-50 text-yellow-700 border-yellow-200" };
+    if (s === "cancelled" || s === "refunded")  return { label: "Annulé",      className: "bg-red-50 text-red-600 border-red-200" };
+    return                                             { label: "Payé",        className: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+  }
+  if (voucher.payment_method === "cash") return { label: "Cash",   className: "bg-amber-50 text-amber-700 border-amber-200" };
+  return                                        { label: "Offert", className: "bg-blue-50  text-blue-700  border-blue-200"  };
 }
 
 const STATUS_FILTER_TABS = [
@@ -123,6 +126,7 @@ function CreateVoucherForm({ onClose, clients, prixHeure60 }: {
   const [priceMode, setPriceMode] = useState<"auto" | "manual">("auto");
   const [duration, setDuration] = useState<number>(60);
   const [manualPrix, setManualPrix] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"offered" | "cash">("offered");
 
   const autoPrice = priceMode === "auto" && prixHeure60 && duration > 0
     ? Math.round((prixHeure60 / 60) * duration * 100) / 100
@@ -134,6 +138,7 @@ function CreateVoucherForm({ onClose, clients, prixHeure60 }: {
     const formData = new FormData(e.currentTarget);
     formData.set("recipient_name", recipientName);
     formData.set("recipient_email", recipientEmail);
+    formData.set("payment_method", paymentMethod);
     if (priceMode === "auto" && autoPrice !== null) {
       formData.set("prix", String(autoPrice));
     }
@@ -151,6 +156,7 @@ function CreateVoucherForm({ onClose, clients, prixHeure60 }: {
       setSendEmail(false);
       setManualPrix("");
       setDuration(60);
+      setPaymentMethod("offered");
       (e.target as HTMLFormElement).reset();
     });
   }
@@ -235,6 +241,27 @@ function CreateVoucherForm({ onClose, clients, prixHeure60 }: {
           <label className="block text-xs font-medium text-muted-foreground mb-1.5">Description du vol *</label>
           <input name="product_title" required placeholder="Ex. Vol de découverte 60 min"
             className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-muted-foreground mb-1.5">Mode de paiement</label>
+          <div className="flex gap-1">
+            <button
+              type="button" onClick={() => setPaymentMethod("offered")}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${paymentMethod === "offered" ? "bg-navy text-white" : "bg-secondary text-muted-foreground hover:text-foreground"}`}
+            >
+              Offert
+            </button>
+            <button
+              type="button" onClick={() => setPaymentMethod("cash")}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${paymentMethod === "cash" ? "bg-navy text-white" : "bg-secondary text-muted-foreground hover:text-foreground"}`}
+            >
+              Payé en cash
+            </button>
+          </div>
+          {paymentMethod === "cash" && (
+            <p className="text-[11px] text-amber-600 mt-1.5">Ce montant sera comptabilisé dans les caisses Fly Horizons.</p>
+          )}
         </div>
 
         <div className="rounded-lg border border-border bg-secondary p-3 space-y-3">

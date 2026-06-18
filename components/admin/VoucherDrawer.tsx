@@ -33,14 +33,18 @@ export interface DrawerVoucher {
   client_id: string | null;
   buyer_name: string | null;
   buyer_email: string | null;
+  payment_method: "stripe" | "cash" | "offered" | null;
 }
 
 function getPaymentBadge(v: DrawerVoucher) {
-  if (!v.order_id) return { label: "Offert", className: "bg-blue-50 text-blue-700 border-blue-200" };
-  const s = v.order?.status;
-  if (s === "pending")                        return { label: "En attente", className: "bg-yellow-50 text-yellow-700 border-yellow-200" };
-  if (s === "cancelled" || s === "refunded")  return { label: "Annulé",     className: "bg-red-50 text-red-600 border-red-200" };
-  return                                             { label: "Payé",       className: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+  if (v.order_id) {
+    const s = v.order?.status;
+    if (s === "pending")                        return { label: "En attente", className: "bg-yellow-50 text-yellow-700 border-yellow-200" };
+    if (s === "cancelled" || s === "refunded")  return { label: "Annulé",     className: "bg-red-50 text-red-600 border-red-200" };
+    return                                             { label: "Payé",       className: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+  }
+  if (v.payment_method === "cash") return { label: "Cash",   className: "bg-amber-50 text-amber-700 border-amber-200" };
+  return                                  { label: "Offert", className: "bg-blue-50  text-blue-700  border-blue-200"  };
 }
 
 function CopyCode({ code }: { code: string }) {

@@ -2,6 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { PrixVolForm } from "@/components/admin/PrixVolForm";
 import { OperationalSettingsForm } from "@/components/admin/OperationalSettingsForm";
 import { SiteSettingsForm } from "@/components/admin/SiteSettingsForm";
+import { TarifAvionForm } from "@/components/admin/TarifAvionForm";
 import { PageHeader } from "@/components/admin/PageHeader";
 
 export const metadata = { title: "Parametres — Admin" };
@@ -9,7 +10,10 @@ export const metadata = { title: "Parametres — Admin" };
 export default async function AdminSettingsPage() {
   const db = createAdminClient();
 
-  const { data: crmSettings } = await db.from("crm_settings").select("*");
+  const [{ data: crmSettings }, { data: tarifAvions }] = await Promise.all([
+    db.from("crm_settings").select("*"),
+    db.from("avion_tarifs").select("*").order("actif_depuis", { ascending: false }),
+  ]);
 
   function get(key: string, fallback: string) {
     return crmSettings?.find(s => s.key === key)?.value ?? fallback;
@@ -32,6 +36,12 @@ export default async function AdminSettingsPage() {
       />
 
       <PrixVolForm prixHeure={prixHeure} acomptePersoHeure={acomptePersoHeure} />
+
+      <hr className="border-border" />
+
+      <TarifAvionForm tarifs={tarifAvions ?? []} />
+
+      <hr className="border-border" />
 
       <OperationalSettingsForm
         welcomeCode={welcomeCode}

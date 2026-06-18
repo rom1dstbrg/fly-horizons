@@ -65,8 +65,9 @@ export async function createManualVoucher(formData: FormData) {
     const recipientEmail = (formData.get("recipient_email") as string)?.trim() || null;
     const recipientName = (formData.get("recipient_name") as string)?.trim() || null;
     const expiresAt = (formData.get("expires_at") as string) || null;
+    const paymentMethod = (formData.get("payment_method") as string) || "offered";
 
-    if (!duration || duration <= 0) return { error: "DurÃ©e invalide." };
+    if (!duration || duration <= 0) return { error: "Durée invalide." };
 
     const code = generateVoucherCode();
     const expiresAtISO = expiresAt ? new Date(expiresAt).toISOString() : null;
@@ -80,6 +81,7 @@ export async function createManualVoucher(formData: FormData) {
       recipient_name: recipientName,
       status: "unused",
       expires_at: expiresAtISO,
+      payment_method: paymentMethod,
     }).select("id").single();
 
     if (error || !inserted) return { error: error?.message ?? "Erreur insertion" };
@@ -99,6 +101,7 @@ export async function updateVoucher(voucherId: string, data: {
   recipient_name?: string | null;
   expires_at?: string | null;
   status?: string;
+  payment_method?: string;
 }) {
   try {
     await checkAdmin();
