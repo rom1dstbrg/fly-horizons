@@ -45,6 +45,9 @@ function ReservationCard({
             <p className="font-semibold text-foreground text-sm">
               {client ? `${client.prenom} ${client.nom}` : "—"}
             </p>
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-navy/8 text-navy border border-navy/20">
+              {r.duree} min
+            </span>
             <AdminBadge variant={statut.variant} label={statut.label} />
             {r.remboursement != null && r.remboursement > 0 && (
               <AdminBadge variant="secondary" label={`Remboursé −${r.remboursement} €`} />
@@ -61,7 +64,7 @@ function ReservationCard({
               {dateStr}{r.heure_vol ? ` · ${r.heure_vol.slice(0, 5)}` : ""}
             </p>
             <p className="text-xs text-muted-foreground">
-              {r.duree} min · {r.passagers} pax{r.poids_total ? ` · ${r.poids_total} kg` : ""}
+              {r.passagers} pax{r.poids_total ? ` · ${r.poids_total} kg` : ""}
             </p>
             {r.voucher_code && (
               <p className="text-xs text-emerald-600 font-mono font-semibold">{r.voucher_code}</p>

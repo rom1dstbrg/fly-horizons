@@ -27,6 +27,7 @@ import {
   Sparkles, RotateCcw, Zap, Wind, AlertTriangle,
   CheckCircle2, XCircle, ChevronRight, Copy, Plus, Trash2,
   List, Map as MapIcon, ArrowUpDown, ExternalLink, Banknote,
+  Calculator, ChevronDown, Ticket,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 
@@ -37,7 +38,7 @@ const AdminRouteEditor = dynamic(
 
 type Waypoint = { lat: number; lng: number; nom?: string };
 type Stopover = { icao: string; nom: string; taxe: number; lat?: number; lng?: number };
-type Reservation = {
+export type Reservation = {
   id: string;
   date_vol: string;
   heure_vol: string | null;
@@ -50,6 +51,8 @@ type Reservation = {
   payment_status: string | null;
   voucher_code: string | null;
   coupon_code: string | null;
+  duree_reelle?: number | null;
+  remboursement?: number | null;
   distance_km: number | null;
   style_vol: "rapide" | "vues" | null;
   waypoints: Waypoint[] | null;
@@ -198,7 +201,7 @@ function InputField({ label, children }: { label: string; children: React.ReactN
 const inputCls = "w-full h-8 px-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-1 focus:ring-navy/30";
 
 // ── Drawer principal ───────────────────────────────────────────────────────────
-function VolsPersoDrawer({
+export function VolsPersoDrawer({
   reservation,
   onClose,
   onStatusChange,
@@ -215,6 +218,12 @@ function VolsPersoDrawer({
   const [avionReserve, setAvionReserveLocal] = useState(reservation?.avion_reserve ?? false);
   const [isCashPending, startCashTransition] = useTransition();
   const [cashMontant, setCashMontant] = useState("");
+
+  // Bilan vol
+  const [bilanOpen, setBilanOpen] = useState(false);
+  const [bilanDureeReelle, setBilanDureeReelle] = useState("");
+  const [bilanTarifEcole, setBilanTarifEcole] = useState<number | null>(null);
+  const [bilanPending, startBilanTransition] = useTransition();
 
   // Tab
   const [activeTab, setActiveTab] = useState<Tab>("infos");
@@ -245,6 +254,7 @@ function VolsPersoDrawer({
   const [draftCouponCode, setDraftCouponCode] = useState("");
   const [draftCommentaire, setDraftCommentaire] = useState("");
   const [draftStyleVol, setDraftStyleVol] = useState<"rapide" | "vues" | "">("");
+  const [draftRemboursement, setDraftRemboursement] = useState("");
 
   // Route tab
   const [finalWpDrafts, setFinalWpDrafts] = useState<WaypointDraft[]>([]);
@@ -284,6 +294,7 @@ function VolsPersoDrawer({
     setDraftCouponCode(reservation.coupon_code ?? "");
     setDraftCommentaire(reservation.commentaire ?? "");
     setDraftStyleVol(reservation.style_vol ?? "");
+    setDraftRemboursement(reservation.remboursement != null ? String(reservation.remboursement) : "");
     setAvionReserveLocal(reservation.avion_reserve ?? false);
     setCashMontant(reservation.acompte != null ? String(reservation.acompte) : "");
     // Final waypoints: load from saved state, or fall back to client route — always optimized
@@ -313,6 +324,9 @@ function VolsPersoDrawer({
     setHistoryItems([]);
     setProposalsLoaded(false);
     setProposals([]);
+    setBilanOpen(false);
+    setBilanDureeReelle(reservation.duree_reelle != null ? String(reservation.duree_reelle) : "");
+    setBilanTarifEcole(null);
   }, [reservation?.id]);
 
   // Lazy-load when tabs open
@@ -333,6 +347,31 @@ function VolsPersoDrawer({
       setProposalsLoaded(true);
     });
   }, [activeTab, proposalsLoaded, reservation?.id]);
+
+  // Voucher auto-fill: when paye=0 and voucher_code set, prefill prix from voucher
+  useEffect(() => {
+    if (!reservation?.voucher_code) return;
+    if ((reservation.paye ?? 0) > 0 && reservation.acompte != null) return;
+    import("@/lib/supabase/client").then(({ createClient }) => {
+      createClient()
+        .from("voucher_codes")
+        .select("prix, orders(total, status)")
+        .eq("code", reservation.voucher_code!)
+        .single()
+        .then(({ data }) => {
+          if (!data) return;
+          const orderRaw = data.orders as unknown;
+          const order = Array.isArray(orderRaw)
+            ? (orderRaw[0] as { total: number; status: string } | undefined) ?? null
+            : orderRaw as { total: number; status: string } | null;
+          const price = order?.status === "paid" ? order.total : (data.prix ?? null);
+          if (price != null) {
+            setDraftPaye(p => (p === "" || p === "0") ? String(price) : p);
+            setDraftAcompte(a => (a === "" || a === "0" || a === "") ? String(price) : a);
+          }
+        });
+    });
+  }, [reservation?.id, reservation?.voucher_code]);
 
   function showFeedback(msg: string, ok = true) {
     setFeedback({ msg, ok });
@@ -356,6 +395,36 @@ function VolsPersoDrawer({
       const result = await sendRescheduleInvite(reservation.id);
       if (result.error) { showFeedback("Erreur : " + result.error, false); return; }
       showFeedback("Email de report envoyé au client ✓");
+    });
+  }
+
+  function openBilan() {
+    if (!reservation) return;
+    setBilanOpen(v => !v);
+    if (bilanTarifEcole !== null) return;
+    import("@/lib/supabase/client").then(({ createClient }) => {
+      createClient()
+        .from("avion_tarifs")
+        .select("prix_heure, actif_depuis")
+        .then(({ data }) => {
+          if (!data || data.length === 0) return;
+          const sorted = [...data].sort(
+            (a, b) => new Date(b.actif_depuis).getTime() - new Date(a.actif_depuis).getTime()
+          );
+          const applicable = sorted.find(t => t.actif_depuis <= reservation.date_vol);
+          const tarif = (applicable ?? sorted[sorted.length - 1])?.prix_heure ?? null;
+          setBilanTarifEcole(tarif);
+        });
+    });
+  }
+
+  function saveBilanVol() {
+    if (!reservation) return;
+    const dureeR = parseInt(bilanDureeReelle);
+    if (isNaN(dureeR) || dureeR <= 0) return;
+    startBilanTransition(async () => {
+      await updateReservationAllFields(reservation.id, {}, { duree_reelle: dureeR });
+      showFeedback("Bilan vol enregistré ✓");
     });
   }
 
@@ -383,6 +452,8 @@ function VolsPersoDrawer({
           coupon_code: draftCouponCode.trim() || null,
           commentaire: draftCommentaire.trim() || null,
           style_vol: draftStyleVol || null,
+          remboursement: draftRemboursement ? parseFloat(draftRemboursement) : null,
+          duree_reelle: bilanDureeReelle ? parseInt(bilanDureeReelle) : null,
         }
       );
       if (r.error) { showFeedback("Erreur : " + r.error, false); return; }
@@ -497,6 +568,15 @@ function VolsPersoDrawer({
   if (!reservation) return null;
 
   const r = reservation;
+
+  // Bilan vol calc
+  const bilanDureeR = parseInt(bilanDureeReelle) || 0;
+  const bilanPrixDemande = r.acompte ?? 0;
+  const bilanCoutEcole = bilanTarifEcole !== null && bilanDureeR > 0
+    ? Math.round((bilanTarifEcole / 60) * bilanDureeR * 100) / 100 : null;
+  const bilanResultat = bilanCoutEcole !== null && bilanPrixDemande > 0
+    ? Math.round((bilanPrixDemande - bilanCoutEcole) * 100) / 100 : null;
+
   const statusCfg = STATUT_PERSO[r.statut] ?? { label: r.statut, variant: "secondary" as const };
   const dateLabel = new Date(r.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
     weekday: "long", day: "numeric", month: "long", year: "numeric",
@@ -681,12 +761,6 @@ function VolsPersoDrawer({
                           }
                         </div>
                       </Field>
-                      <Field label="Durée">
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <Clock size={13} className="text-muted-foreground" />
-                          ~{r.duree} min
-                        </div>
-                      </Field>
                       <Field label="Passagers">
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <Users size={13} className="text-muted-foreground" />
@@ -753,27 +827,6 @@ function VolsPersoDrawer({
                       )}
                     </div>
 
-                    {/* Style de vol */}
-                    {r.style_vol && (
-                      <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-semibold ${
-                        r.style_vol === "rapide"
-                          ? "bg-blue-50 border-blue-200 text-blue-800"
-                          : "bg-purple-50 border-purple-200 text-purple-800"
-                      }`}>
-                        {r.style_vol === "rapide" ? <Zap size={14} /> : <Wind size={14} />}
-                        <div>
-                          <p className="font-bold text-sm">
-                            {r.style_vol === "rapide" ? "Itinéraire direct" : "Parcours pittoresque"}
-                          </p>
-                          <p className="text-xs font-normal opacity-70 mt-0.5">
-                            {r.style_vol === "rapide"
-                              ? "Le client souhaite le trajet le plus court entre les lieux."
-                              : "Le client préfère une route plus ample. Tu peux ajouter des détours."}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
                     {/* Remarques client */}
                     {r.commentaire && (
                       <div>
@@ -782,6 +835,74 @@ function VolsPersoDrawer({
                       </div>
                     )}
                   </div>
+                </div>
+
+                {/* Bilan vol */}
+                <div>
+                  <button
+                    onClick={openBilan}
+                    className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-2 cursor-pointer hover:text-foreground transition-colors"
+                  >
+                    <Calculator size={11} />
+                    Bilan vol
+                    <ChevronDown size={11} className={`transition-transform ${bilanOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  {bilanOpen && (
+                    <div className="bg-secondary/60 rounded-xl border border-border p-4 space-y-3">
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <p className="text-muted-foreground mb-0.5">Pack demandé</p>
+                          <p className="font-semibold">{r.duree} min</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground mb-0.5">Prix demandé</p>
+                          <p className="font-semibold">{bilanPrixDemande > 0 ? `${bilanPrixDemande} €` : "—"}</p>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                          Durée réelle (min)
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="number"
+                            value={bilanDureeReelle}
+                            onChange={e => setBilanDureeReelle(e.target.value)}
+                            min={1}
+                            placeholder="ex. 52"
+                            className="flex-1 h-8 px-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-1 focus:ring-navy/30 placeholder:text-muted-foreground/40"
+                          />
+                          <button
+                            onClick={saveBilanVol}
+                            disabled={bilanPending || !bilanDureeReelle}
+                            className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-navy text-white text-xs font-semibold hover:brightness-90 transition-colors disabled:opacity-50 cursor-pointer"
+                          >
+                            {bilanPending ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
+                            Enregistrer
+                          </button>
+                        </div>
+                      </div>
+                      {bilanCoutEcole !== null && (
+                        <div className="grid grid-cols-2 gap-3 text-xs pt-1 border-t border-border">
+                          <div>
+                            <p className="text-muted-foreground mb-0.5">Coût école</p>
+                            <p className="font-semibold text-red-500">−{bilanCoutEcole} €</p>
+                          </div>
+                          {bilanResultat !== null && (
+                            <div>
+                              <p className="text-muted-foreground mb-0.5">Résultat Romain</p>
+                              <p className={`font-bold ${bilanResultat >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+                                {bilanResultat >= 0 ? "+" : ""}{bilanResultat} €
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {bilanTarifEcole === null && bilanDureeR > 0 && (
+                        <p className="text-xs text-amber-600">Tarif avion école introuvable</p>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Résumé waypoints client (lecture seule) */}
@@ -1030,8 +1151,11 @@ function VolsPersoDrawer({
                     <InputField label="Heure">
                       <input type="time" value={draftHeure} onChange={e => setDraftHeure(e.target.value)} className={inputCls} />
                     </InputField>
-                    <InputField label="Durée (min)">
+                    <InputField label="Durée pack (min)">
                       <input type="number" value={draftDuree} onChange={e => setDraftDuree(e.target.value)} min={1} className={inputCls} />
+                    </InputField>
+                    <InputField label="Durée réelle (min)">
+                      <input type="number" value={bilanDureeReelle} onChange={e => setBilanDureeReelle(e.target.value)} min={1} placeholder="—" className={inputCls} />
                     </InputField>
                     <InputField label="Passagers">
                       <input type="number" value={draftPassagers} onChange={e => setDraftPassagers(e.target.value)} min={1} className={inputCls} />
@@ -1039,10 +1163,10 @@ function VolsPersoDrawer({
                     <InputField label="Poids total (kg)">
                       <input type="number" value={draftPoids} onChange={e => setDraftPoids(e.target.value)} min={0} placeholder="—" className={inputCls} />
                     </InputField>
-                    <InputField label="Provision (€)">
+                    <InputField label="Prix demandé au client (€)">
                       <input type="number" value={draftAcompte} onChange={e => setDraftAcompte(e.target.value)} min={0} placeholder="—" className={inputCls} />
                     </InputField>
-                    <InputField label="Montant encaissé (€)">
+                    <InputField label="Montant payé (€)">
                       <input type="number" value={draftPaye} onChange={e => setDraftPaye(e.target.value)} min={0} placeholder="—" className={inputCls} />
                     </InputField>
                     <InputField label="Statut paiement">
@@ -1053,15 +1177,56 @@ function VolsPersoDrawer({
                         <option value="refunded">Remboursé</option>
                       </select>
                     </InputField>
-                    <InputField label="Style de vol">
-                      <select value={draftStyleVol} onChange={e => setDraftStyleVol(e.target.value as "rapide" | "vues" | "")} className={inputCls}>
-                        <option value="">Non défini</option>
-                        <option value="rapide">Direct</option>
-                        <option value="vues">Pittoresque</option>
-                      </select>
+                    <InputField label="Remboursement (€)">
+                      <div className="flex gap-1.5">
+                        <input type="number" value={draftRemboursement} onChange={e => setDraftRemboursement(e.target.value)} min={0} placeholder="—" className={inputCls} />
+                        <button
+                          type="button"
+                          title="Calculer : payé − coût école (durée réelle)"
+                          onClick={() => {
+                            const paye = parseFloat(draftPaye);
+                            const dureeR = parseInt(bilanDureeReelle);
+                            if (isNaN(paye) || dureeR <= 0) return;
+                            const compute = (tarifEcole: number) => {
+                              const coutEcole = Math.round((tarifEcole / 60) * dureeR * 100) / 100;
+                              const remb = Math.max(0, Math.round((paye - coutEcole) * 100) / 100);
+                              setDraftRemboursement(String(remb));
+                            };
+                            if (bilanTarifEcole !== null) {
+                              compute(bilanTarifEcole);
+                            } else {
+                              import("@/lib/supabase/client").then(({ createClient }) => {
+                                createClient()
+                                  .from("avion_tarifs")
+                                  .select("prix_heure, actif_depuis")
+                                  .then(({ data }) => {
+                                    if (!data || data.length === 0) return;
+                                    const sorted = [...data].sort(
+                                      (a, b) => new Date(b.actif_depuis).getTime() - new Date(a.actif_depuis).getTime()
+                                    );
+                                    const applicable = sorted.find(t => t.actif_depuis <= reservation!.date_vol);
+                                    const tarif = (applicable ?? sorted[sorted.length - 1])?.prix_heure ?? null;
+                                    if (tarif !== null) { setBilanTarifEcole(tarif); compute(tarif); }
+                                  });
+                              });
+                            }
+                          }}
+                          disabled={!bilanDureeReelle || !draftPaye}
+                          className="shrink-0 h-8 px-2 rounded-lg border border-input bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
+                        >
+                          <Calculator size={13} />
+                        </button>
+                      </div>
                     </InputField>
                   </div>
                 </div>
+
+                {r.voucher_code && (
+                  <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800">
+                    <Ticket size={13} className="shrink-0 mt-0.5" />
+                    <span>Prix et montant payé pré-remplis depuis le voucher <span className="font-mono font-bold">{r.voucher_code}</span></span>
+                  </div>
+                )}
 
                 {/* Codes */}
                 <div>
@@ -1499,6 +1664,9 @@ function ReservationCard({
             <p className="font-semibold text-foreground text-sm">
               {client ? `${client.prenom} ${client.nom}` : "Client inconnu"}
             </p>
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-navy/8 text-navy border border-navy/20">
+              {r.duree} min
+            </span>
             <AdminBadge variant={statusCfg.variant} label={statusCfg.label} />
             {latestProposal && proposalBadge[latestProposal.status] && (
               <AdminBadge
@@ -1506,26 +1674,13 @@ function ReservationCard({
                 label={proposalBadge[latestProposal.status].label}
               />
             )}
-            {r.style_vol === "rapide" && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                <Zap size={9} /> Direct
-              </span>
-            )}
-            {r.style_vol === "vues" && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
-                <Wind size={9} /> Pittoresque
-              </span>
-            )}
           </div>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
             <p className="text-xs text-muted-foreground">
               {dateStr}{r.heure_vol ? ` · ${r.heure_vol.slice(0, 5)}` : ""}
             </p>
             <p className="text-xs text-muted-foreground">
-              ~{r.duree} min{r.distance_km ? ` · ${r.distance_km} km` : ""}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {r.passagers} pax{r.poids_total ? ` · ${r.poids_total} kg` : ""}
+              {r.passagers} pax{r.distance_km ? ` · ${r.distance_km} km` : ""}{r.poids_total ? ` · ${r.poids_total} kg` : ""}
             </p>
             {r.acompte != null && (
               <p className="text-xs text-primary font-semibold">Provision : {r.acompte} €</p>

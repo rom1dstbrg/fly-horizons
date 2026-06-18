@@ -89,6 +89,7 @@ type ReservationFields = {
   date_vol?: string;
   heure_vol?: string | null;
   duree?: number;
+  duree_reelle?: number | null;
   passagers?: number;
   poids_total?: number | null;
   acompte?: number | null;
@@ -173,9 +174,31 @@ export async function updateReservationAllFields(
     }
 
     revalidatePath("/admin/vols");
+    revalidatePath("/admin/transactions");
     return { success: true };
   } catch (e) {
     console.error("updateReservationAllFields error:", e);
+    return { error: "Erreur serveur" };
+  }
+}
+
+// ── Récupérer une réservation complète pour le drawer (côté client) ────────────
+
+export async function getReservationForDrawer(id: string, isPerso: boolean) {
+  try {
+    await checkAdmin();
+    const supabase = createAdminClient();
+    const select = isPerso
+      ? "*, clients(*), route_proposals(status, created_at)"
+      : "*, clients(*)";
+    const { data, error } = await supabase
+      .from("reservations")
+      .select(select)
+      .eq("id", id)
+      .single();
+    if (error || !data) return { error: "Réservation introuvable" };
+    return { data };
+  } catch {
     return { error: "Erreur serveur" };
   }
 }

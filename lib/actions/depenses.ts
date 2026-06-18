@@ -28,6 +28,22 @@ export async function addDepense(montant: number, description: string, date: str
   }
 }
 
+export async function updateDepense(id: string, montant: number, description: string, date: string) {
+  try {
+    await checkAdmin();
+    if (isNaN(montant) || montant <= 0) return { error: "Montant invalide" };
+    if (!description.trim()) return { error: "Description requise" };
+    if (!date) return { error: "Date requise" };
+    const db = createAdminClient();
+    const { error } = await db.from("depenses").update({ montant, description: description.trim(), date }).eq("id", id);
+    if (error) return { error: error.message };
+    revalidatePath("/admin/transactions");
+    return { success: true };
+  } catch {
+    return { error: "Erreur serveur" };
+  }
+}
+
 export async function deleteDepense(id: string) {
   try {
     await checkAdmin();

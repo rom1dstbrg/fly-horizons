@@ -48,8 +48,11 @@ async function getData() {
       .order("date", { ascending: false }),
   ]);
 
-  // Montants des vouchers utilisés dans des réservations (pour affichage sur la ligne vol)
+  // Voucher codes utilisés dans des réservations non-annulées
   const voucherCodes = (resas ?? []).map(r => r.voucher_code).filter(Boolean) as string[];
+  const usedVoucherCodes = new Set(voucherCodes);
+
+  // Montants des vouchers utilisés → valeur encaissée à l'achat du voucher
   const voucherMontantMap = new Map<string, number>();
   if (voucherCodes.length > 0) {
     const { data: usedVouchers } = await supabase
@@ -76,7 +79,11 @@ async function getData() {
       : clientRaw as { prenom: string; nom: string } | null;
     const paye = r.paye ?? 0;
     const remb = r.remboursement ?? 0;
-    const net = paye - remb;
+    // Quand un voucher couvre le vol, le revenu effectif = valeur du voucher
+    const voucherMontant = r.voucher_code ? (voucherMontantMap.get(r.voucher_code) ?? null) : null;
+    const coveredByVoucher = !!r.voucher_code && paye === 0;
+    const effectivePaye = coveredByVoucher ? (voucherMontant ?? 0) : paye;
+    const net = effectivePaye - remb;
     const prixH = tarifs.length > 0 ? tarifPourDate(tarifs, r.date_vol) : 0;
     const coutAvion = r.duree_reelle != null && prixH > 0
       ? Math.round((r.duree_reelle / 60) * prixH * 100) / 100
@@ -87,7 +94,7 @@ async function getData() {
       client: client ? `${client.prenom} ${client.nom}` : "—",
       type_resa: r.type_resa ?? "standard",
       acompte: r.acompte ?? null,
-      paye,
+      paye: effectivePaye,
       remboursement: remb,
       net_client: net,
       duree: r.duree ?? null,
@@ -95,14 +102,15 @@ async function getData() {
       cout_avion: coutAvion,
       resultat: coutAvion != null ? Math.round((net - coutAvion) * 100) / 100 : null,
       voucher_code: r.voucher_code ?? null,
-      voucher_montant: r.voucher_code ? (voucherMontantMap.get(r.voucher_code) ?? null) : null,
+      voucher_montant: voucherMontant,
     };
   });
 
-  // ── Lignes vouchers ───────────────────────────────────────────────────────
+  // ── Lignes vouchers — seulement les vouchers non encore utilisés ──────────
   const vouchers: LigneVoucher[] = [];
 
   for (const v of vouchersShop ?? []) {
+    if (usedVoucherCodes.has(v.code)) continue; // réservation active → ligne vol à la place
     const orderRaw = v.orders as unknown;
     const order = Array.isArray(orderRaw)
       ? (orderRaw[0] as { total: number; status: string } | undefined) ?? null
@@ -120,6 +128,7 @@ async function getData() {
   }
 
   for (const v of vouchersCash ?? []) {
+    if (usedVoucherCodes.has(v.code)) continue;
     vouchers.push({
       id: v.id,
       date: v.created_at.slice(0, 10),
@@ -140,6 +149,8 @@ async function getData() {
   }));
 
   // ── Solde global ──────────────────────────────────────────────────────────
+  // Le revenu d'un vol avec voucher est déjà dans v.paye (= voucher_montant)
+  // Les vouchers non utilisés restent dans le total (argent reçu, service pas encore rendu)
   let globalEncaisse = 0;
   let globalRembourse = 0;
   let globalCoutAvion = 0;

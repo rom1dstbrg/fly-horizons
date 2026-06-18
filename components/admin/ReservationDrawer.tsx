@@ -158,6 +158,7 @@ export interface DrawerReservation {
   date_vol: string;
   heure_vol: string | null;
   duree: number;
+  duree_reelle?: number | null;
   passagers: number;
   poids_total: number | null;
   statut: string;
@@ -239,10 +240,11 @@ export function ReservationDrawer({
   const [includeReschedule, setIncludeReschedule] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
 
-  // Calculateur de remboursement (vol sur mesure uniquement)
-  const [calcOpen, setCalcOpen] = useState(false);
-  const [calcPrixHeure, setCalcPrixHeure] = useState("");
-  const [calcDureeReelle, setCalcDureeReelle] = useState("");
+  // Bilan vol
+  const [bilanOpen, setBilanOpen] = useState(false);
+  const [bilanDureeReelle, setBilanDureeReelle] = useState("");
+  const [bilanTarifEcole, setBilanTarifEcole] = useState<number | null>(null);
+  const [bilanPending, startBilanTransition] = useTransition();
 
   // Historique tab
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
@@ -302,10 +304,10 @@ export function ReservationDrawer({
     setProposalLoaded(false);
     setLocalRouteStatus(reservation.route_status ?? null);
     setLocalRouteFeedback(reservation.route_feedback ?? null);
-    setCalcOpen(false);
+    setBilanOpen(false);
+    setBilanDureeReelle(reservation.duree_reelle != null ? String(reservation.duree_reelle) : "");
     setAvionReserveLocal(reservation.avion_reserve ?? false);
     setCashMontant(reservation.acompte != null ? String(reservation.acompte) : "");
-    setCalcDureeReelle("");
     setActiveTab("infos");
     setHistoryLoaded(false);
     setHistoryItems([]);
@@ -347,6 +349,31 @@ export function ReservationDrawer({
     });
   }, [reservation?.id, proposalLoaded]);
 
+  // Pour les réservations avec voucher (paye=0), récupère le prix du voucher pour pré-remplir
+  useEffect(() => {
+    if (!reservation?.voucher_code) return;
+    if ((reservation.paye ?? 0) > 0 && reservation.acompte != null) return;
+    import("@/lib/supabase/client").then(({ createClient }) => {
+      createClient()
+        .from("voucher_codes")
+        .select("prix, orders(total, status)")
+        .eq("code", reservation.voucher_code!)
+        .single()
+        .then(({ data }) => {
+          if (!data) return;
+          const orderRaw = data.orders as unknown;
+          const order = Array.isArray(orderRaw)
+            ? (orderRaw[0] as { total: number; status: string } | undefined) ?? null
+            : orderRaw as { total: number; status: string } | null;
+          const price = order?.status === "paid" ? order.total : (data.prix ?? null);
+          if (price != null) {
+            setDraftPaye(p => (p === "" || p === "0") ? String(price) : p);
+            setDraftAcompte(a => (a === "" || a === "0" || a === "") ? String(price) : a);
+          }
+        });
+    });
+  }, [reservation?.id, reservation?.voucher_code]);
+
   // Lazy-load historique when tab is opened
   useEffect(() => {
     if (activeTab !== "historique" || historyLoaded || !reservation) return;
@@ -358,15 +385,37 @@ export function ReservationDrawer({
     });
   }, [activeTab, historyLoaded, reservation?.id]);
 
-  function openCalc() {
-    if (!calcOpen && !calcPrixHeure) {
+  function openBilan() {
+    if (!bilanOpen && bilanTarifEcole === null) {
       import("@/lib/supabase/client").then(({ createClient }) => {
         createClient()
-          .from("crm_settings").select("value").eq("key", "prix_heure").single()
-          .then(({ data }) => { if (data) setCalcPrixHeure(data.value); });
+          .from("avion_tarifs")
+          .select("prix_heure, actif_depuis")
+          .order("actif_depuis", { ascending: false })
+          .then(({ data }) => {
+            if (data && data.length > 0 && reservation) {
+              const dateVol = reservation.date_vol;
+              const applicable = data.find(t => t.actif_depuis <= dateVol) ?? data[data.length - 1];
+              setBilanTarifEcole(applicable.prix_heure);
+            }
+          });
       });
     }
-    setCalcOpen(v => !v);
+    setBilanOpen(v => !v);
+  }
+
+  function saveBilanVol() {
+    if (!reservation) return;
+    const dureeR = parseInt(bilanDureeReelle);
+    if (isNaN(dureeR) || dureeR <= 0) return;
+    startBilanTransition(async () => {
+      const res = await updateReservationAllFields(
+        reservation.id, {},
+        { duree_reelle: dureeR }
+      );
+      if (res.error) { showFeedback("Erreur : " + res.error, false); return; }
+      showFeedback("Bilan vol enregistré ✓");
+    });
   }
 
   function showFeedback(msg: string, ok = true) {
@@ -562,12 +611,15 @@ export function ReservationDrawer({
   const isStandard = r?.type_resa !== "perso";
   const routeStatusCfg = localRouteStatus ? ROUTE_STATUS_CONFIG[localRouteStatus] : null;
 
-  // Calculateur de remboursement
-  const calcPrixH        = parseFloat(calcPrixHeure) || 0;
-  const calcDureeR       = parseInt(calcDureeReelle) || 0;
-  const calcPrixReel     = calcPrixH > 0 && calcDureeR > 0 ? (calcPrixH / 60) * calcDureeR : null;
-  const calcMontantPaye  = r ? (r.paye ?? r.acompte ?? 0) : 0;
-  const calcRemboursement = calcPrixReel !== null ? calcMontantPaye - calcPrixReel : null;
+  // Bilan vol — calculs en temps réel
+  const bilanDureeR    = parseInt(bilanDureeReelle) || 0;
+  const bilanPrixDemande = r ? (r.acompte ?? 0) : 0;
+  const bilanCoutEcole = bilanTarifEcole !== null && bilanDureeR > 0
+    ? Math.round((bilanTarifEcole / 60) * bilanDureeR * 100) / 100
+    : null;
+  const bilanResultat = bilanCoutEcole !== null && bilanPrixDemande > 0
+    ? Math.round((bilanPrixDemande - bilanCoutEcole) * 100) / 100
+    : null;
 
   return (
     <>
@@ -754,12 +806,6 @@ export function ReservationDrawer({
                         }
                       </div>
                     </Field>
-                    <Field label="Durée">
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <Clock size={13} className="text-muted-foreground" />
-                        {r.duree} min
-                      </div>
-                    </Field>
                     <Field label="Passagers">
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <Users size={13} className="text-muted-foreground" />
@@ -831,97 +877,106 @@ export function ReservationDrawer({
                   </div>
                 </div>
 
-                {/* Calculateur de remboursement — vol sur mesure uniquement */}
-                {!isStandard && (
-                  <div>
-                    <button
-                      type="button"
-                      onClick={openCalc}
-                      className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg border border-border bg-secondary hover:bg-secondary/80 transition-colors cursor-pointer"
-                    >
-                      <span className="flex items-center gap-2 text-[11px] font-bold text-foreground uppercase tracking-wider">
-                        <Calculator size={12} className="text-muted-foreground" />
-                        Calculateur de remboursement
-                      </span>
-                      <ChevronDown
-                        size={13}
-                        className={`text-muted-foreground transition-transform ${calcOpen ? "rotate-180" : ""}`}
-                      />
-                    </button>
+                {/* Bilan vol — toutes réservations */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={openBilan}
+                    className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg border border-border bg-secondary hover:bg-secondary/80 transition-colors cursor-pointer"
+                  >
+                    <span className="flex items-center gap-2 text-[11px] font-bold text-foreground uppercase tracking-wider">
+                      <Calculator size={12} className="text-muted-foreground" />
+                      Bilan vol
+                      {r.duree_reelle != null && (
+                        <span className="text-[10px] font-normal text-emerald-600 normal-case tracking-normal">
+                          · {r.duree_reelle} min enregistré
+                        </span>
+                      )}
+                    </span>
+                    <ChevronDown
+                      size={13}
+                      className={`text-muted-foreground transition-transform ${bilanOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
 
-                    {calcOpen && (
-                      <div className="mt-2 p-4 rounded-xl border border-border bg-background space-y-3.5">
-                        <div className="grid grid-cols-2 gap-3 pb-3 border-b border-border">
-                          <div>
-                            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Durée estimée</p>
-                            <p className="text-sm font-black text-foreground">{r.duree} min</p>
-                          </div>
-                          <div>
-                            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Montant encaissé</p>
-                            <p className="text-sm font-black text-foreground">
-                              {calcMontantPaye > 0
-                                ? `${calcMontantPaye} €`
-                                : <span className="text-amber-500 text-xs font-semibold">Non encaissé</span>
-                              }
-                            </p>
-                          </div>
+                  {bilanOpen && (
+                    <div className="mt-2 p-4 rounded-xl border border-border bg-background space-y-3.5">
+                      {/* Contexte */}
+                      <div className="grid grid-cols-2 gap-3 pb-3 border-b border-border">
+                        <div>
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Pack</p>
+                          <p className="text-sm font-black text-foreground">{r.duree} min</p>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
-                              Prix / heure (€)
-                            </label>
-                            <input
-                              type="number" min={0} step={0.01}
-                              value={calcPrixHeure}
-                              onChange={e => setCalcPrixHeure(e.target.value)}
-                              placeholder="ex : 260"
-                              className="w-full h-9 px-2.5 rounded-lg border border-input bg-secondary text-sm font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-navy/30 placeholder:text-muted-foreground/40"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
-                              Durée réelle (min)
-                            </label>
-                            <input
-                              type="number" min={0}
-                              value={calcDureeReelle}
-                              onChange={e => setCalcDureeReelle(e.target.value)}
-                              placeholder="ex : 55"
-                              className="w-full h-9 px-2.5 rounded-lg border border-input bg-secondary text-sm font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-navy/30 placeholder:text-muted-foreground/40"
-                            />
-                          </div>
-                        </div>
-                        {calcPrixReel !== null ? (
-                          <div className="pt-3 border-t border-border space-y-2">
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="text-muted-foreground font-mono">
-                                {calcPrixHeure} ÷ 60 × {calcDureeReelle}
-                              </span>
-                              <span className="font-semibold text-foreground">{calcPrixReel.toFixed(2)} €</span>
-                            </div>
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="text-muted-foreground">Encaissé</span>
-                              <span className="font-semibold text-foreground">{calcMontantPaye} €</span>
-                            </div>
-                            <div className={`flex items-center justify-between pt-2.5 border-t border-border ${calcRemboursement! >= 0 ? "text-emerald-700" : "text-red-700"}`}>
-                              <span className="text-sm font-bold">
-                                {calcRemboursement! >= 0 ? "À rembourser" : "Supplément dû"}
-                              </span>
-                              <span className="text-xl font-black">
-                                {Math.abs(calcRemboursement!).toFixed(2)} €
-                              </span>
-                            </div>
-                          </div>
-                        ) : (
-                          <p className="text-[10px] text-muted-foreground text-center py-1">
-                            Entrez le prix/h et la durée réelle pour voir le résultat.
+                        <div>
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Prix demandé</p>
+                          <p className="text-sm font-black text-foreground">
+                            {r.acompte != null ? `${r.acompte} €` : <span className="text-muted-foreground text-xs">—</span>}
                           </p>
-                        )}
+                        </div>
                       </div>
-                    )}
-                  </div>
-                )}
+
+                      {/* Saisie durée réelle */}
+                      <div>
+                        <label className="block text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
+                          Durée réelle (min)
+                        </label>
+                        <input
+                          type="number" min={1} max={r.duree + 120}
+                          value={bilanDureeReelle}
+                          onChange={e => setBilanDureeReelle(e.target.value)}
+                          placeholder={`pack : ${r.duree} min`}
+                          className="w-full h-9 px-2.5 rounded-lg border border-input bg-secondary text-sm font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-navy/30 placeholder:text-muted-foreground/40"
+                        />
+                      </div>
+
+                      {/* Résultats auto */}
+                      {bilanDureeR > 0 && (
+                        <div className="pt-3 border-t border-border space-y-2.5">
+                          {/* Coût avion école */}
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground">
+                              Coût avion école
+                              {bilanTarifEcole !== null && (
+                                <span className="ml-1 text-[10px] opacity-60 font-mono">({bilanTarifEcole} €/h)</span>
+                              )}
+                            </span>
+                            {bilanCoutEcole !== null
+                              ? <span className="font-semibold text-red-500">−{bilanCoutEcole.toFixed(2)} €</span>
+                              : <span className="text-muted-foreground text-[10px] italic">tarif école non renseigné</span>
+                            }
+                          </div>
+
+                          {/* Résultat Romain */}
+                          {bilanResultat !== null && (
+                            <div className={`flex items-center justify-between pt-2 border-t border-border text-sm font-bold ${
+                              bilanResultat >= 0 ? "text-emerald-700" : "text-red-600"
+                            }`}>
+                              <span>Résultat</span>
+                              <span className="text-lg font-black">
+                                {bilanResultat >= 0 ? "+" : ""}{bilanResultat.toFixed(2)} €
+                              </span>
+                            </div>
+                          )}
+
+                          <button
+                            onClick={saveBilanVol}
+                            disabled={bilanPending}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-navy text-white text-xs font-semibold hover:brightness-90 transition-colors disabled:opacity-50 cursor-pointer"
+                          >
+                            {bilanPending ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                            Enregistrer le bilan vol
+                          </button>
+                        </div>
+                      )}
+
+                      {bilanDureeR === 0 && (
+                        <p className="text-[10px] text-muted-foreground text-center py-1">
+                          Entrez la durée réelle pour voir les calculs.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
 
                 {/* Route — standard only */}
                 {isStandard && (
@@ -1375,6 +1430,12 @@ export function ReservationDrawer({
                       <input type="number" value={draftRemboursement} onChange={e => setDraftRemboursement(e.target.value)} min={0} placeholder="—" className={inputCls} />
                     </InputField>
                   </div>
+                  {r.voucher_code && (
+                    <p className="text-[10px] text-amber-600 mt-2 flex items-center gap-1">
+                      <Ticket size={10} />
+                      Prix et montant payé pré-remplis depuis le voucher {r.voucher_code}
+                    </p>
+                  )}
                 </div>
 
                 {/* Codes */}
