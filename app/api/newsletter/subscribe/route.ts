@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { resend, EMAIL_FROM } from "@/lib/resend";
 import { newsletterConfirmationEmail } from "@/lib/email-templates";
+import { rateLimit, getIp } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const { allowed } = rateLimit(`newsletter-subscribe:${getIp(req)}`, 3, 60_000);
+  if (!allowed) {
+    return NextResponse.json({ error: "Trop de tentatives, veuillez patienter." }, { status: 429 });
+  }
+
   try {
     const { email, prenom } = await req.json();
 
@@ -18,7 +24,7 @@ export async function POST(req: NextRequest) {
       .from("newsletter_subscribers")
       .select("id, active")
       .eq("email", cleaned)
-      .single();
+      .maybeSingle();
 
     if (existing) {
       if (existing.active) {
@@ -39,7 +45,7 @@ export async function POST(req: NextRequest) {
       .from("newsletter_subscribers")
       .select("unsubscribe_token")
       .eq("email", cleaned)
-      .single();
+      .maybeSingle();
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
     const unsubscribeUrl = `${siteUrl}/newsletter/unsubscribe?token=${sub?.unsubscribe_token ?? ""}`;

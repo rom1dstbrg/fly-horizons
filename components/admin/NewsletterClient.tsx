@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { useRouter } from "next/navigation";
 import { deleteSubscriber, unsubscribeSubscriber, resubscribeSubscriber, addSubscriberFromAdmin, type AddResult, type NewsletterTemplate } from "@/lib/actions/newsletter";
 import { Users, Trash2, CheckCircle2, AlertCircle, Loader2, Mail, UserPlus, UserMinus, UserCheck } from "lucide-react";
 import { NewsletterEditor } from "@/components/admin/NewsletterEditor";
@@ -22,6 +23,7 @@ type Props = {
 };
 
 export function NewsletterClient({ total, active, subscribers, templates }: Props) {
+  const router = useRouter();
   const [addResult, addAction, addPending] = useActionState<AddResult, FormData>(addSubscriberFromAdmin, null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [unsubscribingId, setUnsubscribingId] = useState<string | null>(null);
@@ -29,20 +31,32 @@ export function NewsletterClient({ total, active, subscribers, templates }: Prop
 
   async function handleDelete(id: string) {
     setDeletingId(id);
-    await deleteSubscriber(id);
-    setDeletingId(null);
+    try {
+      await deleteSubscriber(id);
+      router.refresh();
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   async function handleUnsubscribe(id: string) {
     setUnsubscribingId(id);
-    await unsubscribeSubscriber(id);
-    setUnsubscribingId(null);
+    try {
+      await unsubscribeSubscriber(id);
+      router.refresh();
+    } finally {
+      setUnsubscribingId(null);
+    }
   }
 
   async function handleResubscribe(id: string) {
     setResubscribingId(id);
-    await resubscribeSubscriber(id);
-    setResubscribingId(null);
+    try {
+      await resubscribeSubscriber(id);
+      router.refresh();
+    } finally {
+      setResubscribingId(null);
+    }
   }
 
   return (

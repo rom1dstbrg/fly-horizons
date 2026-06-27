@@ -73,8 +73,6 @@ export async function POST(request: NextRequest) {
       if (cliErr) return NextResponse.json({ error: "Erreur création client" }, { status: 500 });
     }
 
-    if (newsletter_opt_in) await optInNewsletter(email, prenom);
-
     // ── Vérification de disponibilité du créneau ─────────────────────────
     const { data: conflicts } = await supabase
       .from("reservations")
@@ -131,6 +129,8 @@ export async function POST(request: NextRequest) {
     if (voucherId) {
       await supabase.from("voucher_codes").update({ status: "used", used_at: new Date().toISOString() }).eq("id", voucherId);
     }
+
+    if (newsletter_opt_in) await optInNewsletter(email, prenom);
 
     // Email de confirmation au client
     const dateStr = new Date(date + "T12:00:00Z").toLocaleDateString("fr-BE", {

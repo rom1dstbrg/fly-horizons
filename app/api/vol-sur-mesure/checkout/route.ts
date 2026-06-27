@@ -149,8 +149,6 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    if (newsletter_opt_in) await optInNewsletter(email, prenom);
-
     // Generate payment token for deferred Stripe checkout
     const paymentToken = finalAcompte > 0 ? randomUUID() : null;
 
@@ -187,6 +185,8 @@ export async function POST(request: NextRequest) {
       console.error("Erreur création réservation perso:", resaErr);
       return NextResponse.json({ error: "Erreur création réservation" }, { status: 500 });
     }
+
+    if (newsletter_opt_in) await optInNewsletter(email, prenom);
 
     // If voucher/coupon covers everything: mark it used immediately (no payment link needed)
     if (finalAcompte <= 0 && claimedVoucherId) {

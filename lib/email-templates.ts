@@ -1832,6 +1832,12 @@ export type NewsletterBlock =
   | { id: string; type: "callout";   text: string }
   | { id: string; type: "separator" }
 
+function safeUrl(url: string): string {
+  const lower = url.trim().toLowerCase();
+  if (lower.startsWith("javascript:") || lower.startsWith("data:") || lower.startsWith("vbscript:")) return "#";
+  return url;
+}
+
 function blockToHtml(block: NewsletterBlock): string {
   switch (block.type) {
     case "text": {
@@ -1853,14 +1859,14 @@ function blockToHtml(block: NewsletterBlock): string {
       if (!block.text.trim() || !block.url.trim()) return "";
       return `<table width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
   <tr><td align="center">
-    <a href="${esc(block.url)}" class="em-btn" style="display:inline-block;background-color:#F2B705;color:#0b2238;font-size:14px;font-weight:800;padding:14px 40px;border-radius:10px;text-decoration:none;letter-spacing:0.02em;">${esc(block.text)}</a>
+    <a href="${esc(safeUrl(block.url))}" class="em-btn" style="display:inline-block;background-color:#F2B705;color:#0b2238;font-size:14px;font-weight:800;padding:14px 40px;border-radius:10px;text-decoration:none;letter-spacing:0.02em;">${esc(block.text)}</a>
   </td></tr>
 </table>`;
     }
     case "image": {
       if (!block.url.trim()) return "";
-      const img = `<img src="${esc(block.url)}" alt="${esc(block.alt ?? "")}" style="display:block;max-width:100%;height:auto;border-radius:8px;margin:0 auto;border:0;" />`;
-      return `<table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;"><tr><td align="center">${block.link?.trim() ? `<a href="${esc(block.link)}">${img}</a>` : img}</td></tr></table>`;
+      const img = `<img src="${esc(safeUrl(block.url))}" alt="${esc(block.alt ?? "")}" style="display:block;max-width:100%;height:auto;border-radius:8px;margin:0 auto;border:0;" />`;
+      return `<table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;"><tr><td align="center">${block.link?.trim() ? `<a href="${esc(safeUrl(block.link))}">${img}</a>` : img}</td></tr></table>`;
     }
     case "callout": {
       if (!block.text.trim()) return "";

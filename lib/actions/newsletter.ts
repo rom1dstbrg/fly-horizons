@@ -208,7 +208,7 @@ export async function addSubscriberFromAdmin(_prev: AddResult, formData: FormDat
     .from("newsletter_subscribers")
     .select("id, active")
     .eq("email", email)
-    .single();
+    .maybeSingle();
 
   if (existing?.active) return { error: "Cet email est déjà abonné." };
 
@@ -264,7 +264,7 @@ export async function subscribeFromAccount(): Promise<{ ok?: boolean; error?: st
     .from("newsletter_subscribers")
     .select("id, active")
     .eq("email", email)
-    .single();
+    .maybeSingle();
 
   if (existing?.active) return { ok: true };
 
@@ -281,7 +281,7 @@ export async function subscribeFromAccount(): Promise<{ ok?: boolean; error?: st
     .from("newsletter_subscribers")
     .select("unsubscribe_token")
     .eq("email", email)
-    .single();
+    .maybeSingle();
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
   const unsubscribeUrl = `${siteUrl}/newsletter/unsubscribe?token=${sub?.unsubscribe_token ?? ""}`;

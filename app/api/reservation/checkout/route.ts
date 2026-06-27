@@ -150,8 +150,6 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    if (newsletter_opt_in) await optInNewsletter(email, prenom);
-
     // ── Vérification finale de disponibilité du créneau ─────────────────
     // Recheck serveur-side juste avant d'insérer : évite la race condition
     // si deux utilisateurs soumettent le même créneau en même temps.
@@ -205,6 +203,8 @@ export async function POST(request: NextRequest) {
       }
       return NextResponse.json({ error: "Erreur création réservation" }, { status: 500 });
     }
+
+    if (newsletter_opt_in) await optInNewsletter(email, prenom);
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
     const dateStr = new Date(date + "T12:00:00Z").toLocaleDateString("fr-BE", {
