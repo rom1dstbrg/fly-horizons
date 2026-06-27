@@ -1880,16 +1880,12 @@ export function newsletterFromBlocksEmail(
   prenom: string | null,
   unsubscribeUrl: string,
 ): string {
-  const greeting = prenom
-    ? `Bonjour <strong style="color:#0b2238;">${esc(prenom)}</strong>,`
-    : "Bonjour,";
   const unsubLink = `<a href="${esc(unsubscribeUrl)}" style="color:#94a3b8;text-decoration:underline;">Se d&eacute;sinscrire</a>`;
   const blocksHtml = blocks.map(blockToHtml).filter(Boolean).join("\n");
 
   const body = `
     <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Newsletter</p>
-    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">${esc(subject)}</h1>
-    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">${greeting}</p>
+    <h1 class="em-dark" style="margin:0 0 28px;font-size:22px;font-weight:800;color:#0b2238;">${esc(subject)}</h1>
     <hr class="em-sep" style="border:none;border-top:1px solid #e8ecf4;margin:0 0 28px;">
     ${blocksHtml || `<p class="em-muted" style="color:#94a3b8;font-size:13px;font-style:italic;">(Aucun contenu)</p>`}
     <hr class="em-sep" style="border:none;border-top:1px solid #e8ecf4;margin:28px 0 0;">`;
@@ -1900,15 +1896,11 @@ export function newsletterFromBlocksEmail(
 // ── Newsletter — confirmation d'inscription ───────────────────────────────────
 
 export function newsletterConfirmationEmail(prenom: string | null, unsubscribeUrl: string): string {
-  const greeting = prenom
-    ? `Bonjour <strong style="color:#0b2238;">${esc(prenom)}</strong>,`
-    : "Bonjour,";
   const unsubLink = `<a href="${esc(unsubscribeUrl)}" style="color:#94a3b8;text-decoration:underline;">Se d&eacute;sinscrire de la newsletter</a>`;
 
   const body = `
     <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Newsletter</p>
-    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Bienvenue chez Fly Horizons&nbsp;!</h1>
-    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">${greeting}</p>
+    <h1 class="em-dark" style="margin:0 0 28px;font-size:22px;font-weight:800;color:#0b2238;">Bienvenue chez Fly Horizons&nbsp;!</h1>
 
     ${separator()}
 
@@ -1930,16 +1922,12 @@ export function newsletterConfirmationEmail(prenom: string | null, unsubscribeUr
 // ── Newsletter — campagne (envoi admin) ───────────────────────────────────────
 
 export function newsletterCampaignEmail(subject: string, body: string, prenom: string | null, unsubscribeUrl: string): string {
-  const greeting = prenom
-    ? `Bonjour <strong style="color:#0b2238;">${esc(prenom)}</strong>,`
-    : "Bonjour,";
   const bodyHtml = esc(body).replace(/\n\n/g, "</p><p style=\"margin:0 0 16px;\">").replace(/\n/g, "<br>");
   const unsubLink = `<a href="${esc(unsubscribeUrl)}" style="color:#94a3b8;text-decoration:underline;">Se d&eacute;sinscrire de la newsletter</a>`;
 
   const bodyContent = `
     <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Newsletter</p>
-    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">${esc(subject)}</h1>
-    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">${greeting}</p>
+    <h1 class="em-dark" style="margin:0 0 28px;font-size:22px;font-weight:800;color:#0b2238;">${esc(subject)}</h1>
 
     ${separator()}
 
