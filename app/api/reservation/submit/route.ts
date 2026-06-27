@@ -4,6 +4,7 @@ import { reservationConfirmationFreeEmail } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { rateLimit, getIp } from "@/lib/rate-limit";
 import { escapeHtml } from "@/lib/utils";
+import { optInNewsletter } from "@/lib/newsletter";
 
 export async function POST(request: NextRequest) {
   const { allowed } = rateLimit(`reservation-submit:${getIp(request)}`, 5, 60_000);
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { prenom, nom, email, telephone, duree, date, heure, voucher_code, poids_total, passengers, commentaire } = body;
+    const { prenom, nom, email, telephone, duree, date, heure, voucher_code, poids_total, passengers, commentaire, newsletter_opt_in } = body;
 
     if (!prenom || !nom || !email || !duree || !date || !heure) {
       return NextResponse.json({ error: "Champs obligatoires manquants" }, { status: 400 });
@@ -71,6 +72,8 @@ export async function POST(request: NextRequest) {
       });
       if (cliErr) return NextResponse.json({ error: "Erreur création client" }, { status: 500 });
     }
+
+    if (newsletter_opt_in) await optInNewsletter(email, prenom);
 
     // ── Vérification de disponibilité du créneau ─────────────────────────
     const { data: conflicts } = await supabase

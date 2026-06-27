@@ -4,6 +4,7 @@ import { sendVolSurMesureQuote } from "@/lib/email-service";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { randomUUID } from "crypto";
 import { rateLimit, getIp } from "@/lib/rate-limit";
+import { optInNewsletter } from "@/lib/newsletter";
 
 // ── Reverse geocoding via Nominatim (pour les points GPS cliqués sans nom) ──
 async function reverseGeocode(lat: number, lng: number): Promise<string> {
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
       date, heure, passagers, poids_total, commentaire,
       style_vol,
       waypoints, stopovers, distKm, dureMin, taxesEscales,
-      voucher_code, voucher_id, coupon_code,
+      voucher_code, voucher_id, coupon_code, newsletter_opt_in,
     } = body;
     const styleLabel = style_vol === "rapide" ? "Itinéraire direct" : style_vol === "vues" ? "Parcours pittoresque" : null;
 
@@ -147,6 +148,8 @@ export async function POST(request: NextRequest) {
         id: clientId, nom, prenom, email, telephone: telephone || null,
       });
     }
+
+    if (newsletter_opt_in) await optInNewsletter(email, prenom);
 
     // Generate payment token for deferred Stripe checkout
     const paymentToken = finalAcompte > 0 ? randomUUID() : null;

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { rateLimit, getIp } from "@/lib/rate-limit";
+import { optInNewsletter } from "@/lib/newsletter";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-04-22.dahlia",
@@ -15,7 +16,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { prenom, nom, email, telephone, duree, date, heure, voucher_code, voucher_id, poids_total, passengers, coupon_code, commentaire } = body;
+    const { prenom, nom, email, telephone, duree, date, heure, voucher_code, voucher_id, poids_total, passengers, coupon_code, commentaire, newsletter_opt_in } = body;
 
     if (!prenom || !nom || !email || !duree || !date || !heure) {
       return NextResponse.json({ error: "Champs obligatoires manquants" }, { status: 400 });
@@ -148,6 +149,8 @@ export async function POST(request: NextRequest) {
         id: clientId, nom, prenom, email, telephone: telephone || null,
       });
     }
+
+    if (newsletter_opt_in) await optInNewsletter(email, prenom);
 
     // ── Vérification finale de disponibilité du créneau ─────────────────
     // Recheck serveur-side juste avant d'insérer : évite la race condition

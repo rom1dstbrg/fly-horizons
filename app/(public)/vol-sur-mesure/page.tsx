@@ -51,7 +51,8 @@ interface FormData {
   email:       string;
   telephone:   string;
   commentaire: string;
-  accept_cgp:  boolean;
+  accept_cgp:       boolean;
+  newsletter_opt_in: boolean;
 }
 
 // ── Constants ─────────────────────────────────────────────────
@@ -227,7 +228,7 @@ export default function VolSurMesurePage() {
   const [form, setForm] = useState<FormData>({
     date: "", heure: "", passagers: "", poids_total: "",
     prenom: "", nom: "", email: "", telephone: "",
-    commentaire: "", accept_cgp: false,
+    commentaire: "", accept_cgp: false, newsletter_opt_in: false,
   });
   const [submitting,  setSubmitting]  = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -598,9 +599,10 @@ export default function VolSurMesurePage() {
           distKm:       route.distKm,
           dureMin:      route.totalMin,
           taxesEscales: taxesEscalesTotal,
-          voucher_code: voucherData?.code ?? null,
-          voucher_id:   voucherData?.id   ?? null,
-          coupon_code:  couponCode.trim() || null,
+          voucher_code:       voucherData?.code ?? null,
+          voucher_id:         voucherData?.id   ?? null,
+          coupon_code:        couponCode.trim() || null,
+          newsletter_opt_in:  form.newsletter_opt_in,
         }),
       });
       const d = await r.json();
@@ -1923,23 +1925,38 @@ export default function VolSurMesurePage() {
                 </div>
               </div>
 
-              {/* CGP */}
-              <div className={`rounded-lg border-2 p-5 transition-all ${form.accept_cgp ? "bg-primary/5 border-primary/20" : "bg-card border-border"}`}>
-                <label className="flex items-start gap-3.5 cursor-pointer">
-                  <div className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${form.accept_cgp ? "bg-primary border-primary" : "border-border bg-card"}`}>
-                    {form.accept_cgp && <Check size={11} className="text-primary" />}
-                    <input type="checkbox" checked={form.accept_cgp}
-                      onChange={e => setForm(f => ({ ...f, accept_cgp: e.target.checked }))}
-                      className="sr-only" />
-                  </div>
-                  <span className="text-sm text-foreground/70 leading-relaxed">
-                    J&apos;accepte les{" "}
-                    <Link href="/cgp" target="_blank" rel="noopener noreferrer" className="text-foreground underline underline-offset-2 font-semibold hover:text-primary transition-colors">
-                      Conditions Générales de Participation
-                    </Link>{" "}
-                    et que mes données soient utilisées pour traiter ma réservation.
-                  </span>
-                </label>
+              {/* CGP + Newsletter */}
+              <div className="space-y-3">
+                <div className={`rounded-lg border-2 p-5 transition-all ${form.accept_cgp ? "bg-primary/5 border-primary/20" : "bg-card border-border"}`}>
+                  <label className="flex items-start gap-3.5 cursor-pointer">
+                    <div className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${form.accept_cgp ? "bg-primary border-primary" : "border-border bg-card"}`}>
+                      {form.accept_cgp && <Check size={11} className="text-primary" />}
+                      <input type="checkbox" checked={form.accept_cgp}
+                        onChange={e => setForm(f => ({ ...f, accept_cgp: e.target.checked }))}
+                        className="sr-only" />
+                    </div>
+                    <span className="text-sm text-foreground/70 leading-relaxed">
+                      J&apos;accepte les{" "}
+                      <Link href="/cgp" target="_blank" rel="noopener noreferrer" className="text-foreground underline underline-offset-2 font-semibold hover:text-primary transition-colors">
+                        Conditions Générales de Participation
+                      </Link>{" "}
+                      et que mes données soient utilisées pour traiter ma réservation.
+                    </span>
+                  </label>
+                </div>
+                <div className="rounded-lg border border-border p-4 bg-card">
+                  <label className="flex items-start gap-3.5 cursor-pointer">
+                    <div className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${form.newsletter_opt_in ? "bg-primary border-primary" : "border-border bg-card"}`}>
+                      {form.newsletter_opt_in && <Check size={11} className="text-primary" />}
+                      <input type="checkbox" checked={form.newsletter_opt_in}
+                        onChange={e => setForm(f => ({ ...f, newsletter_opt_in: e.target.checked }))}
+                        className="sr-only" />
+                    </div>
+                    <span className="text-sm text-foreground/70 leading-relaxed">
+                      Je souhaite recevoir les actualités et offres de Fly Horizons par email. <span className="text-foreground/40">(optionnel)</span>
+                    </span>
+                  </label>
+                </div>
               </div>
 
               {submitError && (

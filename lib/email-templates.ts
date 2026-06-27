@@ -53,7 +53,7 @@ export function fmtDuration(minutes: number): string {
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL?.startsWith("http://localhost")
   ? process.env.NEXT_PUBLIC_SITE_URL
   : "https://fly-horizons.com";
-const LOGO_URL = "https://fly-horizons.com/logo-header.png";
+const LOGO_URL = "https://fly-horizons.com/logo-email.png";
 
 // ── Base ──────────────────────────────────────────────────────────────────────
 

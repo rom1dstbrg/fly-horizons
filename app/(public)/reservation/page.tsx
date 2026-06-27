@@ -34,6 +34,7 @@ interface FormState {
   voucher: VoucherInfo | null;
   coupon: CouponInfo | null;
   accept_cgp: boolean;
+  newsletter_opt_in: boolean;
 }
 
 const MONTHS_FR = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
@@ -77,7 +78,7 @@ export default function ReservationPage() {
     prenom: "", nom: "", email: "", telephone: "",
     passengers: 0, poids_total: "", poids_unknown: false, commentaire: "",
     codeInput: "", voucher: null, coupon: null,
-    accept_cgp: false,
+    accept_cgp: false, newsletter_opt_in: false,
   });
 
   const today = new Date();
@@ -295,6 +296,7 @@ export default function ReservationPage() {
       voucher_code: form.voucher?.code,
       coupon_code: form.coupon?.code || undefined,
       commentaire: form.commentaire || undefined,
+      newsletter_opt_in: form.newsletter_opt_in,
     };
     if (price === 0) {
       const r = await fetch("/api/reservation/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
@@ -718,8 +720,8 @@ export default function ReservationPage() {
                   />
                 </div>
 
-                {/* CGP */}
-                <div className="card-premium p-5">
+                {/* CGP + Newsletter */}
+                <div className="card-premium p-5 space-y-3">
                   <label className="flex items-start gap-3.5 cursor-pointer">
                     <input type="checkbox" checked={form.accept_cgp}
                       onChange={e => setForm(f => ({ ...f, accept_cgp: e.target.checked }))}
@@ -730,6 +732,14 @@ export default function ReservationPage() {
                         Conditions Générales de Participation
                       </Link>{" "}
                       et j&apos;autorise l&apos;utilisation de mes données personnelles pour le traitement de cette réservation.
+                    </span>
+                  </label>
+                  <label className="flex items-start gap-3.5 cursor-pointer">
+                    <input type="checkbox" checked={form.newsletter_opt_in}
+                      onChange={e => setForm(f => ({ ...f, newsletter_opt_in: e.target.checked }))}
+                      className="mt-0.5 w-4 h-4 accent-primary shrink-0 cursor-pointer" />
+                    <span className="text-sm text-foreground/60 leading-relaxed">
+                      Je souhaite recevoir les actualités et offres de Fly Horizons par email. <span className="text-foreground/40">(optionnel)</span>
                     </span>
                   </label>
                 </div>
