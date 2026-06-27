@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Users, MessageSquare, Settings, LogOut,
   Menu, X, ExternalLink, Search,
   CalendarCheck, Route, Clock, Navigation,
-  Package, Ticket, Tag, Images, Bot, Receipt,
+  Package, Ticket, Tag, Images, Bot, Receipt, BarChart2, Mails,
 } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 
@@ -45,16 +45,18 @@ const NAVIGATION: NavEntry[] = [
   { type: "link", id: "coupons",  icon: Tag,     label: "Coupons",  href: "/admin/boutique?tab=coupons",  tab: "coupons",  tabBase: "/admin/boutique" },
 
   { type: "section", label: "CRM" },
-  { type: "link", id: "clients",  icon: Users,         label: "Clients",  href: "/admin/clients"  },
-  { type: "link", id: "contacts", icon: MessageSquare, label: "Contacts", href: "/admin/contacts" },
-  { type: "link", id: "chat",     icon: Bot,           label: "Assistant", href: "/admin/chat"     },
+  { type: "link", id: "clients",      icon: Users,         label: "Clients",      href: "/admin/clients"      },
+  { type: "link", id: "contacts",     icon: MessageSquare, label: "Contacts",     href: "/admin/contacts"     },
+  { type: "link", id: "newsletter",   icon: Mails,         label: "Newsletter",   href: "/admin/newsletter"   },
+  { type: "link", id: "chat",         icon: Bot,           label: "Assistant",    href: "/admin/chat"         },
 
   { type: "section", label: "Finances" },
   { type: "link", id: "transactions", icon: Receipt, label: "Transactions", href: "/admin/transactions" },
 
   { type: "section", label: "Site" },
-  { type: "link", id: "galerie",   icon: Images,   label: "Galerie",    href: "/admin/galerie"  },
-  { type: "link", id: "settings",  icon: Settings, label: "Paramètres", href: "/admin/settings" },
+  { type: "link", id: "analytics", icon: BarChart2, label: "Analytiques", href: "/admin/analytics" },
+  { type: "link", id: "galerie",   icon: Images,    label: "Galerie",     href: "/admin/galerie"   },
+  { type: "link", id: "settings",  icon: Settings,  label: "Paramètres",  href: "/admin/settings"  },
 ];
 
 function isLinkActive(item: NavLink, pathname: string, currentTab: string | null): boolean {

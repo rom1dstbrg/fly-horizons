@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronDown, Route, Lock, Users, Clock, PlaneTakeoff, Zap, ArrowRight, MousePointerClick } from "lucide-react";
+import { HeroContent } from "@/components/HeroContent";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import { createClient } from "@/lib/supabase/server";
 
@@ -109,51 +110,7 @@ export default async function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/35 to-black/65" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent" />
 
-        <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-4 pb-16 pt-[48px] md:pt-[76px]">
-          <div className="inline-flex items-center gap-2 bg-[#F2B705] rounded-full px-5 py-2 mb-8 shadow-[0_4px_20px_rgba(242,183,5,.4)]">
-            <PlaneTakeoff size={13} className="text-[#0b2238]" />
-            <span className="text-[#0b2238] text-xs font-bold tracking-[2.5px] uppercase">
-              Vols en avion léger
-            </span>
-          </div>
-
-          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[80px] font-black text-white leading-[1.0] tracking-tight mb-6 drop-shadow-lg">
-            Volez où vous voulez.<br />
-            <span className="text-[#F2B705]">À votre façon.</span>
-          </h1>
-
-          <p className="text-white/75 text-base sm:text-lg md:text-xl leading-relaxed max-w-xl mb-10 font-light">
-            Baptême de l&apos;air en avion léger depuis Charleroi,{" "}
-            <br className="hidden sm:block" />
-            itinéraire libre, jusqu&apos;à 3 passagers, date au choix.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a
-              href="#nos-vols"
-              className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-[#F2B705] text-[#0b2238] rounded-lg font-bold text-sm hover:bg-[#e6a800] transition-all shadow-[0_8px_30px_rgba(242,183,5,.35)] hover:-translate-y-0.5 active:translate-y-0"
-            >
-              <PlaneTakeoff size={16} />
-              Réserver un vol
-            </a>
-            <a
-              href="#vol-sur-mesure"
-              className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-white/10 text-white border border-white/30 rounded-lg font-semibold text-sm hover:bg-white/20 hover:border-white/50 transition-all backdrop-blur-sm"
-            >
-              <Route size={16} />
-              Vol sur mesure
-            </a>
-          </div>
-
-          <div className="mt-6 flex flex-col items-center gap-1.5">
-            <p className="text-sm text-white/80">
-              Utilisez le code{" "}
-              <span className="font-mono font-black text-[#F2B705] bg-[#F2B705]/10 border border-[#F2B705]/30 rounded px-2 py-0.5">{welcomeCode}</span>
-              {" "}pour {welcomeDiscountLabel}
-            </p>
-            <p className="text-[11px] text-white/55">* valable une seule fois · applicable lors de votre réservation.</p>
-          </div>
-        </div>
+        <HeroContent welcomeCode={welcomeCode} welcomeDiscountLabel={welcomeDiscountLabel} />
 
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/50 z-10">
           <span className="text-xs font-medium tracking-widest uppercase">Découvrir</span>

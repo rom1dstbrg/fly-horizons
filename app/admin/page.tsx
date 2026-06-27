@@ -126,19 +126,14 @@ export default async function AdminDashboardPage() {
   const resasThisMonth  = allResas.filter(r => r.created_at >= monthStart && r.statut !== "annulee").length;
   const clientsUniques  = new Set((allClients ?? []).map(c => c.email?.toLowerCase() ?? c.id)).size;
 
-  // ── Surplus / déficit global (vols effectués avec acompte renseigné)
-  // Pour les réservations payées par voucher (paye=0), l'acompte est considéré comme reçu
-  // car le voucher a déjà été comptabilisé dans le CA boutique au moment de l'achat.
-  const resasAvecBalance = allResas.filter(
-    (r: { statut: string; acompte: number | null }) =>
-      r.statut === "vol_effectue" && r.acompte != null
-  );
-  const totalDu   = resasAvecBalance.reduce((s: number, r: { acompte: number }) => s + r.acompte, 0);
-  const totalRecu = resasAvecBalance.reduce((s: number, r: { paye: number | null; acompte: number; voucher_code?: string | null; remboursement?: number | null }) => {
-    const recu = (r.paye != null && r.paye > 0) ? r.paye : (r.voucher_code ? r.acompte : 0);
-    return s + recu - (r.remboursement ?? 0);
-  }, 0);
-  const soldeGlobal = totalRecu - totalDu;
+  // ── Net encaissé vols (même logique que /admin/transactions)
+  const soldeGlobal = allResas
+    .filter((r: { statut: string }) => r.statut !== "annulee")
+    .reduce(
+      (s: number, r: { paye: number | null; remboursement: number | null }) =>
+        s + (r.paye ?? 0) - (r.remboursement ?? 0),
+      0
+    );
 
   // ── Actionnables
   const paymentPending   = resaStd.filter(r => r.statut === "payment_pending").length;
