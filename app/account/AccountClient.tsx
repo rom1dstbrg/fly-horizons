@@ -25,8 +25,11 @@ import {
   LayoutDashboard,
   RotateCcw,
   Download,
+  Mails,
+  BellOff,
 } from "lucide-react";
 import { logout, updateProfile, changePassword } from "@/lib/actions/auth";
+import { subscribeFromAccount, unsubscribeFromAccount } from "@/lib/actions/newsletter";
 import { generateClientRescheduleToken } from "@/lib/actions/reservations";
 import { AddressBook } from "@/components/account/AddressBook";
 import { formatPrice } from "@/lib/utils";
@@ -99,6 +102,7 @@ export interface AccountClientProps {
   orders: Order[];
   vouchersByOrder: Record<string, VoucherCode[]>;
   reservations: Reservation[];
+  newsletterActive: boolean | null;
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────
@@ -108,6 +112,7 @@ const NAV_ITEMS = [
   { id: "reservations", label: "Réservations",  Icon: CalendarDays },
   { id: "commandes",    label: "Bons de vol",   Icon: Ticket },
   { id: "adresses",     label: "Adresses",      Icon: MapPin },
+  { id: "newsletter",   label: "Newsletter",    Icon: Mails },
   { id: "securite",     label: "Sécurité",      Icon: ShieldCheck },
 ] as const;
 
@@ -179,10 +184,13 @@ export function AccountClient({
   orders,
   vouchersByOrder,
   reservations,
+  newsletterActive,
 }: AccountClientProps) {
   const router = useRouter();
 
   const [activeSection, setActiveSection] = useState<string>("apercu");
+  const [nlSubscribed, setNlSubscribed] = useState<boolean | null>(newsletterActive);
+  const [nlLoading, setNlLoading] = useState(false);
 
   // Profile edit
   const [editingProfile, setEditingProfile] = useState(false);
@@ -272,6 +280,20 @@ export function AccountClient({
     } else {
       toast.success("Mot de passe modifié avec succès");
       setPwForm({ password: "", confirm: "" });
+    }
+  }
+
+  async function handleNewsletterToggle() {
+    setNlLoading(true);
+    const res = nlSubscribed
+      ? await unsubscribeFromAccount()
+      : await subscribeFromAccount();
+    setNlLoading(false);
+    if (res.error) {
+      toast.error(res.error);
+    } else {
+      setNlSubscribed(!nlSubscribed);
+      toast.success(nlSubscribed ? "Désinscription effectuée" : "Inscription confirmée, vérifiez vos emails");
     }
   }
 
@@ -845,6 +867,54 @@ export function AccountClient({
               />
               <div className="card-premium p-6">
                 <AddressBook addresses={addresses} />
+              </div>
+            </section>
+
+            {/* ───────────────────────────────────────────────────────── */}
+            {/* NEWSLETTER                                                 */}
+            {/* ───────────────────────────────────────────────────────── */}
+            <section id="newsletter">
+              <SectionHeader icon={Mails} title="Newsletter" subtitle="Actualités et offres Fly Horizons" />
+
+              <div className="card-premium p-6">
+                <div className="flex items-start justify-between gap-6">
+                  <div className="flex-1">
+                    <p className="text-sm text-foreground font-medium mb-1">
+                      {nlSubscribed ? "Vous êtes abonné" : "Vous n'êtes pas abonné"}
+                    </p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {nlSubscribed
+                        ? "Vous recevez nos actualités, offres et nouveautés en avant-première."
+                        : "Abonnez-vous pour recevoir nos actualités, offres et nouveautés en avant-première."}
+                    </p>
+                  </div>
+
+                  {nlSubscribed ? (
+                    <button
+                      onClick={handleNewsletterToggle}
+                      disabled={nlLoading}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-xs font-semibold text-muted-foreground hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-colors disabled:opacity-40 cursor-pointer shrink-0"
+                    >
+                      {nlLoading ? <Loader2 size={13} className="animate-spin" /> : <BellOff size={13} />}
+                      Se désinscrire
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleNewsletterToggle}
+                      disabled={nlLoading}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-navy text-white text-xs font-semibold hover:bg-navy/90 transition-colors disabled:opacity-40 cursor-pointer shrink-0"
+                    >
+                      {nlLoading ? <Loader2 size={13} className="animate-spin" /> : <Mails size={13} />}
+                      S'abonner
+                    </button>
+                  )}
+                </div>
+
+                {nlSubscribed && (
+                  <p className="mt-4 pt-4 border-t border-border text-[11px] text-muted-foreground/60">
+                    Vous pouvez vous désinscrire à tout moment via le lien en bas de chaque email ou depuis cette page.
+                  </p>
+                )}
               </div>
             </section>
 

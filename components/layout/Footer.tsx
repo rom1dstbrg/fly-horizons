@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Mail, MapPin, Lock, Clock } from "lucide-react";
 import { FaPlane, FaRoute, FaUser, FaCircleQuestion, FaBookOpen, FaMap, FaCircleUser, FaRightToBracket, FaEnvelope, FaImages } from "react-icons/fa6";
 import type { IconType } from "react-icons";
+import { NewsletterForm } from "@/components/NewsletterForm";
 
 function IconFacebook({ size = 16 }: { size?: number }) {
   return (
@@ -80,6 +81,13 @@ export function Footer() {
             Baptêmes de l&apos;air en avion léger depuis Charleroi (EBCI).
             Partage de frais réglementé NCO.GEN.104.
           </p>
+
+          {/* Newsletter mobile */}
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+            <p className="text-base font-black text-white mb-1">Restez dans la boucle.</p>
+            <p className="text-xs text-white/40 mb-4">Actus et offres exclusives en avant-première.</p>
+            <NewsletterForm compact />
+          </div>
 
           {/* Séparateur gold */}
           <div className="h-px bg-gradient-to-r from-primary/40 via-primary/10 to-transparent" />
@@ -186,10 +194,25 @@ export function Footer() {
         {/* ════════════════════════════════
             VERSION DESKTOP  (≥ lg)
         ════════════════════════════════ */}
-        <div className="hidden lg:block py-10">
+        <div className="hidden lg:block">
 
-          {/* Grille principale */}
-          <div className="grid lg:grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-10 pb-10 border-b border-white/5">
+          {/* ── Newsletter band ─────────────────────────────────────── */}
+          <div className="py-10 flex items-center justify-between gap-16 border-b border-white/8">
+            <div className="shrink-0">
+              <p className="text-2xl font-black text-white tracking-tight leading-tight">
+                Restez dans la boucle.
+              </p>
+              <p className="text-sm text-white/45 mt-1.5">
+                Actualités, nouvelles destinations et offres exclusives en avant-première.
+              </p>
+            </div>
+            <div className="w-full max-w-md">
+              <NewsletterForm compact />
+            </div>
+          </div>
+
+          {/* ── Grille liens ────────────────────────────────────────── */}
+          <div className="grid lg:grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-10 py-10 border-b border-white/5">
 
             {/* Marque */}
             <div>
@@ -197,7 +220,7 @@ export function Footer() {
                 <Image src="/fly-horizons-logo-white.svg" alt="Fly Horizons"
                   width={160} height={40} className="block h-8 w-auto object-contain" unoptimized />
               </Link>
-              <p className="text-white/45 text-sm leading-relaxed max-w-xs mt-4">
+              <p className="text-white/40 text-sm leading-relaxed max-w-xs mt-4">
                 Baptêmes de l&apos;air et vols sur mesure en avion léger depuis Charleroi · EBCI.
                 Organisés dans le cadre du partage de frais réglementé (NCO.GEN.104).
               </p>
@@ -282,11 +305,9 @@ export function Footer() {
 
           </div>
 
-          {/* Barre de bas desktop */}
-          <div className="pt-5 flex items-center justify-between gap-3">
-            <p className="text-xs text-white/25">
-              © {year} Fly Horizons. Tous droits réservés.
-            </p>
+          {/* ── Barre de bas ────────────────────────────────────────── */}
+          <div className="py-5 flex items-center justify-between gap-3">
+            <p className="text-xs text-white/25">© {year} Fly Horizons. Tous droits réservés.</p>
             <div className="flex items-center gap-4 text-xs text-white/25">
               <div className="flex items-center gap-3">
                 <Link href="/cgp" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">Conditions générales</Link>

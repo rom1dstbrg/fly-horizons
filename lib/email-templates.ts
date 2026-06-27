@@ -57,7 +57,7 @@ const LOGO_URL = "https://fly-horizons.com/logo-header.png";
 
 // ── Base ──────────────────────────────────────────────────────────────────────
 
-function emailBase(bodyContent: string, title: string): string {
+function emailBase(bodyContent: string, title: string, footerExtra?: string): string {
   return `<!DOCTYPE html>
 <html lang="fr" xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -109,6 +109,7 @@ function emailBase(bodyContent: string, title: string): string {
             <p style="margin:0;font-size:11px;color:#94a3b8;">
               Fly Horizons &mdash; <a href="https://fly-horizons.com" style="color:#94a3b8;text-decoration:none;">fly-horizons.com</a> &middot; <a href="mailto:info@fly-horizons.com" style="color:#94a3b8;text-decoration:none;">info@fly-horizons.com</a>
             </p>
+            ${footerExtra ? `<p style="margin:6px 0 0;font-size:11px;color:#94a3b8;">${footerExtra}</p>` : ""}
           </td>
         </tr>
 
@@ -1819,4 +1820,140 @@ export function paymentLinkEmail(p: PaymentLinkEmailProps): string {
     </p>`;
 
   return emailBase(body, `Finalisez votre réservation — Fly Horizons`);
+}
+
+// ── Newsletter — types de blocs ──────────────────────────────────────────────
+
+export type NewsletterBlock =
+  | { id: string; type: "text";      content: string }
+  | { id: string; type: "heading";   level: 1 | 2; text: string }
+  | { id: string; type: "button";    text: string; url: string }
+  | { id: string; type: "image";     url: string; alt?: string; link?: string }
+  | { id: string; type: "callout";   text: string }
+  | { id: string; type: "separator" }
+
+function blockToHtml(block: NewsletterBlock): string {
+  switch (block.type) {
+    case "text": {
+      if (!block.content.trim()) return "";
+      const p = `<p class="em-body" style="margin:0 0 16px;font-size:14px;color:#334155;line-height:1.75;">`;
+      const html = esc(block.content)
+        .replace(/\n\n/g, `</p>${p}`)
+        .replace(/\n/g, "<br>");
+      return `${p}${html}</p>`;
+    }
+    case "heading": {
+      if (!block.text.trim()) return "";
+      const sz  = block.level === 1 ? "20px" : "16px";
+      const fw  = block.level === 1 ? "800"  : "700";
+      const mg  = block.level === 1 ? "0 0 20px" : "0 0 14px";
+      return `<h${block.level} class="em-dark" style="margin:${mg};font-size:${sz};font-weight:${fw};color:#0b2238;">${esc(block.text)}</h${block.level}>`;
+    }
+    case "button": {
+      if (!block.text.trim() || !block.url.trim()) return "";
+      return `<table width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
+  <tr><td align="center">
+    <a href="${esc(block.url)}" class="em-btn" style="display:inline-block;background-color:#F2B705;color:#0b2238;font-size:14px;font-weight:800;padding:14px 40px;border-radius:10px;text-decoration:none;letter-spacing:0.02em;">${esc(block.text)}</a>
+  </td></tr>
+</table>`;
+    }
+    case "image": {
+      if (!block.url.trim()) return "";
+      const img = `<img src="${esc(block.url)}" alt="${esc(block.alt ?? "")}" style="display:block;max-width:100%;height:auto;border-radius:8px;margin:0 auto;border:0;" />`;
+      return `<table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;"><tr><td align="center">${block.link?.trim() ? `<a href="${esc(block.link)}">${img}</a>` : img}</td></tr></table>`;
+    }
+    case "callout": {
+      if (!block.text.trim()) return "";
+      return `<p class="em-body" style="margin:0 0 20px;font-size:13px;color:#334155;line-height:1.7;border-left:3px solid #F2B705;padding:2px 0 2px 16px;">${esc(block.text)}</p>`;
+    }
+    case "separator": {
+      return `<hr class="em-sep" style="border:none;border-top:1px solid #e8ecf4;margin:24px 0;">`;
+    }
+  }
+}
+
+// ── Newsletter — éditeur de blocs ────────────────────────────────────────────
+
+export function newsletterFromBlocksEmail(
+  subject: string,
+  blocks: NewsletterBlock[],
+  prenom: string | null,
+  unsubscribeUrl: string,
+): string {
+  const greeting = prenom
+    ? `Bonjour <strong style="color:#0b2238;">${esc(prenom)}</strong>,`
+    : "Bonjour,";
+  const unsubLink = `<a href="${esc(unsubscribeUrl)}" style="color:#94a3b8;text-decoration:underline;">Se d&eacute;sinscrire</a>`;
+  const blocksHtml = blocks.map(blockToHtml).filter(Boolean).join("\n");
+
+  const body = `
+    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Newsletter</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">${esc(subject)}</h1>
+    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">${greeting}</p>
+    <hr class="em-sep" style="border:none;border-top:1px solid #e8ecf4;margin:0 0 28px;">
+    ${blocksHtml || `<p class="em-muted" style="color:#94a3b8;font-size:13px;font-style:italic;">(Aucun contenu)</p>`}
+    <hr class="em-sep" style="border:none;border-top:1px solid #e8ecf4;margin:28px 0 0;">`;
+
+  return emailBase(body, subject, unsubLink);
+}
+
+// ── Newsletter — confirmation d'inscription ───────────────────────────────────
+
+export function newsletterConfirmationEmail(prenom: string | null, unsubscribeUrl: string): string {
+  const greeting = prenom
+    ? `Bonjour <strong style="color:#0b2238;">${esc(prenom)}</strong>,`
+    : "Bonjour,";
+  const unsubLink = `<a href="${esc(unsubscribeUrl)}" style="color:#94a3b8;text-decoration:underline;">Se d&eacute;sinscrire de la newsletter</a>`;
+
+  const body = `
+    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Newsletter</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Bienvenue chez Fly Horizons&nbsp;!</h1>
+    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">${greeting}</p>
+
+    ${separator()}
+
+    <p class="em-body" style="margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;">
+      Merci pour votre inscription &agrave; notre newsletter. Vous serez inform&eacute; en avant-premi&egrave;re de nos actualit&eacute;s, nouvelles disponibilit&eacute;s et offres exclusives.
+    </p>
+
+    ${ctaButton(SITE_URL, "Découvrir nos vols")}
+
+    ${separator()}
+    <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;text-align:center;">
+      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
+      <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
+    </p>`;
+
+  return emailBase(body, "Bienvenue dans la newsletter Fly Horizons", unsubLink);
+}
+
+// ── Newsletter — campagne (envoi admin) ───────────────────────────────────────
+
+export function newsletterCampaignEmail(subject: string, body: string, prenom: string | null, unsubscribeUrl: string): string {
+  const greeting = prenom
+    ? `Bonjour <strong style="color:#0b2238;">${esc(prenom)}</strong>,`
+    : "Bonjour,";
+  const bodyHtml = esc(body).replace(/\n\n/g, "</p><p style=\"margin:0 0 16px;\">").replace(/\n/g, "<br>");
+  const unsubLink = `<a href="${esc(unsubscribeUrl)}" style="color:#94a3b8;text-decoration:underline;">Se d&eacute;sinscrire de la newsletter</a>`;
+
+  const bodyContent = `
+    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Newsletter</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">${esc(subject)}</h1>
+    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">${greeting}</p>
+
+    ${separator()}
+
+    <div class="em-body" style="font-size:14px;color:#334155;line-height:1.75;">
+      <p style="margin:0 0 16px;">${bodyHtml}</p>
+    </div>
+
+    ${ctaButton(SITE_URL, "Visiter le site")}
+
+    ${separator()}
+    <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;text-align:center;">
+      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
+      <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
+    </p>`;
+
+  return emailBase(bodyContent, subject, unsubLink);
 }

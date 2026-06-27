@@ -19,7 +19,7 @@ export default async function AccountPage() {
   const adminSupabase = createAdminClient();
 
   // Fetch in parallel
-  const [{ data: profile }, { data: addresses }, { data: orders }] =
+  const [{ data: profile }, { data: addresses }, { data: orders }, { data: newsletterSub }] =
     await Promise.all([
       supabase.from("profiles").select("*").eq("id", user.id).single(),
       supabase
@@ -33,6 +33,11 @@ export default async function AccountPage() {
         .eq("user_id", user.id)
         .neq("status", "pending")
         .order("created_at", { ascending: false }),
+      adminSupabase
+        .from("newsletter_subscribers")
+        .select("active")
+        .eq("email", user.email!.toLowerCase())
+        .maybeSingle(),
     ]);
 
   // Voucher codes for all orders
@@ -164,6 +169,7 @@ export default async function AccountPage() {
       orders={orders ?? []}
       vouchersByOrder={vouchersByOrder}
       reservations={reservations}
+      newsletterActive={newsletterSub?.active ?? null}
     />
   );
 }
