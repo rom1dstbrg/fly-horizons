@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Mail, MapPin, Lock, Clock } from "lucide-react";
-import { FaPlane, FaRoute, FaUser, FaCircleQuestion, FaBookOpen, FaMap, FaCircleUser, FaRightToBracket, FaEnvelope, FaImages } from "react-icons/fa6";
+import { FaPlane, FaRoute, FaUser, FaCircleQuestion, FaBookOpen, FaMap, FaEnvelope, FaImages } from "react-icons/fa6";
 import type { IconType } from "react-icons";
 import { NewsletterForm } from "@/components/NewsletterForm";
 
@@ -34,11 +34,6 @@ const INFOS: { href: string; label: string; icon: IconType }[] = [
   { href: "/guide",       label: "Guide passager",      icon: FaBookOpen },
   { href: "/access-ebci", label: "Plan d'accès · EBCI", icon: FaMap },
   { href: "/galerie",     label: "Galerie",             icon: FaImages },
-];
-
-const MON_ESPACE: { href: string; label: string; icon: IconType }[] = [
-  { href: "/account", label: "Mon compte", icon: FaCircleUser },
-  { href: "/login",   label: "Connexion",  icon: FaRightToBracket },
 ];
 
 const SOCIALS = [
@@ -82,21 +77,14 @@ export function Footer() {
             Partage de frais réglementé NCO.GEN.104.
           </p>
 
-          {/* Newsletter mobile */}
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-            <p className="text-base font-black text-white mb-1">Restez dans la boucle.</p>
-            <p className="text-xs text-white/40 mb-4">Actus et offres exclusives en avant-première.</p>
-            <NewsletterForm compact />
-          </div>
-
           {/* Séparateur gold */}
           <div className="h-px bg-gradient-to-r from-primary/40 via-primary/10 to-transparent" />
 
-          {/* Liens de navigation — 2 colonnes */}
-          <div className="grid grid-cols-2 gap-x-6 gap-y-5">
-            {/* Colonne gauche : Vols */}
+          {/* Liens de navigation — 1 colonne */}
+          <div className="flex flex-col gap-5">
+            {/* Nos services */}
             <div>
-              <p className="text-[9px] font-bold text-primary/70 uppercase tracking-[2px] mb-3">Vols</p>
+              <p className="text-[9px] font-bold text-primary/70 uppercase tracking-[2px] mb-3">Nos services</p>
               <ul className="space-y-2.5">
                 {SERVICES.map(({ href, label, icon: Icon }) => (
                   <li key={href}>
@@ -108,7 +96,7 @@ export function Footer() {
               </ul>
             </div>
 
-            {/* Colonne droite : Infos */}
+            {/* Informations */}
             <div>
               <p className="text-[9px] font-bold text-primary/70 uppercase tracking-[2px] mb-3">Informations</p>
               <ul className="space-y-2.5">
@@ -122,21 +110,7 @@ export function Footer() {
               </ul>
             </div>
 
-            {/* Colonne gauche : Mon espace */}
-            <div>
-              <p className="text-[9px] font-bold text-primary/70 uppercase tracking-[2px] mb-3">Mon espace</p>
-              <ul className="space-y-2.5">
-                {MON_ESPACE.map(({ href, label, icon: Icon }) => (
-                  <li key={href}>
-                    <Link href={href} className="flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors">
-                      <Icon size={12} className="shrink-0" />{label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Colonne droite : Contact */}
+            {/* Contact */}
             <div>
               <p className="text-[9px] font-bold text-primary/70 uppercase tracking-[2px] mb-3">Contact</p>
               <ul className="space-y-2.5">
@@ -157,14 +131,21 @@ export function Footer() {
           {/* Séparateur */}
           <div className="h-px bg-white/5" />
 
-          {/* Infos pratiques compactes */}
-          <div className="flex flex-col items-center gap-2">
+          {/* Newsletter */}
+          <div>
+            <p className="text-[9px] font-bold text-primary/70 uppercase tracking-[2px] mb-3">Newsletter</p>
+            <p className="text-sm text-white/40 mb-4">Actus et offres exclusives en avant-première.</p>
+            <NewsletterForm compact />
+          </div>
+
+          {/* Infos pratiques */}
+          <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2.5">
-              <MapPin size={11} className="shrink-0" />
+              <MapPin size={11} className="text-white/30 shrink-0" />
               <span className="text-xs text-white/30">Charleroi EBCI · Gosselies, Belgique</span>
             </div>
             <div className="flex items-center gap-2.5">
-              <Clock size={11} className="shrink-0" />
+              <Clock size={11} className="text-white/30 shrink-0" />
               <span className="text-xs text-white/30">7j/7 sur réservation · Réponse email sous 24 h</span>
             </div>
           </div>
@@ -196,23 +177,8 @@ export function Footer() {
         ════════════════════════════════ */}
         <div className="hidden lg:block">
 
-          {/* ── Newsletter band ─────────────────────────────────────── */}
-          <div className="py-10 flex items-center justify-between gap-16 border-b border-white/8">
-            <div className="shrink-0">
-              <p className="text-2xl font-black text-white tracking-tight leading-tight">
-                Restez dans la boucle.
-              </p>
-              <p className="text-sm text-white/45 mt-1.5">
-                Actualités, nouvelles destinations et offres exclusives en avant-première.
-              </p>
-            </div>
-            <div className="w-full max-w-md">
-              <NewsletterForm compact />
-            </div>
-          </div>
-
           {/* ── Grille liens ────────────────────────────────────────── */}
-          <div className="grid lg:grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-10 py-10 border-b border-white/5">
+          <div className="grid lg:grid-cols-[2fr_1fr_1.2fr_1.2fr_1.6fr] gap-10 py-12 border-b border-white/5">
 
             {/* Marque */}
             <div>
@@ -262,20 +228,6 @@ export function Footer() {
               </ul>
             </div>
 
-            {/* Mon espace */}
-            <div>
-              <p className={hd}>Mon espace</p>
-              <ul className="space-y-2.5">
-                {MON_ESPACE.map(({ href, label, icon: Icon }) => (
-                  <li key={href}>
-                    <Link href={href} className={lnk + " flex items-center gap-2"}>
-                      <Icon size={12} className="shrink-0" />{label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
             {/* Contact */}
             <div>
               <p className={hd}>Contact</p>
@@ -301,6 +253,15 @@ export function Footer() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Newsletter */}
+            <div>
+              <p className={hd}>Newsletter</p>
+              <p className="text-sm text-white/40 leading-relaxed mb-5">
+                Actus et offres exclusives en avant-première.
+              </p>
+              <NewsletterForm compact />
             </div>
 
           </div>

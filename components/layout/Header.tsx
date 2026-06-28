@@ -104,7 +104,7 @@ export function Header() {
             ) : (
               <Link
                 href="/login"
-                className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-foreground border border-border bg-secondary rounded-lg hover:bg-navy hover:text-white hover:border-navy transition-all"
+                className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-foreground border border-border bg-secondary rounded-lg hover:bg-[#F2B705] hover:text-[#0b2238] hover:border-[#F2B705] transition-all"
               >
                 <User size={13} />
                 Connexion
