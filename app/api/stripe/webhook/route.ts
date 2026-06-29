@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
         await adminSupabase.from("reservations")
           .update({ statut: "acompte_recu", payment_token: null, paye: montantPayePerso, payment_status: "paid" })
           .eq("id", reservationId)
-          .eq("statut", "en_attente"); // Garde idempotence — évite de rétrograder si déjà avancé
+          .in("statut", ["en_attente", "payment_pending"]); // Couvre les deux flux (public + admin)
         if (voucherId) {
           await adminSupabase.from("voucher_codes").update({ status: "used", used_at: new Date().toISOString() }).eq("id", voucherId);
         }
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
           const montantPaye = session.amount_total ? session.amount_total / 100 : 0;
           await resend.emails.send({
             from: EMAIL_FROM, to: [c.email], replyTo: EMAIL_REPLY_TO,
-            subject: "Confirmation de paiement — Vol sur mesure Fly Horizons",
+            subject: "Confirmation de paiement · Vol sur mesure Fly Horizons",
             html: volSurMesureAcompteEmail({
               prenom: c.prenom,
               nom: c.nom,
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
           });
           await resend.emails.send({
             from: EMAIL_FROM, to: [EMAIL_REPLY_TO],
-            subject: `[Vol sur mesure payé] ${c.prenom} ${c.nom} — ${resa.date_vol}`,
+            subject: `[Vol sur mesure payé] ${c.prenom} ${c.nom} · ${resa.date_vol}`,
             html: `<p>${c.prenom} ${c.nom} (${c.email}) a réglé la provision pour un vol sur mesure le <strong>${resa.date_vol} à ${resa.heure_vol}</strong>, ~${resa.duree} min, ${resa.distance_km ?? "?"} km.</p><p>Waypoints : ${(resa.waypoints ?? []).length} points.</p>`,
           });
         }
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
             from: EMAIL_FROM,
             to: [c.email],
             replyTo: EMAIL_REPLY_TO,
-            subject: "Confirmation de paiement — Fly Horizons",
+            subject: "Confirmation de paiement · Fly Horizons",
             html: reservationPaymentConfirmationEmail({
               prenom: c.prenom,
               nom: c.nom,
@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
           await resend.emails.send({
             from: EMAIL_FROM,
             to: [EMAIL_REPLY_TO],
-            subject: `[Réservation payée] ${c.prenom} ${c.nom} — ${resa.date_vol} à ${resa.heure_vol}`,
+            subject: `[Réservation payée] ${c.prenom} ${c.nom} · ${resa.date_vol} à ${resa.heure_vol}`,
             html: `<p>${c.prenom} ${c.nom} (${c.email}) a payé et réservé le <strong>${resa.date_vol} à ${resa.heure_vol}</strong> pour ${resa.duree} min.</p>${voucherCode ? `<p>Voucher : ${voucherCode}</p>` : ""}`,
           });
         }

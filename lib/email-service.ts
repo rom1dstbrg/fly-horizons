@@ -77,7 +77,7 @@ async function send(to: string, subject: string, html: string, attachments?: Ema
 export async function sendOrderConfirmation(params: SendOrderConfirmationParams) {
   const { to, orderRef, attachments, ...rest } = params;
   const html = orderConfirmationEmail({ orderRef, customerEmail: to, ...rest });
-  return send(to, `Confirmation de commande #${orderRef} — Fly Horizons`, html, attachments);
+  return send(to, `Confirmation de commande #${orderRef} · Fly Horizons`, html, attachments);
 }
 
 export async function sendVoucherEmail(params: {
@@ -95,7 +95,7 @@ export async function sendVoucherEmail(params: {
 export async function sendFlightReminder(params: FlightReminderEmailProps & { to: string }) {
   const { to, ...rest } = params;
   const html = flightReminderEmail(rest);
-  return send(to, `Rappel — Votre vol le ${rest.dateStr} — Fly Horizons`, html);
+  return send(to, `Rappel · Votre vol le ${rest.dateStr} · Fly Horizons`, html);
 }
 
 type SendVolSurMesureQuoteParams = VolSurMesureQuoteEmailProps & { to: string };
@@ -106,20 +106,20 @@ export async function sendVolSurMesureQuote(params: SendVolSurMesureQuoteParams)
     weekday: "long", day: "numeric", month: "long", year: "numeric",
   });
   const html = volSurMesureQuoteEmail(rest);
-  return send(to, `Votre vol sur mesure — ${dateStr} · Fly Horizons`, html);
+  return send(to, `Votre vol sur mesure · ${dateStr} · Fly Horizons`, html);
 }
 
 export async function sendContactNotificationEmail(params: ContactNotificationProps) {
   const html = contactNotificationEmail(params);
-  return send("info@fly-horizons.com", `Nouveau message : ${params.sujet} — ${params.nom}`, html);
+  return send("info@fly-horizons.com", `Nouveau message : ${params.sujet} · ${params.nom}`, html);
 }
 
 export async function sendContactAcknowledgmentEmail(params: ContactAcknowledgmentProps) {
   const html = contactAcknowledgmentEmail(params);
-  return send(params.email, "Votre message a bien été reçu — Fly Horizons", html);
+  return send(params.email, "Votre message a bien été reçu · Fly Horizons", html);
 }
 
 export async function sendContactReplyEmail(params: ContactReplyProps) {
   const html = contactReplyEmail(params);
-  return send(params.email, `Réponse Fly Horizons — ${params.sujet}`, html);
+  return send(params.email, `Vous avez reçu une réponse · ${params.sujet}`, html);
 }

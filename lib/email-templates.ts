@@ -53,7 +53,7 @@ export function fmtDuration(minutes: number): string {
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL?.startsWith("http://localhost")
   ? process.env.NEXT_PUBLIC_SITE_URL
   : "https://fly-horizons.com";
-const LOGO_URL = "https://fly-horizons.com/logo-email.png";
+const LOGO_URL = "https://fly-horizons.com/logo-fly-horizons-navy.png";
 
 // ── Base ──────────────────────────────────────────────────────────────────────
 
@@ -107,7 +107,7 @@ function emailBase(bodyContent: string, title: string, footerExtra?: string): st
         <tr>
           <td bgcolor="#ffffff" style="background-color:#ffffff;padding:20px 0 0;text-align:center;">
             <p style="margin:0;font-size:11px;color:#94a3b8;">
-              Fly Horizons &mdash; <a href="https://fly-horizons.com" style="color:#94a3b8;text-decoration:none;">fly-horizons.com</a> &middot; <a href="mailto:info@fly-horizons.com" style="color:#94a3b8;text-decoration:none;">info@fly-horizons.com</a>
+              Fly Horizons &middot; <a href="https://fly-horizons.com" style="color:#94a3b8;text-decoration:none;">fly-horizons.com</a> &middot; <a href="mailto:info@fly-horizons.com" style="color:#94a3b8;text-decoration:none;">info@fly-horizons.com</a>
             </p>
             ${footerExtra ? `<p style="margin:6px 0 0;font-size:11px;color:#94a3b8;">${footerExtra}</p>` : ""}
           </td>
@@ -278,7 +278,7 @@ function addToCalendarBlock(dateISO: string, heure: string, dureeMin: number): s
   const outlookEnd   = `${dateISO}T${pad(endH)}:${pad(endM)}:00`;
 
   const title    = encodeURIComponent(`Vol Fly Horizons (${dureeMin} min)`);
-  const details  = encodeURIComponent("Vol en avion léger avec Romain — Fly Horizons");
+  const details  = encodeURIComponent("Vol en avion léger avec Romain, Fly Horizons");
   const location = encodeURIComponent("Aéroport de Charleroi (EBCI), Rue des Frères Wright 8, Gosselies");
 
   const googleUrl  = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${gcalDates}&details=${details}&location=${location}`;
@@ -472,14 +472,14 @@ export function orderConfirmationEmail(props: OrderConfirmationProps): string {
         <td class="em-dark" style="padding:12px 0 0;font-size:14px;font-weight:800;text-align:right;white-space:nowrap;border-top:1px solid #e8ecf4;">${fmt(total)}</td>
       </tr>
     </table>
-    <p class="em-muted" style="margin:12px 0 0;font-size:11px;color:#94a3b8;">TVA non applicable &mdash; Art. 293bis CTVA</p>
+    <p class="em-muted" style="margin:12px 0 0;font-size:11px;color:#94a3b8;">TVA non applicable, Art. 293bis CTVA</p>
     ${separator()}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;text-align:center;">
       Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
-  return emailBase(body, `Confirmation de commande #${orderRef} — Fly Horizons`);
+  return emailBase(body, `Confirmation de commande #${orderRef} · Fly Horizons`);
 }
 
 
@@ -584,7 +584,7 @@ export function voucherEmail(props: VoucherEmailProps): string {
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
-  return emailBase(body, `Vos vouchers Fly Horizons — #${orderRef}`);
+  return emailBase(body, `Vos vouchers Fly Horizons · #${orderRef}`);
 }
 
 // ── 5. Vol sur mesure — confirmation de demande (sans paiement) ───────────────
@@ -670,7 +670,7 @@ export function volSurMesureQuoteEmail(props: VolSurMesureQuoteEmailProps): stri
     ${reservationId ? ctaButton(`${SITE_URL}/account/reservations/${reservationId}`, "Voir mon itinéraire") : ""}
 
     ${separator()}
-    ${label("Devis — estimation des co&ucirc;ts")}
+    ${label("Devis : estimation des co&ucirc;ts")}
     <p class="em-body" style="margin:0 0 16px;font-size:13px;color:#334155;line-height:1.7;">
       Ces montants sont calcul&eacute;s sur la base de l&rsquo;itin&eacute;raire soumis. Je vais analyser la route dans les 24&nbsp;h et vous enverrai une proposition d&eacute;finitive. Si certaines zones sont interdites au survol ou n&eacute;cessitent un ajustement, je vous proposerai un itinéraire modifi&eacute; et le devis sera mis &agrave; jour.
     </p>
@@ -700,7 +700,7 @@ export function volSurMesureQuoteEmail(props: VolSurMesureQuoteEmailProps): stri
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
-  return emailBase(body, `Votre vol sur mesure — ${dateStr}`);
+  return emailBase(body, `Votre vol sur mesure · ${dateStr}`);
 }
 
 // ── 6. Réservation standard — couverte par voucher ────────────────────────────
@@ -771,7 +771,7 @@ export function reservationConfirmationFreeEmail(p: ReservationConfirmationProps
         )
       : secondaryButton(`${SITE_URL}/access-ebci`, "Plan d'accès")}`;
 
-  return emailBase(body, "Réservation confirmée — Fly Horizons");
+  return emailBase(body, "Réservation confirmée · Fly Horizons");
 }
 
 // ── 7. Réservation standard — paiement reçu ───────────────────────────────────
@@ -836,7 +836,7 @@ export function reservationPaymentConfirmationEmail(p: ReservationPaymentConfirm
 
     ${p.dateISO ? addToCalendarBlock(p.dateISO, p.heure, p.duree) : ""}`;
 
-  return emailBase(body, "Paiement confirmé — Fly Horizons");
+  return emailBase(body, "Paiement confirmé · Fly Horizons");
 }
 
 // ── 8. Vol sur mesure — provision reçue ──────────────────────────────────────
@@ -908,7 +908,7 @@ export function volSurMesureAcompteEmail(p: VolSurMesureAcompteProps): string {
 
     ${p.dateISO ? addToCalendarBlock(p.dateISO, p.heure, p.dureeEstimee) : ""}`;
 
-  return emailBase(body, "Provision reçue — Vol sur mesure Fly Horizons");
+  return emailBase(body, "Provision reçue · Vol sur mesure Fly Horizons");
 }
 
 // ── 9. Date de vol confirmée (admin) ──────────────────────────────────────────
@@ -979,7 +979,7 @@ export function reservationDateConfirmeeEmail(p: ReservationDateConfirmeeProps):
       <a href="${SITE_URL}/account#reservations" style="color:#F2B705;font-weight:600;text-decoration:none;">votre espace client</a>.
     </p>`;
 
-  return emailBase(body, "Votre date de vol est confirmée — Fly Horizons");
+  return emailBase(body, "Votre date de vol est confirmée · Fly Horizons");
 }
 
 // ── 10. Créneau horaire confirmé (admin) ──────────────────────────────────────
@@ -1045,7 +1045,7 @@ export function reservationHeureConfirmeeEmail(p: ReservationHeureConfirmeeProps
       <a href="${SITE_URL}/account#reservations" style="color:#F2B705;font-weight:600;text-decoration:none;">votre espace client</a>.
     </p>`;
 
-  return emailBase(body, "Votre créneau horaire est confirmé — Fly Horizons");
+  return emailBase(body, "Votre créneau horaire est confirmé · Fly Horizons");
 }
 
 // ── 11. Contact — notification interne ───────────────────────────────────────
@@ -1075,7 +1075,7 @@ export function contactNotificationEmail({ nom, email, sujet, message }: Contact
     ${ctaButton(`${SITE_URL}/admin/contacts`, "Voir dans l'admin")}
     `;
 
-  return emailBase(body, `Nouveau message : ${sujet} — ${nom}`);
+  return emailBase(body, `Nouveau message : ${sujet} · ${nom}`);
 }
 
 // ── 12. Contact — accusé de réception client ─────────────────────────────────
@@ -1085,9 +1085,10 @@ export interface ContactAcknowledgmentProps {
   email: string;
   sujet: string;
   message: string;
+  threadUrl?: string;
 }
 
-export function contactAcknowledgmentEmail({ nom, sujet, message }: ContactAcknowledgmentProps): string {
+export function contactAcknowledgmentEmail({ nom, sujet, message, threadUrl }: ContactAcknowledgmentProps): string {
   const body = `
     <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Contact</p>
     <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Message bien re&ccedil;u</h1>
@@ -1104,13 +1105,19 @@ export function contactAcknowledgmentEmail({ nom, sujet, message }: ContactAckno
     ${label("Votre message")}
     <p class="em-body" style="margin:0 0 28px;font-size:13px;color:#334155;line-height:1.7;white-space:pre-wrap;border-left:3px solid #e8ecf4;padding:2px 0 2px 16px;">${esc(message)}</p>
 
+    ${threadUrl ? `${separator()}
+    <p class="em-muted" style="margin:0 0 16px;font-size:12px;color:#64748b;text-align:center;">
+      Vous pouvez suivre votre demande et consulter nos &eacute;changes &agrave; tout moment.
+    </p>
+    ${ctaButton(threadUrl, "Suivre ma demande")}` : ""}
+
     ${separator()}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;text-align:center;">
       Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
-  return emailBase(body, "Votre message a été reçu — Fly Horizons");
+  return emailBase(body, "Votre message a été reçu · Fly Horizons");
 }
 
 // ── 13. Contact — réponse admin ───────────────────────────────────────────────
@@ -1120,24 +1127,30 @@ export interface ContactReplyProps {
   email: string;
   sujet: string;
   reponse: string;
+  threadUrl: string;
 }
 
-export function contactReplyEmail({ nom, sujet, reponse }: ContactReplyProps): string {
+export function contactReplyEmail({ nom, sujet, reponse, threadUrl }: ContactReplyProps): string {
   const body = `
     <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Fly Horizons</p>
-    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">R&eacute;ponse &agrave; votre message</h1>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Vous avez re&ccedil;u une r&eacute;ponse</h1>
     <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">Concernant : <strong style="color:#0b2238;">${esc(sujet)}</strong></p>
 
     ${separator()}
 
     <p class="em-body" style="margin:0 0 16px;font-size:14px;color:#334155;">Bonjour <strong style="color:#0b2238;">${esc(nom)}</strong>,</p>
-    <p class="em-body" style="margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;">Voici ma r&eacute;ponse &agrave; votre demande :</p>
+    <p class="em-body" style="margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;">Romain vous a r&eacute;pondu :</p>
 
     <p class="em-body" style="margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;white-space:pre-wrap;border-left:3px solid #F2B705;padding:2px 0 2px 16px;">${esc(reponse)}</p>
 
-    ${ctaButton(`${SITE_URL}/contact`, "Nous recontacter")}
+    ${ctaButton(threadUrl, "Voir la réponse et répondre")}
 
-    <p class="em-body" style="margin:24px 0 12px;font-size:14px;color:#334155;">
+    <p class="em-muted" style="margin:20px 0 0;font-size:12px;color:#64748b;text-align:center;">
+      Ce lien vous donne acc&egrave;s &agrave; l&rsquo;historique complet de votre &eacute;change.
+    </p>
+
+    ${separator()}
+    <p class="em-body" style="margin:0 0 12px;font-size:14px;color:#334155;">
       <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
@@ -1145,7 +1158,7 @@ export function contactReplyEmail({ nom, sujet, reponse }: ContactReplyProps): s
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
-  return emailBase(body, `Réponse de Fly Horizons — ${sujet}`);
+  return emailBase(body, `Réponse de Fly Horizons · ${sujet}`);
 }
 
 // ── 14. Invitation au paiement (réservation admin) ────────────────────────────
@@ -1207,7 +1220,7 @@ export function reservationPaymentInvitationEmail(p: ReservationPaymentInvitatio
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
-  return emailBase(body, `Votre réservation — ${p.dateStr}`);
+  return emailBase(body, `Votre réservation · ${p.dateStr}`);
 }
 
 
@@ -1280,7 +1293,7 @@ export function reservationPaymentReminderEmail(p: ReservationPaymentReminderEma
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
-  return emailBase(body, `Rappel — Confirmez votre vol du ${p.dateStr}`);
+  return emailBase(body, `Rappel : confirmez votre vol du ${p.dateStr}`);
 }
 
 // ── 14d. Annulation automatique — délai de paiement dépassé ──────────────────
@@ -1351,7 +1364,7 @@ export function reservationAutoAnnuleeEmail(p: ReservationAutoAnnuleeEmailProps)
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
-  return emailBase(body, `Réservation annulée — ${p.dateStr}`);
+  return emailBase(body, `Réservation annulée · ${p.dateStr}`);
 }
 
 // ── 14e. Rappel J-2 avant le vol ─────────────────────────────────────────────
@@ -1407,7 +1420,7 @@ export function flightReminderEmail(p: FlightReminderEmailProps): string {
 
     ${p.dateISO ? addToCalendarBlock(p.dateISO, p.heure, p.duree) : ""}`;
 
-  return emailBase(body, `Rappel — Votre vol le ${p.dateStr} — Fly Horizons`);
+  return emailBase(body, `Rappel · Votre vol le ${p.dateStr} · Fly Horizons`);
 }
 
 // ── 15. Post-vol — remerciement + lien enquête ────────────────────────────────
@@ -1439,7 +1452,7 @@ export function postVolEmail(p: PostVolEmailProps): string {
       Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
-  return emailBase(body, "Merci pour votre vol — Fly Horizons");
+  return emailBase(body, "Merci pour votre vol · Fly Horizons");
 }
 
 // ── 16. Résultat enquête — notification admin ─────────────────────────────────
@@ -1485,7 +1498,7 @@ export function satisfactionResultEmail(p: SatisfactionResultEmailProps): string
     ${p.commentaire ? `${separator()}${label("Exp&eacute;rience g&eacute;n&eacute;rale")}${callout(esc(p.commentaire))}` : ""}
     ${p.pointsAmelioration ? `${separator()}${label("Points &agrave; am&eacute;liorer")}<p style="margin:0;padding:12px 16px;background:#fef3c7;border-left:3px solid #F2B705;border-radius:6px;font-size:13px;color:#334155;line-height:1.7;">${esc(p.pointsAmelioration)}</p>` : ""}`;
 
-  return emailBase(body, `Satisfaction — ${p.prenom} ${p.nom}`);
+  return emailBase(body, `Satisfaction · ${p.prenom} ${p.nom}`);
 }
 
 // ── 19. Email libre stylisé ───────────────────────────────────────────────────
@@ -1560,7 +1573,7 @@ export function routeFeedbackAdminEmail(p: RouteFeedbackAdminEmailProps): string
 
     ${ctaButton(p.adminUrl, "Voir dans l'admin")}`;
 
-  return emailBase(body, `Itinéraire ${isValidated ? "validé" : "— modification"} — ${p.clientPrenom} ${p.clientNom}`);
+  return emailBase(body, `Itinéraire ${isValidated ? "validé" : "modification demandée"} · ${p.clientPrenom} ${p.clientNom}`);
 }
 
 // ── 19. Invitation à reporter un vol ─────────────────────────────────────────
@@ -1595,7 +1608,7 @@ export function rescheduleInviteEmail(p: {
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
-  return emailBase(body, "Votre vol est reporté — Fly Horizons");
+  return emailBase(body, "Votre vol est reporté · Fly Horizons");
 }
 
 // ── 20. Confirmation de report ────────────────────────────────────────────────
@@ -1635,7 +1648,7 @@ export function rescheduleConfirmationEmail(p: {
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
-  return emailBase(body, "Votre report est confirmé — Fly Horizons");
+  return emailBase(body, "Votre report est confirmé · Fly Horizons");
 }
 
 // ── Route itinéraire (ancien flux texte, /vol/itineraire/[token]) ────────────
@@ -1679,7 +1692,7 @@ export function routeItineraireEmail(p: RouteItineraireEmailProps): string {
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
-  return emailBase(body, "Votre itinéraire de vol — Fly Horizons");
+  return emailBase(body, "Votre itinéraire de vol · Fly Horizons");
 }
 
 // ── Route proposal (nouveau flux waypoints, /vol/proposition/[token]) ────────
@@ -1690,9 +1703,36 @@ export interface RouteProposalEmailProps {
   waypoints: Array<{ lat?: number; lng?: number; nom?: string }>;
   adminComment: string;
   responseUrl: string;
+  totalAcompte?: number | null;
 }
 
 export function routeProposalEmail(p: RouteProposalEmailProps): string {
+  const provisionBlock = p.totalAcompte != null && p.totalAcompte > 0
+    ? `${separator()}
+    ${label("Provision")}
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+      <tr>
+        <td style="background:#f0f6ff;border:1.5px solid #bfdbfe;border-radius:10px;padding:16px 20px;">
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td class="em-body" style="font-size:13px;color:#334155;line-height:1.65;">
+                Si vous acceptez cet itin&eacute;raire, une provision de <strong style="color:#0b2238;">${fmt(p.totalAcompte)}</strong> vous sera demand&eacute;e pour confirmer la r&eacute;servation.
+              </td>
+              <td style="white-space:nowrap;padding-left:16px;text-align:right;">
+                <span style="font-size:20px;font-weight:800;color:#0b2238;">${fmt(p.totalAcompte)}</span>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2" class="em-muted" style="padding-top:10px;font-size:12px;color:#64748b;line-height:1.6;">
+                D&eacute;duite du prix final apr&egrave;s le vol &middot; rembours&eacute;e int&eacute;gralement si annulation m&eacute;t&eacute;o.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>`
+    : "";
+
   const waypointRows = p.waypoints.map((wp, i) => `
     <tr>
       <td style="padding:9px 0;${i < p.waypoints.length - 1 ? "border-bottom:1px solid #f1f5f9;" : ""}vertical-align:middle;">
@@ -1718,7 +1758,7 @@ export function routeProposalEmail(p: RouteProposalEmailProps): string {
     ` : ""}
 
     ${separator()}
-    ${label("Votre parcours — " + p.waypoints.length + " point" + (p.waypoints.length > 1 ? "s" : ""))}
+    ${label("Votre parcours : " + p.waypoints.length + " point" + (p.waypoints.length > 1 ? "s" : ""))}
 
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
       <tr>
@@ -1727,7 +1767,7 @@ export function routeProposalEmail(p: RouteProposalEmailProps): string {
             <div style="width:22px;height:22px;background:#0b2238;border:2px solid #F2B705;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <span style="font-size:11px;font-weight:800;color:#F2B705;">&rarr;</span>
             </div>
-            <span class="em-muted" style="font-size:13px;color:#64748b;font-weight:600;">Charleroi EBCI &mdash; D&eacute;part</span>
+            <span class="em-muted" style="font-size:13px;color:#64748b;font-weight:600;">Charleroi EBCI, d&eacute;part</span>
           </div>
         </td>
       </tr>
@@ -1738,11 +1778,13 @@ export function routeProposalEmail(p: RouteProposalEmailProps): string {
             <div style="width:22px;height:22px;background:#0b2238;border:2px solid #F2B705;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <span style="font-size:11px;font-weight:800;color:#F2B705;">&larr;</span>
             </div>
-            <span class="em-muted" style="font-size:13px;color:#64748b;font-weight:600;">Charleroi EBCI &mdash; Retour</span>
+            <span class="em-muted" style="font-size:13px;color:#64748b;font-weight:600;">Charleroi EBCI, retour</span>
           </div>
         </td>
       </tr>
     </table>
+
+    ${provisionBlock}
 
     ${ctaButton(p.responseUrl, "Voir la carte et répondre")}
 
@@ -1758,7 +1800,7 @@ export function routeProposalEmail(p: RouteProposalEmailProps): string {
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
-  return emailBase(body, `Votre itinéraire personnalisé — Fly Horizons`);
+  return emailBase(body, `Votre itinéraire personnalisé · Fly Horizons`);
 }
 
 // ── Payment link after route acceptance ──────────────────────────────────────
@@ -1797,7 +1839,7 @@ export function paymentLinkEmail(p: PaymentLinkEmailProps): string {
           <p class="em-dark" style="margin:0 0 20px;font-size:42px;font-weight:800;color:#0b2238;line-height:1;">${p.acompte}&nbsp;&euro;</p>
           <a href="${esc(p.paymentUrl)}" class="em-btn"
             style="display:inline-block;background-color:#F2B705;color:#0b2238;font-size:14px;font-weight:800;padding:14px 36px;border-radius:10px;text-decoration:none;">
-            R&eacute;gler ma provision &mdash; ${p.acompte}&nbsp;&euro;
+            R&eacute;gler ma provision, ${p.acompte}&nbsp;&euro;
           </a>
           <p class="em-muted" style="margin:14px 0 0;font-size:11px;color:#94a3b8;">Paiement s&eacute;curis&eacute; par Stripe, carte bancaire</p>
         </td>
@@ -1819,7 +1861,7 @@ export function paymentLinkEmail(p: PaymentLinkEmailProps): string {
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
-  return emailBase(body, `Finalisez votre réservation — Fly Horizons`);
+  return emailBase(body, `Finalisez votre réservation · Fly Horizons`);
 }
 
 // ── Newsletter — types de blocs ──────────────────────────────────────────────

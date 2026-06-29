@@ -385,7 +385,7 @@ export function buildVoucherHtml(p: VoucherHtmlParams): string {
   <div class="hero">
     <img src="${p.heroImageDataUrl}" class="hero-img" alt="Vol Fly Horizons">
     <div class="hero-overlay"></div>
-    <img src="https://fly-horizons.com/logo-email.png" class="hero-logo" alt="Fly Horizons">
+    <img src="https://fly-horizons.com/logo-fly-horizons-navy.png" class="hero-logo" alt="Fly Horizons">
     <div class="hero-content">
       <div class="hero-badge">Voucher</div>
       <div class="hero-title">${p.product_title}</div>

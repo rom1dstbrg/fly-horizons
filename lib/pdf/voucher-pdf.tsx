@@ -43,7 +43,7 @@ function VoucherPDF({ code, product_title, expiresAtStr, qrDataUrl, heroImageDat
           }} />
           {/* Logo */}
           <Image
-            src="https://fly-horizons.com/logo-email.png"
+            src="https://fly-horizons.com/logo-fly-horizons-navy.png"
             style={{ position: "absolute", top: 20, left: 28, height: 20, width: 88, objectFit: "contain" }}
           />
           {/* Hero text */}
@@ -88,7 +88,7 @@ function VoucherPDF({ code, product_title, expiresAtStr, qrDataUrl, heroImageDat
               {code}
             </Text>
             <Text style={{ fontSize: 8, color: MUTED }}>
-              À saisir lors de la réservation — valable jusqu&apos;au {expiresAtStr}
+              À saisir lors de la réservation, valable jusqu&apos;au {expiresAtStr}
             </Text>
           </View>
 

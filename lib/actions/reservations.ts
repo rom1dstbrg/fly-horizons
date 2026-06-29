@@ -44,7 +44,8 @@ export async function updateStatutReservation(id: string, statut: string) {
 
     const extra: Record<string, unknown> = {};
     if (statut === "heure_confirmee") extra.heure_confirmee_at = new Date().toISOString();
-    await supabase.from("reservations").update({ statut, ...extra }).eq("id", id);
+    const { error: updateErr } = await supabase.from("reservations").update({ statut, ...extra }).eq("id", id);
+    if (updateErr) return { error: "Erreur mise à jour réservation" };
 
     if (["heure_confirmee", "vol_effectue"].includes(statut)) {
       const { data: resa } = await supabase
@@ -87,7 +88,7 @@ export async function updateStatutReservation(id: string, statut: string) {
             from: EMAIL_FROM,
             to: [client.email],
             replyTo: EMAIL_REPLY_TO,
-            subject: "Fly Horizons — Votre créneau horaire est confirmé",
+            subject: "Fly Horizons · Votre créneau horaire est confirmé",
             html: reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, route: resa.route, routeUrl, dateISO: resa.date_vol }),
           });
         } else {
@@ -95,7 +96,7 @@ export async function updateStatutReservation(id: string, statut: string) {
             from: EMAIL_FROM,
             to: [client.email],
             replyTo: EMAIL_REPLY_TO,
-            subject: "Merci pour votre vol — Fly Horizons",
+            subject: "Merci pour votre vol · Fly Horizons",
             html: postVolEmail({
               prenom: client.prenom,
               dateStr,
@@ -127,12 +128,12 @@ export async function updateStatutReservation(id: string, statut: string) {
               from: EMAIL_FROM,
               to: [c.email],
               replyTo: EMAIL_REPLY_TO,
-              subject: `Fly Horizons — Réservation annulée — ${dateStr}`,
+              subject: `Fly Horizons · Réservation annulée · ${dateStr}`,
               html: reservationAutoAnnuleeEmail({
                 prenom: c.prenom,
                 nom: c.nom,
                 dateStr,
-                heure: (resa.heure_vol ?? "—").slice(0, 5),
+                heure: (resa.heure_vol ?? "-").slice(0, 5),
                 duree: resa.duree,
                 bookingUrl: "https://fly-horizons.com/reservation",
                 source: "admin",
@@ -161,7 +162,8 @@ export async function updateStatutReservationPerso(id: string, statut: string) {
     const extra: Record<string, string> = {};
     if (statut === "date_confirmee") extra.date_confirmee_at = new Date().toISOString();
     if (statut === "heure_confirmee") extra.heure_confirmee_at = new Date().toISOString();
-    await supabase.from("reservations").update({ statut, ...extra }).eq("id", id);
+    const { error: updateErrPerso } = await supabase.from("reservations").update({ statut, ...extra }).eq("id", id);
+    if (updateErrPerso) return { error: "Erreur mise à jour réservation" };
 
     // Libérer le voucher réservé si on annule — le webhook session.expired ne le fait plus
     // pour les perso (pour permettre les nouvelles tentatives de paiement jusqu'à J-4).
@@ -192,12 +194,12 @@ export async function updateStatutReservationPerso(id: string, statut: string) {
               from: EMAIL_FROM,
               to: [c.email],
               replyTo: EMAIL_REPLY_TO,
-              subject: `Fly Horizons — Réservation annulée — ${dateStr}`,
+              subject: `Fly Horizons · Réservation annulée · ${dateStr}`,
               html: reservationAutoAnnuleeEmail({
                 prenom: c.prenom,
                 nom: c.nom,
                 dateStr,
-                heure: (resaData.heure_vol ?? "—").slice(0, 5),
+                heure: (resaData.heure_vol ?? "-").slice(0, 5),
                 duree: resaData.duree,
                 bookingUrl: "https://fly-horizons.com/vol-sur-mesure",
                 source: "admin",
@@ -231,7 +233,7 @@ export async function updateStatutReservationPerso(id: string, statut: string) {
             from: EMAIL_FROM,
             to: [client.email],
             replyTo: EMAIL_REPLY_TO,
-            subject: "Fly Horizons — Votre date de vol est confirmée",
+            subject: "Fly Horizons · Votre date de vol est confirmée",
             html: reservationDateConfirmeeEmail({ prenom: client.prenom, dateStr, duree: resa.duree }),
           });
         } else if (statut === "heure_confirmee") {
@@ -239,7 +241,7 @@ export async function updateStatutReservationPerso(id: string, statut: string) {
             from: EMAIL_FROM,
             to: [client.email],
             replyTo: EMAIL_REPLY_TO,
-            subject: "Fly Horizons — Votre créneau horaire est confirmé",
+            subject: "Fly Horizons · Votre créneau horaire est confirmé",
             html: reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, dateISO: resa.date_vol }),
           });
         } else {
@@ -247,7 +249,7 @@ export async function updateStatutReservationPerso(id: string, statut: string) {
             from: EMAIL_FROM,
             to: [client.email],
             replyTo: EMAIL_REPLY_TO,
-            subject: "Merci pour votre vol — Fly Horizons",
+            subject: "Merci pour votre vol · Fly Horizons",
             html: postVolEmail({
               prenom: client.prenom,
               dateStr,
@@ -281,8 +283,8 @@ export async function sendEmailConfirmation(id: string, type: "date" | "heure") 
       weekday: "long", day: "numeric", month: "long", year: "numeric",
     });
     const subject = type === "date"
-      ? "Fly Horizons — Votre date de vol est confirmée"
-      : "Fly Horizons — Votre créneau horaire est confirmé";
+      ? "Fly Horizons · Votre date de vol est confirmée"
+      : "Fly Horizons · Votre créneau horaire est confirmé";
     const html = type === "date"
       ? reservationDateConfirmeeEmail({ prenom: client.prenom, dateStr, duree: resa.duree })
       : reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, dateISO: resa.date_vol });
@@ -403,7 +405,9 @@ export async function createAdminReservation(data: {
       return { error: "Erreur création réservation" };
     }
 
-    if (voucherId) {
+    if (voucherId && !paymentToken) {
+      // Pas de paiement requis — marquer directement "used"
+      // Si paymentToken existe, le voucher reste "reserved" ; le webhook Stripe le passera à "used"
       await supabase.from("voucher_codes").update({ status: "used", used_at: new Date().toISOString() }).eq("id", voucherId);
     }
 
@@ -421,7 +425,7 @@ export async function createAdminReservation(data: {
         from: EMAIL_FROM,
         to: [client.email],
         replyTo: EMAIL_REPLY_TO,
-        subject: "Votre réservation — Lien de paiement Fly Horizons",
+        subject: "Votre réservation : lien de paiement Fly Horizons",
         html: reservationPaymentInvitationEmail({
           prenom: client.prenom,
           nom: client.nom,
@@ -438,7 +442,7 @@ export async function createAdminReservation(data: {
         from: EMAIL_FROM,
         to: [client.email],
         replyTo: EMAIL_REPLY_TO,
-        subject: "Votre réservation est enregistrée — Fly Horizons",
+        subject: "Votre réservation est enregistrée · Fly Horizons",
         html: reservationConfirmationFreeEmail({
           prenom: client.prenom,
           nom: client.nom,
@@ -556,7 +560,7 @@ export async function createAdminVolMesure(data: {
         const paymentUrl = `${siteUrl}/api/reservation/pay/${paymentToken}`;
         await resend.emails.send({
           from: EMAIL_FROM, to: [client.email], replyTo: EMAIL_REPLY_TO,
-          subject: "Votre vol sur mesure — Lien de paiement Fly Horizons",
+          subject: "Votre vol sur mesure : lien de paiement Fly Horizons",
           html: reservationPaymentInvitationEmail({
             prenom: client.prenom, nom: client.nom, dateStr,
             heure: data.heure_vol, duree: data.duree,
@@ -566,7 +570,7 @@ export async function createAdminVolMesure(data: {
       } else {
         await resend.emails.send({
           from: EMAIL_FROM, to: [client.email], replyTo: EMAIL_REPLY_TO,
-          subject: "Votre vol sur mesure est enregistré — Fly Horizons",
+          subject: "Votre vol sur mesure est enregistré · Fly Horizons",
           html: reservationConfirmationFreeEmail({
             prenom: client.prenom, nom: client.nom, dateStr,
             heure: data.heure_vol, duree: data.duree,
@@ -697,8 +701,8 @@ export async function updateReservationDateHeure(id: string, fields: {
   try {
     await checkAdmin();
     const supabase = createAdminClient();
-    await supabase.from("reservations").update(fields).eq("id", id);
-    revalidatePath("/admin/vols");
+    const { error } = await supabase.from("reservations").update(fields).eq("id", id);
+    if (error) return { error: "Erreur mise à jour" };
     revalidatePath("/admin/vols");
     return { success: true };
   } catch {
@@ -755,8 +759,8 @@ export async function updateReservationFields(id: string, fields: {
   try {
     await checkAdmin();
     const supabase = createAdminClient();
-    await supabase.from("reservations").update(fields).eq("id", id);
-    revalidatePath("/admin/vols");
+    const { error } = await supabase.from("reservations").update(fields).eq("id", id);
+    if (error) return { error: "Erreur mise à jour" };
     revalidatePath("/admin/vols");
     return { success: true };
   } catch {
@@ -774,7 +778,8 @@ export async function updateReservationPersoFields(id: string, fields: {
   try {
     await checkAdmin();
     const supabase = createAdminClient();
-    await supabase.from("reservations").update(fields).eq("id", id);
+    const { error } = await supabase.from("reservations").update(fields).eq("id", id);
+    if (error) return { error: "Erreur mise à jour" };
     revalidatePath("/admin/vols");
     return { success: true };
   } catch {
@@ -820,7 +825,7 @@ export async function sendPaymentLinkAdmin(id: string) {
       from: EMAIL_FROM,
       to: [client.email],
       replyTo: EMAIL_REPLY_TO,
-      subject: "Votre réservation — Lien de paiement Fly Horizons",
+      subject: "Votre réservation : lien de paiement Fly Horizons",
       html: reservationPaymentInvitationEmail({
         prenom: client.prenom,
         nom: client.nom,
@@ -881,7 +886,7 @@ export async function resendPaymentLinkAdmin(id: string) {
       from: EMAIL_FROM,
       to: [client.email],
       replyTo: EMAIL_REPLY_TO,
-      subject: "Votre réservation — Lien de paiement Fly Horizons",
+      subject: "Votre réservation : lien de paiement Fly Horizons",
       html: reservationPaymentInvitationEmail({
         prenom: client.prenom,
         nom: client.nom,
@@ -904,8 +909,8 @@ export async function updateReservationRoute(id: string, route: string) {
   try {
     await checkAdmin();
     const supabase = createAdminClient();
-    await supabase.from("reservations").update({ route }).eq("id", id);
-    revalidatePath("/admin/vols");
+    const { error } = await supabase.from("reservations").update({ route }).eq("id", id);
+    if (error) return { error: "Erreur mise à jour" };
     revalidatePath("/admin/vols");
     return { success: true };
   } catch {
@@ -945,7 +950,7 @@ export async function resendRoute(id: string) {
       from: EMAIL_FROM,
       to: [client.email],
       replyTo: EMAIL_REPLY_TO,
-      subject: "Fly Horizons — Votre itinéraire de vol",
+      subject: "Fly Horizons · Votre itinéraire de vol",
       html: routeItineraireEmail({ prenom: client.prenom, dateStr, duree: resa.duree, route: resa.route, routeUrl }),
     });
 
@@ -993,7 +998,7 @@ export async function sendRescheduleInvite(id: string) {
       from: EMAIL_FROM,
       to: [client.email],
       replyTo: EMAIL_REPLY_TO,
-      subject: "Fly Horizons — Votre vol est reporté",
+      subject: "Fly Horizons · Votre vol est reporté",
       html: rescheduleInviteEmail({
         prenom: client.prenom,
         dateStr,
@@ -1090,7 +1095,7 @@ export async function rescheduleReservation(token: string, newDate: string, newH
       from: EMAIL_FROM,
       to: [client.email],
       replyTo: EMAIL_REPLY_TO,
-      subject: "Fly Horizons — Votre report est confirmé",
+      subject: "Fly Horizons · Votre report est confirmé",
       html: rescheduleConfirmationEmail({
         prenom: client.prenom,
         oldDateStr,
@@ -1105,9 +1110,9 @@ export async function rescheduleReservation(token: string, newDate: string, newH
       from: EMAIL_FROM,
       to: ["info@fly-horizons.com"],
       replyTo: EMAIL_REPLY_TO,
-      subject: `Report vol — ${client.prenom} ${client.nom} : ${newDateTimeStr}`,
+      subject: `Report vol · ${client.prenom} ${client.nom} : ${newDateTimeStr}`,
       html: customEmail({
-        subject: `Report vol — ${client.prenom} ${client.nom}`,
+        subject: `Report vol · ${client.prenom} ${client.nom}`,
         body: `${client.prenom} ${client.nom} a reporté son vol.\n\nAncienne date : ${oldDateStr}\nNouvelle date : ${newDateTimeStr}\nDurée : ${resa.duree} min`,
       }),
     });

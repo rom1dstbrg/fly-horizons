@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bugs — Fly Horizons Backend</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, 'Segoe UI', sans-serif; background: #f5f7fa; color: #1a2538; line-height: 1.6; }
+
+  .header { background: #0b2238; color: white; padding: 36px 48px; }
+  .header h1 { font-size: 22px; font-weight: 800; letter-spacing: 0.02em; }
+  .header p { margin-top: 6px; font-size: 13px; color: rgba(255,255,255,0.55); }
+  .header .meta { display: flex; gap: 24px; margin-top: 20px; }
+  .header .stat { background: rgba(255,255,255,0.07); border-radius: 10px; padding: 12px 20px; text-align: center; }
+  .header .stat .n { font-size: 28px; font-weight: 900; }
+  .header .stat .l { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.6; margin-top: 2px; }
+  .header .stat.crit .n { color: #f87171; }
+  .header .stat.imp .n { color: #fb923c; }
+  .header .stat.min .n { color: #facc15; }
+
+  .body { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  .section-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; color: #64748b; margin: 40px 0 14px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; }
+  .section-title:first-child { margin-top: 0; }
+
+  .bug { background: white; border-radius: 12px; border: 1px solid #e8ecf4; margin-bottom: 12px; overflow: hidden; }
+  .bug-header { display: flex; align-items: flex-start; gap: 14px; padding: 16px 20px; cursor: pointer; user-select: none; }
+  .bug-header:hover { background: #fafbfd; }
+  .badge { flex-shrink: 0; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; padding: 3px 9px; border-radius: 6px; margin-top: 2px; }
+  .crit .badge { background: #fef2f2; color: #b91c1c; }
+  .imp  .badge { background: #fff7ed; color: #c2410c; }
+  .min  .badge { background: #fefce8; color: #854d0e; }
+  .bug-num { flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; background: #f1f5f9; font-size: 12px; font-weight: 800; color: #64748b; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+  .bug-title-block { flex: 1; min-width: 0; }
+  .bug-title { font-size: 14px; font-weight: 700; color: #0b2238; line-height: 1.4; }
+  .bug-file { font-size: 11px; color: #94a3b8; font-family: 'Courier New', monospace; margin-top: 3px; }
+  .chevron { flex-shrink: 0; color: #cbd5e1; font-size: 12px; margin-top: 4px; transition: transform 0.2s; }
+  .bug.open .chevron { transform: rotate(180deg); }
+
+  .bug-body { display: none; padding: 0 20px 18px 60px; }
+  .bug.open .bug-body { display: block; }
+  .bug-section { margin-bottom: 12px; }
+  .bug-section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #94a3b8; margin-bottom: 4px; }
+  .bug-desc { font-size: 13px; color: #334155; line-height: 1.7; }
+  .bug-impact { font-size: 13px; color: #334155; line-height: 1.7; }
+  .impact-box { background: #fef2f2; border-left: 3px solid #f87171; border-radius: 0 6px 6px 0; padding: 8px 14px; font-size: 13px; color: #7f1d1d; line-height: 1.6; }
+  .imp .impact-box { background: #fff7ed; border-left-color: #fb923c; color: #7c2d12; }
+  .min .impact-box { background: #fefce8; border-left-color: #facc15; color: #713f12; }
+  code { font-family: 'Courier New', monospace; background: #f1f5f9; padding: 1px 5px; border-radius: 4px; font-size: 12px; color: #0f172a; }
+  .done { opacity: 0.4; }
+  .done .bug-title { text-decoration: line-through; }
+
+  .checkbox { flex-shrink: 0; width: 18px; height: 18px; border-radius: 5px; border: 2px solid #cbd5e1; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-top: 4px; transition: all 0.15s; }
+  .checkbox.checked { background: #22c55e; border-color: #22c55e; }
+  .checkbox.checked::after { content: '✓'; font-size: 11px; color: white; font-weight: 800; }
+
+  .bug.fixed { opacity: 0.55; border-color: #bbf7d0; }
+  .bug.fixed .bug-title { text-decoration: line-through; color: #64748b; }
+  .bug.fixed .bug-header:hover { background: #f0fdf4; }
+  .fixed-badge { flex-shrink: 0; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; padding: 3px 9px; border-radius: 6px; margin-top: 2px; background: #dcfce7; color: #15803d; }
+  .progress-bar { background: rgba(255,255,255,0.1); border-radius: 8px; height: 6px; margin-top: 16px; overflow: hidden; }
+  .progress-fill { background: #22c55e; height: 100%; border-radius: 8px; transition: width 0.5s; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Fly Horizons — Rapport de bugs backend</h1>
+  <p>Audit complet · 29 juin 2026</p>
+  <div class="meta">
+    <div class="stat crit"><div class="n">4</div><div class="l">Critiques</div></div>
+    <div class="stat imp"><div class="n">17</div><div class="l">Importants</div></div>
+    <div class="stat min"><div class="n">10</div><div class="l">Mineurs</div></div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" style="width: 12.9%"></div></div>
+  <div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:6px;">4 / 31 corrigés</div>
+</div>
+
+<div class="body">
+
+<!-- ══════════════════════════════════════════════════════ CRITIQUES -->
+<div class="section-title">🔴 Critiques</div>
+
+<div class="bug crit fixed" id="b1">
+  <div class="bug-header" onclick="toggle('b1')">
+    <div class="checkbox checked" id="cb1" onclick="event.stopPropagation(); check('cb1','b1')"></div>
+    <div class="badge">Critique</div>
+    <div class="fixed-badge">Corrigé ✓</div>
+    <div class="bug-num">1</div>
+    <div class="bug-title-block">
+      <div class="bug-title">Paiements perso via admin jamais enregistrés en BDD après Stripe</div>
+      <div class="bug-file">app/api/stripe/webhook/route.ts</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc">Le webhook Stripe filtre <code>.eq("statut", "en_attente")</code> pour les <code>reservation_perso</code>. Or, les réservations créées via l'admin avec <code>envoyer_paiement = true</code> sont créées avec <code>statut = "payment_pending"</code>, pas <code>"en_attente"</code>. Le webhook ne les trouve donc jamais et ne met jamais à jour leur statut.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Impact</div>
+      <div class="impact-box">Le client paie, Stripe confirme, mais la réservation reste bloquée à <code>payment_pending</code> indéfiniment. Aucun email de confirmation envoyé. Romain ne voit pas le paiement dans l'admin.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Remplacer <code>.eq("statut", "en_attente")</code> par <code>.in("statut", ["en_attente", "payment_pending"])</code> dans le bloc <code>reservation_perso</code> du webhook.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug crit fixed" id="b2">
+  <div class="bug-header" onclick="toggle('b2')">
+    <div class="checkbox checked" id="cb2" onclick="event.stopPropagation(); check('cb2','b2')"></div>
+    <div class="badge">Critique</div>
+    <div class="fixed-badge">Corrigé ✓</div>
+    <div class="bug-num">2</div>
+    <div class="bug-title-block">
+      <div class="bug-title">Emails de confirmation envoyés même si la mise à jour BDD a échoué</div>
+      <div class="bug-file">lib/actions/reservations.ts — 6 fonctions</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc"><code>updateStatutReservation</code>, <code>updateStatutReservationPerso</code>, <code>updateReservationDateHeure</code>, <code>updateReservationFields</code>, <code>updateReservationPersoFields</code>, <code>updateReservationRoute</code> — aucune de ces fonctions ne vérifie le résultat de la requête Supabase. Si l'update échoue (RLS, réseau, contrainte), la fonction retourne <code>{ success: true }</code> et envoie quand même l'email.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Impact</div>
+      <div class="impact-box">Client reçoit un email de confirmation de statut alors que la BDD n'a pas changé. Données incohérentes entre ce que voit le client et la réalité.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Ajouter <code>const { error } = await supabase.from(...).update(...);</code> et retourner une erreur si <code>error</code> est présent, avant d'envoyer l'email.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug crit fixed" id="b3">
+  <div class="bug-header" onclick="toggle('b3')">
+    <div class="checkbox checked" id="cb3" onclick="event.stopPropagation(); check('cb3','b3')"></div>
+    <div class="badge">Critique</div>
+    <div class="fixed-badge">Corrigé ✓</div>
+    <div class="bug-num">3</div>
+    <div class="bug-title-block">
+      <div class="bug-title">Voucher marqué "used" avant paiement lors d'une création admin</div>
+      <div class="bug-file">lib/actions/reservations.ts — createAdminReservation</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc">Dans <code>createAdminReservation</code>, si un voucher est fourni, il est immédiatement marqué <code>used</code> à la création de la réservation — avant même que le client ait payé. Le flux admin vol sur mesure (<code>createAdminVolMesure</code>) le marque correctement <code>reserved</code> et attend le webhook Stripe. Incohérence entre les deux.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Impact</div>
+      <div class="impact-box">Si la réservation est annulée avant paiement, le voucher reste <code>used</code> — perdu sans rollback. Le client ne peut plus l'utiliser.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Si <code>envoyer_paiement = true</code>, marquer le voucher <code>reserved</code> (et laisser le webhook le passer à <code>used</code>). Sinon, marquer directement <code>used</code>.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug crit fixed" id="b4">
+  <div class="bug-header" onclick="toggle('b4')">
+    <div class="checkbox checked" id="cb4" onclick="event.stopPropagation(); check('cb4','b4')"></div>
+    <div class="badge">Critique</div>
+    <div class="fixed-badge">Corrigé ✓</div>
+    <div class="bug-num">4</div>
+    <div class="bug-title-block">
+      <div class="bug-title">respondToRouteProposal est une action publique avec effets financiers</div>
+      <div class="bug-file">lib/actions/reservation-edit.ts</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc">La server action <code>respondToRouteProposal</code> n'a pas de <code>checkAdmin()</code>. Elle est entièrement publique — la seule protection est le token de proposition (UUID). Quand le client accepte, elle change le statut de la réservation ET envoie un lien de paiement Stripe.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Impact</div>
+      <div class="impact-box">Un token exposé (email forwardé, URL copiée) permet à n'importe qui d'accepter la route à la place du client, de déclencher l'envoi d'un lien de paiement et de modifier l'état de la réservation. C'est voulu pour le client, mais sans contrainte de token à usage unique.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Ajouter une vérification que le statut de la proposition est encore <code>"pending"</code> avant d'exécuter (déjà partiellement géré via <code>alreadyResponded</code> côté UI, mais pas enforced côté serveur). Idéalement, invalider le token après première utilisation.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ IMPORTANTS -->
+<div class="section-title">🟠 Importants</div>
+
+<div class="bug imp" id="b5">
+  <div class="bug-header" onclick="toggle('b5')">
+    <div class="checkbox" id="cb5" onclick="event.stopPropagation(); check('cb5','b5')"></div>
+    <div class="badge">Important</div>
+    <div class="bug-num">5</div>
+    <div class="bug-title-block">
+      <div class="bug-title">Webhook shop sans idempotence — doublons de vouchers et stocks négatifs</div>
+      <div class="bug-file">app/api/stripe/webhook/route.ts</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc">Le bloc <code>checkout.session.completed</code> pour les commandes shop ne vérifie pas si le statut de la commande est déjà <code>paid</code> avant de traiter. Stripe peut livrer le même webhook plusieurs fois (retry normal).</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Impact</div>
+      <div class="impact-box">Double livraison → codes voucher générés en double, stocks décrémentés deux fois, double email au client.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Ajouter <code>.neq("status", "paid")</code> dans la requête update, ou vérifier le statut actuel avant traitement.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug imp" id="b6">
+  <div class="bug-header" onclick="toggle('b6')">
+    <div class="checkbox" id="cb6" onclick="event.stopPropagation(); check('cb6','b6')"></div>
+    <div class="badge">Important</div>
+    <div class="bug-num">6</div>
+    <div class="bug-title-block">
+      <div class="bug-title">Cron annulation ne couvre pas les vols perso en payment_pending</div>
+      <div class="bug-file">app/api/cron/payment-deadline/route.ts</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc">Le cron filtre <code>.eq("type_resa", "standard")</code>. Les vols sur mesure (<code>type_resa = "perso"</code>) dont le client n'a pas payé après acceptation de la route restent en <code>payment_pending</code> indéfiniment.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Impact</div>
+      <div class="impact-box">Réservations zombies en <code>payment_pending</code> qui bloquent les créneaux et ne sont jamais nettoyées.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Supprimer le filtre <code>type_resa</code> ou le remplacer par <code>.in("type_resa", ["standard", "perso"])</code>. Vérifier que la logique d'annulation est identique pour les deux types.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug imp" id="b7">
+  <div class="bug-header" onclick="toggle('b7')">
+    <div class="checkbox" id="cb7" onclick="event.stopPropagation(); check('cb7','b7')"></div>
+    <div class="badge">Important</div>
+    <div class="bug-num">7</div>
+    <div class="bug-title-block">
+      <div class="bug-title">Rate limiter inopérant en production serverless</div>
+      <div class="bug-file">lib/rate-limit.ts</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc">Le rate limiter utilise un <code>Map</code> en mémoire Node.js. Sur Netlify (fonctions serverless), chaque requête peut être traitée par une instance séparée. Chaque instance a son propre <code>Map</code> vide → aucune limite n'est jamais atteinte.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Impact</div>
+      <div class="impact-box">Les endpoints <code>/api/reservation/submit</code>, <code>/api/vol-sur-mesure/checkout</code> et <code>/contact</code> sont sans protection contre le spam/abuse en production.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Utiliser Upstash Redis (compatible Netlify Edge) avec <code>@upstash/ratelimit</code>, ou désactiver le rate limiter et s'appuyer sur la protection Netlify/Cloudflare.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug imp" id="b8">
+  <div class="bug-header" onclick="toggle('b8')">
+    <div class="checkbox" id="cb8" onclick="event.stopPropagation(); check('cb8','b8')"></div>
+    <div class="badge">Important</div>
+    <div class="bug-num">8</div>
+    <div class="bug-title-block">
+      <div class="bug-title">VALID_STATUTS_PERSO n'inclut pas "payment_pending"</div>
+      <div class="bug-file">lib/actions/reservations.ts</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc"><code>VALID_STATUTS_PERSO</code> ne contient pas <code>"payment_pending"</code>. Or les vols perso créés via admin avec <code>envoyer_paiement = true</code> peuvent être en <code>payment_pending</code>. Appeler <code>updateStatutReservationPerso(id, "payment_pending")</code> retourne <code>{ error: "Statut invalide" }</code>.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Impact</div>
+      <div class="impact-box">Si ce chemin de code est atteint, la mise à jour échoue silencieusement avec une erreur business.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Ajouter <code>"payment_pending"</code> à <code>VALID_STATUTS_PERSO</code>.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug imp" id="b9">
+  <div class="bug-header" onclick="toggle('b9')">
+    <div class="checkbox" id="cb9" onclick="event.stopPropagation(); check('cb9','b9')"></div>
+    <div class="badge">Important</div>
+    <div class="bug-num">9</div>
+    <div class="bug-title-block">
+      <div class="bug-title">rescheduleReservation : action publique (protection = token seul)</div>
+      <div class="bug-file">lib/actions/reservations.ts</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc">Pas de <code>checkAdmin()</code>. La server action modifie la date et le statut d'une réservation via un token exposé dans un email client.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Impact</div>
+      <div class="impact-box">C'est voulu (action client), mais un token copié/forwardé permet à un tiers de modifier la réservation. Accepté comme risque fonctionnel, mais mérite d'être documenté.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Invalider le token de reschedule après première utilisation, ou ajouter une expiration stricte (lien valable 30 jours déjà mentionné dans l'email mais non enforced côté serveur).</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug imp" id="b10">
+  <div class="bug-header" onclick="toggle('b10')">
+    <div class="checkbox" id="cb10" onclick="event.stopPropagation(); check('cb10','b10')"></div>
+    <div class="badge">Important</div>
+    <div class="bug-num">10</div>
+    <div class="bug-title-block">
+      <div class="bug-title">Statut "date_confirmee" incorrect pour les vols standard après report</div>
+      <div class="bug-file">lib/actions/reservations.ts — rescheduleReservation</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc">Après report, un vol standard reçoit le statut <code>"date_confirmee"</code>. Ce statut n'est pas dans <code>VALID_STATUTS_STD</code> — il est réservé aux vols perso. Sémantiquement, un standard reporté devrait revenir à <code>"en_attente"</code>.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Impact</div>
+      <div class="impact-box">Statut incohérent visible dans l'admin, logique de filtre potentiellement cassée pour les traitements ultérieurs.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Remplacer <code>"date_confirmee"</code> par <code>"en_attente"</code> pour <code>type_resa = "standard"</code> dans la logique de reschedule.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug imp" id="b11">
+  <div class="bug-header" onclick="toggle('b11')">
+    <div class="checkbox" id="cb11" onclick="event.stopPropagation(); check('cb11','b11')"></div>
+    <div class="badge">Important</div>
+    <div class="bug-num">11</div>
+    <div class="bug-title-block">
+      <div class="bug-title">Calcul délai 48h incorrect dans generateClientRescheduleToken</div>
+      <div class="bug-file">lib/actions/reservations.ts</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc">La comparaison utilise <code>new Date(resa.date_vol + "T23:59:59Z")</code> au lieu de l'heure réelle du vol. Un vol à 9h00 le jour J serait considéré comme "dans plus de 48h" jusqu'à presque minuit du J-1.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Impact</div>
+      <div class="impact-box">Un client peut générer un token de report jusqu'à ~15h de trop tard — potentiellement la veille du vol à 23:59 alors que le vol est à 9h le lendemain.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Utiliser <code>brusselsTimestamp(resa.date_vol, resa.heure_vol)</code> comme partout ailleurs dans la codebase.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug imp" id="b12">
+  <div class="bug-header" onclick="toggle('b12')">
+    <div class="checkbox" id="cb12" onclick="event.stopPropagation(); check('cb12','b12')"></div>
+    <div class="badge">Important</div>
+    <div class="bug-num">12</div>
+    <div class="bug-title-block">
+      <div class="bug-title">sendPaymentLinkAdmin envoie l'email même si la mise à jour a échoué</div>
+      <div class="bug-file">lib/actions/reservations.ts — sendPaymentLinkAdmin</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc">Le statut est mis à <code>payment_pending</code> sans vérification du résultat. L'email de lien de paiement est envoyé inconditionnellement après.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Impact</div>
+      <div class="impact-box">Client reçoit un lien de paiement mais la réservation n'est pas en <code>payment_pending</code> en BDD → incohérence d'état.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Vérifier le résultat de l'update et interrompre si erreur.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug imp" id="b13">
+  <div class="bug-header" onclick="toggle('b13')">
+    <div class="checkbox" id="cb13" onclick="event.stopPropagation(); check('cb13','b13')"></div>
+    <div class="badge">Important</div>
+    <div class="bug-num">13</div>
+    <div class="bug-title-block">
+      <div class="bug-title">Voucher "reserved" retourné comme valid: false</div>
+      <div class="bug-file">app/api/vouchers/validate/route.ts</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc"><code>valid: voucher.status === "unused"</code> — un voucher en <code>"reserved"</code> (checkout Stripe actif) retourne <code>valid: false</code>.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Impact</div>
+      <div class="impact-box">Client en cours de checkout voit son bon comme invalide. Si le checkout expire sans être traité par le webhook, le voucher reste bloqué en <code>reserved</code> et semble invalide indéfiniment.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Changer en <code>valid: ["unused", "reserved"].includes(voucher.status)</code> et ajouter un message différencié selon le statut.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug imp" id="b14">
+  <div class="bug-header" onclick="toggle('b14')">
+    <div class="checkbox" id="cb14" onclick="event.stopPropagation(); check('cb14','b14')"></div>
+    <div class="badge">Important</div>
+    <div class="bug-num">14</div>
+    <div class="bug-title-block">
+      <div class="bug-title">Rappel vol J-2 envoyé quand heure_vol est null</div>
+      <div class="bug-file">app/api/cron/flight-reminder/route.ts</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc">Le cron récupère les vols en statut <code>heure_confirmee</code> mais n'exclut pas ceux avec <code>heure_vol = null</code>. <code>brusselsTimestamp(date_vol, null)</code> utilise <code>"00:00"</code> → le calcul <code>hoursUntil</code> est biaisé de plusieurs heures.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Impact</div>
+      <div class="impact-box">Rappel envoyé au mauvais moment ou pas du tout, selon l'heure réelle du vol.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Ajouter <code>.not("heure_vol", "is", null)</code> à la query, ou traiter séparément les cas sans heure.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug imp" id="b15">
+  <div class="bug-header" onclick="toggle('b15')">
+    <div class="checkbox" id="cb15" onclick="event.stopPropagation(); check('cb15','b15')"></div>
+    <div class="badge">Important</div>
+    <div class="bug-num">15</div>
+    <div class="bug-title-block">
+      <div class="bug-title">session.expired : voucher reste bloqué si metadata.type absent</div>
+      <div class="bug-file">app/api/stripe/webhook/route.ts</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc">La condition de libération du voucher est <code>if (voucherId && type !== "reservation_perso" && !paymentToken)</code>. Si <code>metadata.type</code> est absent (bug de metadata, ancienne session), le voucher reste en <code>"reserved"</code>.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Impact</div>
+      <div class="impact-box">Voucher inutilisable après une session expirée avec metadata incorrects.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Libérer le voucher si <code>voucherId</code> existe et que le statut actuel est <code>"reserved"</code>, indépendamment du type.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug imp" id="b16">
+  <div class="bug-header" onclick="toggle('b16')">
+    <div class="checkbox" id="cb16" onclick="event.stopPropagation(); check('cb16','b16')"></div>
+    <div class="badge">Important</div>
+    <div class="bug-num">16</div>
+    <div class="bug-title-block">
+      <div class="bug-title">Envoi newsletter séquentiel — timeout probable dès ~50 abonnés</div>
+      <div class="bug-file">lib/actions/newsletter.ts</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc">Les emails sont envoyés dans une boucle <code>for...of</code> avec <code>await</code> séquentiel. À ~100ms par email Resend, 50 abonnés = 5s, 100 abonnés = 10s, ce qui dépasse le timeout d'une server action Next.js.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Impact</div>
+      <div class="impact-box">La newsletter s'arrête en cours d'envoi, une partie des abonnés ne reçoit rien, aucune erreur visible dans l'admin.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Utiliser l'API Resend Batch (<code>resend.batch.send([])</code>) qui envoie tout en une seule requête.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug imp" id="b17">
+  <div class="bug-header" onclick="toggle('b17')">
+    <div class="checkbox" id="cb17" onclick="event.stopPropagation(); check('cb17','b17')"></div>
+    <div class="badge">Important</div>
+    <div class="bug-num">17</div>
+    <div class="bug-title-block">
+      <div class="bug-title">Pas d'email de bienvenue lors d'opt-in newsletter depuis le checkout réservation</div>
+      <div class="bug-file">lib/newsletter.ts — optInNewsletter()</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc"><code>optInNewsletter()</code> ajoute l'abonné en BDD sans envoyer d'email. <code>subscribeFromAccount()</code> envoie <code>newsletterConfirmationEmail</code>. Incohérence selon le point d'entrée.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Impact</div>
+      <div class="impact-box">Clients qui s'inscrivent via le checkout de réservation ne reçoivent pas l'email de bienvenue. Expérience dégradée vs inscription via compte.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Envoyer <code>newsletterConfirmationEmail</code> dans <code>optInNewsletter()</code> également.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug imp" id="b18">
+  <div class="bug-header" onclick="toggle('b18')">
+    <div class="checkbox" id="cb18" onclick="event.stopPropagation(); check('cb18','b18')"></div>
+    <div class="badge">Important</div>
+    <div class="bug-num">18</div>
+    <div class="bug-title-block">
+      <div class="bug-title">Colonne "reponse" dans contacts redondante avec contact_messages</div>
+      <div class="bug-file">lib/actions/contacts.ts — replyContact()</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc">La réponse est enregistrée à la fois dans <code>contacts.reponse</code> (scalaire, écrasé à chaque réponse) et dans <code>contact_messages</code> (historique). Double source de vérité.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Impact</div>
+      <div class="impact-box"><code>contacts.reponse</code> ne montre que la dernière réponse. Si l'admin legacy lit ce champ, il ne voit pas l'historique complet.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Supprimer la mise à jour de <code>contacts.reponse</code> si l'admin n'utilise que <code>contact_messages</code>.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug imp" id="b19">
+  <div class="bug-header" onclick="toggle('b19')">
+    <div class="checkbox" id="cb19" onclick="event.stopPropagation(); check('cb19','b19')"></div>
+    <div class="badge">Important</div>
+    <div class="bug-num">19</div>
+    <div class="bug-title-block">
+      <div class="bug-title">addToCalendarBlock : vol dépassant minuit → heure de fin incorrecte</div>
+      <div class="bug-file">lib/email-templates.ts</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc"><code>endH = Math.floor(endTotal / 60) % 24</code> calcule correctement l'heure, mais <code>gcalDates</code> utilise la même <code>dateCompact</code> (même jour) pour le début ET la fin. Un vol de 90 min à 23:00 aurait fin à 00:30 mais avec la date de départ → Google Calendar crée un événement se terminant avant qu'il commence.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Impact</div>
+      <div class="impact-box">Événement calendrier corrompu pour les vols tardifs (rare mais possible).</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Calculer la date de fin séparément en ajoutant la durée à un objet <code>Date</code> complet, puis formater.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug imp" id="b20">
+  <div class="bug-header" onclick="toggle('b20')">
+    <div class="checkbox" id="cb20" onclick="event.stopPropagation(); check('cb20','b20')"></div>
+    <div class="badge">Important</div>
+    <div class="bug-num">20</div>
+    <div class="bug-title-block">
+      <div class="bug-title">Montants affichés sans fmt() dans 3 emails (ex : "127.5 €" au lieu de "127,50 €")</div>
+      <div class="bug-file">lib/email-templates.ts</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc"><code>reservationPaymentConfirmationEmail</code> ligne 802, <code>reservationPaymentReminderEmail</code> ligne 1275, et <code>paymentLinkEmail</code> ligne 1810 affichent des montants directement sans passer par <code>fmt()</code> (formatage <code>fr-BE</code>). Toutes les autres occurrences utilisent <code>fmt()</code>.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Impact</div>
+      <div class="impact-box">Montants mal formatés dans les emails de paiement : séparateur décimal anglais, pas de symbole € formaté correctement.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Remplacer <code>${"${p.montantPaye}"}&nbsp;&euro;</code> par <code>${"${fmt(p.montantPaye)}"}</code> dans les 3 endroits.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug imp" id="b21">
+  <div class="bug-header" onclick="toggle('b21')">
+    <div class="checkbox" id="cb21" onclick="event.stopPropagation(); check('cb21','b21')"></div>
+    <div class="badge">Important</div>
+    <div class="bug-num">21</div>
+    <div class="bug-title-block">
+      <div class="bug-title">updateReservationAllFields : mise à jour client sans vérification d'erreur</div>
+      <div class="bug-file">lib/actions/reservation-edit.ts</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc">La mise à jour de la table <code>clients</code> n'est pas vérifiée. Si elle échoue (email en doublon, contrainte), la fonction retourne <code>{ success: true }</code>.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Impact</div>
+      <div class="impact-box">Données client non mises à jour sans aucune indication d'erreur dans l'admin.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Capturer et retourner l'erreur de la mise à jour client.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ MINEURS -->
+<div class="section-title">🟡 Mineurs</div>
+
+<div class="bug min" id="b22">
+  <div class="bug-header" onclick="toggle('b22')">
+    <div class="checkbox" id="cb22" onclick="event.stopPropagation(); check('cb22','b22')"></div>
+    <div class="badge">Mineur</div>
+    <div class="bug-num">22</div>
+    <div class="bug-title-block">
+      <div class="bug-title">Caractère "3" parasite à la fin de server.ts</div>
+      <div class="bug-file">lib/supabase/server.ts</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc">La dernière ligne du fichier contient <code>}3</code> — caractère <code>3</code> parasite après l'accolade fermante de la fonction.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Supprimer le <code>3</code> en fin de fichier.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug min" id="b23">
+  <div class="bug-header" onclick="toggle('b23')">
+    <div class="checkbox" id="cb23" onclick="event.stopPropagation(); check('cb23','b23')"></div>
+    <div class="badge">Mineur</div>
+    <div class="bug-num">23</div>
+    <div class="bug-title-block">
+      <div class="bug-title">Double revalidatePath dans 6 fonctions</div>
+      <div class="bug-file">lib/actions/reservations.ts</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc"><code>revalidatePath("/admin/vols")</code> est appelé deux fois consécutivement dans plusieurs fonctions. Redondant, sans impact fonctionnel.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Supprimer l'un des deux appels dans chaque occurrence.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug min" id="b24">
+  <div class="bug-header" onclick="toggle('b24')">
+    <div class="checkbox" id="cb24" onclick="event.stopPropagation(); check('cb24','b24')"></div>
+    <div class="badge">Mineur</div>
+    <div class="bug-num">24</div>
+    <div class="bug-title-block">
+      <div class="bug-title">taxesEscales parsé avec parseInt — centimes perdus si valeur décimale</div>
+      <div class="bug-file">app/api/vol-sur-mesure/checkout/route.ts</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc"><code>parseInt(taxesEscales)</code> tronque les décimales. Si une taxe est <code>"5.50"</code>, elle devient <code>5</code>.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Utiliser <code>parseFloat</code> ou <code>Number()</code>.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug min" id="b25">
+  <div class="bug-header" onclick="toggle('b25')">
+    <div class="checkbox" id="cb25" onclick="event.stopPropagation(); check('cb25','b25')"></div>
+    <div class="badge">Mineur</div>
+    <div class="bug-num">25</div>
+    <div class="bug-title-block">
+      <div class="bug-title">Voucher "expired" peut écraser un "reserved" sans condition</div>
+      <div class="bug-file">app/api/vouchers/validate/route.ts</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc">La mise à jour vers <code>expired</code> se fait sans <code>.eq("status", "unused")</code>. Un voucher en <code>reserved</code> (checkout actif expiré) sera forcé à <code>expired</code>.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Ajouter <code>.eq("status", "unused")</code> avant la mise à jour vers <code>expired</code>.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug min" id="b26">
+  <div class="bug-header" onclick="toggle('b26')">
+    <div class="checkbox" id="cb26" onclick="event.stopPropagation(); check('cb26','b26')"></div>
+    <div class="badge">Mineur</div>
+    <div class="bug-num">26</div>
+    <div class="bug-title-block">
+      <div class="bug-title">Calcul J-2 basé sur l'heure UTC serveur au lieu de Brussels</div>
+      <div class="bug-file">app/api/reservation/submit/route.ts</div>
+    </div>
+    <div class="chevron">▼</v>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc"><code>todayMidnight</code> utilise l'heure UTC du serveur Netlify. Le jour calculé peut être décalé d'un jour autour de minuit UTC (= 1h ou 2h du matin Brussels).</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Calculer le minuit Brussels via <code>Intl.DateTimeFormat</code> comme dans <code>brusselsTimestamp</code>.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug min" id="b27">
+  <div class="bug-header" onclick="toggle('b27')">
+    <div class="checkbox" id="cb27" onclick="event.stopPropagation(); check('cb27','b27')"></div>
+    <div class="badge">Mineur</div>
+    <div class="bug-num">27</div>
+    <div class="bug-title-block">
+      <div class="bug-title">source non passé à reservationAutoAnnuleeEmail dans le cron</div>
+      <div class="bug-file">app/api/cron/payment-deadline/route.ts</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc">La propriété <code>source</code> n'est pas passée, donc vaut <code>undefined</code>. La condition <code>p.source === "admin"</code> est <code>false</code> — comportement correct par défaut, mais implicite.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Passer explicitement <code>source: "auto"</code>.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug min" id="b28">
+  <div class="bug-header" onclick="toggle('b28')">
+    <div class="checkbox" id="cb28" onclick="event.stopPropagation(); check('cb28','b28')"></div>
+    <div class="badge">Mineur</div>
+    <div class="bug-num">28</div>
+    <div class="bug-title-block">
+      <div class="bug-title">Typo "dureMin" dans VolSurMesureQuoteEmailProps</div>
+      <div class="bug-file">lib/email-templates.ts</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc">Le champ s'appelle <code>dureMin</code> au lieu de <code>dureeMin</code> (cohérence avec le reste de la codebase).</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Renommer <code>dureMin</code> → <code>dureeMin</code> dans l'interface et tous ses usages.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug min" id="b29">
+  <div class="bug-header" onclick="toggle('b29')">
+    <div class="checkbox" id="cb29" onclick="event.stopPropagation(); check('cb29','b29')"></div>
+    <div class="badge">Mineur</div>
+    <div class="bug-num">29</div>
+    <div class="bug-title-block">
+      <div class="bug-title">Logo PDF chargé depuis URL externe sans fallback</div>
+      <div class="bug-file">lib/pdf/voucher-pdf.tsx</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc">Le logo est chargé via <code>https://fly-horizons.com/logo-fly-horizons-navy.png</code> au moment de la génération PDF. Si le CDN est indisponible, le PDF est généré sans logo ou la génération échoue.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Utiliser le fichier local (<code>fs.readFileSync</code> + base64) ou <code>public/logo-fly-horizons-navy.png</code>.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug min" id="b30">
+  <div class="bug-header" onclick="toggle('b30')">
+    <div class="checkbox" id="cb30" onclick="event.stopPropagation(); check('cb30','b30')"></div>
+    <div class="badge">Mineur</div>
+    <div class="bug-num">30</div>
+    <div class="bug-title-block">
+      <div class="bug-title">Panier persisté en localStorage sans expiration</div>
+      <div class="bug-file">store/cart.ts</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc">Le store Zustand est persisté en localStorage. Aucun mécanisme d'expiration. Des produits supprimés ou en rupture peuvent rester dans le panier indéfiniment.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Ajouter un <code>timestamp</code> à la persistance et vider le panier si > 7 jours, ou valider les items au chargement.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bug min" id="b31">
+  <div class="bug-header" onclick="toggle('b31')">
+    <div class="checkbox" id="cb31" onclick="event.stopPropagation(); check('cb31','b31')"></div>
+    <div class="badge">Mineur</div>
+    <div class="bug-num">31</div>
+    <div class="bug-title-block">
+      <div class="bug-title">Route site-settings publique utilisant service_role_key</div>
+      <div class="bug-file">app/api/site-settings/route.ts</div>
+    </div>
+    <div class="chevron">▼</div>
+  </div>
+  <div class="bug-body">
+    <div class="bug-section">
+      <div class="bug-section-label">Problème</div>
+      <div class="bug-desc">Endpoint public qui utilise <code>createAdminClient()</code> (service_role) pour lire des paramètres non-sensibles. Anti-pattern : la clé service_role côté client expose des droits non nécessaires.</div>
+    </div>
+    <div class="bug-section">
+      <div class="bug-section-label">Correction</div>
+      <div class="bug-desc">Utiliser le client anon avec une RLS appropriée sur la table <code>crm_settings</code>, ou mettre les paramètres en cache via <code>unstable_cache</code>.</div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+function toggle(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+function check(cbId, bugId) {
+  const cb = document.getElementById(cbId);
+  const bug = document.getElementById(bugId);
+  cb.classList.toggle('checked');
+  bug.classList.toggle('done');
+  // Sauvegarder en localStorage
+  const state = JSON.parse(localStorage.getItem('flybugs') || '{}');
+  state[cbId] = cb.classList.contains('checked');
+  localStorage.setItem('flybugs', JSON.stringify(state));
+}
+// Restaurer l'état au chargement
+window.addEventListener('DOMContentLoaded', () => {
+  const state = JSON.parse(localStorage.getItem('flybugs') || '{}');
+  Object.entries(state).forEach(([cbId, checked]) => {
+    if (checked) {
+      const bugId = cbId.replace('cb', 'b');
+      document.getElementById(cbId)?.classList.add('checked');
+      document.getElementById(bugId)?.classList.add('done');
+    }
+  });
+});
+</script>
+</body>
+</html>

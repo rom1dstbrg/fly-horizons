@@ -654,6 +654,7 @@ add(
     sujet: "Question sur les tarifs groupe",
     reponse:
       "Bonjour Sophie,\n\nMerci pour votre message. Pour un groupe de 4 personnes, nous proposons des vols privés à bord d'un ULM 2 places. Pour 4 passagers, nous organisons 2 rotations.\n\nLe tarif pour 2 vols de 30 min est de 280 € au total.\n\nN'hésitez pas à me contacter pour définir une date !",
+    threadUrl: "https://fly-horizons.com/contact/ticket/exemple",
   })
 );
 

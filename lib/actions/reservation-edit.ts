@@ -281,17 +281,22 @@ export async function sendRouteProposalToClient(
       weekday: "long", day: "numeric", month: "long", year: "numeric",
     });
 
+    const acompte = (resa.acompte as number | null) ?? null;
+    const taxesEscales = (resa.taxes_escales as number | null) ?? 0;
+    const totalAcompte = acompte !== null ? acompte + taxesEscales : null;
+
     await resend.emails.send({
       from: EMAIL_FROM,
       to: [client.email],
       replyTo: EMAIL_REPLY_TO,
-      subject: `Fly Horizons — Votre itinéraire personnalisé pour le ${dateStr}`,
+      subject: `Fly Horizons · Votre itinéraire personnalisé pour le ${dateStr}`,
       html: routeProposalEmail({
         prenom: client.prenom,
         dateStr,
         waypoints,
         adminComment,
         responseUrl,
+        totalAcompte,
       }),
     });
 
@@ -329,14 +334,20 @@ export async function respondToRouteProposal(
     if (!proposal) return { error: "Proposition introuvable ou lien expiré" };
     if (proposal.status !== "pending") return { error: "Cette proposition a déjà été traitée" };
 
-    await supabase
+    // Update atomique avec condition sur status=pending — empêche la double soumission en race condition
+    const { data: updated } = await supabase
       .from("route_proposals")
       .update({
         status,
         client_comment: clientComment ?? null,
         responded_at: new Date().toISOString(),
       })
-      .eq("token", token);
+      .eq("token", token)
+      .eq("status", "pending")
+      .select("id")
+      .maybeSingle();
+
+    if (!updated) return { error: "Cette proposition a déjà été traitée" };
 
     const resa = proposal.reservations as {
       id: string;
@@ -432,7 +443,7 @@ export async function respondToRouteProposal(
         from: EMAIL_FROM,
         to: [client.email],
         replyTo: EMAIL_REPLY_TO,
-        subject: `Fly Horizons — Finalisez votre réservation`,
+        subject: `Fly Horizons · Finalisez votre réservation`,
         html: paymentLinkEmail({
           prenom: client.prenom,
           dateStr,

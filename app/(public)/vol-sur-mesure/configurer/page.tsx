@@ -741,9 +741,9 @@ export default function VolSurMesurePage() {
 
           {totalAcompte > 0 && (
             <div className="pt-2.5 border-t border-border space-y-1.5">
-              {/* Provision brute */}
+              {/* Acompte brut */}
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Provision</span>
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Acompte estimé</span>
                 <span className={`font-black text-foreground ${(voucherDiscount > 0 || couponDiscount > 0) ? "text-sm line-through opacity-40" : "text-2xl"}`}>
                   {totalAcompte}&thinsp;€
                 </span>
@@ -1156,7 +1156,7 @@ export default function VolSurMesurePage() {
               <div className="shrink-0 px-5 py-5 bg-card border-t border-border">
                 {taxesEscalesTotal > 0 && acompte > 0 && (
                   <div className="flex items-center justify-between mb-3 text-xs text-muted-foreground">
-                    <span>Provision + taxes escales</span>
+                    <span>Acompte estimé + taxes escales</span>
                     <span className="font-bold text-foreground">{totalAcompte}&thinsp;€</span>
                   </div>
                 )}
@@ -1384,6 +1384,30 @@ export default function VolSurMesurePage() {
       {flowStep === "reserve" && (
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 py-10">
 
+          {/* ── Indicateur d'étapes ─────────────────────────────────── */}
+          <div className="flex items-center gap-0 mb-5 w-full max-w-xs">
+            <div className="flex items-center gap-1.5 shrink-0">
+              <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
+                <Check size={9} className="text-green-600" />
+              </div>
+              <span className="text-[11px] font-semibold text-muted-foreground/60 hidden sm:block">Itinéraire</span>
+            </div>
+            <div className="flex-1 h-px bg-border mx-3" />
+            <div className="flex items-center gap-1.5 shrink-0">
+              <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                <span className="text-[10px] font-black text-[#0b2238]">2</span>
+              </div>
+              <span className="text-[11px] font-bold text-foreground hidden sm:block">Réservation</span>
+            </div>
+            <div className="flex-1 h-px bg-border mx-3" />
+            <div className="flex items-center gap-1.5 shrink-0">
+              <div className="w-5 h-5 rounded-full bg-border flex items-center justify-center">
+                <span className="text-[10px] font-bold text-muted-foreground/50">3</span>
+              </div>
+              <span className="text-[11px] font-semibold text-muted-foreground/50 hidden sm:block">Confirmation</span>
+            </div>
+          </div>
+
           {/* ── Bande de navigation + récap de route ─────────────────── */}
           <div className="flex items-center gap-3 mb-6">
             <button type="button" onClick={() => setFlowStep("build")}
@@ -1562,7 +1586,7 @@ export default function VolSurMesurePage() {
               <div className="card-premium overflow-hidden">
                 <div className="px-6 pt-5 pb-4 border-b border-border">
                   <h2 className="text-[15px] font-black text-foreground leading-tight">Vos coordonnées</h2>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Nous vous contactons ici pour confirmer le vol</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{user ? "Vos informations sont pré-remplies" : "Un compte sera créé pour accéder à vos réservations"}</p>
                 </div>
                 <div className="p-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -1810,6 +1834,30 @@ export default function VolSurMesurePage() {
       {flowStep === "recap" && (
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 py-10">
 
+          {/* ── Indicateur d'étapes ─────────────────────────────────── */}
+          <div className="flex items-center gap-0 mb-5 w-full max-w-xs">
+            <div className="flex items-center gap-1.5 shrink-0">
+              <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
+                <Check size={9} className="text-green-600" />
+              </div>
+              <span className="text-[11px] font-semibold text-muted-foreground/60 hidden sm:block">Itinéraire</span>
+            </div>
+            <div className="flex-1 h-px bg-border mx-3" />
+            <div className="flex items-center gap-1.5 shrink-0">
+              <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
+                <Check size={9} className="text-green-600" />
+              </div>
+              <span className="text-[11px] font-semibold text-muted-foreground/60 hidden sm:block">Réservation</span>
+            </div>
+            <div className="flex-1 h-px bg-border mx-3" />
+            <div className="flex items-center gap-1.5 shrink-0">
+              <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                <span className="text-[10px] font-black text-[#0b2238]">3</span>
+              </div>
+              <span className="text-[11px] font-bold text-foreground hidden sm:block">Confirmation</span>
+            </div>
+          </div>
+
           {/* ── Bande de navigation — même structure que step 2 */}
           <div className="flex items-center gap-3 mb-6">
             <button type="button" onClick={() => setFlowStep("reserve")}
@@ -1912,7 +1960,7 @@ export default function VolSurMesurePage() {
                   </div>
                   {/* Ligne provision */}
                   <div className="flex justify-between items-baseline">
-                    <span className="text-muted-foreground">Provision <span className="text-[10px]">({acompteH} €/h)</span></span>
+                    <span className="text-muted-foreground">Acompte <span className="text-[10px]">({acompteH} €/h · payable après validation)</span></span>
                     <span className="font-semibold text-foreground shrink-0 ml-2">{acompte} €</span>
                   </div>
                   {/* Taxes */}
@@ -1938,7 +1986,7 @@ export default function VolSurMesurePage() {
                   {/* Total */}
                   <div className="flex justify-between items-baseline pt-2.5 border-t border-border">
                     <span className="font-black text-foreground">
-                      {totalAcompteFinal === 0 ? "Couvert par voucher" : "Provision estimée"}
+                      {totalAcompteFinal === 0 ? "Couvert par voucher" : "Acompte à payer"}
                     </span>
                     <span className="font-black text-foreground text-lg shrink-0 ml-2">
                       {totalAcompteFinal === 0 ? "0 €" : `${totalAcompteFinal} €`}
@@ -1948,9 +1996,9 @@ export default function VolSurMesurePage() {
 
                 {/* Explication provision */}
                 <div className="mx-5 mb-5 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-amber-800 leading-relaxed space-y-1">
-                  <p className="font-bold flex items-center gap-1.5"><Info size={11} className="shrink-0" />Pourquoi une provision ?</p>
-                  <p>La provision couvre le coût réel du vol, calculé <strong>après le vol</strong> selon la durée effectivement réalisée. Si elle dépasse le montant dû, la différence est remboursée.</p>
-                  <p>Elle est <strong>intégralement remboursée</strong> si le vol est annulé pour météo, ou si vous annulez plus de 48 h avant la date prévue.</p>
+                  <p className="font-bold flex items-center gap-1.5"><Info size={11} className="shrink-0" />Vous ne payez rien maintenant</p>
+                  <p>L&apos;acompte sera demandé <strong>après validation de votre itinéraire par Romain</strong> (sous 24 h). Il couvre le coût réel du vol selon la durée effectivement réalisée.</p>
+                  <p>Il est <strong>intégralement remboursé</strong> si le vol est annulé pour météo, ou si vous annulez plus de 48 h avant la date prévue.</p>
                 </div>
               </div>
 
