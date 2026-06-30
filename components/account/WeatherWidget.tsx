@@ -43,7 +43,7 @@ interface Weather {
   code: number;
 }
 
-export function WeatherWidget({ date }: { date: string }) {
+export function WeatherWidget({ date, bordered = true }: { date: string; bordered?: boolean }) {
   const [weather, setWeather] = useState<Weather | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -88,7 +88,7 @@ export function WeatherWidget({ date }: { date: string }) {
   const windBad = weather.wind_max > 25;
 
   return (
-    <div className="mt-3 pt-3 border-t border-border">
+    <div className={bordered ? "mt-3 pt-3 border-t border-border" : ""}>
       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
         Météo EBCI le jour du vol
       </p>

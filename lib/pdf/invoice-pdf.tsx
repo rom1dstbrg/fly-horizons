@@ -243,11 +243,11 @@ export async function generateInvoicePDFBuffer(data: InvoiceData, detailed: bool
   let logoDataUrl: string;
   try {
     const logoBuf = fs.default.readFileSync(
-      path.default.join(process.cwd(), "public", "logo-fly-horizons-navy.png")
+      path.default.join(process.cwd(), "public", "logo-white.png")
     );
     logoDataUrl = "data:image/png;base64," + logoBuf.toString("base64");
   } catch {
-    logoDataUrl = "https://fly-horizons.com/logo-fly-horizons-navy.png";
+    logoDataUrl = "https://fly-horizons.com/logo-white.png";
   }
 
   return renderToBuffer(

@@ -252,10 +252,10 @@ export async function generateVoucherPDFBuffer(params: VoucherPDFParams): Promis
   // Logo chargé depuis le système de fichiers local pour éviter une dépendance réseau
   let logoDataUrl: string;
   try {
-    const logoBuf = fs.default.readFileSync(path.default.join(process.cwd(), "public", "logo-fly-horizons-navy.png"));
+    const logoBuf = fs.default.readFileSync(path.default.join(process.cwd(), "public", "logo-white.png"));
     logoDataUrl = "data:image/png;base64," + logoBuf.toString("base64");
   } catch {
-    logoDataUrl = "https://fly-horizons.com/logo-fly-horizons-navy.png";
+    logoDataUrl = "https://fly-horizons.com/logo-white.png";
   }
 
   const qrDataUrl = await QRCode.toDataURL(reservationUrl, {

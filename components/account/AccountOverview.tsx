@@ -17,6 +17,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { updateProfile } from "@/lib/actions/auth";
+import { WeatherWidget } from "@/components/account/WeatherWidget";
 
 type Tab = "apercu" | "reservations" | "bons" | "adresses" | "newsletter" | "securite";
 
@@ -108,48 +109,55 @@ export function AccountOverview({ user, stats, nextFlight, onNavigate }: Props) 
         <p className="text-sm text-muted-foreground mt-0.5">Membre depuis {memberSince}</p>
       </div>
 
-      {/* Prochain vol */}
+      {/* Prochain vol + météo */}
       {nextFlight && nextFlightDate && (
-        <button
-          onClick={() => onNavigate?.("reservations")}
-          className="w-full text-left rounded-xl border border-navy/20 bg-navy text-white p-5 cursor-pointer hover:bg-navy/90 transition-colors"
-        >
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-2">
-                Prochain vol
-              </p>
-              <p className="text-base font-bold capitalize">{nextFlightDate}</p>
-              <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                {nextFlightHour && (
-                  <span className="flex items-center gap-1 text-xs text-white/70">
-                    <Clock size={11} />
-                    {nextFlightHour}
+        <div className="rounded-xl border border-navy/20 overflow-hidden">
+          {/* Header navy cliquable */}
+          <button
+            onClick={() => onNavigate?.("reservations")}
+            className="w-full text-left bg-navy text-white px-5 pt-5 pb-4 cursor-pointer hover:bg-navy/90 transition-colors"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-2">
+                  Prochain vol
+                </p>
+                <p className="text-base font-bold capitalize">{nextFlightDate}</p>
+                <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                  {nextFlightHour && (
+                    <span className="flex items-center gap-1 text-xs text-white/70">
+                      <Clock size={11} />
+                      {nextFlightHour}
+                    </span>
+                  )}
+                  <span className="text-xs text-white/70">
+                    {nextFlight.duree >= 60
+                      ? `${Math.floor(nextFlight.duree / 60)}h${nextFlight.duree % 60 > 0 ? String(nextFlight.duree % 60).padStart(2, "0") : ""}`
+                      : `${nextFlight.duree} min`} de vol
                   </span>
-                )}
-                <span className="text-xs text-white/70">
-                  {nextFlight.duree >= 60
-                    ? `${Math.floor(nextFlight.duree / 60)}h${nextFlight.duree % 60 > 0 ? String(nextFlight.duree % 60).padStart(2, "0") : ""}`
-                    : `${nextFlight.duree} min`} de vol
-                </span>
-                {nextFlight.type_resa === "perso" && (
-                  <span className="text-[10px] text-white/50 border border-white/20 rounded-full px-2 py-0.5">
-                    Sur mesure
-                  </span>
+                  {nextFlight.type_resa === "perso" && (
+                    <span className="text-[10px] text-white/50 border border-white/20 rounded-full px-2 py-0.5">
+                      Sur mesure
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="text-right shrink-0">
+                {daysUntilFlight !== null && daysUntilFlight <= 7 ? (
+                  <div className="bg-gold text-navy text-xs font-black px-3 py-1.5 rounded-lg">
+                    {daysUntilFlight === 0 ? "Aujourd'hui !" : daysUntilFlight === 1 ? "Demain !" : `J-${daysUntilFlight}`}
+                  </div>
+                ) : (
+                  <ChevronRight size={16} className="text-white/40 mt-1" />
                 )}
               </div>
             </div>
-            <div className="text-right shrink-0">
-              {daysUntilFlight !== null && daysUntilFlight <= 7 ? (
-                <div className="bg-gold text-navy text-xs font-black px-3 py-1.5 rounded-lg">
-                  {daysUntilFlight === 0 ? "Aujourd'hui !" : daysUntilFlight === 1 ? "Demain !" : `J-${daysUntilFlight}`}
-                </div>
-              ) : (
-                <ChevronRight size={16} className="text-white/40 mt-1" />
-              )}
-            </div>
+          </button>
+          {/* Météo section blanche collée */}
+          <div className="bg-card px-5 py-4 border-t border-navy/10">
+            <WeatherWidget date={nextFlight.date_vol} bordered={false} />
           </div>
-        </button>
+        </div>
       )}
 
       {/* Profile card */}
