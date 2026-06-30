@@ -76,10 +76,16 @@ export async function middleware(request: NextRequest) {
 
   // -------------------------------------------------
   // Redirige /login et /register si déjà connecté
+  // Honore le paramètre redirectTo pour les flows comme /checkout
   // -------------------------------------------------
   if ((pathname === "/login" || pathname === "/register") && user) {
     const url = request.nextUrl.clone();
-    url.pathname = "/account";
+    const redirectTo = request.nextUrl.searchParams.get("redirectTo");
+    url.pathname =
+      redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//")
+        ? redirectTo
+        : "/account";
+    url.searchParams.delete("redirectTo");
     return NextResponse.redirect(url);
   }
 

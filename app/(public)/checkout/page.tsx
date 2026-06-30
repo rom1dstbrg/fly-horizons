@@ -174,7 +174,8 @@ export default function CheckoutPage() {
   }
 
   async function handleCheckout() {
-    if (!isLoggedIn) {
+    if (isLoggedIn === null) return; // auth check still pending
+    if (isLoggedIn === false) {
       window.location.href = `/login?redirectTo=${encodeURIComponent("/checkout")}`;
       return;
     }
