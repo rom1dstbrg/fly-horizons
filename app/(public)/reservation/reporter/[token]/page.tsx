@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { parseRescheduleToken } from "@/lib/actions/reservations";
 import { RescheduleClient } from "./RescheduleClient";
 import { XCircle, AlertCircle } from "lucide-react";
 
@@ -10,11 +11,16 @@ export default async function ReporterPage({ params }: PageProps) {
   const { token } = await params;
   const supabase = createAdminClient();
 
-  const { data: resa } = await supabase
-    .from("reservations")
-    .select("id, date_vol, duree, statut, passagers, poids_total, clients(prenom, nom, email)")
-    .eq("reschedule_token", token)
-    .maybeSingle();
+  const parsed = parseRescheduleToken(token);
+  const isExpired = parsed && Date.now() > parsed.exp;
+
+  const { data: resa } = parsed && !isExpired
+    ? await supabase
+        .from("reservations")
+        .select("id, date_vol, duree, statut, passagers, poids_total, clients(prenom, nom, email)")
+        .eq("reschedule_token", parsed.t)
+        .maybeSingle()
+    : { data: null };
 
   if (!resa) {
     return (

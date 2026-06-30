@@ -93,14 +93,14 @@ export function BonsSection({ vouchers, orders }: { vouchers: VoucherCode[]; ord
         </div>
       </div>
 
-      {orders.length > 0 && (
+      {orders.filter((o) => o.total > 0).length > 0 && (
         <div>
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
             Mes commandes
           </p>
           <div className="card-premium overflow-hidden">
             <div className="divide-y divide-border">
-              {orders.map((order) => {
+              {orders.filter((o) => o.total > 0).map((order) => {
                 const dateStr = new Date(order.created_at).toLocaleDateString("fr-BE", {
                   day: "numeric", month: "long", year: "numeric",
                 });
@@ -119,24 +119,14 @@ export function BonsSection({ vouchers, orders }: { vouchers: VoucherCode[]; ord
                         {order.total.toLocaleString("fr-BE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                       </p>
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <a
-                        href={`/api/invoice/${order.id}`}
-                        download
-                        className="flex items-center justify-center gap-1.5 w-full py-2 px-4 rounded-lg border border-border bg-secondary text-foreground hover:border-foreground text-xs font-semibold transition-colors cursor-pointer"
-                      >
-                        <Download size={13} />
-                        Facture simple
-                      </a>
-                      <a
-                        href={`/api/invoice/${order.id}?type=detaillee`}
-                        download
-                        className="flex items-center justify-center gap-1.5 w-full py-2 px-4 rounded-lg border border-border bg-secondary text-foreground hover:border-foreground text-xs font-semibold transition-colors cursor-pointer"
-                      >
-                        <Download size={13} />
-                        Facture détaillée
-                      </a>
-                    </div>
+                    <a
+                      href={`/api/invoice/${order.id}?type=detaillee`}
+                      download
+                      className="flex items-center justify-center gap-1.5 w-full py-2 px-4 rounded-lg border border-border bg-secondary text-foreground hover:border-foreground text-xs font-semibold transition-colors cursor-pointer"
+                    >
+                      <Download size={13} />
+                      Facture
+                    </a>
                   </div>
                 );
               })}

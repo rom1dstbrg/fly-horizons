@@ -15,7 +15,7 @@ function makeRescheduleToken(uuid: string): string {
   return Buffer.from(JSON.stringify({ t: uuid, exp })).toString("base64url");
 }
 
-function parseRescheduleToken(token: string): { t: string; exp: number } | null {
+export function parseRescheduleToken(token: string): { t: string; exp: number } | null {
   try {
     const p = JSON.parse(Buffer.from(token, "base64url").toString());
     if (typeof p?.t !== "string" || typeof p?.exp !== "number") return null;
