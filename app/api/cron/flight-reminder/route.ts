@@ -28,7 +28,8 @@ export async function POST(request: NextRequest) {
   const { data: reservations, error } = await supabase
     .from("reservations")
     .select("id, date_vol, heure_vol, duree, type_resa, clients(prenom, email)")
-    .eq("statut", "heure_confirmee");
+    .eq("statut", "heure_confirmee")
+    .not("heure_vol", "is", null);
 
   if (error) {
     console.error("[cron/flight-reminder] Supabase error:", error);

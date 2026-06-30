@@ -23,9 +23,10 @@ interface Props {
   expiresAtStr: string;
   qrDataUrl: string;
   heroImageDataUrl: string;
+  logoDataUrl: string;
 }
 
-function VoucherPDF({ code, product_title, expiresAtStr, qrDataUrl, heroImageDataUrl }: Props) {
+function VoucherPDF({ code, product_title, expiresAtStr, qrDataUrl, heroImageDataUrl, logoDataUrl }: Props) {
   return (
     <Document>
       <Page size="A4" style={{ fontFamily: "Helvetica", backgroundColor: WHITE, flexDirection: "column" }}>
@@ -43,7 +44,7 @@ function VoucherPDF({ code, product_title, expiresAtStr, qrDataUrl, heroImageDat
           }} />
           {/* Logo */}
           <Image
-            src="https://fly-horizons.com/logo-fly-horizons-navy.png"
+            src={logoDataUrl}
             style={{ position: "absolute", top: 20, left: 28, height: 20, width: 88, objectFit: "contain" }}
           />
           {/* Hero text */}
@@ -248,6 +249,15 @@ export async function generateVoucherPDFBuffer(params: VoucherPDFParams): Promis
 
   const reservationUrl = `https://fly-horizons.com/reservation?duree=${params.duration_minutes}&code=${encodeURIComponent(params.code)}`;
 
+  // Logo chargé depuis le système de fichiers local pour éviter une dépendance réseau
+  let logoDataUrl: string;
+  try {
+    const logoBuf = fs.default.readFileSync(path.default.join(process.cwd(), "public", "logo-fly-horizons-navy.png"));
+    logoDataUrl = "data:image/png;base64," + logoBuf.toString("base64");
+  } catch {
+    logoDataUrl = "https://fly-horizons.com/logo-fly-horizons-navy.png";
+  }
+
   const qrDataUrl = await QRCode.toDataURL(reservationUrl, {
     width: 200,
     margin: 1,
@@ -276,6 +286,7 @@ export async function generateVoucherPDFBuffer(params: VoucherPDFParams): Promis
       expiresAtStr={expiresAtStr}
       qrDataUrl={qrDataUrl}
       heroImageDataUrl={heroImageDataUrl}
+      logoDataUrl={logoDataUrl}
     />
   );
 }

@@ -11,8 +11,11 @@ export interface CartItem {
   product_type?: "physical" | "voucher";
 }
 
+const CART_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 jours
+
 interface CartStore {
   items: CartItem[];
+  _savedAt: number | null;
   addItem: (item: CartItem) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
@@ -25,6 +28,7 @@ export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
       items: [],
+      _savedAt: null,
 
       addItem: (item) => {
         const existing = get().items.find((i) => i.id === item.id);
@@ -35,9 +39,10 @@ export const useCartStore = create<CartStore>()(
                 ? { ...i, quantity: i.quantity + item.quantity }
                 : i
             ),
+            _savedAt: Date.now(),
           });
         } else {
-          set({ items: [...get().items, item] });
+          set({ items: [...get().items, item], _savedAt: Date.now() });
         }
       },
 
@@ -57,7 +62,7 @@ export const useCartStore = create<CartStore>()(
         });
       },
 
-      clearCart: () => set({ items: [] }),
+      clearCart: () => set({ items: [], _savedAt: null }),
 
       totalItems: () =>
         get().items.reduce((sum, i) => sum + i.quantity, 0),
@@ -67,6 +72,13 @@ export const useCartStore = create<CartStore>()(
     }),
     {
       name: "fly-horizons-cart",
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+        if (state._savedAt != null && Date.now() - state._savedAt > CART_TTL_MS) {
+          state.items = [];
+          state._savedAt = null;
+        }
+      },
     }
   )
 );

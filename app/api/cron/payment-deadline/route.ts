@@ -29,9 +29,9 @@ export async function POST(request: NextRequest) {
   // ── Récupération des réservations en attente de paiement ─────────────────
   const { data: reservations, error } = await supabase
     .from("reservations")
-    .select("id, date_vol, heure_vol, duree, acompte, payment_token, voucher_code, clients(prenom, nom, email)")
+    .select("id, date_vol, heure_vol, duree, acompte, payment_token, voucher_code, coupon_code, clients(prenom, nom, email)")
     .eq("statut", "payment_pending")
-    .eq("type_resa", "standard")
+    .in("type_resa", ["standard", "perso"])
     .not("payment_token", "is", null);
 
   if (error) {
@@ -53,13 +53,18 @@ export async function POST(request: NextRequest) {
 
     // ── Annulation : vol dans moins de 48h ───────────────────────────────
     if (hoursUntil < 48) {
-      const { error: cancelErr } = await supabase
+      // .select("id").maybeSingle() permet de savoir si une ligne a réellement été mise à jour.
+      // Supabase ne renvoie pas d'erreur pour 0 lignes — seul `cancelledRow` null indique qu'on n'a
+      // rien touché (paiement reçu entre la lecture et ici).
+      const { data: cancelledRow, error: cancelErr } = await supabase
         .from("reservations")
         .update({ statut: "annulee", payment_token: null })
         .eq("id", resa.id)
-        .eq("statut", "payment_pending");
+        .eq("statut", "payment_pending")
+        .select("id")
+        .maybeSingle();
 
-      if (!cancelErr) {
+      if (!cancelErr && cancelledRow) {
         cancelled++;
         console.log(`[cron/payment-deadline] Annulée: ${resa.id} (vol dans ${hoursUntil.toFixed(1)}h)`);
 
@@ -70,6 +75,9 @@ export async function POST(request: NextRequest) {
             .eq("code", resa.voucher_code)
             .eq("status", "reserved");
         }
+
+        // Pas de release_coupon : l'incrément coupon n'a lieu qu'au webhook (après paiement).
+        // Si la réservation est annulée avant paiement, usage_count n'a jamais été incrémenté.
 
         // Email d'annulation au client
         const raw = resa.clients;
@@ -95,6 +103,7 @@ export async function POST(request: NextRequest) {
                 heure,
                 duree: resa.duree,
                 bookingUrl: `${siteUrl}/reservation`,
+                source: "auto",
               }),
             });
           } catch (e) {

@@ -53,20 +53,17 @@ export async function sendNewsletter(_prev: SendResult, formData: FormData): Pro
   if (!subscribers?.length) return { error: "Aucun abonné actif." };
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
-  let sent = 0;
-  let failed = 0;
 
-  for (const sub of subscribers) {
-    const unsubscribeUrl = `${siteUrl}/newsletter/unsubscribe?token=${sub.unsubscribe_token}`;
-    const { error } = await resend.emails.send({
-      from: EMAIL_FROM,
-      to: [sub.email],
-      subject,
-      html: newsletterCampaignEmail(subject, body, sub.prenom, unsubscribeUrl),
-    });
-    if (error) failed++;
-    else sent++;
-  }
+  const emailBatch = subscribers.map(sub => ({
+    from: EMAIL_FROM,
+    to: [sub.email],
+    subject,
+    html: newsletterCampaignEmail(subject, body, sub.prenom, `${siteUrl}/newsletter/unsubscribe?token=${sub.unsubscribe_token}`),
+  }));
+
+  const { data: batchData, error: batchError } = await resend.batch.send(emailBatch);
+  const sent = batchError ? 0 : (batchData?.data?.length ?? subscribers.length);
+  const failed = subscribers.length - sent;
 
   revalidatePath("/admin/newsletter");
   return { sent, failed };
@@ -97,19 +94,17 @@ export async function sendNewsletterBlocks(_prev: SendResult, formData: FormData
   if (!subscribers?.length) return { error: "Aucun abonné actif." };
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
-  let sent = 0, failed = 0;
 
-  for (const sub of subscribers) {
-    const unsubscribeUrl = `${siteUrl}/newsletter/unsubscribe?token=${sub.unsubscribe_token}`;
-    const { error } = await resend.emails.send({
-      from: EMAIL_FROM,
-      to: [sub.email],
-      subject,
-      html: newsletterFromBlocksEmail(subject, blocks, sub.prenom, unsubscribeUrl),
-    });
-    if (error) failed++;
-    else sent++;
-  }
+  const emailBatch = subscribers.map(sub => ({
+    from: EMAIL_FROM,
+    to: [sub.email],
+    subject,
+    html: newsletterFromBlocksEmail(subject, blocks, sub.prenom, `${siteUrl}/newsletter/unsubscribe?token=${sub.unsubscribe_token}`),
+  }));
+
+  const { data: batchData, error: batchError } = await resend.batch.send(emailBatch);
+  const sent = batchError ? 0 : (batchData?.data?.length ?? subscribers.length);
+  const failed = subscribers.length - sent;
 
   revalidatePath("/admin/newsletter");
   return { sent, failed };

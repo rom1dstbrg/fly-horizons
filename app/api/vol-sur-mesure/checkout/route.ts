@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
       : Math.round(acompteHeure);
     const discount     = voucherValue;
     const prixBillable = Math.max(0, prixEstime - discount);
-    const taxes        = Math.max(0, taxesEscales ? parseInt(taxesEscales) : 0);
+    const taxes        = Math.max(0, taxesEscales ? parseFloat(taxesEscales) : 0);
     const afterVoucher = Math.max(0, acompte + taxes - discount);
 
     // Appliquer le code promo s'il y en a un (sur le montant après voucher)
@@ -224,7 +224,7 @@ export async function POST(request: NextRequest) {
       nom,
       date,
       heure,
-      dureMin: effectiveDureMin,
+      dureeMin: effectiveDureMin,
       distKm: distKm ?? 0,
       reservationId: resa.id,
       styleVol: styleLabel,

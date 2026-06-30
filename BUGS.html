@@ -73,8 +73,8 @@
     <div class="stat imp"><div class="n">17</div><div class="l">Importants</div></div>
     <div class="stat min"><div class="n">10</div><div class="l">Mineurs</div></div>
   </div>
-  <div class="progress-bar"><div class="progress-fill" style="width: 12.9%"></div></div>
-  <div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:6px;">4 / 31 corrigés</div>
+  <div class="progress-bar"><div class="progress-fill" style="width: 100%"></div></div>
+  <div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:6px;">31 / 31 corrigés</div>
 </div>
 
 <div class="body">
@@ -197,10 +197,11 @@
 <!-- ══════════════════════════════════════════════════════ IMPORTANTS -->
 <div class="section-title">🟠 Importants</div>
 
-<div class="bug imp" id="b5">
+<div class="bug imp fixed" id="b5">
   <div class="bug-header" onclick="toggle('b5')">
-    <div class="checkbox" id="cb5" onclick="event.stopPropagation(); check('cb5','b5')"></div>
+    <div class="checkbox checked" id="cb5" onclick="event.stopPropagation(); check('cb5','b5')"></div>
     <div class="badge">Important</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">5</div>
     <div class="bug-title-block">
       <div class="bug-title">Webhook shop sans idempotence — doublons de vouchers et stocks négatifs</div>
@@ -224,10 +225,11 @@
   </div>
 </div>
 
-<div class="bug imp" id="b6">
+<div class="bug imp fixed" id="b6">
   <div class="bug-header" onclick="toggle('b6')">
-    <div class="checkbox" id="cb6" onclick="event.stopPropagation(); check('cb6','b6')"></div>
+    <div class="checkbox checked" id="cb6" onclick="event.stopPropagation(); check('cb6','b6')"></div>
     <div class="badge">Important</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">6</div>
     <div class="bug-title-block">
       <div class="bug-title">Cron annulation ne couvre pas les vols perso en payment_pending</div>
@@ -251,10 +253,11 @@
   </div>
 </div>
 
-<div class="bug imp" id="b7">
+<div class="bug imp fixed" id="b7">
   <div class="bug-header" onclick="toggle('b7')">
-    <div class="checkbox" id="cb7" onclick="event.stopPropagation(); check('cb7','b7')"></div>
+    <div class="checkbox checked" id="cb7" onclick="event.stopPropagation(); check('cb7','b7')"></div>
     <div class="badge">Important</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">7</div>
     <div class="bug-title-block">
       <div class="bug-title">Rate limiter inopérant en production serverless</div>
@@ -278,10 +281,11 @@
   </div>
 </div>
 
-<div class="bug imp" id="b8">
+<div class="bug imp fixed" id="b8">
   <div class="bug-header" onclick="toggle('b8')">
-    <div class="checkbox" id="cb8" onclick="event.stopPropagation(); check('cb8','b8')"></div>
+    <div class="checkbox checked" id="cb8" onclick="event.stopPropagation(); check('cb8','b8')"></div>
     <div class="badge">Important</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">8</div>
     <div class="bug-title-block">
       <div class="bug-title">VALID_STATUTS_PERSO n'inclut pas "payment_pending"</div>
@@ -305,10 +309,11 @@
   </div>
 </div>
 
-<div class="bug imp" id="b9">
+<div class="bug imp fixed" id="b9">
   <div class="bug-header" onclick="toggle('b9')">
-    <div class="checkbox" id="cb9" onclick="event.stopPropagation(); check('cb9','b9')"></div>
+    <div class="checkbox checked" id="cb9" onclick="event.stopPropagation(); check('cb9','b9')"></div>
     <div class="badge">Important</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">9</div>
     <div class="bug-title-block">
       <div class="bug-title">rescheduleReservation : action publique (protection = token seul)</div>
@@ -332,10 +337,11 @@
   </div>
 </div>
 
-<div class="bug imp" id="b10">
+<div class="bug imp fixed" id="b10">
   <div class="bug-header" onclick="toggle('b10')">
-    <div class="checkbox" id="cb10" onclick="event.stopPropagation(); check('cb10','b10')"></div>
+    <div class="checkbox checked" id="cb10" onclick="event.stopPropagation(); check('cb10','b10')"></div>
     <div class="badge">Important</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">10</div>
     <div class="bug-title-block">
       <div class="bug-title">Statut "date_confirmee" incorrect pour les vols standard après report</div>
@@ -359,10 +365,11 @@
   </div>
 </div>
 
-<div class="bug imp" id="b11">
+<div class="bug imp fixed" id="b11">
   <div class="bug-header" onclick="toggle('b11')">
-    <div class="checkbox" id="cb11" onclick="event.stopPropagation(); check('cb11','b11')"></div>
+    <div class="checkbox checked" id="cb11" onclick="event.stopPropagation(); check('cb11','b11')"></div>
     <div class="badge">Important</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">11</div>
     <div class="bug-title-block">
       <div class="bug-title">Calcul délai 48h incorrect dans generateClientRescheduleToken</div>
@@ -386,10 +393,11 @@
   </div>
 </div>
 
-<div class="bug imp" id="b12">
+<div class="bug imp fixed" id="b12">
   <div class="bug-header" onclick="toggle('b12')">
-    <div class="checkbox" id="cb12" onclick="event.stopPropagation(); check('cb12','b12')"></div>
+    <div class="checkbox checked" id="cb12" onclick="event.stopPropagation(); check('cb12','b12')"></div>
     <div class="badge">Important</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">12</div>
     <div class="bug-title-block">
       <div class="bug-title">sendPaymentLinkAdmin envoie l'email même si la mise à jour a échoué</div>
@@ -413,10 +421,11 @@
   </div>
 </div>
 
-<div class="bug imp" id="b13">
+<div class="bug imp fixed" id="b13">
   <div class="bug-header" onclick="toggle('b13')">
-    <div class="checkbox" id="cb13" onclick="event.stopPropagation(); check('cb13','b13')"></div>
+    <div class="checkbox checked" id="cb13" onclick="event.stopPropagation(); check('cb13','b13')"></div>
     <div class="badge">Important</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">13</div>
     <div class="bug-title-block">
       <div class="bug-title">Voucher "reserved" retourné comme valid: false</div>
@@ -440,10 +449,11 @@
   </div>
 </div>
 
-<div class="bug imp" id="b14">
+<div class="bug imp fixed" id="b14">
   <div class="bug-header" onclick="toggle('b14')">
-    <div class="checkbox" id="cb14" onclick="event.stopPropagation(); check('cb14','b14')"></div>
+    <div class="checkbox checked" id="cb14" onclick="event.stopPropagation(); check('cb14','b14')"></div>
     <div class="badge">Important</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">14</div>
     <div class="bug-title-block">
       <div class="bug-title">Rappel vol J-2 envoyé quand heure_vol est null</div>
@@ -467,10 +477,11 @@
   </div>
 </div>
 
-<div class="bug imp" id="b15">
+<div class="bug imp fixed" id="b15">
   <div class="bug-header" onclick="toggle('b15')">
-    <div class="checkbox" id="cb15" onclick="event.stopPropagation(); check('cb15','b15')"></div>
+    <div class="checkbox checked" id="cb15" onclick="event.stopPropagation(); check('cb15','b15')"></div>
     <div class="badge">Important</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">15</div>
     <div class="bug-title-block">
       <div class="bug-title">session.expired : voucher reste bloqué si metadata.type absent</div>
@@ -494,10 +505,11 @@
   </div>
 </div>
 
-<div class="bug imp" id="b16">
+<div class="bug imp fixed" id="b16">
   <div class="bug-header" onclick="toggle('b16')">
-    <div class="checkbox" id="cb16" onclick="event.stopPropagation(); check('cb16','b16')"></div>
+    <div class="checkbox checked" id="cb16" onclick="event.stopPropagation(); check('cb16','b16')"></div>
     <div class="badge">Important</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">16</div>
     <div class="bug-title-block">
       <div class="bug-title">Envoi newsletter séquentiel — timeout probable dès ~50 abonnés</div>
@@ -521,10 +533,11 @@
   </div>
 </div>
 
-<div class="bug imp" id="b17">
+<div class="bug imp fixed" id="b17">
   <div class="bug-header" onclick="toggle('b17')">
-    <div class="checkbox" id="cb17" onclick="event.stopPropagation(); check('cb17','b17')"></div>
+    <div class="checkbox checked" id="cb17" onclick="event.stopPropagation(); check('cb17','b17')"></div>
     <div class="badge">Important</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">17</div>
     <div class="bug-title-block">
       <div class="bug-title">Pas d'email de bienvenue lors d'opt-in newsletter depuis le checkout réservation</div>
@@ -548,10 +561,11 @@
   </div>
 </div>
 
-<div class="bug imp" id="b18">
+<div class="bug imp fixed" id="b18">
   <div class="bug-header" onclick="toggle('b18')">
-    <div class="checkbox" id="cb18" onclick="event.stopPropagation(); check('cb18','b18')"></div>
+    <div class="checkbox checked" id="cb18" onclick="event.stopPropagation(); check('cb18','b18')"></div>
     <div class="badge">Important</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">18</div>
     <div class="bug-title-block">
       <div class="bug-title">Colonne "reponse" dans contacts redondante avec contact_messages</div>
@@ -575,10 +589,11 @@
   </div>
 </div>
 
-<div class="bug imp" id="b19">
+<div class="bug imp fixed" id="b19">
   <div class="bug-header" onclick="toggle('b19')">
-    <div class="checkbox" id="cb19" onclick="event.stopPropagation(); check('cb19','b19')"></div>
+    <div class="checkbox checked" id="cb19" onclick="event.stopPropagation(); check('cb19','b19')"></div>
     <div class="badge">Important</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">19</div>
     <div class="bug-title-block">
       <div class="bug-title">addToCalendarBlock : vol dépassant minuit → heure de fin incorrecte</div>
@@ -602,10 +617,11 @@
   </div>
 </div>
 
-<div class="bug imp" id="b20">
+<div class="bug imp fixed" id="b20">
   <div class="bug-header" onclick="toggle('b20')">
-    <div class="checkbox" id="cb20" onclick="event.stopPropagation(); check('cb20','b20')"></div>
+    <div class="checkbox checked" id="cb20" onclick="event.stopPropagation(); check('cb20','b20')"></div>
     <div class="badge">Important</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">20</div>
     <div class="bug-title-block">
       <div class="bug-title">Montants affichés sans fmt() dans 3 emails (ex : "127.5 €" au lieu de "127,50 €")</div>
@@ -629,10 +645,11 @@
   </div>
 </div>
 
-<div class="bug imp" id="b21">
+<div class="bug imp fixed" id="b21">
   <div class="bug-header" onclick="toggle('b21')">
-    <div class="checkbox" id="cb21" onclick="event.stopPropagation(); check('cb21','b21')"></div>
+    <div class="checkbox checked" id="cb21" onclick="event.stopPropagation(); check('cb21','b21')"></div>
     <div class="badge">Important</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">21</div>
     <div class="bug-title-block">
       <div class="bug-title">updateReservationAllFields : mise à jour client sans vérification d'erreur</div>
@@ -659,10 +676,11 @@
 <!-- ══════════════════════════════════════════════════════ MINEURS -->
 <div class="section-title">🟡 Mineurs</div>
 
-<div class="bug min" id="b22">
+<div class="bug min fixed" id="b22">
   <div class="bug-header" onclick="toggle('b22')">
-    <div class="checkbox" id="cb22" onclick="event.stopPropagation(); check('cb22','b22')"></div>
+    <div class="checkbox checked" id="cb22" onclick="event.stopPropagation(); check('cb22','b22')"></div>
     <div class="badge">Mineur</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">22</div>
     <div class="bug-title-block">
       <div class="bug-title">Caractère "3" parasite à la fin de server.ts</div>
@@ -682,10 +700,11 @@
   </div>
 </div>
 
-<div class="bug min" id="b23">
+<div class="bug min fixed" id="b23">
   <div class="bug-header" onclick="toggle('b23')">
-    <div class="checkbox" id="cb23" onclick="event.stopPropagation(); check('cb23','b23')"></div>
+    <div class="checkbox checked" id="cb23" onclick="event.stopPropagation(); check('cb23','b23')"></div>
     <div class="badge">Mineur</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">23</div>
     <div class="bug-title-block">
       <div class="bug-title">Double revalidatePath dans 6 fonctions</div>
@@ -705,10 +724,11 @@
   </div>
 </div>
 
-<div class="bug min" id="b24">
+<div class="bug min fixed" id="b24">
   <div class="bug-header" onclick="toggle('b24')">
-    <div class="checkbox" id="cb24" onclick="event.stopPropagation(); check('cb24','b24')"></div>
+    <div class="checkbox checked" id="cb24" onclick="event.stopPropagation(); check('cb24','b24')"></div>
     <div class="badge">Mineur</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">24</div>
     <div class="bug-title-block">
       <div class="bug-title">taxesEscales parsé avec parseInt — centimes perdus si valeur décimale</div>
@@ -728,10 +748,11 @@
   </div>
 </div>
 
-<div class="bug min" id="b25">
+<div class="bug min fixed" id="b25">
   <div class="bug-header" onclick="toggle('b25')">
-    <div class="checkbox" id="cb25" onclick="event.stopPropagation(); check('cb25','b25')"></div>
+    <div class="checkbox checked" id="cb25" onclick="event.stopPropagation(); check('cb25','b25')"></div>
     <div class="badge">Mineur</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">25</div>
     <div class="bug-title-block">
       <div class="bug-title">Voucher "expired" peut écraser un "reserved" sans condition</div>
@@ -751,16 +772,16 @@
   </div>
 </div>
 
-<div class="bug min" id="b26">
+<div class="bug min fixed" id="b26">
   <div class="bug-header" onclick="toggle('b26')">
-    <div class="checkbox" id="cb26" onclick="event.stopPropagation(); check('cb26','b26')"></div>
+    <div class="checkbox checked" id="cb26" onclick="event.stopPropagation(); check('cb26','b26')"></div>
     <div class="badge">Mineur</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">26</div>
     <div class="bug-title-block">
       <div class="bug-title">Calcul J-2 basé sur l'heure UTC serveur au lieu de Brussels</div>
       <div class="bug-file">app/api/reservation/submit/route.ts</div>
     </div>
-    <div class="chevron">▼</v>
     <div class="chevron">▼</div>
   </div>
   <div class="bug-body">
@@ -775,10 +796,11 @@
   </div>
 </div>
 
-<div class="bug min" id="b27">
+<div class="bug min fixed" id="b27">
   <div class="bug-header" onclick="toggle('b27')">
-    <div class="checkbox" id="cb27" onclick="event.stopPropagation(); check('cb27','b27')"></div>
+    <div class="checkbox checked" id="cb27" onclick="event.stopPropagation(); check('cb27','b27')"></div>
     <div class="badge">Mineur</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">27</div>
     <div class="bug-title-block">
       <div class="bug-title">source non passé à reservationAutoAnnuleeEmail dans le cron</div>
@@ -798,10 +820,11 @@
   </div>
 </div>
 
-<div class="bug min" id="b28">
+<div class="bug min fixed" id="b28">
   <div class="bug-header" onclick="toggle('b28')">
-    <div class="checkbox" id="cb28" onclick="event.stopPropagation(); check('cb28','b28')"></div>
+    <div class="checkbox checked" id="cb28" onclick="event.stopPropagation(); check('cb28','b28')"></div>
     <div class="badge">Mineur</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">28</div>
     <div class="bug-title-block">
       <div class="bug-title">Typo "dureMin" dans VolSurMesureQuoteEmailProps</div>
@@ -821,10 +844,11 @@
   </div>
 </div>
 
-<div class="bug min" id="b29">
+<div class="bug min fixed" id="b29">
   <div class="bug-header" onclick="toggle('b29')">
-    <div class="checkbox" id="cb29" onclick="event.stopPropagation(); check('cb29','b29')"></div>
+    <div class="checkbox checked" id="cb29" onclick="event.stopPropagation(); check('cb29','b29')"></div>
     <div class="badge">Mineur</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">29</div>
     <div class="bug-title-block">
       <div class="bug-title">Logo PDF chargé depuis URL externe sans fallback</div>
@@ -844,10 +868,11 @@
   </div>
 </div>
 
-<div class="bug min" id="b30">
+<div class="bug min fixed" id="b30">
   <div class="bug-header" onclick="toggle('b30')">
-    <div class="checkbox" id="cb30" onclick="event.stopPropagation(); check('cb30','b30')"></div>
+    <div class="checkbox checked" id="cb30" onclick="event.stopPropagation(); check('cb30','b30')"></div>
     <div class="badge">Mineur</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">30</div>
     <div class="bug-title-block">
       <div class="bug-title">Panier persisté en localStorage sans expiration</div>
@@ -867,10 +892,11 @@
   </div>
 </div>
 
-<div class="bug min" id="b31">
+<div class="bug min fixed" id="b31">
   <div class="bug-header" onclick="toggle('b31')">
-    <div class="checkbox" id="cb31" onclick="event.stopPropagation(); check('cb31','b31')"></div>
+    <div class="checkbox checked" id="cb31" onclick="event.stopPropagation(); check('cb31','b31')"></div>
     <div class="badge">Mineur</div>
+    <div class="fixed-badge">Corrigé ✓</div>
     <div class="bug-num">31</div>
     <div class="bug-title-block">
       <div class="bug-title">Route site-settings publique utilisant service_role_key</div>

@@ -43,15 +43,70 @@ export async function POST(request: NextRequest) {
       const { reservationId, voucherId, voucherCode, couponCode, paymentToken } = session.metadata;
       if (reservationId) {
         const montantPayePerso = session.amount_total ? session.amount_total / 100 : 0;
-        await adminSupabase.from("reservations")
+        const { data: persoUpdated } = await adminSupabase.from("reservations")
           .update({ statut: "acompte_recu", payment_token: null, paye: montantPayePerso, payment_status: "paid" })
           .eq("id", reservationId)
-          .in("statut", ["en_attente", "payment_pending"]); // Couvre les deux flux (public + admin)
+          .in("statut", ["en_attente", "payment_pending"]) // Couvre les deux flux (public + admin)
+          .select("id")
+          .maybeSingle();
+
+        if (!persoUpdated) {
+          // 0 lignes mises à jour : déjà traité (RC-03) ou cron T-48h a annulé avant nous (RC-02)
+          const { data: cur } = await adminSupabase.from("reservations").select("statut, payment_status").eq("id", reservationId).maybeSingle();
+          if (cur?.payment_status === "paid") return NextResponse.json({ received: true }); // RC-03: idempotent
+          if (cur?.statut === "annulee") {
+            // RC-02: force-restaurer + alerte admin
+            await adminSupabase.from("reservations")
+              .update({ statut: "acompte_recu", payment_token: null, paye: montantPayePerso, payment_status: "paid" })
+              .eq("id", reservationId);
+            await resend.emails.send({
+              from: EMAIL_FROM, to: [EMAIL_REPLY_TO],
+              subject: "[URGENT] Paiement reçu sur réservation annulée — restaurée",
+              html: `<p>La réservation <strong>${reservationId}</strong> avait été annulée par le cron T-48h mais un paiement Stripe vient d'être reçu. Elle a été automatiquement restaurée au statut <em>acompte_recu</em>. À vérifier manuellement.</p>`,
+            });
+          } else {
+            return NextResponse.json({ received: true }); // état inattendu
+          }
+        }
+
         if (voucherId) {
           await adminSupabase.from("voucher_codes").update({ status: "used", used_at: new Date().toISOString() }).eq("id", voucherId);
         }
         if (couponCode) {
-          await adminSupabase.rpc("increment_coupon_usage", { coupon_code: couponCode });
+          const { data: incremented } = await adminSupabase.rpc("increment_coupon_usage", { coupon_code: couponCode });
+          if (incremented === 0) {
+            const event = {
+              type: "COUPON_SATURATED",
+              reservationId,
+              couponCode,
+              checkoutSessionId: session.id,
+              paymentIntentId: session.payment_intent as string ?? null,
+              customerEmail: session.customer_details?.email ?? null,
+              amountPaidEur: montantPayePerso,
+              reservationType: "perso",
+              timestamp: new Date().toISOString(),
+            };
+            console.error("[webhook/coupon-saturated]", JSON.stringify(event));
+            await resend.emails.send({
+              from: EMAIL_FROM, to: [EMAIL_REPLY_TO],
+              subject: "[ACTION REQUISE] Coupon utilisé deux fois en simultané",
+              html: `
+                <h2>Coupon saturé — double usage concurrent</h2>
+                <p>Le coupon <strong>${couponCode}</strong> a atteint sa limite d'utilisation lors d'un paiement simultané. Le paiement est valide et la réservation est active, mais <code>usage_count</code> n'a pas pu être incrémenté.</p>
+                <table style="border-collapse:collapse;width:100%">
+                  <tr><td style="padding:4px 8px;font-weight:bold">Réservation</td><td style="padding:4px 8px">${reservationId}</td></tr>
+                  <tr><td style="padding:4px 8px;font-weight:bold">Coupon</td><td style="padding:4px 8px">${couponCode}</td></tr>
+                  <tr><td style="padding:4px 8px;font-weight:bold">Session Stripe</td><td style="padding:4px 8px">${session.id}</td></tr>
+                  <tr><td style="padding:4px 8px;font-weight:bold">Payment Intent</td><td style="padding:4px 8px">${session.payment_intent ?? "—"}</td></tr>
+                  <tr><td style="padding:4px 8px;font-weight:bold">Email client</td><td style="padding:4px 8px">${session.customer_details?.email ?? "—"}</td></tr>
+                  <tr><td style="padding:4px 8px;font-weight:bold">Montant payé</td><td style="padding:4px 8px">${montantPayePerso} €</td></tr>
+                  <tr><td style="padding:4px 8px;font-weight:bold">Type</td><td style="padding:4px 8px">Vol sur mesure</td></tr>
+                  <tr><td style="padding:4px 8px;font-weight:bold">Horodatage</td><td style="padding:4px 8px">${event.timestamp}</td></tr>
+                </table>
+                <p style="margin-top:16px">Action suggérée : vérifier si deux réservations différentes ont utilisé ce coupon et corriger <code>usage_count</code> manuellement si nécessaire.</p>
+              `,
+            });
+          }
         }
         const { data: resa } = await adminSupabase.from("reservations").select("*, clients(*)").eq("id", reservationId).single();
         if (resa?.clients) {
@@ -88,11 +143,36 @@ export async function POST(request: NextRequest) {
       const { reservationId, voucherId, voucherCode, couponCode } = session.metadata;
       if (reservationId) {
         const montantPayeStd = session.amount_total ? session.amount_total / 100 : 0;
-        await adminSupabase
+        const { data: stdUpdated } = await adminSupabase
           .from("reservations")
           .update({ statut: "en_attente", payment_token: null, paye: montantPayeStd, payment_status: "paid" })
           .eq("id", reservationId)
-          .eq("statut", "payment_pending");
+          .eq("statut", "payment_pending")
+          .select("id")
+          .maybeSingle();
+
+        if (!stdUpdated) {
+          // 0 lignes mises à jour : déjà traité (RC-03) ou cron T-48h a annulé avant nous (RC-02)
+          const { data: cur } = await adminSupabase.from("reservations").select("statut, payment_status").eq("id", reservationId).maybeSingle();
+          if (cur?.payment_status === "paid") return NextResponse.json({ received: true }); // RC-03: idempotent
+          if (cur?.statut === "annulee") {
+            // RC-02: force-restaurer + alerte admin
+            await adminSupabase.from("reservations")
+              .update({ statut: "en_attente", payment_token: null, paye: montantPayeStd, payment_status: "paid" })
+              .eq("id", reservationId);
+            // Le cron avait libéré le coupon (release_coupon) — le re-incrémenter
+            if (couponCode) {
+              await adminSupabase.rpc("increment_coupon_usage", { coupon_code: couponCode });
+            }
+            await resend.emails.send({
+              from: EMAIL_FROM, to: [EMAIL_REPLY_TO],
+              subject: "[URGENT] Paiement reçu sur réservation annulée — restaurée",
+              html: `<p>La réservation <strong>${reservationId}</strong> avait été annulée par le cron T-48h mais un paiement Stripe vient d'être reçu. Elle a été automatiquement restaurée au statut <em>en_attente</em>. À vérifier manuellement.</p>`,
+            });
+          } else {
+            return NextResponse.json({ received: true }); // état inattendu
+          }
+        }
 
         if (voucherId) {
           await adminSupabase
@@ -101,8 +181,45 @@ export async function POST(request: NextRequest) {
             .eq("id", voucherId);
         }
 
+        // Incrémenter le coupon maintenant que le paiement est confirmé.
+        // Conditionnel (WHERE usage_count < max_uses) : plafonne à max_uses même en cas de race
+        // entre deux webhooks concurrents. L'incrément différé (ici, pas au checkout) garantit
+        // qu'aucun crash côté application ne crée d'incrément orphelin sans réservation.
         if (couponCode) {
-          await adminSupabase.rpc("increment_coupon_usage", { coupon_code: couponCode });
+          const { data: incremented } = await adminSupabase.rpc("increment_coupon_usage", { coupon_code: couponCode });
+          if (incremented === 0) {
+            const event = {
+              type: "COUPON_SATURATED",
+              reservationId,
+              couponCode,
+              checkoutSessionId: session.id,
+              paymentIntentId: session.payment_intent as string ?? null,
+              customerEmail: session.customer_details?.email ?? null,
+              amountPaidEur: montantPayeStd,
+              reservationType: "standard",
+              timestamp: new Date().toISOString(),
+            };
+            console.error("[webhook/coupon-saturated]", JSON.stringify(event));
+            await resend.emails.send({
+              from: EMAIL_FROM, to: [EMAIL_REPLY_TO],
+              subject: "[ACTION REQUISE] Coupon utilisé deux fois en simultané",
+              html: `
+                <h2>Coupon saturé — double usage concurrent</h2>
+                <p>Le coupon <strong>${couponCode}</strong> a atteint sa limite d'utilisation lors d'un paiement simultané. Le paiement est valide et la réservation est active, mais <code>usage_count</code> n'a pas pu être incrémenté.</p>
+                <table style="border-collapse:collapse;width:100%">
+                  <tr><td style="padding:4px 8px;font-weight:bold">Réservation</td><td style="padding:4px 8px">${reservationId}</td></tr>
+                  <tr><td style="padding:4px 8px;font-weight:bold">Coupon</td><td style="padding:4px 8px">${couponCode}</td></tr>
+                  <tr><td style="padding:4px 8px;font-weight:bold">Session Stripe</td><td style="padding:4px 8px">${session.id}</td></tr>
+                  <tr><td style="padding:4px 8px;font-weight:bold">Payment Intent</td><td style="padding:4px 8px">${session.payment_intent ?? "—"}</td></tr>
+                  <tr><td style="padding:4px 8px;font-weight:bold">Email client</td><td style="padding:4px 8px">${session.customer_details?.email ?? "—"}</td></tr>
+                  <tr><td style="padding:4px 8px;font-weight:bold">Montant payé</td><td style="padding:4px 8px">${montantPayeStd} €</td></tr>
+                  <tr><td style="padding:4px 8px;font-weight:bold">Type</td><td style="padding:4px 8px">Standard</td></tr>
+                  <tr><td style="padding:4px 8px;font-weight:bold">Horodatage</td><td style="padding:4px 8px">${event.timestamp}</td></tr>
+                </table>
+                <p style="margin-top:16px">Action suggérée : vérifier si deux réservations différentes ont utilisé ce coupon et corriger <code>usage_count</code> manuellement si nécessaire.</p>
+              `,
+            });
+          }
         }
 
         // Récupérer la réservation + client pour l'email
@@ -164,6 +281,11 @@ export async function POST(request: NextRequest) {
 
     if (!order) {
       return NextResponse.json({ error: "Commande introuvable" }, { status: 404 });
+    }
+
+    // Idempotence : si la commande est déjà payée, ignorer le webhook
+    if (order.status === "paid") {
+      return NextResponse.json({ received: true });
     }
 
     // Récupère la session fraîche — shipping_details est dans collected_information (API 2026-04-22)
@@ -316,14 +438,13 @@ export async function POST(request: NextRequest) {
 
   if (event.type === "checkout.session.expired") {
     const session = event.data.object as Stripe.Checkout.Session;
-    const { orderId, voucherId, reservationId, type, paymentToken } = session.metadata ?? {};
+    const { orderId, voucherId, reservationId, type, paymentToken, couponCode } = session.metadata ?? {};
 
     // Release any voucher that was atomically reserved for this session.
-    // Exceptions où le voucher doit rester "reserved" :
-    // - réservations perso : voucher réservé dès la création, pas à la session Stripe
-    // - paiement différé (paymentToken présent) : le client peut recliquer son lien ; la
-    //   réservation reste active et le cron restituera le voucher si elle est annulée
-    if (voucherId && type !== "reservation_perso" && !paymentToken) {
+    // Exception : réservations perso — le voucher est réservé dès la création de la
+    // réservation (pas à la session Stripe), donc on ne le libère pas ici.
+    // Pour tous les autres cas (shop, standard, type absent), on libère toujours.
+    if (voucherId && type !== "reservation_perso") {
       await adminSupabase
         .from("voucher_codes")
         .update({ status: "unused" })
@@ -354,6 +475,9 @@ export async function POST(request: NextRequest) {
         .eq("id", reservationId)
         .eq("statut", "payment_pending");
     }
+
+    // Pas de release_coupon ici : l'incrément coupon n'a jamais lieu avant le paiement Stripe.
+    // Si la session expire sans paiement, usage_count n'a jamais été touché.
   }
 
   return NextResponse.json({ received: true });

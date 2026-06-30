@@ -39,7 +39,8 @@ export async function GET(request: NextRequest) {
     await adminSupabase
       .from("voucher_codes")
       .update({ status: "expired" })
-      .eq("id", voucher.id);
+      .eq("id", voucher.id)
+      .eq("status", "unused");
     return NextResponse.json({ valid: false, status: "expired" });
   }
 
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
     : (productsJoin?.price ?? 0);
 
   return NextResponse.json({
-    valid: voucher.status === "unused",
+    valid: ["unused", "reserved"].includes(voucher.status),
     id: voucher.id,
     code: voucher.code,
     duration_minutes: voucher.duration_minutes,

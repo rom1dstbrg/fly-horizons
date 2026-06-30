@@ -132,7 +132,8 @@ export async function updateReservationAllFields(
     }
 
     if (Object.keys(clientUpdates).length > 0 && current.client_id) {
-      await supabase.from("clients").update(clientUpdates).eq("id", current.client_id);
+      const { error: clientErr } = await supabase.from("clients").update(clientUpdates).eq("id", current.client_id);
+      if (clientErr) return { error: "Erreur mise à jour client" };
 
       for (const [field, newValue] of Object.entries(clientUpdates)) {
         const oldValue = currentClient?.[field];

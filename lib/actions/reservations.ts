@@ -6,6 +6,23 @@ import { createClient } from "@/lib/supabase/server";
 import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationPaymentInvitationEmail, reservationConfirmationFreeEmail, postVolEmail, routeItineraireEmail, customEmail, rescheduleInviteEmail, rescheduleConfirmationEmail, reservationAutoAnnuleeEmail } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 
+// ── Reschedule token : UUID stocké en DB, URL = base64url({t,exp}) ──────────
+// L'expiry est encodée dans le token lui-même — pas de colonne DB supplémentaire.
+const RESCHEDULE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 jours
+
+function makeRescheduleToken(uuid: string): string {
+  const exp = Date.now() + RESCHEDULE_TTL_MS;
+  return Buffer.from(JSON.stringify({ t: uuid, exp })).toString("base64url");
+}
+
+function parseRescheduleToken(token: string): { t: string; exp: number } | null {
+  try {
+    const p = JSON.parse(Buffer.from(token, "base64url").toString());
+    if (typeof p?.t !== "string" || typeof p?.exp !== "number") return null;
+    return p;
+  } catch { return null; }
+}
+
 async function checkAdmin() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -15,7 +32,7 @@ async function checkAdmin() {
 }
 
 const VALID_STATUTS_STD = ["en_attente", "acompte_recu", "heure_confirmee", "vol_effectue", "annulee", "payment_pending"] as const;
-const VALID_STATUTS_PERSO = ["en_attente", "acompte_recu", "date_confirmee", "heure_confirmee", "solde", "vol_effectue", "annulee"] as const;
+const VALID_STATUTS_PERSO = ["en_attente", "acompte_recu", "date_confirmee", "heure_confirmee", "solde", "vol_effectue", "annulee", "payment_pending"] as const;
 
 export async function updateStatutReservation(id: string, statut: string) {
   try {
@@ -458,7 +475,6 @@ export async function createAdminReservation(data: {
     }
 
     revalidatePath("/admin/vols");
-    revalidatePath("/admin/vols");
     revalidatePath("/admin/clients");
     return { success: true, reservationId: resa.id };
   } catch (e) {
@@ -727,9 +743,9 @@ export async function sendCustomEmail(id: string, subject: string, body: string,
       const rawUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
       const siteUrl = rawUrl.startsWith("http://localhost") || rawUrl.startsWith("http://127")
         ? rawUrl : "https://fly-horizons.com";
-      const token = crypto.randomUUID();
-      await supabase.from("reservations").update({ reschedule_token: token }).eq("id", id);
-      rescheduleUrl = `${siteUrl}/reservation/reporter/${token}`;
+      const uuid = crypto.randomUUID();
+      await supabase.from("reservations").update({ reschedule_token: uuid }).eq("id", id);
+      rescheduleUrl = `${siteUrl}/reservation/reporter/${makeRescheduleToken(uuid)}`;
     }
 
     const { error: emailError } = await resend.emails.send({
@@ -810,7 +826,8 @@ export async function sendPaymentLinkAdmin(id: string) {
       await supabase.from("reservations").update({ payment_token: paymentToken }).eq("id", id);
     }
 
-    await supabase.from("reservations").update({ statut: "payment_pending" }).eq("id", id);
+    const { error: statusErr } = await supabase.from("reservations").update({ statut: "payment_pending" }).eq("id", id);
+    if (statusErr) return { error: "Erreur mise à jour statut" };
 
     const rawUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
     const siteUrl = rawUrl.startsWith("http://localhost") || rawUrl.startsWith("http://127")
@@ -955,7 +972,6 @@ export async function resendRoute(id: string) {
     });
 
     revalidatePath("/admin/vols");
-    revalidatePath("/admin/vols");
     return { success: true };
   } catch {
     return { error: "Erreur serveur" };
@@ -987,8 +1003,8 @@ export async function sendRescheduleInvite(id: string) {
     const siteUrl = rawUrl.startsWith("http://localhost") || rawUrl.startsWith("http://127")
       ? rawUrl : "https://fly-horizons.com";
 
-    const token = crypto.randomUUID();
-    await supabase.from("reservations").update({ reschedule_token: token }).eq("id", id);
+    const uuid = crypto.randomUUID();
+    await supabase.from("reservations").update({ reschedule_token: uuid }).eq("id", id);
 
     const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
       weekday: "long", day: "numeric", month: "long", year: "numeric",
@@ -1003,11 +1019,10 @@ export async function sendRescheduleInvite(id: string) {
         prenom: client.prenom,
         dateStr,
         duree: resa.duree,
-        rescheduleUrl: `${siteUrl}/reservation/reporter/${token}`,
+        rescheduleUrl: `${siteUrl}/reservation/reporter/${makeRescheduleToken(uuid)}`,
       }),
     });
 
-    revalidatePath("/admin/vols");
     revalidatePath("/admin/vols");
     return { success: true };
   } catch (e) {
@@ -1022,10 +1037,14 @@ export async function rescheduleReservation(token: string, newDate: string, newH
   try {
     const supabase = createAdminClient();
 
+    const parsed = parseRescheduleToken(token);
+    if (!parsed) return { error: "Lien invalide ou expiré" };
+    if (Date.now() > parsed.exp) return { error: "Ce lien a expiré (valable 30 jours)" };
+
     const { data: resa } = await supabase
       .from("reservations")
       .select("*, clients(*)")
-      .eq("reschedule_token", token)
+      .eq("reschedule_token", parsed.t)
       .single();
 
     if (!resa) return { error: "Lien invalide ou expiré" };
@@ -1081,7 +1100,7 @@ export async function rescheduleReservation(token: string, newDate: string, newH
 
     const newStatut = resa.type_resa === "perso"
       ? (["acompte_recu", "solde", "vol_effectue"].includes(resa.statut) ? "acompte_recu" : "en_attente")
-      : "date_confirmee";
+      : "en_attente";
 
     await supabase.from("reservations").update({
       date_vol: newDate,
@@ -1118,7 +1137,6 @@ export async function rescheduleReservation(token: string, newDate: string, newH
     });
 
     revalidatePath("/admin/vols");
-    revalidatePath("/admin/vols");
     revalidatePath("/account");
     return { success: true, newDateStr: newDateTimeStr };
   } catch (e) {
@@ -1146,7 +1164,7 @@ export async function generateClientRescheduleToken(reservationId: string) {
 
     const { data: resa } = await adminSupa
       .from("reservations")
-      .select("id, date_vol, statut")
+      .select("id, date_vol, heure_vol, statut")
       .eq("id", reservationId)
       .eq("client_id", client.id)
       .single();
@@ -1156,16 +1174,16 @@ export async function generateClientRescheduleToken(reservationId: string) {
       return { error: "Ce vol ne peut pas être reporté" };
     }
 
-    // Règle 48h pour le client
-    const now = new Date();
-    const flightDate = new Date(resa.date_vol + "T23:59:59Z");
-    const diffH = (flightDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+    // Règle 48h pour le client — utilise l'heure réelle du vol en heure Brussels
+    const { brusselsTimestamp } = await import("@/lib/utils");
+    const flightMs = brusselsTimestamp(resa.date_vol, resa.heure_vol);
+    const diffH = (flightMs - Date.now()) / (1000 * 60 * 60);
     if (diffH < 48) return { error: "Le délai de 48 h est dépassé" };
 
-    const token = crypto.randomUUID();
-    await adminSupa.from("reservations").update({ reschedule_token: token }).eq("id", reservationId);
+    const uuid = crypto.randomUUID();
+    await adminSupa.from("reservations").update({ reschedule_token: uuid }).eq("id", reservationId);
 
-    return { success: true, token };
+    return { success: true, token: makeRescheduleToken(uuid) };
   } catch (e) {
     console.error("generateClientRescheduleToken error:", e);
     return { error: "Erreur serveur" };

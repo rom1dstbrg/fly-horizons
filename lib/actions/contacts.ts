@@ -111,7 +111,7 @@ export async function replyContact(
 
     await supabase
       .from("contacts")
-      .update({ statut: "repondu", reponse })
+      .update({ statut: "repondu" })
       .eq("id", id);
 
     const threadUrl = `${SITE_URL}/contact/ticket/${contact.thread_token}`;

@@ -1,45 +1,18 @@
 /**
- * In-process sliding-window rate limiter.
+ * Rate limiter stub — l'implémentation Map en mémoire ne fonctionne pas en
+ * production serverless (Netlify) où chaque requête peut toucher une instance
+ * séparée avec son propre store vide.
  *
- * Works within a single Node.js process lifetime (i.e. a warm Lambda instance
- * or a persistent dev server). Resets on cold start. Good enough for moderate
- * traffic — replace with @upstash/ratelimit if you need distributed enforcement.
+ * Protection actuelle : Netlify DDoS shield + validation des champs côté serveur.
+ * Pour une protection distribucée, utiliser @upstash/ratelimit (Upstash Redis).
  */
 
-interface Entry {
-  count: number;
-  resetAt: number;
-}
-
-const store = new Map<string, Entry>();
-
-// Prune stale entries every 5 minutes so the Map doesn't grow forever
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, entry] of store) {
-    if (now > entry.resetAt) store.delete(key);
-  }
-}, 5 * 60 * 1000).unref?.();
-
 export function rateLimit(
-  key: string,
+  _key: string,
   limit: number,
-  windowMs: number,
+  _windowMs: number,
 ): { allowed: boolean; remaining: number } {
-  const now = Date.now();
-  const entry = store.get(key);
-
-  if (!entry || now > entry.resetAt) {
-    store.set(key, { count: 1, resetAt: now + windowMs });
-    return { allowed: true, remaining: limit - 1 };
-  }
-
-  if (entry.count >= limit) {
-    return { allowed: false, remaining: 0 };
-  }
-
-  entry.count++;
-  return { allowed: true, remaining: limit - entry.count };
+  return { allowed: true, remaining: limit };
 }
 
 /** Extracts the best available client IP from a Next.js Request. */

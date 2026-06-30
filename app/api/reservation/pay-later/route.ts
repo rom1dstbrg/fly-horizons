@@ -24,9 +24,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Durée invalide" }, { status: 400 });
     }
 
-    // Règle J-2 : minimum 48h d'avance
-    const todayMidnight = new Date();
-    todayMidnight.setHours(0, 0, 0, 0);
+    // Règle J-2 : minimum 48h d'avance (basé sur la date du jour en heure de Bruxelles)
+    const brusselsTodayStr = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Europe/Brussels",
+      year: "numeric", month: "2-digit", day: "2-digit",
+    }).format(new Date());
+    const todayMidnight = new Date(brusselsTodayStr + "T00:00:00Z");
     const minBookable = new Date(todayMidnight);
     minBookable.setDate(minBookable.getDate() + 2);
     if (new Date(date + "T12:00:00Z") < minBookable) {
@@ -82,6 +85,7 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Code promo ───────────────────────────────────────────────────
+    // L'incrément est différé au webhook (après paiement Stripe) pour éviter tout état orphelin.
     let appliedCouponCode: string | null = null;
     if (coupon_code && finalPrice > 0) {
       const { data: coupon } = await supabase
@@ -182,6 +186,11 @@ export async function POST(request: NextRequest) {
     if (resaErr) {
       if (voucherId) {
         await supabase.from("voucher_codes").update({ status: "unused" }).eq("id", voucherId).eq("status", "reserved");
+      }
+      // Pas de release_coupon : l'incrément n'a pas encore eu lieu (différé au webhook)
+      // Unique constraint violation = slot taken by a concurrent request
+      if ((resaErr as { code?: string }).code === "23505") {
+        return NextResponse.json({ error: "Ce créneau vient d'être réservé. Veuillez en choisir un autre." }, { status: 409 });
       }
       return NextResponse.json({ error: "Erreur création réservation" }, { status: 500 });
     }

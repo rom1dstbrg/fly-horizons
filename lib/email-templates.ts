@@ -267,15 +267,21 @@ function addToCalendarBlock(dateISO: string, heure: string, dureeMin: number): s
   const startM = parseInt(parts[1] ?? "0", 10);
   if (isNaN(startH) || isNaN(startM)) return "";
 
-  const endTotal = startH * 60 + startM + dureeMin;
-  const endH = Math.floor(endTotal / 60) % 24;
-  const endM = endTotal % 60;
   const pad = (n: number) => String(n).padStart(2, "0");
-  const dateCompact = dateISO.replace(/-/g, "");
 
-  const gcalDates = `${dateCompact}T${pad(startH)}${pad(startM)}00/${dateCompact}T${pad(endH)}${pad(endM)}00`;
+  // Calculer la fin via Date pour gérer le passage minuit
+  const startDate = new Date(`${dateISO}T${pad(startH)}:${pad(startM)}:00Z`);
+  const endDate   = new Date(startDate.getTime() + dureeMin * 60 * 1000);
+  const endH = endDate.getUTCHours();
+  const endM = endDate.getUTCMinutes();
+  const endDateISO = endDate.toISOString().slice(0, 10);
+
+  const startCompact = dateISO.replace(/-/g, "");
+  const endCompact   = endDateISO.replace(/-/g, "");
+
+  const gcalDates = `${startCompact}T${pad(startH)}${pad(startM)}00/${endCompact}T${pad(endH)}${pad(endM)}00`;
   const outlookStart = `${dateISO}T${pad(startH)}:${pad(startM)}:00`;
-  const outlookEnd   = `${dateISO}T${pad(endH)}:${pad(endM)}:00`;
+  const outlookEnd   = `${endDateISO}T${pad(endH)}:${pad(endM)}:00`;
 
   const title    = encodeURIComponent(`Vol Fly Horizons (${dureeMin} min)`);
   const details  = encodeURIComponent("Vol en avion léger avec Romain, Fly Horizons");
@@ -594,7 +600,7 @@ export interface VolSurMesureQuoteEmailProps {
   nom: string;
   date: string;
   heure: string;
-  dureMin: number;
+  dureeMin: number;
   distKm: number;
   reservationId?: string | null;
   styleVol: string | null;
@@ -610,7 +616,7 @@ export interface VolSurMesureQuoteEmailProps {
 
 export function volSurMesureQuoteEmail(props: VolSurMesureQuoteEmailProps): string {
   const {
-    prenom, date, heure, dureMin, distKm, reservationId, styleVol, stopovers,
+    prenom, date, heure, dureeMin, distKm, reservationId, styleVol, stopovers,
     prixEstime, discount, prixBillable, acompte, taxesEscales, totalAcompte,
     voucherCode,
   } = props;
@@ -631,7 +637,7 @@ export function volSurMesureQuoteEmail(props: VolSurMesureQuoteEmailProps): stri
     ["Date souhaitée", `<strong style="text-transform:capitalize;">${esc(dateStr)}</strong>`],
     ["Heure de départ", esc(heure)],
     ["Départ / retour", "Charleroi EBCI"],
-    ["Durée estimée", `~${dureMin}&nbsp;min &middot; ${distKm}&nbsp;km`],
+    ["Durée estimée", `~${dureeMin}&nbsp;min &middot; ${distKm}&nbsp;km`],
     ...styleRow,
     ...stopoverRow,
   ];
@@ -676,7 +682,7 @@ export function volSurMesureQuoteEmail(props: VolSurMesureQuoteEmailProps): stri
     </p>
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
       <tr>
-        <td class="em-muted" style="padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;">Co&ucirc;t du vol estim&eacute; (~${dureMin}&nbsp;min, ~${distKm}&nbsp;km)</td>
+        <td class="em-muted" style="padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;">Co&ucirc;t du vol estim&eacute; (~${dureeMin}&nbsp;min, ~${distKm}&nbsp;km)</td>
         <td class="em-muted" style="padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;text-align:right;white-space:nowrap;">${fmt(prixEstime)}</td>
       </tr>
       ${voucherRow}
@@ -799,7 +805,7 @@ export function reservationPaymentConfirmationEmail(p: ReservationPaymentConfirm
     ${separator()}
 
     <p class="em-muted" style="margin:0 0 6px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.12em;text-align:center;">Montant pay&eacute;</p>
-    <p class="em-gold" style="margin:0 0 28px;font-size:42px;font-weight:800;color:#F2B705;text-align:center;line-height:1;">${p.montantPaye}&nbsp;&euro;</p>
+    <p class="em-gold" style="margin:0 0 28px;font-size:42px;font-weight:800;color:#F2B705;text-align:center;line-height:1;">${fmt(p.montantPaye)}</p>
 
     ${separator()}
     ${label("D&eacute;tails du vol")}
@@ -871,7 +877,7 @@ export function volSurMesureAcompteEmail(p: VolSurMesureAcompteProps): string {
     ${separator()}
 
     <p class="em-muted" style="margin:0 0 6px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.12em;text-align:center;">Provision pay&eacute;e</p>
-    <p class="em-gold" style="margin:0 0 28px;font-size:42px;font-weight:800;color:#F2B705;text-align:center;line-height:1;">${p.montantPaye}&nbsp;&euro;</p>
+    <p class="em-gold" style="margin:0 0 28px;font-size:42px;font-weight:800;color:#F2B705;text-align:center;line-height:1;">${fmt(p.montantPaye)}</p>
 
     ${separator()}
     ${label("Vol sur mesure")}
@@ -1272,10 +1278,10 @@ export function reservationPaymentReminderEmail(p: ReservationPaymentReminderEma
       <tr>
         <td style="border:2px solid #F2B705;border-radius:12px;padding:28px 24px;text-align:center;">
           <p class="em-muted" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.1em;">Montant &agrave; r&eacute;gler</p>
-          <p class="em-dark" style="margin:0 0 20px;font-size:42px;font-weight:800;color:#0b2238;line-height:1;">${p.montant}&nbsp;&euro;</p>
+          <p class="em-dark" style="margin:0 0 20px;font-size:42px;font-weight:800;color:#0b2238;line-height:1;">${fmt(p.montant)}</p>
           <a href="${esc(p.paymentUrl)}" class="em-btn"
             style="display:inline-block;background-color:#F2B705;color:#0b2238;font-size:14px;font-weight:800;padding:14px 36px;border-radius:10px;text-decoration:none;">
-            Payer maintenant, ${p.montant}&nbsp;&euro;
+            Payer maintenant, ${fmt(p.montant)}
           </a>
           <p class="em-muted" style="margin:14px 0 0;font-size:11px;color:#94a3b8;">Paiement s&eacute;curis&eacute; par Stripe, carte bancaire</p>
         </td>
@@ -1836,10 +1842,10 @@ export function paymentLinkEmail(p: PaymentLinkEmailProps): string {
       <tr>
         <td style="border:2px solid #F2B705;border-radius:12px;padding:28px 24px;text-align:center;">
           <p class="em-muted" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.1em;">Provision &agrave; r&eacute;gler</p>
-          <p class="em-dark" style="margin:0 0 20px;font-size:42px;font-weight:800;color:#0b2238;line-height:1;">${p.acompte}&nbsp;&euro;</p>
+          <p class="em-dark" style="margin:0 0 20px;font-size:42px;font-weight:800;color:#0b2238;line-height:1;">${fmt(p.acompte)}</p>
           <a href="${esc(p.paymentUrl)}" class="em-btn"
             style="display:inline-block;background-color:#F2B705;color:#0b2238;font-size:14px;font-weight:800;padding:14px 36px;border-radius:10px;text-decoration:none;">
-            R&eacute;gler ma provision, ${p.acompte}&nbsp;&euro;
+            R&eacute;gler ma provision, ${fmt(p.acompte)}
           </a>
           <p class="em-muted" style="margin:14px 0 0;font-size:11px;color:#94a3b8;">Paiement s&eacute;curis&eacute; par Stripe, carte bancaire</p>
         </td>

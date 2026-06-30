@@ -107,6 +107,7 @@ export async function GET(
       clientId: resa.client_id,
       voucherId: resolvedVoucherId,
       voucherCode: resa.voucher_code || "",
+      couponCode: resa.coupon_code || "",
       paymentToken: token,
     },
     success_url: `${siteUrl}/reservation/success?session_id={CHECKOUT_SESSION_ID}`,

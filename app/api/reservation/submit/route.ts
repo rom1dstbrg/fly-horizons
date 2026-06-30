@@ -20,11 +20,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Champs obligatoires manquants" }, { status: 400 });
     }
 
-    // Règle J-2 : minimum 48h d'avance
-    const todayMidnight = new Date();
-    todayMidnight.setHours(0, 0, 0, 0);
+    // Règle J-2 : minimum 48h d'avance (en heure Brussels)
+    const brusselsTodayStr = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Europe/Brussels",
+      year: "numeric", month: "2-digit", day: "2-digit",
+    }).format(new Date());
+    const todayMidnight = new Date(brusselsTodayStr + "T00:00:00Z");
     const minBookable = new Date(todayMidnight);
-    minBookable.setDate(minBookable.getDate() + 2);
+    minBookable.setUTCDate(minBookable.getUTCDate() + 2);
     if (new Date(date + "T12:00:00Z") < minBookable) {
       return NextResponse.json(
         { error: "Les réservations sont possibles uniquement 48h à l'avance minimum (J-2)." },
@@ -121,6 +124,10 @@ export async function POST(request: NextRequest) {
       // Rollback voucher claim so the code can be reused
       if (voucherId) {
         await supabase.from("voucher_codes").update({ status: "unused" }).eq("id", voucherId).eq("status", "reserved");
+      }
+      // Unique constraint violation = slot taken by a concurrent request
+      if ((resaErr as { code?: string }).code === "23505") {
+        return NextResponse.json({ error: "Ce créneau vient d'être réservé. Veuillez en choisir un autre." }, { status: 409 });
       }
       return NextResponse.json({ error: "Erreur création réservation" }, { status: 500 });
     }
