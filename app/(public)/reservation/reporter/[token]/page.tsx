@@ -1,5 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { parseRescheduleToken } from "@/lib/actions/reservations";
+import { parseRescheduleToken } from "@/lib/reschedule-token";
 import { RescheduleClient } from "./RescheduleClient";
 import { XCircle, AlertCircle } from "lucide-react";
 

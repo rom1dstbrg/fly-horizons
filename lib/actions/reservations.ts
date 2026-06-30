@@ -5,23 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationPaymentInvitationEmail, reservationConfirmationFreeEmail, postVolEmail, routeItineraireEmail, customEmail, rescheduleInviteEmail, rescheduleConfirmationEmail, reservationAutoAnnuleeEmail } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
-
-// ── Reschedule token : UUID stocké en DB, URL = base64url({t,exp}) ──────────
-// L'expiry est encodée dans le token lui-même — pas de colonne DB supplémentaire.
-const RESCHEDULE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 jours
-
-function makeRescheduleToken(uuid: string): string {
-  const exp = Date.now() + RESCHEDULE_TTL_MS;
-  return Buffer.from(JSON.stringify({ t: uuid, exp })).toString("base64url");
-}
-
-export function parseRescheduleToken(token: string): { t: string; exp: number } | null {
-  try {
-    const p = JSON.parse(Buffer.from(token, "base64url").toString());
-    if (typeof p?.t !== "string" || typeof p?.exp !== "number") return null;
-    return p;
-  } catch { return null; }
-}
+import { makeRescheduleToken, parseRescheduleToken } from "@/lib/reschedule-token";
 
 async function checkAdmin() {
   const supabase = await createClient();
