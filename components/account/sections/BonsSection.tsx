@@ -61,7 +61,7 @@ export function BonsSection({ vouchers }: { vouchers: VoucherCode[] }) {
                   {st.label}
                 </span>
               </div>
-              <div className="flex flex-col gap-2">
+              <div className="space-y-2">
                 {v.status === "unused" && (
                   <Link
                     href={`/reservation?duree=${v.duration_minutes}&code=${encodeURIComponent(v.code)}`}
@@ -70,24 +70,26 @@ export function BonsSection({ vouchers }: { vouchers: VoucherCode[] }) {
                     Utiliser ce bon →
                   </Link>
                 )}
-                <a
-                  href={`/api/voucher/pdf?code=${encodeURIComponent(v.code)}`}
-                  download
-                  className="flex items-center justify-center gap-1.5 w-full py-2 px-4 rounded-lg border border-border bg-secondary text-foreground hover:border-foreground text-xs font-semibold transition-colors cursor-pointer"
-                >
-                  <Download size={13} />
-                  Imprimer le bon cadeau
-                </a>
-                {v.order_id && (
+                <div className="flex items-center gap-2 flex-wrap">
                   <a
-                    href={`/api/invoice/${v.order_id}?type=detaillee`}
+                    href={`/api/voucher/pdf?code=${encodeURIComponent(v.code)}`}
                     download
-                    className="flex items-center justify-center gap-1.5 w-full py-2 px-4 rounded-lg border border-border bg-secondary text-foreground hover:border-foreground text-xs font-semibold transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-secondary text-foreground hover:border-foreground text-xs font-medium transition-colors cursor-pointer"
                   >
-                    <Download size={13} />
-                    Facture d&apos;achat
+                    <Download size={12} />
+                    Imprimer le bon
                   </a>
-                )}
+                  {v.order_id && (
+                    <a
+                      href={`/api/invoice/${v.order_id}?type=detaillee`}
+                      download
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-secondary text-foreground hover:border-foreground text-xs font-medium transition-colors cursor-pointer"
+                    >
+                      <Download size={12} />
+                      Facture
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
           );

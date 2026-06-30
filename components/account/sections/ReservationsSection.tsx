@@ -37,7 +37,7 @@ export interface Reservation {
 }
 
 function formatHeure(h: string | null | undefined) {
-  if (!h) return "En attente";
+  if (!h) return null;
   const [hh, mm] = h.split(":");
   return `${hh}h${mm}`;
 }
@@ -53,7 +53,7 @@ export function ReservationsSection({ reservations }: { reservations: Reservatio
         <p className="text-xs text-muted-foreground mt-1">Vos vols réservés apparaîtront ici.</p>
         <Link
           href="/reservation"
-          className="inline-flex items-center gap-1 mt-4 text-xs text-foreground font-semibold hover:text-primary transition-colors"
+          className="inline-flex items-center gap-1 mt-4 text-xs font-semibold text-foreground hover:text-primary transition-colors"
         >
           Réserver un vol <ChevronRight size={12} />
         </Link>
@@ -69,7 +69,7 @@ export function ReservationsSection({ reservations }: { reservations: Reservatio
       {upcoming.length > 0 && (
         <div className="space-y-3">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">À venir</p>
-          {upcoming.map((r) => <ResaCard key={r.id} resa={r} upcoming />)}
+          {upcoming.map((r, idx) => <ResaCard key={r.id} resa={r} upcoming showWeather={idx === 0} />)}
         </div>
       )}
       {past.length > 0 && (
@@ -77,25 +77,27 @@ export function ReservationsSection({ reservations }: { reservations: Reservatio
           {upcoming.length > 0 && (
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Passées</p>
           )}
-          {past.map((r) => <ResaCard key={r.id} resa={r} upcoming={false} />)}
+          {past.map((r) => <ResaCard key={r.id} resa={r} upcoming={false} showWeather={false} />)}
         </div>
       )}
     </div>
   );
 }
 
-function ResaCard({ resa, upcoming }: { resa: Reservation; upcoming: boolean }) {
-  const status   = RESA_STATUS[resa.statut] ?? RESA_STATUS.en_attente;
-  const isPerso  = resa.type_resa === "perso";
-  const isPaid   = !["en_attente", "payment_pending", "en_attente_perso"].includes(resa.statut);
+function ResaCard({ resa, upcoming, showWeather = false }: { resa: Reservation; upcoming: boolean; showWeather?: boolean }) {
+  const status     = RESA_STATUS[resa.statut] ?? RESA_STATUS.en_attente;
+  const isPerso    = resa.type_resa === "perso";
+  const isPaid     = !["en_attente", "payment_pending", "en_attente_perso"].includes(resa.statut);
   const hasPayLink = resa.payment_token && !isPaid;
-  const payUrl   = isPerso
+  const payUrl     = isPerso
     ? `/api/vol-sur-mesure/pay/${resa.payment_token}`
     : `/api/reservation/pay/${resa.payment_token}`;
 
   const dateFormatted = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
     weekday: "long", day: "numeric", month: "long", year: "numeric",
   });
+
+  const heure = formatHeure(resa.heure_vol);
 
   const canReschedule =
     !["annulee", "vol_effectue", "payment_pending"].includes(resa.statut) &&
@@ -108,95 +110,133 @@ function ResaCard({ resa, upcoming }: { resa: Reservation; upcoming: boolean }) 
     : null;
 
   return (
-    <div className={`card-premium p-5 ${upcoming ? "border-l-[3px] border-l-navy" : ""}`}>
-      <div className="flex items-start justify-between gap-4 mb-3">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap mb-1.5">
-            <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${status.color}`}>
-              {status.label}
+    <div className={`card-premium overflow-hidden ${upcoming ? "border-l-[3px] border-l-navy" : ""}`}>
+
+      {/* Header */}
+      <div className="px-5 pt-4 pb-3">
+        {/* Badges */}
+        <div className="flex items-center gap-2 flex-wrap mb-2.5">
+          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${status.color}`}>
+            {status.label}
+          </span>
+          {isPerso && (
+            <span className="text-[11px] text-muted-foreground bg-secondary px-2 py-0.5 rounded-full border border-border">
+              Sur mesure
             </span>
-            {upcoming && (
-              <span className="text-[11px] font-medium bg-secondary px-2 py-0.5 rounded-full text-foreground">À venir</span>
-            )}
-            {isPerso && (
-              <span className="text-[11px] text-muted-foreground bg-secondary px-2 py-0.5 rounded-full border border-border">Sur mesure</span>
-            )}
-          </div>
-          <p className="text-sm font-semibold text-foreground capitalize">{dateFormatted}</p>
-          {resa.heure_vol && (
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              <Clock size={11} className="opacity-60" />
-              {formatHeure(resa.heure_vol)}
-            </p>
           )}
         </div>
-        <div className="text-right shrink-0">
-          <p className="text-sm font-bold text-foreground">{formatDuration(resa.duree)}</p>
-          <p className="text-xs text-muted-foreground">de vol</p>
-          {resa.passagers > 1 && <p className="text-xs text-muted-foreground">{resa.passagers} pass.</p>}
-        </div>
+
+        {/* Date principale */}
+        <p className="text-sm font-bold text-foreground capitalize">{dateFormatted}</p>
+
+        {/* Méta : heure · durée · passagers */}
+        <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2 flex-wrap">
+          {heure && (
+            <span className="flex items-center gap-1">
+              <Clock size={11} className="opacity-60" />
+              {heure}
+            </span>
+          )}
+          <span>{formatDuration(resa.duree)} de vol</span>
+          {resa.passagers > 1 && <span>{resa.passagers} passagers</span>}
+        </p>
       </div>
 
-      {resa.route && (
-        <div className="mt-3 pt-3 border-t border-border space-y-2">
-          <div className="flex items-start gap-2">
-            <MapPin size={12} className="text-muted-foreground shrink-0 mt-0.5" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">Itinéraire proposé</p>
-              <p className="text-xs text-foreground leading-snug">{resa.route}</p>
-            </div>
-            {resa.route_status === "validated" && <CheckCircle size={13} className="text-green-500 shrink-0 mt-0.5" />}
-          </div>
-          {resa.route_status === "sent" && resa.route_token && (
-            <Link href={`/vol/itineraire/${resa.route_token}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-200 bg-amber-50 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors">
-              Valider ou modifier
-            </Link>
-          )}
-          {resa.route_status === "modification_requested" && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-secondary text-xs font-medium text-muted-foreground">
-              Modification en cours de traitement
-            </span>
-          )}
-        </div>
-      )}
-
+      {/* Paiement urgent — pleine largeur, bien visible */}
       {hasPayLink && (
-        <div className="mt-3 pt-3 border-t border-border">
-          <Link href={payUrl} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:brightness-105 transition-all">
-            <CreditCard size={12} />
+        <div className="px-5 pb-4">
+          <Link
+            href={payUrl}
+            className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-lg bg-primary text-primary-foreground text-xs font-black hover:bg-[#e6a800] transition-colors"
+          >
+            <CreditCard size={13} />
             {isPerso ? "Régler la provision" : "Finaliser le paiement"}
             {resa.acompte != null ? ` · ${resa.acompte} €` : ""}
           </Link>
         </div>
       )}
 
-      {isPaid && resa.acompte != null && (
-        <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-border text-xs text-green-600 font-medium">
-          <CheckCircle size={12} className="shrink-0" />
-          Provision payée · {resa.acompte} €
+      {/* Itinéraire proposé */}
+      {resa.route && (
+        <div className="px-5 pb-4 pt-0">
+          <div className="rounded-lg bg-secondary/50 border border-border p-3 space-y-2">
+            <div className="flex items-start gap-2">
+              <MapPin size={12} className="text-muted-foreground shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">
+                  Itinéraire proposé
+                </p>
+                <p className="text-xs text-foreground leading-snug">{resa.route}</p>
+              </div>
+              {resa.route_status === "validated" && (
+                <CheckCircle size={13} className="text-green-500 shrink-0 mt-0.5" />
+              )}
+            </div>
+            {resa.route_status === "sent" && resa.route_token && (
+              <Link
+                href={`/vol/itineraire/${resa.route_token}`}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-200 bg-amber-50 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors"
+              >
+                Valider ou modifier l&apos;itinéraire
+              </Link>
+            )}
+            {resa.route_status === "modification_requested" && (
+              <span className="inline-flex items-center text-xs text-muted-foreground">
+                Modification en cours de traitement
+              </span>
+            )}
+          </div>
         </div>
       )}
 
-      {upcoming && <WeatherWidget date={resa.date_vol} />}
+      {/* Météo */}
+      {showWeather && (
+        <div className="px-5 pb-4">
+          <WeatherWidget date={resa.date_vol} bordered={false} />
+        </div>
+      )}
 
-      <div className="flex items-center gap-2 flex-wrap mt-3 pt-3 border-t border-border">
-        <Link href={`/account/reservations/${resa.id}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-foreground hover:bg-secondary transition-colors">
+      {/* Footer */}
+      <div className="px-5 py-3 border-t border-border bg-secondary/20 flex items-center gap-2 flex-wrap">
+
+        {/* Provision payée */}
+        {isPaid && resa.acompte != null && resa.acompte > 0 && (
+          <span className="flex items-center gap-1 text-xs text-green-600 font-medium mr-auto">
+            <CheckCircle size={11} className="shrink-0" />
+            Provision payée · {resa.acompte} €
+          </span>
+        )}
+
+        <Link
+          href={`/account/reservations/${resa.id}`}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-foreground text-background text-xs font-semibold hover:bg-foreground/90 transition-colors"
+        >
           Suivre la réservation
         </Link>
+
         {carteHref && (
-          <Link href={carteHref} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-foreground hover:bg-secondary transition-colors">
-            <MapPin size={11} /> Voir la carte
+          <Link
+            href={carteHref}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-foreground bg-card hover:bg-secondary transition-colors"
+          >
+            <MapPin size={11} /> Carte
           </Link>
         )}
-        {canReschedule && <RescheduleButton reservationId={resa.id} />}
+
         {resa.acompte != null && resa.acompte > 0 && (
           <a
             href={`/api/invoice/reservation/${resa.id}`}
             download
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-foreground hover:bg-secondary transition-colors ml-auto cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-foreground bg-card hover:bg-secondary transition-colors cursor-pointer"
           >
             <Download size={11} /> Facture
           </a>
+        )}
+
+        {canReschedule && (
+          <div className="ml-auto">
+            <RescheduleButton reservationId={resa.id} />
+          </div>
         )}
       </div>
     </div>

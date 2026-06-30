@@ -91,7 +91,7 @@ function AddressForm({
         </div>
 
         <div className="sm:col-span-2 space-y-1.5">
-          <Label className="text-xs text-muted-foreground">Complement (optionnel)</Label>
+          <Label className="text-xs text-muted-foreground">Complément (optionnel)</Label>
           <Input
             name="line2"
             defaultValue={address?.line2 ?? ""}
@@ -180,7 +180,7 @@ export function AddressBook({ addresses }: AddressBookProps) {
     <div className="space-y-4">
       {addresses.length === 0 && !showForm && (
         <p className="text-muted-foreground text-sm">
-          Aucune adresse enregistree. Ajoutez-en une pour faciliter vos commandes.
+          Aucune adresse enregistrée. Ajoutez-en une pour faciliter vos commandes.
         </p>
       )}
 
@@ -218,7 +218,7 @@ export function AddressBook({ addresses }: AddressBookProps) {
                     onClick={() => handleSetDefault(address.id)}
                     disabled={isPending}
                     className="p-1.5 text-muted-foreground hover:text-primary transition-colors rounded cursor-pointer"
-                    title="Definir par defaut"
+                    title="Définir par défaut"
                   >
                     <Star size={14} />
                   </button>

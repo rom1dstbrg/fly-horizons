@@ -76,21 +76,19 @@ export default async function AdminDashboardPage() {
   const now         = new Date();
   const todayStr    = now.toISOString().split("T")[0];
   const tomorrowStr = new Date(now.getTime() + 86400000).toISOString().split("T")[0];
-  const monthStart  = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
   const thirtyDaysFromNow = new Date(now.getTime() + 30 * 86400000).toISOString();
 
   const [
-    { data: monthOrders },
+    { data: allOrders },
     { data: reservations },
     { data: allClients },
     { count: vouchersDispoCount },
     { data: newContacts },
     { data: vouchersExpiring },
   ] = await Promise.all([
-    // CA du mois uniquement (pas besoin de tout l'historique)
-    supabase.from("orders").select("id, total, status, created_at")
-      .gte("created_at", monthStart)
+    // CA total depuis le début
+    supabase.from("orders").select("id, total, status")
       .not("status", "in", "(cancelled,refunded)"),
     // Réservations — tous les champs requis par DrawerReservation
     supabase.from("reservations").select(
@@ -117,15 +115,6 @@ export default async function AdminDashboardPage() {
   const resaStd   = allResas.filter(r => r.type_resa === "standard");
   const resaPerso = allResas.filter(r => r.type_resa === "perso");
 
-  // ── KPIs
-  const caMonthOrders   = (monthOrders ?? []).reduce((s, o) => s + (o.total ?? 0), 0);
-  const caMonthResas    = allResas
-    .filter(r => r.created_at >= monthStart && r.statut !== "annulee" && r.paye)
-    .reduce((s: number, r: { paye: number | null; remboursement?: number | null }) => s + (r.paye ?? 0) - (r.remboursement ?? 0), 0);
-  const caMonth         = caMonthOrders + caMonthResas;
-  const resasThisMonth  = allResas.filter(r => r.created_at >= monthStart && r.statut !== "annulee").length;
-  const clientsUniques  = new Set((allClients ?? []).map(c => c.email?.toLowerCase() ?? c.id)).size;
-
   // ── Net encaissé vols (même logique que /admin/transactions)
   const soldeGlobal = allResas
     .filter((r: { statut: string }) => r.statut !== "annulee")
@@ -134,6 +123,13 @@ export default async function AdminDashboardPage() {
         s + (r.paye ?? 0) - (r.remboursement ?? 0),
       0
     );
+
+  // ── KPIs
+  // caAllOrders = toute la boutique (orders) ; ne pas ajouter soldeGlobal qui est déjà
+  // inclus via les vouchers achetés en boutique (les vols payés par voucher ont paye=0).
+  const caAllOrders    = (allOrders ?? []).reduce((s, o) => s + (o.total ?? 0), 0);
+  const resasTotal     = allResas.filter(r => r.statut !== "annulee").length;
+  const clientsUniques = new Set((allClients ?? []).map(c => c.email?.toLowerCase() ?? c.id)).size;
 
   // ── Actionnables
   const paymentPending   = resaStd.filter(r => r.statut === "payment_pending").length;
@@ -215,10 +211,10 @@ export default async function AdminDashboardPage() {
 
       {/* ── KPIs ─────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KPICard label="CA ce mois"  value={formatPrice(caMonth)}                                                            icon={CreditCard}                                   accent="navy"                              />
-        <KPICard label="Solde vols"  value={`${soldeGlobal >= 0 ? "+" : ""}${formatPrice(soldeGlobal)}`}                     icon={soldeGlobal >= 0 ? TrendingUp : TrendingDown} accent={soldeGlobal >= 0 ? "green" : "red"} />
-        <KPICard label="Vols ce mois" value={String(resasThisMonth)}                                                          icon={PremiumPlaneIcon}                             accent="gold"                              href="/admin/vols" />
-        <KPICard label="Clients"     value={String(clientsUniques)}                                                            icon={Users}                                        accent="green"                             href="/admin/clients" />
+        <KPICard label="CA boutique"   value={formatPrice(caAllOrders)}                                                          icon={CreditCard}                                   accent="navy"                              />
+        <KPICard label="Solde vols"    value={`${soldeGlobal >= 0 ? "+" : ""}${formatPrice(soldeGlobal)}`}                       icon={soldeGlobal >= 0 ? TrendingUp : TrendingDown} accent={soldeGlobal >= 0 ? "green" : "red"} />
+        <KPICard label="Vols réservés" value={String(resasTotal)}                                                                 icon={PremiumPlaneIcon}                             accent="gold"                              href="/admin/vols" />
+        <KPICard label="Clients"       value={String(clientsUniques)}                                                             icon={Users}                                        accent="green"                             href="/admin/clients" />
       </div>
 
       {/* ── MAIN GRID ────────────────────────────────────────────────── */}

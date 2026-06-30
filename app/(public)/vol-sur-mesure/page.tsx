@@ -23,12 +23,13 @@ const LeafletMapAdventure = dynamic(
 const PRESET_VILLES = [
   { id: "namur",  nom: "Namur",  sous: "Citadelle & Meuse",         lat: 50.4636, lng: 4.8666 },
   { id: "dinant", nom: "Dinant", sous: "Rocher Bayard & falaises",  lat: 50.2611, lng: 4.9122 },
-  { id: "liege",  nom: "Liège",  sous: "Centre historique & Meuse", lat: 50.6330, lng: 5.5669 },
-  { id: "mons",   nom: "Mons",   sous: "Beffroi UNESCO",            lat: 50.4541, lng: 3.9523 },
+  { id: "liege",  nom: "Liège",  sous: "Centre historique & Meuse", lat: 50.6454, lng: 5.5730 },
+  { id: "durbuy", nom: "Durbuy", sous: "La plus petite ville du monde", lat: 50.3578, lng: 5.4559 },
 ] as const;
 
+
 const PRESET_MONUMENTS = [
-  { id: "lion-waterloo",  nom: "Lion de Waterloo",  sous: "Champ de bataille 1815",       lat: 50.4099, lng: 4.3815 },
+  { id: "lion-waterloo",  nom: "Lion de Waterloo",  sous: "Champ de bataille 1815",       lat: 50.6757, lng: 4.4122 },
   { id: "abbaye-villers", nom: "Abbaye de Villers",  sous: "Ruines XIIe siècle",           lat: 50.5724, lng: 4.5298 },
   { id: "chateau-modave", nom: "Château de Modave",  sous: "Baroque sur éperon rocheux",   lat: 50.4491, lng: 5.2983 },
   { id: "chateau-freyr",  nom: "Château de Freÿr",   sous: "Renaissance au bord de Meuse", lat: 50.2280, lng: 4.8970 },
@@ -235,7 +236,7 @@ export default function VolSurMesurePage() {
     setPhase("map");
   }
 
-  function backToGuide() {
+function backToGuide() {
     if (route.pois.length > 0) setWaypoints(route.pois.map(p => ({ id: p.id, nom: p.nom, lat: p.lat, lng: p.lng })));
     initWpRef.current = [];
     setPhase("guide");
