@@ -13,10 +13,21 @@ import {
   CalendarDays,
   Ticket,
   Package,
+  Clock,
+  ChevronRight,
 } from "lucide-react";
 import { updateProfile } from "@/lib/actions/auth";
 
 type Tab = "apercu" | "reservations" | "bons" | "adresses" | "newsletter" | "securite";
+
+interface NextFlight {
+  id: string;
+  date_vol: string;
+  heure_vol: string | null;
+  duree: number;
+  statut: string;
+  type_resa: string;
+}
 
 function initials(name: string) {
   return name
@@ -40,10 +51,11 @@ interface Props {
     vouchers: number;
     orders: number;
   };
+  nextFlight?: NextFlight | null;
   onNavigate?: (tab: Tab) => void;
 }
 
-export function AccountOverview({ user, stats, onNavigate }: Props) {
+export function AccountOverview({ user, stats, nextFlight, onNavigate }: Props) {
   const router = useRouter();
   const [editing, setEditing]     = useState(false);
   const [loading, setLoading]     = useState(false);
@@ -75,12 +87,70 @@ export function AccountOverview({ user, stats, onNavigate }: Props) {
     setForm({ full_name: user.full_name, phone: user.phone ?? "" });
   }
 
+  const nextFlightDate = nextFlight
+    ? new Date(nextFlight.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
+        weekday: "long", day: "numeric", month: "long",
+      })
+    : null;
+
+  const nextFlightHour = nextFlight?.heure_vol
+    ? nextFlight.heure_vol.slice(0, 5).replace(":", "h")
+    : null;
+
+  const daysUntilFlight = nextFlight
+    ? Math.ceil((new Date(nextFlight.date_vol + "T23:59:59").getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : null;
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Aperçu</h1>
         <p className="text-sm text-muted-foreground mt-0.5">Membre depuis {memberSince}</p>
       </div>
+
+      {/* Prochain vol */}
+      {nextFlight && nextFlightDate && (
+        <button
+          onClick={() => onNavigate?.("reservations")}
+          className="w-full text-left rounded-xl border border-navy/20 bg-navy text-white p-5 cursor-pointer hover:bg-navy/90 transition-colors"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-2">
+                Prochain vol
+              </p>
+              <p className="text-base font-bold capitalize">{nextFlightDate}</p>
+              <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                {nextFlightHour && (
+                  <span className="flex items-center gap-1 text-xs text-white/70">
+                    <Clock size={11} />
+                    {nextFlightHour}
+                  </span>
+                )}
+                <span className="text-xs text-white/70">
+                  {nextFlight.duree >= 60
+                    ? `${Math.floor(nextFlight.duree / 60)}h${nextFlight.duree % 60 > 0 ? String(nextFlight.duree % 60).padStart(2, "0") : ""}`
+                    : `${nextFlight.duree} min`} de vol
+                </span>
+                {nextFlight.type_resa === "perso" && (
+                  <span className="text-[10px] text-white/50 border border-white/20 rounded-full px-2 py-0.5">
+                    Sur mesure
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="text-right shrink-0">
+              {daysUntilFlight !== null && daysUntilFlight <= 7 ? (
+                <div className="bg-gold text-navy text-xs font-black px-3 py-1.5 rounded-lg">
+                  {daysUntilFlight === 0 ? "Aujourd'hui !" : daysUntilFlight === 1 ? "Demain !" : `J-${daysUntilFlight}`}
+                </div>
+              ) : (
+                <ChevronRight size={16} className="text-white/40 mt-1" />
+              )}
+            </div>
+          </div>
+        </button>
+      )}
 
       {/* Profile card */}
       <div className="card-premium p-6">

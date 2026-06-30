@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { CalendarDays, Clock, CreditCard, MapPin, CheckCircle, ChevronRight } from "lucide-react";
 import { RescheduleButton } from "@/components/account/RescheduleButton";
+import { WeatherWidget } from "@/components/account/WeatherWidget";
 import { formatDuration } from "@/lib/vouchers";
 
 const RESA_STATUS: Record<string, { label: string; color: string }> = {
@@ -175,6 +176,8 @@ function ResaCard({ resa, upcoming }: { resa: Reservation; upcoming: boolean }) 
           Provision payée · {resa.acompte} €
         </div>
       )}
+
+      {upcoming && <WeatherWidget date={resa.date_vol} />}
 
       <div className="flex items-center gap-2 flex-wrap mt-3 pt-3 border-t border-border">
         <Link href={`/account/reservations/${resa.id}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-foreground hover:bg-secondary transition-colors">
