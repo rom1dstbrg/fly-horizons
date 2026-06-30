@@ -83,3 +83,5 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ sent, errors: errors.length ? errors : undefined });
 }
+
+export const GET = POST;

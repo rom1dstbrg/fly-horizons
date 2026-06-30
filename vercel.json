@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/flight-reminder",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/payment-deadline",
+      "schedule": "0 * * * *"
+    }
+  ]
+}
