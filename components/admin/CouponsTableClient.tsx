@@ -182,6 +182,7 @@ function CouponRow({ coupon }: { coupon: Coupon }) {
 export function CouponsTableClient({ coupons }: { coupons: Coupon[] }) {
   return (
     <div className="card-premium overflow-hidden">
+      <div className="overflow-x-auto">
       <table className="w-full">
         <thead>
           <tr className="border-b border-border">
@@ -198,6 +199,7 @@ export function CouponsTableClient({ coupons }: { coupons: Coupon[] }) {
           {coupons.map((coupon) => <CouponRow key={coupon.id} coupon={coupon} />)}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

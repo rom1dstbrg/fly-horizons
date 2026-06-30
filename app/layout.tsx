@@ -60,9 +60,15 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/icone.svg", type: "image/svg+xml", sizes: "any" },
+      { url: "/icone.png", sizes: "2149x2149",    type: "image/png" },
     ],
     shortcut: "/icone.svg",
-    apple: "/logo-email.png",
+    apple:    [{ url: "/icone.png", sizes: "2149x2149", type: "image/png" }],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Fly Horizons",
   },
 };
 

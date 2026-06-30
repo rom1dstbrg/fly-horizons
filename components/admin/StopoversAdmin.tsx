@@ -470,6 +470,7 @@ export function StopoversAdmin({ initialData }: Props) {
           <p className="text-xs text-muted-foreground mt-1">Cliquez sur « Ajouter » pour en créer une.</p>
         </div>
       ) : (
+        <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-secondary">
@@ -485,6 +486,7 @@ export function StopoversAdmin({ initialData }: Props) {
             ))}
           </tbody>
         </table>
+        </div>
       )}
 
       </>}

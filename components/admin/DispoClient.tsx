@@ -311,6 +311,7 @@ export function DispoClient({ plages, joursIndiv }: Props) {
           </div>
         ) : plages.length > 0 && (
           <div className="card-premium overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border">
@@ -372,6 +373,7 @@ export function DispoClient({ plages, joursIndiv }: Props) {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </section>
@@ -407,6 +409,7 @@ export function DispoClient({ plages, joursIndiv }: Props) {
           </div>
         ) : joursIndiv.length > 0 && (
           <div className="card-premium overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border">
@@ -461,6 +464,7 @@ export function DispoClient({ plages, joursIndiv }: Props) {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </section>

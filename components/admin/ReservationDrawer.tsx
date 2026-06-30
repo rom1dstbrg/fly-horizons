@@ -790,7 +790,7 @@ export function ReservationDrawer({
                 {/* Vol details */}
                 <div>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-2">Vol</p>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <Field label="Date du vol">
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <Calendar size={13} className="text-muted-foreground shrink-0" />
@@ -902,7 +902,7 @@ export function ReservationDrawer({
                   {bilanOpen && (
                     <div className="mt-2 p-4 rounded-xl border border-border bg-background space-y-3.5">
                       {/* Contexte */}
-                      <div className="grid grid-cols-2 gap-3 pb-3 border-b border-border">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-3 border-b border-border">
                         <div>
                           <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Pack</p>
                           <p className="text-sm font-black text-foreground">{r.duree} min</p>
@@ -1384,7 +1384,7 @@ export function ReservationDrawer({
                 <div>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-3">Client</p>
                   <div className="space-y-2.5">
-                    <div className="grid grid-cols-2 gap-2.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       <InputField label="Prénom">
                         <input type="text" value={draftPrenom} onChange={e => setDraftPrenom(e.target.value)} className={inputCls} />
                       </InputField>
@@ -1404,7 +1404,7 @@ export function ReservationDrawer({
                 {/* Vol */}
                 <div>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-3">Vol</p>
-                  <div className="grid grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <InputField label="Date">
                       <input type="date" value={draftDate} onChange={e => setDraftDate(e.target.value)} className={inputCls} />
                     </InputField>
@@ -1441,7 +1441,7 @@ export function ReservationDrawer({
                 {/* Codes */}
                 <div>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-3">Codes</p>
-                  <div className="grid grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <InputField label="Code voucher">
                       <input type="text" value={draftVoucherCode} onChange={e => setDraftVoucherCode(e.target.value)} placeholder="—" className={`${inputCls} font-mono`} />
                     </InputField>

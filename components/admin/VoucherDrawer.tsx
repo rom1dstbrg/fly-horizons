@@ -304,7 +304,7 @@ export function VoucherDrawer({
                         className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs font-medium text-muted-foreground mb-1.5">Durée (min)</label>
                         <input
@@ -421,7 +421,7 @@ export function VoucherDrawer({
 
             {/* Footer */}
             <div className="px-5 py-4 border-t border-border shrink-0 space-y-2">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
               {v.status !== "expired" && (
                 <button
                   onClick={toggleUsed} disabled={isPending}

@@ -48,6 +48,7 @@ function ProductTable({ products, showStock }: { products: Product[]; showStock:
   }
   return (
     <div className="bg-card rounded-xl border border-border overflow-hidden">
+      <div className="overflow-x-auto">
       <table className="w-full">
         <thead>
           <tr className="border-b border-border">
@@ -106,6 +107,7 @@ function ProductTable({ products, showStock }: { products: Product[]; showStock:
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

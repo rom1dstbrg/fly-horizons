@@ -149,6 +149,7 @@ export function TarifAvionForm({ tarifs: initial }: { tarifs: TarifAvion[] }) {
       {/* Historique */}
       {tarifs.length > 0 && (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-secondary">
@@ -181,6 +182,7 @@ export function TarifAvionForm({ tarifs: initial }: { tarifs: TarifAvion[] }) {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </section>
