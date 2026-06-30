@@ -107,7 +107,6 @@ export default async function AccountPage() {
       }}
       addresses={addresses ?? []}
       vouchers={vouchers}
-      orders={(orders ?? []).map((o) => ({ id: o.id, created_at: o.created_at, status: o.status, total: o.total }))}
       reservations={reservations}
       newsletterActive={newsletterSub?.active ?? null}
     />

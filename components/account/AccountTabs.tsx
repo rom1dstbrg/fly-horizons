@@ -8,7 +8,7 @@ import Link from "next/link";
 import { logout } from "@/lib/actions/auth";
 import { AccountOverview } from "@/components/account/AccountOverview";
 import { ReservationsSection, type Reservation } from "@/components/account/sections/ReservationsSection";
-import { BonsSection, type VoucherCode, type OrderSummary } from "@/components/account/sections/BonsSection";
+import { BonsSection, type VoucherCode } from "@/components/account/sections/BonsSection";
 import { NewsletterSection } from "@/components/account/sections/NewsletterSection";
 import { SecuritySection } from "@/components/account/sections/SecuritySection";
 import { AddressBook } from "@/components/account/AddressBook";
@@ -50,7 +50,6 @@ export interface AccountTabsProps {
   stats: { reservations: number; vouchers: number; orders: number };
   addresses: Address[];
   vouchers: VoucherCode[];
-  orders: OrderSummary[];
   reservations: Reservation[];
   newsletterActive: boolean | null;
 }
@@ -64,7 +63,7 @@ const SECTION_TITLE: Record<Tab, string> = {
   securite:     "Sécurité",
 };
 
-export function AccountTabs({ user, stats, addresses, vouchers, orders, reservations, newsletterActive }: AccountTabsProps) {
+export function AccountTabs({ user, stats, addresses, vouchers, reservations, newsletterActive }: AccountTabsProps) {
   const [tab, setTab] = useState<Tab>("apercu");
 
   const nextFlight = reservations
@@ -162,7 +161,7 @@ export function AccountTabs({ user, stats, addresses, vouchers, orders, reservat
               <ReservationsSection reservations={reservations} />
             )}
             {tab === "bons" && (
-              <BonsSection vouchers={vouchers} orders={orders} />
+              <BonsSection vouchers={vouchers} />
             )}
             {tab === "adresses" && (
               <div className="card-premium p-6">

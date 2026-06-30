@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarDays, Clock, CreditCard, MapPin, CheckCircle, ChevronRight } from "lucide-react";
+import { CalendarDays, Clock, CreditCard, MapPin, CheckCircle, ChevronRight, Download } from "lucide-react";
 import { RescheduleButton } from "@/components/account/RescheduleButton";
 import { WeatherWidget } from "@/components/account/WeatherWidget";
 import { formatDuration } from "@/lib/vouchers";
@@ -189,6 +189,15 @@ function ResaCard({ resa, upcoming }: { resa: Reservation; upcoming: boolean }) 
           </Link>
         )}
         {canReschedule && <RescheduleButton reservationId={resa.id} />}
+        {resa.acompte != null && resa.acompte > 0 && (
+          <a
+            href={`/api/invoice/reservation/${resa.id}`}
+            download
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-foreground hover:bg-secondary transition-colors ml-auto cursor-pointer"
+          >
+            <Download size={11} /> Facture
+          </a>
+        )}
       </div>
     </div>
   );
