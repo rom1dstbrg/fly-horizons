@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { updateProfile } from "@/lib/actions/auth";
 
+type Tab = "apercu" | "reservations" | "bons" | "adresses" | "newsletter" | "securite";
+
 function initials(name: string) {
   return name
     .trim()
@@ -38,9 +40,10 @@ interface Props {
     vouchers: number;
     orders: number;
   };
+  onNavigate?: (tab: Tab) => void;
 }
 
-export function AccountOverview({ user, stats }: Props) {
+export function AccountOverview({ user, stats, onNavigate }: Props) {
   const router = useRouter();
   const [editing, setEditing]     = useState(false);
   const [loading, setLoading]     = useState(false);
@@ -154,33 +157,27 @@ export function AccountOverview({ user, stats }: Props) {
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-2">
-          <Link href="/account/reservations" className="text-center py-3 px-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors group">
-            <div className="flex items-center justify-center gap-1 mb-1">
-              <CalendarDays size={12} className="text-muted-foreground group-hover:text-foreground" />
-            </div>
-            <p className="text-2xl font-bold text-foreground">{stats.reservations}</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              {stats.reservations !== 1 ? "Réservations" : "Réservation"}
-            </p>
-          </Link>
-          <Link href="/account/bons" className="text-center py-3 px-2 rounded-lg bg-primary/8 hover:bg-primary/12 transition-colors group">
-            <div className="flex items-center justify-center gap-1 mb-1">
-              <Ticket size={12} className="text-primary" />
-            </div>
-            <p className="text-2xl font-bold text-primary">{stats.vouchers}</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              {stats.vouchers !== 1 ? "Bons de vol" : "Bon de vol"}
-            </p>
-          </Link>
-          <Link href="/account/bons" className="text-center py-3 px-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors group">
-            <div className="flex items-center justify-center gap-1 mb-1">
-              <Package size={12} className="text-muted-foreground group-hover:text-foreground" />
-            </div>
-            <p className="text-2xl font-bold text-foreground">{stats.orders}</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              {stats.orders !== 1 ? "Commandes" : "Commande"}
-            </p>
-          </Link>
+          {[
+            { tab: "reservations" as Tab, count: stats.reservations, label: ["Réservation", "Réservations"], Icon: CalendarDays, highlight: false },
+            { tab: "bons" as Tab,         count: stats.vouchers,     label: ["Bon de vol",   "Bons de vol"],  Icon: Ticket,       highlight: true  },
+            { tab: "bons" as Tab,         count: stats.orders,       label: ["Commande",     "Commandes"],    Icon: Package,      highlight: false },
+          ].map(({ tab, count, label, Icon, highlight }, i) => (
+            <button
+              key={i}
+              onClick={() => onNavigate?.(tab)}
+              className={`text-center py-3 px-2 rounded-lg transition-colors cursor-pointer ${
+                highlight ? "bg-primary/8 hover:bg-primary/12" : "bg-secondary hover:bg-secondary/80"
+              }`}
+            >
+              <div className="flex items-center justify-center mb-1">
+                <Icon size={12} className={highlight ? "text-primary" : "text-muted-foreground"} />
+              </div>
+              <p className={`text-2xl font-bold ${highlight ? "text-primary" : "text-foreground"}`}>{count}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                {count !== 1 ? label[1] : label[0]}
+              </p>
+            </button>
+          ))}
         </div>
 
         {user.is_admin && (
