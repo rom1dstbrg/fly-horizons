@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarDays, Clock, CreditCard, MapPin, CheckCircle, ChevronRight, Download } from "lucide-react";
+import { CalendarDays, Clock, CreditCard, MapPin, CheckCircle, ChevronRight, Download, AlertCircle, Star } from "lucide-react";
 import { RescheduleButton } from "@/components/account/RescheduleButton";
 import { WeatherWidget } from "@/components/account/WeatherWidget";
 import { formatDuration } from "@/lib/vouchers";
@@ -156,6 +156,21 @@ function ResaCard({ resa, upcoming, showWeather = false }: { resa: Reservation; 
         </div>
       )}
 
+      {/* Paiement en préparation (pas encore de lien) */}
+      {resa.statut === "payment_pending" && !resa.payment_token && (
+        <div className="px-5 pb-4">
+          <div className="flex items-start gap-2.5 p-3 rounded-lg bg-orange-50 border border-orange-200">
+            <AlertCircle size={14} className="text-orange-500 shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-orange-700">Lien de paiement en préparation</p>
+              <p className="text-xs text-orange-600 mt-0.5">Vous le recevrez par email sous peu. Une question ?{" "}
+                <a href="/contact" className="underline font-semibold">Nous contacter</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Itinéraire proposé */}
       {resa.route && (
         <div className="px-5 pb-4 pt-0">
@@ -237,6 +252,17 @@ function ResaCard({ resa, upcoming, showWeather = false }: { resa: Reservation; 
           <div className="ml-auto">
             <RescheduleButton reservationId={resa.id} />
           </div>
+        )}
+
+        {resa.statut === "vol_effectue" && (
+          <a
+            href="https://g.page/r/fly-horizons/review"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-purple-200 bg-purple-50 text-xs font-semibold text-purple-700 hover:bg-purple-100 transition-colors ml-auto"
+          >
+            <Star size={11} /> Laisser un avis
+          </a>
         )}
       </div>
     </div>

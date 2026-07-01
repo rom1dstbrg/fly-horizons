@@ -120,7 +120,7 @@ export function AccountTabs({ user, stats, addresses, vouchers, reservations, ne
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Mobile tab bar */}
-        <div className="lg:hidden sticky top-[72px] z-40 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2.5 bg-card/90 backdrop-blur border-b border-border mb-6">
+        <div className="lg:hidden sticky top-[72px] z-40 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2.5 bg-background/95 backdrop-blur border-b border-border mb-6">
           <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
             {NAV.map(({ id, label, Icon }) => {
               const count = badgeCount(id);
@@ -152,16 +152,6 @@ export function AccountTabs({ user, stats, addresses, vouchers, reservations, ne
           {/* Desktop sidebar */}
           <aside className="hidden lg:block w-52 shrink-0 sticky top-28 self-start">
             <div className="space-y-1">
-
-              {/* User compact */}
-              <div className="flex items-center gap-2.5 px-3 py-2 mb-1 rounded-lg bg-secondary/60">
-                <div className="w-7 h-7 rounded-lg bg-navy flex items-center justify-center shrink-0">
-                  <span className="text-[11px] font-bold text-white">{initials(user.full_name || user.email)}</span>
-                </div>
-                <p className="text-xs font-semibold text-foreground truncate leading-tight">
-                  {user.full_name || user.email}
-                </p>
-              </div>
 
               <nav className="space-y-0.5">
                 {NAV.map(({ id, label, Icon }) => {

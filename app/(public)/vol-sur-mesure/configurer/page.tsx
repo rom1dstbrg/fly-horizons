@@ -201,6 +201,15 @@ export default function VolSurMesurePage() {
     sessionStorage.setItem("vsm_pois", JSON.stringify(route.pois));
   }, [route.pois]);
 
+  // ── Pulse initial pour attirer l'œil sur la barre de recherche
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setSearchPulse(true);
+      setTimeout(() => setSearchPulse(false), 1400);
+    }, 1800);
+    return () => clearTimeout(t);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Scroll vers le haut + reset sheet à chaque changement d'étape
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -878,16 +887,16 @@ export default function VolSurMesurePage() {
                     <div className="pointer-events-auto w-full max-w-lg flex items-center gap-2">
                       <div className="relative flex-1 min-w-0">
                         <div className={[
-                          "flex items-center gap-2.5 h-10 rounded-lg px-3.5 transition-all border-2",
+                          "flex items-center gap-2.5 h-11 rounded-xl px-3.5 transition-all border-2",
                           searchPulse
-                            ? "bg-white border-primary shadow-[0_0_0_6px_rgba(242,183,5,0.30)] animate-pulse"
+                            ? "bg-white border-primary shadow-[0_0_0_8px_rgba(242,183,5,0.35)] animate-pulse"
                             : searchFocused || searchOpen
-                            ? "bg-white border-primary shadow-[0_0_0_4px_rgba(242,183,5,0.15)]"
-                            : "bg-white/95 border-[#cdd5e0] shadow-md hover:border-primary/70 backdrop-blur-sm",
+                            ? "bg-white border-primary shadow-[0_0_0_4px_rgba(242,183,5,0.20)]"
+                            : "bg-white border-primary/70 shadow-[0_4px_24px_rgba(242,183,5,0.30)] hover:border-primary backdrop-blur-sm",
                         ].join(" ")}>
                           {searchLoading
-                            ? <Loader2 size={14} className="text-primary animate-spin shrink-0" />
-                            : <Search   size={14} className="text-[#6b7280] shrink-0" />
+                            ? <Loader2 size={15} className="text-primary animate-spin shrink-0" />
+                            : <Search   size={15} className="text-primary shrink-0" />
                           }
                           <input
                             ref={searchInputRef}
@@ -896,8 +905,8 @@ export default function VolSurMesurePage() {
                             onChange={e => setSearchQ(e.target.value)}
                             onFocus={() => { setSearchFocused(true); if (searchResults.length > 0) setSearchOpen(true); }}
                             onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
-                            placeholder="Ajouter un point de survol : ville, château, lac…"
-                            className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/55 outline-none min-w-0"
+                            placeholder="Ville, château, lac, monument…"
+                            className="flex-1 bg-transparent text-sm font-medium text-foreground placeholder:text-muted-foreground/60 outline-none min-w-0"
                             autoComplete="off"
                           />
                           {searchQ && (
@@ -907,6 +916,17 @@ export default function VolSurMesurePage() {
                             </button>
                           )}
                         </div>
+
+                        {/* Hint : visible tant qu'aucun POI n'est ajouté */}
+                        {route.pois.length === 0 && !searchFocused && !searchOpen && (
+                          <div className="pointer-events-none absolute -bottom-8 left-0 right-0 flex justify-center">
+                            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#0b2238]/80 text-white/90 text-[10px] font-semibold backdrop-blur-sm whitespace-nowrap shadow-sm">
+                              <MapPin size={9} className="text-primary shrink-0" />
+                              Cherchez ici un lieu à survoler
+                            </span>
+                          </div>
+                        )}
+
                         {/* Dropdown résultats */}
                         {searchOpen && searchResults.length > 0 && (
                           <div className="absolute top-full left-0 right-0 bg-white border border-border rounded-lg shadow-2xl z-[600] overflow-hidden mt-1.5">

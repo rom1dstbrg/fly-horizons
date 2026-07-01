@@ -555,8 +555,8 @@ function backToGuide() {
         <div className="lg:flex lg:flex-col lg:items-center lg:justify-center" style={{ minHeight: "calc(100vh - 98px)" }}>
         <div className="w-full max-w-[620px] mx-auto px-4 sm:px-6 py-3 sm:py-8 pb-24">
 
-          <p className="text-[11px] font-bold text-muted-foreground/50 uppercase tracking-[2px] flex items-center gap-1.5 mb-4 sm:mb-6">
-            <PlaneTakeoff size={11} /> EBCI · Vol sur mesure
+          <p className="text-[11px] font-bold text-muted-foreground/50 uppercase tracking-[2px] flex items-center gap-1.5 mb-4 sm:mb-6 animate-slide-up">
+            <PlaneTakeoff size={11} className="animate-float" /> EBCI · Vol sur mesure
           </p>
 
           {/* Progress */}
@@ -592,9 +592,9 @@ function backToGuide() {
 
           {/* Step 1: Villes */}
           {guideStep === 1 && (
-            <div className="space-y-4 sm:space-y-6">
+            <div className="space-y-4 sm:space-y-6 animate-slide-up">
               <div className="flex items-start gap-3 sm:gap-4">
-                <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-[#0b2238]/8 flex items-center justify-center shrink-0 mt-0.5">
+                <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-[#0b2238]/8 flex items-center justify-center shrink-0 mt-0.5 animate-float">
                   <Building2 size={17} className="text-[#0b2238] sm:hidden" />
                   <Building2 size={21} className="text-[#0b2238] hidden sm:block" />
                 </div>
@@ -611,12 +611,13 @@ function backToGuide() {
               <div>
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-2 sm:mb-3">Suggestions</p>
                 <div className="grid grid-cols-2 gap-2">
-                  {PRESET_VILLES.map(v => {
+                  {PRESET_VILLES.map((v, i) => {
                     const sel = waypoints.some(w => w.id === v.id);
                     return (
                       <button key={v.id} type="button"
                         onClick={() => toggleWaypoint({ id: v.id, nom: v.nom, sous: v.sous, lat: v.lat, lng: v.lng })}
-                        className={["flex items-start gap-2 sm:gap-3 p-2.5 sm:p-3.5 rounded-xl border text-left cursor-pointer transition-all", sel ? "bg-primary/10 border-primary/40" : "bg-card border-border hover:border-primary/40 hover:bg-primary/5"].join(" ")}>
+                        style={{ animationDelay: `${i * 70}ms` }}
+                        className={["flex items-start gap-2 sm:gap-3 p-2.5 sm:p-3.5 rounded-xl border text-left cursor-pointer transition-all animate-slide-up", sel ? "bg-primary/10 border-primary/40 scale-[1.02]" : "bg-card border-border hover:border-primary/40 hover:bg-primary/5"].join(" ")}>
                         <div className={`mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${sel ? "bg-primary border-primary" : "border-muted-foreground/30"}`}>
                           {sel && <Check size={8} className="text-[#0b2238]" />}
                         </div>
@@ -634,9 +635,9 @@ function backToGuide() {
 
           {/* Step 2: Monuments */}
           {guideStep === 2 && (
-            <div className="space-y-4 sm:space-y-6">
+            <div className="space-y-4 sm:space-y-6 animate-slide-up">
               <div className="flex items-start gap-3 sm:gap-4">
-                <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-[#0b2238]/8 flex items-center justify-center shrink-0 mt-0.5">
+                <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-[#0b2238]/8 flex items-center justify-center shrink-0 mt-0.5 animate-float">
                   <Landmark size={17} className="text-[#0b2238] sm:hidden" />
                   <Landmark size={21} className="text-[#0b2238] hidden sm:block" />
                 </div>
@@ -653,12 +654,13 @@ function backToGuide() {
               <div>
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-2 sm:mb-3">Suggestions</p>
                 <div className="grid grid-cols-2 gap-2">
-                  {PRESET_MONUMENTS.map(m => {
+                  {PRESET_MONUMENTS.map((m, i) => {
                     const sel = waypoints.some(w => w.id === m.id);
                     return (
                       <button key={m.id} type="button"
                         onClick={() => toggleWaypoint({ id: m.id, nom: m.nom, sous: m.sous, lat: m.lat, lng: m.lng })}
-                        className={["flex items-start gap-2 sm:gap-3 p-2.5 sm:p-3.5 rounded-xl border text-left cursor-pointer transition-all", sel ? "bg-primary/10 border-primary/40" : "bg-card border-border hover:border-primary/40 hover:bg-primary/5"].join(" ")}>
+                        style={{ animationDelay: `${i * 70}ms` }}
+                        className={["flex items-start gap-2 sm:gap-3 p-2.5 sm:p-3.5 rounded-xl border text-left cursor-pointer transition-all animate-slide-up", sel ? "bg-primary/10 border-primary/40 scale-[1.02]" : "bg-card border-border hover:border-primary/40 hover:bg-primary/5"].join(" ")}>
                         <div className={`mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${sel ? "bg-primary border-primary" : "border-muted-foreground/30"}`}>
                           {sel && <Check size={8} className="text-[#0b2238]" />}
                         </div>
@@ -676,9 +678,9 @@ function backToGuide() {
 
           {/* Step 3: Lieu personnel */}
           {guideStep === 3 && (
-            <div className="space-y-4 sm:space-y-6">
+            <div className="space-y-4 sm:space-y-6 animate-slide-up">
               <div className="flex items-start gap-3 sm:gap-4">
-                <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-rose-50 flex items-center justify-center shrink-0 mt-0.5">
+                <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-rose-50 flex items-center justify-center shrink-0 mt-0.5 animate-float">
                   <Heart size={17} className="text-rose-400 sm:hidden" />
                   <Heart size={21} className="text-rose-400 hidden sm:block" />
                 </div>
@@ -704,7 +706,7 @@ function backToGuide() {
               <p className="text-[10px] font-bold text-foreground/40 uppercase tracking-[1.5px]">{waypoints.length} lieu{waypoints.length > 1 ? "x" : ""} dans votre itinéraire</p>
               <div className="flex flex-wrap gap-2">
                 {waypoints.map(wp => (
-                  <span key={wp.id} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0b2238]/6 border border-[#0b2238]/15 rounded-full text-xs font-semibold text-[#0b2238]">
+                  <span key={wp.id} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0b2238]/6 border border-[#0b2238]/15 rounded-full text-xs font-semibold text-[#0b2238] animate-in zoom-in-90 fade-in duration-200">
                     {wp.nom}
                     <button type="button" onClick={() => toggleWaypoint(wp)} className="cursor-pointer opacity-50 hover:opacity-100 transition-opacity"><X size={10} /></button>
                   </span>
@@ -733,7 +735,8 @@ function backToGuide() {
 
             {waypoints.length > 0 ? (
               <button type="button" onClick={advanceGuide}
-                className="flex items-center gap-1.5 h-10 px-5 rounded-xl bg-[#0b2238] text-white text-sm font-bold hover:opacity-90 transition-opacity cursor-pointer">
+                className="relative flex items-center gap-1.5 h-10 px-5 rounded-xl bg-[#0b2238] text-white text-sm font-bold hover:opacity-90 transition-opacity cursor-pointer overflow-hidden"
+                style={{ background: "linear-gradient(105deg, #0b2238 0%, #0b2238 40%, #1a3a54 50%, #0b2238 60%, #0b2238 100%)", backgroundSize: "200% auto", animation: "shimmer 2.4s linear infinite" }}>
                 {guideStep === 3 ? "Voir la carte" : "Continuer"} <ArrowRight size={13} />
               </button>
             ) : (
@@ -1156,13 +1159,16 @@ function GeoField({ q, setQ, loading, open, results, onSelect, placeholder = "Re
 }) {
   return (
     <div className="relative">
-      <div className="flex items-center gap-2 h-11 px-4 border border-border rounded-lg bg-input focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
-        <input value={q} onChange={e => setQ(e.target.value)} placeholder={placeholder}
-          className="flex-1 text-sm bg-transparent text-foreground focus:outline-none placeholder:text-muted-foreground/40 font-medium" />
+      <div className="flex items-center gap-2.5 h-12 px-4 border-2 border-primary/65 rounded-xl bg-white shadow-[0_2px_16px_rgba(242,183,5,0.22)] focus-within:border-primary focus-within:shadow-[0_0_0_4px_rgba(242,183,5,0.15)] transition-all">
         {loading
-          ? <Loader2 size={14} className="animate-spin text-muted-foreground shrink-0" />
-          : q && <button type="button" onClick={() => setQ("")} className="cursor-pointer text-muted-foreground hover:text-foreground shrink-0"><X size={14} /></button>
+          ? <Loader2 size={15} className="animate-spin text-primary shrink-0" />
+          : <Search size={15} className="text-primary shrink-0" />
         }
+        <input value={q} onChange={e => setQ(e.target.value)} placeholder={placeholder}
+          className="flex-1 text-sm bg-transparent text-foreground focus:outline-none placeholder:text-muted-foreground/55 font-medium" />
+        {!loading && q && (
+          <button type="button" onClick={() => setQ("")} className="cursor-pointer text-muted-foreground hover:text-foreground shrink-0"><X size={14} /></button>
+        )}
       </div>
       {open && results.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-premium z-50 overflow-hidden">
