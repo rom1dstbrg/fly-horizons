@@ -74,9 +74,9 @@ export default async function NosOffresPage() {
 
           <div className="mt-12 text-center">
             <p className="text-sm text-muted-foreground">
-              Vous avez un itinéraire précis en tête ?{" "}
+              Vous voulez voler sur votre propre route ?{" "}
               <Link href="/vol-sur-mesure" className="text-foreground font-semibold hover:underline">
-                Créez un vol entièrement sur mesure →
+                Créez un vol sur mesure →
               </Link>
             </p>
           </div>
@@ -112,9 +112,9 @@ export default async function NosOffresPage() {
                 <span className="text-[#F2B705]">Payez ce que vous volez.</span>
               </h2>
               <p className="text-white/60 text-sm leading-relaxed mb-6 max-w-md">
-                Contrairement aux vols à durée fixe, ici c&apos;est votre itinéraire qui
-                détermine le prix. Tracez votre route sur la carte : durée et tarif s&apos;affichent
-                instantanément, au kilomètre près.
+                Un assistant pas à pas vous guide — villes, monuments, lieux qui vous tiennent
+                à cœur. Tracez votre route sur la carte : durée et prix s&apos;affichent en direct,
+                à la minute de vol réelle.
               </p>
 
               {/* Différenciation vs packs */}
@@ -123,9 +123,9 @@ export default async function NosOffresPage() {
                   <Zap size={11} className="text-[#F2B705]" />
                 </div>
                 <p className="text-white/70 text-xs leading-relaxed">
-                  <span className="text-white font-semibold">Pas de minuterie. Pas de formule fixe.</span>{" "}
-                  Vous volez 52 minutes ? Vous payez 52 minutes. L&apos;algorithme optimise
-                  automatiquement la route pour que chaque km compte.
+                  <span className="text-white font-semibold">Pas de forfait. Pas de tranche fixe.</span>{" "}
+                  Vous volez 52 minutes ? Vous payez 52 minutes. Le prix s&apos;ajuste à la seconde
+                  de vol réelle — aucune surprise au moment de payer.
                 </p>
               </div>
 
@@ -135,20 +135,20 @@ export default async function NosOffresPage() {
                   {
                     n: "1",
                     icon: <MousePointerClick size={13} />,
-                    title: "Cliquez sur la carte pour placer vos destinations",
-                    desc: "Namur, Bruxelles, la côte, les Ardennes, un château, une ferme… n'importe où en Belgique et au-delà.",
+                    title: "Choisissez vos destinations, guidé étape par étape",
+                    desc: "Villes belges, châteaux, lieux qui vous tiennent à cœur ou adresse précise — l'assistant vous propose des idées, puis la carte finalise l'itinéraire.",
                   },
                   {
                     n: "2",
                     icon: <Zap size={13} />,
-                    title: "Durée et prix s'affichent en temps réel",
-                    desc: "L'algorithme calcule la route optimale à chaque ajout. Vous voyez le coût évoluer avant de confirmer quoi que ce soit.",
+                    title: "Durée et prix s'affichent en temps réel sur la carte",
+                    desc: "À chaque lieu ajouté, le prix se recalcule instantanément. Vous voyez le coût évoluer avant de confirmer quoi que ce soit.",
                   },
                   {
                     n: "3",
                     icon: <PlaneTakeoff size={13} />,
-                    title: "Votre pilote valide votre itinéraire sous 24 h",
-                    desc: "Il vérifie la faisabilité (espaces aériens, restrictions) et vous envoie la route définitive avec possibilité d'ajustement.",
+                    title: "Romain confirme sous 24 h — l'acompte vient ensuite",
+                    desc: "Il vérifie la faisabilité (espaces aériens, restrictions) et vous envoie la confirmation. Le lien de paiement n'arrive qu'après votre accord.",
                   },
                 ].map(({ n, icon, title, desc }) => (
                   <div key={n} className="flex gap-3.5">

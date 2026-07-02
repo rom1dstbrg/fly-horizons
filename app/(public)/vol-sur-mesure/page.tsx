@@ -133,8 +133,7 @@ export default function VolSurMesurePage() {
     // invalidateSize after hidden → visible transition
     const t1 = setTimeout(() => mapRef.current?.invalidateSize(), 80);
     const wps = initWpRef.current;
-    if (!wps.length) return () => clearTimeout(t1);
-    // Give Leaflet time to recover from hidden state
+    // Always clearAll + re-add so deselecting in guide is reflected on map
     const t2 = setTimeout(() => {
       if (!mapRef.current) return;
       mapRef.current.clearAll();
@@ -552,7 +551,7 @@ function backToGuide() {
 
       {/* ════════ GUIDE ════════ */}
       {phase === "guide" && (
-        <div className="lg:flex lg:flex-col lg:items-center lg:justify-center" style={{ minHeight: "calc(100vh - 98px)" }}>
+        <div className="flex flex-col items-center justify-center" style={{ minHeight: "calc(100vh - 98px)" }}>
         <div className="w-full max-w-[620px] mx-auto px-4 sm:px-6 py-3 sm:py-8 pb-24">
 
           <p className="text-[11px] font-bold text-muted-foreground/50 uppercase tracking-[2px] flex items-center gap-1.5 mb-4 sm:mb-6 animate-slide-up">
@@ -606,7 +605,8 @@ function backToGuide() {
               <div>
                 <label className="block text-sm font-semibold text-foreground mb-2">Autre ville ou région</label>
                 <GeoField q={adQ} setQ={setAdQ} loading={adLoading} open={adOpen} results={adResults}
-                  placeholder="Ex : Bruxelles, Huy, Aix-la-Chapelle…" onSelect={selectFromGuideSearch} />
+                  placeholder="Ex : Bruxelles…" onSelect={selectFromGuideSearch}
+                  examples={["Bruxelles", "Liège", "Huy", "Dinant", "Spa", "Mons", "Gand", "Aix-la-Chapelle"]} />
               </div>
               <div>
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-2 sm:mb-3">Suggestions</p>
@@ -649,7 +649,8 @@ function backToGuide() {
               <div>
                 <label className="block text-sm font-semibold text-foreground mb-2">Autre monument ou site</label>
                 <GeoField q={adQ} setQ={setAdQ} loading={adLoading} open={adOpen} results={adResults}
-                  placeholder="Ex : Château de Bouillon, Abbaye d'Orval…" onSelect={selectFromGuideSearch} />
+                  placeholder="Ex : Château de Bouillon…" onSelect={selectFromGuideSearch}
+                  examples={["Château de Bouillon", "Abbaye d'Orval", "Fort de Huy", "Grottes de Han", "Château de Modave", "Château de Freÿr"]} />
               </div>
               <div>
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-2 sm:mb-3">Suggestions</p>
@@ -692,7 +693,8 @@ function backToGuide() {
               <div>
                 <label className="block text-sm font-semibold text-foreground mb-2">Adresse ou lieu</label>
                 <GeoField q={adQ} setQ={setAdQ} loading={adLoading} open={adOpen} results={adResults}
-                  placeholder="Ex : Rue de la Loi 1, Bruxelles…" onSelect={selectFromGuideSearch} />
+                  placeholder="Ex : ma maison à Namur…" onSelect={selectFromGuideSearch}
+                  examples={["ma maison à Namur", "Rue de la Loi 1, Bruxelles", "notre ferme à Libramont", "l'école des enfants", "le bureau à Liège"]} />
               </div>
               <div className="hidden sm:block bg-[#f5f5f7] rounded-xl px-4 py-3.5 text-[12px] text-muted-foreground leading-relaxed">
                 Pas de lieu spécifique ? Aucun problème — passez à la carte pour tracer librement votre route.
@@ -1153,18 +1155,64 @@ function backToGuide() {
 }
 
 // ── GeoField ──────────────────────────────────────────────────────
-function GeoField({ q, setQ, loading, open, results, onSelect, placeholder = "Rechercher un lieu…" }: {
+function GeoField({ q, setQ, loading, open, results, onSelect, placeholder = "Rechercher un lieu…", examples }: {
   q: string; setQ: (v: string) => void; loading: boolean; open: boolean;
-  results: NominatimResult[]; onSelect: (r: NominatimResult) => void; placeholder?: string;
+  results: NominatimResult[]; onSelect: (r: NominatimResult) => void; placeholder?: string; examples?: string[];
 }) {
+  const exRef = useRef(examples);
+  const [animText, setAnimText] = useState(() =>
+    exRef.current?.length ? "Ex : " + exRef.current[0] : ""
+  );
+
+  useEffect(() => {
+    const exs = exRef.current;
+    if (!exs || exs.length === 0) return;
+
+    // Start fully typed, wait 2s, then cycle
+    let idx      = 0;
+    let charIdx  = exs[0].length;
+    let isTyping = false;
+    let timer: ReturnType<typeof setTimeout>;
+
+    function tick() {
+      const word = "Ex : " + exs[idx];
+      if (isTyping) {
+        charIdx++;
+        setAnimText(word.slice(0, charIdx));
+        if (charIdx >= word.length) {
+          isTyping = false;
+          timer = setTimeout(tick, 2000);
+        } else {
+          timer = setTimeout(tick, 65);
+        }
+      } else {
+        charIdx--;
+        setAnimText(word.slice(0, Math.max(0, charIdx)));
+        if (charIdx <= 0) {
+          idx = (idx + 1) % exs.length;
+          charIdx = 0;
+          isTyping = true;
+          timer = setTimeout(tick, 200);
+        } else {
+          timer = setTimeout(tick, 42);
+        }
+      }
+    }
+
+    timer = setTimeout(tick, 2000);
+    return () => clearTimeout(timer);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const activePlaceholder = examples?.length ? animText : placeholder;
+
   return (
     <div className="relative">
-      <div className="flex items-center gap-2.5 h-12 px-4 border-2 border-primary/65 rounded-xl bg-white shadow-[0_2px_16px_rgba(242,183,5,0.22)] focus-within:border-primary focus-within:shadow-[0_0_0_4px_rgba(242,183,5,0.15)] transition-all">
+      <div className="flex items-center gap-2.5 h-12 px-4 border border-gray-200 rounded-xl bg-white shadow-sm focus-within:border-foreground/25 focus-within:shadow-[0_0_0_3px_rgba(11,34,56,0.06)] transition-all">
         {loading
-          ? <Loader2 size={15} className="animate-spin text-primary shrink-0" />
-          : <Search size={15} className="text-primary shrink-0" />
+          ? <Loader2 size={15} className="animate-spin text-foreground/35 shrink-0" />
+          : <Search size={15} className="text-foreground/35 shrink-0" />
         }
-        <input value={q} onChange={e => setQ(e.target.value)} placeholder={placeholder}
+        <input value={q} onChange={e => setQ(e.target.value)} placeholder={activePlaceholder}
           className="flex-1 text-sm bg-transparent text-foreground focus:outline-none placeholder:text-muted-foreground/55 font-medium" />
         {!loading && q && (
           <button type="button" onClick={() => setQ("")} className="cursor-pointer text-muted-foreground hover:text-foreground shrink-0"><X size={14} /></button>

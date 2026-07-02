@@ -221,9 +221,9 @@ export default async function HomePage() {
 
             <div className="mt-12 text-center">
               <p className="text-sm text-muted-foreground">
-                Vous avez un itinéraire précis en tête ?{" "}
+                Vous voulez voler sur votre propre route ?{" "}
                 <Link href="/vol-sur-mesure" className="text-foreground font-semibold hover:underline">
-                  Créez un vol entièrement sur mesure →
+                  Créez un vol sur mesure →
                 </Link>
               </p>
             </div>
@@ -257,8 +257,8 @@ export default async function HomePage() {
                 <span className="text-[#F2B705]">Payez ce que vous volez.</span>
               </h2>
               <p className="text-white/60 text-sm leading-relaxed mb-7 max-w-md">
-                Pas de forfait à la minute. Tracez votre itinéraire sur la carte interactive
-                et voyez le prix s&apos;ajuster en direct, kilomètre par kilomètre.
+                Un assistant pas à pas vous aide à choisir vos destinations — villes, châteaux, lieux
+                qui vous tiennent à cœur. Le prix s&apos;affiche en direct selon votre itinéraire.
               </p>
 
               {/* Features */}
@@ -266,18 +266,18 @@ export default async function HomePage() {
                 {[
                   {
                     icon: <MousePointerClick size={14} />,
-                    title: "Itinéraire 100 % libre",
-                    desc: "Namur, Bruxelles, la côte, les Ardennes... n'importe quelle destination en Belgique et au-delà.",
+                    title: "Guidé étape par étape",
+                    desc: "L'assistant vous propose des villes, des monuments, des lieux perso. Puis la carte calcule votre route et son prix en temps réel.",
                   },
                   {
                     icon: <Zap size={14} />,
-                    title: "Prix calculé en direct, au km",
-                    desc: "Vous voyez le montant évoluer avant de confirmer quoi que ce soit. Zéro surprise.",
+                    title: "Prix à la minute, pas au forfait",
+                    desc: "Volez 52 minutes ? Vous payez 52 minutes. Pas de tranche fixe, le prix s'ajuste à la seconde de vol réelle. Zéro surprise.",
                   },
                   {
                     icon: <PlaneTakeoff size={14} />,
-                    title: "Votre pilote valide votre itinéraire sous 24 h",
-                    desc: "Il vérifie la faisabilité de l'espace aérien et vous confirme avec possibilité d'ajuster.",
+                    title: "Romain confirme sous 24 h — vous payez ensuite",
+                    desc: "Il vérifie l'espace aérien et vous envoie la confirmation. L'acompte n'est demandé qu'après votre accord.",
                   },
                 ].map(({ icon, title, desc }) => (
                   <div key={title} className="flex items-start gap-3.5">
@@ -313,7 +313,7 @@ export default async function HomePage() {
                 </Link>
                 <p className="flex items-center gap-1.5 text-white/35 text-xs self-center">
                   <Clock size={12} />
-                  Aucun paiement immédiat
+                  Aucun paiement avant confirmation
                 </p>
               </div>
             </div>
