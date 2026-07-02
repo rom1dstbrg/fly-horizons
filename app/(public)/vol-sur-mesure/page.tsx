@@ -1165,8 +1165,8 @@ function GeoField({ q, setQ, loading, open, results, onSelect, placeholder = "Re
   );
 
   useEffect(() => {
-    const exs = exRef.current;
-    if (!exs || exs.length === 0) return;
+    const exs: string[] = exRef.current ?? [];
+    if (exs.length === 0) return;
 
     // Start fully typed, wait 2s, then cycle
     let idx      = 0;
