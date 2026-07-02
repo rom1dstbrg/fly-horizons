@@ -1,18 +1,20 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import { DA40Section } from "@/components/about/DA40Section";
 import {
-  BadgeCheck, ShieldCheck, Route, ArrowRight, MapPin, Clock,
+  BadgeCheck, Route, ArrowRight, MapPin, Clock,
   Banknote, Compass, Users,
 } from "lucide-react";
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
 
 export const metadata: Metadata = {
   title: "À propos · Fly Horizons",
   description:
     "Découvrez Romain DESTANBERG, fondateur et pilote de Fly Horizons. Vols en avion léger depuis Charleroi, dans un cadre de partage de frais accessible à tous.",
-  alternates: { canonical: "https://fly-horizons.com/about" },
+  alternates: { canonical: `${siteUrl}/about` },
 };
 
 export default function AboutPage() {
@@ -20,65 +22,73 @@ export default function AboutPage() {
     <main className="min-h-screen bg-[#f5f5f7]">
 
       {/* ══ ROMAIN ══ */}
-      <section className="bg-secondary pt-[98px] pb-20 sm:pb-28">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-2 sm:pt-12">
+      <section className="bg-[#f5f5f7] pt-[98px]">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-2 sm:pt-12 pb-16 sm:pb-24">
 
           {/*
-            Mobile  : 1-header · 2-photo · 3-body (order utilities)
-            Desktop : col-1 = photo (row-span-2) · col-2 row-1 = header · col-2 row-2 = body
+            Mobile / tablette (< lg) : DOM order → A, photo, B
+            Desktop (lg+) : grid 2 col — A col1 row1 | photo col2 rows1-2 | B col1 row2
           */}
-          <div className="grid md:grid-cols-[400px_1fr] lg:grid-cols-[460px_1fr] gap-x-10 lg:gap-x-16 gap-y-6 md:gap-y-8">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16">
 
-            {/* 1. Header */}
-            <div className="order-1 md:col-start-2 md:row-start-1">
-              <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-4">Votre pilote</p>
-              <h1 className="text-5xl sm:text-6xl font-black text-foreground leading-none tracking-tight mb-2">
+            {/* A — Eyebrow + H1 + sous-titre */}
+            <div>
+              <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-5">Votre pilote</p>
+              <h1 className="text-5xl sm:text-6xl xl:text-7xl font-black text-foreground leading-none tracking-tight mb-3">
                 Romain<br />
-                <span className="text-primary">Destanberg</span>
+                <span className="text-[#0b2238]">Destanberg</span>
               </h1>
               <p className="text-foreground/40 text-xs font-semibold uppercase tracking-[2px]">
                 Fondateur &amp; Pilote · Fly Horizons
               </p>
             </div>
 
-            {/* 2. Photo */}
-            <div className="order-2 md:order-none md:col-start-1 md:row-start-1 md:row-span-2 relative aspect-[4/5] md:aspect-auto rounded-lg overflow-hidden shadow-xl">
+            {/* Photo — col droite desktop (row-span-2), entre A et B sur mobile */}
+            <div className="lg:row-span-2 relative aspect-[4/5] lg:aspect-auto rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.15)]">
               <Image
                 src="/photo-pilote.jpg"
                 alt="Romain, pilote et fondateur de Fly Horizons"
                 fill
                 className="object-cover object-top"
-                sizes="(max-width: 768px) 100vw, 460px"
+                sizes="(max-width: 1024px) 100vw, 50vw"
                 priority
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-              <div className="absolute bottom-4 left-4">
-                <div className="inline-flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-lg px-3 py-2">
-                  <BadgeCheck size={13} className="text-primary shrink-0" />
-                  <span className="text-white text-[12px] font-semibold">Licence CPL(A)</span>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+              <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between gap-3">
+                <div className="inline-flex items-center gap-2 bg-black/55 backdrop-blur-md rounded-xl px-3.5 py-2.5">
+                  <BadgeCheck size={14} className="text-[#F2B705] shrink-0" />
+                  <span className="text-white text-xs font-semibold">Licence CPL(A)</span>
+                </div>
+                <div className="bg-white/95 backdrop-blur-sm rounded-xl px-4 py-3 shadow-sm text-right">
+                  <p className="text-xl font-black text-[#0b2238] leading-none">4 ans</p>
+                  <p className="text-foreground/45 text-[10px] font-medium uppercase tracking-wide">d&apos;expérience</p>
                 </div>
               </div>
             </div>
 
-            {/* 3. Body */}
-            <div className="order-3 md:order-none md:col-start-2 md:row-start-2 flex flex-col">
-              <div className="space-y-4 text-foreground/65 text-sm leading-relaxed mb-10">
+            {/* B — Citation + bio + tags */}
+            <div className="flex flex-col">
+              <div className="border-l-[3px] border-[#F2B705] pl-5 mb-8">
+                <p className="text-foreground/65 text-[15px] italic leading-relaxed">
+                  &ldquo;Depuis que j&apos;ai découvert ce que c&apos;était de voir le sol
+                  s&apos;éloigner à sept ans, je n&apos;ai jamais vraiment atterri.&rdquo;
+                </p>
+              </div>
+
+              <div className="space-y-3.5 text-foreground/60 text-sm leading-relaxed mb-9">
                 <p>
-                  Depuis que j&apos;ai découvert ce que c&apos;était de voir le sol s&apos;éloigner
-                  à sept ans, je n&apos;ai jamais vraiment atterri. Cette passion pour l&apos;aviation,
-                  je l&apos;ai construite année après année. Depuis 4 ans, je la vis pleinement.
+                  Cette passion pour l&apos;aviation, je l&apos;ai construite année après année.
+                  Depuis 4 ans, je la vis pleinement. Et depuis Fly Horizons, je la partage.
                 </p>
                 <p>
-                  Fly Horizons est né d&apos;une envie simple : partager cette sensation avec ceux
-                  qui n&apos;ont jamais eu l&apos;occasion d&apos;y accéder. Pas de barrière
-                  d&apos;entrée, pas de jargon inutile. Juste vous, l&apos;avion, et l&apos;horizon
-                  que vous choisissez.
+                  Pas de barrière d&apos;entrée, pas de jargon inutile. Juste vous, l&apos;avion,
+                  et l&apos;horizon que vous choisissez. Chaque vol est préparé avec vous :
+                  itinéraire adapté à la météo et à vos envies, briefing sécurité complet avant
+                  le départ, casques audio fournis pour suivre le vol en temps réel.
                 </p>
                 <p>
-                  Chaque vol est préparé avec vous : itinéraire adapté à la météo et à vos envies,
-                  briefing sécurité complet avant le départ, casques audio fournis pour suivre
-                  le vol en temps réel. La sécurité n&apos;est pas un argument de vente ; c&apos;est
-                  simplement la façon dont je travaille.
+                  La sécurité n&apos;est pas un argument de vente. C&apos;est simplement
+                  la façon dont je travaille.
                 </p>
               </div>
 
@@ -87,13 +97,12 @@ export default function AboutPage() {
                   { icon: <BadgeCheck size={12} />, label: "Licence CPL(A)" },
                   { icon: <Clock size={12} />,       label: "Pilote depuis 4 ans" },
                   { icon: <MapPin size={12} />,      label: "Aérodrome EBCI · Charleroi" },
-                  { icon: <ShieldCheck size={12} />, label: "Assurance passagers incluse" },
                 ].map(({ icon, label }) => (
                   <span
                     key={label}
                     className="inline-flex items-center gap-1.5 bg-white border border-border text-foreground/65 text-[11px] font-medium px-3 py-1.5 rounded-full"
                   >
-                    <span className="text-primary">{icon}</span>
+                    <span className="text-[#F2B705]">{icon}</span>
                     {label}
                   </span>
                 ))}
@@ -105,7 +114,7 @@ export default function AboutPage() {
       </section>
 
       {/* ══ L'AVION ══ */}
-      <section className="bg-white py-20 sm:py-28">
+      <section className="bg-white border-t border-border py-20 sm:py-28">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
           <DA40Section />
         </div>
@@ -115,12 +124,12 @@ export default function AboutPage() {
       <section className="bg-[#f5f5f7] py-20 sm:py-28 overflow-hidden">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
-          <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-4">
+          <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-4">
             L&apos;approche Fly Horizons
           </p>
           <h2 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight mb-16">
             Sans marge.<br />
-            <span className="text-primary">Uniquement les frais réels.</span>
+            <span className="text-[#0b2238]">Uniquement les frais réels.</span>
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -145,23 +154,16 @@ export default function AboutPage() {
               },
             ].map(({ num, icon, title, text }) => (
               <div key={title} className="relative bg-white rounded-2xl p-8 flex flex-col gap-5 shadow-[0_2px_20px_rgba(0,0,0,0.06)] overflow-hidden">
-
-                {/* Numéro décoratif */}
                 <span className="absolute -top-3 right-4 text-[96px] font-black leading-none select-none pointer-events-none tabular-nums text-foreground/[0.05]">
                   {num}
                 </span>
-
-                {/* Icône gold */}
-                <div className="relative z-10 w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-[#0b2238] shadow-[0_6px_24px_rgba(242,183,5,0.35)]">
+                <div className="relative z-10 w-14 h-14 rounded-2xl bg-[#F2B705] flex items-center justify-center text-[#0b2238] shadow-[0_6px_24px_rgba(242,183,5,0.35)]">
                   {icon}
                 </div>
-
-                {/* Texte */}
                 <div className="flex flex-col gap-1.5">
                   <p className="text-foreground font-black text-[17px] leading-snug">{title}</p>
                   <p className="text-foreground/60 text-sm leading-relaxed">{text}</p>
                 </div>
-
               </div>
             ))}
           </div>
@@ -171,28 +173,32 @@ export default function AboutPage() {
 
       {/* ══ CTA ══ */}
       <section className="bg-white border-t border-border py-14">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-          <div>
-            <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-3">Prêt à décoller ?</p>
-            <h2 className="text-2xl sm:text-3xl font-black text-foreground leading-tight">
-              Réservez votre vol ou créez votre itinéraire.
-            </h2>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-            <Link
-              href="/nos-offres"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-primary text-primary-foreground rounded-lg text-sm font-black hover:bg-[#e6a800] active:scale-[0.98] transition-all shadow-gold"
-            >
-              Voir les vols
-              <ArrowRight size={15} />
-            </Link>
-            <Link
-              href="/vol-sur-mesure"
-              className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 border border-border text-foreground/70 rounded-lg text-sm font-semibold hover:border-foreground hover:text-foreground transition-colors"
-            >
-              <Route size={15} />
-              Vol sur mesure
-            </Link>
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div className="text-center lg:text-left">
+              <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">Prêt à partir ?</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-foreground leading-snug mb-1.5">
+                Regardez ce qu&apos;on propose,<br className="hidden sm:block" />
+                ou dites-nous ce que vous avez en tête.
+              </h2>
+              <p className="text-foreground/50 text-sm">Romain vous revient sous 24 heures.</p>
+            </div>
+            <div className="flex flex-wrap gap-3 justify-center lg:justify-start shrink-0">
+              <Link
+                href="/nos-offres"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#F2B705] text-[#0b2238] rounded-lg text-sm font-black hover:bg-[#e6a800] transition-colors shadow-[0_4px_16px_rgba(242,183,5,0.25)]"
+              >
+                Voir les vols
+                <ArrowRight size={15} />
+              </Link>
+              <Link
+                href="/vol-sur-mesure"
+                className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 border border-border text-foreground/70 rounded-lg text-sm font-semibold hover:border-foreground hover:text-foreground transition-colors"
+              >
+                <Route size={15} />
+                Vol sur mesure
+              </Link>
+            </div>
           </div>
         </div>
       </section>

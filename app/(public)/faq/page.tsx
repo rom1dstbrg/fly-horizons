@@ -117,8 +117,8 @@ const THEMES: Theme[] = [
       },
       {
         q: "Comment fonctionne le vol sur mesure ?",
-        aText: "Le vol sur mesure vous permet de dessiner votre propre itinéraire sur une carte interactive. Vous placez des points de passage : l'algorithme calcule la distance totale, la durée estimée et le prix en temps réel. Vous savez exactement ce que vous payez avant de confirmer.",
-        a: <>Le vol sur mesure vous permet de tracer votre propre itinéraire sur une carte interactive. Vous placez des points de passage : l'algorithme calcule la distance, la durée estimée et le prix en temps réel. Accédez à l'outil via <Link href="/vol-sur-mesure" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Vol sur mesure</Link>.</>,
+        aText: "Un assistant pas à pas vous guide pour choisir vos destinations : villes belges, monuments, lieux qui vous tiennent à cœur ou adresse précise. L'itinéraire se finalise sur la carte et le prix s'ajuste en temps réel, à la minute de vol réelle. Pas de forfait ni de tranche fixe : si vous volez 52 minutes, vous payez 52 minutes. Une fois votre demande envoyée, Romain vérifie la faisabilité (espaces aériens, restrictions) et vous revient sous 24 heures. Le lien de paiement n'est envoyé qu'après votre accord. Aucun paiement immédiat.",
+        a: <>Un assistant pas à pas vous guide pour choisir vos destinations : villes belges, monuments, lieux qui vous tiennent à cœur ou adresse précise. L&apos;itinéraire se finalise sur la carte et le prix s&apos;ajuste en temps réel, à la minute de vol réelle. Pas de forfait ni de tranche fixe. Romain vérifie la faisabilité et vous revient sous 24 heures. Le lien de paiement n&apos;arrive qu&apos;après votre accord. Accédez à l&apos;outil via <Link href="/vol-sur-mesure" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Vol sur mesure</Link>.</>,
       },
       {
         q: "D'où partent les vols ?",
