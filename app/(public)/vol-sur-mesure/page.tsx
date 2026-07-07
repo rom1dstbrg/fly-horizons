@@ -496,7 +496,7 @@ function backToGuide() {
 
   // ── RENDER ───────────────────────────────────────────────────
   return (
-    <div className={phase === "map" ? "h-screen overflow-hidden flex flex-col" : "min-h-screen bg-[#f5f5f7]"}>
+    <div className={phase === "map" ? "h-screen overflow-hidden flex flex-col bg-[#f5f5f7]" : "min-h-screen bg-[#f5f5f7]"}>
 
       {/* Navbar spacer — always present */}
       <div className={phase === "map" ? "h-[80px] sm:h-[98px] shrink-0" : "h-[80px] sm:h-[98px]"} />
@@ -504,13 +504,13 @@ function backToGuide() {
       {/* ════════ MAP — always mounted, hidden when not active ════════ */}
       <div className={[
         phase === "map"
-          ? "flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden"
+          ? "flex-1 min-h-0 flex flex-col lg:flex-row gap-3 lg:gap-4 p-3 lg:p-4 pb-4 lg:pb-5"
           : "hidden",
       ].join(" ")}>
 
         {/* Map area */}
-        <div className="relative flex-1 min-h-0 overflow-hidden">
-          <div className="absolute inset-0 overflow-hidden">
+        <div className="relative flex-1 min-h-0 rounded-2xl overflow-hidden border border-border shadow-sm">
+          <div className="absolute inset-0">
             <LeafletMapAdventure ref={mapRef} styleMode="rapide" onRouteChange={setRoute} />
           </div>
           {/* Back button */}
@@ -521,14 +521,14 @@ function backToGuide() {
         </div>
 
         {/* Desktop sidebar */}
-        <div className="hidden lg:flex flex-col w-[400px] border-l border-border bg-white overflow-y-auto">
-          <div className="sticky top-0 bg-white border-b border-border px-4 py-4 z-10">
+        <div className="hidden lg:flex flex-col w-[380px] rounded-2xl border border-border bg-white overflow-hidden shrink-0">
+          <div className="shrink-0 border-b border-border px-4 py-4">
             <p className="text-[10px] font-black text-primary uppercase tracking-[3px] mb-1">Votre itinéraire</p>
             <p className="text-sm font-black text-foreground">Cliquez sur la carte pour ajouter des lieux</p>
             <p className="text-[11px] text-muted-foreground mt-0.5">Départ et retour depuis Charleroi EBCI</p>
           </div>
-          {panelContent()}
-          {mapCta()}
+          <div className="flex-1 min-h-0 overflow-y-auto">{panelContent()}</div>
+          <div className="shrink-0 border-t border-border">{mapCta()}</div>
         </div>
 
         {/* Mobile drawer — z-[1001] to stay above Leaflet attribution (z-1000) */}
