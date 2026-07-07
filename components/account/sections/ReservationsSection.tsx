@@ -160,13 +160,13 @@ function ResaCard({ resa, upcoming, showWeather = false }: { resa: Reservation; 
       {resa.statut === "payment_pending" && !resa.payment_token && (
         <div className="px-5 pb-4">
           {!isPerso ? (
-            <Link
+            <a
               href={`/api/reservation/resume/${resa.id}`}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:brightness-105 transition-all"
             >
               <CreditCard size={13} />
               Finaliser le paiement
-            </Link>
+            </a>
           ) : (
             <div className="flex items-start gap-2.5 p-3 rounded-lg bg-orange-50 border border-orange-200">
               <AlertCircle size={14} className="text-orange-500 shrink-0 mt-0.5" />

@@ -244,13 +244,13 @@ function ResaCard({
       {/* Paiement à reprendre (pas de token — session Stripe expirée) */}
       {resa.statut === "payment_pending" && !resa.payment_token && !isPerso && (
         <div className="mt-3 pt-3 border-t border-border">
-          <Link
+          <a
             href={`/api/reservation/resume/${resa.id}`}
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:brightness-105 transition-all"
           >
             <CreditCard size={12} />
             Finaliser le paiement
-          </Link>
+          </a>
         </div>
       )}
 
