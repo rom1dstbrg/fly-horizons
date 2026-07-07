@@ -687,7 +687,7 @@ export function AccountClient({
                           </div>
                         )}
 
-                        {/* Lien de paiement acompte */}
+                        {/* Lien de paiement acompte (token existant) */}
                         {hasPaymentLink && (
                           <div className="mt-3 pt-3 border-t border-border">
                             <Link
@@ -696,6 +696,19 @@ export function AccountClient({
                             >
                               <CreditCard size={12} />
                               {isPerso ? "Régler la provision" : "Finaliser le paiement"}{resa.acompte != null ? ` · ${resa.acompte} €` : ""}
+                            </Link>
+                          </div>
+                        )}
+
+                        {/* Paiement à reprendre (session Stripe expirée, pas de token) */}
+                        {resa.statut === "payment_pending" && !resa.payment_token && !isPerso && (
+                          <div className="mt-3 pt-3 border-t border-border">
+                            <Link
+                              href={`/api/reservation/resume/${resa.id}`}
+                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:brightness-105 transition-all"
+                            >
+                              <CreditCard size={12} />
+                              Finaliser le paiement
                             </Link>
                           </div>
                         )}
