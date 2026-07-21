@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Mail, MapPin, Lock, Clock } from "lucide-react";
-import { FaPlane, FaRoute, FaUser, FaCircleQuestion, FaBookOpen, FaMap, FaEnvelope, FaImages } from "react-icons/fa6";
+import { FaPlane, FaRoute, FaUser, FaCircleQuestion, FaMap, FaEnvelope, FaImages, FaWhatsapp } from "react-icons/fa6";
 import type { IconType } from "react-icons";
 import { NewsletterForm } from "@/components/NewsletterForm";
 
@@ -31,7 +31,6 @@ const SERVICES: { href: string; label: string; icon: IconType }[] = [
 const INFOS: { href: string; label: string; icon: IconType }[] = [
   { href: "/about",       label: "À propos",            icon: FaUser },
   { href: "/faq",         label: "FAQ",                 icon: FaCircleQuestion },
-  { href: "/guide",       label: "Guide passager",      icon: FaBookOpen },
   { href: "/access-ebci", label: "Plan d'accès · EBCI", icon: FaMap },
   { href: "/galerie",     label: "Galerie",             icon: FaImages },
 ];
@@ -123,6 +122,11 @@ export function Footer() {
                   <Link href="/contact" className="flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors">
                     <FaEnvelope size={12} className="shrink-0" />Formulaire de contact
                   </Link>
+                </li>
+                <li>
+                  <a href="https://wa.me/32472324135" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors">
+                    <FaWhatsapp size={12} className="shrink-0" />Contacter sur WhatsApp
+                  </a>
                 </li>
               </ul>
             </div>
@@ -239,17 +243,16 @@ export function Footer() {
                   </a>
                 </div>
                 <div className="flex items-start gap-2.5">
+                  <FaWhatsapp size={13} className="text-primary shrink-0 mt-0.5" />
+                  <a href="https://wa.me/32472324135" target="_blank" rel="noopener noreferrer" className="text-sm text-white/45 hover:text-white transition-colors">
+                    Contacter sur WhatsApp
+                  </a>
+                </div>
+                <div className="flex items-start gap-2.5">
                   <MapPin size={13} className="text-primary shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm text-white/45">Aéroport de Charleroi</p>
                     <p className="text-xs text-white/25 mt-0.5">EBCI · Gosselies, Belgique</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <Clock size={13} className="text-primary shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-white/45">7j/7 sur réservation</p>
-                    <p className="text-xs text-white/25 mt-0.5">Réponse email sous 24 h</p>
                   </div>
                 </div>
               </div>

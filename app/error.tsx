@@ -13,9 +13,6 @@ export default function Error({
     <>
       <Header />
       <main className="min-h-screen bg-white flex flex-col items-center justify-center px-4 text-center pt-[86px]">
-        <div className="w-16 h-16 rounded-2xl bg-[#f5f5f7] flex items-center justify-center mb-6">
-          <span className="text-3xl select-none">✈️</span>
-        </div>
         <h1 className="text-2xl font-black text-[#0b2238] mb-2">Une erreur est survenue</h1>
         <p className="text-[#0b2238]/50 text-sm mb-8 max-w-xs">
           Quelque chose s&apos;est mal passé. Réessayez ou revenez à l&apos;accueil.

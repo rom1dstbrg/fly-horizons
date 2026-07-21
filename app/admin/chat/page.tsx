@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/admin/PageHeader";
-import { ChevronDown, Download, Bot, User, Loader2 } from "lucide-react";
-import { getChatSessions, type ChatSession } from "@/lib/actions/chat";
+import { ChevronDown, Download, Bot, User, Loader2, Trash2 } from "lucide-react";
+import { getChatSessions, deleteChatSession, type ChatSession } from "@/lib/actions/chat";
 
 export default function AdminChatPage() {
   const [sessions, setSessions]   = useState<ChatSession[]>([]);
   const [loading, setLoading]     = useState(true);
   const [openId, setOpenId]       = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     getChatSessions().then((data) => {
@@ -30,6 +31,14 @@ export default function AdminChatPage() {
     a.download = `chat-sessions-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  async function handleDelete(sessionId: string) {
+    setDeletingId(sessionId);
+    await deleteChatSession(sessionId);
+    setSessions(prev => prev.filter(s => s.id !== sessionId));
+    if (openId === sessionId) setOpenId(null);
+    setDeletingId(null);
   }
 
   const totalMessages = sessions.reduce((s, sess) => s + sess.messages.filter(m => m.role === "user").length, 0);
@@ -71,23 +80,36 @@ export default function AdminChatPage() {
 
             return (
               <div key={session.id} className="bg-card border border-border rounded-xl overflow-hidden">
-                <button
-                  onClick={() => setOpenId(isOpen ? null : session.id)}
-                  className="w-full flex items-center gap-4 px-4 py-3.5 text-left hover:bg-secondary/50 transition-colors cursor-pointer"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      {firstUserMsg?.content ?? "—"}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {date} · {userMsgCount} question{userMsgCount > 1 ? "s" : ""}
-                    </p>
-                  </div>
-                  <ChevronDown
-                    size={15}
-                    className={`shrink-0 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
-                  />
-                </button>
+                <div className="flex items-center">
+                  <button
+                    onClick={() => setOpenId(isOpen ? null : session.id)}
+                    className="flex-1 flex items-center gap-4 px-4 py-3.5 text-left hover:bg-secondary/50 transition-colors cursor-pointer min-w-0"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {firstUserMsg?.content ?? "—"}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {date} · {userMsgCount} question{userMsgCount > 1 ? "s" : ""}
+                      </p>
+                    </div>
+                    <ChevronDown
+                      size={15}
+                      className={`shrink-0 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(session.id)}
+                    disabled={deletingId === session.id}
+                    className="shrink-0 p-3.5 text-muted-foreground/40 hover:text-destructive transition-colors cursor-pointer disabled:opacity-40"
+                    title="Supprimer cette conversation"
+                  >
+                    {deletingId === session.id
+                      ? <Loader2 size={14} className="animate-spin" />
+                      : <Trash2 size={14} />
+                    }
+                  </button>
+                </div>
 
                 <div className={`grid transition-all duration-200 ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
                   <div className="overflow-hidden">

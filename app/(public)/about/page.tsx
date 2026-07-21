@@ -46,7 +46,7 @@ export default function AboutPage() {
             {/* Photo — col droite desktop (row-span-2), entre A et B sur mobile */}
             <div className="lg:row-span-2 relative aspect-[4/5] lg:aspect-auto rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.15)]">
               <Image
-                src="/photo-pilote.jpg"
+                src="/photo-pilote.png"
                 alt="Romain, pilote et fondateur de Fly Horizons"
                 fill
                 className="object-cover object-top"

@@ -7,6 +7,7 @@ import {
   ChevronDown, Search, MessageCircle, X,
   CalendarCheck, CreditCard, Gift, CloudRain, PlaneTakeoff, Users,
 } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa6";
 
 // ── Recherche intelligente ──────────────────────────────────────────────────
 
@@ -463,12 +464,23 @@ export default function FaqPage() {
               <p className="text-sm font-bold text-foreground">Une question rapide ?</p>
               <p className="text-xs text-muted-foreground mt-0.5">Notre assistant répond instantanément, 24h/24.</p>
             </div>
-            <button
-              onClick={() => window.dispatchEvent(new CustomEvent("fh:open-chat"))}
-              className="shrink-0 px-5 py-2.5 text-sm font-black bg-[#0b2238] text-white rounded-lg hover:bg-[#0b2238]/85 transition-colors cursor-pointer"
-            >
-              Poser une question →
-            </button>
+            <div className="shrink-0 flex items-center gap-2">
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent("fh:open-chat"))}
+                className="px-5 py-2.5 text-sm font-black bg-[#0b2238] text-white rounded-lg hover:bg-[#0b2238]/85 transition-colors cursor-pointer"
+              >
+                Poser une question →
+              </button>
+              <a
+                href="https://wa.me/32472324135"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-bold bg-[#25D366] text-white rounded-lg hover:bg-[#1ebe5d] transition-colors"
+              >
+                <FaWhatsapp size={15} />
+                WhatsApp
+              </a>
+            </div>
           </div>
 
           {/* CTA contact */}

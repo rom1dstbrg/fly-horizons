@@ -46,7 +46,7 @@ type Phase     = "guide" | "map" | "booking" | "done";
 type GuideStep = 1 | 2 | 3;
 
 interface Waypoint { id: string; nom: string; sous?: string; lat: number; lng: number }
-interface Stopover { id: string; icao: string; nom: string; taxe: number }
+interface Stopover { id: string; icao: string; nom: string; taxe: number; lat?: number | null; lng?: number | null }
 interface NominatimResult { place_id: number; display_name: string; lat: string; lon: string }
 
 // ── Page ──────────────────────────────────────────────────────────
@@ -119,8 +119,15 @@ export default function VolSurMesurePage() {
           if (key === "acompte_perso_heure") setAcompteH(parseFloat(value));
         });
       });
-    sb.from("stopovers").select("id, icao, nom, taxe").eq("actif", true).order("nom")
-      .then(({ data }) => setAvailableStops((data ?? []) as Stopover[]));
+    sb.from("stopovers").select("id, icao, nom, taxe, lat, lng").eq("actif", true).order("nom")
+      .then(({ data, error }) => {
+        if (error) {
+          sb.from("stopovers").select("id, icao, nom, taxe").eq("actif", true).order("nom")
+            .then(({ data: d2 }) => setAvailableStops((d2 ?? []) as Stopover[]));
+        } else {
+          setAvailableStops((data ?? []) as Stopover[]);
+        }
+      });
     fetch("/api/site-settings")
       .then(r => r.json())
       .then(d => { if (d.calendar_closed === "true") { setCalendarClosed(true); setClosedMessage(d.calendar_closed_message ?? ""); } })
@@ -176,6 +183,15 @@ export default function VolSurMesurePage() {
     }, 400);
     return () => clearTimeout(t);
   }, [panQ]);
+
+  // ── Reverse-sync: si l'escale est supprimée depuis la carte, la désélectionner
+  useEffect(() => {
+    const routePOIIds = new Set(route.pois.map(p => p.id));
+    setSelectedStops(prev =>
+      prev.filter(s => s.lat == null || s.lng == null || routePOIIds.has(`stop-${s.id}`))
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [route.pois]);
 
   // ── Calendar ─────────────────────────────────────────────────
   const dureForCal = Math.max(30, route.totalMin);
@@ -254,7 +270,15 @@ function backToGuide() {
   }
 
   function toggleStop(stop: Stopover) {
-    setSelectedStops(prev => prev.some(s => s.id === stop.id) ? prev.filter(s => s.id !== stop.id) : [...prev, stop]);
+    const isSelected = selectedStops.some(s => s.id === stop.id);
+    setSelectedStops(prev => isSelected ? prev.filter(s => s.id !== stop.id) : [...prev, stop]);
+    if (stop.lat != null && stop.lng != null) {
+      if (isSelected) {
+        mapRef.current?.removePOI(`stop-${stop.id}`);
+      } else {
+        mapRef.current?.addPOI({ id: `stop-${stop.id}`, lat: stop.lat, lng: stop.lng, nom: stop.nom });
+      }
+    }
   }
 
   // ── Price ────────────────────────────────────────────────────

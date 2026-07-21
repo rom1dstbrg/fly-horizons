@@ -300,8 +300,15 @@ export default function VolSurMesurePage() {
   const [promoError,   setPromoError]   = useState("");
 
   // ── Price calc
-  const prixEstime        = route.totalMin > 0 ? Math.round((prixHeure / 60) * route.totalMin) : 0;
-  const acompte           = route.totalMin > 0 ? Math.round((acompteH  / 60) * route.totalMin) : 0;
+  // Escales sans coords : non ajoutées à la carte Leaflet → on compense avec un temps de
+  // turnaround fixe (taxi + demi-tour + décollage) afin que le temps et le prix reflètent l'escale.
+  const ESCALE_TURNAROUND_MIN  = 20;
+  const escalesSansCoords      = selectedStops.filter(s => s.lat == null || s.lng == null);
+  const effectiveTotalMin      = route.totalMin > 0
+    ? route.totalMin + escalesSansCoords.length * ESCALE_TURNAROUND_MIN
+    : 0;
+  const prixEstime        = effectiveTotalMin > 0 ? Math.round((prixHeure / 60) * effectiveTotalMin) : 0;
+  const acompte           = effectiveTotalMin > 0 ? Math.round((acompteH  / 60) * effectiveTotalMin) : 0;
   const taxesEscalesTotal = selectedStops.reduce((acc, s) => acc + s.taxe, 0);
   const totalAcompte      = acompte + taxesEscalesTotal;
   // Valeur du voucher : prix produit, ou fallback duration_minutes × prixHeure / 60
@@ -381,7 +388,7 @@ export default function VolSurMesurePage() {
   }, [user, shouldRestoreForm, route.pois.length]);
 
   // ── Calendar
-  const dureeForCal = Math.max(30, route.totalMin);
+  const dureeForCal = Math.max(30, effectiveTotalMin);
   const loadMonth = useCallback(async (y: number, m: number) => {
     setCalLoading(true);
     try {
@@ -635,7 +642,7 @@ export default function VolSurMesurePage() {
           waypoints:    route.pois.map(p => ({ lat: p.lat, lng: p.lng, nom: p.nom })),
           stopovers:    selectedStops.map(s => ({ icao: s.icao, nom: s.nom, taxe: s.taxe, lat: s.lat ?? null, lng: s.lng ?? null })),
           distKm:       route.distKm,
-          dureMin:      route.totalMin,
+          dureMin:      effectiveTotalMin,
           taxesEscales: taxesEscalesTotal,
           voucher_code:       voucherData?.code ?? null,
           voucher_id:         voucherData?.id   ?? null,
@@ -657,7 +664,7 @@ export default function VolSurMesurePage() {
         <div className="px-5 pt-5 pb-4 border-b border-border">
           <p className="text-[10px] font-bold text-primary uppercase tracking-[2px] mb-1">Votre aventure</p>
           <p className="text-foreground text-2xl font-black leading-none">
-            {route.totalMin > 0 ? `≈ ${route.totalMin} min` : "—"}
+            {effectiveTotalMin > 0 ? `≈ ${effectiveTotalMin} min` : "—"}
           </p>
           {route.distKm > 0 && (
             <p className="text-muted-foreground text-xs mt-1">{route.distKm} km · {prixEstime > 0 ? `≈ ${prixEstime} €` : ""}</p>
@@ -668,7 +675,7 @@ export default function VolSurMesurePage() {
             { l: "Date",         v: formattedDate ? <span className="capitalize">{formattedDate}</span> : <span className="text-muted-foreground">Non sélectionnée</span> },
             { l: "Heure",        v: form.heure || <span className="text-muted-foreground">—</span> },
             { l: "Départ",       v: DEPART_NOM },
-            { l: "Temps estimé", v: route.totalMin > 0 ? `≈ ${route.totalMin} min` : "—" },
+            { l: "Temps estimé", v: effectiveTotalMin > 0 ? `≈ ${effectiveTotalMin} min` : "—" },
             { l: "Passagers",    v: form.passagers },
           ].map(({ l, v }) => (
             <div key={l} className="flex items-center justify-between gap-2">
@@ -1037,10 +1044,10 @@ export default function VolSurMesurePage() {
                 <div className="grid grid-cols-3 divide-x divide-border border-b border-border">
                   {[
                     { icon: <Clock size={9} />,  label: "TEMPS ESTIMÉ",
-                      main: route.totalMin > 0
-                        ? (route.totalMin >= 60 ? `${Math.floor(route.totalMin / 60)}h${String(route.totalMin % 60).padStart(2, "0")}` : `${route.totalMin}`)
+                      main: effectiveTotalMin > 0
+                        ? (effectiveTotalMin >= 60 ? `${Math.floor(effectiveTotalMin / 60)}h${String(effectiveTotalMin % 60).padStart(2, "0")}` : `${effectiveTotalMin}`)
                         : "—",
-                      sub: route.totalMin >= 60 ? "heures" : route.totalMin > 0 ? "minutes" : "",
+                      sub: effectiveTotalMin >= 60 ? "heures" : effectiveTotalMin > 0 ? "minutes" : "",
                     },
                     { icon: <MapPin size={9} />, label: "DISTANCE",
                       main: route.distKm > 0 ? `${route.distKm}` : "—",
@@ -1254,8 +1261,8 @@ export default function VolSurMesurePage() {
                       <span className="text-xs font-bold text-[#0b2238] shrink-0">
                         {route.pois.length} lieu{route.pois.length > 1 ? "x" : ""}
                       </span>
-                      {route.totalMin > 0 && (
-                        <span className="text-xs text-muted-foreground truncate">· ≈{route.totalMin} min · {route.distKm} km</span>
+                      {effectiveTotalMin > 0 && (
+                        <span className="text-xs text-muted-foreground truncate">· ≈{effectiveTotalMin} min · {route.distKm} km</span>
                       )}
                     </div>
                     {prixEstime > 0 && (
@@ -1288,10 +1295,10 @@ export default function VolSurMesurePage() {
                 <div className="flex-1 overflow-y-auto px-4 space-y-4 pb-2">
 
                   {/* Stats */}
-                  {route.totalMin > 0 && (
+                  {effectiveTotalMin > 0 && (
                     <div className="flex items-center justify-between py-2 border-b border-border">
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1"><Clock size={11} />≈{route.totalMin} min</span>
+                        <span className="flex items-center gap-1"><Clock size={11} />≈{effectiveTotalMin} min</span>
                         {route.distKm > 0 && <span className="flex items-center gap-1"><MapPin size={11} />{route.distKm} km</span>}
                       </div>
                       {prixEstime > 0 && <span className="text-sm font-black text-[#0b2238]">{prixEstime}&thinsp;€</span>}
@@ -1453,7 +1460,7 @@ export default function VolSurMesurePage() {
                 <span className="text-foreground font-bold shrink-0">Charleroi</span>
               </div>
               <div className="flex items-center gap-3 shrink-0 border-l border-border pl-3">
-                {route.totalMin > 0 && <span className="text-foreground font-black text-sm">≈{route.totalMin}&thinsp;min</span>}
+                {effectiveTotalMin > 0 && <span className="text-foreground font-black text-sm">≈{effectiveTotalMin}&thinsp;min</span>}
                 {prixEstime > 0 && <span className="text-muted-foreground text-xs font-semibold">{prixEstime}&thinsp;€</span>}
               </div>
             </div>
@@ -1469,8 +1476,8 @@ export default function VolSurMesurePage() {
                   <div>
                     <p className="text-[8px] font-black text-muted-foreground uppercase tracking-[2.5px] mb-1">Votre vol</p>
                     <p className="text-foreground font-black text-2xl leading-none">
-                      {route.totalMin > 0 ? `≈ ${route.totalMin}` : "—"}
-                      {route.totalMin > 0 && <span className="text-base font-bold ml-1">min</span>}
+                      {effectiveTotalMin > 0 ? `≈ ${effectiveTotalMin}` : "—"}
+                      {effectiveTotalMin > 0 && <span className="text-base font-bold ml-1">min</span>}
                     </p>
                   </div>
                   {prixEstime > 0 && (
@@ -1901,7 +1908,7 @@ export default function VolSurMesurePage() {
                 <span className="text-foreground font-bold shrink-0">Charleroi</span>
               </div>
               <div className="flex items-center gap-3 shrink-0 border-l border-border pl-3">
-                {route.totalMin > 0 && <span className="text-foreground font-black text-sm">≈{route.totalMin}&thinsp;min</span>}
+                {effectiveTotalMin > 0 && <span className="text-foreground font-black text-sm">≈{effectiveTotalMin}&thinsp;min</span>}
                 {prixEstime > 0 && <span className="text-muted-foreground text-xs font-semibold">{prixEstime}&thinsp;€</span>}
               </div>
             </div>
@@ -1958,9 +1965,9 @@ export default function VolSurMesurePage() {
                 </div>
 
                 {/* Stats vol */}
-                {(route.totalMin > 0 || route.distKm > 0) && (
+                {(effectiveTotalMin > 0 || route.distKm > 0) && (
                   <div className="px-5 py-3 border-t border-border flex gap-4 text-xs text-muted-foreground font-medium">
-                    {route.totalMin > 0 && <span>≈ {route.totalMin} min</span>}
+                    {effectiveTotalMin > 0 && <span>≈ {effectiveTotalMin} min</span>}
                     {route.distKm > 0  && <span>{route.distKm} km</span>}
                     {prixEstime > 0    && <span>≈ {prixEstime} € estimé</span>}
                   </div>
@@ -1975,7 +1982,7 @@ export default function VolSurMesurePage() {
                 <div className="p-5 space-y-2 text-sm">
                   {/* Ligne vol */}
                   <div className="flex justify-between items-baseline">
-                    <span className="text-muted-foreground">Vol estimé <span className="text-[10px]">({prixHeure} €/h · ≈ {route.totalMin} min)</span></span>
+                    <span className="text-muted-foreground">Vol estimé <span className="text-[10px]">({prixHeure} €/h · ≈ {effectiveTotalMin} min)</span></span>
                     <span className="font-semibold text-foreground shrink-0 ml-2">≈ {prixEstime} €</span>
                   </div>
                   {/* Ligne provision */}

@@ -98,8 +98,14 @@ Vol sur mesure :
 - Accéder au statut d'une réservation spécifique → orienter vers l'espace client
 - Modifier ou annuler une réservation → orienter vers la page contact (/contact)
 
+**CONTACT DIRECT**
+- Nous n'avons pas de numéro de téléphone fixe ni de ligne d'appel directe.
+- Romain est joignable sur WhatsApp pour les questions personnelles ou urgentes.
+- Si un client demande un numéro de téléphone, un appel ou un contact direct : lui répondre en 1-2 phrases et mentionner explicitement le mot "WhatsApp" dans ta réponse (le mot seul suffit, ne pas inclure de numéro ni de lien).
+- Page contact : /contact (pour les messages écrits non urgents)
+
 **ESCALADE**
-Si la question dépasse tes compétences ou nécessite une intervention humaine : "Je vous invite à nous contacter directement via notre page contact pour que nous puissions vous aider personnellement."`;
+Si la question dépasse tes compétences ou nécessite une intervention humaine : selon l'urgence, orienter vers WhatsApp ou la page contact.`;
 
 type MessageRole = "user" | "assistant";
 

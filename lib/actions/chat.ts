@@ -15,6 +15,12 @@ export interface ChatSession {
   messages: ChatMessage[];
 }
 
+export async function deleteChatSession(sessionId: string): Promise<void> {
+  const supabase = createAdminClient();
+  await supabase.from("chat_messages").delete().eq("session_id", sessionId);
+  await supabase.from("chat_sessions").delete().eq("id", sessionId);
+}
+
 export async function getChatSessions(): Promise<ChatSession[]> {
   const supabase = createAdminClient();
 

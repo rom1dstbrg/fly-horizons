@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Send, X, PlaneTakeoff } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa6";
 import Link from "next/link";
 
 interface Message {
@@ -151,6 +152,17 @@ export function ChatWidget({ mobileVisible = false }: { mobileVisible?: boolean 
                   >
                     Voir le plan d&apos;accès →
                   </Link>
+                )}
+                {msg.role === "assistant" && msg.content.toLowerCase().includes("whatsapp") && (
+                  <a
+                    href="https://wa.me/32472324135"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold text-white bg-[#25D366] hover:bg-[#1ebe5d] px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    <FaWhatsapp size={13} />
+                    Contacter sur WhatsApp
+                  </a>
                 )}
               </div>
             </div>

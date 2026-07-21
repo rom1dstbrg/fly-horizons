@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { Mail, MapPin, Clock, MessageCircle } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa6";
 import { ContactForm } from "@/components/shop/ContactForm";
 import { OpenChatButton } from "@/components/shop/OpenChatButton";
 import { ChatWidget } from "@/components/chat/ChatWidget";
@@ -10,10 +11,11 @@ export const metadata = {
   description: "Une question sur votre réservation ou votre vol ? Contactez Fly Horizons. Réponse personnelle sous 24 h.",
 };
 
-const CONTACT_ITEMS: { Icon: React.ElementType; label: string; value: string; href?: string }[] = [
-  { Icon: Mail,   label: "Email",               value: "info@fly-horizons.com",        href: "mailto:info@fly-horizons.com" },
-  { Icon: MapPin, label: "Aérodrome de départ", value: "Brussels South Charleroi · EBCI" },
-  { Icon: Clock,  label: "Délai de réponse",    value: "Sous 24 h · 7 j/7" },
+const CONTACT_ITEMS: { Icon: React.ElementType; label: string; value: string; href?: string; external?: boolean }[] = [
+  { Icon: Mail,       label: "Email",               value: "info@fly-horizons.com",        href: "mailto:info@fly-horizons.com" },
+  { Icon: FaWhatsapp, label: "WhatsApp",             value: "Contacter sur WhatsApp",       href: "https://wa.me/32472324135", external: true },
+  { Icon: MapPin,     label: "Aérodrome de départ",  value: "Brussels South Charleroi · EBCI" },
+  { Icon: Clock,      label: "Délai de réponse",     value: "Sous 24 h · 7 j/7" },
 ];
 
 export default function ContactPage() {
@@ -55,7 +57,7 @@ export default function ContactPage() {
 
               {/* Infos pratiques */}
               <div className="bg-card border border-border rounded-lg p-6 shadow-premium flex flex-col gap-4">
-                {CONTACT_ITEMS.map(({ Icon, label, value, href }) => (
+                {CONTACT_ITEMS.map(({ Icon, label, value, href, external }) => (
                   <div key={label} className="flex items-center gap-3.5">
                     <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-[#0b2238] shadow-gold-sm shrink-0">
                       <Icon size={16} />
@@ -63,7 +65,7 @@ export default function ContactPage() {
                     <div>
                       <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-[2px] mb-0.5">{label}</p>
                       {href ? (
-                        <a href={href} className="text-sm font-bold text-foreground hover:text-primary transition-colors">{value}</a>
+                        <a href={href} {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})} className="text-sm font-bold text-foreground hover:text-primary transition-colors">{value}</a>
                       ) : (
                         <p className="text-sm font-bold text-foreground">{value}</p>
                       )}
