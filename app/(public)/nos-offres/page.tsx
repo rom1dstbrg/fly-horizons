@@ -6,6 +6,7 @@ import {
   Clock, Route, Zap, PlaneTakeoff, ArrowRight, MousePointerClick,
   EuroIcon, Users,
 } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa6";
 import { PackCard } from "@/components/shop/PackCard";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
@@ -252,13 +253,24 @@ export default async function NosOffresPage() {
               </span>
             ))}
           </div>
-          <Link
-            href="/contact"
-            className="inline-flex items-center gap-2 px-7 py-3.5 bg-[#F2B705] text-[#0b2238] font-black text-sm rounded-lg hover:bg-[#e6a800] transition-colors shadow-md shadow-[#F2B705]/20"
-          >
-            Nous contacter
-            <ArrowRight size={15} />
-          </Link>
+          <div className="flex flex-wrap justify-center gap-3">
+            <a
+              href="https://wa.me/32472324135"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-5 py-3.5 text-sm font-bold bg-[#25D366] text-white rounded-lg hover:bg-[#1ebe5d] transition-colors"
+            >
+              <FaWhatsapp size={15} />
+              WhatsApp
+            </a>
+            <Link
+              href="/contact"
+              className="inline-flex items-center gap-2 px-7 py-3.5 bg-[#F2B705] text-[#0b2238] font-black text-sm rounded-lg hover:bg-[#e6a800] transition-colors shadow-md shadow-[#F2B705]/20"
+            >
+              Nous contacter
+              <ArrowRight size={15} />
+            </Link>
+          </div>
         </div>
       </div>
 

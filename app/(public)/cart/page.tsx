@@ -25,7 +25,7 @@ export default function CartPage() {
                 Votre panier est vide
               </h1>
               <p className="text-muted-foreground">
-                Decouvrez nos produits et ajoutez-en a votre panier.
+                Découvrez nos vols et ajoutez-en un à votre panier.
               </p>
             </div>
             <Button asChild className="bg-primary text-primary-foreground hover:brightness-105 font-black shadow-gold">
