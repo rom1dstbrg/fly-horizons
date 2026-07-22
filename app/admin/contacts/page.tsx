@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ContactsClient } from "@/components/admin/ContactsClient";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { StatCard, StatGrid } from "@/components/admin/ui";
 
 export const metadata = { title: "Messages — Admin" };
 
@@ -28,20 +29,12 @@ export default async function AdminContactsPage() {
         subtitle="Formulaire de contact : répondez directement depuis cette page"
       />
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: "Nouveaux",  value: stats.nouveau,  color: "text-yellow-600" },
-          { label: "Lus",       value: stats.lu,       color: "text-blue-600" },
-          { label: "Répondus",  value: stats.repondu,  color: "text-emerald-600" },
-          { label: "Archivés",  value: stats.archive,  color: "text-gray-500" },
-        ].map(({ label, value, color }) => (
-          <div key={label} className="card-premium p-3 text-center">
-            <p className={`text-xl font-bold ${color}`}>{value}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
-          </div>
-        ))}
-      </div>
+      <StatGrid cols={4}>
+        <StatCard label="Nouveaux"  value={stats.nouveau}  variant="warning" />
+        <StatCard label="Lus"       value={stats.lu}       variant="info"    />
+        <StatCard label="Répondus"  value={stats.repondu}  variant="emerald" />
+        <StatCard label="Archivés"  value={stats.archive}  variant="neutral" />
+      </StatGrid>
 
       <ContactsClient contacts={all} />
     </div>

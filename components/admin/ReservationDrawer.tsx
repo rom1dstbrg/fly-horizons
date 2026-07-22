@@ -36,7 +36,7 @@ const AdminRouteEditorDynamic = dynamic(
   () => import("@/components/admin/AdminRouteEditor").then(m => ({ default: m.AdminRouteEditor })),
   { ssr: false, loading: () => <div className="h-[280px] rounded-lg bg-secondary animate-pulse" /> }
 );
-import { AdminBadge, STATUT_RESA, STATUT_PERSO } from "@/components/admin/ui/AdminBadge";
+import { AdminBadge, STATUT_RESA, STATUT_PERSO, PAYMENT_STATUS_CONFIG, ACTION_LABELS } from "@/components/admin/ui/AdminBadge";
 import type { BadgeVariant } from "@/components/admin/ui/AdminBadge";
 
 // Map fusionné : couvre standard + perso (acompte_recu = "Payé" pour les résa standard)
@@ -86,19 +86,6 @@ const ROUTE_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   modification_requested: { label: "Modification demandée",   color: "bg-red-50 text-red-700 border-red-200" },
 };
 
-const PAYMENT_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-  paid:     { label: "Payé",      color: "bg-green-50 text-green-700 border border-green-200" },
-  unpaid:   { label: "Non payé",  color: "bg-amber-50 text-amber-700 border border-amber-200" },
-  partial:  { label: "Partiel",   color: "bg-blue-50 text-blue-700 border border-blue-200" },
-  refunded: { label: "Remboursé", color: "bg-gray-50 text-gray-600 border border-gray-200" },
-};
-
-const ACTION_LABELS: Record<string, string> = {
-  field_changed:       "Modification",
-  route_proposal_sent: "Proposition envoyée",
-  client_response:     "Réponse client",
-  status_changed:      "Changement de statut",
-};
 
 const FIELD_LABELS: Record<string, string> = {
   "client.prenom":    "Prénom",

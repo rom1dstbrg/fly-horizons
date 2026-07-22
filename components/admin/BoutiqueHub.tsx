@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -10,6 +10,7 @@ import { VouchersClient } from "./VouchersClient";
 import { CouponForm } from "./CouponForm";
 import { CouponsTableClient } from "./CouponsTableClient";
 import { ToggleProductActive } from "./ToggleProductActive";
+import { StatCard, StatGrid, PageTabs } from "@/components/admin/ui";
 import { formatPrice } from "@/lib/utils";
 import { formatDuration } from "@/lib/vouchers";
 
@@ -135,53 +136,19 @@ export function BoutiqueHub({
   };
   prixHeure60?: number | null;
 }) {
-  const router = useRouter();
   const tab = useSearchParams().get("tab") ?? "vouchers";
-
-  function changeTab(key: string) {
-    const url = key === "vouchers" ? "/admin/boutique" : `/admin/boutique?tab=${key}`;
-    router.replace(url, { scroll: false });
-  }
 
   return (
     <div className="space-y-5">
-      {/* Stats bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        {[
-          { label: "Vouchers total",    value: stats.vouchersTotal,    color: "text-navy" },
-          { label: "Disponibles",       value: stats.vouchersDispos,   color: "text-emerald-600" },
-          { label: "Utilisés",          value: stats.vouchersUtilises, color: "text-purple-600" },
-          { label: "Offres actives",    value: stats.produitsActifs,   color: "text-blue-600" },
-          { label: "Coupons",           value: stats.coupons,          color: "text-amber-600" },
-        ].map(({ label, value, color }) => (
-          <div key={label} className="bg-card rounded-xl border border-border p-4 text-center">
-            <p className={`text-2xl font-bold ${color}`}>{value}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
-          </div>
-        ))}
-      </div>
+      <StatGrid cols={5}>
+        <StatCard label="Vouchers total"  value={stats.vouchersTotal}    variant="primary"  />
+        <StatCard label="Disponibles"     value={stats.vouchersDispos}   variant="emerald"  />
+        <StatCard label="Utilisés"        value={stats.vouchersUtilises} variant="purple"   />
+        <StatCard label="Offres actives"  value={stats.produitsActifs}   variant="info"     />
+        <StatCard label="Coupons"         value={stats.coupons}          variant="gold"     />
+      </StatGrid>
 
-      {/* Tab bar */}
-      <div className="flex items-center gap-1 bg-secondary p-1 rounded-xl border border-border w-fit overflow-x-auto">
-        {TABS.map(t => {
-          const Icon = t.icon;
-          const isActive = tab === t.key;
-          return (
-            <button
-              key={t.key}
-              onClick={() => changeTab(t.key)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap cursor-pointer ${
-                isActive
-                  ? "bg-card text-foreground shadow-sm border border-border"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Icon size={14} className={isActive ? "text-navy" : ""} />
-              {t.label}
-            </button>
-          );
-        })}
-      </div>
+      <PageTabs tabs={TABS} defaultTab="vouchers" basePath="/admin/boutique" />
 
       {/* Tab content */}
       <div>

@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { TrendingUp, TrendingDown, Minus, Plus, Trash2, Pencil, X, Check, Loader2 } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Plus, Trash2, Pencil, X, Check, Loader2, Receipt } from "lucide-react";
 import { addDepense, deleteDepense, updateDepense } from "@/lib/actions/depenses";
 import { getReservationForDrawer } from "@/lib/actions/reservation-edit";
 import { ReservationDrawer, type DrawerReservation } from "@/components/admin/ReservationDrawer";
 import { VolsPersoDrawer, type Reservation as PersoReservation } from "@/components/admin/VolsPersoClient";
+import { StatGrid, PageToolbar, FilterChip, EmptyState, AdminSheet } from "@/components/admin/ui";
 
 export type LigneVol = {
   id: string;
@@ -315,7 +316,7 @@ export function TransactionsClient({
 }) {
   const [depenses, setDepenses] = useState<Depense[]>(initialDepenses);
   const [filter, setFilter] = useState<FilterType>("tout");
-  const [showForm, setShowForm] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
   const [montant, setMontant] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
@@ -360,7 +361,7 @@ export function TransactionsClient({
       setDepenses(prev => [{ id: crypto.randomUUID(), montant: m, description: description.trim(), date }, ...prev]);
       setMontant(""); setDescription("");
       setDate(new Date().toISOString().slice(0, 10));
-      setShowForm(false);
+      setFormOpen(false);
     });
   }
 
@@ -397,11 +398,11 @@ export function TransactionsClient({
     : filter === "vouchers" ? allLignes.filter(l => l.kind === "voucher")
     : allLignes.filter(l => l.kind === "depense");
 
-  const FILTERS: { key: FilterType; label: string }[] = [
-    { key: "tout",      label: "Tout" },
-    { key: "vols",      label: `Vols (${vols.length})` },
-    { key: "vouchers",  label: `Vouchers (${vouchers.filter(v => v.type !== "offered").length})` },
-    { key: "depenses",  label: `Dépenses (${depenses.length})` },
+  const FILTERS: { key: FilterType; label: string; count: number }[] = [
+    { key: "tout",      label: "Tout",      count: allLignes.length },
+    { key: "vols",      label: "Vols",      count: vols.length },
+    { key: "vouchers",  label: "Vouchers",  count: vouchers.filter(v => v.type !== "offered").length },
+    { key: "depenses",  label: "Dépenses",  count: depenses.length },
   ];
 
   return (
@@ -410,7 +411,7 @@ export function TransactionsClient({
         {/* KPIs globaux */}
         <div>
           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">Solde caisses Fly Horizons (cumulatif)</p>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <StatGrid cols={5}>
             <KpiCard label="Total encaissé" value={`+${fmt(soldeGlobal.encaisse)}`} cls="text-emerald-600" />
             <KpiCard label="Remboursements" value={soldeGlobal.rembourse > 0 ? `−${fmt(soldeGlobal.rembourse)}` : fmt(0)} cls="text-red-500" />
             <KpiCard
@@ -428,88 +429,40 @@ export function TransactionsClient({
               value={`${soldeNet >= 0 ? "+" : ""}${fmt(soldeNet)}`}
               cls={soldeNet >= 0 ? "text-emerald-600" : "text-red-500"}
             />
-          </div>
+          </StatGrid>
         </div>
 
-        {/* Barre filtres + bouton ajouter dépense */}
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-1">
-            {FILTERS.map(f => (
-              <button
-                key={f.key}
-                onClick={() => setFilter(f.key)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-                  filter === f.key
-                    ? "bg-navy text-white"
-                    : "bg-secondary text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-          <button
-            onClick={() => { setShowForm(v => !v); setFormError(""); }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
-          >
-            <Plus size={12} /> Ajouter une dépense
-          </button>
-        </div>
-
-        {/* Formulaire dépense inline */}
-        {showForm && (
-          <form onSubmit={handleAddDepense} className="bg-card border border-border rounded-xl p-4 space-y-3">
-            {formError && <p className="text-xs text-destructive">{formError}</p>}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1.5">Montant (€) *</label>
-                <input
-                  type="number" step="0.01" min="0.01" required
-                  value={montant} onChange={e => setMontant(e.target.value)}
-                  placeholder="9.99"
-                  className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        <PageToolbar
+          filters={
+            <div className="flex flex-wrap gap-2">
+              {FILTERS.map(f => (
+                <FilterChip
+                  key={f.key}
+                  label={f.label}
+                  active={filter === f.key}
+                  count={f.count}
+                  onClick={() => setFilter(f.key)}
                 />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1.5">Description *</label>
-                <input
-                  type="text" required
-                  value={description} onChange={e => setDescription(e.target.value)}
-                  placeholder="Ex. SkyDemon mensuel"
-                  className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1.5">Date *</label>
-                <input
-                  type="date" required
-                  value={date} onChange={e => setDate(e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
+              ))}
             </div>
-            <div className="flex gap-2">
-              <button
-                type="submit" disabled={isPending}
-                className="px-4 py-2 rounded-lg bg-navy text-white text-xs font-semibold hover:bg-navy/90 transition-colors cursor-pointer disabled:opacity-50"
-              >
-                {isPending ? "Enregistrement…" : "Ajouter"}
-              </button>
-              <button
-                type="button" onClick={() => setShowForm(false)}
-                className="px-4 py-2 rounded-lg border border-border text-xs font-medium text-muted-foreground hover:bg-secondary transition-colors cursor-pointer"
-              >
-                Annuler
-              </button>
-            </div>
-          </form>
-        )}
+          }
+          actions={
+            <button
+              onClick={() => { setFormOpen(true); setFormError(""); }}
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:brightness-105 shadow-gold cursor-pointer transition-all"
+            >
+              <Plus size={14} /> Ajouter une dépense
+            </button>
+          }
+        />
 
         {/* Tableau unifié */}
         {filtered.length === 0 ? (
-          <div className="bg-card border border-border rounded-xl text-center py-14 text-sm text-muted-foreground">
-            Aucune transaction.
-          </div>
+          <EmptyState
+            icon={Receipt}
+            title={filter !== "tout" ? `Aucune transaction "${filter}"` : "Aucune transaction"}
+            description="Les vols, vouchers et dépenses apparaîtront ici."
+          />
         ) : (
           <div className="bg-card border border-border rounded-xl overflow-x-auto">
             <table className="w-full text-sm min-w-[960px]">
@@ -593,6 +546,61 @@ export function TransactionsClient({
           </div>
         )}
       </div>
+
+      {/* Drawer ajout dépense */}
+      <AdminSheet
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        title="Ajouter une dépense"
+      >
+        <div className="p-1">
+          <form onSubmit={handleAddDepense} className="space-y-4">
+            {formError && <p className="text-xs text-destructive">{formError}</p>}
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Montant (€) *</label>
+              <input
+                type="number" step="0.01" min="0.01" required
+                value={montant} onChange={e => setMontant(e.target.value)}
+                placeholder="9.99"
+                className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                autoFocus
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Description *</label>
+              <input
+                type="text" required
+                value={description} onChange={e => setDescription(e.target.value)}
+                placeholder="Ex. SkyDemon mensuel"
+                className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Date *</label>
+              <input
+                type="date" required
+                value={date} onChange={e => setDate(e.target.value)}
+                className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button
+                type="submit" disabled={isPending}
+                className="flex items-center gap-2 px-4 h-9 rounded-lg bg-primary text-primary-foreground text-sm font-black hover:brightness-105 shadow-gold disabled:opacity-50 transition-all cursor-pointer"
+              >
+                {isPending ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+                Ajouter
+              </button>
+              <button
+                type="button" onClick={() => setFormOpen(false)}
+                className="px-4 h-9 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary transition-colors cursor-pointer"
+              >
+                Annuler
+              </button>
+            </div>
+          </form>
+        </div>
+      </AdminSheet>
 
       {/* Drawer standard */}
       <ReservationDrawer

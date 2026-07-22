@@ -2,12 +2,13 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { Search, Tag, ExternalLink, Mail, Send, Loader2 } from "lucide-react";
+import { Tag, ExternalLink, Mail, Send, Loader2, Users } from "lucide-react";
 import { deleteClient } from "@/lib/actions/delete";
 import { sendEmailToClient } from "@/lib/actions/clients";
 import { AdminBadge, STATUT_RESA, STATUT_VOUCHER } from "@/components/admin/ui/AdminBadge";
 import { AdminRowActions } from "@/components/admin/ui/AdminRowActions";
 import { AdminSheet, SheetSection, SheetRow } from "@/components/admin/ui/AdminSheet";
+import { PageToolbar, EmptyState } from "@/components/admin/ui";
 
 interface Reservation {
   id: string;
@@ -305,20 +306,16 @@ export function ClientsClient({ clients: initial }: { clients: Client[] }) {
   return (
     <>
       <div className="space-y-4">
-        <div className="relative max-w-sm">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Rechercher par nom, email ou tél…"
-            className="w-full h-9 pl-9 pr-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-        </div>
+        <PageToolbar
+          search={{ value: search, onChange: setSearch, placeholder: "Rechercher par nom, email ou tél…" }}
+        />
 
         {filtered.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground text-sm">
-            {search ? "Aucun client trouvé." : "Aucun client enregistré."}
-          </div>
+          <EmptyState
+            icon={Users}
+            title={search ? "Aucun client trouvé" : "Aucun client enregistré"}
+            description={search ? "Aucun client ne correspond à cette recherche." : "Les clients apparaîtront ici dès la première réservation."}
+          />
         ) : (
           <div className="space-y-3">
             {filtered.map(c => (

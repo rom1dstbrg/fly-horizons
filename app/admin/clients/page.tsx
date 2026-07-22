@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ClientsClient } from "@/components/admin/ClientsClient";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { StatCard, StatGrid } from "@/components/admin/ui";
 
 export const metadata = { title: "Clients — Admin" };
 
@@ -73,20 +74,11 @@ export default async function ClientsPage() {
         subtitle="Clients ayant effectué une réservation de vol (standard ou sur mesure)"
       />
 
-      <div className="grid grid-cols-3 gap-3">
-        <div className="card-premium p-4 text-center">
-          <p className="text-2xl font-bold text-primary">{all.length}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">Clients total</p>
-        </div>
-        <div className="card-premium p-4 text-center">
-          <p className="text-2xl font-bold text-blue-600">{avecVols}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">Avec réservations</p>
-        </div>
-        <div className="card-premium p-4 text-center">
-          <p className="text-2xl font-bold text-purple-600">{totalVols}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">Vols au total</p>
-        </div>
-      </div>
+      <StatGrid cols={3}>
+        <StatCard label="Clients total"       value={all.length}   variant="primary" />
+        <StatCard label="Avec réservations"   value={avecVols}     variant="info"    />
+        <StatCard label="Vols au total"       value={totalVols}    variant="purple"  />
+      </StatGrid>
 
       <ClientsClient clients={all} />
     </div>

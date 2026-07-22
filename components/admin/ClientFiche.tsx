@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { updateClient } from "@/lib/actions/clients";
 import { AdminBadge, STATUT_RESA, STATUT_PERSO, STATUT_VOUCHER } from "@/components/admin/ui/AdminBadge";
+import { StatCard, StatGrid, EmptyState } from "@/components/admin/ui";
 
 // Map fusionné : couvre standard (payment_pending…) + perso (acompte_recu…)
 const RESA_MAP = { ...STATUT_RESA, ...STATUT_PERSO };
@@ -214,20 +215,12 @@ export function ClientFiche({
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: "Réservations",    value: reservations.length, color: "text-blue-600" },
-          { label: "Vols effectués",  value: volsEffectues,       color: "text-purple-600" },
-          { label: "Vouchers actifs", value: vouchersActifs,      color: "text-emerald-600" },
-          { label: "Provisions",       value: `${totalAcomptes} €`, color: "text-navy" },
-        ].map(({ label, value, color }) => (
-          <div key={label} className="bg-card rounded-xl border border-border p-4 text-center">
-            <p className={`text-2xl font-bold ${color}`}>{value}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
-          </div>
-        ))}
-      </div>
+      <StatGrid cols={4}>
+        <StatCard label="Réservations"    value={reservations.length} variant="info"    />
+        <StatCard label="Vols effectués"  value={volsEffectues}       variant="purple"  />
+        <StatCard label="Vouchers actifs" value={vouchersActifs}      variant="emerald" />
+        <StatCard label="Provisions"      value={`${totalAcomptes} €`} variant="primary" />
+      </StatGrid>
 
       {/* Timeline */}
       <div className="bg-card rounded-xl border border-border overflow-hidden">
@@ -237,7 +230,9 @@ export function ClientFiche({
         </div>
 
         {timeline.length === 0 ? (
-          <div className="p-12 text-center text-sm text-muted-foreground">Aucune activité enregistrée.</div>
+          <div className="py-8">
+            <EmptyState title="Aucune activité" description="Les réservations, vouchers et commandes apparaîtront ici." />
+          </div>
         ) : (
           <div className="divide-y divide-border">
             {timeline.map((item, i) => {

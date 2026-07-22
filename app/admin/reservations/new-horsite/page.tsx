@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CreateHorSiteForm } from "@/components/admin/CreateHorSiteForm";
+import { PageHeader } from "@/components/admin/PageHeader";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
@@ -22,14 +23,15 @@ export default async function NewHorSitePage() {
       <div>
         <Link
           href="/admin/vols"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-2"
         >
           <ChevronLeft size={15} /> Retour aux réservations
         </Link>
-        <h1 className="text-2xl font-bold text-foreground">Vol hors-site</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Enregistrez un vol effectué en dehors du site (Messenger, téléphone, sur place…) pour garder votre historique et votre CA à jour.
-        </p>
+        <PageHeader
+          domain="vols"
+          title="Vol hors-site"
+          subtitle="Enregistrez un vol effectué en dehors du site (Messenger, téléphone, sur place…) pour garder votre historique et votre CA à jour."
+        />
       </div>
 
       <CreateHorSiteForm clients={clients ?? []} prixHeure={prixHeure} />

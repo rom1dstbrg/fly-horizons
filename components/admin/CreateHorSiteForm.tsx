@@ -4,6 +4,7 @@ import { useState, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createHorSiteReservation } from "@/lib/actions/reservations";
 import { Loader2, UserPlus, Users, Search, Check, TrendingUp, TrendingDown } from "lucide-react";
+import { FormSection, FormFooter } from "@/components/admin/ui";
 
 interface Client {
   id: string;
@@ -120,7 +121,7 @@ export function CreateHorSiteForm({ clients, prixHeure }: Props) {
 
       {/* Client */}
       <div className="card-premium p-5 space-y-4">
-        <h2 className="font-semibold text-foreground text-sm">Client</h2>
+        <FormSection title="Client" />
 
         <div className="flex gap-2">
           <button
@@ -216,7 +217,7 @@ export function CreateHorSiteForm({ clients, prixHeure }: Props) {
 
       {/* Vol */}
       <div className="card-premium p-5 space-y-4">
-        <h2 className="font-semibold text-foreground text-sm">Détails du vol</h2>
+        <FormSection title="Détails du vol" />
 
         <div className="flex gap-2">
           {(["standard", "perso"] as const).map(t => (
@@ -300,7 +301,7 @@ export function CreateHorSiteForm({ clients, prixHeure }: Props) {
 
       {/* Finance */}
       <div className="card-premium p-5 space-y-4">
-        <h2 className="font-semibold text-foreground text-sm">Finances</h2>
+        <FormSection title="Finances" />
 
         {dureeNum > 0 && (
           <div className="bg-secondary rounded-lg p-3 flex items-center justify-between">
@@ -384,23 +385,11 @@ export function CreateHorSiteForm({ clients, prixHeure }: Props) {
         </div>
       )}
 
-      <div className="flex gap-3">
-        <button
-          type="submit"
-          disabled={isPending}
-          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-black hover:brightness-105 active:scale-[0.98] disabled:opacity-50 transition-all shadow-gold cursor-pointer"
-        >
-          {isPending ? <Loader2 size={14} className="animate-spin" /> : null}
-          Enregistrer le vol
-        </button>
-        <button
-          type="button"
-          onClick={() => router.push("/admin/vols")}
-          className="px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary transition-colors cursor-pointer"
-        >
-          Annuler
-        </button>
-      </div>
+      <FormFooter
+        pending={isPending}
+        submitLabel="Enregistrer le vol"
+        onCancel={() => router.push("/admin/vols")}
+      />
     </form>
   );
 }

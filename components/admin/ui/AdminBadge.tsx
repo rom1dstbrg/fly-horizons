@@ -86,3 +86,18 @@ export const STATUT_CONTACT: Record<string, { label: string; variant: BadgeVaria
   repondu:  { label: "Répondu", variant: "emerald"   },
   archive:  { label: "Archivé", variant: "secondary" },
 };
+
+// ── Config vol sur mesure — partagée entre ReservationDrawer et VolsPersoClient
+export const PAYMENT_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  paid:     { label: "Payé",      color: "bg-green-50 text-green-700 border border-green-200" },
+  unpaid:   { label: "Non payé",  color: "bg-amber-50 text-amber-700 border border-amber-200" },
+  partial:  { label: "Partiel",   color: "bg-blue-50 text-blue-700 border border-blue-200" },
+  refunded: { label: "Remboursé", color: "bg-gray-50 text-gray-600 border border-gray-200" },
+};
+
+export const ACTION_LABELS: Record<string, string> = {
+  field_changed:       "Modification",
+  route_proposal_sent: "Proposition envoyée",
+  client_response:     "Réponse client",
+  status_changed:      "Changement de statut",
+};

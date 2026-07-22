@@ -1,5 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Monitor, Smartphone, Tablet, Download } from "lucide-react";
+import { PageHeader } from "@/components/admin/PageHeader";
+import { StatGrid } from "@/components/admin/ui";
 
 export const metadata = { title: "Analytiques — Admin" };
 
@@ -132,44 +134,42 @@ export default async function AnalyticsPage({
   return (
     <div className="p-4 lg:p-6 max-w-5xl mx-auto space-y-5">
 
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-foreground">Analytiques</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Visites du site public · sans cookie</p>
-        </div>
-        <div className="flex items-center gap-2">
-        <a
-          href="/api/analytics/export"
-          download
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border bg-white text-muted-foreground hover:text-foreground hover:border-navy/30 transition-all"
-        >
-          <Download size={12} />
-          Exporter CSV
-        </a>
-        <div className="flex items-center gap-1 bg-secondary rounded-lg p-1 shrink-0">
-          <a
-            href="/admin/analytics?period=7"
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-              period === 7 ? "bg-white shadow-sm text-navy" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            7 jours
-          </a>
-          <a
-            href="/admin/analytics?period=30"
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-              period === 30 ? "bg-white shadow-sm text-navy" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            30 jours
-          </a>
-        </div>
-        </div>
-      </div>
+      <PageHeader
+        title="Analytiques"
+        subtitle="Visites du site public · sans cookie"
+        action={
+          <div className="flex items-center gap-2">
+            <a
+              href="/api/analytics/export"
+              download
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border bg-white text-muted-foreground hover:text-foreground hover:border-navy/30 transition-all"
+            >
+              <Download size={12} />
+              Exporter CSV
+            </a>
+            <div className="flex items-center gap-1 bg-secondary rounded-lg p-1 shrink-0">
+              <a
+                href="/admin/analytics?period=7"
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                  period === 7 ? "bg-white shadow-sm text-navy" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                7 jours
+              </a>
+              <a
+                href="/admin/analytics?period=30"
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                  period === 30 ? "bg-white shadow-sm text-navy" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                30 jours
+              </a>
+            </div>
+          </div>
+        }
+      />
 
-      {/* KPIs */}
-      <div className="grid grid-cols-3 gap-3">
+      <StatGrid cols={3}>
         {[
           { label: "Aujourd'hui",      uniq: todayUniq, visits: todayCount },
           { label: "7 derniers jours", uniq: weekUniq,  visits: weekCount  },
@@ -186,7 +186,7 @@ export default async function AnalyticsPage({
             </p>
           </div>
         ))}
-      </div>
+      </StatGrid>
 
       {/* Daily chart */}
       <div className="bg-white rounded-xl border border-border p-5">

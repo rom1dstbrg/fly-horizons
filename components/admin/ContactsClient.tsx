@@ -7,7 +7,8 @@ import {
 import { AdminBadge, STATUT_CONTACT } from "@/components/admin/ui/AdminBadge";
 import { AdminRowActions } from "@/components/admin/ui/AdminRowActions";
 import { AdminSheet, SheetSection } from "@/components/admin/ui/AdminSheet";
-import { Send, Loader2, User } from "lucide-react";
+import { PageToolbar, FilterChip, EmptyState } from "@/components/admin/ui";
+import { Send, Loader2, User, MessageSquare } from "lucide-react";
 
 const FILTERS = ["Tous", "Nouveaux", "Lus", "Répondus", "Archivés"] as const;
 const FILTER_VALUES: Record<string, string | null> = {
@@ -281,34 +282,34 @@ export function ContactsClient({ contacts: initial }: { contacts: Contact[] }) {
   return (
     <>
       <div className="space-y-4">
-        {/* Filtres */}
-        <div className="flex flex-wrap gap-2">
-          {FILTERS.map(f => {
-            const val   = FILTER_VALUES[f];
-            const count = val === null
-              ? contacts.length
-              : contacts.filter(c => c.statut === val).length;
-            return (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors cursor-pointer ${
-                  filter === f
-                    ? "bg-[#0b2238] text-white border-[#0b2238]"
-                    : "border-border text-muted-foreground hover:bg-secondary"
-                }`}
-              >
-                {f}
-                <span className="ml-1.5 opacity-60">{count}</span>
-              </button>
-            );
-          })}
-        </div>
+        <PageToolbar
+          filters={
+            <div className="flex flex-wrap gap-2">
+              {FILTERS.map(f => {
+                const val   = FILTER_VALUES[f];
+                const count = val === null
+                  ? contacts.length
+                  : contacts.filter(c => c.statut === val).length;
+                return (
+                  <FilterChip
+                    key={f}
+                    label={f}
+                    active={filter === f}
+                    count={count}
+                    onClick={() => setFilter(f)}
+                  />
+                );
+              })}
+            </div>
+          }
+        />
 
         {filtered.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground text-sm">
-            Aucun message{filter !== "Tous" ? ` "${filter.toLowerCase()}"` : ""} pour le moment.
-          </div>
+          <EmptyState
+            icon={MessageSquare}
+            title={filter !== "Tous" ? `Aucun message "${filter.toLowerCase()}"` : "Aucun message reçu"}
+            description="Les messages du formulaire de contact apparaîtront ici."
+          />
         ) : (
           <div className="space-y-3">
             {filtered.map(c => (

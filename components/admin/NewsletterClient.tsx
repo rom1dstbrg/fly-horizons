@@ -4,6 +4,8 @@ import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
 import { deleteSubscriber, unsubscribeSubscriber, resubscribeSubscriber, addSubscriberFromAdmin, type AddResult, type NewsletterTemplate } from "@/lib/actions/newsletter";
 import { Users, Trash2, CheckCircle2, AlertCircle, Loader2, Mail, UserPlus, UserMinus, UserCheck } from "lucide-react";
+import { PageHeader } from "@/components/admin/PageHeader";
+import { StatGrid, StatCard, FormSection, EmptyState, AdminBadge } from "@/components/admin/ui";
 import { NewsletterEditor } from "@/components/admin/NewsletterEditor";
 
 type Subscriber = {
@@ -62,37 +64,16 @@ export function NewsletterClient({ total, active, subscribers, templates }: Prop
   return (
     <div className="p-4 lg:p-6 max-w-[1600px] mx-auto space-y-6">
 
-      {/* Header */}
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Newsletter</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Gérez vos abonnés et envoyez des campagnes</p>
-      </div>
+      <PageHeader title="Newsletter" subtitle="Gérez vos abonnés et envoyez des campagnes" />
 
-      {/* KPIs */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-white rounded-xl border border-border p-4 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-navy/8 flex items-center justify-center shrink-0">
-            <Users size={15} className="text-navy" />
-          </div>
-          <div>
-            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Abonnés actifs</p>
-            <p className="text-2xl font-black text-navy">{active}</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-border p-4 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center shrink-0">
-            <Mail size={15} className="text-muted-foreground" />
-          </div>
-          <div>
-            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Total inscrits</p>
-            <p className="text-2xl font-black text-foreground">{total}</p>
-          </div>
-        </div>
-      </div>
+      <StatGrid cols={2}>
+        <StatCard label="Abonnés actifs" value={active} variant="emerald" icon={Users} />
+        <StatCard label="Total inscrits"  value={total}  variant="info"   icon={Mail}  />
+      </StatGrid>
 
       {/* Ajouter un abonné */}
       <div className="bg-white rounded-xl border border-border p-5">
-        <h2 className="text-sm font-semibold text-foreground mb-4">Ajouter un abonné</h2>
+        <FormSection title="Ajouter un abonné" />
 
         {addResult?.ok && (
           <div className="flex items-center gap-2 p-3 rounded-lg mb-4 text-sm bg-green-50 text-green-700 border border-green-200">
@@ -139,7 +120,7 @@ export function NewsletterClient({ total, active, subscribers, templates }: Prop
 
       {/* Éditeur de newsletter */}
       <div className="bg-white rounded-xl border border-border p-5">
-        <h2 className="text-sm font-semibold text-foreground mb-5">Créer et envoyer une newsletter</h2>
+        <FormSection title="Créer et envoyer une newsletter" />
         <NewsletterEditor activeCount={active} initialTemplates={templates} />
       </div>
 
@@ -150,8 +131,8 @@ export function NewsletterClient({ total, active, subscribers, templates }: Prop
         </div>
 
         {subscribers.length === 0 ? (
-          <div className="px-5 py-10 text-center">
-            <p className="text-sm text-muted-foreground">Aucun abonné pour le moment.</p>
+          <div className="py-4">
+            <EmptyState icon={Users} title="Aucun abonné" description="Les abonnés à la newsletter apparaîtront ici." />
           </div>
         ) : (
           <div className="divide-y divide-border">
@@ -165,13 +146,7 @@ export function NewsletterClient({ total, active, subscribers, templates }: Prop
                     Inscrit le {new Date(sub.subscribed_at).toLocaleDateString("fr-BE", { day: "numeric", month: "long", year: "numeric" })}
                   </p>
                 </div>
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0 ${
-                  sub.active
-                    ? "text-green-600 bg-green-50 border-green-200"
-                    : "text-muted-foreground bg-muted border-border"
-                }`}>
-                  {sub.active ? "Actif" : "Désinscrit"}
-                </span>
+                <AdminBadge variant={sub.active ? "success" : "secondary"} label={sub.active ? "Actif" : "Désinscrit"} />
                 {sub.active ? (
                   <button
                     onClick={() => handleUnsubscribe(sub.id)}

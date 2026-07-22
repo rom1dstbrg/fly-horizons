@@ -7,10 +7,11 @@ import {
 } from "@/lib/actions/vouchers";
 import { formatDuration } from "@/lib/vouchers";
 import {
-  Check, RotateCcw, Copy, Plus, Loader2, Users, AlertTriangle, Mail,
+  Check, RotateCcw, Copy, Plus, Loader2, Users, AlertTriangle, Mail, Ticket,
 } from "lucide-react";
 import { AdminBadge, STATUT_VOUCHER } from "@/components/admin/ui/AdminBadge";
 import { AdminRowActions } from "@/components/admin/ui/AdminRowActions";
+import { AdminSheet, PageToolbar, FilterChip, EmptyState } from "@/components/admin/ui";
 import { VoucherDrawer, type DrawerVoucher } from "@/components/admin/VoucherDrawer";
 
 type VoucherCode = DrawerVoucher;
@@ -162,17 +163,7 @@ function CreateVoucherForm({ onClose, clients, prixHeure60 }: {
   }
 
   return (
-    <div className="card-premium p-5 mb-2">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-foreground">Nouveau voucher</h3>
-        <button
-          onClick={onClose}
-          className="p-1.5 rounded-lg hover:bg-secondary transition-colors text-muted-foreground cursor-pointer"
-        >
-          ✕
-        </button>
-      </div>
-
+    <div className="space-y-4">
       {created && (
         <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 mb-4 flex items-center gap-3">
           <Check size={14} className="text-green-500 shrink-0" />
@@ -441,11 +432,11 @@ export function VouchersClient({ vouchers: initial, clients, prixHeure60 }: {
   clients: ClientOption[];
   prixHeure60?: number | null;
 }) {
-  const [vouchers, setVouchers] = useState<VoucherCode[]>(initial);
-  const [drawer, setDrawer]     = useState<VoucherCode | null>(null);
-  const [tab, setTab]           = useState("all");
-  const [search, setSearch]     = useState("");
-  const [showCreate, setShowCreate] = useState(false);
+  const [vouchers, setVouchers]   = useState<VoucherCode[]>(initial);
+  const [drawer, setDrawer]       = useState<VoucherCode | null>(null);
+  const [tab, setTab]             = useState("all");
+  const [search, setSearch]       = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
 
   function handleUpdate(id: string, fields: Partial<VoucherCode>) {
     setVouchers(prev => prev.map(v => v.id === id ? { ...v, ...fields } : v));
@@ -471,58 +462,40 @@ export function VouchersClient({ vouchers: initial, clients, prixHeure60 }: {
   return (
     <>
       <div className="space-y-4">
-        {showCreate && (
-          <CreateVoucherForm
-            onClose={() => setShowCreate(false)}
-            clients={clients}
-            prixHeure60={prixHeure60 ?? null}
-          />
-        )}
+        <PageToolbar
+          search={{ value: search, onChange: setSearch, placeholder: "Code, email, téléphone…" }}
+          filters={
+            <div className="flex flex-wrap gap-2">
+              {STATUS_FILTER_TABS.map(t => {
+                const count = t.key === "all" ? vouchers.length : vouchers.filter(v => v.status === t.key).length;
+                return (
+                  <FilterChip
+                    key={t.key}
+                    label={t.label}
+                    active={tab === t.key}
+                    count={count}
+                    onClick={() => setTab(t.key)}
+                  />
+                );
+              })}
+            </div>
+          }
+          actions={
+            <button
+              onClick={() => setCreateOpen(true)}
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:brightness-105 shadow-gold cursor-pointer transition-all"
+            >
+              <Plus size={14} /> Nouveau voucher
+            </button>
+          }
+        />
 
-        {/* Filtres + recherche + action */}
-        <div className="flex flex-wrap items-center gap-2">
-          {STATUS_FILTER_TABS.map(t => {
-            const count = t.key === "all" ? vouchers.length : vouchers.filter(v => v.status === t.key).length;
-            return (
-              <button
-                key={t.key}
-                onClick={() => setTab(t.key)}
-                className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors cursor-pointer ${
-                  tab === t.key
-                    ? "bg-navy text-white border-navy"
-                    : "border-border text-muted-foreground hover:bg-secondary"
-                }`}
-              >
-                {t.label}
-                <span className="ml-1.5 opacity-60">{count}</span>
-              </button>
-            );
-          })}
-
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Code, email, téléphone…"
-            className="bg-background border border-border rounded-lg px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary sm:w-52"
-          />
-
-          <button
-            onClick={() => setShowCreate(s => !s)}
-            className={`ml-auto flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
-              showCreate
-                ? "bg-secondary text-foreground border border-border"
-                : "bg-primary text-primary-foreground hover:brightness-105 shadow-gold"
-            }`}
-          >
-            <Plus size={14} /> Nouveau voucher
-          </button>
-        </div>
-
-        {/* Liste cartes */}
         {filtered.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground text-sm">
-            Aucun voucher correspondant.
-          </div>
+          <EmptyState
+            icon={Ticket}
+            title="Aucun voucher correspondant"
+            description="Créez votre premier voucher ou ajustez les filtres."
+          />
         ) : (
           <div className="space-y-3">
             {filtered.map(v => (
@@ -531,6 +504,18 @@ export function VouchersClient({ vouchers: initial, clients, prixHeure60 }: {
           </div>
         )}
       </div>
+
+      <AdminSheet
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        title="Nouveau voucher"
+      >
+        <CreateVoucherForm
+          onClose={() => setCreateOpen(false)}
+          clients={clients}
+          prixHeure60={prixHeure60 ?? null}
+        />
+      </AdminSheet>
 
       <VoucherDrawer
         voucher={drawer}

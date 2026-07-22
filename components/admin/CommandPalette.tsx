@@ -8,6 +8,7 @@ import {
   Users, MessageSquare, Settings, ArrowRight, User,
   ShoppingBag, X, Loader2,
 } from "lucide-react";
+import { STATUT_ORDER } from "@/components/admin/ui";
 
 interface SearchResult {
   clients: { id: string; prenom: string; nom: string; email: string }[];
@@ -32,10 +33,6 @@ const QUICK_LINKS = [
   { href: "/admin/products/new",               label: "Nouveau produit",      icon: Package,         group: "Actions rapides" },
 ];
 
-const STATUS_LABELS: Record<string, string> = {
-  paid: "Payée", pending: "En attente", processing: "En cours",
-  shipped: "Expédiée", delivered: "Livrée", cancelled: "Annulée", refunded: "Remboursée",
-};
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
@@ -192,7 +189,7 @@ export function CommandPalette() {
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-foreground font-mono">#{order.id.slice(0, 8).toUpperCase()}</p>
-                    <p className="text-xs text-muted-foreground">{STATUS_LABELS[order.status]} · {order.total?.toFixed(2)} €</p>
+                    <p className="text-xs text-muted-foreground">{STATUT_ORDER[order.status]?.label ?? order.status} · {order.total?.toFixed(2)} €</p>
                   </div>
                   <ArrowRight size={13} className="text-muted-foreground/40 shrink-0 ml-auto" />
                 </button>

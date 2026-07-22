@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { ChevronDown, Download, Bot, User, Loader2, Trash2 } from "lucide-react";
+import { EmptyState } from "@/components/admin/ui";
 import { getChatSessions, deleteChatSession, type ChatSession } from "@/lib/actions/chat";
 
 export default function AdminChatPage() {
@@ -67,7 +68,7 @@ export default function AdminChatPage() {
           <span className="text-sm">Chargement des conversations…</span>
         </div>
       ) : sessions.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-12">Aucune conversation pour l&apos;instant.</p>
+        <EmptyState icon={Bot} title="Aucune conversation" description="Les conversations des visiteurs apparaîtront ici." />
       ) : (
         <div className="space-y-2">
           {sessions.map(session => {

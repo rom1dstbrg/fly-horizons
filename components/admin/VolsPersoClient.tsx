@@ -19,8 +19,10 @@ import {
 import { toForeFlight } from "@/lib/foreflight";
 import { optimizeWaypoints } from "@/lib/route-optimize";
 import { deleteReservationPerso } from "@/lib/actions/delete";
-import { AdminBadge, STATUT_PERSO } from "@/components/admin/ui/AdminBadge";
+import { AdminBadge, STATUT_PERSO, PAYMENT_STATUS_CONFIG, ACTION_LABELS } from "@/components/admin/ui/AdminBadge";
 import { AdminRowActions } from "@/components/admin/ui/AdminRowActions";
+import { EmptyState } from "@/components/admin/ui/EmptyState";
+import { Route } from "lucide-react";
 import {
   X, User, Phone, Mail, Calendar, Clock, Users, Weight,
   CreditCard, Loader2, Send, Check, MapPin,
@@ -104,25 +106,12 @@ Romain`,
   },
 ];
 
-const PAYMENT_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-  paid:     { label: "Payé",      color: "bg-green-50 text-green-700 border border-green-200" },
-  unpaid:   { label: "Non payé",  color: "bg-amber-50 text-amber-700 border border-amber-200" },
-  partial:  { label: "Partiel",   color: "bg-blue-50 text-blue-700 border border-blue-200" },
-  refunded: { label: "Remboursé", color: "bg-gray-50 text-gray-600 border border-gray-200" },
-};
-
 const PROPOSAL_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   pending:               { label: "En attente",          color: "bg-amber-50 text-amber-700 border-amber-200" },
   accepted:              { label: "Acceptée ✓",          color: "bg-green-50 text-green-700 border-green-200" },
   modification_requested:{ label: "Modif. demandée",     color: "bg-red-50 text-red-700 border-red-200" },
 };
 
-const ACTION_LABELS: Record<string, string> = {
-  field_changed:        "Modification",
-  route_proposal_sent:  "Proposition envoyée",
-  client_response:      "Réponse client",
-  status_changed:       "Changement de statut",
-};
 
 const FIELD_LABELS: Record<string, string> = {
   "client.prenom":    "Prénom",
@@ -1727,9 +1716,11 @@ export function VolsPersoClient({ reservations: initial }: { reservations: Reser
 
   if (!reservations.length) {
     return (
-      <div className="text-center py-20 text-muted-foreground text-sm">
-        Aucune demande de vol sur mesure pour le moment.
-      </div>
+      <EmptyState
+        icon={Route}
+        title="Aucune demande de vol sur mesure"
+        description="Les demandes de vol personnalisé apparaîtront ici."
+      />
     );
   }
 

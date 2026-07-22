@@ -7,6 +7,7 @@ import { Upload, X, Star, Loader2, Package, Gift, Clock, GripVertical, Check } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormSection } from "@/components/admin/ui";
 import { createProduct, updateProduct, deleteProductImage, reorderProductImages } from "@/lib/actions/products";
 import { createClient } from "@/lib/supabase/client";
 import type { Product, ProductImage } from "@/types/database";
@@ -136,7 +137,7 @@ export function ProductForm({ product }: ProductFormProps) {
           {isEdit ? (
             <div className="card-premium p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="font-semibold text-foreground">Images</h2>
+                <FormSection title="Images" />
                 <span className="text-xs text-muted-foreground">{images.length} / 6 · glissez pour réordonner</span>
               </div>
 
@@ -216,7 +217,7 @@ export function ProductForm({ product }: ProductFormProps) {
 
           {/* Contenu textuel */}
           <div className="card-premium p-6 space-y-4">
-            <h2 className="font-semibold text-foreground">Contenu</h2>
+            <FormSection title="Contenu" />
 
             <div className="space-y-2">
               <Label htmlFor="title" className="text-sm text-muted-foreground">Titre *</Label>
@@ -260,7 +261,7 @@ export function ProductForm({ product }: ProductFormProps) {
 
           {/* Type de produit */}
           <div className="card-premium p-6 space-y-4">
-            <h2 className="font-semibold text-foreground">Type</h2>
+            <FormSection title="Type" />
 
             <div className="grid grid-cols-2 gap-2">
               {(["physical", "voucher"] as const).map(type => {
@@ -320,7 +321,7 @@ export function ProductForm({ product }: ProductFormProps) {
 
           {/* Prix et stock */}
           <div className="card-premium p-6 space-y-4">
-            <h2 className="font-semibold text-foreground">{productType === "voucher" ? "Prix" : "Prix et stock"}</h2>
+            <FormSection title={productType === "voucher" ? "Prix" : "Prix et stock"} />
 
             <div className="space-y-2">
               <Label htmlFor="price" className="text-sm text-muted-foreground">Prix (EUR) *</Label>
@@ -360,7 +361,7 @@ export function ProductForm({ product }: ProductFormProps) {
 
           {/* Publication */}
           <div className="card-premium p-6 space-y-3">
-            <h2 className="font-semibold text-foreground">Publication</h2>
+            <FormSection title="Publication" />
 
             <button
               type="button"

@@ -5,69 +5,23 @@ import {
   AlertTriangle, AlertCircle, CheckCircle2,
   ArrowRight, Route, MessageSquare, Ticket,
   Users, Plus, Package,
-  CalendarDays, Tag, ChevronRight, CreditCard,
+  CalendarDays, Tag, CreditCard,
   PlaneTakeoff, TrendingUp, TrendingDown, WifiOff,
 } from "lucide-react";
 import { PremiumPlaneIcon } from "@/components/admin/PremiumPlaneIcon";
 import { formatPrice } from "@/lib/utils";
 import { DashboardCalendar } from "@/components/admin/DashboardCalendar";
 import { MetarWidget } from "@/components/admin/MetarWidget";
+import { PageHeader } from "@/components/admin/PageHeader";
+import { StatGrid, StatCard, FormSection, AdminBadge, STATUT_RESA, STATUT_PERSO } from "@/components/admin/ui";
+
+const RESA_ALL = { ...STATUT_RESA, ...STATUT_PERSO };
 
 export const metadata = { title: "Cockpit — Admin" };
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
 type ActionItem = { label: string; href: string; icon: React.ElementType };
-
-// ─── constants ────────────────────────────────────────────────────────────────
-
-const STATUT_BADGE: Record<string, { label: string; cls: string }> = {
-  payment_pending: { label: "Paiement att.",   cls: "text-orange-600 bg-orange-50 border-orange-200" },
-  en_attente:      { label: "En attente",       cls: "text-yellow-600 bg-yellow-50 border-yellow-200" },
-  date_confirmee:  { label: "Date confirmée",   cls: "text-blue-600 bg-blue-50 border-blue-200" },
-  heure_confirmee: { label: "Heure confirmée",  cls: "text-green-600 bg-green-50 border-green-200" },
-  acompte_recu:    { label: "Provision reçue",   cls: "text-emerald-600 bg-emerald-50 border-emerald-200" },
-  vol_effectue:    { label: "Vol effectué",     cls: "text-purple-600 bg-purple-50 border-purple-200" },
-  annulee:         { label: "Annulée",          cls: "text-red-500 bg-red-50 border-red-200" },
-};
-
-// ─── sub-components ───────────────────────────────────────────────────────────
-
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 className="text-[11px] font-bold text-muted-foreground uppercase tracking-[1.8px] mb-3">
-      {children}
-    </h2>
-  );
-}
-
-function KPICard({ label, value, icon: Icon, accent = "navy", href }: {
-  label: string; value: string;
-  icon: React.ElementType; accent?: "navy" | "gold" | "green" | "purple" | "red";
-  href?: string;
-}) {
-  const c = {
-    navy:   { bg: "bg-navy/8",        val: "text-navy" },
-    gold:   { bg: "bg-[#F2B705]/10",  val: "text-[#b88c00]" },
-    green:  { bg: "bg-green-500/10",  val: "text-green-600" },
-    purple: { bg: "bg-purple-500/10", val: "text-purple-600" },
-    red:    { bg: "bg-red-500/10",    val: "text-red-600" },
-  }[accent];
-
-  const inner = (
-    <div className={`bg-card rounded-xl border border-border p-4 flex items-center gap-3 ${href ? "hover:shadow-sm transition-all group" : ""}`}>
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${c.bg}`}>
-        <Icon size={15} className={c.val} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider leading-none">{label}</p>
-        <p className={`text-xl font-black tracking-tight mt-1 ${c.val}`}>{value}</p>
-      </div>
-      {href && <ChevronRight size={12} className="text-muted-foreground/30 group-hover:text-muted-foreground/60 shrink-0 transition-colors" />}
-    </div>
-  );
-  return href ? <Link href={href} className="block">{inner}</Link> : inner;
-}
 
 // ─── page ─────────────────────────────────────────────────────────────────────
 
@@ -178,44 +132,42 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-6 w-full">
 
-      {/* ── HEADER ───────────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">{greeting}, Romain</h1>
-          <p className="text-sm text-muted-foreground mt-0.5 capitalize">{dateLabel}</p>
-        </div>
-        <div className="hidden sm:flex items-center gap-2 shrink-0">
-          <Link
-            href="/admin/reservations/new"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-          >
-            <Plus size={15} />
-            Nouvelle réservation
-          </Link>
-          <Link
-            href="/admin/reservations/new-mesure"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-          >
-            <Route size={15} />
-            Nouveau vol sur mesure
-          </Link>
-          <Link
-            href="/admin/reservations/new-horsite"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-          >
-            <WifiOff size={15} />
-            Hors site
-          </Link>
-        </div>
-      </div>
+      <PageHeader
+        title={`${greeting}, Romain`}
+        subtitle={dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1)}
+        action={
+          <div className="hidden sm:flex items-center gap-2">
+            <Link
+              href="/admin/reservations/new"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            >
+              <Plus size={15} />
+              Nouvelle réservation
+            </Link>
+            <Link
+              href="/admin/reservations/new-mesure"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            >
+              <Route size={15} />
+              Nouveau vol sur mesure
+            </Link>
+            <Link
+              href="/admin/reservations/new-horsite"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            >
+              <WifiOff size={15} />
+              Hors site
+            </Link>
+          </div>
+        }
+      />
 
-      {/* ── KPIs ─────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KPICard label="CA boutique"   value={formatPrice(caAllOrders)}                                                          icon={CreditCard}                                   accent="navy"                              />
-        <KPICard label="Solde vols"    value={`${soldeGlobal >= 0 ? "+" : ""}${formatPrice(soldeGlobal)}`}                       icon={soldeGlobal >= 0 ? TrendingUp : TrendingDown} accent={soldeGlobal >= 0 ? "green" : "red"} />
-        <KPICard label="Vols réservés" value={String(resasTotal)}                                                                 icon={PremiumPlaneIcon}                             accent="gold"                              href="/admin/vols" />
-        <KPICard label="Clients"       value={String(clientsUniques)}                                                             icon={Users}                                        accent="green"                             href="/admin/clients" />
-      </div>
+      <StatGrid cols={4}>
+        <StatCard label="CA boutique"   value={formatPrice(caAllOrders)}                                          icon={CreditCard}                                   variant="primary"                                  />
+        <StatCard label="Solde vols"    value={`${soldeGlobal >= 0 ? "+" : ""}${formatPrice(soldeGlobal)}`}       icon={soldeGlobal >= 0 ? TrendingUp : TrendingDown} variant={soldeGlobal >= 0 ? "success" : "danger"}  />
+        <StatCard label="Vols réservés" value={String(resasTotal)}                                                icon={PremiumPlaneIcon as unknown as typeof CreditCard} variant="gold"                              href="/admin/vols" />
+        <StatCard label="Clients"       value={String(clientsUniques)}                                            icon={Users}                                        variant="success"                                  href="/admin/clients" />
+      </StatGrid>
 
       {/* ── MAIN GRID ────────────────────────────────────────────────── */}
       <div className="grid lg:grid-cols-[7fr_3fr] gap-5 items-start">
@@ -284,7 +236,7 @@ export default async function AdminDashboardPage() {
 
           {/* Calendrier */}
           <div>
-            <SectionTitle>Calendrier des vols</SectionTitle>
+            <FormSection title="Calendrier des vols" />
             <DashboardCalendar reservations={allResas as never} />
           </div>
         </div>
@@ -310,7 +262,7 @@ export default async function AdminDashboardPage() {
                 volsToday.map((r, i) => {
                   const client = r.clients as { prenom: string; nom: string } | null;
                   const name   = client ? `${client.prenom} ${client.nom}`.trim() : "—";
-                  const badge  = STATUT_BADGE[r.statut] ?? { label: r.statut, cls: "text-muted-foreground bg-muted border-border" };
+                  const statut = RESA_ALL[r.statut] ?? { label: r.statut, variant: "secondary" as const };
                   return (
                     <Link key={r.id} href="/admin/vols"
                       className={`flex items-center gap-3 px-3.5 py-2.5 hover:bg-secondary transition-colors group ${i < volsToday.length - 1 ? "border-b border-border" : ""}`}
@@ -323,9 +275,7 @@ export default async function AdminDashboardPage() {
                         <p className="text-xs font-semibold text-foreground truncate">{name}</p>
                         <p className="text-[10px] text-muted-foreground">{r.heure_vol ?? "Heure à confirmer"}</p>
                       </div>
-                      <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full border shrink-0 ${badge.cls}`}>
-                        {badge.label}
-                      </span>
+                      <AdminBadge variant={statut.variant} label={statut.label} />
                     </Link>
                   );
                 })
@@ -336,12 +286,12 @@ export default async function AdminDashboardPage() {
           {/* Vols demain — affiché seulement s'il y en a */}
           {volsTomorrow.length > 0 && (
             <div>
-              <SectionTitle>Demain</SectionTitle>
+              <FormSection title="Demain" />
               <div className="bg-card rounded-xl border border-border overflow-hidden">
                 {volsTomorrow.map((r, i) => {
                   const client = r.clients as { prenom: string; nom: string } | null;
                   const name   = client ? `${client.prenom} ${client.nom}`.trim() : "—";
-                  const badge  = STATUT_BADGE[r.statut] ?? { label: r.statut, cls: "text-muted-foreground bg-muted border-border" };
+                  const statut = RESA_ALL[r.statut] ?? { label: r.statut, variant: "secondary" as const };
                   return (
                     <Link key={r.id} href="/admin/vols"
                       className={`flex items-center gap-3 px-3.5 py-2.5 hover:bg-secondary transition-colors group ${i < volsTomorrow.length - 1 ? "border-b border-border" : ""}`}
@@ -354,9 +304,7 @@ export default async function AdminDashboardPage() {
                         <p className="text-xs font-semibold text-foreground truncate">{name}</p>
                         <p className="text-[10px] text-muted-foreground">{r.heure_vol ?? "Heure à confirmer"}</p>
                       </div>
-                      <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full border shrink-0 ${badge.cls}`}>
-                        {badge.label}
-                      </span>
+                      <AdminBadge variant={statut.variant} label={statut.label} />
                     </Link>
                   );
                 })}
@@ -366,7 +314,7 @@ export default async function AdminDashboardPage() {
 
           {/* METAR / TAF */}
           <div>
-            <SectionTitle>Météo · EBCI</SectionTitle>
+            <FormSection title="Météo · EBCI" />
             <Suspense fallback={
               <div className="bg-card rounded-xl border border-border px-4 py-3">
                 <p className="text-xs text-muted-foreground">Chargement météo...</p>
@@ -378,7 +326,7 @@ export default async function AdminDashboardPage() {
 
           {/* Actions rapides */}
           <div>
-            <SectionTitle>Actions rapides</SectionTitle>
+            <FormSection title="Actions rapides" />
             <div className="bg-card rounded-xl border border-border overflow-hidden">
               {([
                 { href: "/admin/reservations/new",          icon: Plus,    label: "Nouvelle réservation",   color: "text-navy" },
@@ -407,7 +355,7 @@ export default async function AdminDashboardPage() {
       {recentResas.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-3">
-            <SectionTitle>Dernières réservations</SectionTitle>
+            <FormSection title="Dernières réservations" />
             <Link href="/admin/vols" className="text-xs text-muted-foreground hover:text-navy transition-colors flex items-center gap-1">
               Voir tout <ArrowRight size={11} />
             </Link>
@@ -419,7 +367,7 @@ export default async function AdminDashboardPage() {
               const date   = r.date_vol
                 ? new Date(r.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", { day: "numeric", month: "short" })
                 : new Date(r.created_at).toLocaleDateString("fr-BE", { day: "numeric", month: "short" });
-              const badge  = STATUT_BADGE[r.statut] ?? { label: r.statut, cls: "text-muted-foreground bg-muted border-border" };
+              const statut = RESA_ALL[r.statut] ?? { label: r.statut, variant: "secondary" as const };
               return (
                 <div key={r.id} className={`flex items-center gap-4 px-5 py-3 hover:bg-secondary transition-colors ${idx < recentResas.length - 1 ? "border-b border-border" : ""}`}>
                   {r.type_resa === "perso"
@@ -433,9 +381,7 @@ export default async function AdminDashboardPage() {
                       {r.type_resa === "perso" ? " · Vol sur mesure" : ""}
                     </p>
                   </div>
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0 ${badge.cls}`}>
-                    {badge.label}
-                  </span>
+                  <AdminBadge variant={statut.variant} label={statut.label} />
                 </div>
               );
             })}
