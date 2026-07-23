@@ -5,7 +5,7 @@ import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { rateLimit, getIp } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
-  const { allowed } = rateLimit(`satisfaction:${getIp(request)}`, 5, 60_000);
+  const { allowed } = await rateLimit(`satisfaction:${getIp(request)}`, 5, 60_000);
   if (!allowed) {
     return NextResponse.json({ error: "Trop de requêtes." }, { status: 429 });
   }

@@ -116,7 +116,7 @@ interface ChatMessage {
 
 export async function POST(req: NextRequest) {
   const ip = getIp(req);
-  const { allowed } = rateLimit(`chat:${ip}`, 30, 60_000);
+  const { allowed } = await rateLimit(`chat:${ip}`, 30, 60_000);
   if (!allowed) {
     return NextResponse.json(
       { error: "Trop de messages. Veuillez patienter." },
@@ -169,11 +169,23 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // Appel Claude
-  const anthropicMessages = messages.map((m) => ({
-    role: m.role,
-    content: m.content,
-  }));
+  // Reconstruire l'historique depuis la DB (source de confiance) — ignorer le body client
+  // Empêche l'injection de faux messages "assistant" via le corps de la requête
+  let dbHistory: ChatMessage[] = [];
+  if (currentSessionId) {
+    const { data: historyRaw } = await supabase
+      .from("chat_messages")
+      .select("role, content")
+      .eq("session_id", currentSessionId)
+      .order("created_at", { ascending: true })
+      .limit(30);
+    dbHistory = (historyRaw ?? []) as ChatMessage[];
+  }
+
+  // Appel Claude avec l'historique DB (le nouveau message utilisateur est déjà inclus dedans)
+  const anthropicMessages = dbHistory.length > 0
+    ? dbHistory
+    : [{ role: "user" as const, content: lastMessage.content }];
 
   let assistantText: string;
   try {

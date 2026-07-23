@@ -7,7 +7,7 @@ import { escapeHtml } from "@/lib/utils";
 import { optInNewsletter } from "@/lib/newsletter";
 
 export async function POST(request: NextRequest) {
-  const { allowed } = rateLimit(`reservation-submit:${getIp(request)}`, 5, 60_000);
+  const { allowed } = await rateLimit(`reservation-submit:${getIp(request)}`, 5, 60_000);
   if (!allowed) {
     return NextResponse.json({ error: "Trop de requêtes, veuillez patienter." }, { status: 429 });
   }

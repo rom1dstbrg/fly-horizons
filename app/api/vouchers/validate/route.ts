@@ -5,7 +5,7 @@ import { rateLimit, getIp } from "@/lib/rate-limit";
 const VOUCHER_CODE_RE = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/i;
 
 export async function GET(request: NextRequest) {
-  const { allowed } = rateLimit(`voucher-validate:${getIp(request)}`, 20, 60_000);
+  const { allowed } = await rateLimit(`voucher-validate:${getIp(request)}`, 20, 60_000);
   if (!allowed) {
     return NextResponse.json({ error: "Trop de requêtes" }, { status: 429 });
   }

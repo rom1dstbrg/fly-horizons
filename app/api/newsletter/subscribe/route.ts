@@ -5,7 +5,7 @@ import { newsletterConfirmationEmail } from "@/lib/email-templates";
 import { rateLimit, getIp } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
-  const { allowed } = rateLimit(`newsletter-subscribe:${getIp(req)}`, 3, 60_000);
+  const { allowed } = await rateLimit(`newsletter-subscribe:${getIp(req)}`, 3, 60_000);
   if (!allowed) {
     return NextResponse.json({ error: "Trop de tentatives, veuillez patienter." }, { status: 429 });
   }
@@ -14,7 +14,8 @@ export async function POST(req: NextRequest) {
     const { email, prenom } = await req.json();
 
     const cleaned = email?.toLowerCase()?.trim();
-    if (!cleaned || !cleaned.includes("@") || !cleaned.includes(".")) {
+    const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!cleaned || !EMAIL_RE.test(cleaned) || cleaned.length > 254) {
       return NextResponse.json({ error: "Email invalide." }, { status: 400 });
     }
 

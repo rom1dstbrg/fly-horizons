@@ -23,6 +23,7 @@ export async function GET(
     .from("reservations")
     .select("*, clients(*)")
     .eq("payment_token", token)
+    .eq("type_resa", "perso")
     .single();
 
   if (!resa) {

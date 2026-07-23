@@ -41,6 +41,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Un ou plusieurs produits sont indisponibles." }, { status: 400 });
     }
 
+    // Map des prix depuis la DB — jamais depuis le client
+    const productMap = new Map(products.map(p => [p.id, p]));
+    const dbPrice = (itemId: string): number => productMap.get(itemId)?.price ?? 0;
+
     const allVouchers = products.every(isVoucherProduct);
 
     for (const item of items) {
@@ -65,8 +69,9 @@ export async function POST(request: NextRequest) {
       shippingCost = shippingRate?.rate_standard ?? 4.95;
     }
 
+    // Sous-total calculé depuis les prix DB (le client ne peut pas influencer les montants)
     const subtotal = items.reduce(
-      (sum: number, item: { price: number; quantity: number }) => sum + item.price * item.quantity, 0
+      (sum: number, item: { id: string; quantity: number }) => sum + dbPrice(item.id) * item.quantity, 0
     );
 
     let discountAmount = 0;
@@ -102,16 +107,16 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Calculer le sous-total applicable selon la restriction du coupon
+      // Sous-total applicable calculé depuis les prix DB
       const applicableSubtotal = coupon.applies_to === "voucher"
-        ? items.reduce((sum: number, item: { id: string; price: number; quantity: number }) => {
-            const p = products.find(p => p.id === item.id);
-            return sum + (p && isVoucherProduct(p) ? item.price * item.quantity : 0);
+        ? items.reduce((sum: number, item: { id: string; quantity: number }) => {
+            const p = productMap.get(item.id);
+            return sum + (p && isVoucherProduct(p) ? dbPrice(item.id) * item.quantity : 0);
           }, 0)
         : coupon.applies_to === "physical"
-        ? items.reduce((sum: number, item: { id: string; price: number; quantity: number }) => {
-            const p = products.find(p => p.id === item.id);
-            return sum + (p && !isVoucherProduct(p) ? item.price * item.quantity : 0);
+        ? items.reduce((sum: number, item: { id: string; quantity: number }) => {
+            const p = productMap.get(item.id);
+            return sum + (p && !isVoucherProduct(p) ? dbPrice(item.id) * item.quantity : 0);
           }, 0)
         : subtotal;
 
@@ -148,14 +153,17 @@ export async function POST(request: NextRequest) {
     }
 
     await adminSupabase.from("order_items").insert(
-      items.map((item: { id: string; title: string; price: number; quantity: number; image_url: string | null }) => ({
-        order_id: order.id,
-        product_id: item.id,
-        title: item.title,
-        unit_price: item.price,
-        quantity: item.quantity,
-        image_url: item.image_url,
-      }))
+      items.map((item: { id: string; quantity: number }) => {
+        const p = productMap.get(item.id)!;
+        return {
+          order_id: order.id,
+          product_id: item.id,
+          title: p.title,
+          unit_price: p.price,
+          quantity: item.quantity,
+          image_url: p.image_url ?? null,
+        };
+      })
     );
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -216,12 +224,10 @@ export async function POST(request: NextRequest) {
           to: user.email,
           orderRef: order.id.slice(0, 8).toUpperCase(),
           customerName: clientAddress?.full_name || undefined,
-          items: items.map((i: { title: string; price: number; quantity: number; image_url?: string | null }) => ({
-            title: i.title,
-            quantity: i.quantity,
-            unit_price: i.price,
-            image_url: i.image_url ?? null,
-          })),
+          items: items.map((i: { id: string; quantity: number }) => {
+            const p = productMap.get(i.id)!;
+            return { title: p.title, quantity: i.quantity, unit_price: p.price, image_url: p.image_url ?? null };
+          }),
           subtotal,
           shippingCost: 0,
           discountAmount,
@@ -273,17 +279,20 @@ export async function POST(request: NextRequest) {
       quantity: number;
     };
 
-    const lineItems: LineItem[] = items.map((item: { title: string; price: number; quantity: number; image_url: string | null }) => ({
-      price_data: {
-        currency: "eur",
-        product_data: {
-          name: item.title,
-          images: item.image_url ? [item.image_url] : [],
+    const lineItems: LineItem[] = items.map((item: { id: string; quantity: number }) => {
+      const p = productMap.get(item.id)!;
+      return {
+        price_data: {
+          currency: "eur",
+          product_data: {
+            name: p.title,
+            images: p.image_url ? [p.image_url] : [],
+          },
+          unit_amount: Math.round(p.price * 100),
         },
-        unit_amount: Math.round(item.price * 100),
-      },
-      quantity: item.quantity,
-    }));
+        quantity: item.quantity,
+      };
+    });
 
     if (!allVouchers && shippingCost > 0) {
       lineItems.push({

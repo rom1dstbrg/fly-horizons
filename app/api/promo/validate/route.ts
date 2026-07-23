@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { rateLimit, getIp } from "@/lib/rate-limit";
 
 export async function GET(request: NextRequest) {
-  const { allowed } = rateLimit(`promo-validate:${getIp(request)}`, 20, 60_000);
+  const { allowed } = await rateLimit(`promo-validate:${getIp(request)}`, 20, 60_000);
   if (!allowed) {
     return NextResponse.json({ valid: false, error: "Trop de requêtes, veuillez patienter." }, { status: 429 });
   }

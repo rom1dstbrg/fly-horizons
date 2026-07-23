@@ -9,7 +9,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 export async function POST(request: NextRequest) {
-  const { allowed } = rateLimit(`reservation-checkout:${getIp(request)}`, 5, 60_000);
+  const { allowed } = await rateLimit(`reservation-checkout:${getIp(request)}`, 5, 60_000);
   if (!allowed) {
     return NextResponse.json({ error: "Trop de requêtes, veuillez patienter." }, { status: 429 });
   }

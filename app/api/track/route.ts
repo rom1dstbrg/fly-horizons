@@ -5,7 +5,11 @@ export async function POST(req: NextRequest) {
   try {
     const { pathname, referrer, screen_width, visitor_id } = await req.json();
 
-    if (!pathname || pathname.startsWith("/admin")) {
+    if (!pathname || typeof pathname !== "string" || pathname.startsWith("/admin")) {
+      return NextResponse.json({ ok: true });
+    }
+    if (pathname.length > 500) return NextResponse.json({ ok: true });
+    if (visitor_id && (typeof visitor_id !== "string" || visitor_id.length > 64)) {
       return NextResponse.json({ ok: true });
     }
 

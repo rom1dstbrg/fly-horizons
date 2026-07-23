@@ -175,4 +175,3 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ cancelled, reminded, errors: errors.length ? errors : undefined });
 }
 
-export const GET = POST;

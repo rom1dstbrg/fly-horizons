@@ -16,7 +16,12 @@ async function checkAdmin() {
   if (profile?.role !== "admin") throw new Error("Non autorise");
 }
 
+const VALID_ORDER_STATUSES = ["pending", "paid", "processing", "shipped", "delivered", "cancelled", "refunded"] as const;
+
 export async function updateOrderStatus(orderId: string, status: string) {
+  if (!VALID_ORDER_STATUSES.includes(status as typeof VALID_ORDER_STATUSES[number])) {
+    return { error: "Statut invalide" };
+  }
   try {
     await checkAdmin();
     const adminSupabase = createAdminClient();

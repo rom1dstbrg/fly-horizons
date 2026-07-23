@@ -34,7 +34,7 @@ export async function submitContact(formData: FormData) {
     headerStore.get("x-real-ip") ??
     "unknown";
 
-  const { allowed } = rateLimit(`contact:${ip}`, 3, 60_000);
+  const { allowed } = await rateLimit(`contact:${ip}`, 3, 60_000);
   if (!allowed) {
     return { error: "Trop de messages envoyés. Veuillez patienter une minute." };
   }
@@ -131,7 +131,7 @@ export async function submitClientReply(token: string, content: string) {
     headerStore.get("x-real-ip") ??
     "unknown";
 
-  const { allowed } = rateLimit(`contact-reply:${ip}`, 5, 60_000);
+  const { allowed } = await rateLimit(`contact-reply:${ip}`, 5, 60_000);
   if (!allowed) return { error: "Trop de messages. Veuillez patienter." };
 
   if (!content.trim()) return { error: "Le message ne peut pas être vide." };
