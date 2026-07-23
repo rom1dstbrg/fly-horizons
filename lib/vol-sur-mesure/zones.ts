@@ -23,48 +23,62 @@ interface ZoneEntry extends ZoneResult {
 }
 
 const ZONES: ZoneEntry[] = [
-  // Examples — uncomment and extend as needed:
-  //
-  // {
-  //   id: "ardennes",
-  //   nom: "Les Ardennes",
-  //   description: "La Roche-en-Ardenne, Bastogne, Hautes Fagnes",
-  //   lat: 50.1843,
-  //   lng: 5.5706,
-  //   keywords: ["ardenne", "ardennes"],
-  // },
-  // {
-  //   id: "cote-belge",
-  //   nom: "Côte belge",
-  //   description: "Ostende, De Haan, Knokke-Heist",
-  //   lat: 51.2310,
-  //   lng: 2.9161,
-  //   keywords: ["côte", "cote", "mer du nord", "littoral", "plage", "ostende"],
-  // },
-  // {
-  //   id: "fagnes",
-  //   nom: "Hautes Fagnes",
-  //   description: "Signal de Botrange, tourbières, panoramas",
-  //   lat: 50.4980,
-  //   lng: 6.0833,
-  //   keywords: ["fagnes", "hautes fagnes", "botrange"],
-  // },
-  // {
-  //   id: "meuse",
-  //   nom: "Vallée de la Meuse",
-  //   description: "Dinant, Namur, Huy, citadelles et rochers",
-  //   lat: 50.2604,
-  //   lng: 4.9147,
-  //   keywords: ["meuse", "vallée de la meuse"],
-  // },
-  // {
-  //   id: "gaume",
-  //   nom: "La Gaume",
-  //   description: "Virton, Florenville, abbaye d'Orval",
-  //   lat: 49.6780,
-  //   lng: 5.5200,
-  //   keywords: ["gaume", "lorraine belge"],
-  // },
+  {
+    id: "ardennes",
+    nom: "Les Ardennes",
+    description: "La Roche-en-Ardenne, Bastogne, Hautes Fagnes",
+    lat: 50.1843,
+    lng: 5.5706,
+    keywords: ["ardenne", "ardennes"],
+  },
+  {
+    id: "cote-belge",
+    nom: "Côte belge",
+    description: "Ostende, De Haan, Knokke-Heist",
+    lat: 51.2310,
+    lng: 2.9161,
+    keywords: ["côte", "cote", "mer du nord", "littoral", "plage", "ostende"],
+  },
+  {
+    id: "fagnes",
+    nom: "Hautes Fagnes",
+    description: "Signal de Botrange, tourbières, panoramas",
+    lat: 50.4980,
+    lng: 6.0833,
+    keywords: ["fagnes", "hautes fagnes", "botrange"],
+  },
+  {
+    id: "meuse",
+    nom: "Vallée de la Meuse",
+    description: "Dinant, Namur, Huy, citadelles et rochers",
+    lat: 50.2604,
+    lng: 4.9147,
+    keywords: ["meuse", "vallée de la meuse", "vallée meuse"],
+  },
+  {
+    id: "gaume",
+    nom: "La Gaume",
+    description: "Virton, Florenville, abbaye d'Orval",
+    lat: 49.6780,
+    lng: 5.5200,
+    keywords: ["gaume", "lorraine belge"],
+  },
+  {
+    id: "namur",
+    nom: "Namur",
+    description: "Citadelle, confluence Sambre & Meuse",
+    lat: 50.4636,
+    lng: 4.8666,
+    keywords: ["namur"],
+  },
+  {
+    id: "dinant",
+    nom: "Dinant",
+    description: "Rocher Bayard, citadelle, falaises de Meuse",
+    lat: 50.2611,
+    lng: 4.9122,
+    keywords: ["dinant"],
+  },
 ];
 
 /**

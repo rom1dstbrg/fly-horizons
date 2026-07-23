@@ -403,3 +403,10 @@
     font-size: 16px !important;
   }
 }
+
+/* Masque les boutons +/- de Leaflet sur mobile (le pinch-to-zoom suffit) */
+@media (max-width: 1023px) {
+  .leaflet-control-zoom {
+    display: none !important;
+  }
+}
