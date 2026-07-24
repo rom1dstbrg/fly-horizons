@@ -116,7 +116,8 @@
       "mcp__claude_ai_Canva__list-brand-kits",
       "mcp__claude_ai_Canva__generate-design",
       "Bash(grep -E \"\\\\.\\(sql|ts|tsx\\)$\")",
-      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\romai\\\\Documents\\\\Projects\\\\fly_horizons\" -Force)"
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\romai\\\\Documents\\\\Projects\\\\fly_horizons\" -Force)",
+      "Bash(npx vercel *)"
     ]
   }
 }

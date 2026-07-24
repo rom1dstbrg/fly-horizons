@@ -1,0 +1,66 @@
+{
+  "border_radius": {
+    "sm":      { "px": 10, "tailwind": "rounded-[10px]", "usage": "Radius interne CSS (--r-sm)" },
+    "md":      { "px": 18, "tailwind": "rounded-[18px]", "usage": "Radius moyen (--r-md)" },
+    "lg":      { "px": 26, "tailwind": "rounded-[26px]", "usage": "Radius large (--r-lg)" },
+    "card":    { "px": 16, "tailwind": "rounded-2xl",    "usage": "Toutes les cards standard" },
+    "button":  { "px": 12, "tailwind": "rounded-xl",     "usage": "Boutons principaux et secondaires" },
+    "input":   { "px": 12, "tailwind": "rounded-xl",     "usage": "Champs de formulaire" },
+    "badge":   { "px": "999px", "tailwind": "rounded-full", "usage": "Badges statuts" },
+    "header":  { "px": 16, "tailwind": "rounded-2xl",    "usage": "Header flottant" },
+    "icon_box":{ "px": 12, "tailwind": "rounded-xl",     "usage": "Icône dans un carré" }
+  },
+  "layout": {
+    "max_width":                "1400px (max-w-[1400px])",
+    "container_padding_mobile": "16px (px-4)",
+    "container_padding_tablet": "24px (px-6 at sm:)",
+    "container_padding_desktop":"40px (px-10 at xl:)",
+    "header_height":            "84px — spacer fixe sous le header (h-[84px])",
+    "header_height_xs":         "56px (max-xs:h-14)",
+    "header_height_md":         "60px (md:h-[60px])",
+    "header_floating_inset":    "top:8px side:12px md:top:14px md:side:16px"
+  },
+  "sections": {
+    "py_large":  { "px": 80,  "tailwind": "py-20",  "usage": "Sections majeures (galerie, avis)" },
+    "py_medium": { "px": 112, "tailwind": "py-28",  "usage": "Sections hero étendues (sm:py-28)" },
+    "py_small":  { "px": 64,  "tailwind": "py-16",  "usage": "Sections produits" },
+    "py_compact":{ "px": 48,  "tailwind": "py-12",  "usage": "Sections tertiaires" }
+  },
+  "grid": {
+    "gap_standard": "12-16px (gap-3 sm:gap-4)",
+    "gap_cards":    "24px (gap-6)",
+    "gap_sections": "48px (gap-12)",
+    "gap_hero":     "80px (gap-20)"
+  },
+  "components": {
+    "button_padding_md":  "py-3.5 px-6 (14px vertical, 24px horizontal)",
+    "button_padding_sm":  "py-2 px-4 (8px vertical, 16px horizontal)",
+    "input_padding":      "py-2.5 px-3.5 (10px vertical, 14px horizontal)",
+    "card_padding":       "p-5 sm:p-6 (20-24px)",
+    "card_padding_lg":    "p-8 (32px) — cards témoignages",
+    "badge_padding":      "py-0.5 px-2.5 (2px vertical, 10px horizontal)",
+    "icon_box_size":      "40x40px (w-10 h-10)",
+    "icon_box_size_sm":   "32x32px (w-8 h-8)"
+  },
+  "breakpoints": {
+    "xs":  "391px (--breakpoint-xs, custom)",
+    "sm":  "640px",
+    "md":  "768px",
+    "lg":  "1024px",
+    "xl":  "1280px",
+    "2xl": "1536px"
+  },
+  "animations": {
+    "duration_fast":   "200ms",
+    "duration_medium": "300ms",
+    "duration_slow":   "500-700ms (image zoom hover)",
+    "easing":          "cubic-bezier(0.4, 0, 0.2, 1) (--ease)",
+    "transitions":     "transition-colors / transition-all / transition-transform"
+  },
+  "z_index": {
+    "header": 1200,
+    "mobile_overlay": 1199,
+    "dialog": 50,
+    "tooltip": 40
+  }
+}

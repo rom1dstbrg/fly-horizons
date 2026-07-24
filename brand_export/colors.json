@@ -1,0 +1,89 @@
+{
+  "brand": {
+    "navy": {
+      "hex": "#0b2238",
+      "usage": "Couleur principale — texte, accents UI, header sidebar, fond footer"
+    },
+    "gold": {
+      "hex": "#F2B705",
+      "hover": "#e6a800",
+      "soft": "rgba(242,183,5,0.12)",
+      "usage": "CTA principal, overlines, prix, badges, accent décoratif"
+    }
+  },
+  "semantic": {
+    "background": {
+      "hex": "#f5f5f7",
+      "usage": "Fond de page par défaut — jamais navy en fond plein"
+    },
+    "card": {
+      "hex": "#ffffff",
+      "usage": "Surfaces cards, popover, dialog"
+    },
+    "foreground": {
+      "hex": "#1e2535",
+      "usage": "Texte principal sur fond clair"
+    },
+    "border": {
+      "hex": "#e0e5ef",
+      "usage": "Bordures cards, inputs, séparateurs"
+    },
+    "muted": {
+      "hex": "#edf0f7",
+      "usage": "Fond secondaire, arrière-plan inputs"
+    },
+    "muted_foreground": {
+      "hex": "#64748b",
+      "usage": "Texte secondaire / descriptif"
+    },
+    "secondary": {
+      "hex": "#edf0f7",
+      "usage": "Hover nav, fond bouton secondaire"
+    },
+    "success": {
+      "hex": "#22c55e",
+      "usage": "Badges confirmé, payé, statuts positifs"
+    },
+    "destructive": {
+      "hex": "#ef4444",
+      "usage": "Erreurs, annulations, badges danger"
+    }
+  },
+  "palette_navy": {
+    "50":  "oklch(0.97 0.01 260)",
+    "100": "oklch(0.93 0.02 260)",
+    "200": "oklch(0.85 0.04 260)",
+    "300": "oklch(0.72 0.07 260)",
+    "400": "oklch(0.58 0.10 260)",
+    "500": "oklch(0.46 0.13 260)",
+    "600": "oklch(0.38 0.14 260)",
+    "700": "oklch(0.30 0.12 260)",
+    "800": "oklch(0.22 0.09 255)",
+    "900": "oklch(0.16 0.06 255)",
+    "950": "oklch(0.10 0.04 255)"
+  },
+  "palette_gold": {
+    "50":  "oklch(0.99 0.02 85)",
+    "100": "oklch(0.97 0.05 85)",
+    "200": "oklch(0.93 0.09 85)",
+    "300": "oklch(0.87 0.14 85)",
+    "400": "oklch(0.80 0.17 85)",
+    "500": "oklch(0.72 0.16 85)",
+    "600": "oklch(0.63 0.14 85)",
+    "700": "oklch(0.52 0.11 85)",
+    "800": "oklch(0.42 0.09 85)",
+    "900": "oklch(0.32 0.06 85)"
+  },
+  "shadows": {
+    "premium":    "0 2px 14px rgba(11,34,56,0.07)",
+    "premium_lg": "0 8px 32px rgba(11,34,56,0.11)",
+    "premium_xl": "0 20px 60px rgba(11,34,56,0.16)",
+    "gold":       "0 6px 24px rgba(242,183,5,0.35)",
+    "gold_sm":    "0 4px 12px rgba(242,183,5,0.30)"
+  },
+  "overlays": {
+    "hero_gradient": "linear-gradient(to bottom, rgba(11,34,56,0.92) 0%, rgba(0,0,0,0.55) 50%, rgba(11,34,56,0.5) 100%)",
+    "card_image":    "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.20) 60%, transparent 100%)",
+    "dark_overlay":  "rgba(0,0,0,0.55)"
+  }
+}

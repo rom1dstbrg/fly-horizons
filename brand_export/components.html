@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fly Horizons — Guide des composants</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #0b2238;
+    --gold: #F2B705;
+    --gold-hover: #e6a800;
+    --bg: #f5f5f7;
+    --card: #ffffff;
+    --border: #e0e5ef;
+    --muted: #edf0f7;
+    --muted-fg: #64748b;
+    --fg: #1e2535;
+    --success: #22c55e;
+    --error: #ef4444;
+  }
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg);
+    color: var(--navy);
+    font-size: 13px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page { max-width: 960px; margin: 0 auto; padding: 48px 32px 80px; }
+
+  /* ── Header ── */
+  .doc-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 48px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  .doc-title { font-size: 28px; font-weight: 900; color: var(--navy); }
+  .doc-sub { font-size: 11px; color: var(--navy); opacity: .4; font-weight: 500; letter-spacing: .05em; margin-top: 2px; }
+  .doc-overline { font-size: 10px; font-weight: 900; color: var(--gold); text-transform: uppercase; letter-spacing: 3px; }
+
+  /* ── Sections ── */
+  .section { margin-bottom: 56px; }
+  .section-title {
+    font-size: 10px; font-weight: 900; color: var(--gold);
+    text-transform: uppercase; letter-spacing: 3px; margin-bottom: 20px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .flex-wrap { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+  }
+  .card-sm { padding: 16px; border-radius: 12px; }
+  .card-dark { background: var(--navy); border-radius: 16px; padding: 20px; }
+  .card-note {
+    margin-top: 12px;
+    font-size: 10px;
+    color: rgba(11,34,56,.35);
+    font-family: monospace;
+    line-height: 1.7;
+  }
+
+  /* ── Couleurs ── */
+  .swatch { height: 56px; border-radius: 10px; margin-bottom: 10px; }
+  .swatch-label { font-size: 11px; font-weight: 700; }
+  .swatch-hex { font-size: 10px; opacity: .5; font-family: monospace; }
+
+  /* ── Typo ── */
+  .type-row {
+    display: flex; align-items: baseline; gap: 16px;
+    padding: 10px 0; border-bottom: 1px solid var(--bg);
+  }
+  .type-row:last-child { border-bottom: none; }
+  .type-meta { font-size: 10px; color: var(--navy); opacity: .35; min-width: 170px; font-family: monospace; }
+  .t-overline { font-size: 10px; font-weight: 900; color: var(--gold); text-transform: uppercase; letter-spacing: 3px; }
+  .t-h1 { font-size: 32px; font-weight: 900; color: var(--navy); line-height: 1; }
+  .t-h2 { font-size: 20px; font-weight: 900; color: var(--navy); }
+  .t-body { font-size: 14px; font-weight: 400; color: var(--fg); }
+  .t-muted { font-size: 14px; font-weight: 400; color: rgba(11,34,56,.5); }
+  .t-small { font-size: 12px; font-weight: 500; color: rgba(11,34,56,.5); }
+  .t-label { font-size: 9px; font-weight: 900; color: rgba(11,34,56,.4); text-transform: uppercase; letter-spacing: 2px; }
+  .t-price { font-size: 26px; font-weight: 900; color: var(--gold); }
+  .t-price-dark { font-size: 26px; font-weight: 900; color: var(--navy); }
+
+  /* ── Boutons ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 20px; border-radius: 12px;
+    font-size: 13px; font-weight: 900; cursor: default;
+    border: none; font-family: 'Poppins', sans-serif;
+    white-space: nowrap;
+  }
+  .btn-sm { padding: 8px 14px; font-size: 11px; border-radius: 10px; }
+  .btn-primary {
+    background: var(--gold); color: var(--navy);
+    box-shadow: 0 6px 24px rgba(242,183,5,.35);
+  }
+  .btn-secondary {
+    background: transparent; color: rgba(11,34,56,.5);
+    border: 1px solid var(--border); font-weight: 600;
+  }
+  .btn-dark { background: var(--navy); color: #fff; }
+  .btn-ghost-dark {
+    background: rgba(255,255,255,.12); color: #fff;
+    border: 1px solid rgba(255,255,255,.18); font-weight: 600;
+  }
+  .btn-ghost-dark.hover-state {
+    background: var(--gold); color: var(--navy); border-color: transparent;
+  }
+
+  /* ── Inputs ── */
+  .input {
+    width: 100%; padding: 10px 14px;
+    border: 1px solid var(--border); border-radius: 12px;
+    background: var(--muted); font-size: 13px; color: var(--navy);
+    font-family: 'Poppins', sans-serif; outline: none;
+  }
+  .input::placeholder { color: rgba(11,34,56,.3); }
+  .input-focus {
+    border-color: rgba(242,183,5,.5);
+    box-shadow: 0 0 0 3px rgba(242,183,5,.15);
+  }
+  .input-label {
+    font-size: 10px; font-weight: 900; color: rgba(11,34,56,.4);
+    text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; display: block;
+  }
+
+  /* ── Badges ── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 999px; font-size: 10px; font-weight: 700;
+  }
+  .badge-gold  { background: rgba(242,183,5,.12); color: #b88a00; border: 1px solid rgba(242,183,5,.3); }
+  .badge-navy  { background: rgba(11,34,56,.07); color: var(--navy); border: 1px solid rgba(11,34,56,.12); }
+  .badge-green { background: rgba(34,197,94,.1); color: #15803d; border: 1px solid rgba(34,197,94,.2); }
+  .badge-red   { background: rgba(239,68,68,.1); color: #b91c1c; border: 1px solid rgba(239,68,68,.2); }
+
+  /* ── Card photo vol ── */
+  .card-photo {
+    position: relative; border-radius: 12px; overflow: hidden;
+    aspect-ratio: 3/4; background: linear-gradient(135deg, #0b2238 0%, #0e3060 60%, #1a4a8a 100%);
+  }
+  .card-photo-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,.92) 0%, rgba(0,0,0,.20) 60%, transparent 100%);
+  }
+  .card-photo-badge-time {
+    position: absolute; top: 14px; left: 14px;
+    display: inline-flex; align-items: center;
+    background: rgba(0,0,0,.40); backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,.20);
+    border-radius: 8px; padding: 7px 12px;
+    font-size: 15px; font-weight: 900; color: var(--gold);
+  }
+  .card-photo-badge-popular {
+    position: absolute; top: 14px; right: 14px;
+    background: var(--gold); border-radius: 8px; padding: 7px 12px;
+    font-size: 11px; font-weight: 900; color: var(--navy);
+    text-transform: uppercase; letter-spacing: .05em;
+  }
+  .card-photo-content {
+    position: absolute; bottom: 0; left: 0; right: 0; padding: 16px 20px;
+  }
+  .card-photo-title { color: #fff; font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .card-photo-desc  { color: rgba(255,255,255,.70); font-size: 13px; margin-bottom: 10px; }
+  .card-photo-footer { display: flex; align-items: center; justify-content: space-between; }
+  .card-photo-price { color: #fff; font-size: 24px; font-weight: 900; }
+
+  /* ── Card témoignage ── */
+  .card-testi {
+    background: #fff; border-radius: 16px; padding: 32px;
+    box-shadow: 0 2px 20px rgba(0,0,0,.06); position: relative; overflow: hidden;
+  }
+  .card-testi-quote {
+    position: absolute; top: 8px; right: 20px;
+    font-size: 88px; font-weight: 900; color: rgba(242,183,5,.12);
+    line-height: 1; font-family: Georgia, serif;
+    pointer-events: none; user-select: none;
+  }
+  .card-testi-stars { display: flex; gap: 4px; margin-bottom: 16px; }
+  .star { width: 16px; height: 16px; fill: var(--gold); }
+  .card-testi-text { color: rgba(11,34,56,.7); font-size: 14px; line-height: 1.7; margin-bottom: 20px; }
+  .card-testi-author { display: flex; align-items: center; gap: 12px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .card-testi-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--navy); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 900; flex-shrink: 0;
+  }
+  .card-testi-name { font-size: 14px; font-weight: 700; color: var(--navy); }
+  .card-testi-loc  { font-size: 11px; font-weight: 600; color: var(--gold); letter-spacing: .05em; }
+
+  /* ── Header exemple ── */
+  .header-demo {
+    background: #fff; border: 1px solid var(--border); border-radius: 16px;
+    padding: 0 20px; display: flex; align-items: center;
+    height: 60px; box-shadow: 0 2px 14px rgba(11,34,56,.07);
+  }
+  .header-logo { font-size: 14px; font-weight: 900; color: var(--navy); letter-spacing: -.02em; }
+  .header-nav { display: flex; gap: 4px; flex: 1; margin-left: 32px; }
+  .header-nav-link {
+    padding: 6px 12px; font-size: 13px; font-weight: 500;
+    color: rgba(11,34,56,.5); border-radius: 8px;
+  }
+  .header-nav-link.active { color: var(--navy); background: var(--muted); }
+  .header-actions { display: flex; gap: 8px; align-items: center; }
+  .header-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: rgba(11,34,56,.5); font-size: 16px; }
+
+  /* ── Footer exemple ── */
+  .footer-demo {
+    background: var(--navy); border-radius: 16px; padding: 32px;
+  }
+  .footer-col-title {
+    font-size: 10px; font-weight: 700; color: var(--gold);
+    text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px;
+  }
+  .footer-link { font-size: 13px; color: rgba(255,255,255,.45); display: block; margin-bottom: 8px; }
+  .footer-logo { font-size: 14px; font-weight: 900; color: #fff; }
+  .footer-desc { font-size: 12px; color: rgba(255,255,255,.40); line-height: 1.6; margin-top: 10px; max-width: 200px; }
+
+  /* ── Section trust bar ── */
+  .trust-bar {
+    background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 20px;
+  }
+  .trust-item { display: flex; align-items: center; gap: 12px; }
+  .trust-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--muted); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .trust-title { font-size: 13px; font-weight: 600; color: var(--navy); }
+  .trust-desc  { font-size: 11px; color: var(--muted-fg); }
+
+  /* ── Section hero simulée ── */
+  .hero-demo {
+    background: linear-gradient(135deg, rgba(11,34,56,.95) 0%, rgba(5,20,40,.90) 100%);
+    border-radius: 16px; padding: 48px 40px; text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .hero-demo::before {
+    content: ''; position: absolute; inset: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(242,183,5,0.05)" stroke-width="20"/></svg>') center/200px;
+    opacity: .5;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(242,183,5,.10); border: 1px solid rgba(242,183,5,.30);
+    border-radius: 999px; padding: 6px 16px; margin-bottom: 20px;
+  }
+  .hero-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+  .hero-badge-text { font-size: 10px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 3px; }
+  .hero-h1 { font-size: 40px; font-weight: 900; color: #fff; margin-bottom: 12px; line-height: 1.05; }
+  .hero-sub { font-size: 15px; color: rgba(255,255,255,.65); max-width: 360px; margin: 0 auto 28px; line-height: 1.6; }
+
+  /* ── Icône box ── */
+  .icon-box {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: rgba(242,183,5,.12); border: 1px solid rgba(242,183,5,.20);
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+  }
+
+  /* ── Voix de marque ── */
+  .voice-ok { border-left: 3px solid var(--success); }
+  .voice-ko { border-left: 3px solid rgba(11,34,56,.15); }
+  .voice-tag { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; }
+  .ok { color: #15803d; }
+  .ko { color: rgba(11,34,56,.35); }
+
+  /* ── Sidebar card 2 tons ── */
+  .sidebar-card-header {
+    background: var(--navy); border-radius: 12px 12px 0 0; padding: 12px 16px;
+  }
+  .sidebar-card-body {
+    background: #fff; border: 1px solid var(--border); border-top: none;
+    border-radius: 0 0 12px 12px; padding: 16px;
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: #c8d0e0; border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+
+  /* ── Print ── */
+  @media print {
+    body { background: white; font-size: 11px; }
+    .page { padding: 20px; }
+    .section { page-break-inside: avoid; }
+    .grid-3, .grid-4 { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- En-tête doc -->
+  <div class="doc-header">
+    <div>
+      <div class="doc-overline" style="margin-bottom:6px;">Guide des composants</div>
+      <h1 class="doc-title">Fly Horizons</h1>
+      <p class="doc-sub">Design system · Juillet 2026 · fly-horizons.com</p>
+    </div>
+    <div style="text-align:right;">
+      <p style="font-size:11px;color:rgba(11,34,56,.4);">Police unique : Poppins<br>Palette : Navy #0b2238 + Gold #F2B705<br>DESTANBERG Romain</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       1. COULEURS
+  ═══════════════════════════════════════════ -->
+  <div class="section">
+    <p class="section-title">1 · Couleurs primaires</p>
+    <div class="grid-4" style="margin-bottom:20px;">
+      <div>
+        <div class="swatch" style="background:#F2B705;"></div>
+        <div class="swatch-label">Gold</div>
+        <div class="swatch-hex">#F2B705</div>
+        <div class="swatch-hex">Hover : #e6a800</div>
+      </div>
+      <div>
+        <div class="swatch" style="background:#0b2238;"></div>
+        <div class="swatch-label">Navy</div>
+        <div class="swatch-hex">#0b2238</div>
+        <div class="swatch-hex">Texte principal</div>
+      </div>
+      <div>
+        <div class="swatch" style="background:#f5f5f7; border:1px solid #e0e5ef;"></div>
+        <div class="swatch-label">Background</div>
+        <div class="swatch-hex">#f5f5f7</div>
+        <div class="swatch-hex">Fond de page</div>
+      </div>
+      <div>
+        <div class="swatch" style="background:#fff; border:1px solid #e0e5ef;"></div>
+        <div class="swatch-label">Card</div>
+        <div class="swatch-hex">#ffffff</div>
+        <div class="swatch-hex">Surfaces, cards</div>
+      </div>
+    </div>
+    <div class="grid-4">
+      <div>
+        <div class="swatch" style="background:#e0e5ef;"></div>
+        <div class="swatch-label">Border</div>
+        <div class="swatch-hex">#e0e5ef</div>
+      </div>
+      <div>
+        <div class="swatch" style="background:rgba(11,34,56,.5);"></div>
+        <div class="swatch-label">Texte doux</div>
+        <div class="swatch-hex">#0b2238 · 50%</div>
+      </div>
+      <div>
+        <div class="swatch" style="background:#22c55e;"></div>
+        <div class="swatch-label">Succès</div>
+        <div class="swatch-hex">#22c55e</div>
+      </div>
+      <div>
+        <div class="swatch" style="background:#ef4444;"></div>
+        <div class="swatch-label">Erreur</div>
+        <div class="swatch-hex">#ef4444</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       2. TYPOGRAPHIE
+  ═══════════════════════════════════════════ -->
+  <div class="section">
+    <p class="section-title">2 · Typographie — Poppins (unique)</p>
+    <div class="card">
+      <div class="type-row">
+        <span class="type-meta">10px / 900 / gold / +3px</span>
+        <span class="t-overline">Overline · Vol sur mesure</span>
+      </div>
+      <div class="type-row">
+        <span class="type-meta">32px / 900 / navy</span>
+        <span class="t-h1">Titre de page</span>
+      </div>
+      <div class="type-row">
+        <span class="type-meta">20px / 900 / navy</span>
+        <span class="t-h2">Titre de section</span>
+      </div>
+      <div class="type-row">
+        <span class="type-meta">26px / 900 / gold</span>
+        <span class="t-price">240 €</span>
+      </div>
+      <div class="type-row">
+        <span class="type-meta">26px / 900 / navy</span>
+        <span class="t-price-dark">240 €</span>
+      </div>
+      <div class="type-row">
+        <span class="type-meta">14px / 400 / navy</span>
+        <span class="t-body">Texte courant, lisible et aéré.</span>
+      </div>
+      <div class="type-row">
+        <span class="type-meta">14px / 400 / 50%</span>
+        <span class="t-muted">Texte secondaire, descriptions, légendes.</span>
+      </div>
+      <div class="type-row">
+        <span class="type-meta">12px / 500 / 50%</span>
+        <span class="t-small">Petite note · info contextuelle</span>
+      </div>
+      <div class="type-row">
+        <span class="type-meta">9px / 900 / 40% / +2px</span>
+        <span class="t-label">Label interne · champ · metadata</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       3. BOUTONS
+  ═══════════════════════════════════════════ -->
+  <div class="section">
+    <p class="section-title">3 · Boutons</p>
+    <div class="card">
+      <div class="flex-wrap" style="margin-bottom:16px;">
+        <button class="btn btn-primary">✈ Action principale</button>
+        <button class="btn btn-secondary">Action secondaire</button>
+        <button class="btn btn-dark">Action navy</button>
+      </div>
+      <div class="flex-wrap" style="margin-bottom:16px;">
+        <button class="btn btn-primary btn-sm">Petit CTA</button>
+        <button class="btn btn-secondary btn-sm">Retour</button>
+      </div>
+      <div style="background:var(--navy);border-radius:10px;padding:14px;display:flex;gap:12px;align-items:center;">
+        <button class="btn btn-ghost-dark" style="font-size:12px;padding:9px 14px;">Réserver <span style="font-size:10px;margin-left:2px;">→</span></button>
+        <button class="btn btn-ghost-dark hover-state" style="font-size:12px;padding:9px 14px;">Réserver (hover) <span style="font-size:10px;margin-left:2px;">→</span></button>
+      </div>
+      <div class="card-note">
+        Primaire → bg-[#F2B705] text-[#0b2238] font-black rounded-xl shadow-[0_6px_24px_rgba(242,183,5,.35)] hover:bg-[#e6a800]<br>
+        Ghost sombre → bg-white/12 border-white/18 hover:bg-[#F2B705] hover:text-[#0b2238] transition-all 300ms
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       4. CHAMPS
+  ═══════════════════════════════════════════ -->
+  <div class="section">
+    <p class="section-title">4 · Champs de formulaire</p>
+    <div class="grid-2">
+      <div class="card card-sm">
+        <label class="input-label">État normal</label>
+        <input class="input" placeholder="Votre email…" readonly>
+        <div class="card-note">bg-[#edf0f7] border-[#e0e5ef] rounded-xl</div>
+      </div>
+      <div class="card card-sm">
+        <label class="input-label">État focus</label>
+        <input class="input input-focus" value="jean@exemple.com" readonly>
+        <div class="card-note">ring-2 ring-[#F2B705]/30 border-[#F2B705]/50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       5. BADGES
+  ═══════════════════════════════════════════ -->
+  <div class="section">
+    <p class="section-title">5 · Badges &amp; statuts</p>
+    <div class="card">
+      <div class="flex-wrap">
+        <span class="badge badge-gold">Voucher</span>
+        <span class="badge badge-gold">Vol sur mesure</span>
+        <span class="badge badge-navy">Défaut</span>
+        <span class="badge badge-navy">Annulation 48 h</span>
+        <span class="badge badge-green">✓ Confirmé</span>
+        <span class="badge badge-green">✓ Payé</span>
+        <span class="badge badge-red">✕ Annulé</span>
+      </div>
+      <div class="card-note">Tous : border-radius:999px · padding:3px 10px · font-size:10px · font-weight:700</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       6. CARDS
+  ═══════════════════════════════════════════ -->
+  <div class="section">
+    <p class="section-title">6 · Cards</p>
+    <div class="grid-3">
+
+      <!-- Card standard -->
+      <div class="card">
+        <p class="t-overline" style="margin-bottom:8px;">Card standard</p>
+        <p style="font-size:13px;font-weight:700;margin-bottom:4px;">Titre de la card</p>
+        <p style="font-size:12px;color:rgba(11,34,56,.5);">Description lisible et aérée.</p>
+        <div class="card-note">bg-white rounded-2xl border-[#e0e5ef]<br>shadow: 0 2px 14px rgba(11,34,56,.07)</div>
+      </div>
+
+      <!-- Sidebar 2 tons -->
+      <div>
+        <div class="sidebar-card-header">
+          <p style="font-size:9px;font-weight:900;color:var(--gold);text-transform:uppercase;letter-spacing:3px;">Récapitulatif</p>
+        </div>
+        <div class="sidebar-card-body">
+          <p style="font-size:12px;color:rgba(11,34,56,.5);margin-bottom:6px;">Sous-total</p>
+          <p style="font-size:22px;font-weight:900;color:var(--gold);">240 €</p>
+          <div class="card-note">Header bg-navy · Body bg-white<br>border-radius top: 12px / bottom: 12px</div>
+        </div>
+      </div>
+
+      <!-- Card dark -->
+      <div class="card-dark">
+        <p style="font-size:9px;font-weight:900;color:var(--gold);text-transform:uppercase;letter-spacing:3px;margin-bottom:8px;">Card sombre</p>
+        <p style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;">Section hero / accents</p>
+        <p style="font-size:12px;color:rgba(255,255,255,.5);">Réservé sections navbar, sidebar, footer.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       7. CARD PHOTO (Pack vol)
+  ═══════════════════════════════════════════ -->
+  <div class="section">
+    <p class="section-title">7 · Card photo — Pack vol</p>
+    <div class="grid-4">
+      <div class="card-photo">
+        <div class="card-photo-overlay"></div>
+        <span class="card-photo-badge-time">30 min</span>
+        <div class="card-photo-content">
+          <p class="card-photo-title">Vol découverte</p>
+          <p class="card-photo-desc">Survol de Charleroi et ses environs</p>
+          <div class="card-photo-footer">
+            <span class="card-photo-price">99 €</span>
+            <span class="btn btn-ghost-dark" style="font-size:11px;padding:7px 12px;">Plus d'infos →</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-photo">
+        <div class="card-photo-overlay"></div>
+        <span class="card-photo-badge-time">60 min</span>
+        <span class="card-photo-badge-popular">Le plus offert</span>
+        <div class="card-photo-content">
+          <p class="card-photo-title">Vol escapade</p>
+          <p class="card-photo-desc">Namur, la Meuse, le château de Namur</p>
+          <div class="card-photo-footer">
+            <span class="card-photo-price">175 €</span>
+            <span class="btn btn-ghost-dark" style="font-size:11px;padding:7px 12px;">Plus d'infos →</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-photo">
+        <div class="card-photo-overlay"></div>
+        <span class="card-photo-badge-time">90 min</span>
+        <div class="card-photo-content">
+          <p class="card-photo-title">Vol grand tour</p>
+          <p class="card-photo-desc">Fagnes, Ardennes, panorama complet</p>
+          <div class="card-photo-footer">
+            <span class="card-photo-price">240 €</span>
+            <span class="btn btn-ghost-dark" style="font-size:11px;padding:7px 12px;">Plus d'infos →</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-photo">
+        <div class="card-photo-overlay"></div>
+        <span class="card-photo-badge-time">120 min</span>
+        <div class="card-photo-content">
+          <p class="card-photo-title">Vol prestige</p>
+          <p class="card-photo-desc">Itinéraire libre sur toute la Belgique</p>
+          <div class="card-photo-footer">
+            <span class="card-photo-price">295 €</span>
+            <span class="btn btn-ghost-dark" style="font-size:11px;padding:7px 12px;">Plus d'infos →</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-note" style="margin-top:12px;">
+      Photo en object-cover · overlay gradient: from-black/92 to-transparent (bas→haut) · Zoom hover scale(1.06) 700ms<br>
+      Badge temps: black/40 + backdrop-blur, gold text · Badge popular: gold bg, navy text · Prix: white 24px/900
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       8. CARD TÉMOIGNAGE
+  ═══════════════════════════════════════════ -->
+  <div class="section">
+    <p class="section-title">8 · Card témoignage</p>
+    <div class="grid-3">
+      <div class="card-testi">
+        <div class="card-testi-quote">&ldquo;</div>
+        <div class="card-testi-stars">
+          <svg class="star" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg class="star" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg class="star" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg class="star" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg class="star" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+        </div>
+        <p class="card-testi-text">J'avais un peu le trac avant de monter. Romain a pris le temps d'expliquer chaque étape. La vue sur la vallée de la Sambre était à couper le souffle.</p>
+        <div class="card-testi-author">
+          <div class="card-testi-avatar">S</div>
+          <div>
+            <p class="card-testi-name">Sophie M.</p>
+            <p class="card-testi-loc">Namur</p>
+          </div>
+        </div>
+      </div>
+      <div class="card-testi">
+        <div class="card-testi-quote">&ldquo;</div>
+        <div class="card-testi-stars">
+          <svg class="star" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg class="star" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg class="star" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg class="star" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg class="star" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+        </div>
+        <p class="card-testi-text">Offert à notre fils pour ses 18 ans. Il en parle encore. Une expérience vraiment unique, pas du tout un vol de tourisme banal.</p>
+        <div class="card-testi-author">
+          <div class="card-testi-avatar">L</div>
+          <div>
+            <p class="card-testi-name">Laurent &amp; Valérie</p>
+            <p class="card-testi-loc">Liège</p>
+          </div>
+        </div>
+      </div>
+      <div class="card-testi">
+        <div class="card-testi-quote">&ldquo;</div>
+        <div class="card-testi-stars">
+          <svg class="star" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg class="star" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg class="star" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg class="star" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg class="star" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+        </div>
+        <p class="card-testi-text">J'ai choisi le vol sur mesure pour survoler les Fagnes. Pilote à l'écoute, réponse rapide, vol sans accroc. Je recommande sans hésiter.</p>
+        <div class="card-testi-author">
+          <div class="card-testi-avatar">T</div>
+          <div>
+            <p class="card-testi-name">Thomas D.</p>
+            <p class="card-testi-loc">Charleroi</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       9. HERO (simulé)
+  ═══════════════════════════════════════════ -->
+  <div class="section">
+    <p class="section-title">9 · Section Hero</p>
+    <div class="hero-demo">
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        <span class="hero-badge-text">Baptême de l'air en Belgique</span>
+      </div>
+      <h1 class="hero-h1">Fly <span style="color:var(--gold);">Horizons</span></h1>
+      <p class="hero-sub">Vivez l'expérience du vol en avion léger au-dessus de la Belgique.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <button class="btn btn-primary">✈ Réserver une date</button>
+        <button class="btn" style="background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.30);font-weight:600;">🎁 Offrir un vol</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       10. HEADER (simulé)
+  ═══════════════════════════════════════════ -->
+  <div class="section">
+    <p class="section-title">10 · Header flottant</p>
+    <div class="header-demo">
+      <div class="header-logo">✈ Fly Horizons</div>
+      <div class="header-nav">
+        <span class="header-nav-link">Nos offres</span>
+        <span class="header-nav-link active">Vol sur mesure</span>
+        <span class="header-nav-link">À propos</span>
+        <span class="header-nav-link">FAQ</span>
+        <span class="header-nav-link">Contact</span>
+      </div>
+      <div class="header-actions">
+        <div class="header-icon" style="border:1px solid var(--border);">👤</div>
+        <div class="header-icon" style="border:1px solid var(--border);">🛍</div>
+      </div>
+    </div>
+    <div class="card-note" style="margin-top:8px;">
+      Fixed · top:8px side:12px · max-w:1400px · bg-white · border-[#e0e5ef] · rounded-2xl · shadow-premium-lg au scroll
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       11. FOOTER (simulé)
+  ═══════════════════════════════════════════ -->
+  <div class="section">
+    <p class="section-title">11 · Footer</p>
+    <div class="footer-demo">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1.2fr 1.2fr;gap:32px;padding-bottom:24px;border-bottom:1px solid rgba(255,255,255,.05);">
+        <div>
+          <p class="footer-logo">✈ Fly Horizons</p>
+          <p class="footer-desc">Baptêmes de l'air et vols sur mesure en avion léger depuis Charleroi · EBCI.</p>
+        </div>
+        <div>
+          <p class="footer-col-title">Nos services</p>
+          <p class="footer-link">✈ Nos offres</p>
+          <p class="footer-link">🗺 Vol sur mesure</p>
+        </div>
+        <div>
+          <p class="footer-col-title">Informations</p>
+          <p class="footer-link">👤 À propos</p>
+          <p class="footer-link">❓ FAQ</p>
+          <p class="footer-link">🗺 Plan d'accès</p>
+          <p class="footer-link">🖼 Galerie</p>
+        </div>
+        <div>
+          <p class="footer-col-title">Contact</p>
+          <p class="footer-link">✉ info@fly-horizons.com</p>
+          <p class="footer-link">💬 WhatsApp</p>
+          <p class="footer-link">📍 Charleroi EBCI</p>
+        </div>
+      </div>
+      <div style="padding-top:16px;display:flex;justify-content:space-between;align-items:center;">
+        <p style="font-size:11px;color:rgba(255,255,255,.25);">© 2026 Fly Horizons. Tous droits réservés.</p>
+        <p style="font-size:11px;color:rgba(255,255,255,.25);">🔒 Paiement sécurisé <span style="color:var(--gold);font-weight:600;">Stripe</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       12. BARRE DE CONFIANCE
+  ═══════════════════════════════════════════ -->
+  <div class="section">
+    <p class="section-title">12 · Barre de confiance</p>
+    <div class="trust-bar">
+      <div class="grid-4">
+        <div class="trust-item">
+          <div class="trust-icon">🔒</div>
+          <div>
+            <p class="trust-title">Paiement sécurisé</p>
+            <p class="trust-desc">Via Stripe, carte bancaire</p>
+          </div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">⏰</div>
+          <div>
+            <p class="trust-title">Annulation gratuite</p>
+            <p class="trust-desc">Jusqu'à 48 h avant le vol</p>
+          </div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">👥</div>
+          <div>
+            <p class="trust-title">Jusqu'à 3 passagers</p>
+            <p class="trust-desc">Partagez l'expérience</p>
+          </div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">✈</div>
+          <div>
+            <p class="trust-title">Itinéraire libre</p>
+            <p class="trust-desc">Vous choisissez votre route</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       13. VOIX DE MARQUE
+  ═══════════════════════════════════════════ -->
+  <div class="section">
+    <p class="section-title">13 · Voix de marque</p>
+    <div class="grid-2">
+      <div class="card card-sm voice-ok">
+        <p class="voice-tag ok">✓ Site public (nous)</p>
+        <p>«&nbsp;Nous vous attendons à Charleroi EBCI.&nbsp;»</p>
+      </div>
+      <div class="card card-sm voice-ko">
+        <p class="voice-tag ko">✗ À éviter</p>
+        <p style="color:rgba(11,34,56,.4);">«&nbsp;Fly Horizons vous attend à Charleroi.&nbsp;»</p>
+      </div>
+      <div class="card card-sm voice-ok">
+        <p class="voice-tag ok">✓ Emails directs (je)</p>
+        <p>«&nbsp;Je vous enverrai l'itinéraire sous 24 h.&nbsp;»</p>
+      </div>
+      <div class="card card-sm voice-ko">
+        <p class="voice-tag ko">✗ À éviter</p>
+        <p style="color:rgba(11,34,56,.4);">«&nbsp;Romain vous enverra l'itinéraire.&nbsp;»</p>
+      </div>
+    </div>
+    <div class="card" style="margin-top:12px;font-size:12px;line-height:2;color:rgba(11,34,56,.6);">
+      <strong style="color:var(--navy);">Ponctuation</strong> → virgule, point, point-virgule, deux-points — jamais de tiret cadratin (–) &nbsp;·&nbsp;
+      <strong style="color:var(--navy);">"Fly Horizons"</strong> → métadonnées SEO uniquement, jamais dans le corps du texte &nbsp;·&nbsp;
+      <strong style="color:var(--navy);">Guillements</strong> → « » français
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       14. RÈGLES RAPIDES
+  ═══════════════════════════════════════════ -->
+  <div class="section">
+    <p class="section-title">14 · Règles rapides</p>
+    <div class="grid-4">
+      <div class="card card-sm" style="font-size:12px;line-height:1.8;color:rgba(11,34,56,.7);">
+        <p style="font-weight:900;color:var(--navy);margin-bottom:6px;">Fond de page</p>
+        #f5f5f7 standard<br>
+        #ffffff sections blanches<br>
+        Navy uniquement footer / hero
+      </div>
+      <div class="card card-sm" style="font-size:12px;line-height:1.8;color:rgba(11,34,56,.7);">
+        <p style="font-weight:900;color:var(--navy);margin-bottom:6px;">Border-radius</p>
+        Cards : 16px<br>
+        Boutons : 12px<br>
+        Inputs : 12px<br>
+        Badges : 999px
+      </div>
+      <div class="card card-sm" style="font-size:12px;line-height:1.8;color:rgba(11,34,56,.7);">
+        <p style="font-weight:900;color:var(--navy);margin-bottom:6px;">Layout</p>
+        max-width: 1400px<br>
+        Header fixe 84px spacer<br>
+        Padding: 16→40px
+      </div>
+      <div class="card card-sm" style="font-size:12px;line-height:1.8;color:rgba(11,34,56,.7);">
+        <p style="font-weight:900;color:var(--navy);margin-bottom:6px;">Overline gold</p>
+        10px / font-black<br>
+        UPPERCASE / +3px<br>
+        Avant chaque H1/H2<br>
+        Gold #F2B705 uniquement
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:56px;text-align:center;font-size:10px;color:rgba(11,34,56,.2);">
+    Fly Horizons · fly-horizons.com · DESTANBERG Romain · info@fly-horizons.com<br>
+    Ouvrir dans Chrome ou Firefox → Imprimer → PDF pour exporter en PDF
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vol sur mesure — 20 idées</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f7; color: #1a1a1a; }
+
+  .header { background: #0b2238; color: white; padding: 36px 40px 32px; }
+  .header h1 { font-size: 22px; font-weight: 900; }
+  .header p { font-size: 13px; opacity: .55; margin-top: 6px; line-height: 1.6; }
+
+  .context { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 18px 40px; font-size: 12.5px; color: #374151; line-height: 1.7; }
+  .context strong { color: #0b2238; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(370px, 1fr)); gap: 20px; padding: 32px 40px; max-width: 1500px; margin: 0 auto; }
+
+  .card { background: white; border-radius: 16px; border: 1px solid #e5e7eb; overflow: hidden; display: flex; flex-direction: column; }
+  .card.highlight { border-color: #F2B705; box-shadow: 0 0 0 2px #F2B70522; }
+
+  .card-top { padding: 18px 22px 14px; border-bottom: 1px solid #f3f4f6; }
+  .num-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .num { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background: #F2B705; color: #0b2238; border-radius: 50%; font-size: 11px; font-weight: 900; flex-shrink: 0; }
+  .badge { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 2px 7px; border-radius: 20px; }
+  .badge.map     { background: #dbeafe; color: #1d4ed8; }
+  .badge.form    { background: #d1fae5; color: #065f46; }
+  .badge.emotion { background: #fce7f3; color: #9d174d; }
+  .badge.hybrid  { background: #ede9fe; color: #5b21b6; }
+  .badge.star    { background: #fef3c7; color: #92400e; }
+
+  .card-title { font-size: 17px; font-weight: 900; color: #0b2238; line-height: 1.25; }
+  .card-hook  { font-size: 12px; color: #6b7280; margin-top: 3px; font-style: italic; }
+
+  .card-body { padding: 14px 22px 18px; flex: 1; display: flex; flex-direction: column; gap: 12px; }
+
+  .label { font-size: 9px; font-weight: 800; color: #9ca3af; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }
+  .desc { font-size: 12.5px; color: #374151; line-height: 1.65; }
+
+  .mockup { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 9px; padding: 12px 14px; font-size: 11px; color: #374151; line-height: 1.85; font-family: 'Courier New', monospace; white-space: pre-wrap; }
+
+  .pros-cons { display: flex; flex-direction: column; gap: 5px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .tag { font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
+  .tag.v { background: #d1fae5; color: #065f46; }
+  .tag.x { background: #fee2e2; color: #991b1b; }
+  .tag.n { background: #fef3c7; color: #92400e; }
+
+  .footer { text-align: center; padding: 16px 40px 48px; color: #9ca3af; font-size: 13px; }
+
+  @media (max-width: 640px) {
+    .grid { padding: 16px; gap: 14px; }
+    .header, .context { padding: 20px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Vol sur mesure — 20 idées</h1>
+  <p>Basé sur ce qui fonctionnait dans la version originale + ce qu'on a appris ensemble.<br>Dis-moi le numéro qui te parle.</p>
+</div>
+
+<div class="context">
+  <strong>Ce qu'on sait du produit :</strong> Romain emmène les clients (1–3 personnes) depuis Charleroi vers une destination, passe la journée avec eux, les ramène le soir.
+  Le vol <em>est</em> le transport, la destination <em>est</em> l'expérience. Les clients ne savent souvent pas ce qui est possible.
+  Ce qui fonctionnait bien avant : la <strong>carte cliquable + calcul de durée/prix + calendrier + formulaire</strong>.
+</div>
+
+<div class="grid">
+
+  <!-- 1 -->
+  <div class="card">
+    <div class="card-top">
+      <div class="num-row"><div class="num">1</div><span class="badge hybrid">Hybride</span></div>
+      <div class="card-title">La version originale, mieux présentée</div>
+      <div class="card-hook">"Où voulez-vous aller ?" au lieu de "que voulez-vous survoler ?"</div>
+    </div>
+    <div class="card-body">
+      <div>
+        <div class="label">Le concept</div>
+        <p class="desc">Garder exactement la même carte et la même logique (clic = waypoint, estimation automatique, calendrier, formulaire), mais changer le <strong>cadrage textuel</strong> entièrement. Ce n'est plus "tracez votre itinéraire de survol" — c'est "où voulez-vous passer votre journée ?". La mécanique est identique, l'histoire est différente.</p>
+      </div>
+      <div class="mockup">Où voulez-vous passer
+votre prochaine journée ?
+
+→ Cliquez sur la carte
+  ou cherchez une destination.
+
+[ Le Touquet    ] ← suggestion
+
+★ Charleroi  ·  Le Touquet  ·  retour
+⏱ Durée estimée : 1h30 aller-retour
+💶 Provision : ≈ 195 €</div>
+      <div class="tags">
+        <span class="tag v">Aucun refactoring de la logique</span>
+        <span class="tag v">Déjà prouvé</span>
+        <span class="tag n">Nécessite bonne rédaction</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2 -->
+  <div class="card">
+    <div class="card-top">
+      <div class="num-row"><div class="num">2</div><span class="badge map">Carte</span></div>
+      <div class="card-title">Carte simplifiée avec destinations réelles</div>
+      <div class="card-hook">Des points cliquables sur des villes visitables, pas des lieux à survoler</div>
+    </div>
+    <div class="card-body">
+      <div>
+        <div class="label">Le concept</div>
+        <p class="desc">La carte originale reste mais avec des <strong>pins pré-positionnés</strong> sur des destinations visitables réelles : Le Touquet, Bruges, Paris, Amsterdam, Cologne, Dinant, côte belge… Le client clique sur une épingle, voit "45 min · journée complète possible · ≈ 195 €", et peut en sélectionner plusieurs. La carte libre reste disponible pour les destinations custom.</p>
+      </div>
+      <div class="mockup">  [Amsterdam 🔵]   [Cologne 🔵]
+  [Bruges 🔵]
+     [Le Touquet 🔵]  [Paris 🔵]
+          ★ Charleroi
+  [Dinant 🔵] [Côte belge 🔵]
+
+🔵 = clic → fiche destination
+    + ajouter à mon itinéraire</div>
+      <div class="tags">
+        <span class="tag v">Très visuel</span>
+        <span class="tag v">Révèle les possibilités</span>
+        <span class="tag n">Destinations à définir et maintenir</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3 -->
+  <div class="card">
+    <div class="card-top">
+      <div class="num-row"><div class="num">3</div><span class="badge form">Formulaire</span></div>
+      <div class="card-title">Devis express en 3 champs</div>
+      <div class="card-hook">Le plus rapide à remplir, le plus rapide à traiter pour Romain</div>
+    </div>
+    <div class="card-body">
+      <div>
+        <div class="label">Le concept</div>
+        <p class="desc">Pas de carte, pas d'étapes. Trois champs : <strong>destination libre</strong> (texte, autocomplete), <strong>date souhaitée</strong>, <strong>nombre de personnes</strong>. Un bouton "Demander à Romain". Romain répond manuellement avec un itinéraire et un prix. La page inspire d'abord avec quelques exemples de destinations + temps de vol, puis propose le formulaire.</p>
+      </div>
+      <div class="mockup">Le Touquet → 45 min ·  Bruges → 20 min
+Paris → 1h10  ·  Amsterdam → 1h15
+
+────────────────────────────────
+Où voulez-vous aller ?
+[ Le Touquet                  ]
+
+Quand ?       Pour combien de personnes ?
+[ 14 août ]   [ 2 ]
+
+[ Envoyer ma demande à Romain ]</div>
+      <div class="tags">
+        <span class="tag v">Ultra-simple</span>
+        <span class="tag v">Mobile-first naturellement</span>
+        <span class="tag x">Pas de prix automatique</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4 -->
+  <div class="card highlight">
+    <div class="card-top">
+      <div class="num-row"><div class="num">4</div><span class="badge star">⭐ Favori potentiel</span></div>
+      <div class="card-title">Inspirations + carte en seconde phase</div>
+      <div class="card-hook">Les destinations réelles ouvrent les yeux, la carte affine le trajet</div>
+    </div>
+    <div class="card-body">
+      <div>
+        <div class="label">Le concept</div>
+        <p class="desc">Phase 1 : grille de destinations visitables avec photo (du lieu, pas aérienne), durée de vol, ambiance. Clic → la carte s'ouvre avec cette destination pré-chargée. Phase 2 : la carte originale pour ajuster, ajouter une étape. Prix calculé automatiquement. Calendrier. Formulaire. Les deux systèmes coexistent — les inspirations ouvrent l'entrée, la carte gère la précision.</p>
+      </div>
+      <div class="mockup">[ Le Touquet 🏖️  45 min  ≈195€ ]
+[ Bruges      🏛️  20 min  ≈ 90€ ]
+[ Paris       🗼 1h10   ≈320€ ]
+[ Côte belge  🌊  25 min  ≈115€ ]
+[ Ma propre idée... 🗺️        ]
+
+  ↓ clic sur "Le Touquet"
+
+→ Carte avec Le Touquet pré-chargé
+  Durée: 1h30 A/R · Prix: ≈ 195€
+  [ Modifier ] [ Continuer → ]</div>
+      <div class="tags">
+        <span class="tag v">Révèle les possibilités</span>
+        <span class="tag v">Garde la puissance de la carte</span>
+        <span class="tag v">Fonctionne pour tous les profils</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5 -->
+  <div class="card">
+    <div class="card-top">
+      <div class="num-row"><div class="num">5</div><span class="badge emotion">Émotion</span></div>
+      <div class="card-title">L'occasion d'abord</div>
+      <div class="card-hook">Demande en mariage, anniversaire, cadeau — l'émotion avant la logistique</div>
+    </div>
+    <div class="card-body">
+      <div>
+        <div class="label">Le concept</div>
+        <p class="desc">Première question : <strong>c'est pour quelle occasion ?</strong> La réponse influence les suggestions. Anniversaire → destinations romantiques. Cadeau → option bon cadeau. Groupe d'amis → destinations festives. Chaque sélection amène des suggestions de destinations adaptées, puis le formulaire ou la carte.</p>
+      </div>
+      <div class="mockup">C'est pour quelle occasion ?
+
+  💍 Demande en mariage
+  🎂 Anniversaire / fête
+  🎁 Offrir en cadeau
+  👫 Sortie en couple
+  🥂 Entre amis / EVJF
+  ✈️ Juste l'envie de voler
+
+→ Selon la réponse, Romain
+  propose les destinations adaptées.</div>
+      <div class="tags">
+        <span class="tag v">Capture les cadeaux (gros marché)</span>
+        <span class="tag v">Très émotionnel</span>
+        <span class="tag n">Pas idéal si destination déjà en tête</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6 -->
+  <div class="card">
+    <div class="card-top">
+      <div class="num-row"><div class="num">6</div><span class="badge map">Carte</span></div>
+      <div class="card-title">La carte isochrone</div>
+      <div class="card-hook">Voir d'un coup d'œil ce qui est accessible par temps de vol</div>
+    </div>
+    <div class="card-body">
+      <div>
+        <div class="label">Le concept</div>
+        <p class="desc">Une carte avec Charleroi au centre et des <strong>zones colorées</strong> par durée : vert (moins de 30 min), orange (30–1h), rouge (1h–2h). Des épingles sur des destinations précises dans chaque zone. Le client voit immédiatement ce qui est "proche" par avion alors qu'il pensait que c'était loin. Très puissant pour déclencher le "wow".</p>
+      </div>
+      <div class="mockup">        [Amsterdam]   [Cologne]
+  🟠──────────────────────
+   [Bruges]  [Le Touquet]
+  🟢───────────────────
+    ★ Charleroi  [Namur]
+  🟢──[Dinant]──[Côte]──
+   30min  ·  1h  ·  2h</div>
+      <div class="tags">
+        <span class="tag v">Révélation instantanée</span>
+        <span class="tag v">Très visuel</span>
+        <span class="tag x">Plus complexe à construire</span>
+        <span class="tag x">Moins utile sur petit écran</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7 -->
+  <div class="card">
+    <div class="card-top">
+      <div class="num-row"><div class="num">7</div><span class="badge form">Formulaire</span></div>
+      <div class="card-title">La journée racontée avec un horaire</div>
+      <div class="card-hook">Montrer concrètement à quoi ressemble la journée, heure par heure</div>
+    </div>
+    <div class="card-body">
+      <div>
+        <div class="label">Le concept</div>
+        <p class="desc">Avant le formulaire, la page montre un exemple de journée type avec un <strong>planning horaire concret</strong> — pas de la publicité, une vraie narration. Le client comprend ce qu'il vit. Ensuite : formulaire simple. Le planning s'adapte à la destination choisie.</p>
+      </div>
+      <div class="mockup">Une journée type · Le Touquet
+
+08h00  Départ Charleroi (EBCI)
+08h45  Atterrissage Le Touquet
+09h00  Balade matinale sur la plage
+12h30  Déjeuner face à la mer
+15h00  Promenade en ville
+17h00  Retour vers l'avion
+17h45  Atterrissage Charleroi
+
+Et vous, où voulez-vous aller ?
+[ Ma destination  ]  [ Ma date ]</div>
+      <div class="tags">
+        <span class="tag v">Très concret, lève les doutes</span>
+        <span class="tag v">Client se projette facilement</span>
+        <span class="tag n">Nécessite contenu par destination</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8 -->
+  <div class="card">
+    <div class="card-top">
+      <div class="num-row"><div class="num">8</div><span class="badge emotion">Émotion</span></div>
+      <div class="card-title">La comparaison voiture vs avion</div>
+      <div class="card-hook">"En voiture, Bruges c'est 1h30. En avion avec Romain, c'est 20 minutes."</div>
+    </div>
+    <div class="card-body">
+      <div>
+        <div class="label">Le concept</div>
+        <p class="desc">Le client entre une destination. La page affiche côte à côte : temps de trajet en voiture (via Google Maps API ou hardcodé) et temps de vol avec Romain. La différence fait l'argumentaire. Elle lève aussi l'objection du prix : tu paies pour récupérer X heures de ta vie.</p>
+      </div>
+      <div class="mockup">[ Le Touquet                🔍 ]
+
+  🚗 En voiture       ✈️ Avec Romain
+  ────────────        ────────────
+  2h45 aller           45 min aller
+  Autoroute A16        Avion privé
+  + péage              Départ à vous
+
+  Vous récupérez 4h de route.
+
+[ Réserver cette journée → ]</div>
+      <div class="tags">
+        <span class="tag v">Argumente le prix sans le dire</span>
+        <span class="tag v">Effet "révélation" garanti</span>
+        <span class="tag n">Temps voiture à maintenir</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9 -->
+  <div class="card">
+    <div class="card-top">
+      <div class="num-row"><div class="num">9</div><span class="badge emotion">Émotion</span></div>
+      <div class="card-title">Les témoignages comme porte d'entrée</div>
+      <div class="card-hook">Laisser les anciens clients expliquer le produit à la place d'un texte marketing</div>
+    </div>
+    <div class="card-body">
+      <div>
+        <div class="label">Le concept</div>
+        <p class="desc">La page commence par <strong>3 courtes histoires de vols réels</strong> (anonymisées si besoin). Chaque histoire décrit une journée vécue : où ils sont allés, ce qu'ils ont fait, ce qu'ils ont ressenti. En bas de chaque histoire, un bouton "Vivez la vôtre". Les histoires font comprendre le produit sans explication.</p>
+      </div>
+      <div class="mockup">"On ne savait pas où fêter nos 10
+ans. Romain nous a emmenés au
+Touquet un samedi. On a déjeuné
+les pieds dans le sable et on
+était rentrés pour 18h."
+                 — Marie & Tom
+
+"J'ai offert ça à mon père pour
+ses 60 ans. Il en parle encore."
+                 — Sophie, Liège
+
+      [ Créez votre histoire → ]</div>
+      <div class="tags">
+        <span class="tag v">Crédible et humain</span>
+        <span class="tag v">Explique sans expliquer</span>
+        <span class="tag n">Nécessite vrais témoignages</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10 -->
+  <div class="card">
+    <div class="card-top">
+      <div class="num-row"><div class="num">10</div><span class="badge hybrid">Hybride</span></div>
+      <div class="card-title">Deux entrées : "j'ai une idée" ou "inspirez-moi"</div>
+      <div class="card-hook">Deux profils de clients, deux chemins différents</div>
+    </div>
+    <div class="card-body">
+      <div>
+        <div class="label">Le concept</div>
+        <p class="desc">Sur la page, deux grandes cartes : <strong>"J'ai déjà une idée"</strong> (→ formulaire ou carte directement) et <strong>"Inspirez-moi"</strong> (→ suggestions de destinations par ambiance). Chaque profil de client trouve son chemin sans friction. Celui qui sait ce qu'il veut ne perd pas de temps. Celui qui ne sait pas non plus.</p>
+      </div>
+      <div class="mockup">┌─────────────────┬─────────────────┐
+│  J'ai déjà une  │  Inspirez-moi   │
+│  idée           │                 │
+│                 │  Je ne sais pas │
+│  → Formulaire   │  encore où      │
+│    ou carte     │  aller          │
+│                 │  → Suggestions  │
+└─────────────────┴─────────────────┘</div>
+      <div class="tags">
+        <span class="tag v">Sert tous les profils</span>
+        <span class="tag v">Pas de compromis</span>
+        <span class="tag n">Double contenu à maintenir</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 11 -->
+  <div class="card">
+    <div class="card-top">
+      <div class="num-row"><div class="num">11</div><span class="badge form">Formulaire</span></div>
+      <div class="card-title">La conversation guidée</div>
+      <div class="card-hook">Questions posées une par une, comme un vrai échange</div>
+    </div>
+    <div class="card-body">
+      <div>
+        <div class="label">Le concept</div>
+        <p class="desc">Pas un formulaire classique. Les questions apparaissent <strong>une par une</strong>, façon chat ou assistant — "Où voulez-vous aller ?" → réponse → "Quand ?" → réponse → "Vous êtes combien ?" → réponse → "Quelque chose de particulier ?" → envoi. Très doux, pas intimidant, donne l'impression de parler à quelqu'un.</p>
+      </div>
+      <div class="mockup">Bonjour, je suis Romain.
+Où voulez-vous aller ?
+
+[ Le Touquet                  ]
+                    [ Suite → ]
+
+─────────
+Super ! Vous partez quand ?
+
+[ Calendrier ]
+                    [ Suite → ]</div>
+      <div class="tags">
+        <span class="tag v">Très humain</span>
+        <span class="tag v">Pas intimidant</span>
+        <span class="tag v">Fonctionne très bien sur mobile</span>
+        <span class="tag x">Pas de prix automatique</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 12 -->
+  <div class="card">
+    <div class="card-top">
+      <div class="num-row"><div class="num">12</div><span class="badge map">Carte</span></div>
+      <div class="card-title">Carte originale + intro "révélatrice"</div>
+      <div class="card-hook">Garder 100% de la logique, ajouter un header qui change tout</div>
+    </div>
+    <div class="card-body">
+      <div>
+        <div class="label">Le concept</div>
+        <p class="desc">La carte et toute la logique restent identiques. On ajoute juste en haut un <strong>bloc d'introduction court et fort</strong> qui révèle ce qu'on peut faire : "Bruges à 20 min. Le Touquet à 45 min. Paris à 1h10. Cliquez sur la carte pour tracer votre journée." Deux phrases. Le reste, c'est la carte.</p>
+      </div>
+      <div class="mockup">Bruges 20 min · Le Touquet 45 min
+Paris 1h10 · Amsterdam 1h15
+
+Cliquez sur la carte pour tracer
+votre journée. Romain vous ramène
+le soir.
+
+┌──────────────────────────────┐
+│                              │
+│         [ CARTE ]            │
+│                              │
+└──────────────────────────────┘</div>
+      <div class="tags">
+        <span class="tag v">Zéro refactoring</span>
+        <span class="tag v">Juste du texte à changer</span>
+        <span class="tag v">Minimal mais efficace</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 13 -->
+  <div class="card">
+    <div class="card-top">
+      <div class="num-row"><div class="num">13</div><span class="badge form">Formulaire</span></div>
+      <div class="card-title">La disponibilité de Romain en premier</div>
+      <div class="card-hook">Partir du calendrier pour ancrer la conversation dans le réel</div>
+    </div>
+    <div class="card-body">
+      <div>
+        <div class="label">Le concept</div>
+        <p class="desc">La première chose visible est un <strong>mini-calendrier avec les jours disponibles de Romain</strong>. Le client choisit d'abord une date, puis dit où il veut aller. L'ordre inversé rend la réservation plus concrète immédiatement. "Il est libre ce samedi — c'est pour où ?"</p>
+      </div>
+      <div class="mockup">Romain est disponible :
+
+  ● Sam 2 août    ○ Dim 3 août
+  ○ Sam 9 août    ● Dim 10 août
+  ● Sam 16 août   ● Sam 23 août
+
+→ [ Sam 2 août sélectionné ]
+
+Parfait. Où voulez-vous aller ?
+[ Ma destination              ]</div>
+      <div class="tags">
+        <span class="tag v">Crée l'urgence et l'exclusivité</span>
+        <span class="tag v">Très concret</span>
+        <span class="tag n">Calendrier doit être tenu à jour</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 14 -->
+  <div class="card">
+    <div class="card-top">
+      <div class="num-row"><div class="num">14</div><span class="badge emotion">Émotion</span></div>
+      <div class="card-title">La destination secrète</div>
+      <div class="card-hook">Romain choisit, vous découvrez à l'aéroport — parfait pour un cadeau</div>
+    </div>
+    <div class="card-body">
+      <div>
+        <div class="label">Le concept</div>
+        <p class="desc">Une offre à part : le client donne une <strong>ambiance</strong> (mer / ville / nature), un budget, une date — et Romain choisit lui-même la destination. Elle reste secrète jusqu'au matin du vol. Parfait pour offrir à quelqu'un "une journée quelque part avec Romain" sans savoir où. Le mystère est le cadeau.</p>
+      </div>
+      <div class="mockup">Laissez Romain choisir.
+
+Ambiance :  [ 🌊 La mer          ]
+Date :      [ Sam 16 août        ]
+Budget :    [ 400–600 €          ]
+Pour :      [ 2 personnes        ]
+
+La destination reste secrète.
+Vous la découvrez à l'aéroport.
+
+  [ Je fais confiance à Romain → ]</div>
+      <div class="tags">
+        <span class="tag v">Très original</span>
+        <span class="tag v">Idéal pour les cadeaux</span>
+        <span class="tag v">Mémorable et partageable</span>
+        <span class="tag n">N'est pas pour tout le monde</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 15 -->
+  <div class="card">
+    <div class="card-top">
+      <div class="num-row"><div class="num">15</div><span class="badge hybrid">Hybride</span></div>
+      <div class="card-title">Vol + restaurant réservé</div>
+      <div class="card-hook">Romain s'occupe de tout, y compris la table</div>
+    </div>
+    <div class="card-body">
+      <div>
+        <div class="label">Le concept</div>
+        <p class="desc">Des packages complets : <strong>vol + recommandation de restaurant</strong> (ou réservation via un lien) à destination. "Le Touquet — La Coupole — réservation possible". Le client ne doit rien organiser d'autre. La valeur ajoutée dépasse le vol : c'est une journée clé en main.</p>
+      </div>
+      <div class="mockup">[ Le Touquet — journée complète  ]
+  ✈️ 45 min depuis Charleroi
+  🍽️ La Coupole · fruits de mer
+  🚶 Digue · plage · vieille ville
+  ✈️ Retour en soirée
+  💶 À partir de 195 €
+
+[ Réserver cette journée → ]</div>
+      <div class="tags">
+        <span class="tag v">Zéro effort pour le client</span>
+        <span class="tag v">Justifie le prix</span>
+        <span class="tag n">Partenariats restaurants à construire</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 16 -->
+  <div class="card">
+    <div class="card-top">
+      <div class="num-row"><div class="num">16</div><span class="badge form">Formulaire</span></div>
+      <div class="card-title">Le bon cadeau en ligne</div>
+      <div class="card-hook">Acheter une expérience pour quelqu'un d'autre, sans date fixée</div>
+    </div>
+    <div class="card-body">
+      <div>
+        <div class="label">Le concept</div>
+        <p class="desc">Une section ou une page dédiée : <strong>offrir un vol comme cadeau</strong>. Le client choisit un montant ou un type d'expérience, paie, reçoit un bon cadeau imprimable. Le bénéficiaire choisit la destination et la date avec Romain quand il veut. Énorme marché : Noël, anniversaires, fêtes des pères/mères.</p>
+      </div>
+      <div class="mockup">Offrir une journée en avion.
+
+  [ Journée courte   ≈ 200 €  ]
+  [ Journée complète ≈ 400 €  ]
+  [ Journée longue   ≈ 700 €  ]
+
+Prénom du destinataire : [ Marc  ]
+Message personnel :
+[ Bon anniversaire papa, profite ]
+
+→ Vous recevez un PDF à imprimer.
+  Marc choisit la date avec Romain.</div>
+      <div class="tags">
+        <span class="tag v">Marché immense (cadeaux)</span>
+        <span class="tag v">Vente sans date bloquée</span>
+        <span class="tag n">Nécessite gestion des bons</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 17 -->
+  <div class="card">
+    <div class="card-top">
+      <div class="num-row"><div class="num">17</div><span class="badge hybrid">Hybride</span></div>
+      <div class="card-title">Les suggestions selon la saison</div>
+      <div class="card-hook">"En ce moment" — en été la mer, en automne les Ardennes, en hiver Cologne</div>
+    </div>
+    <div class="card-body">
+      <div>
+        <div class="label">Le concept</div>
+        <p class="desc">La page détecte la saison actuelle (ou la date de visite) et propose des <strong>destinations adaptées</strong>. Été : côte belge, Le Touquet, Normandie. Automne : Ardennes, Alsace, Bruges. Hiver : marchés de Noël à Cologne ou Strasbourg. Printemps : Keukenhof (tulipes) près d'Amsterdam. Chaque saison a ses "must".</p>
+      </div>
+      <div class="mockup">En ce moment — Été 2025
+
+  🌊 [ Le Touquet   45 min  ]
+  🌊 [ Côte belge   25 min  ]
+  🌊 [ Normandie   1h00    ]
+
+─── Et aussi ───────────────────
+  🏙️ [ Bruges        20 min ]
+  🗼 [ Paris         1h10  ]</div>
+      <div class="tags">
+        <span class="tag v">Suggestions toujours pertinentes</span>
+        <span class="tag v">Donne une raison de revenir</span>
+        <span class="tag n">Contenu saisonnier à maintenir</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 18 -->
+  <div class="card">
+    <div class="card-top">
+      <div class="num-row"><div class="num">18</div><span class="badge map">Carte</span></div>
+      <div class="card-title">Carte avec "récits de vols" cliquables</div>
+      <div class="card-hook">Chaque épingle sur la carte ouvre l'histoire d'un vol réel</div>
+    </div>
+    <div class="card-body">
+      <div>
+        <div class="label">Le concept</div>
+        <p class="desc">La carte originale reste, mais chaque épingle sur une destination visitée ouvre une <strong>courte histoire</strong> : qui y est allé, ce qu'ils ont fait, une photo. "Marie et Thomas — Le Touquet — juin 2024". La carte devient une galerie d'expériences passées autant qu'un outil de planification.</p>
+      </div>
+      <div class="mockup">[ Carte ]
+  🔵 Le Touquet  ← clic →
+
+  ┌────────────────────────────┐
+  │ Marie & Thomas · juin 2024 │
+  │ "Déjeuner face à la mer,  │
+  │  retour avant le dîner"   │
+  │  [photo]    [ Faire pareil]│
+  └────────────────────────────┘</div>
+      <div class="tags">
+        <span class="tag v">Très humain</span>
+        <span class="tag v">Preuve sociale visuelle</span>
+        <span class="tag n">Contenu à alimenter régulièrement</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 19 -->
+  <div class="card">
+    <div class="card-top">
+      <div class="num-row"><div class="num">19</div><span class="badge form">Formulaire</span></div>
+      <div class="card-title">Le quiz rapide → suggestion personnalisée</div>
+      <div class="card-hook">3 questions, une suggestion de journée adaptée, pas un itinéraire à construire</div>
+    </div>
+    <div class="card-body">
+      <div>
+        <div class="label">Le concept</div>
+        <p class="desc">Trois questions simples — <strong>ambiance, durée, occasion</strong> — et la page propose une ou deux journées toutes faites qui correspondent. Le client valide, choisit une date, envoie. Pas de carte, pas de wapoints — Romain s'occupe du trajet. La personnalisation se fait par les questions, pas par la carte.</p>
+      </div>
+      <div class="mockup">Vous préférez :
+  ◉ La mer  ○ Une ville  ○ La nature
+
+Vous avez :
+  ○ Une demi-journée  ◉ Une journée
+
+C'est pour :
+  ◉ Un couple  ○ En famille  ○ Amis
+
+────────────────────────────────
+Notre suggestion : Le Touquet
+45 min de vol · journée complète
+Déjeuner face à la mer
+
+[ Réserver ce vol → ]  [ Autre → ]</div>
+      <div class="tags">
+        <span class="tag v">Zéro effort</span>
+        <span class="tag v">Très mobile-friendly</span>
+        <span class="tag v">Pas de carte à gérer</span>
+        <span class="tag n">Suggestions limitées aux destinations prédéfinies</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 20 -->
+  <div class="card highlight">
+    <div class="card-top">
+      <div class="num-row"><div class="num">20</div><span class="badge star">⭐ Favori potentiel</span></div>
+      <div class="card-title">Révélation + carte originale intacte</div>
+      <div class="card-hook">L'entrée qui ouvre les yeux, la carte qui construit le rêve</div>
+    </div>
+    <div class="card-body">
+      <div>
+        <div class="label">Le concept</div>
+        <p class="desc">La page s'ouvre sur une section courte et percutante qui révèle ce qui est possible — texte fort, quelques destinations avec leurs temps de vol, une photo de destination (pas aérienne). Puis, sans transition, la <strong>carte originale</strong> dans son intégralité. Le client qui ne savait pas ce que c'était comprend en 5 secondes, puis utilise la carte comme avant. Aucune logique à refaire.</p>
+      </div>
+      <div class="mockup">Bruges est à 20 minutes.
+Le Touquet à 45 minutes.
+Paris à 1h10.
+
+Romain vous emmène, vous ramène
+le soir. Cliquez sur la carte
+pour tracer votre journée.
+
+┌────────────────────────────────┐
+│                                │
+│         [ CARTE ]              │
+│   (identique à la version      │
+│    originale, 0 changement)    │
+│                                │
+└────────────────────────────────┘</div>
+      <div class="tags">
+        <span class="tag v">Refactoring minimal</span>
+        <span class="tag v">Garde tout ce qui fonctionnait</span>
+        <span class="tag v">Révèle le produit dès l'entrée</span>
+        <span class="tag v">Fonctionne pour tous</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  Dis-moi le numéro — ou une combinaison de numéros — qui te parle. On creuse ensemble.
+</div>
+
+</body>
+</html>

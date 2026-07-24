@@ -1,0 +1,111 @@
+{
+  "family": {
+    "primary": "Poppins",
+    "mono": "ui-monospace, monospace",
+    "fallback": "system-ui, -apple-system, sans-serif",
+    "source": "Google Fonts — https://fonts.google.com/specimen/Poppins",
+    "subsets": ["latin"],
+    "weights_loaded": [300, 400, 500, 600, 700, 800, 900],
+    "display": "swap"
+  },
+  "weights": {
+    "light":     300,
+    "regular":   400,
+    "medium":    500,
+    "semibold":  600,
+    "bold":      700,
+    "extrabold": 800,
+    "black":     900,
+    "note": "La marque utilise principalement 400 (corps) et 900 (titres/overlines/prix). Les poids 600-800 couvrent le milieu."
+  },
+  "scale": {
+    "overline": {
+      "size":          "10px",
+      "weight":        900,
+      "transform":     "uppercase",
+      "letter_spacing":"3px",
+      "color":         "#F2B705",
+      "usage":         "Toujours au-dessus d'un titre h1/h2 pour qualifier la section. Ex: 'Vol sur mesure', 'Au départ de Charleroi'",
+      "tailwind":      "text-[10px] font-black uppercase tracking-[3px] text-primary"
+    },
+    "h1_display": {
+      "size":          "60-72px (text-6xl/text-7xl)",
+      "weight":        900,
+      "letter_spacing":"-0.02em (tracking-tight)",
+      "line_height":   "1.0",
+      "usage":         "Hero uniquement",
+      "tailwind":      "text-5xl sm:text-6xl lg:text-7xl font-black text-foreground leading-tight tracking-tight"
+    },
+    "h1_page": {
+      "size":          "36-48px (text-4xl/text-5xl)",
+      "weight":        900,
+      "letter_spacing":"-0.02em",
+      "line_height":   "1.0",
+      "usage":         "Titre principal de section sur la home et les pages internes",
+      "tailwind":      "text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight"
+    },
+    "h2_section": {
+      "size":          "20px (text-xl)",
+      "weight":        900,
+      "usage":         "Sous-titre de section dans les cards dark, sidebar",
+      "tailwind":      "text-xl font-black"
+    },
+    "body": {
+      "size":          "14px (text-sm)",
+      "weight":        400,
+      "line_height":   "1.6 (leading-relaxed)",
+      "color":         "#1e2535",
+      "tailwind":      "text-sm text-foreground leading-relaxed"
+    },
+    "body_muted": {
+      "size":          "14px (text-sm)",
+      "weight":        400,
+      "color":         "rgba(11,34,56,0.5)",
+      "usage":         "Descriptions secondaires, légendes, paragraphes d'intro",
+      "tailwind":      "text-sm text-muted-foreground leading-relaxed"
+    },
+    "small": {
+      "size":          "12px (text-xs)",
+      "weight":        500,
+      "color":         "rgba(11,34,56,0.5)",
+      "tailwind":      "text-xs font-medium text-muted-foreground"
+    },
+    "label_internal": {
+      "size":          "9-10px",
+      "weight":        900,
+      "transform":     "uppercase",
+      "letter_spacing":"2px",
+      "color":         "rgba(11,34,56,0.4)",
+      "usage":         "Étiquettes de champ, métadonnées, sections tableau",
+      "tailwind":      "text-[10px] font-black uppercase tracking-[2px] text-foreground/40"
+    },
+    "price": {
+      "size":          "24-26px",
+      "weight":        900,
+      "color":         "#F2B705 (sur fond sombre) / #0b2238 (sur fond clair)",
+      "tailwind":      "text-[26px] font-black text-primary"
+    },
+    "nav_link": {
+      "size":          "14px (text-sm)",
+      "weight":        500,
+      "color":         "muted-foreground → foreground au hover",
+      "tailwind":      "px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground rounded-lg hover:bg-secondary transition-colors"
+    },
+    "button_primary": {
+      "size":          "13-14px",
+      "weight":        900,
+      "tailwind":      "text-sm font-black"
+    },
+    "footer_heading": {
+      "size":          "10px",
+      "weight":        700,
+      "transform":     "uppercase",
+      "letter_spacing":"2px",
+      "color":         "#F2B705",
+      "tailwind":      "text-[10px] font-bold text-primary uppercase tracking-[2px]"
+    }
+  },
+  "antialiasing": "antialiased (CSS font-smooth: antialiased)",
+  "base_line_height": 1.5,
+  "note_ios": "iOS forcé à font-size:16px sur tous les inputs pour éviter le zoom auto"
+}

@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fly Horizons — Affiche A4 Premium</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+
+/* ════════════════════════════════════════
+   RESET + SCREEN WRAPPER
+════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  font-family: 'Poppins', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background: #0a0a14;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 40px 20px 60px;
+  gap: 16px;
+}
+
+.hint {
+  color: rgba(255,255,255,.35);
+  font-size: 12px;
+  font-family: 'Poppins', sans-serif;
+  letter-spacing: .05em;
+  text-align: center;
+}
+
+.hint strong { color: #F2B705; font-weight: 700; }
+
+/* ════════════════════════════════════════
+   FORMAT A4
+════════════════════════════════════════ */
+.poster {
+  width: 210mm;
+  height: 297mm;
+  position: relative;
+  overflow: hidden;
+  background: #080e18;
+  box-shadow:
+    0 0 0 1px rgba(242,183,5,.15),
+    0 40px 120px rgba(0,0,0,.9),
+    0 0 80px rgba(242,183,5,.05);
+  flex-shrink: 0;
+}
+
+/* ════════════════════════════════════════
+   COUCHE 1 — PHOTO
+════════════════════════════════════════ */
+.layer-photo {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 58%;
+  overflow: hidden;
+}
+
+.layer-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 40%;
+  filter: contrast(1.25) saturate(0.55) brightness(0.50);
+  display: block;
+}
+
+/* ════════════════════════════════════════
+   COUCHE 2 — OVERLAYS CINÉMA
+════════════════════════════════════════ */
+/* Vignetage global */
+.overlay-vignette {
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 58%;
+  background:
+    radial-gradient(ellipse 90% 70% at 50% 40%, transparent 20%, rgba(8,14,24,.55) 100%);
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+/* Gradient bas de la photo → fond */
+.overlay-photo-bottom {
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 58%;
+  background:
+    linear-gradient(to bottom,
+      rgba(8,14,24,.60) 0%,
+      rgba(8,14,24,.10) 20%,
+      rgba(8,14,24,.05) 55%,
+      rgba(8,14,24,.70) 80%,
+      rgba(8,14,24,.96) 100%
+    );
+  pointer-events: none;
+}
+
+/* Gradient latéral gauche */
+.overlay-photo-left {
+  position: absolute;
+  top: 0; left: 0; bottom: 42%;
+  width: 55%;
+  background:
+    linear-gradient(to right,
+      rgba(8,14,24,.85) 0%,
+      rgba(8,14,24,.30) 60%,
+      transparent 100%
+    );
+  pointer-events: none;
+}
+
+/* Teinte bleue cinématographique */
+.overlay-cinematic {
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 58%;
+  background: rgba(5, 18, 40, .22);
+  mix-blend-mode: color;
+  pointer-events: none;
+}
+
+/* ════════════════════════════════════════
+   COUCHE 3 — FOND BAS (panel infos)
+════════════════════════════════════════ */
+.panel-bottom {
+  position: absolute;
+  top: 58%; left: 0; right: 0; bottom: 0;
+  background:
+    linear-gradient(to bottom,
+      #080e18 0%,
+      #0a1220 40%,
+      #09111d 100%
+    );
+}
+
+/* ════════════════════════════════════════
+   COUCHE 4 — GRAIN TEXTURE
+════════════════════════════════════════ */
+.layer-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .55;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='.08'/%3E%3C/svg%3E");
+  z-index: 40;
+}
+
+/* ════════════════════════════════════════
+   COUCHE 5 — WATERMARK TYPOGRAPHIQUE
+════════════════════════════════════════ */
+.watermark {
+  position: absolute;
+  top: 17%;
+  left: -8mm;
+  right: -8mm;
+  font-size: 88px;
+  font-weight: 900;
+  color: transparent;
+  letter-spacing: -.04em;
+  line-height: .85;
+  pointer-events: none;
+  z-index: 2;
+  user-select: none;
+  -webkit-text-stroke: 1px rgba(242,183,5,.07);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* ════════════════════════════════════════
+   COUCHE 6 — ÉLÉMENTS DÉCORATIFS
+════════════════════════════════════════ */
+
+/* Barre verticale gold à gauche */
+.deco-stripe-left {
+  position: absolute;
+  top: 0; left: 0;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(to bottom,
+    transparent 0%,
+    rgba(242,183,5,.0) 5%,
+    rgba(242,183,5,.6) 25%,
+    rgba(242,183,5,.8) 50%,
+    rgba(242,183,5,.6) 75%,
+    rgba(242,183,5,.0) 95%,
+    transparent 100%
+  );
+  z-index: 10;
+}
+
+/* Ligne de séparation photo / panel */
+.deco-separator {
+  position: absolute;
+  top: calc(58% - 1px);
+  left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(to right,
+    rgba(242,183,5,.0) 0%,
+    rgba(242,183,5,.7) 8%,
+    rgba(242,183,5,1) 30%,
+    rgba(242,183,5,.9) 60%,
+    rgba(242,183,5,.3) 85%,
+    rgba(242,183,5,.0) 100%
+  );
+  z-index: 10;
+}
+
+/* Divider vertical dans le panel bas */
+.deco-vdivider {
+  position: absolute;
+  top: calc(58% + 8mm);
+  bottom: 14mm;
+  left: 60%;
+  width: 1px;
+  background: linear-gradient(to bottom,
+    rgba(242,183,5,.0) 0%,
+    rgba(242,183,5,.4) 15%,
+    rgba(242,183,5,.4) 85%,
+    rgba(242,183,5,.0) 100%
+  );
+  z-index: 10;
+}
+
+/* Marques de coupe (crop marks) — print pro */
+.crop { position: absolute; z-index: 50; }
+.crop-tl { top: 3mm; left: 3mm; }
+.crop-tr { top: 3mm; right: 3mm; }
+.crop-bl { bottom: 3mm; left: 3mm; }
+.crop-br { bottom: 3mm; right: 3mm; }
+.crop-line-h { width: 5mm; height: .5px; background: rgba(242,183,5,.35); }
+.crop-line-v { width: .5px; height: 5mm; background: rgba(242,183,5,.35); }
+
+/* Cercle déco dans la photo */
+.deco-circle {
+  position: absolute;
+  border-radius: 50%;
+  border: .5px solid rgba(242,183,5,.10);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Coordonnées en rotation verticale */
+.deco-coords {
+  position: absolute;
+  right: 6mm;
+  top: 20%;
+  font-size: 7px;
+  font-weight: 400;
+  color: rgba(242,183,5,.35);
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  z-index: 10;
+  font-family: 'Poppins', monospace;
+}
+
+/* Numéro d'édition */
+.deco-edition {
+  position: absolute;
+  bottom: 3.5mm;
+  right: 6mm;
+  font-size: 6.5px;
+  font-weight: 400;
+  color: rgba(255,255,255,.12);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  z-index: 10;
+}
+
+/* ════════════════════════════════════════
+   CONTENU PRINCIPAL
+════════════════════════════════════════ */
+.content {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── ZONE LOGO TOP ── */
+.zone-logo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7mm 8mm 0 8mm;
+}
+
+.logo-lockup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-emblem {
+  width: 30px;
+  height: 30px;
+  border: 1.5px solid rgba(242,183,5,.55);
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(242,183,5,.06);
+}
+
+.logo-emblem svg {
+  width: 17px;
+  height: 17px;
+  fill: #F2B705;
+}
+
+.logo-name {
+  font-size: 12px;
+  font-weight: 900;
+  color: rgba(255,255,255,.90);
+  letter-spacing: .01em;
+  line-height: 1;
+}
+
+.logo-tagline {
+  font-size: 6.5px;
+  font-weight: 400;
+  color: rgba(255,255,255,.30);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.badge-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: .5px solid rgba(242,183,5,.30);
+  border-radius: 3px;
+  padding: 4px 8px;
+  font-size: 6.5px;
+  font-weight: 600;
+  color: rgba(242,183,5,.70);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.badge-location-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #F2B705;
+  opacity: .8;
+}
+
+/* ── ZONE TITRE — ancré bas de la zone photo ── */
+.zone-headline {
+  position: absolute;
+  left: 0; right: 0;
+  top: calc(58% - 64mm);
+  padding: 0 8mm;
+  z-index: 21;
+}
+
+.overline-label {
+  font-size: 7.5px;
+  font-weight: 700;
+  color: #F2B705;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  margin-bottom: 5mm;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.overline-label::before {
+  content: '';
+  display: block;
+  width: 20px;
+  height: 1px;
+  background: #F2B705;
+  flex-shrink: 0;
+}
+
+.headline {
+  font-size: 52px;
+  font-weight: 900;
+  line-height: .92;
+  letter-spacing: -.035em;
+  color: #fff;
+  margin-bottom: 4mm;
+}
+
+.headline .line-gold {
+  /* Gold métallique */
+  background: linear-gradient(
+    105deg,
+    #8a6c00 0%,
+    #c49a0a 15%,
+    #F2B705 30%,
+    #ffe566 48%,
+    #F2B705 62%,
+    #c49a0a 80%,
+    #9a7800 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.headline .line-light {
+  color: rgba(255,255,255,.88);
+}
+
+.headline .line-thin {
+  font-weight: 300;
+  font-style: italic;
+  color: rgba(255,255,255,.55);
+  font-size: 36px;
+  letter-spacing: -.015em;
+}
+
+/* ── ZONE PANEL BAS ── */
+.zone-panel {
+  position: absolute;
+  top: 58%;
+  left: 0; right: 0; bottom: 0;
+  padding: 7mm 0 0 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Colonnes */
+.panel-cols {
+  display: flex;
+  flex: 1;
+  padding: 0;
+}
+
+.col-left {
+  flex: 0 0 60%;
+  padding: 0 7mm 0 8mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.col-right {
+  flex: 0 0 40%;
+  padding: 0 8mm 0 7mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* ── PRIX ── */
+.price-block {
+  margin-bottom: 6mm;
+}
+
+.price-from-label {
+  font-size: 7px;
+  font-weight: 600;
+  color: rgba(255,255,255,.30);
+  letter-spacing: .20em;
+  text-transform: uppercase;
+  margin-bottom: 1mm;
+}
+
+.price-main {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  line-height: 1;
+}
+
+.price-num {
+  font-size: 66px;
+  font-weight: 900;
+  letter-spacing: -.04em;
+  line-height: .9;
+  background: linear-gradient(
+    110deg,
+    #8a6c00 0%,
+    #c8960c 15%,
+    #F2B705 32%,
+    #ffe566 50%,
+    #F2B705 68%,
+    #c8960c 85%,
+    #9a7800 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.price-currency {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: rgba(242,183,5,.55);
+  padding-bottom: 4px;
+}
+
+.price-note {
+  font-size: 8px;
+  font-weight: 400;
+  color: rgba(255,255,255,.28);
+  letter-spacing: .04em;
+  margin-top: 2mm;
+  line-height: 1.5;
+}
+
+/* ── USPs ── */
+.usps {
+  display: flex;
+  flex-direction: column;
+  gap: 4mm;
+}
+
+.usp {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.usp-marker {
+  flex-shrink: 0;
+  margin-top: 5px;
+  width: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.usp-diamond {
+  width: 5px;
+  height: 5px;
+  background: #F2B705;
+  transform: rotate(45deg);
+  flex-shrink: 0;
+}
+
+.usp-line {
+  width: 1px;
+  height: 8px;
+  background: rgba(242,183,5,.25);
+}
+
+.usp-title {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: rgba(255,255,255,.88);
+  line-height: 1.3;
+  letter-spacing: -.01em;
+}
+
+.usp-desc {
+  font-size: 8px;
+  font-weight: 400;
+  color: rgba(255,255,255,.35);
+  line-height: 1.45;
+  margin-top: 1px;
+  letter-spacing: .01em;
+}
+
+/* ── COLONNE DROITE ── */
+.right-url {
+  font-size: 11px;
+  font-weight: 800;
+  color: rgba(255,255,255,.85);
+  letter-spacing: -.01em;
+  line-height: 1;
+  margin-bottom: 1.5mm;
+}
+
+.right-url-dot {
+  color: #F2B705;
+}
+
+.right-contacts {
+  display: flex;
+  flex-direction: column;
+  gap: 3mm;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.contact-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: rgba(242,183,5,.10);
+  border: .5px solid rgba(242,183,5,.20);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.contact-icon svg {
+  width: 8px;
+  height: 8px;
+  fill: rgba(242,183,5,.7);
+}
+
+.contact-text {
+  font-size: 8px;
+  font-weight: 500;
+  color: rgba(255,255,255,.40);
+  letter-spacing: .02em;
+}
+
+/* QR code */
+.qr-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3mm;
+}
+
+.qr-label {
+  font-size: 6.5px;
+  font-weight: 600;
+  color: rgba(255,255,255,.20);
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.qr-frame {
+  width: 24mm;
+  height: 24mm;
+  border: 1px solid rgba(242,183,5,.25);
+  border-radius: 4px;
+  padding: 2mm;
+  background: rgba(242,183,5,.03);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Coins QR gold */
+.qr-frame::before,
+.qr-frame::after {
+  content: '';
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-color: #F2B705;
+  border-style: solid;
+}
+
+.qr-frame::before { top: 1.5mm; left: 1.5mm; border-width: 1.5px 0 0 1.5px; }
+.qr-frame::after  { bottom: 1.5mm; right: 1.5mm; border-width: 0 1.5px 1.5px 0; }
+
+.qr-canvas {
+  width: 18mm;
+  height: 18mm;
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  grid-template-rows: repeat(9, 1fr);
+  gap: 0.8px;
+}
+
+.qr-canvas span { background: rgba(242,183,5,.70); border-radius: .5px; }
+.qr-canvas span.w { background: rgba(242,183,5,.06); }
+
+.qr-note {
+  font-size: 6px;
+  color: rgba(255,255,255,.18);
+  letter-spacing: .05em;
+  line-height: 1.5;
+}
+
+/* ── BARRE BAS (CTA) ── */
+.zone-cta {
+  margin-top: 6mm;
+  padding: 0 8mm 5mm 8mm;
+}
+
+.cta-inner {
+  background: linear-gradient(
+    105deg,
+    #c49a0a 0%,
+    #F2B705 35%,
+    #ffe566 55%,
+    #F2B705 75%,
+    #c49a0a 100%
+  );
+  border-radius: 10px;
+  padding: 0 5mm;
+  height: 14mm;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Reflet subtil */
+.cta-inner::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 50%;
+  background: rgba(255,255,255,.12);
+  border-radius: 10px 10px 0 0;
+  pointer-events: none;
+}
+
+.cta-main-text {
+  font-size: 14px;
+  font-weight: 900;
+  color: #0b2238;
+  letter-spacing: -.02em;
+  line-height: 1;
+}
+
+.cta-sub-text {
+  font-size: 8px;
+  font-weight: 600;
+  color: rgba(11,34,56,.55);
+  letter-spacing: .04em;
+  margin-top: 2px;
+}
+
+.cta-arrow {
+  width: 10mm;
+  height: 10mm;
+  border-radius: 6px;
+  background: rgba(11,34,56,.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cta-arrow svg {
+  width: 18px;
+  height: 18px;
+  fill: #0b2238;
+}
+
+/* ── FINE BARRE TOUT EN BAS ── */
+.zone-footer {
+  padding: 3mm 8mm;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: .5px solid rgba(255,255,255,.05);
+}
+
+.footer-legal {
+  font-size: 6.5px;
+  color: rgba(255,255,255,.15);
+  letter-spacing: .08em;
+  line-height: 1.6;
+}
+
+.footer-legal strong { color: rgba(255,255,255,.25); font-weight: 600; }
+
+.footer-cert {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.footer-cert-badge {
+  border: .5px solid rgba(242,183,5,.20);
+  border-radius: 3px;
+  padding: 2px 5px;
+  font-size: 6px;
+  font-weight: 700;
+  color: rgba(242,183,5,.40);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+/* ════════════════════════════════════════
+   IMPRESSION
+════════════════════════════════════════ */
+@media print {
+  html, body {
+    background: none;
+    padding: 0;
+    margin: 0;
+  }
+  body {
+    display: block;
+  }
+  .hint { display: none; }
+  .poster {
+    width: 210mm;
+    height: 297mm;
+    box-shadow: none;
+    page-break-after: always;
+  }
+  @page {
+    size: A4;
+    margin: 0;
+  }
+}
+</style>
+</head>
+<body>
+
+<p class="hint">Ouvrir dans <strong>Chrome / Edge</strong> → <strong>Ctrl+P</strong> → Format A4, marges : Aucune, ☑ Graphiques d'arrière-plan</p>
+
+<div class="poster">
+
+  <!-- ═══ FOND PHOTO ═══ -->
+  <div class="layer-photo">
+    <img src="images/da-40-white.webp" alt="">
+  </div>
+
+  <!-- ═══ OVERLAYS ═══ -->
+  <div class="overlay-vignette"></div>
+  <div class="overlay-photo-bottom"></div>
+  <div class="overlay-photo-left"></div>
+  <div class="overlay-cinematic"></div>
+
+  <!-- ═══ FOND PANEL BAS ═══ -->
+  <div class="panel-bottom"></div>
+
+  <!-- ═══ GRAIN ═══ -->
+  <div class="layer-grain"></div>
+
+  <!-- ═══ WATERMARK TYPOGRAPHIQUE ═══ -->
+  <div class="watermark">HORIZONS</div>
+
+  <!-- ═══ DÉCORATIONS ═══ -->
+  <div class="deco-stripe-left"></div>
+  <div class="deco-separator"></div>
+  <div class="deco-vdivider"></div>
+
+  <!-- Cercles atmosphériques -->
+  <div class="deco-circle" style="width:280px;height:280px;top:-60px;right:-80px;"></div>
+  <div class="deco-circle" style="width:160px;height:160px;top:-10px;right:-10px;border-color:rgba(242,183,5,.14);"></div>
+  <div class="deco-circle" style="width:60px;height:60px;top:30px;right:30px;border-color:rgba(242,183,5,.20);"></div>
+
+  <!-- Coordonnées verticales -->
+  <div class="deco-coords">50.459°N · 4.453°E · EBCI · Charleroi</div>
+
+  <!-- Crop marks -->
+  <div class="crop crop-tl"><div class="crop-line-h"></div><div style="margin-top:2px;"><div class="crop-line-v"></div></div></div>
+  <div class="crop crop-tr" style="display:flex;flex-direction:column;align-items:flex-end;"><div class="crop-line-h"></div><div style="margin-top:2px;"><div class="crop-line-v" style="margin-left:auto;"></div></div></div>
+  <div class="crop crop-bl"><div style="margin-bottom:2px;"><div class="crop-line-v"></div></div><div class="crop-line-h"></div></div>
+  <div class="crop crop-br" style="display:flex;flex-direction:column;align-items:flex-end;"><div style="margin-bottom:2px;margin-left:auto;"><div class="crop-line-v"></div></div><div class="crop-line-h"></div></div>
+
+  <!-- Numéro d'édition -->
+  <div class="deco-edition">FLY-HORIZONS · Édition 2026 · © DESTANBERG R.</div>
+
+  <!-- ═══════════════════════════════════════
+       CONTENU
+  ═══════════════════════════════════════ -->
+  <div class="content">
+
+    <!-- ── LOGO ── -->
+    <div class="zone-logo">
+      <div class="logo-lockup">
+        <div class="logo-emblem">
+          <!-- Icône avion -->
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="logo-name">Fly Horizons</div>
+          <div class="logo-tagline">Vols privés en avion léger</div>
+        </div>
+      </div>
+      <div class="badge-location">
+        <span class="badge-location-dot"></span>
+        Belgique · EBCI
+      </div>
+    </div>
+
+    <!-- ── HEADLINE ── -->
+    <div class="zone-headline">
+      <p class="overline-label">Baptême de l'air</p>
+      <h1 class="headline">
+        <span class="line-light">Prenez<br>de la</span><br>
+        <span class="line-gold">Hauteur.</span>
+      </h1>
+    </div>
+
+    <!-- ── PANEL INFOS ── -->
+    <div class="zone-panel">
+
+      <div class="panel-cols">
+
+        <!-- Colonne gauche -->
+        <div class="col-left">
+
+          <!-- Prix -->
+          <div class="price-block">
+            <p class="price-from-label">À partir de</p>
+            <div class="price-main">
+              <span class="price-num">99</span>
+              <span class="price-currency">€</span>
+            </div>
+            <p class="price-note">
+              Pour 1 à 3 passagers · Vol de 30 min<br>
+              Valable 12 mois · Transferable librement
+            </p>
+          </div>
+
+          <!-- USPs -->
+          <div class="usps">
+            <div class="usp">
+              <div class="usp-marker">
+                <div class="usp-diamond"></div>
+                <div class="usp-line"></div>
+              </div>
+              <div>
+                <p class="usp-title">Vols de 30 à 120 minutes</p>
+                <p class="usp-desc">Découverte, escapade ou itinéraire entièrement libre — votre route, votre rythme.</p>
+              </div>
+            </div>
+            <div class="usp">
+              <div class="usp-marker">
+                <div class="usp-diamond"></div>
+                <div class="usp-line"></div>
+              </div>
+              <div>
+                <p class="usp-title">Paiement sécurisé · Stripe</p>
+                <p class="usp-desc">Annulation gratuite jusqu'à 48 h avant le vol. Aucun risque.</p>
+              </div>
+            </div>
+            <div class="usp">
+              <div class="usp-marker">
+                <div class="usp-diamond"></div>
+              </div>
+              <div>
+                <p class="usp-title">Jusqu'à 3 passagers à bord</p>
+                <p class="usp-desc">Partagez l'expérience en famille ou entre amis. Le cadeau idéal.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Colonne droite -->
+        <div class="col-right">
+
+          <!-- URL + contacts -->
+          <div>
+            <p class="right-url">fly-horizons<span class="right-url-dot">.</span>com</p>
+            <div class="right-contacts" style="margin-top:3mm;">
+              <div class="contact-item">
+                <div class="contact-icon">
+                  <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                </div>
+                <span class="contact-text">info@fly-horizons.com</span>
+              </div>
+              <div class="contact-item">
+                <div class="contact-icon">
+                  <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                </div>
+                <span class="contact-text">WhatsApp · +32 472 32 41 35</span>
+              </div>
+              <div class="contact-item">
+                <div class="contact-icon">
+                  <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                </div>
+                <span class="contact-text">Aéroport Charleroi · EBCI</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- QR Code -->
+          <div class="qr-zone">
+            <p class="qr-label">Scanner pour réserver</p>
+            <div class="qr-frame">
+              <div class="qr-canvas">
+                <!-- Ligne 1 -->
+                <span></span><span></span><span></span><span class="w"></span><span></span><span class="w"></span><span></span><span></span><span></span>
+                <!-- Ligne 2 -->
+                <span></span><span class="w"></span><span></span><span></span><span class="w"></span><span></span><span></span><span class="w"></span><span></span>
+                <!-- Ligne 3 -->
+                <span></span><span></span><span></span><span class="w"></span><span></span><span class="w"></span><span></span><span></span><span></span>
+                <!-- Ligne 4 -->
+                <span class="w"></span><span></span><span class="w"></span><span></span><span></span><span></span><span class="w"></span><span></span><span class="w"></span>
+                <!-- Ligne 5 -->
+                <span></span><span class="w"></span><span></span><span></span><span></span><span></span><span></span><span class="w"></span><span></span>
+                <!-- Ligne 6 -->
+                <span class="w"></span><span></span><span class="w"></span><span class="w"></span><span></span><span class="w"></span><span class="w"></span><span></span><span class="w"></span>
+                <!-- Ligne 7 -->
+                <span></span><span></span><span></span><span class="w"></span><span></span><span class="w"></span><span></span><span></span><span></span>
+                <!-- Ligne 8 -->
+                <span></span><span class="w"></span><span></span><span></span><span class="w"></span><span></span><span></span><span class="w"></span><span></span>
+                <!-- Ligne 9 -->
+                <span></span><span></span><span></span><span class="w"></span><span></span><span class="w"></span><span></span><span></span><span></span>
+              </div>
+            </div>
+            <p class="qr-note">Remplacer par un QR réel<br>généré sur fly-horizons.com</p>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ── CTA GOLD ── -->
+      <div class="zone-cta">
+        <div class="cta-inner">
+          <div>
+            <p class="cta-main-text">Réservez votre vol maintenant</p>
+            <p class="cta-sub-text">En ligne · Réponse sous 24 h · 7 j/7</p>
+          </div>
+          <div class="cta-arrow">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── FOOTER LÉGAL ── -->
+      <div class="zone-footer">
+        <div class="footer-legal">
+          <strong>Fly Horizons</strong> · DESTANBERG Romain · Charleroi EBCI, Belgique<br>
+          Partage de frais réglementé · NCO.GEN.104 · info@fly-horizons.com
+        </div>
+        <div class="footer-cert">
+          <div class="footer-cert-badge">Vol privé</div>
+          <div class="footer-cert-badge">Avion léger</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
