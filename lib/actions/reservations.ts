@@ -28,18 +28,17 @@ export async function updateStatutReservation(id: string, statut: string) {
     if (statut === "heure_confirmee") {
       const { data: check } = await supabase
         .from("reservations")
-        .select("route, type_resa, final_waypoints")
+        .select("route, type_resa")
         .eq("id", id)
         .single();
       if (check?.type_resa === "standard" && !check?.route?.trim()) {
-        const hasFinalWaypoints = Array.isArray(check?.final_waypoints) && check.final_waypoints.length > 0;
-        if (!hasFinalWaypoints) {
-          const { count } = await supabase
-            .from("route_proposals")
-            .select("*", { count: "exact", head: true })
-            .eq("reservation_id", id);
-          if (!count) return { error: "Route requise avant de confirmer l'heure" };
-        }
+        // final_waypoints seul ne suffit pas : c'est un brouillon (bouton "Sauvegarder"),
+        // pas une preuve que le client a reçu la route. Il faut au moins un envoi ("Envoyer au client").
+        const { count } = await supabase
+          .from("route_proposals")
+          .select("*", { count: "exact", head: true })
+          .eq("reservation_id", id);
+        if (!count) return { error: "Route requise avant de confirmer l'heure : envoyez-la au client (bouton « Envoyer »)" };
       }
     }
 

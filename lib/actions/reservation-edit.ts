@@ -285,6 +285,7 @@ export async function sendRouteProposalToClient(
     const acompte = (resa.acompte as number | null) ?? null;
     const taxesEscales = (resa.taxes_escales as number | null) ?? 0;
     const totalAcompte = acompte !== null ? acompte + taxesEscales : null;
+    const alreadyPaid = resa.statut === "acompte_recu" || resa.payment_status === "paid";
 
     await resend.emails.send({
       from: EMAIL_FROM,
@@ -298,6 +299,7 @@ export async function sendRouteProposalToClient(
         adminComment,
         responseUrl,
         totalAcompte,
+        alreadyPaid,
       }),
     });
 

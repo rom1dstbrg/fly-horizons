@@ -1710,10 +1710,22 @@ export interface RouteProposalEmailProps {
   adminComment: string;
   responseUrl: string;
   totalAcompte?: number | null;
+  alreadyPaid?: boolean;
 }
 
 export function routeProposalEmail(p: RouteProposalEmailProps): string {
-  const provisionBlock = p.totalAcompte != null && p.totalAcompte > 0
+  const provisionBlock = p.alreadyPaid
+    ? `${separator()}
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+      <tr>
+        <td style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;padding:16px 20px;">
+          <p class="em-body" style="margin:0;font-size:13px;color:#166534;line-height:1.65;">
+            Votre provision a d&eacute;j&agrave; &eacute;t&eacute; r&eacute;gl&eacute;e. Il ne vous reste qu&rsquo;&agrave; valider cet itin&eacute;raire, aucun paiement suppl&eacute;mentaire ne vous sera demand&eacute;.
+          </p>
+        </td>
+      </tr>
+    </table>`
+    : p.totalAcompte != null && p.totalAcompte > 0
     ? `${separator()}
     ${label("Provision")}
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">

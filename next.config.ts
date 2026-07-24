@@ -33,7 +33,7 @@ const nextConfig: NextConfig = {
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline'",         // unsafe-inline requis pour les scripts injectés par Next.js
       "style-src 'self' 'unsafe-inline'",           // requis pour Leaflet et shadcn
-      `img-src 'self' data: blob: ${supabaseHost} *.tile.openstreetmap.org`,
+      `img-src 'self' data: blob: ${supabaseHost} server.arcgisonline.com *.basemaps.cartocdn.com`,
       `connect-src 'self' ${supabaseHost} wss://${supabaseHost} *.stripe.com nominatim.openstreetmap.org overpass-api.de`,
       "font-src 'self' data:",
       "frame-src 'none'",
