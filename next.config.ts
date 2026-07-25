@@ -29,9 +29,12 @@ const nextConfig: NextConfig = {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
     const supabaseHost = supabaseUrl ? new URL(supabaseUrl).hostname : "*.supabase.co";
 
+    const isDev = process.env.NODE_ENV === "development";
+
     const csp = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline'",         // unsafe-inline requis pour les scripts injectés par Next.js
+      // unsafe-eval requis uniquement en dev (fast refresh / stack traces React), jamais en prod
+      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
       "style-src 'self' 'unsafe-inline'",           // requis pour Leaflet et shadcn
       `img-src 'self' data: blob: ${supabaseHost} server.arcgisonline.com *.basemaps.cartocdn.com`,
       `connect-src 'self' ${supabaseHost} wss://${supabaseHost} *.stripe.com nominatim.openstreetmap.org overpass-api.de`,
