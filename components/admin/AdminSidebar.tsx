@@ -155,8 +155,8 @@ function NavContentInner({ onClose }: { onClose?: () => void }) {
         })}
       </nav>
 
-      {/* External tools */}
-      <div className="px-2.5 pt-2 pb-1 border-t border-border shrink-0">
+      {/* External tools — desktop uniquement, pas utile en déplacement sur mobile */}
+      <div className="hidden lg:block px-2.5 pt-2 pb-1 border-t border-border shrink-0">
         <p className="px-3 mb-1.5 text-[9px] font-bold text-muted-foreground/40 uppercase tracking-[1.5px]">Outils</p>
         {[
           { href: "https://app.netlify.com/teams/rom1dstbrg/projects",             label: "Netlify"  },
@@ -294,10 +294,10 @@ export function AdminSidebar() {
           }`}
           onClick={() => setMobileOpen(false)}
         />
-        {/* Panel glissant */}
+        {/* Panel glissant — depuis la droite, côté du bouton "Plus" qui l'ouvre */}
         <aside
-          className={`absolute left-0 top-0 bottom-0 w-[280px] max-w-[85vw] transition-transform duration-300 ease-out ${
-            mobileOpen ? "translate-x-0" : "-translate-x-full"
+          className={`absolute right-0 top-0 bottom-0 w-[280px] max-w-[85vw] transition-transform duration-300 ease-out ${
+            mobileOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >
           <NavContent onClose={() => setMobileOpen(false)} />

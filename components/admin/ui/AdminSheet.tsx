@@ -82,13 +82,13 @@ export function AdminSheet({
             </div>
 
             {/* Body */}
-            <div className={bodyClassName ?? "flex-1 overflow-y-auto px-6 py-5 space-y-5"}>
+            <div className={bodyClassName ?? `flex-1 overflow-y-auto px-6 pt-5 space-y-5 ${footer ? "pb-5" : "pb-[calc(1.25rem+env(safe-area-inset-bottom))]"}`}>
               {children}
             </div>
 
             {/* Footer optionnel */}
             {footer && (
-              <div className="px-6 py-4 border-t border-border shrink-0 bg-secondary/20">
+              <div className="px-6 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-border shrink-0 bg-secondary/20">
                 {footer}
               </div>
             )}

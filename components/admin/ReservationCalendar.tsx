@@ -72,27 +72,27 @@ export function ReservationCalendar({
 
   return (
     <div className="space-y-4">
-      {/* Calendar header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <h2 className="text-lg font-bold text-foreground">
+      {/* Calendar header — deux lignes sur mobile pour ne rien écraser, une seule dès sm: */}
+      <div className="flex flex-wrap items-center justify-between gap-y-2 gap-x-4">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+          <h2 className="text-base sm:text-lg font-bold text-foreground whitespace-nowrap">
             {MONTHS_FR[month]} {year}
           </h2>
           {volsConfirmes > 0 && (
-            <span className="flex items-center gap-1.5 text-xs font-medium text-navy bg-navy/8 border border-navy/15 px-2.5 py-1 rounded-full">
-              <Plane size={11} />
+            <span className="flex items-center gap-1.5 text-[11px] sm:text-xs font-medium text-navy bg-navy/8 border border-navy/15 px-2 sm:px-2.5 py-1 rounded-full whitespace-nowrap">
+              <Plane size={11} className="shrink-0" />
               {volsConfirmes} vol{volsConfirmes > 1 ? "s" : ""} confirmé{volsConfirmes > 1 ? "s" : ""}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-auto">
           <button
             onClick={goToday}
-            className="px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
+            className="px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer whitespace-nowrap"
           >
             Aujourd'hui
           </button>
-          <div className="flex items-center border border-border rounded-lg overflow-hidden">
+          <div className="flex items-center border border-border rounded-lg overflow-hidden shrink-0">
             <button onClick={prevMonth} className="p-1.5 hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground cursor-pointer">
               <ChevronLeft size={15} />
             </button>
@@ -121,7 +121,7 @@ export function ReservationCalendar({
             <div key={weekIdx} className={`grid grid-cols-7 ${weekIdx < calendarDays.length / 7 - 1 ? "border-b border-border" : ""}`}>
               {calendarDays.slice(weekIdx * 7, weekIdx * 7 + 7).map((day, dayIdx) => {
                 if (!day) {
-                  return <div key={dayIdx} className="p-2 min-h-[90px] bg-secondary" />;
+                  return <div key={dayIdx} className="p-1 sm:p-2 min-h-[46px] sm:min-h-[90px] bg-secondary" />;
                 }
 
                 const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
@@ -133,9 +133,9 @@ export function ReservationCalendar({
                 return (
                   <div
                     key={dayIdx}
-                    className={`p-2 min-h-[90px] ${dayIdx < 6 ? "border-r border-border" : ""} ${isSunday || isSaturday ? "bg-secondary" : ""}`}
+                    className={`p-1 sm:p-2 min-h-[46px] sm:min-h-[90px] ${dayIdx < 6 ? "border-r border-border" : ""} ${isSunday || isSaturday ? "bg-secondary" : ""}`}
                   >
-                    <div className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold mb-1.5 ${
+                    <div className={`inline-flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full text-[11px] sm:text-xs font-semibold mb-1 sm:mb-1.5 ${
                       isToday
                         ? "bg-navy text-white"
                         : "text-muted-foreground"
@@ -143,7 +143,26 @@ export function ReservationCalendar({
                       {day.getDate()}
                     </div>
 
-                    <div className="space-y-1">
+                    {/* Mobile : pastilles compactes (colonnes trop étroites pour du texte) */}
+                    {dayResas.length > 0 && (
+                      <div className="flex flex-wrap gap-0.5 sm:hidden">
+                        {dayResas.slice(0, 4).map(r => {
+                          const statusClass = STATUS_COLOR[r.statut] ?? STATUS_COLOR.en_attente;
+                          const client = r.clients;
+                          return (
+                            <button
+                              key={r.id}
+                              onClick={() => onCardClick(r)}
+                              title={`${client?.prenom} ${client?.nom} · ${r.heure_vol?.slice(0, 5) ?? "?"}`}
+                              className={`w-3.5 h-3.5 rounded-full border cursor-pointer ${statusClass}`}
+                            />
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* sm:+ : liste texte comme avant */}
+                    <div className="hidden sm:block space-y-1">
                       {dayResas.slice(0, 3).map(r => {
                         const client = r.clients;
                         const statusClass = STATUS_COLOR[r.statut] ?? STATUS_COLOR.en_attente;

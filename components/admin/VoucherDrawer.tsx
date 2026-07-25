@@ -420,7 +420,7 @@ export function VoucherDrawer({
             </div>
 
             {/* Footer */}
-            <div className="px-5 py-4 border-t border-border shrink-0 space-y-2">
+            <div className="px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-border shrink-0 space-y-2">
               <div className="flex flex-wrap items-center gap-2">
               {v.status !== "expired" && (
                 <button

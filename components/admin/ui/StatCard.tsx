@@ -41,22 +41,23 @@ export function StatCard({ label, value, variant = "neutral", icon: Icon, subtit
   const interactive = !!href;
 
   const content = Icon ? (
-    <div className={`bg-card rounded-xl border border-border p-4 flex items-center gap-3 ${interactive ? "hover:shadow-sm transition-all group cursor-pointer" : ""}`}>
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${c.icon}`}>
-        <Icon size={15} />
+    <div className={`shrink-0 w-[132px] sm:w-auto bg-card rounded-xl border border-border p-2.5 sm:p-4 flex items-center gap-2 sm:gap-3 snap-start ${interactive ? "hover:shadow-sm transition-all group cursor-pointer" : ""}`}>
+      <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 ${c.icon}`}>
+        <Icon size={13} className="sm:hidden" />
+        <Icon size={15} className="hidden sm:block" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider leading-none">{label}</p>
-        <p className={`text-xl font-black tracking-tight mt-1 ${c.value}`}>{value}</p>
-        {subtitle && <p className="text-[10px] text-muted-foreground mt-0.5">{subtitle}</p>}
+        <p className="text-[9px] sm:text-[10px] text-muted-foreground font-medium uppercase tracking-wider leading-none truncate">{label}</p>
+        <p className={`text-base sm:text-xl font-black tracking-tight mt-1 ${c.value}`}>{value}</p>
+        {subtitle && <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{subtitle}</p>}
       </div>
-      {interactive && <ChevronRight size={12} className="text-muted-foreground/30 group-hover:text-muted-foreground/60 shrink-0 transition-colors" />}
+      {interactive && <ChevronRight size={12} className="hidden sm:block text-muted-foreground/30 group-hover:text-muted-foreground/60 shrink-0 transition-colors" />}
     </div>
   ) : (
-    <div className={`bg-card rounded-xl border border-border p-4 text-center ${interactive ? "hover:shadow-sm transition-all cursor-pointer" : ""}`}>
-      <p className={`text-2xl font-bold ${c.value}`}>{value}</p>
-      <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
-      {subtitle && <p className="text-[10px] text-muted-foreground/70 mt-0.5">{subtitle}</p>}
+    <div className={`shrink-0 w-[104px] sm:w-auto bg-card rounded-xl border border-border p-2.5 sm:p-4 text-center snap-start ${interactive ? "hover:shadow-sm transition-all cursor-pointer" : ""}`}>
+      <p className={`text-lg sm:text-2xl font-bold ${c.value}`}>{value}</p>
+      <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 leading-tight">{label}</p>
+      {subtitle && <p className="text-[9px] sm:text-[10px] text-muted-foreground/70 mt-0.5">{subtitle}</p>}
     </div>
   );
 

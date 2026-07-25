@@ -29,7 +29,7 @@ export function PageTabs({ tabs, defaultTab, param = "tab", basePath }: PageTabs
   }
 
   return (
-    <div className="flex items-center gap-1 bg-secondary/50 p-1 rounded-xl border border-border w-fit">
+    <div className="no-scrollbar flex items-center gap-1 bg-secondary/50 p-1 rounded-xl border border-border w-full overflow-x-auto sm:w-fit">
       {tabs.map(t => {
         const Icon     = t.icon;
         const isActive = current === t.key;
@@ -39,7 +39,7 @@ export function PageTabs({ tabs, defaultTab, param = "tab", basePath }: PageTabs
             type="button"
             onClick={() => changeTab(t.key)}
             className={[
-              "flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer",
+              "flex items-center gap-1.5 sm:gap-2 shrink-0 whitespace-nowrap px-2.5 sm:px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all cursor-pointer",
               isActive
                 ? "bg-card text-foreground shadow-sm border border-border"
                 : "text-muted-foreground hover:text-foreground",

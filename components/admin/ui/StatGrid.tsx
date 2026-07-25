@@ -3,16 +3,21 @@ interface StatGridProps {
   cols?: 2 | 3 | 4 | 5;
 }
 
+// Sur mobile : bande défilante horizontale (une seule ligne, ne bouffe pas la hauteur
+// d'écran) — le -mx-4/px-4 laisse la bande défiler jusqu'aux bords de l'écran.
+// À partir de sm: grille normale figée, comme avant le passage au mobile-first.
+const BASE = "no-scrollbar flex overflow-x-auto gap-2 -mx-4 px-4 pb-1 snap-x snap-mandatory sm:grid sm:gap-3 sm:overflow-visible sm:mx-0 sm:px-0 sm:pb-0 sm:snap-none";
+
 const COLS: Record<number, string> = {
-  2: "grid-cols-2",
-  3: "grid-cols-2 sm:grid-cols-3",
-  4: "grid-cols-2 lg:grid-cols-4",
-  5: "grid-cols-2 sm:grid-cols-5",
+  2: `${BASE} sm:grid-cols-2`,
+  3: `${BASE} sm:grid-cols-3`,
+  4: `${BASE} sm:grid-cols-4`,
+  5: `${BASE} sm:grid-cols-5`,
 };
 
 export function StatGrid({ children, cols = 4 }: StatGridProps) {
   return (
-    <div className={`grid ${COLS[cols]} gap-3`}>
+    <div className={COLS[cols]}>
       {children}
     </div>
   );

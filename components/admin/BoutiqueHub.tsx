@@ -158,7 +158,7 @@ export function BoutiqueHub({
 
         {tab === "produits" && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-2">
                 <Ticket size={15} className="text-navy" />
                 <h3 className="text-sm font-semibold text-foreground">Services / Vols</h3>
@@ -166,7 +166,7 @@ export function BoutiqueHub({
               </div>
               <Link
                 href="/admin/products/new"
-                className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:brightness-105 transition-all font-medium"
+                className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:brightness-105 transition-all font-medium shrink-0"
               >
                 <Plus size={13} />
                 Nouveau produit
