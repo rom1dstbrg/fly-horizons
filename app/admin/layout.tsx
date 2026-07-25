@@ -48,7 +48,7 @@ export default async function AdminLayout({
     <div className="min-h-screen bg-background flex">
       <AdminSidebar />
       <CommandPalette />
-      <main className="flex-1 lg:ml-64 min-h-screen">
+      <main className="flex-1 min-w-0 lg:ml-64 min-h-screen">
         <div className="px-4 pt-16 pb-[calc(76px+env(safe-area-inset-bottom))] sm:px-6 sm:pt-16 lg:p-8 lg:pt-8 lg:pb-8">
           {children}
         </div>
