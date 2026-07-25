@@ -47,6 +47,7 @@ export function CreateReservationForm({ clients, prixHeure }: Props) {
   // Payment
   const [envoyerPaiement, setEnvoyerPaiement] = useState(true);
   const [montantOverride, setMontantOverride] = useState("");
+  const [sendEmail, setSendEmail] = useState(true);
 
   // Feedback
   const [error, setError] = useState("");
@@ -99,6 +100,7 @@ export function CreateReservationForm({ clients, prixHeure }: Props) {
         voucher_code: voucherCode || undefined,
         envoyer_paiement: envoyerPaiement,
         montant_override: !isNaN(override) && override >= 0 ? override : null,
+        send_email: sendEmail,
       });
 
       if (result.error) {
@@ -106,7 +108,9 @@ export function CreateReservationForm({ clients, prixHeure }: Props) {
         return;
       }
 
-      if (envoyerPaiement && prixEstime > 0) {
+      if (!sendEmail) {
+        setSuccess("Réservation créée, aucun email envoyé ✓");
+      } else if (envoyerPaiement && prixEstime > 0) {
         setSuccess("Réservation créée et email de paiement envoyé au client ✓");
       } else {
         setSuccess("Réservation créée et marquée comme confirmée ✓");
@@ -338,6 +342,21 @@ export function CreateReservationForm({ clients, prixHeure }: Props) {
             </div>
           </label>
         </div>
+
+        <label className="flex items-start gap-3 cursor-pointer pt-3 border-t border-border">
+          <input
+            type="checkbox"
+            checked={sendEmail}
+            onChange={e => setSendEmail(e.target.checked)}
+            className="mt-0.5"
+          />
+          <div>
+            <p className="text-sm font-medium text-foreground">Envoyer un email au client</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Décochez pour créer la réservation silencieusement (ex : vous préparez encore la route ou le dossier avant de le contacter).
+            </p>
+          </div>
+        </label>
       </div>
 
       {error && (

@@ -4,8 +4,8 @@ import { useState, useTransition } from "react";
 import { TrendingUp, TrendingDown, Minus, Plus, Trash2, Pencil, X, Check, Loader2, Receipt } from "lucide-react";
 import { addDepense, deleteDepense, updateDepense } from "@/lib/actions/depenses";
 import { getReservationForDrawer } from "@/lib/actions/reservation-edit";
-import { ReservationDrawer, type DrawerReservation } from "@/components/admin/ReservationDrawer";
-import { VolsPersoDrawer, type Reservation as PersoReservation } from "@/components/admin/VolsPersoClient";
+import { ReservationDrawer } from "@/components/admin/reservation-drawer/ReservationDrawer";
+import type { DrawerReservation } from "@/components/admin/reservation-drawer/types";
 import { StatGrid, PageToolbar, FilterChip, EmptyState, AdminSheet } from "@/components/admin/ui";
 
 export type LigneVol = {
@@ -323,9 +323,8 @@ export function TransactionsClient({
   const [formError, setFormError] = useState("");
   const [isPending, startTransition] = useTransition();
 
-  // Drawers vols
-  const [stdDrawer, setStdDrawer] = useState<DrawerReservation | null>(null);
-  const [persoDrawer, setPersoDrawer] = useState<PersoReservation | null>(null);
+  // Drawer vol (standard + perso, même composant)
+  const [volDrawer, setVolDrawer] = useState<DrawerReservation | null>(null);
   const [loadingVolId, setLoadingVolId] = useState<string | null>(null);
 
   // Edition dépenses
@@ -338,15 +337,10 @@ export function TransactionsClient({
   async function openVolDrawer(vol: LigneVol) {
     if (loadingVolId) return;
     setLoadingVolId(vol.id);
-    const isPerso = vol.type_resa === "perso";
-    const result = await getReservationForDrawer(vol.id, isPerso);
+    const result = await getReservationForDrawer(vol.id, vol.type_resa === "perso");
     setLoadingVolId(null);
     if (!result.data) return;
-    if (isPerso) {
-      setPersoDrawer(result.data as unknown as PersoReservation);
-    } else {
-      setStdDrawer(result.data as unknown as DrawerReservation);
-    }
+    setVolDrawer(result.data as unknown as DrawerReservation);
   }
 
   function handleAddDepense(e: React.FormEvent) {
@@ -602,17 +596,9 @@ export function TransactionsClient({
         </div>
       </AdminSheet>
 
-      {/* Drawer standard */}
       <ReservationDrawer
-        reservation={stdDrawer}
-        onClose={() => setStdDrawer(null)}
-        onStatusChange={() => {}}
-      />
-
-      {/* Drawer sur mesure */}
-      <VolsPersoDrawer
-        reservation={persoDrawer}
-        onClose={() => setPersoDrawer(null)}
+        reservation={volDrawer}
+        onClose={() => setVolDrawer(null)}
         onStatusChange={() => {}}
         onFieldsChange={() => {}}
       />

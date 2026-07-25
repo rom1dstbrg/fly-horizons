@@ -2,10 +2,20 @@
 
 import { useState } from "react";
 import { deleteReservationStandard } from "@/lib/actions/delete";
-import { ReservationDrawer, type DrawerReservation } from "@/components/admin/ReservationDrawer";
+import { ReservationDrawer } from "@/components/admin/reservation-drawer/ReservationDrawer";
+import type { DrawerReservation } from "@/components/admin/reservation-drawer/types";
 import { AdminBadge, STATUT_RESA, PageToolbar, FilterChip, EmptyState } from "@/components/admin/ui";
+import type { BadgeVariant } from "@/components/admin/ui/AdminBadge";
 import { AdminRowActions } from "@/components/admin/ui/AdminRowActions";
 import { MapPin, CalendarCheck } from "lucide-react";
+
+// Badge de statut de la proposition de route la plus récente (système carte, route_proposals) —
+// prioritaire sur route_status (ancien système texte, gardé en repli pour les résas historiques).
+const PROPOSAL_BADGE: Record<string, { label: string; variant: BadgeVariant }> = {
+  pending:                 { label: "Proposition envoyée", variant: "info"    },
+  accepted:                { label: "Route acceptée ✓",    variant: "emerald" },
+  modification_requested:  { label: "Modif. demandée",      variant: "warning" },
+};
 
 const FILTERS = ["Tous", "En attente", "Confirmées", "Effectuées", "Annulées"] as const;
 const FILTER_MAP: Record<string, string[] | null> = {
@@ -32,6 +42,8 @@ function ReservationCard({
   const dateStr = new Date(r.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
     weekday: "short", day: "numeric", month: "short", year: "numeric",
   });
+  const latestProposal = r.route_proposals
+    ?.slice().sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
 
   return (
     <div className="card-premium p-4 hover:border-primary/30 transition-colors">
@@ -48,11 +60,20 @@ function ReservationCard({
             {r.remboursement != null && r.remboursement > 0 && (
               <AdminBadge variant="secondary" label={`Remboursé −${r.remboursement} €`} />
             )}
-            {r.route_status === "modification_requested" && (
-              <AdminBadge variant="danger" label="Modif. demandée" />
-            )}
-            {r.route_status === "validated" && (
-              <AdminBadge variant="success" label="Route ✓" />
+            {latestProposal && PROPOSAL_BADGE[latestProposal.status] ? (
+              <AdminBadge
+                variant={PROPOSAL_BADGE[latestProposal.status].variant}
+                label={PROPOSAL_BADGE[latestProposal.status].label}
+              />
+            ) : (
+              <>
+                {r.route_status === "modification_requested" && (
+                  <AdminBadge variant="danger" label="Modif. demandée" />
+                )}
+                {r.route_status === "validated" && (
+                  <AdminBadge variant="success" label="Route ✓" />
+                )}
+              </>
             )}
           </div>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 mt-1">
@@ -95,6 +116,11 @@ export function ReservationsClient({ reservations: initial }: { reservations: Re
   function handleStatusChange(id: string, newStatut: string) {
     setReservations(prev => prev.map(r => r.id === id ? { ...r, statut: newStatut } : r));
     setDrawer(prev => prev?.id === id ? { ...prev, statut: newStatut } : prev);
+  }
+
+  function handleFieldsChange(id: string, fields: Partial<Reservation>) {
+    setReservations(prev => prev.map(r => r.id === id ? { ...r, ...fields } : r));
+    setDrawer(prev => prev?.id === id ? { ...prev, ...fields } : prev);
   }
 
   async function handleDelete(id: string) {
@@ -168,6 +194,7 @@ export function ReservationsClient({ reservations: initial }: { reservations: Re
         reservation={drawer}
         onClose={() => setDrawer(null)}
         onStatusChange={handleStatusChange}
+        onFieldsChange={handleFieldsChange}
       />
     </>
   );

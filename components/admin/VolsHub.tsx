@@ -7,7 +7,7 @@ import { DispoClient } from "@/components/admin/DispoClient";
 import { StopoversAdmin } from "@/components/admin/StopoversAdmin";
 import { StatCard, StatGrid, PageTabs } from "@/components/admin/ui";
 import { CalendarCheck, Route, Clock } from "lucide-react";
-import type { DrawerReservation } from "@/components/admin/ReservationDrawer";
+import type { DrawerReservation } from "@/components/admin/reservation-drawer/types";
 
 type Reservation = DrawerReservation;
 

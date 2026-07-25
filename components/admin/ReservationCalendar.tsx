@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight, Plane } from "lucide-react";
-import type { DrawerReservation } from "./ReservationDrawer";
+import type { DrawerReservation } from "./reservation-drawer/types";
 
 type Reservation = DrawerReservation;
 

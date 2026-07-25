@@ -287,21 +287,29 @@ export async function sendRouteProposalToClient(
     const totalAcompte = acompte !== null ? acompte + taxesEscales : null;
     const alreadyPaid = resa.statut === "acompte_recu" || resa.payment_status === "paid";
 
-    await resend.emails.send({
-      from: EMAIL_FROM,
-      to: [client.email],
-      replyTo: EMAIL_REPLY_TO,
-      subject: `Fly Horizons · Votre itinéraire personnalisé pour le ${dateStr}`,
-      html: routeProposalEmail({
-        prenom: client.prenom,
-        dateStr,
-        waypoints,
-        adminComment,
-        responseUrl,
-        totalAcompte,
-        alreadyPaid,
-      }),
-    });
+    // La proposition existe déjà en base à ce stade : un échec d'envoi ne doit pas
+    // remonter une erreur générique, seulement signaler emailError.
+    let emailError = false;
+    try {
+      await resend.emails.send({
+        from: EMAIL_FROM,
+        to: [client.email],
+        replyTo: EMAIL_REPLY_TO,
+        subject: `Fly Horizons · Votre itinéraire personnalisé pour le ${dateStr}`,
+        html: routeProposalEmail({
+          prenom: client.prenom,
+          dateStr,
+          waypoints,
+          adminComment,
+          responseUrl,
+          totalAcompte,
+          alreadyPaid,
+        }),
+      });
+    } catch (e) {
+      console.error("[sendRouteProposalToClient] Erreur email:", e);
+      emailError = true;
+    }
 
     await logHistory({
       reservation_id: reservationId,
@@ -311,7 +319,7 @@ export async function sendRouteProposalToClient(
     });
 
     revalidatePath("/admin/vols");
-    return { success: true };
+    return { success: true, emailError };
   } catch (e) {
     console.error("sendRouteProposalToClient error:", e);
     return { error: "Erreur serveur" };

@@ -1,14 +1,10 @@
 import Link from "next/link";
-import { CalendarDays, MapPin, CloudRain, Users, ExternalLink, CheckCircle, AlertTriangle } from "lucide-react";
+import { CalendarDays, MapPin, CloudRain, Users, ExternalLink, CheckCircle } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Réservation envoyée · Fly Horizons",
 };
-
-interface Props {
-  searchParams: Promise<{ mode?: string }>;
-}
 
 const STEPS_NORMAL = [
   {
@@ -37,37 +33,8 @@ const STEPS_NORMAL = [
   },
 ];
 
-const STEPS_PAY_LATER = [
-  {
-    num: 1,
-    done: true,
-    title: "Demande enregistrée",
-    desc: "Votre demande a bien été reçue.",
-  },
-  {
-    num: 2,
-    done: false,
-    title: "Réglez dans les 24 h pour confirmer",
-    desc: "Ouvrez le lien de paiement reçu par email et réglez la provision. Votre créneau n'est sécurisé qu'après paiement ; les disponibilités peuvent évoluer.",
-  },
-  {
-    num: 3,
-    done: false,
-    title: "Votre pilote confirme et prépare votre vol",
-    desc: "Une fois le paiement reçu, votre pilote valide votre créneau et vous envoie une proposition d'itinéraire à approuver.",
-  },
-  {
-    num: 4,
-    done: false,
-    title: "À vous le ciel",
-    desc: "Présentez-vous 15 min avant à Charleroi (EBCI). Briefing sécurité, casques audio fournis.",
-  },
-];
-
-export default async function ReservationSuccessPage({ searchParams }: Props) {
-  const { mode } = await searchParams;
-  const isPayLater = mode === "pay-later";
-  const steps = isPayLater ? STEPS_PAY_LATER : STEPS_NORMAL;
+export default function ReservationSuccessPage() {
+  const steps = STEPS_NORMAL;
 
   return (
     <main className="flex-1 flex items-center justify-center bg-gradient-navy px-4 pt-[98px] pb-16">
@@ -76,23 +43,11 @@ export default async function ReservationSuccessPage({ searchParams }: Props) {
         {/* ── En-tête ── */}
         <div className="card-premium p-6">
           <h1 className="text-2xl font-black text-foreground leading-tight">
-            {isPayLater ? "Demande enregistrée" : "Demande envoyée !"}
+            Demande envoyée !
           </h1>
           <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
-            {isPayLater
-              ? "Votre créneau sera confirmé dès réception de votre paiement."
-              : "Voici ce qui se passe maintenant."}
+            Voici ce qui se passe maintenant.
           </p>
-
-          {isPayLater && (
-            <div className="mt-4 bg-primary/10 border border-primary/25 rounded-lg px-4 py-3 flex items-start gap-2.5">
-              <AlertTriangle size={13} className="text-[#b38500] mt-0.5 shrink-0" />
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                <strong className="text-foreground">Créneau non garanti.</strong>{" "}
-                Réglez <strong className="text-foreground">dans les 24 h</strong> via le lien reçu par email. Au-delà, la date peut être attribuée à un autre client.
-              </p>
-            </div>
-          )}
         </div>
 
         {/* ── Étapes ── */}
@@ -172,7 +127,7 @@ export default async function ReservationSuccessPage({ searchParams }: Props) {
             className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-primary text-primary-foreground rounded-lg text-sm font-black hover:brightness-105 active:scale-[0.98] transition-all shadow-gold"
           >
             <CalendarDays size={15} />
-            {isPayLater ? "Accéder à mon compte" : "Suivre ma réservation"}
+            Suivre ma réservation
           </Link>
           <Link
             href="/"

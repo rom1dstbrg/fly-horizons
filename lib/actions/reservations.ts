@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationPaymentInvitationEmail, reservationConfirmationFreeEmail, postVolEmail, routeItineraireEmail, customEmail, rescheduleInviteEmail, rescheduleConfirmationEmail, reservationAutoAnnuleeEmail } from "@/lib/email-templates";
+import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationPaymentInvitationEmail, reservationConfirmationFreeEmail, reservationPaymentConfirmationEmail, volSurMesureAcompteEmail, postVolEmail, customEmail, rescheduleInviteEmail, rescheduleConfirmationEmail, reservationAutoAnnuleeEmail } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { makeRescheduleToken, parseRescheduleToken } from "@/lib/reschedule-token";
 
@@ -18,14 +18,20 @@ async function checkAdmin() {
 const VALID_STATUTS_STD = ["en_attente", "acompte_recu", "heure_confirmee", "vol_effectue", "annulee", "payment_pending"] as const;
 const VALID_STATUTS_PERSO = ["en_attente", "acompte_recu", "date_confirmee", "heure_confirmee", "solde", "vol_effectue", "annulee", "payment_pending"] as const;
 
-export async function updateStatutReservation(id: string, statut: string) {
+export async function updateStatutReservation(
+  id: string,
+  statut: string,
+  routePayload?: { waypoints: Array<{ lat: number; lng: number; nom?: string }>; comment?: string } | null
+) {
   try {
     await checkAdmin();
     if (!(VALID_STATUTS_STD as readonly string[]).includes(statut)) return { error: "Statut invalide" };
     const supabase = createAdminClient();
+    const hasFreshRoute = !!routePayload?.waypoints?.length;
 
-    // For heure_confirmee, route is required on standard reservations
-    if (statut === "heure_confirmee") {
+    // For heure_confirmee, route is required on standard reservations — sauf si routePayload
+    // est fourni : dans ce cas la route est envoyée dans le même geste (voir plus bas).
+    if (statut === "heure_confirmee" && !hasFreshRoute) {
       const { data: check } = await supabase
         .from("reservations")
         .select("route, type_resa")
@@ -38,7 +44,7 @@ export async function updateStatutReservation(id: string, statut: string) {
           .from("route_proposals")
           .select("*", { count: "exact", head: true })
           .eq("reservation_id", id);
-        if (!count) return { error: "Route requise avant de confirmer l'heure : envoyez-la au client (bouton « Envoyer »)" };
+        if (!count) return { error: "Route requise avant de confirmer l'heure : tracez-la sur la carte, elle sera envoyée avec la confirmation" };
       }
     }
 
@@ -47,7 +53,12 @@ export async function updateStatutReservation(id: string, statut: string) {
     const { error: updateErr } = await supabase.from("reservations").update({ statut, ...extra }).eq("id", id);
     if (updateErr) return { error: "Erreur mise à jour réservation" };
 
-    if (["heure_confirmee", "vol_effectue"].includes(statut)) {
+    // Le statut est déjà mis à jour en base à ce stade : un échec d'envoi d'email
+    // ci-dessous ne doit jamais faire remonter "Erreur serveur" (ce qui laisserait
+    // croire que rien n'a changé), seulement signaler emailError.
+    let emailError = false;
+
+    if (["acompte_recu", "heure_confirmee", "vol_effectue", "annulee"].includes(statut)) {
       const { data: resa } = await supabase
         .from("reservations")
         .select("*, clients(*)")
@@ -63,75 +74,104 @@ export async function updateStatutReservation(id: string, statut: string) {
           weekday: "long", day: "numeric", month: "long", year: "numeric",
         });
 
-        if (statut === "heure_confirmee") {
-          // Chercher la dernière route_proposal (nouveau système carte)
-          let routeUrl: string | null = null;
-          const { data: proposal } = await supabase
-            .from("route_proposals")
-            .select("token")
-            .eq("reservation_id", id)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          if (proposal?.token) {
-            routeUrl = `${siteUrl}/vol/proposition/${proposal.token}`;
-          } else if (resa.route?.trim()) {
-            // Fallback ancien système texte
-            const routeToken = resa.route_token ?? crypto.randomUUID();
-            await supabase
-              .from("reservations")
-              .update({ route_token: routeToken, route_status: "sent", route_responded_at: null, route_feedback: null })
-              .eq("id", id);
-            routeUrl = `${siteUrl}/vol/itineraire/${routeToken}`;
-          }
-          await resend.emails.send({
-            from: EMAIL_FROM,
-            to: [client.email],
-            replyTo: EMAIL_REPLY_TO,
-            subject: "Fly Horizons · Votre créneau horaire est confirmé",
-            html: reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, route: resa.route, routeUrl, dateISO: resa.date_vol }),
-          });
-        } else {
-          await resend.emails.send({
-            from: EMAIL_FROM,
-            to: [client.email],
-            replyTo: EMAIL_REPLY_TO,
-            subject: "Merci pour votre vol · Fly Horizons",
-            html: postVolEmail({
-              prenom: client.prenom,
-              dateStr,
-              duree: resa.duree,
-              surveyUrl: `${siteUrl}/satisfaction/${id}`,
-            }),
-          });
-        }
-      }
-    }
-
-    if (statut === "annulee") {
-      const { data: resa } = await supabase
-        .from("reservations")
-        .select("date_vol, heure_vol, duree, clients(prenom, nom, email)")
-        .eq("id", id)
-        .single();
-      if (resa) {
-        const raw = resa.clients;
-        const c = Array.isArray(raw)
-          ? (raw[0] as { prenom: string; nom: string; email: string } | undefined) ?? null
-          : (raw as { prenom: string; nom: string; email: string } | null);
-        if (c) {
-          const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
-            weekday: "long", day: "numeric", month: "long", year: "numeric",
-          });
-          try {
+        try {
+          if (statut === "acompte_recu") {
             await resend.emails.send({
               from: EMAIL_FROM,
-              to: [c.email],
+              to: [client.email],
+              replyTo: EMAIL_REPLY_TO,
+              subject: "Paiement confirmé · Fly Horizons",
+              html: reservationPaymentConfirmationEmail({
+                prenom: client.prenom,
+                nom: client.nom,
+                dateStr,
+                heure: (resa.heure_vol ?? "-").slice(0, 5),
+                duree: resa.duree,
+                passengers: resa.passagers,
+                poids_total: resa.poids_total,
+                voucherCode: resa.voucher_code,
+                montantPaye: resa.paye ?? resa.acompte ?? 0,
+                reservationId: id,
+                dateISO: resa.date_vol,
+              }),
+            });
+          } else if (statut === "heure_confirmee") {
+            let routeUrl: string | null = null;
+            if (hasFreshRoute && routePayload) {
+              // Route tracée/modifiée dans le drawer mais jamais envoyée (ou changée depuis) :
+              // on l'envoie ici, dans le même email que la confirmation — un seul geste, un seul email.
+              const { data: proposal } = await supabase
+                .from("route_proposals")
+                .insert({
+                  reservation_id: id,
+                  waypoints: routePayload.waypoints,
+                  admin_comment: routePayload.comment ?? "",
+                  duree: resa.duree ?? null,
+                  acompte: resa.acompte ?? null,
+                })
+                .select("token")
+                .single();
+              if (proposal?.token) {
+                routeUrl = `${siteUrl}/vol/proposition/${proposal.token}`;
+                await supabase.from("reservation_history").insert({
+                  reservation_id: id,
+                  action: "route_proposal_sent",
+                  new_value: `${routePayload.waypoints.length} points`,
+                  note: routePayload.comment || "Envoyée avec la confirmation de créneau",
+                  author: "admin",
+                });
+              }
+            } else {
+              // Chercher la dernière route_proposal déjà envoyée (nouveau système carte)
+              const { data: proposal } = await supabase
+                .from("route_proposals")
+                .select("token")
+                .eq("reservation_id", id)
+                .order("created_at", { ascending: false })
+                .limit(1)
+                .maybeSingle();
+              if (proposal?.token) {
+                routeUrl = `${siteUrl}/vol/proposition/${proposal.token}`;
+              } else if (resa.route?.trim()) {
+                // Fallback ancien système texte
+                const routeToken = resa.route_token ?? crypto.randomUUID();
+                await supabase
+                  .from("reservations")
+                  .update({ route_token: routeToken, route_status: "sent", route_responded_at: null, route_feedback: null })
+                  .eq("id", id);
+                routeUrl = `${siteUrl}/vol/itineraire/${routeToken}`;
+              }
+            }
+            await resend.emails.send({
+              from: EMAIL_FROM,
+              to: [client.email],
+              replyTo: EMAIL_REPLY_TO,
+              subject: "Fly Horizons · Votre créneau horaire est confirmé",
+              html: reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, route: resa.route, routeUrl, dateISO: resa.date_vol }),
+            });
+          } else if (statut === "vol_effectue") {
+            await resend.emails.send({
+              from: EMAIL_FROM,
+              to: [client.email],
+              replyTo: EMAIL_REPLY_TO,
+              subject: "Merci pour votre vol · Fly Horizons",
+              html: postVolEmail({
+                prenom: client.prenom,
+                dateStr,
+                duree: resa.duree,
+                surveyUrl: `${siteUrl}/satisfaction/${id}`,
+              }),
+            });
+          } else {
+            // annulee
+            await resend.emails.send({
+              from: EMAIL_FROM,
+              to: [client.email],
               replyTo: EMAIL_REPLY_TO,
               subject: `Fly Horizons · Réservation annulée · ${dateStr}`,
               html: reservationAutoAnnuleeEmail({
-                prenom: c.prenom,
-                nom: c.nom,
+                prenom: client.prenom,
+                nom: client.nom,
                 dateStr,
                 heure: (resa.heure_vol ?? "-").slice(0, 5),
                 duree: resa.duree,
@@ -139,15 +179,16 @@ export async function updateStatutReservation(id: string, statut: string) {
                 source: "admin",
               }),
             });
-          } catch (e) {
-            console.error("[updateStatutReservation] Erreur email annulation:", e);
           }
+        } catch (e) {
+          console.error(`[updateStatutReservation] Erreur email (${statut}):`, e);
+          emailError = true;
         }
       }
     }
 
     revalidatePath("/admin/vols");
-    return { success: true };
+    return { success: true, emailError };
   } catch {
     return { error: "Erreur serveur" };
   }
@@ -170,7 +211,7 @@ export async function updateStatutReservationPerso(id: string, statut: string) {
     if (statut === "annulee") {
       const { data: resaData } = await supabase
         .from("reservations")
-        .select("voucher_code, date_vol, heure_vol, duree, clients(prenom, nom, email)")
+        .select("voucher_code")
         .eq("id", id)
         .single();
       if (resaData?.voucher_code) {
@@ -180,39 +221,14 @@ export async function updateStatutReservationPerso(id: string, statut: string) {
           .eq("code", resaData.voucher_code)
           .eq("status", "reserved");
       }
-      if (resaData) {
-        const raw = resaData.clients;
-        const c = Array.isArray(raw)
-          ? (raw[0] as { prenom: string; nom: string; email: string } | undefined) ?? null
-          : (raw as { prenom: string; nom: string; email: string } | null);
-        if (c) {
-          const dateStr = new Date(resaData.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
-            weekday: "long", day: "numeric", month: "long", year: "numeric",
-          });
-          try {
-            await resend.emails.send({
-              from: EMAIL_FROM,
-              to: [c.email],
-              replyTo: EMAIL_REPLY_TO,
-              subject: `Fly Horizons · Réservation annulée · ${dateStr}`,
-              html: reservationAutoAnnuleeEmail({
-                prenom: c.prenom,
-                nom: c.nom,
-                dateStr,
-                heure: (resaData.heure_vol ?? "-").slice(0, 5),
-                duree: resaData.duree,
-                bookingUrl: "https://fly-horizons.com/vol-sur-mesure",
-                source: "admin",
-              }),
-            });
-          } catch (e) {
-            console.error("[updateStatutReservationPerso] Erreur email annulation:", e);
-          }
-        }
-      }
     }
 
-    if (["date_confirmee", "heure_confirmee", "vol_effectue"].includes(statut)) {
+    // Le statut est déjà mis à jour en base à ce stade : un échec d'envoi d'email
+    // ci-dessous ne doit jamais faire remonter "Erreur serveur" (ce qui laisserait
+    // croire que rien n'a changé), seulement signaler emailError.
+    let emailError = false;
+
+    if (["acompte_recu", "date_confirmee", "heure_confirmee", "vol_effectue", "annulee"].includes(statut)) {
       const { data: resa } = await supabase
         .from("reservations")
         .select("*, clients(*)")
@@ -228,82 +244,83 @@ export async function updateStatutReservationPerso(id: string, statut: string) {
           weekday: "long", day: "numeric", month: "long", year: "numeric",
         });
 
-        if (statut === "date_confirmee") {
-          await resend.emails.send({
-            from: EMAIL_FROM,
-            to: [client.email],
-            replyTo: EMAIL_REPLY_TO,
-            subject: "Fly Horizons · Votre date de vol est confirmée",
-            html: reservationDateConfirmeeEmail({ prenom: client.prenom, dateStr, duree: resa.duree }),
-          });
-        } else if (statut === "heure_confirmee") {
-          await resend.emails.send({
-            from: EMAIL_FROM,
-            to: [client.email],
-            replyTo: EMAIL_REPLY_TO,
-            subject: "Fly Horizons · Votre créneau horaire est confirmé",
-            html: reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, dateISO: resa.date_vol }),
-          });
-        } else {
-          await resend.emails.send({
-            from: EMAIL_FROM,
-            to: [client.email],
-            replyTo: EMAIL_REPLY_TO,
-            subject: "Merci pour votre vol · Fly Horizons",
-            html: postVolEmail({
-              prenom: client.prenom,
-              dateStr,
-              duree: resa.duree,
-              surveyUrl: `${siteUrl}/satisfaction/${id}`,
-            }),
-          });
+        try {
+          if (statut === "acompte_recu") {
+            await resend.emails.send({
+              from: EMAIL_FROM,
+              to: [client.email],
+              replyTo: EMAIL_REPLY_TO,
+              subject: "Provision reçue · Vol sur mesure Fly Horizons",
+              html: volSurMesureAcompteEmail({
+                prenom: client.prenom,
+                nom: client.nom,
+                dateStr,
+                heure: (resa.heure_vol ?? "-").slice(0, 5),
+                dureeEstimee: resa.duree,
+                voucherCode: resa.voucher_code,
+                montantPaye: resa.paye ?? resa.acompte ?? 0,
+                reservationId: id,
+                dateISO: resa.date_vol,
+              }),
+            });
+          } else if (statut === "date_confirmee") {
+            await resend.emails.send({
+              from: EMAIL_FROM,
+              to: [client.email],
+              replyTo: EMAIL_REPLY_TO,
+              subject: "Fly Horizons · Votre date de vol est confirmée",
+              html: reservationDateConfirmeeEmail({ prenom: client.prenom, dateStr, duree: resa.duree }),
+            });
+          } else if (statut === "heure_confirmee") {
+            await resend.emails.send({
+              from: EMAIL_FROM,
+              to: [client.email],
+              replyTo: EMAIL_REPLY_TO,
+              subject: "Fly Horizons · Votre créneau horaire est confirmé",
+              html: reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, dateISO: resa.date_vol }),
+            });
+          } else if (statut === "vol_effectue") {
+            await resend.emails.send({
+              from: EMAIL_FROM,
+              to: [client.email],
+              replyTo: EMAIL_REPLY_TO,
+              subject: "Merci pour votre vol · Fly Horizons",
+              html: postVolEmail({
+                prenom: client.prenom,
+                dateStr,
+                duree: resa.duree,
+                surveyUrl: `${siteUrl}/satisfaction/${id}`,
+              }),
+            });
+          } else {
+            // annulee
+            await resend.emails.send({
+              from: EMAIL_FROM,
+              to: [client.email],
+              replyTo: EMAIL_REPLY_TO,
+              subject: `Fly Horizons · Réservation annulée · ${dateStr}`,
+              html: reservationAutoAnnuleeEmail({
+                prenom: client.prenom,
+                nom: client.nom,
+                dateStr,
+                heure: (resa.heure_vol ?? "-").slice(0, 5),
+                duree: resa.duree,
+                bookingUrl: "https://fly-horizons.com/vol-sur-mesure",
+                source: "admin",
+              }),
+            });
+          }
+        } catch (e) {
+          console.error(`[updateStatutReservationPerso] Erreur email (${statut}):`, e);
+          emailError = true;
         }
       }
     }
 
     revalidatePath("/admin/vols");
-    return { success: true };
+    return { success: true, emailError };
   } catch {
     return { error: "Erreur serveur" };
-  }
-}
-
-export async function sendEmailConfirmation(id: string, type: "date" | "heure") {
-  try {
-    await checkAdmin();
-    const supabase = createAdminClient();
-    const { data: resa } = await supabase
-      .from("reservations")
-      .select("*, clients(*)")
-      .eq("id", id)
-      .single();
-    if (!resa) return { error: "Réservation introuvable" };
-    const client = resa.clients as { prenom: string; nom: string; email: string };
-    const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
-      weekday: "long", day: "numeric", month: "long", year: "numeric",
-    });
-    const subject = type === "date"
-      ? "Fly Horizons · Votre date de vol est confirmée"
-      : "Fly Horizons · Votre créneau horaire est confirmé";
-    const html = type === "date"
-      ? reservationDateConfirmeeEmail({ prenom: client.prenom, dateStr, duree: resa.duree })
-      : reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, dateISO: resa.date_vol });
-    const { error: emailError } = await resend.emails.send({ from: EMAIL_FROM, to: [client.email], replyTo: EMAIL_REPLY_TO, subject, html });
-    if (emailError) {
-      console.error("Resend sendEmailConfirmation error:", emailError);
-      return { error: `Email non envoyé — ${(emailError as { message?: string }).message ?? JSON.stringify(emailError)}` };
-    }
-    const now = new Date().toISOString();
-    const newStatut = type === "date" ? "date_confirmee" : "heure_confirmee";
-    const timestampField = type === "date" ? "date_confirmee_at" : "heure_confirmee_at";
-    await supabase.from("reservations")
-      .update({ statut: newStatut, [timestampField]: now })
-      .eq("id", id);
-    revalidatePath("/admin/vols");
-    return { success: true };
-  } catch (err) {
-    console.error("sendEmailConfirmation exception:", err);
-    return { error: "Erreur envoi email" };
   }
 }
 
@@ -321,6 +338,7 @@ export async function createAdminReservation(data: {
   voucher_code?: string;
   envoyer_paiement: boolean;
   montant_override?: number | null;
+  send_email?: boolean;
 }) {
   try {
     await checkAdmin();
@@ -419,47 +437,57 @@ export async function createAdminReservation(data: {
       weekday: "long", day: "numeric", month: "long", year: "numeric",
     });
 
-    if (paymentToken && montant > 0) {
-      const paymentUrl = `${siteUrl}/api/reservation/pay/${paymentToken}`;
-      await resend.emails.send({
-        from: EMAIL_FROM,
-        to: [client.email],
-        replyTo: EMAIL_REPLY_TO,
-        subject: "Votre réservation : lien de paiement Fly Horizons",
-        html: reservationPaymentInvitationEmail({
-          prenom: client.prenom,
-          nom: client.nom,
-          dateStr,
-          heure: data.heure_vol,
-          duree: data.duree,
-          montant,
-          paymentUrl,
-          voucherCode: data.voucher_code || null,
-        }),
-      });
-    } else {
-      await resend.emails.send({
-        from: EMAIL_FROM,
-        to: [client.email],
-        replyTo: EMAIL_REPLY_TO,
-        subject: "Votre réservation est enregistrée · Fly Horizons",
-        html: reservationConfirmationFreeEmail({
-          prenom: client.prenom,
-          nom: client.nom,
-          dateStr,
-          heure: data.heure_vol,
-          duree: data.duree,
-          passengers: data.passagers,
-          poids_total: data.poids_total ?? null,
-          voucherCode: data.voucher_code?.toUpperCase().trim() || null,
-          reservationId: resa.id,
-        }),
-      });
+    // La réservation existe déjà en base à ce stade : un échec d'envoi ne doit pas
+    // renvoyer une erreur générique (l'admin recréerait sinon un doublon en retentant).
+    let emailError = false;
+    if (data.send_email !== false) {
+      try {
+        if (paymentToken && montant > 0) {
+          const paymentUrl = `${siteUrl}/api/reservation/pay/${paymentToken}`;
+          await resend.emails.send({
+            from: EMAIL_FROM,
+            to: [client.email],
+            replyTo: EMAIL_REPLY_TO,
+            subject: "Votre réservation : lien de paiement Fly Horizons",
+            html: reservationPaymentInvitationEmail({
+              prenom: client.prenom,
+              nom: client.nom,
+              dateStr,
+              heure: data.heure_vol,
+              duree: data.duree,
+              montant,
+              paymentUrl,
+              voucherCode: data.voucher_code || null,
+            }),
+          });
+        } else {
+          await resend.emails.send({
+            from: EMAIL_FROM,
+            to: [client.email],
+            replyTo: EMAIL_REPLY_TO,
+            subject: "Votre réservation est enregistrée · Fly Horizons",
+            html: reservationConfirmationFreeEmail({
+              prenom: client.prenom,
+              nom: client.nom,
+              dateStr,
+              heure: data.heure_vol,
+              duree: data.duree,
+              passengers: data.passagers,
+              poids_total: data.poids_total ?? null,
+              voucherCode: data.voucher_code?.toUpperCase().trim() || null,
+              reservationId: resa.id,
+            }),
+          });
+        }
+      } catch (e) {
+        console.error("[createAdminReservation] Erreur email:", e);
+        emailError = true;
+      }
     }
 
     revalidatePath("/admin/vols");
     revalidatePath("/admin/clients");
-    return { success: true, reservationId: resa.id };
+    return { success: true, reservationId: resa.id, emailError };
   } catch (e) {
     console.error("createAdminReservation error:", e);
     return { error: "Erreur serveur" };
@@ -554,35 +582,43 @@ export async function createAdminVolMesure(data: {
       weekday: "long", day: "numeric", month: "long", year: "numeric",
     });
 
+    // La réservation existe déjà en base à ce stade : un échec d'envoi ne doit pas
+    // renvoyer une erreur générique (l'admin recréerait sinon un doublon en retentant).
+    let emailError = false;
     if (data.send_email) {
-      if (paymentToken && montant > 0) {
-        const paymentUrl = `${siteUrl}/api/reservation/pay/${paymentToken}`;
-        await resend.emails.send({
-          from: EMAIL_FROM, to: [client.email], replyTo: EMAIL_REPLY_TO,
-          subject: "Votre vol sur mesure : lien de paiement Fly Horizons",
-          html: reservationPaymentInvitationEmail({
-            prenom: client.prenom, nom: client.nom, dateStr,
-            heure: data.heure_vol, duree: data.duree,
-            montant, paymentUrl, voucherCode: null,
-          }),
-        });
-      } else {
-        await resend.emails.send({
-          from: EMAIL_FROM, to: [client.email], replyTo: EMAIL_REPLY_TO,
-          subject: "Votre vol sur mesure est enregistré · Fly Horizons",
-          html: reservationConfirmationFreeEmail({
-            prenom: client.prenom, nom: client.nom, dateStr,
-            heure: data.heure_vol, duree: data.duree,
-            passengers: data.passagers, poids_total: data.poids_total ?? null,
-            voucherCode: null, reservationId: resa.id,
-          }),
-        });
+      try {
+        if (paymentToken && montant > 0) {
+          const paymentUrl = `${siteUrl}/api/reservation/pay/${paymentToken}`;
+          await resend.emails.send({
+            from: EMAIL_FROM, to: [client.email], replyTo: EMAIL_REPLY_TO,
+            subject: "Votre vol sur mesure : lien de paiement Fly Horizons",
+            html: reservationPaymentInvitationEmail({
+              prenom: client.prenom, nom: client.nom, dateStr,
+              heure: data.heure_vol, duree: data.duree,
+              montant, paymentUrl, voucherCode: null,
+            }),
+          });
+        } else {
+          await resend.emails.send({
+            from: EMAIL_FROM, to: [client.email], replyTo: EMAIL_REPLY_TO,
+            subject: "Votre vol sur mesure est enregistré · Fly Horizons",
+            html: reservationConfirmationFreeEmail({
+              prenom: client.prenom, nom: client.nom, dateStr,
+              heure: data.heure_vol, duree: data.duree,
+              passengers: data.passagers, poids_total: data.poids_total ?? null,
+              voucherCode: null, reservationId: resa.id,
+            }),
+          });
+        }
+      } catch (e) {
+        console.error("[createAdminVolMesure] Erreur email:", e);
+        emailError = true;
       }
     }
 
     revalidatePath("/admin/vols");
     revalidatePath("/admin/clients");
-    return { success: true, reservationId: resa.id };
+    return { success: true, reservationId: resa.id, emailError };
   } catch (e) {
     console.error("createAdminVolMesure error:", e);
     return { error: "Erreur serveur" };
@@ -669,9 +705,67 @@ export async function recordCashPayment(id: string, montant: number) {
       .update({ paye: montant, payment_status: "paid", statut: "acompte_recu" })
       .eq("id", id);
     if (error) return { error: error.message };
+
+    let emailError = false;
+    const { data: resa } = await supabase
+      .from("reservations")
+      .select("*, clients(*)")
+      .eq("id", id)
+      .single();
+    if (resa) {
+      const client = resa.clients as unknown as { prenom: string; nom: string; email: string };
+      const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
+        weekday: "long", day: "numeric", month: "long", year: "numeric",
+      });
+      try {
+        if (resa.type_resa === "perso") {
+          await resend.emails.send({
+            from: EMAIL_FROM,
+            to: [client.email],
+            replyTo: EMAIL_REPLY_TO,
+            subject: "Provision reçue · Vol sur mesure Fly Horizons",
+            html: volSurMesureAcompteEmail({
+              prenom: client.prenom,
+              nom: client.nom,
+              dateStr,
+              heure: (resa.heure_vol ?? "-").slice(0, 5),
+              dureeEstimee: resa.duree,
+              voucherCode: resa.voucher_code,
+              montantPaye: montant,
+              reservationId: id,
+              dateISO: resa.date_vol,
+            }),
+          });
+        } else {
+          await resend.emails.send({
+            from: EMAIL_FROM,
+            to: [client.email],
+            replyTo: EMAIL_REPLY_TO,
+            subject: "Paiement confirmé · Fly Horizons",
+            html: reservationPaymentConfirmationEmail({
+              prenom: client.prenom,
+              nom: client.nom,
+              dateStr,
+              heure: (resa.heure_vol ?? "-").slice(0, 5),
+              duree: resa.duree,
+              passengers: resa.passagers,
+              poids_total: resa.poids_total,
+              voucherCode: resa.voucher_code,
+              montantPaye: montant,
+              reservationId: id,
+              dateISO: resa.date_vol,
+            }),
+          });
+        }
+      } catch (e) {
+        console.error("[recordCashPayment] Erreur email:", e);
+        emailError = true;
+      }
+    }
+
     revalidatePath("/admin/vols");
     revalidatePath("/admin");
-    return { success: true };
+    return { success: true, emailError };
   } catch {
     return { error: "Erreur serveur" };
   }
@@ -821,25 +915,34 @@ export async function sendPaymentLinkAdmin(id: string) {
       weekday: "long", day: "numeric", month: "long", year: "numeric",
     });
 
-    await resend.emails.send({
-      from: EMAIL_FROM,
-      to: [client.email],
-      replyTo: EMAIL_REPLY_TO,
-      subject: "Votre réservation : lien de paiement Fly Horizons",
-      html: reservationPaymentInvitationEmail({
-        prenom: client.prenom,
-        nom: client.nom,
-        dateStr,
-        heure: resa.heure_vol ?? "-",
-        duree: resa.duree,
-        montant: resa.acompte ?? 0,
-        paymentUrl,
-        voucherCode: resa.voucher_code ?? null,
-      }),
-    });
+    // Le statut est déjà "payment_pending" en base à ce stade : un échec d'envoi
+    // ne doit pas renvoyer une erreur générique, l'admin a déjà un bouton "Renvoyer"
+    // pour ce statut — on signale juste emailError pour qu'il sache qu'il faut l'utiliser.
+    let emailError = false;
+    try {
+      await resend.emails.send({
+        from: EMAIL_FROM,
+        to: [client.email],
+        replyTo: EMAIL_REPLY_TO,
+        subject: "Votre réservation : lien de paiement Fly Horizons",
+        html: reservationPaymentInvitationEmail({
+          prenom: client.prenom,
+          nom: client.nom,
+          dateStr,
+          heure: resa.heure_vol ?? "-",
+          duree: resa.duree,
+          montant: resa.acompte ?? 0,
+          paymentUrl,
+          voucherCode: resa.voucher_code ?? null,
+        }),
+      });
+    } catch (e) {
+      console.error("[sendPaymentLinkAdmin] Erreur email:", e);
+      emailError = true;
+    }
 
     revalidatePath("/admin/vols");
-    return { success: true };
+    return { success: true, emailError };
   } catch {
     return { error: "Erreur serveur" };
   }
@@ -918,50 +1021,7 @@ export async function updateReservationRoute(id: string, route: string) {
   }
 }
 
-export async function resendRoute(id: string) {
-  try {
-    await checkAdmin();
-    const supabase = createAdminClient();
-
-    const { data: resa } = await supabase
-      .from("reservations")
-      .select("*, clients(*)")
-      .eq("id", id)
-      .single();
-    if (!resa) return { error: "Réservation introuvable" };
-    if (!resa.route?.trim()) return { error: "Aucune route définie" };
-
-    const client = resa.clients as unknown as { prenom: string; nom: string; email: string };
-    const rawUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
-    const siteUrl = rawUrl.startsWith("http://localhost") || rawUrl.startsWith("http://127")
-      ? rawUrl : "https://fly-horizons.com";
-    const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
-      weekday: "long", day: "numeric", month: "long", year: "numeric",
-    });
-
-    const newToken = crypto.randomUUID();
-    await supabase
-      .from("reservations")
-      .update({ route_token: newToken, route_status: "sent", route_responded_at: null, route_feedback: null })
-      .eq("id", id);
-
-    const routeUrl = `${siteUrl}/vol/itineraire/${newToken}`;
-    await resend.emails.send({
-      from: EMAIL_FROM,
-      to: [client.email],
-      replyTo: EMAIL_REPLY_TO,
-      subject: "Fly Horizons · Votre itinéraire de vol",
-      html: routeItineraireEmail({ prenom: client.prenom, dateStr, duree: resa.duree, route: resa.route, routeUrl }),
-    });
-
-    revalidatePath("/admin/vols");
-    return { success: true };
-  } catch {
-    return { error: "Erreur serveur" };
-  }
-}
-
-// â"€â"€ Report de vol : générer un lien et envoyer l'email (admin) â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+// ── Report de vol : générer un lien et envoyer l'email (admin) ────────────────
 
 export async function sendRescheduleInvite(id: string) {
   try {
@@ -993,21 +1053,29 @@ export async function sendRescheduleInvite(id: string) {
       weekday: "long", day: "numeric", month: "long", year: "numeric",
     });
 
-    await resend.emails.send({
-      from: EMAIL_FROM,
-      to: [client.email],
-      replyTo: EMAIL_REPLY_TO,
-      subject: "Fly Horizons · Votre vol est reporté",
-      html: rescheduleInviteEmail({
-        prenom: client.prenom,
-        dateStr,
-        duree: resa.duree,
-        rescheduleUrl: `${siteUrl}/reservation/reporter/${makeRescheduleToken(uuid)}`,
-      }),
-    });
+    // Le token de report est déjà en base à ce stade : un échec d'envoi ne doit pas
+    // remonter une erreur générique.
+    let emailError = false;
+    try {
+      await resend.emails.send({
+        from: EMAIL_FROM,
+        to: [client.email],
+        replyTo: EMAIL_REPLY_TO,
+        subject: "Fly Horizons · Votre vol est reporté",
+        html: rescheduleInviteEmail({
+          prenom: client.prenom,
+          dateStr,
+          duree: resa.duree,
+          rescheduleUrl: `${siteUrl}/reservation/reporter/${makeRescheduleToken(uuid)}`,
+        }),
+      });
+    } catch (e) {
+      console.error("[sendRescheduleInvite] Erreur email:", e);
+      emailError = true;
+    }
 
     revalidatePath("/admin/vols");
-    return { success: true };
+    return { success: true, emailError };
   } catch (e) {
     console.error("sendRescheduleInvite error:", e);
     return { error: "Erreur serveur" };

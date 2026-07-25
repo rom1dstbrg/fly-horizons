@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { ReservationCalendar } from "@/components/admin/ReservationCalendar";
-import { ReservationDrawer, type DrawerReservation } from "@/components/admin/ReservationDrawer";
+import { ReservationDrawer } from "@/components/admin/reservation-drawer/ReservationDrawer";
+import type { DrawerReservation } from "@/components/admin/reservation-drawer/types";
 
 export function DashboardCalendar({
   reservations,
@@ -23,6 +24,9 @@ export function DashboardCalendar({
         onStatusChange={(id, newStatut) => {
           // Optimistic update in the calendar view — page refreshes on next navigation
           setDrawer(prev => prev?.id === id ? { ...prev, statut: newStatut } : prev);
+        }}
+        onFieldsChange={(id, fields) => {
+          setDrawer(prev => prev?.id === id ? { ...prev, ...fields } : prev);
         }}
       />
     </>
