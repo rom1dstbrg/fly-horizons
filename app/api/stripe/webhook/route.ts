@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
               .eq("id", reservationId);
             await resend.emails.send({
               from: EMAIL_FROM, to: [EMAIL_REPLY_TO],
-              subject: "[URGENT] Paiement reçu sur réservation annulée — restaurée",
+              subject: "[URGENT] Paiement reçu sur réservation annulée, restaurée",
               html: `<p>La réservation <strong>${reservationId}</strong> avait été annulée par le cron T-48h mais un paiement Stripe vient d'être reçu. Elle a été automatiquement restaurée au statut <em>acompte_recu</em>. À vérifier manuellement.</p>`,
             });
           } else {
@@ -91,14 +91,14 @@ export async function POST(request: NextRequest) {
               from: EMAIL_FROM, to: [EMAIL_REPLY_TO],
               subject: "[ACTION REQUISE] Coupon utilisé deux fois en simultané",
               html: `
-                <h2>Coupon saturé — double usage concurrent</h2>
+                <h2>Coupon saturé : double usage concurrent</h2>
                 <p>Le coupon <strong>${couponCode}</strong> a atteint sa limite d'utilisation lors d'un paiement simultané. Le paiement est valide et la réservation est active, mais <code>usage_count</code> n'a pas pu être incrémenté.</p>
                 <table style="border-collapse:collapse;width:100%">
                   <tr><td style="padding:4px 8px;font-weight:bold">Réservation</td><td style="padding:4px 8px">${reservationId}</td></tr>
                   <tr><td style="padding:4px 8px;font-weight:bold">Coupon</td><td style="padding:4px 8px">${couponCode}</td></tr>
                   <tr><td style="padding:4px 8px;font-weight:bold">Session Stripe</td><td style="padding:4px 8px">${session.id}</td></tr>
-                  <tr><td style="padding:4px 8px;font-weight:bold">Payment Intent</td><td style="padding:4px 8px">${session.payment_intent ?? "—"}</td></tr>
-                  <tr><td style="padding:4px 8px;font-weight:bold">Email client</td><td style="padding:4px 8px">${session.customer_details?.email ?? "—"}</td></tr>
+                  <tr><td style="padding:4px 8px;font-weight:bold">Payment Intent</td><td style="padding:4px 8px">${session.payment_intent ?? "non renseigné"}</td></tr>
+                  <tr><td style="padding:4px 8px;font-weight:bold">Email client</td><td style="padding:4px 8px">${session.customer_details?.email ?? "non renseigné"}</td></tr>
                   <tr><td style="padding:4px 8px;font-weight:bold">Montant payé</td><td style="padding:4px 8px">${montantPayePerso} €</td></tr>
                   <tr><td style="padding:4px 8px;font-weight:bold">Type</td><td style="padding:4px 8px">Vol sur mesure</td></tr>
                   <tr><td style="padding:4px 8px;font-weight:bold">Horodatage</td><td style="padding:4px 8px">${event.timestamp}</td></tr>
@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
             }
             await resend.emails.send({
               from: EMAIL_FROM, to: [EMAIL_REPLY_TO],
-              subject: "[URGENT] Paiement reçu sur réservation annulée — restaurée",
+              subject: "[URGENT] Paiement reçu sur réservation annulée, restaurée",
               html: `<p>La réservation <strong>${reservationId}</strong> avait été annulée par le cron T-48h mais un paiement Stripe vient d'être reçu. Elle a été automatiquement restaurée au statut <em>en_attente</em>. À vérifier manuellement.</p>`,
             });
           } else {
@@ -204,14 +204,14 @@ export async function POST(request: NextRequest) {
               from: EMAIL_FROM, to: [EMAIL_REPLY_TO],
               subject: "[ACTION REQUISE] Coupon utilisé deux fois en simultané",
               html: `
-                <h2>Coupon saturé — double usage concurrent</h2>
+                <h2>Coupon saturé : double usage concurrent</h2>
                 <p>Le coupon <strong>${couponCode}</strong> a atteint sa limite d'utilisation lors d'un paiement simultané. Le paiement est valide et la réservation est active, mais <code>usage_count</code> n'a pas pu être incrémenté.</p>
                 <table style="border-collapse:collapse;width:100%">
                   <tr><td style="padding:4px 8px;font-weight:bold">Réservation</td><td style="padding:4px 8px">${reservationId}</td></tr>
                   <tr><td style="padding:4px 8px;font-weight:bold">Coupon</td><td style="padding:4px 8px">${couponCode}</td></tr>
                   <tr><td style="padding:4px 8px;font-weight:bold">Session Stripe</td><td style="padding:4px 8px">${session.id}</td></tr>
-                  <tr><td style="padding:4px 8px;font-weight:bold">Payment Intent</td><td style="padding:4px 8px">${session.payment_intent ?? "—"}</td></tr>
-                  <tr><td style="padding:4px 8px;font-weight:bold">Email client</td><td style="padding:4px 8px">${session.customer_details?.email ?? "—"}</td></tr>
+                  <tr><td style="padding:4px 8px;font-weight:bold">Payment Intent</td><td style="padding:4px 8px">${session.payment_intent ?? "non renseigné"}</td></tr>
+                  <tr><td style="padding:4px 8px;font-weight:bold">Email client</td><td style="padding:4px 8px">${session.customer_details?.email ?? "non renseigné"}</td></tr>
                   <tr><td style="padding:4px 8px;font-weight:bold">Montant payé</td><td style="padding:4px 8px">${montantPayeStd} €</td></tr>
                   <tr><td style="padding:4px 8px;font-weight:bold">Type</td><td style="padding:4px 8px">Standard</td></tr>
                   <tr><td style="padding:4px 8px;font-weight:bold">Horodatage</td><td style="padding:4px 8px">${event.timestamp}</td></tr>

@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
       from: EMAIL_FROM,
       to: [email],
       replyTo: EMAIL_REPLY_TO,
-      subject: "Demande de réservation reçue — Fly Horizons",
+      subject: "Demande de réservation reçue · Fly Horizons",
       html: reservationConfirmationFreeEmail({
         prenom,
         nom,
@@ -167,13 +167,13 @@ export async function POST(request: NextRequest) {
     const ePrenom = escapeHtml(prenom);
     const eNom = escapeHtml(nom);
     const eEmail = escapeHtml(email);
-    const eTel = escapeHtml(telephone || "—");
+    const eTel = escapeHtml(telephone || "non renseigné");
     const eVoucher = voucher_code ? escapeHtml(voucher_code.toUpperCase().trim()) : null;
     const eComment = commentaire ? escapeHtml(commentaire) : null;
     await resend.emails.send({
       from: EMAIL_FROM,
       to: [EMAIL_REPLY_TO],
-      subject: `[Réservation] ${ePrenom} ${eNom} — ${date} à ${heure}`,
+      subject: `[Réservation] ${ePrenom} ${eNom} · ${date} à ${heure}`,
       html: `<p><strong>✈️ Nouvelle réservation</strong></p>
 <table style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;">
   <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Client</td><td><strong>${ePrenom} ${eNom}</strong> (${clientId})</td></tr>

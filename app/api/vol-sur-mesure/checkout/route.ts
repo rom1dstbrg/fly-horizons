@@ -245,7 +245,7 @@ export async function POST(request: NextRequest) {
     await resend.emails.send({
       from: EMAIL_FROM,
       to: [EMAIL_REPLY_TO],
-      subject: `[Nouvelle demande vol sur mesure] ${prenom} ${nom} — ${dateStr}`,
+      subject: `[Nouvelle demande vol sur mesure] ${prenom} ${nom} · ${dateStr}`,
       html: `<p><strong>${prenom} ${nom}</strong> (${email}) a soumis une demande de vol sur mesure.</p>
         <ul>
           <li>Date : ${dateStr} à ${heure}</li>
@@ -254,7 +254,7 @@ export async function POST(request: NextRequest) {
           <li>Provision : ${finalAcompte} €${discount > 0 ? ` (voucher −${discount} €)` : ""}${couponDiscountAmount > 0 ? ` (code promo −${couponDiscountAmount} €)` : ""}</li>
           <li>Réservation : ${resa.id}</li>
         </ul>
-        ${paymentUrl ? `<p>Lien de paiement (sera envoyé automatiquement après validation de la route) : <a href="${paymentUrl}">${paymentUrl}</a></p>` : "<p>Vol entièrement couvert par voucher — aucun paiement requis.</p>"}`,
+        ${paymentUrl ? `<p>Lien de paiement (sera envoyé automatiquement après validation de la route) : <a href="${paymentUrl}">${paymentUrl}</a></p>` : "<p>Vol entièrement couvert par voucher, aucun paiement requis.</p>"}`,
     });
 
     return NextResponse.json({ success: true });

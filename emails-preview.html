@@ -87,11 +87,10 @@
 <nav id="sidebar">
   <div id="sidebar-header">
     <h1>Fly Horizons</h1>
-    <p>31 emails</p>
+    <p>29 emails</p>
   </div>
   <div class="nav-section">Boutique</div>
-<a href="#order-confirmation" onclick="showEmail('order-confirmation');return false;" id="link-order-confirmation" class="nav-link">Commande reçue — cadeau</a>
-<a href="#order-confirmation-with-codes" onclick="showEmail('order-confirmation-with-codes');return false;" id="link-order-confirmation-with-codes" class="nav-link">Commande reçue — codes inclus</a>
+<a href="#order-confirmation" onclick="showEmail('order-confirmation');return false;" id="link-order-confirmation" class="nav-link">Commande reçue</a>
 <a href="#voucher-single" onclick="showEmail('voucher-single');return false;" id="link-voucher-single" class="nav-link">Envoi du code voucher</a>
 <a href="#voucher-multi" onclick="showEmail('voucher-multi');return false;" id="link-voucher-multi" class="nav-link">Envoi des codes voucher — plusieurs</a>
 <div class="nav-section">Réservation standard</div>
@@ -111,7 +110,6 @@
 <a href="#post-vol" onclick="showEmail('post-vol');return false;" id="link-post-vol" class="nav-link">Remerciement post-vol</a>
 <a href="#satisfaction" onclick="showEmail('satisfaction');return false;" id="link-satisfaction" class="nav-link">Résultat satisfaction → admin</a>
 <div class="nav-section">Itinéraire</div>
-<a href="#route-itineraire" onclick="showEmail('route-itineraire');return false;" id="link-route-itineraire" class="nav-link">Itinéraire envoyé — texte libre</a>
 <a href="#route-proposal" onclick="showEmail('route-proposal');return false;" id="link-route-proposal" class="nav-link">Proposition d'itinéraire — carte</a>
 <a href="#route-feedback-validated" onclick="showEmail('route-feedback-validated');return false;" id="link-route-feedback-validated" class="nav-link">Client valide l'itinéraire → admin</a>
 <a href="#route-feedback-modification" onclick="showEmail('route-feedback-modification');return false;" id="link-route-feedback-modification" class="nav-link">Client demande une modification → admin</a>
@@ -137,12 +135,12 @@
   </div>
 
   <div id="panel-order-confirmation" class="email-panel" style="display:none;">
-  <h2 class="panel-title">Commande reçue — cadeau</h2>
+  <h2 class="panel-title">Commande reçue</h2>
   <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
   <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
   <div style="flex:1;">
     <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0369a122;color:#0369a1;border:1px solid #0369a155;">Stripe webhook</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
-    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Stripe webhook checkout.session.completed — achat de vouchers à offrir. Les codes ne sont PAS dans cet email ; ils sont envoyés séparément (→ « Envoi des codes »).</p>
+    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Stripe webhook checkout.session.completed — envoyé pour tout achat (cadeau ou pour soi-même). Les codes voucher ne sont jamais dans cet email : ils partent toujours dans un second email séparé, juste après (→ « Envoi du code voucher »).</p>
   </div>
 </div>
   <iframe class="email-frame" srcdoc="<!DOCTYPE html>
@@ -301,194 +299,6 @@
       <tr>
         <td colspan=&quot;3&quot; class=&quot;em-dark&quot; style=&quot;padding:12px 0 0;font-size:14px;font-weight:800;color:#0b2238;border-top:1px solid #e8ecf4;&quot;>Total TTC</td>
         <td class=&quot;em-dark&quot; style=&quot;padding:12px 0 0;font-size:14px;font-weight:800;text-align:right;white-space:nowrap;border-top:1px solid #e8ecf4;&quot;>36 500,00 €</td>
-      </tr>
-    </table>
-    <p class=&quot;em-muted&quot; style=&quot;margin:12px 0 0;font-size:11px;color:#94a3b8;&quot;>TVA non applicable, Art. 293bis CTVA</p>
-    <hr class=&quot;em-sep&quot; style=&quot;border:none;border-top:1px solid #e8ecf4;margin:28px 0;&quot;>
-    <p class=&quot;em-muted&quot; style=&quot;margin:0;font-size:12px;color:#64748b;text-align:center;&quot;>
-      Des questions ? R&amp;eacute;pondez directement &amp;agrave; cet email ou visitez notre
-      <a href=&quot;https://fly-horizons.com/contact&quot; style=&quot;color:#F2B705;font-weight:600;text-decoration:none;&quot;>page contact</a>.
-    </p>
-          </td>
-        </tr>
-
-        <!-- Footer -->
-        <tr>
-          <td bgcolor=&quot;#ffffff&quot; style=&quot;background-color:#ffffff;padding:20px 0 0;text-align:center;&quot;>
-            <p style=&quot;margin:0;font-size:11px;color:#94a3b8;&quot;>
-              Fly Horizons &amp;middot; <a href=&quot;https://fly-horizons.com&quot; style=&quot;color:#94a3b8;text-decoration:none;&quot;>fly-horizons.com</a> &amp;middot; <a href=&quot;mailto:info@fly-horizons.com&quot; style=&quot;color:#94a3b8;text-decoration:none;&quot;>info@fly-horizons.com</a>
-            </p>
-            
-          </td>
-        </tr>
-
-      </table>
-    </td>
-  </tr>
-</table>
-</body>
-</html>" frameborder="0" onload="resizeIframe(this)"></iframe>
-</div>
-
-<div id="panel-order-confirmation-with-codes" class="email-panel" style="display:none;">
-  <h2 class="panel-title">Commande reçue — codes inclus</h2>
-  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
-  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
-  <div style="flex:1;">
-    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0369a122;color:#0369a1;border:1px solid #0369a155;">Stripe webhook</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
-    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Stripe webhook checkout.session.completed — achat pour soi-même. Les codes voucher sont inclus directement dans cet email (pas d'email séparé).</p>
-  </div>
-</div>
-  <iframe class="email-frame" srcdoc="<!DOCTYPE html>
-<html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
-<head>
-<meta charset=&quot;UTF-8&quot;>
-<meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1.0&quot;>
-<meta name=&quot;color-scheme&quot; content=&quot;light only&quot;>
-<meta name=&quot;supported-color-schemes&quot; content=&quot;light only&quot;>
-<title>Confirmation de commande #FH-2026-0587 · Fly Horizons</title>
-<style>
-  :root { color-scheme: light only; }
-  html, body { color-scheme: light only !important; background-color: #ffffff !important; }
-  [data-ogsc] .em-card { background-color: #ffffff !important; }
-  [data-ogsc] .em-bg { background-color: #ffffff !important; }
-  [data-ogsc] .em-dark { color: #0b2238 !important; }
-  [data-ogsc] .em-muted { color: #64748b !important; }
-  [data-ogsc] .em-gold { color: #F2B705 !important; }
-  [data-ogsc] .em-body { color: #334155 !important; }
-  [data-ogsc] .em-btn { background-color: #F2B705 !important; color: #0b2238 !important; }
-  [data-ogsc] .em-sep { border-color: #e8ecf4 !important; }
-  @media (prefers-color-scheme: dark) {
-    html, body { color-scheme: light only !important; background-color: #ffffff !important; }
-  }
-</style>
-</head>
-<body style=&quot;margin:0;padding:0;background-color:#ffffff;font-family:'Segoe UI',Arial,sans-serif;&quot;>
-<table class=&quot;em-bg&quot; width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; bgcolor=&quot;#ffffff&quot; style=&quot;background-color:#ffffff;padding:40px 16px;&quot;>
-  <tr>
-    <td align=&quot;center&quot;>
-      <table width=&quot;560&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; style=&quot;max-width:560px;width:100%;&quot;>
-
-        <!-- Logo -->
-        <tr>
-          <td bgcolor=&quot;#ffffff&quot; style=&quot;background-color:#ffffff;padding:0 0 24px;text-align:center;&quot;>
-            <img src=&quot;https://fly-horizons.com/logo-fly-horizons-navy.png&quot; alt=&quot;Fly Horizons&quot; width=&quot;140&quot;
-              style=&quot;display:block;margin:0 auto;width:140px;height:auto;border:0;outline:none;&quot; />
-          </td>
-        </tr>
-
-        <!-- Card -->
-        <tr>
-          <td class=&quot;em-card&quot; bgcolor=&quot;#ffffff&quot; style=&quot;background-color:#ffffff;border:1px solid #e8ecf4;border-radius:12px;padding:40px 36px;&quot;>
-            
-    <p class=&quot;em-gold&quot; style=&quot;margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;&quot;>R&amp;eacute;f. #FH-2026-0587</p>
-    <h1 class=&quot;em-dark&quot; style=&quot;margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;&quot;>Commande confirm&amp;eacute;e !</h1>
-    <p class=&quot;em-muted&quot; style=&quot;margin:0 0 28px;font-size:14px;color:#64748b;&quot;>Merci <strong style=&quot;color:#0b2238;&quot;>Sophie Marchal</strong> pour votre commande.</p>
-
-    <hr class=&quot;em-sep&quot; style=&quot;border:none;border-top:1px solid #e8ecf4;margin:28px 0;&quot;>
-    <p class=&quot;em-muted&quot; style=&quot;margin:0 0 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.12em;&quot;>D&amp;eacute;tail de la commande</p>
-
-    <table width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; style=&quot;margin-bottom:16px;&quot;>
-    <tr>
-      <td style=&quot;padding:12px 0;border-bottom:1px solid #f1f5f9;vertical-align:middle;&quot;>
-        <table cellpadding=&quot;0&quot; cellspacing=&quot;0&quot;><tr>
-          
-          <td style=&quot;vertical-align:middle;&quot;>
-            <p class=&quot;em-dark&quot; style=&quot;margin:0;font-size:14px;font-weight:600;color:#0b2238;&quot;>Voucher Exploration · 1h</p>
-            <p class=&quot;em-muted&quot; style=&quot;margin:3px 0 0;font-size:12px;color:#94a3b8;&quot;>Qt&amp;eacute; : 1</p>
-          </td>
-        </tr></table>
-      </td>
-      <td class=&quot;em-dark&quot; style=&quot;padding:12px 0;border-bottom:1px solid #f1f5f9;text-align:right;vertical-align:middle;font-size:14px;font-weight:700;color:#0b2238;white-space:nowrap;&quot;>
-        17 500,00 €
-      </td>
-    </tr></table>
-
-    <table width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; style=&quot;margin-bottom:4px;&quot;>
-      <tr>
-        <td class=&quot;em-muted&quot; style=&quot;padding:5px 0;font-size:13px;color:#64748b;&quot;>Sous-total</td>
-        <td class=&quot;em-body&quot; style=&quot;padding:5px 0;font-size:13px;color:#334155;text-align:right;&quot;>17 500,00 €</td>
-      </tr>
-      
-      
-      <tr>
-        <td class=&quot;em-dark&quot; style=&quot;padding:14px 0 4px;font-size:15px;font-weight:800;color:#0b2238;border-top:1px solid #e8ecf4;&quot;>Total</td>
-        <td class=&quot;em-gold&quot; style=&quot;padding:14px 0 4px;font-size:18px;font-weight:800;color:#F2B705;text-align:right;border-top:1px solid #e8ecf4;&quot;>17 500,00 €</td>
-      </tr>
-    </table>
-
-    <table width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; style=&quot;margin-top:28px;&quot;>
-    <tr>
-      <td align=&quot;center&quot;>
-        <a href=&quot;https://fly-horizons.com/orders&quot; class=&quot;em-btn&quot;
-          style=&quot;display:inline-block;background-color:#F2B705;color:#0b2238;font-size:14px;font-weight:800;padding:14px 40px;border-radius:10px;text-decoration:none;letter-spacing:0.02em;&quot;>
-          Voir mes commandes
-        </a>
-      </td>
-    </tr>
-  </table>
-
-    
-    <hr class=&quot;em-sep&quot; style=&quot;border:none;border-top:1px solid #e8ecf4;margin:28px 0;&quot;>
-    <p class=&quot;em-muted&quot; style=&quot;margin:0 0 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.12em;&quot;>Vos bons de vol</p>
-    <p class=&quot;em-muted&quot; style=&quot;margin:0 0 20px;font-size:13px;color:#64748b;&quot;>Scannez le QR code ou rendez-vous sur fly-horizons.com/reservation et saisissez votre code.</p>
-    
-    <table width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; style=&quot;margin-bottom:14px;&quot;>
-      <tr>
-        <td style=&quot;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:18px 24px;text-align:center;&quot;>
-          <p style=&quot;margin:0 0 4px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:2.5px;&quot;>Votre code</p>
-          <p style=&quot;margin:0 0 6px;font-family:-apple-system,'Segoe UI',Arial,sans-serif;font-size:22px;font-weight:900;color:#062548;letter-spacing:5px;text-transform:uppercase;&quot;>FLYH-X4K9-2026</p>
-          <p style=&quot;margin:0 0 16px;font-size:10px;color:#94a3b8;&quot;>Voucher Exploration · 1h</p>
-          <a href=&quot;https://fly-horizons.com/reservation?duree=60&amp;code=FLYHX4K92026&quot; style=&quot;display:inline-block;background-color:#F2B705;color:#062548;font-size:13px;font-weight:800;padding:11px 26px;border-radius:8px;text-decoration:none;&quot;>R&amp;eacute;server mon vol</a>
-        </td>
-      </tr>
-    </table>
-
-    <table width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; style=&quot;margin-top:36px;&quot;>
-      <tr><td style=&quot;border-top:2px dashed #e8ecf4;height:0;padding:0;&quot;></td></tr>
-    </table>
-
-    <p class=&quot;em-dark&quot; style=&quot;margin:28px 0 2px;font-size:18px;font-weight:800;color:#0b2238;letter-spacing:0.04em;&quot;>FACTURE</p>
-    <p class=&quot;em-muted&quot; style=&quot;margin:0 0 20px;font-size:12px;color:#94a3b8;&quot;>N&amp;deg; FAC-FH-2026-0587 &amp;middot; Invalid Date &amp;middot; Carte bancaire</p>
-
-    <table width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; style=&quot;margin-bottom:16px;&quot;>
-      <tr>
-        <td width=&quot;50%&quot; style=&quot;vertical-align:top;padding-right:16px;&quot;>
-          <p class=&quot;em-muted&quot; style=&quot;margin:0 0 6px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;&quot;>Vendeur</p>
-          <p class=&quot;em-dark&quot; style=&quot;margin:0 0 2px;font-size:13px;font-weight:600;color:#0b2238;&quot;>Fly Horizons</p>
-          <p class=&quot;em-muted&quot; style=&quot;margin:1px 0;font-size:12px;color:#64748b;&quot;>fly-horizons.com</p>
-          <p class=&quot;em-muted&quot; style=&quot;margin:1px 0;font-size:12px;color:#64748b;&quot;>info@fly-horizons.com</p>
-        </td>
-        <td width=&quot;50%&quot; style=&quot;vertical-align:top;&quot;>
-          <p class=&quot;em-muted&quot; style=&quot;margin:0 0 6px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;&quot;>Acheteur</p>
-          <p class=&quot;em-dark&quot; style=&quot;margin:0 0 2px;font-size:13px;font-weight:600;color:#0b2238;&quot;>Sophie Marchal</p><p class=&quot;em-muted&quot; style=&quot;margin:1px 0;font-size:12px;color:#64748b;&quot;>sophie.marchal@example.com</p>
-        </td>
-      </tr>
-    </table>
-
-    <table width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; style=&quot;border-top:1px solid #e8ecf4;margin-top:16px;&quot;>
-      <tr>
-        <th style=&quot;text-align:left;font-size:11px;color:#94a3b8;text-transform:uppercase;padding:10px 0 8px;font-weight:600;border-bottom:1px solid #e8ecf4;&quot;>Description</th>
-        <th style=&quot;text-align:center;font-size:11px;color:#94a3b8;text-transform:uppercase;padding:10px 0 8px;font-weight:600;border-bottom:1px solid #e8ecf4;width:36px;&quot;>Qt&amp;eacute;</th>
-        <th style=&quot;text-align:right;font-size:11px;color:#94a3b8;text-transform:uppercase;padding:10px 0 8px;font-weight:600;border-bottom:1px solid #e8ecf4;width:80px;&quot;>P.U.</th>
-        <th style=&quot;text-align:right;font-size:11px;color:#94a3b8;text-transform:uppercase;padding:10px 0 8px;font-weight:600;border-bottom:1px solid #e8ecf4;width:80px;&quot;>Total</th>
-      </tr>
-      
-    <tr>
-      <td class=&quot;em-body&quot; style=&quot;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;&quot;>Voucher Exploration · 1h</td>
-      <td class=&quot;em-muted&quot; style=&quot;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;text-align:center;&quot;>1</td>
-      <td class=&quot;em-muted&quot; style=&quot;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;text-align:right;white-space:nowrap;&quot;>17 500,00 €</td>
-      <td class=&quot;em-dark&quot; style=&quot;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;font-weight:600;color:#0b2238;text-align:right;white-space:nowrap;&quot;>17 500,00 €</td>
-    </tr>
-      <tr>
-        <td colspan=&quot;3&quot; class=&quot;em-muted&quot; style=&quot;padding:10px 0 3px;font-size:13px;color:#64748b;border-top:1px solid #e8ecf4;&quot;>Sous-total</td>
-        <td class=&quot;em-body&quot; style=&quot;padding:10px 0 3px;font-size:13px;text-align:right;white-space:nowrap;border-top:1px solid #e8ecf4;&quot;>17 500,00 €</td>
-      </tr>
-      
-      
-      <tr>
-        <td colspan=&quot;3&quot; class=&quot;em-dark&quot; style=&quot;padding:12px 0 0;font-size:14px;font-weight:800;color:#0b2238;border-top:1px solid #e8ecf4;&quot;>Total TTC</td>
-        <td class=&quot;em-dark&quot; style=&quot;padding:12px 0 0;font-size:14px;font-weight:800;text-align:right;white-space:nowrap;border-top:1px solid #e8ecf4;&quot;>17 500,00 €</td>
       </tr>
     </table>
     <p class=&quot;em-muted&quot; style=&quot;margin:12px 0 0;font-size:11px;color:#94a3b8;&quot;>TVA non applicable, Art. 293bis CTVA</p>
@@ -928,7 +738,7 @@
 
     <p class=&quot;em-body&quot; style=&quot;margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;&quot;>
       &amp;Agrave; tr&amp;egrave;s bient&amp;ocirc;t &amp;agrave; bord,<br>
-      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, votre pilote</strong>
+      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
     <p class=&quot;em-muted&quot; style=&quot;margin:0 0 24px;font-size:12px;color:#64748b;&quot;>
       Des questions ? Romain, votre pilote, vous r&amp;eacute;pondra rapidement. R&amp;eacute;pondez &amp;agrave; cet email ou visitez notre
@@ -2787,122 +2597,6 @@
 </html>" frameborder="0" onload="resizeIframe(this)"></iframe>
 </div>
 
-<div id="panel-route-itineraire" class="email-panel" style="display:none;">
-  <h2 class="panel-title">Itinéraire envoyé — texte libre</h2>
-  <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
-  <div style="font-size:18px;line-height:1;margin-top:1px;">ℹ️</div>
-  <div style="flex:1;">
-    <div style="display:flex;gap:6px;margin-bottom:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#7c3aed22;color:#7c3aed;border:1px solid #7c3aed55;">Action admin</span><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#0b223818;color:#0b2238;border:1px solid #0b223844;">→ Client</span></div>
-    <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Admin → champ texte libre « Itinéraire ». Ancien flux — envoie le parcours sous forme de texte. Remplacé par la carte pour les VSM.</p>
-  </div>
-</div>
-  <iframe class="email-frame" srcdoc="<!DOCTYPE html>
-<html lang=&quot;fr&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;>
-<head>
-<meta charset=&quot;UTF-8&quot;>
-<meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1.0&quot;>
-<meta name=&quot;color-scheme&quot; content=&quot;light only&quot;>
-<meta name=&quot;supported-color-schemes&quot; content=&quot;light only&quot;>
-<title>Votre itinéraire de vol · Fly Horizons</title>
-<style>
-  :root { color-scheme: light only; }
-  html, body { color-scheme: light only !important; background-color: #ffffff !important; }
-  [data-ogsc] .em-card { background-color: #ffffff !important; }
-  [data-ogsc] .em-bg { background-color: #ffffff !important; }
-  [data-ogsc] .em-dark { color: #0b2238 !important; }
-  [data-ogsc] .em-muted { color: #64748b !important; }
-  [data-ogsc] .em-gold { color: #F2B705 !important; }
-  [data-ogsc] .em-body { color: #334155 !important; }
-  [data-ogsc] .em-btn { background-color: #F2B705 !important; color: #0b2238 !important; }
-  [data-ogsc] .em-sep { border-color: #e8ecf4 !important; }
-  @media (prefers-color-scheme: dark) {
-    html, body { color-scheme: light only !important; background-color: #ffffff !important; }
-  }
-</style>
-</head>
-<body style=&quot;margin:0;padding:0;background-color:#ffffff;font-family:'Segoe UI',Arial,sans-serif;&quot;>
-<table class=&quot;em-bg&quot; width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; bgcolor=&quot;#ffffff&quot; style=&quot;background-color:#ffffff;padding:40px 16px;&quot;>
-  <tr>
-    <td align=&quot;center&quot;>
-      <table width=&quot;560&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; style=&quot;max-width:560px;width:100%;&quot;>
-
-        <!-- Logo -->
-        <tr>
-          <td bgcolor=&quot;#ffffff&quot; style=&quot;background-color:#ffffff;padding:0 0 24px;text-align:center;&quot;>
-            <img src=&quot;https://fly-horizons.com/logo-fly-horizons-navy.png&quot; alt=&quot;Fly Horizons&quot; width=&quot;140&quot;
-              style=&quot;display:block;margin:0 auto;width:140px;height:auto;border:0;outline:none;&quot; />
-          </td>
-        </tr>
-
-        <!-- Card -->
-        <tr>
-          <td class=&quot;em-card&quot; bgcolor=&quot;#ffffff&quot; style=&quot;background-color:#ffffff;border:1px solid #e8ecf4;border-radius:12px;padding:40px 36px;&quot;>
-            
-    <p class=&quot;em-gold&quot; style=&quot;margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;&quot;>Itin&amp;eacute;raire de vol</p>
-    <h1 class=&quot;em-dark&quot; style=&quot;margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;&quot;>Votre itin&amp;eacute;raire de vol</h1>
-    <p class=&quot;em-muted&quot; style=&quot;margin:0 0 28px;font-size:14px;color:#64748b;&quot;>Bonjour <strong style=&quot;color:#0b2238;&quot;>Sophie</strong>, voici l&amp;rsquo;itin&amp;eacute;raire de vol que j&amp;rsquo;ai pr&amp;eacute;par&amp;eacute; pour vous. Regardez et indiquez-moi s&amp;rsquo;il vous convient.</p>
-
-    <hr class=&quot;em-sep&quot; style=&quot;border:none;border-top:1px solid #e8ecf4;margin:28px 0;&quot;>
-    <p class=&quot;em-muted&quot; style=&quot;margin:0 0 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.12em;&quot;>D&amp;eacute;tails</p>
-    <table width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; style=&quot;margin-bottom:28px;&quot;>
-    
-    <tr>
-      <td class=&quot;em-muted&quot; style=&quot;padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;&quot;>Date</td>
-      <td class=&quot;em-dark&quot; style=&quot;padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;font-weight:700;color:#0b2238;text-align:right;&quot;><strong style=&quot;text-transform:capitalize;&quot;>samedi 24 mai 2026</strong></td>
-    </tr>
-    <tr>
-      <td class=&quot;em-muted&quot; style=&quot;padding:11px 0;font-size:13px;color:#64748b;&quot;>Dur&amp;eacute;e estim&amp;eacute;e</td>
-      <td class=&quot;em-dark&quot; style=&quot;padding:11px 0;font-size:13px;font-weight:700;color:#0b2238;text-align:right;&quot;>~1h</td>
-    </tr>
-  </table>
-
-    <hr class=&quot;em-sep&quot; style=&quot;border:none;border-top:1px solid #e8ecf4;margin:28px 0;&quot;>
-    <p class=&quot;em-muted&quot; style=&quot;margin:0 0 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.12em;&quot;>Itin&amp;eacute;raire pr&amp;eacute;vu</p>
-    <p class=&quot;em-body&quot; style=&quot;margin:0 0 20px;font-size:13px;color:#334155;line-height:1.8;white-space:pre-line;border-left:3px solid #F2B705;padding:4px 0 4px 16px;&quot;>Charleroi EBCI → survol de Namur et de la Citadelle → descente sur la vallée de la Meuse → Dinant et le rocher Bayard → retour EBCI via Philippeville</p>
-
-    <table width=&quot;100%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; style=&quot;margin-top:28px;&quot;>
-    <tr>
-      <td align=&quot;center&quot;>
-        <a href=&quot;https://fly-horizons.com/vol/itineraire/preview-token-123&quot; class=&quot;em-btn&quot;
-          style=&quot;display:inline-block;background-color:#F2B705;color:#0b2238;font-size:14px;font-weight:800;padding:14px 40px;border-radius:10px;text-decoration:none;letter-spacing:0.02em;&quot;>
-          Valider ou modifier l’itinéraire
-        </a>
-      </td>
-    </tr>
-  </table>
-
-    <p class=&quot;em-muted&quot; style=&quot;margin:0 0 28px;font-size:12px;color:#94a3b8;text-align:center;&quot;>Ce lien est actif jusqu&amp;rsquo;&amp;agrave; 48&amp;nbsp;h avant le vol.</p>
-
-    <p class=&quot;em-body&quot; style=&quot;margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;&quot;>
-      Des ajustements ? Pas de souci, r&amp;eacute;pondez &amp;agrave; cet email ou utilisez le bouton ci-dessus.<br>
-      &amp;Agrave; tr&amp;egrave;s bient&amp;ocirc;t,<br>
-      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, pilote et fondateur de Fly Horizons</strong>
-    </p>
-    <p class=&quot;em-muted&quot; style=&quot;margin:0;font-size:12px;color:#64748b;&quot;>
-      Des questions ? R&amp;eacute;pondez directement &amp;agrave; cet email ou visitez notre
-      <a href=&quot;https://fly-horizons.com/contact&quot; style=&quot;color:#F2B705;font-weight:600;text-decoration:none;&quot;>page contact</a>.
-    </p>
-          </td>
-        </tr>
-
-        <!-- Footer -->
-        <tr>
-          <td bgcolor=&quot;#ffffff&quot; style=&quot;background-color:#ffffff;padding:20px 0 0;text-align:center;&quot;>
-            <p style=&quot;margin:0;font-size:11px;color:#94a3b8;&quot;>
-              Fly Horizons &amp;middot; <a href=&quot;https://fly-horizons.com&quot; style=&quot;color:#94a3b8;text-decoration:none;&quot;>fly-horizons.com</a> &amp;middot; <a href=&quot;mailto:info@fly-horizons.com&quot; style=&quot;color:#94a3b8;text-decoration:none;&quot;>info@fly-horizons.com</a>
-            </p>
-            
-          </td>
-        </tr>
-
-      </table>
-    </td>
-  </tr>
-</table>
-</body>
-</html>" frameborder="0" onload="resizeIframe(this)"></iframe>
-</div>
-
 <div id="panel-route-proposal" class="email-panel" style="display:none;">
   <h2 class="panel-title">Proposition d'itinéraire — carte</h2>
   <div style="display:flex;align-items:flex-start;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
@@ -3753,7 +3447,7 @@
     </p>
     <hr class=&quot;em-sep&quot; style=&quot;border:none;border-top:1px solid #e8ecf4;margin:28px 0;&quot;>
     <p class=&quot;em-body&quot; style=&quot;margin:0 0 16px;font-size:14px;color:#334155;line-height:1.7;&quot;>
-      Votre vol du <strong style=&quot;color:#0b2238;&quot;>samedi 24 mai 2026</strong> (1h) ne peut pas avoir lieu comme pr&amp;eacute;vu. Nous sommes d&amp;eacute;sol&amp;eacute;s pour ce contretemps.
+      Votre vol du <strong style=&quot;color:#0b2238;&quot;>samedi 24 mai 2026</strong> (1h) ne peut pas avoir lieu comme pr&amp;eacute;vu. Je suis d&amp;eacute;sol&amp;eacute; pour ce contretemps.
     </p>
     <p class=&quot;em-body&quot; style=&quot;margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;&quot;>
       Votre provision est bien conserv&amp;eacute;e. Choisissez simplement une nouvelle date qui vous convient en cliquant ci-dessous. Le lien est valable 30 jours.
@@ -4085,19 +3779,19 @@ Merci d'avance.</p>
           <td class=&quot;em-card&quot; bgcolor=&quot;#ffffff&quot; style=&quot;background-color:#ffffff;border:1px solid #e8ecf4;border-radius:12px;padding:40px 36px;&quot;>
             
     <p class=&quot;em-gold&quot; style=&quot;margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;&quot;>Contact</p>
-    <h1 class=&quot;em-dark&quot; style=&quot;margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;&quot;>Message bien re&amp;ccedil;u</h1>
-    <p class=&quot;em-muted&quot; style=&quot;margin:0 0 28px;font-size:14px;color:#64748b;&quot;>Nous vous r&amp;eacute;pondrons sous 24&amp;nbsp;h.</p>
-
-    <hr class=&quot;em-sep&quot; style=&quot;border:none;border-top:1px solid #e8ecf4;margin:28px 0;&quot;>
+    <h1 class=&quot;em-dark&quot; style=&quot;margin:0 0 28px;font-size:22px;font-weight:800;color:#0b2238;&quot;>Message bien re&amp;ccedil;u</h1>
 
     <p class=&quot;em-body&quot; style=&quot;margin:0 0 16px;font-size:14px;color:#334155;&quot;>Bonjour <strong style=&quot;color:#0b2238;&quot;>Sophie Marchal</strong>,</p>
     <p class=&quot;em-body&quot; style=&quot;margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;&quot;>
-      Merci pour votre message concernant <strong style=&quot;color:#0b2238;&quot;>Question sur les tarifs groupe</strong>. Nous l&amp;rsquo;avons bien re&amp;ccedil;u et vous r&amp;eacute;pondrons dans les meilleurs d&amp;eacute;lais.
+      Merci pour votre message. Nous l&amp;rsquo;avons bien re&amp;ccedil;u et vous r&amp;eacute;pondrons dans les meilleurs d&amp;eacute;lais.
     </p>
 
     <hr class=&quot;em-sep&quot; style=&quot;border:none;border-top:1px solid #e8ecf4;margin:28px 0;&quot;>
+    <p class=&quot;em-muted&quot; style=&quot;margin:0 0 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.12em;&quot;>Sujet</p>
+    <p class=&quot;em-body&quot; style=&quot;margin:0 0 20px;font-size:14px;color:#334155;font-weight:600;&quot;>Question sur les tarifs groupe</p>
+
     <p class=&quot;em-muted&quot; style=&quot;margin:0 0 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.12em;&quot;>Votre message</p>
-    <p class=&quot;em-body&quot; style=&quot;margin:0 0 28px;font-size:13px;color:#334155;line-height:1.7;white-space:pre-wrap;border-left:3px solid #e8ecf4;padding:2px 0 2px 16px;&quot;>Bonjour,
+    <p class=&quot;em-body&quot; style=&quot;margin:0 0 28px;font-size:13px;color:#334155;line-height:1.7;white-space:pre-wrap;border-left:3px solid #F2B705;padding:2px 0 2px 16px;&quot;>Bonjour,
 
 Je souhaite organiser un vol en groupe pour 4 personnes à l'occasion d'un anniversaire. Pourriez-vous me communiquer vos tarifs et disponibilités pour juin 2026 ?
 
@@ -4106,9 +3800,9 @@ Merci d'avance.</p>
     
 
     <hr class=&quot;em-sep&quot; style=&quot;border:none;border-top:1px solid #e8ecf4;margin:28px 0;&quot;>
-    <p class=&quot;em-muted&quot; style=&quot;margin:0;font-size:12px;color:#64748b;text-align:center;&quot;>
-      Des questions ? R&amp;eacute;pondez directement &amp;agrave; cet email ou visitez notre
-      <a href=&quot;https://fly-horizons.com/contact&quot; style=&quot;color:#F2B705;font-weight:600;text-decoration:none;&quot;>page contact</a>.
+    <p class=&quot;em-body&quot; style=&quot;margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;&quot;>
+      &amp;Agrave; bient&amp;ocirc;t,<br>
+      <strong class=&quot;em-dark&quot; style=&quot;color:#0b2238;&quot;>Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
           </td>
         </tr>
@@ -4204,14 +3898,14 @@ N'hésitez pas à me contacter pour définir une date !</p>
       <td align=&quot;center&quot;>
         <a href=&quot;https://fly-horizons.com/contact/ticket/exemple&quot; class=&quot;em-btn&quot;
           style=&quot;display:inline-block;background-color:#F2B705;color:#0b2238;font-size:14px;font-weight:800;padding:14px 40px;border-radius:10px;text-decoration:none;letter-spacing:0.02em;&quot;>
-          Voir la réponse et répondre
+          Voir la conversation
         </a>
       </td>
     </tr>
   </table>
 
     <p class=&quot;em-muted&quot; style=&quot;margin:20px 0 0;font-size:12px;color:#64748b;text-align:center;&quot;>
-      Ce lien vous donne acc&amp;egrave;s &amp;agrave; l&amp;rsquo;historique complet de votre &amp;eacute;change.
+      Ce lien vous donne acc&amp;egrave;s &amp;agrave; toute la conversation, vous pouvez y r&amp;eacute;pondre directement.
     </p>
 
     <hr class=&quot;em-sep&quot; style=&quot;border:none;border-top:1px solid #e8ecf4;margin:28px 0;&quot;>

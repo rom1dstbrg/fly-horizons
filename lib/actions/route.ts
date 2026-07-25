@@ -49,7 +49,7 @@ export async function submitRouteResponse(
     await resend.emails.send({
       from: EMAIL_FROM,
       to: [ADMIN_EMAIL],
-      subject: `[Route] ${subjectLabel} — ${client.prenom} ${client.nom}`,
+      subject: `[Route] ${subjectLabel} · ${client.prenom} ${client.nom}`,
       html: routeFeedbackAdminEmail({
         clientPrenom: client.prenom,
         clientNom: client.nom,

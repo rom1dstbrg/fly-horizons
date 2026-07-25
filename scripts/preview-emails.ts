@@ -67,8 +67,8 @@ section("Boutique");
 
 add(
   "order-confirmation",
-  "Commande reçue — cadeau",
-  "Stripe webhook checkout.session.completed — achat de vouchers à offrir. Les codes ne sont PAS dans cet email ; ils sont envoyés séparément (→ « Envoi des codes »).",
+  "Commande reçue",
+  "Stripe webhook checkout.session.completed — envoyé pour tout achat (cadeau ou pour soi-même). Les codes voucher ne sont jamais dans cet email : ils partent toujours dans un second email séparé, juste après (→ « Envoi du code voucher »).",
   "client",
   "webhook",
   et.orderConfirmationEmail({
@@ -86,32 +86,6 @@ add(
     couponCode: null,
     shippingAddress: { full_name: PRENOM + " " + NOM, email: EMAIL },
     orderDate: "24 mai 2026",
-  })
-);
-
-add(
-  "order-confirmation-with-codes",
-  "Commande reçue — codes inclus",
-  "Stripe webhook checkout.session.completed — achat pour soi-même. Les codes voucher sont inclus directement dans cet email (pas d'email séparé).",
-  "client",
-  "webhook",
-  et.orderConfirmationEmail({
-    orderRef: ORDER_REF,
-    customerEmail: EMAIL,
-    customerName: PRENOM + " " + NOM,
-    items: [
-      { title: "Voucher Exploration · 1h", quantity: 1, unit_price: 17500, image_url: null },
-    ],
-    subtotal: 17500,
-    shippingCost: 0,
-    discountAmount: 0,
-    total: 17500,
-    couponCode: null,
-    shippingAddress: { full_name: PRENOM + " " + NOM, email: EMAIL },
-    orderDate: "24 mai 2026",
-    voucherCodes: [
-      { code: "FLYH-X4K9-2026", duration_minutes: 60, product_title: "Voucher Exploration · 1h" },
-    ],
   })
 );
 
@@ -440,21 +414,6 @@ add(
 // ─────────────────────────────────────────────────────────────────────────────
 
 section("Itinéraire");
-
-add(
-  "route-itineraire",
-  "Itinéraire envoyé — texte libre",
-  "Admin → champ texte libre « Itinéraire ». Ancien flux — envoie le parcours sous forme de texte. Remplacé par la carte pour les VSM.",
-  "client",
-  "admin",
-  et.routeItineraireEmail({
-    prenom: PRENOM,
-    dateStr: DATE_STR,
-    duree: 60,
-    route: ROUTE,
-    routeUrl: ROUTE_URL,
-  })
-);
 
 add(
   "route-proposal",

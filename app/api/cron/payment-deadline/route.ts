@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
               from: EMAIL_FROM,
               to: [c.email],
               replyTo: EMAIL_REPLY_TO,
-              subject: `Réservation annulée — vol du ${dateStr}`,
+              subject: `Réservation annulée · vol du ${dateStr}`,
               html: reservationAutoAnnuleeEmail({
                 prenom: c.prenom,
                 nom: c.nom,
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
           from: EMAIL_FROM,
           to: [c.email],
           replyTo: EMAIL_REPLY_TO,
-          subject: `Rappel — Confirmez votre vol du ${dateStr}`,
+          subject: `Rappel : confirmez votre vol du ${dateStr}`,
           html: reservationPaymentReminderEmail({
             prenom: c.prenom,
             nom: c.nom,
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
         await resend.emails.send({
           from: EMAIL_FROM,
           to: [EMAIL_REPLY_TO],
-          subject: `[Rappel paiement envoyé] ${c.prenom} ${c.nom} — ${resa.date_vol}`,
+          subject: `[Rappel paiement envoyé] ${c.prenom} ${c.nom} · ${resa.date_vol}`,
           html: `<p>Un rappel de paiement a été envoyé à <strong>${c.prenom} ${c.nom}</strong> (${c.email}) pour la réservation du <strong>${resa.date_vol} à ${heure}</strong>.</p><p>Montant : ${resa.acompte} €. Deadline : ${deadlineStr}.</p>`,
         });
 

@@ -195,6 +195,24 @@ function nextStep(text: string): string {
   </table>`;
 }
 
+// Section "Itinéraire prévu" partagée entre reservationDateConfirmeeEmail et
+// reservationHeureConfirmeeEmail — routeUrl (système carte / route_proposals) est le vrai
+// signal qu'un itinéraire existe ; route (texte libre, ancien système) n'est qu'un
+// complément d'affichage optionnel, jamais requis pour afficher le lien.
+function routeSectionBlock(route: string | null | undefined, routeUrl: string | null | undefined): string {
+  if (!routeUrl) return "";
+  return `
+    ${separator()}
+    ${label("Itin&eacute;raire pr&eacute;vu")}
+    ${route ? `<p class="em-body" style="margin:0 0 20px;font-size:13px;color:#334155;line-height:1.8;white-space:pre-line;border-left:3px solid #F2B705;padding:4px 0 4px 16px;">${esc(route)}</p>` : ""}
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;"><tr><td align="center">
+      <a href="${esc(routeUrl)}" class="em-btn"
+        style="display:inline-block;background-color:#F2B705;color:#0b2238;font-size:14px;font-weight:800;padding:14px 40px;border-radius:10px;text-decoration:none;letter-spacing:0.02em;">
+        Valider ou modifier l&rsquo;itin&eacute;raire
+      </a>
+    </td></tr></table>`;
+}
+
 export interface EmailPriceBreakdown {
   coutVol: number;
   dureeMin?: number | null;
@@ -763,7 +781,7 @@ export function reservationConfirmationFreeEmail(p: ReservationConfirmationProps
 
     <p class="em-body" style="margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;">
       &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord,<br>
-      <strong class="em-dark" style="color:#0b2238;">Romain, votre pilote</strong>
+      <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
     <p class="em-muted" style="margin:0 0 24px;font-size:12px;color:#64748b;">
       Des questions ? Romain, votre pilote, vous r&eacute;pondra rapidement. R&eacute;pondez &agrave; cet email ou visitez notre
@@ -938,16 +956,8 @@ export interface ReservationHeureConfirmeeProps {
 }
 
 export function reservationDateConfirmeeEmail(p: ReservationDateConfirmeeProps): string {
-  const routeSection = p.route && p.routeUrl ? `
-    ${separator()}
-    ${label("Itin&eacute;raire pr&eacute;vu")}
-    <p class="em-body" style="margin:0 0 20px;font-size:13px;color:#334155;line-height:1.8;white-space:pre-line;border-left:3px solid #F2B705;padding:4px 0 4px 16px;">${esc(p.route)}</p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;"><tr><td align="center">
-      <a href="${esc(p.routeUrl)}" class="em-btn"
-        style="display:inline-block;background-color:#F2B705;color:#0b2238;font-size:14px;font-weight:800;padding:14px 40px;border-radius:10px;text-decoration:none;letter-spacing:0.02em;">
-        Valider ou modifier l&rsquo;itin&eacute;raire
-      </a>
-    </td></tr></table>` : "";
+  const hasRoute = !!p.routeUrl;
+  const routeSection = routeSectionBlock(p.route, p.routeUrl);
 
   const body = `
     <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Fly Horizons</p>
@@ -964,7 +974,7 @@ export function reservationDateConfirmeeEmail(p: ReservationDateConfirmeeProps):
 
     ${callout("Votre date est bloqu&eacute;e dans notre planning. Si les conditions m&eacute;t&eacute;o ne permettent pas le vol ce jour-l&agrave;, il sera report&eacute; sans frais suppl&eacute;mentaires.")}
 
-    ${!p.route ? nextStep("Je vous confirmerai l&rsquo;heure exacte du d&eacute;part et vous enverrai l&rsquo;itin&eacute;raire pr&eacute;vu quelques jours avant votre vol.") : ""}
+    ${!hasRoute ? nextStep("Je vous confirmerai l&rsquo;heure exacte du d&eacute;part et vous enverrai l&rsquo;itin&eacute;raire pr&eacute;vu quelques jours avant votre vol.") : ""}
 
     ${routeSection}
 
@@ -977,7 +987,7 @@ export function reservationDateConfirmeeEmail(p: ReservationDateConfirmeeProps):
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>
 
-    ${!p.route ? secondaryButton(`${SITE_URL}/access-ebci`, "Plan d'accès") : ""}
+    ${!hasRoute ? secondaryButton(`${SITE_URL}/access-ebci`, "Plan d'accès") : ""}
 
     ${separator()}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;text-align:center;">
@@ -991,16 +1001,8 @@ export function reservationDateConfirmeeEmail(p: ReservationDateConfirmeeProps):
 // ── 10. Créneau horaire confirmé (admin) ──────────────────────────────────────
 
 export function reservationHeureConfirmeeEmail(p: ReservationHeureConfirmeeProps): string {
-  const routeSection = p.route && p.routeUrl ? `
-    ${separator()}
-    ${label("Itin&eacute;raire pr&eacute;vu")}
-    <p class="em-body" style="margin:0 0 20px;font-size:13px;color:#334155;line-height:1.8;white-space:pre-line;border-left:3px solid #F2B705;padding:4px 0 4px 16px;">${esc(p.route)}</p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;"><tr><td align="center">
-      <a href="${esc(p.routeUrl)}" class="em-btn"
-        style="display:inline-block;background-color:#F2B705;color:#0b2238;font-size:14px;font-weight:800;padding:14px 40px;border-radius:10px;text-decoration:none;letter-spacing:0.02em;">
-        Valider ou modifier l&rsquo;itin&eacute;raire
-      </a>
-    </td></tr></table>` : "";
+  const hasRoute = !!p.routeUrl;
+  const routeSection = routeSectionBlock(p.route, p.routeUrl);
 
   const body = `
     <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Fly Horizons</p>
@@ -1028,7 +1030,7 @@ export function reservationHeureConfirmeeEmail(p: ReservationHeureConfirmeeProps
       <tr><td class="em-body" style="padding:8px 0;font-size:13px;color:#334155;">Questions : <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a> &middot; <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a></td></tr>
     </table>
 
-    ${!p.route
+    ${!hasRoute
       ? nextStep("Je vous enverrai votre itin&eacute;raire de vol avant le jour J, avec les lieux que nous survolerons.")
       : nextStep(`C&rsquo;est tout bon&nbsp;! Rendez-vous le <strong>${esc(p.dateStr)}</strong> &agrave; <strong>${esc(p.heure)}</strong> &agrave; l&rsquo;a&eacute;roport de Charleroi (EBCI). Pr&eacute;sentez-vous 15&nbsp;min avant le d&eacute;collage.`)}
 
@@ -1097,30 +1099,30 @@ export interface ContactAcknowledgmentProps {
 export function contactAcknowledgmentEmail({ nom, sujet, message, threadUrl }: ContactAcknowledgmentProps): string {
   const body = `
     <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Contact</p>
-    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Message bien re&ccedil;u</h1>
-    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">Nous vous r&eacute;pondrons sous 24&nbsp;h.</p>
-
-    ${separator()}
+    <h1 class="em-dark" style="margin:0 0 28px;font-size:22px;font-weight:800;color:#0b2238;">Message bien re&ccedil;u</h1>
 
     <p class="em-body" style="margin:0 0 16px;font-size:14px;color:#334155;">Bonjour <strong style="color:#0b2238;">${esc(nom)}</strong>,</p>
     <p class="em-body" style="margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;">
-      Merci pour votre message concernant <strong style="color:#0b2238;">${esc(sujet)}</strong>. Nous l&rsquo;avons bien re&ccedil;u et vous r&eacute;pondrons dans les meilleurs d&eacute;lais.
+      Merci pour votre message. Nous l&rsquo;avons bien re&ccedil;u et vous r&eacute;pondrons dans les meilleurs d&eacute;lais.
     </p>
 
     ${separator()}
+    ${label("Sujet")}
+    <p class="em-body" style="margin:0 0 20px;font-size:14px;color:#334155;font-weight:600;">${esc(sujet)}</p>
+
     ${label("Votre message")}
-    <p class="em-body" style="margin:0 0 28px;font-size:13px;color:#334155;line-height:1.7;white-space:pre-wrap;border-left:3px solid #e8ecf4;padding:2px 0 2px 16px;">${esc(message)}</p>
+    <p class="em-body" style="margin:0 0 28px;font-size:13px;color:#334155;line-height:1.7;white-space:pre-wrap;border-left:3px solid #F2B705;padding:2px 0 2px 16px;">${esc(message)}</p>
 
     ${threadUrl ? `${separator()}
     <p class="em-muted" style="margin:0 0 16px;font-size:12px;color:#64748b;text-align:center;">
-      Vous pouvez suivre votre demande et consulter nos &eacute;changes &agrave; tout moment.
+      En attendant de recevoir une r&eacute;ponse par email, vous pouvez suivre votre conversation via ce lien.
     </p>
-    ${ctaButton(threadUrl, "Suivre ma demande")}` : ""}
+    ${ctaButton(threadUrl, "Suivre la conversation")}` : ""}
 
     ${separator()}
-    <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;text-align:center;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
-      <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
+    <p class="em-body" style="margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;">
+      &Agrave; bient&ocirc;t,<br>
+      <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>`;
 
   return emailBase(body, "Votre message a été reçu · Fly Horizons");
@@ -1149,10 +1151,10 @@ export function contactReplyEmail({ nom, sujet, reponse, threadUrl }: ContactRep
 
     <p class="em-body" style="margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;white-space:pre-wrap;border-left:3px solid #F2B705;padding:2px 0 2px 16px;">${esc(reponse)}</p>
 
-    ${ctaButton(threadUrl, "Voir la réponse et répondre")}
+    ${ctaButton(threadUrl, "Voir la conversation")}
 
     <p class="em-muted" style="margin:20px 0 0;font-size:12px;color:#64748b;text-align:center;">
-      Ce lien vous donne acc&egrave;s &agrave; l&rsquo;historique complet de votre &eacute;change.
+      Ce lien vous donne acc&egrave;s &agrave; toute la conversation, vous pouvez y r&eacute;pondre directement.
     </p>
 
     ${separator()}
@@ -1444,7 +1446,7 @@ export function postVolEmail(p: PostVolEmailProps): string {
     <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Merci pour votre vol&nbsp;!</h1>
     <p class="em-body" style="margin:0 0 24px;font-size:14px;color:#334155;line-height:1.7;">
       Bonjour <strong style="color:#0b2238;">${esc(p.prenom)}</strong>,<br><br>
-      C&rsquo;est avec beaucoup de plaisir que je vous ai accompagn&eacute; lors de votre vol du <strong>${p.dateStr}</strong> (${p.duree}&nbsp;min). Merci de votre confiance pour ce moment. J&rsquo;esp&egrave;re sinc&egrave;rement que vous avez v&eacute;cu quelque chose d&rsquo;unique l&agrave;-haut.
+      C&rsquo;est avec beaucoup de plaisir que je vous ai accompagn&eacute; lors de votre vol du <strong>${esc(p.dateStr)}</strong> (${p.duree}&nbsp;min). Merci de votre confiance pour ce moment. J&rsquo;esp&egrave;re sinc&egrave;rement que vous avez v&eacute;cu quelque chose d&rsquo;unique l&agrave;-haut.
     </p>
     <p class="em-body" style="margin:0 0 4px;font-size:14px;color:#334155;line-height:1.7;">
       Votre avis compte vraiment : il m&rsquo;aide &agrave; am&eacute;liorer chaque vol. L&rsquo;enqu&ecirc;te prend moins d&rsquo;une minute, et je lis chaque r&eacute;ponse personnellement.
@@ -1598,7 +1600,7 @@ export function rescheduleInviteEmail(p: {
     </p>
     ${separator()}
     <p class="em-body" style="margin:0 0 16px;font-size:14px;color:#334155;line-height:1.7;">
-      Votre vol du <strong style="color:#0b2238;">${esc(p.dateStr)}</strong> (${esc(fmtDuration(p.duree))}) ne peut pas avoir lieu comme pr&eacute;vu. Nous sommes d&eacute;sol&eacute;s pour ce contretemps.
+      Votre vol du <strong style="color:#0b2238;">${esc(p.dateStr)}</strong> (${esc(fmtDuration(p.duree))}) ne peut pas avoir lieu comme pr&eacute;vu. Je suis d&eacute;sol&eacute; pour ce contretemps.
     </p>
     <p class="em-body" style="margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;">
       Votre provision est bien conserv&eacute;e. Choisissez simplement une nouvelle date qui vous convient en cliquant ci-dessous. Le lien est valable 30 jours.
@@ -1655,50 +1657,6 @@ export function rescheduleConfirmationEmail(p: {
     </p>`;
 
   return emailBase(body, "Votre report est confirmé · Fly Horizons");
-}
-
-// ── Route itinéraire (ancien flux texte, /vol/itineraire/[token]) ────────────
-
-export interface RouteItineraireEmailProps {
-  prenom: string;
-  dateStr: string;
-  duree: number;
-  route: string;
-  routeUrl: string;
-}
-
-export function routeItineraireEmail(p: RouteItineraireEmailProps): string {
-  const body = `
-    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Itin&eacute;raire de vol</p>
-    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Votre itin&eacute;raire de vol</h1>
-    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">Bonjour <strong style="color:#0b2238;">${esc(p.prenom)}</strong>, voici l&rsquo;itin&eacute;raire de vol que j&rsquo;ai pr&eacute;par&eacute; pour vous. Regardez et indiquez-moi s&rsquo;il vous convient.</p>
-
-    ${separator()}
-    ${label("D&eacute;tails")}
-    ${infoRows([
-      ["Date", `<strong style="text-transform:capitalize;">${esc(p.dateStr)}</strong>`],
-      ["Dur&eacute;e estim&eacute;e", `~${fmtDuration(p.duree)}`],
-    ])}
-
-    ${separator()}
-    ${label("Itin&eacute;raire pr&eacute;vu")}
-    <p class="em-body" style="margin:0 0 20px;font-size:13px;color:#334155;line-height:1.8;white-space:pre-line;border-left:3px solid #F2B705;padding:4px 0 4px 16px;">${esc(p.route)}</p>
-
-    ${ctaButton(p.routeUrl, "Valider ou modifier l’itinéraire")}
-
-    <p class="em-muted" style="margin:0 0 28px;font-size:12px;color:#94a3b8;text-align:center;">Ce lien est actif jusqu&rsquo;&agrave; 48&nbsp;h avant le vol.</p>
-
-    <p class="em-body" style="margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;">
-      Des ajustements ? Pas de souci, r&eacute;pondez &agrave; cet email ou utilisez le bouton ci-dessus.<br>
-      &Agrave; tr&egrave;s bient&ocirc;t,<br>
-      <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
-    </p>
-    <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
-      <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
-    </p>`;
-
-  return emailBase(body, "Votre itinéraire de vol · Fly Horizons");
 }
 
 // ── Route proposal (nouveau flux waypoints, /vol/proposition/[token]) ────────

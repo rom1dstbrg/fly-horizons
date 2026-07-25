@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       from: EMAIL_FROM,
       to: [EMAIL_REPLY_TO],
       replyTo: EMAIL_REPLY_TO,
-      subject: `[Satisfaction] ${client.prenom} ${client.nom} — ${fmtDuration(resa.duree)} le ${resa.date_vol}`,
+      subject: `[Satisfaction] ${client.prenom} ${client.nom} · ${fmtDuration(resa.duree)} le ${resa.date_vol}`,
       html: satisfactionResultEmail({
         prenom: client.prenom,
         nom: client.nom,
