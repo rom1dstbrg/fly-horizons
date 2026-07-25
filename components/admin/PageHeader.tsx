@@ -9,8 +9,8 @@ interface PageHeaderProps {
 
 export function PageHeader({ domain, title, subtitle, action }: PageHeaderProps) {
   return (
-    <div className="flex items-start justify-between gap-4">
-      <div>
+    <div className="flex items-start justify-between gap-3 flex-wrap">
+      <div className="min-w-0">
         {domain && (
           <div className="mb-1.5">
             <DomainBadge domain={domain} />
@@ -21,7 +21,7 @@ export function PageHeader({ domain, title, subtitle, action }: PageHeaderProps)
           <p className="text-muted-foreground text-sm mt-0.5 max-w-prose">{subtitle}</p>
         )}
       </div>
-      {action && <div className="shrink-0">{action}</div>}
+      {action && <div className="shrink-0 max-w-full">{action}</div>}
     </div>
   );
 }

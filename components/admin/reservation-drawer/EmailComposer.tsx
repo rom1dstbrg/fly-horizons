@@ -20,7 +20,7 @@ export function EmailComposer({
   onCancel: () => void;
 }) {
   return (
-    <div className="flex-1 flex flex-col min-h-0 px-5 py-4 gap-3">
+    <div className="flex-1 flex flex-col min-h-0 px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] gap-3">
       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] shrink-0">Email libre</p>
       <div className="shrink-0">
         <p className="text-[10px] text-muted-foreground mb-1">À</p>

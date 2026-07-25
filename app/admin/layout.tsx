@@ -1,7 +1,30 @@
+import type { Metadata, Viewport } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { CommandPalette } from "@/components/admin/CommandPalette";
+
+export const metadata: Metadata = {
+  title: "Fly Horizons Admin",
+  manifest: "/admin-manifest.webmanifest",
+  icons: {
+    icon: "/icons/icon-192.png",
+    apple: "/icons/apple-touch-icon.png",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "FH Admin",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: "cover",
+  themeColor: "#0b2238",
+};
 
 export default async function AdminLayout({
   children,
@@ -26,7 +49,7 @@ export default async function AdminLayout({
       <AdminSidebar />
       <CommandPalette />
       <main className="flex-1 lg:ml-64 min-h-screen">
-        <div className="px-4 pt-16 pb-20 sm:px-6 sm:pt-16 sm:pb-20 lg:p-8 lg:pt-8 lg:pb-8">
+        <div className="px-4 pt-16 pb-[calc(76px+env(safe-area-inset-bottom))] sm:px-6 sm:pt-16 lg:p-8 lg:pt-8 lg:pb-8">
           {children}
         </div>
       </main>

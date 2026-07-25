@@ -178,7 +178,7 @@ function NavContentInner({ onClose }: { onClose?: () => void }) {
       </div>
 
       {/* Logout */}
-      <div className="px-2.5 py-3 border-t border-border shrink-0">
+      <div className="px-2.5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-border shrink-0">
         <form action={logout}>
           <button
             type="submit"

@@ -90,7 +90,7 @@ export function ActionFooter({
 
   if (activeTab === "modifier") {
     return (
-      <div className="px-5 py-3 border-t border-border shrink-0 flex justify-end">
+      <div className="px-5 pt-3 border-t border-border shrink-0 flex justify-end pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
         <button onClick={modifier.save} disabled={modifier.isPending} className={`${primaryBtn} bg-navy hover:brightness-90`}>
           {modifier.isPending ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
           Sauvegarder les modifications
@@ -111,7 +111,7 @@ export function ActionFooter({
       )}
 
       {/* Statut */}
-      <div className="flex items-center gap-2 px-5 py-2.5 flex-wrap">
+      <div className="flex items-center gap-2 px-5 pt-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))] flex-wrap">
         {r.statut === "payment_pending" && (
           <>
             <button onClick={() => onChangeStatut("acompte_recu")} disabled={isPending} className={`${primaryBtn} bg-navy hover:brightness-90`}>

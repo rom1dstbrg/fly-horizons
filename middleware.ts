@@ -52,7 +52,7 @@ export async function middleware(request: NextRequest) {
   // Protection routes /admin/*
   // Redirige vers /login si pas connecté
   // -------------------------------------------------
-  if (pathname.startsWith("/admin")) {
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";

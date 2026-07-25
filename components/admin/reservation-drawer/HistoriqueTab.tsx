@@ -6,7 +6,7 @@ import { FIELD_LABELS, type HistoryItem } from "./types";
 
 export function HistoriqueTab({ loading, loaded, items }: { loading: boolean; loaded: boolean; items: HistoryItem[] }) {
   return (
-    <div className="flex-1 overflow-y-auto px-5 py-4">
+    <div className="flex-1 overflow-y-auto px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
       {loading && (
         <div className="flex items-center justify-center py-10">
           <Loader2 size={20} className="animate-spin text-muted-foreground" />
