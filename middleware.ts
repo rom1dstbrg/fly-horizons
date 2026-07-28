@@ -31,6 +31,40 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // -------------------------------------------------
+  // Site en reconstruction : quand le toggle admin
+  // "maintenance_mode" est actif, tout le trafic public
+  // est redirigé vers /maintenance, sauf l'admin, l'auth,
+  // les API et les fichiers SEO/robots.
+  // -------------------------------------------------
+  const isMaintenanceExempt =
+    pathname === "/maintenance" ||
+    pathname.startsWith("/admin") ||
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname.startsWith("/api") ||
+    pathname === "/robots.txt" ||
+    pathname === "/sitemap.xml" ||
+    pathname === "/manifest.webmanifest";
+
+  if (!isMaintenanceExempt) {
+    const { data: maintenanceSetting } = await supabase
+      .from("crm_settings")
+      .select("value")
+      .eq("key", "maintenance_mode")
+      .maybeSingle();
+
+    // Pas de ligne en base = comportement par défaut = maintenance active
+    const maintenanceEnabled = (maintenanceSetting?.value ?? "true") === "true";
+
+    if (maintenanceEnabled) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/maintenance";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // -------------------------------------------------
   // Protection routes /account/*, /orders, /checkout
   // Redirige vers /login si pas connecté
   // /orders/success est volontairement exclu : page de
@@ -94,6 +128,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|mp4|webm|ico|webmanifest)$).*)",
   ],
 };

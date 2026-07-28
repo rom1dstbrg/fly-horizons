@@ -8,12 +8,14 @@ interface Props {
   calendarClosed: boolean;
   calendarClosedMessage: string;
   chatEnabled: boolean;
+  maintenanceMode: boolean;
 }
 
-export function SiteSettingsForm({ calendarClosed, calendarClosedMessage, chatEnabled }: Props) {
-  const [closed,  setClosed]  = useState(calendarClosed);
-  const [message, setMessage] = useState(calendarClosedMessage);
-  const [chat,    setChat]    = useState(chatEnabled);
+export function SiteSettingsForm({ calendarClosed, calendarClosedMessage, chatEnabled, maintenanceMode }: Props) {
+  const [closed,      setClosed]      = useState(calendarClosed);
+  const [message,     setMessage]     = useState(calendarClosedMessage);
+  const [chat,        setChat]        = useState(chatEnabled);
+  const [maintenance, setMaintenance] = useState(maintenanceMode);
   const [saved,   setSaved]   = useState(false);
   const [error,   setError]   = useState("");
   const [isPending, startTransition] = useTransition();
@@ -25,6 +27,7 @@ export function SiteSettingsForm({ calendarClosed, calendarClosedMessage, chatEn
         calendar_closed:         closed,
         calendar_closed_message: message,
         chat_enabled:            chat,
+        maintenance_mode:        maintenance,
       });
       if (result.error) setError(result.error);
       else { setSaved(true); setTimeout(() => setSaved(false), 2500); }
@@ -39,6 +42,25 @@ export function SiteSettingsForm({ calendarClosed, calendarClosedMessage, chatEn
           Paramètres opérationnels visibles par les clients.
         </p>
       </div>
+
+      {/* Mode maintenance */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-foreground">Site en reconstruction</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Redirige tous les visiteurs vers une page &quot;site en pause&quot; (mail + WhatsApp). L&apos;admin reste accessible.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => { setMaintenance(v => !v); setSaved(false); }}
+          className={`relative w-11 h-6 rounded-full transition-colors cursor-pointer shrink-0 ${maintenance ? "bg-red-500" : "bg-muted-foreground/30"}`}
+        >
+          <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${maintenance ? "translate-x-5" : "translate-x-0"}`} />
+        </button>
+      </div>
+
+      <div className="border-t border-border" />
 
       {/* Fermeture calendrier */}
       <div className="space-y-3">

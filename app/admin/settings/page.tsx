@@ -27,6 +27,7 @@ export default async function AdminSettingsPage() {
   const calendarClosed        =            get("calendar_closed",          "false") === "true";
   const calendarClosedMessage =            get("calendar_closed_message",  "");
   const chatEnabled           =            get("chat_enabled",             "true") === "true";
+  const maintenanceMode       =            get("maintenance_mode",         "true") === "true";
 
   return (
     <div className="space-y-8 max-w-2xl">
@@ -53,6 +54,7 @@ export default async function AdminSettingsPage() {
         calendarClosed={calendarClosed}
         calendarClosedMessage={calendarClosedMessage}
         chatEnabled={chatEnabled}
+        maintenanceMode={maintenanceMode}
       />
     </div>
   );
