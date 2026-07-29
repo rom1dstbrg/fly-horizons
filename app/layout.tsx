@@ -16,15 +16,15 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
 
 export const metadata: Metadata = {
   title: {
-    default: "Fly Horizons, baptême de l'air en Belgique",
+    default: "Fly Horizons, vol partagé en Belgique",
     template: "%s | Fly Horizons",
   },
   description:
-    "Baptême de l'air et vols privés en avion léger depuis Charleroi (Belgique). Jusqu'à 3 passagers, itinéraire 100 % libre. Réservez votre expérience unique.",
+    "Vols partagés et vols privés en avion léger depuis Charleroi (Belgique). Jusqu'à 3 passagers, itinéraire 100 % libre. Réservez votre expérience unique.",
   metadataBase: new URL(siteUrl),
   keywords: [
-    "baptême de l'air Belgique",
-    "baptême de l'air Charleroi",
+    "vol partagé Belgique",
+    "vol partagé Charleroi",
     "vol en avion Belgique",
     "vol avion léger Charleroi",
     "vol avion léger Belgique",
@@ -38,21 +38,21 @@ export const metadata: Metadata = {
     locale: "fr_BE",
     url: siteUrl,
     siteName: "Fly Horizons",
-    title: "Fly Horizons, baptême de l'air en Belgique",
+    title: "Fly Horizons, vol partagé en Belgique",
     description:
-      "Baptême de l'air et vols privés en avion léger depuis Charleroi. Jusqu'à 3 passagers, itinéraire 100 % libre.",
+      "Vols partagés et vols privés en avion léger depuis Charleroi. Jusqu'à 3 passagers, itinéraire 100 % libre.",
     images: [
       {
         url: "/gallery/10.jpg",
         width: 1200,
         height: 630,
-        alt: "Fly Horizons, baptême de l'air en Belgique",
+        alt: "Fly Horizons, vol partagé en Belgique",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Fly Horizons, baptême de l'air en Belgique",
+    title: "Fly Horizons, vol partagé en Belgique",
     description:
       "Vols privés en avion léger depuis Charleroi. Itinéraire libre, jusqu'à 3 passagers.",
     images: ["/gallery/10.jpg"],

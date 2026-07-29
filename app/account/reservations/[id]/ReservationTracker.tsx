@@ -293,7 +293,7 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div className="flex-1 min-w-0">
               <p className="text-xs text-muted-foreground mb-1">
-                {isPerso ? "Vol sur mesure" : (resa.packTitle ?? "Baptême de l'air")} · #{resa.id.slice(0, 8).toUpperCase()}
+                {isPerso ? "Vol sur mesure" : (resa.packTitle ?? "Vol partagé")} · #{resa.id.slice(0, 8).toUpperCase()}
               </p>
               <h1 className="text-xl lg:text-2xl font-bold text-foreground">
                 {resa.statut === "vol_effectue"

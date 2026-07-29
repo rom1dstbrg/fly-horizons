@@ -235,7 +235,7 @@ async function buildHtml(): Promise<string> {
     <div class="spacer"></div>
 
     <div class="main">
-      <span class="badge">Baptême de l'air · Avion léger</span>
+      <span class="badge">Vol partagé · Avion léger</span>
 
       <div class="headline">
         Et si vous<br>regardiez la<br>Belgique <span class="accent">d'en haut&nbsp;?</span>

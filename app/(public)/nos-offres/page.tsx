@@ -12,16 +12,16 @@ import { PackCard } from "@/components/shop/PackCard";
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
 
 export const metadata = {
-  title: "Baptême de l'air en Belgique | Vols 30 à 120 min | Fly Horizons",
+  title: "Vol partagé en Belgique | Vols 30 à 120 min | Fly Horizons",
   description:
-    "Baptêmes de l'air en avion léger depuis Charleroi, vols de 30 à 120 min ou sur mesure. Itinéraire libre, jusqu'à 3 passagers. Réservez votre vol en Belgique.",
+    "Vols partagés en avion léger depuis Charleroi, vols de 30 à 120 min ou sur mesure. Itinéraire libre, jusqu'à 3 passagers. Réservez votre vol en Belgique.",
   alternates: { canonical: `${siteUrl}/nos-offres` },
   openGraph: {
-    title: "Baptême de l'air en Belgique | Vols 30 à 120 min | Fly Horizons",
+    title: "Vol partagé en Belgique | Vols 30 à 120 min | Fly Horizons",
     description:
-      "Baptêmes de l'air en avion léger depuis Charleroi, vols de 30 à 120 min ou sur mesure. Itinéraire libre, jusqu'à 3 passagers.",
+      "Vols partagés en avion léger depuis Charleroi, vols de 30 à 120 min ou sur mesure. Itinéraire libre, jusqu'à 3 passagers.",
     url: `${siteUrl}/nos-offres`,
-    images: [{ url: `${siteUrl}/piste.jpg`, width: 1200, height: 630, alt: "Baptême de l'air, Fly Horizons Charleroi" }],
+    images: [{ url: `${siteUrl}/piste.jpg`, width: 1200, height: 630, alt: "Vol partagé, Fly Horizons Charleroi" }],
   },
 };
 
@@ -73,6 +73,7 @@ export default async function NosOffresPage() {
             </div>
           )}
 
+          {/* Masqué 29/07/2026 en attendant confirmation légale — voir audit-legal-fly-horizons.html
           <div className="mt-12 text-center">
             <p className="text-sm text-muted-foreground">
               Vous voulez voler sur votre propre route ?{" "}
@@ -81,20 +82,16 @@ export default async function NosOffresPage() {
               </Link>
             </p>
           </div>
+          */}
 
-        </div>
-
-        {/* Vague de transition clair → navy */}
-        <div className="relative h-12 overflow-hidden bg-[#0b2238]">
-          <svg viewBox="0 0 1440 48" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0,0 L0,24 Q360,48 720,24 Q1080,0 1440,24 L1440,0 Z" fill="#f5f5f7"/>
-          </svg>
         </div>
       </div>
 
       {/* ══════════════════════════════════════════
-          SECTION — Vol sur mesure
+          SECTION — Vol sur mesure — masquée 29/07/2026 en attendant confirmation légale,
+          voir audit-legal-fly-horizons.html
       ══════════════════════════════════════════ */}
+      {false && (
       <div className="bg-[#0b2238] pb-0 relative overflow-hidden">
 
         <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 py-14">
@@ -233,6 +230,7 @@ export default async function NosOffresPage() {
           </svg>
         </div>
       </div>
+      )}
 
       {/* ══════════════════════════════════════════
           Demande particulière

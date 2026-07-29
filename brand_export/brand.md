@@ -4,7 +4,7 @@
 
 **Exploitant** : DESTANBERG Romain  
 **Site** : fly-horizons.com  
-**Activité** : Baptêmes de l'air et vols sur mesure en avion léger depuis Charleroi (EBCI), Belgique  
+**Activité** : Vols partagés et vols sur mesure en avion léger depuis Charleroi (EBCI), Belgique  
 **Date de version** : Juillet 2026
 
 ---

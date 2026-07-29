@@ -20,7 +20,7 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
               Réservez votre expérience
             </h2>
             <p className="text-[#0b2238]/50 text-sm mt-2 max-w-md">
-              Du baptême découverte à l&apos;aventure prolongée, choisissez la durée qui vous convient.
+              Du vol découverte à l&apos;aventure prolongée, choisissez la durée qui vous convient.
             </p>
           </div>
           <Link

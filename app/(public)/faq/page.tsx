@@ -112,15 +112,22 @@ const THEMES: Theme[] = [
     Icon: CalendarCheck,
     items: [
       {
-        q: "Comment réserver un vol en durée fixe ?",
-        aText: "Rendez-vous sur la page Nos offres, choisissez votre durée de vol : 30, 60, 90 ou 120 minutes. Cliquez sur Réserver, sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis choisissez votre mode de paiement. La réservation est confirmée dès que la provision est reçue.",
-        a: <>Rendez-vous sur la page <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Nos offres</Link>, choisissez votre durée : 30, 60, 90 ou 120 minutes. Sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis choisissez votre mode de paiement. La réservation est confirmée dès que la provision est reçue.</>,
+        q: "Comment réserver un vol partagé ?",
+        aText: "Rendez-vous sur la page Nos offres, choisissez votre durée de vol : 30, 60, 90 ou 120 minutes. Cliquez sur Réserver, sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis choisissez votre mode de paiement. La réservation de votre vol partagé est confirmée dès que la provision est reçue.",
+        a: <>Rendez-vous sur la page <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Nos offres</Link>, choisissez votre durée : 30, 60, 90 ou 120 minutes. Sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis choisissez votre mode de paiement. La réservation de votre vol partagé est confirmée dès que la provision est reçue.</>,
       },
+      {
+        q: "Quel est le prix d'un vol partagé en Belgique ?",
+        aText: "Le prix d'un vol partagé dépend de la durée choisie (30, 60, 90 ou 120 minutes) et se calcule au temps de vol réel. Tous les tarifs à jour sont affichés sur la page Nos offres, sans frais cachés : le tarif horaire est communiqué avant la réservation.",
+        a: <>Le prix d&apos;un vol partagé dépend de la durée choisie (30, 60, 90 ou 120 minutes) et se calcule au temps de vol réel. Tous les tarifs à jour sont affichés sur la page <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Nos offres</Link>, sans frais cachés : le tarif horaire est communiqué avant la réservation.</>,
+      },
+      /* Masqué 29/07/2026 en attendant confirmation légale — voir audit-legal-fly-horizons.html
       {
         q: "Comment fonctionne le vol sur mesure ?",
         aText: "Un assistant pas à pas vous guide pour choisir vos destinations : villes belges, monuments, lieux qui vous tiennent à cœur ou adresse précise. L'itinéraire se finalise sur la carte et le prix s'ajuste en temps réel, à la minute de vol réelle. Pas de forfait ni de tranche fixe : si vous volez 52 minutes, vous payez 52 minutes. Une fois votre demande envoyée, Romain vérifie la faisabilité (espaces aériens, restrictions) et vous revient sous 24 heures. Le lien de paiement n'est envoyé qu'après votre accord. Aucun paiement immédiat.",
         a: <>Un assistant pas à pas vous guide pour choisir vos destinations : villes belges, monuments, lieux qui vous tiennent à cœur ou adresse précise. L&apos;itinéraire se finalise sur la carte et le prix s&apos;ajuste en temps réel, à la minute de vol réelle. Pas de forfait ni de tranche fixe. Romain vérifie la faisabilité et vous revient sous 24 heures. Le lien de paiement n&apos;arrive qu&apos;après votre accord. Accédez à l&apos;outil via <Link href="/vol-sur-mesure" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Vol sur mesure</Link>.</>,
       },
+      */
       {
         q: "D'où partent les vols ?",
         aText: "Les vols partent depuis l'aéroport de Brussels South Charleroi (EBCI/CRL). Un départ depuis un autre aéroport proche est possible sur demande, mais peut entraîner des frais supplémentaires.",
@@ -185,11 +192,13 @@ const THEMES: Theme[] = [
         aText: "Il se rend sur la page de réservation, choisit une date et un horaire, remplit ses informations, puis entre son code au moment du paiement. Le code est déduit automatiquement de la provision.",
         a: "Il se rend sur la page de réservation, choisit une date et un horaire disponibles, remplit ses informations, puis entre son code au moment du paiement. Le code est déduit automatiquement de la provision.",
       },
+      /* Masqué 29/07/2026 (mentionne le vol sur mesure) — voir audit-legal-fly-horizons.html
       {
         q: "Un bon cadeau est-il utilisable pour un vol sur mesure ?",
         aText: "Oui. Le code est valable pour n'importe quelle formule de vol, durée fixe ou itinéraire libre. Il est déduit de la provision quelle que soit la formule choisie.",
         a: "Oui. Le code est valable pour n'importe quelle formule : durée fixe ou vol sur mesure. Il est déduit de la provision quelle que soit la formule choisie.",
       },
+      */
       {
         q: "Quelle est la durée de validité d'un bon cadeau ?",
         aText: "La durée de validité est indiquée sur le bon lors de l'achat. Passé ce délai, le code ne peut plus être utilisé. En cas de doute, contactez-nous.",
@@ -276,8 +285,8 @@ const THEMES: Theme[] = [
       },
       {
         q: "Les passagers sont-ils assurés pendant le vol ?",
-        aText: "Oui. L'avion utilisé (Diamond DA40) appartient à Air Academy New CAG (ATO-005, EBCI), école d'aviation certifiée. L'assurance de l'école couvre tous les occupants à bord. Ce vol est organisé dans le cadre du partage de frais réglementé par le règlement européen NCO.GEN.104 (aviation légère non commerciale). Pour toute question sur les garanties, contactez-nous avant de réserver.",
-        a: <>Oui. L&apos;avion utilisé (Diamond DA40) appartient à Air Academy New CAG (ATO-005, EBCI), école d&apos;aviation certifiée. L&apos;assurance de l&apos;école couvre tous les occupants à bord. Ce vol est organisé dans le cadre du partage de frais réglementé par le règlement européen NCO.GEN.104 (aviation légère non commerciale). Pour toute question, <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link> avant de réserver.</>,
+        aText: "Oui. L'avion utilisé (Diamond DA40) appartient à Air Academy New CAG (ATO-005, EBCI), école d'aviation certifiée. L'assurance de l'école couvre tous les occupants à bord. Pour toute question sur les garanties, contactez-nous avant de réserver.",
+        a: <>Oui. L&apos;avion utilisé (Diamond DA40) appartient à Air Academy New CAG (ATO-005, EBCI), école d&apos;aviation certifiée. L&apos;assurance de l&apos;école couvre tous les occupants à bord. Pour toute question, <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link> avant de réserver.</>,
       },
     ],
   },
