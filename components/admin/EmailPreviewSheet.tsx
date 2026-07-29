@@ -68,7 +68,7 @@ export function EmailPreviewSheet({
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">Confirmation de commande + facture</span>
+            <span className="text-xs text-muted-foreground">Confirmation de commande + reçu</span>
             <div className="ml-auto flex items-center gap-2 shrink-0">
               {sendState === "sent" && (
                 <span className="flex items-center gap-1 text-xs text-green-500">

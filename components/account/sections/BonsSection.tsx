@@ -86,7 +86,7 @@ export function BonsSection({ vouchers }: { vouchers: VoucherCode[] }) {
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-secondary text-foreground hover:border-foreground text-xs font-medium transition-colors cursor-pointer"
                     >
                       <Download size={12} />
-                      Facture
+                      Reçu
                     </a>
                   )}
                 </div>

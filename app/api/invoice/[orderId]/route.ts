@@ -58,7 +58,7 @@ export async function GET(
   return new NextResponse(buffer as unknown as BodyInit, {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="facture-${ref}${suffix}.pdf"`,
+      "Content-Disposition": `attachment; filename="recu-${ref}${suffix}.pdf"`,
       "Content-Length": String(buffer.length),
     },
   });

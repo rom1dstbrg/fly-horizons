@@ -254,7 +254,7 @@ function ResaCard({ resa, upcoming, showWeather = false }: { resa: Reservation; 
             download
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-foreground bg-card hover:bg-secondary transition-colors cursor-pointer"
           >
-            <Download size={11} /> Facture
+            <Download size={11} /> Reçu
           </a>
         )}
 

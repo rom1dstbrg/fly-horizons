@@ -84,11 +84,11 @@ function InvoicePDF({
               </Text>
             </View>
 
-            {/* Facture info */}
+            {/* Reçu info */}
             <View style={{ alignItems: "flex-end" }}>
               <View style={{ backgroundColor: GOLD, paddingLeft: 10, paddingRight: 10, paddingTop: 4, paddingBottom: 4, borderRadius: 4, marginBottom: 8 }}>
                 <Text style={{ color: NAVY, fontSize: 10, fontFamily: "Helvetica-Bold", letterSpacing: 1 }}>
-                  {detailed ? "FACTURE DÉTAILLÉE" : "FACTURE"}
+                  {detailed ? "REÇU DÉTAILLÉ" : "REÇU"}
                 </Text>
               </View>
               <Text style={{ color: WHITE, fontSize: 11, fontFamily: "Helvetica-Bold", marginBottom: 4 }}>{ref}</Text>
@@ -110,7 +110,7 @@ function InvoicePDF({
             paddingLeft: 20, paddingRight: 20, paddingTop: 14, paddingBottom: 14, marginBottom: 24,
           }}>
             <Text style={{ fontSize: 7.5, fontFamily: "Helvetica-Bold", color: MUTED, letterSpacing: 2, marginBottom: 8 }}>
-              FACTURÉ À
+              PAYÉ PAR
             </Text>
             <Text style={{ fontSize: 10, fontFamily: "Helvetica-Bold", color: NAVY, marginBottom: 3 }}>
               {data.customerName || data.customerEmail}
@@ -202,16 +202,13 @@ function InvoicePDF({
             )}
             {detailed && <View style={{ height: 1, backgroundColor: BORDER, marginTop: 6, marginBottom: 8 }} />}
             <Row label="TOTAL TTC" value={euros(data.total)} bold />
-            <Text style={{ fontSize: 7.5, color: MUTED, marginTop: 6 }}>
-              TVA non applicable · Art. 56bis du Code TVA belge
-            </Text>
           </View>
 
           {/* Payment note */}
           <View style={{ marginTop: 24, paddingTop: 16, borderTopWidth: 1, borderColor: BORDER }}>
             <Text style={{ fontSize: 8, color: MUTED }}>
               Paiement reçu le {paidStr} par carte bancaire via Stripe.
-              Cette facture est établie à titre de justificatif de paiement.
+              Ce reçu est établi à titre de justificatif de paiement.
             </Text>
           </View>
         </View>

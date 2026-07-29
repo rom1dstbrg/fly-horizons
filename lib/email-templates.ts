@@ -453,8 +453,8 @@ export function orderConfirmationEmail(props: OrderConfirmationProps): string {
       <tr><td style="border-top:2px dashed #e8ecf4;height:0;padding:0;"></td></tr>
     </table>
 
-    <p class="em-dark" style="margin:28px 0 2px;font-size:18px;font-weight:800;color:#0b2238;letter-spacing:0.04em;">FACTURE</p>
-    <p class="em-muted" style="margin:0 0 20px;font-size:12px;color:#94a3b8;">N&deg; FAC-${esc(orderRef)} &middot; ${invoiceDate} &middot; Carte bancaire</p>
+    <p class="em-dark" style="margin:28px 0 2px;font-size:18px;font-weight:800;color:#0b2238;letter-spacing:0.04em;">REÇU</p>
+    <p class="em-muted" style="margin:0 0 20px;font-size:12px;color:#94a3b8;">N&deg; REC-${esc(orderRef)} &middot; ${invoiceDate} &middot; Carte bancaire</p>
 
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
       <tr>
@@ -496,7 +496,6 @@ export function orderConfirmationEmail(props: OrderConfirmationProps): string {
         <td class="em-dark" style="padding:12px 0 0;font-size:14px;font-weight:800;text-align:right;white-space:nowrap;border-top:1px solid #e8ecf4;">${fmt(total)}</td>
       </tr>
     </table>
-    <p class="em-muted" style="margin:12px 0 0;font-size:11px;color:#94a3b8;">TVA non applicable, Art. 293bis CTVA</p>
     ${separator()}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;text-align:center;">
       Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
@@ -1475,6 +1474,7 @@ interface SatisfactionResultEmailProps {
   notePilote: number;
   commentaire?: string | null;
   pointsAmelioration?: string | null;
+  nbPhotos?: number;
 }
 
 export function satisfactionResultEmail(p: SatisfactionResultEmailProps): string {
@@ -1504,7 +1504,10 @@ export function satisfactionResultEmail(p: SatisfactionResultEmailProps): string
       </tr>
     </table>
     ${p.commentaire ? `${separator()}${label("Exp&eacute;rience g&eacute;n&eacute;rale")}${callout(esc(p.commentaire))}` : ""}
-    ${p.pointsAmelioration ? `${separator()}${label("Points &agrave; am&eacute;liorer")}<p style="margin:0;padding:12px 16px;background:#fef3c7;border-left:3px solid #F2B705;border-radius:6px;font-size:13px;color:#334155;line-height:1.7;">${esc(p.pointsAmelioration)}</p>` : ""}`;
+    ${p.pointsAmelioration ? `${separator()}${label("Points &agrave; am&eacute;liorer")}<p style="margin:0;padding:12px 16px;background:#fef3c7;border-left:3px solid #F2B705;border-radius:6px;font-size:13px;color:#334155;line-height:1.7;">${esc(p.pointsAmelioration)}</p>` : ""}
+    ${p.nbPhotos ? `${separator()}${label("Photos")}<p style="margin:0;font-size:13px;color:#64748b;">${p.nbPhotos} photo${p.nbPhotos > 1 ? "s" : ""} partag&eacute;e${p.nbPhotos > 1 ? "s" : ""} par le client, consultable${p.nbPhotos > 1 ? "s" : ""} dans l&rsquo;admin.</p>` : ""}
+    ${separator()}
+    ${ctaButton(`${SITE_URL}/admin/satisfaction`, "Voir dans l'admin")}`;
 
   return emailBase(body, `Satisfaction · ${p.prenom} ${p.nom}`);
 }

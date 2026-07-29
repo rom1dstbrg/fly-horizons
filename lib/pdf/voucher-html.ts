@@ -390,7 +390,7 @@ export function buildVoucherHtml(p: VoucherHtmlParams): string {
       <div class="hero-badge">Voucher</div>
       <div class="hero-title">${p.product_title}</div>
       <div class="hero-sub">Volez où vous voulez. À votre façon.</div>
-      <div class="hero-tagline">Baptême de l&rsquo;air en avion léger depuis l&rsquo;aéroport de Charleroi (EBCI).</div>
+      <div class="hero-tagline">Vol partagé en avion léger depuis l&rsquo;aéroport de Charleroi (EBCI).</div>
     </div>
   </div>
 

@@ -65,7 +65,7 @@ function VoucherPDF({ code, product_title, expiresAtStr, qrDataUrl, heroImageDat
               Volez où vous voulez. À votre façon.
             </Text>
             <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 8.5, fontStyle: "italic" }}>
-              {"Baptême de l'air en avion léger depuis l'aéroport de Charleroi (EBCI)."}
+              {"Vol partagé en avion léger depuis l'aéroport de Charleroi (EBCI)."}
             </Text>
           </View>
         </View>

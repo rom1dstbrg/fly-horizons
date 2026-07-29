@@ -42,7 +42,7 @@ export async function GET(
     weekday: "long", day: "numeric", month: "long", year: "numeric",
   });
 
-  const typeLabel = resa.type_resa === "perso" ? "Vol sur mesure" : "Baptême de l'air en avion léger";
+  const typeLabel = resa.type_resa === "perso" ? "Vol sur mesure" : "Vol partagé en avion léger";
   const itemTitle = `${typeLabel} — ${formatDur(resa.duree)} · ${dateStr}`;
   const qty = resa.passagers ?? 1;
 
@@ -67,7 +67,7 @@ export async function GET(
   return new NextResponse(buffer as unknown as BodyInit, {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="facture-${ref}.pdf"`,
+      "Content-Disposition": `attachment; filename="recu-${ref}.pdf"`,
       "Content-Length": String(buffer.length),
     },
   });
