@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { TrendingUp, TrendingDown, Minus, Plus, Trash2, Pencil, X, Check, Loader2, Receipt } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Plus, Trash2, Pencil, X, Check, Loader2, Receipt, Download } from "lucide-react";
 import { addDepense, deleteDepense, updateDepense } from "@/lib/actions/depenses";
 import { getReservationForDrawer } from "@/lib/actions/reservation-edit";
 import { ReservationDrawer } from "@/components/admin/reservation-drawer/ReservationDrawer";
@@ -19,7 +19,11 @@ export type LigneVol = {
   net_client: number;
   duree: number | null;
   duree_reelle: number | null;
+  passagers: number | null;
   cout_avion: number | null;
+  part_pilote: number | null;
+  part_pilote_pct: number | null;
+  part_attendue_pct: number | null;
   resultat: number | null;
   voucher_code: string | null;
   voucher_montant: number | null;
@@ -48,6 +52,8 @@ export type SoldeStats = {
   cout_avion: number;
   depenses: number;
   solde_net: number;
+  part_pilote_moyenne_pct: number | null;
+  vols_avec_cout: number;
 };
 
 type FilterType = "tout" | "vols" | "vouchers" | "depenses";
@@ -72,6 +78,23 @@ function KpiCard({ label, value, cls, sub }: { label: string; value: string; cls
 }
 
 const DASH = <span className="text-muted-foreground">—</span>;
+
+function PartPilote({ montant, pct, attenduePct }: { montant: number | null; pct: number | null; attenduePct: number | null }) {
+  if (montant == null || pct == null) return <span className="text-xs text-muted-foreground">—</span>;
+  // Vert si la part payée atteint ~la quote-part attendue (1 personne parmi pilote+passagers), orange sinon, rouge si quasi nulle
+  const ratio = attenduePct != null && attenduePct > 0 ? pct / attenduePct : null;
+  const cls = pct < 0.5 ? "text-red-500"
+    : ratio != null && ratio < 0.6 ? "text-amber-600"
+    : "text-emerald-600";
+  return (
+    <div className="flex flex-col items-end gap-0.5">
+      <span className={`font-semibold ${cls}`}>{fmt(montant)}</span>
+      <span className={`text-[10px] ${cls}`}>
+        {pct}% {attenduePct != null && <span className="text-muted-foreground">(attendu ~{attenduePct}%)</span>}
+      </span>
+    </div>
+  );
+}
 
 function Resultat({ v }: { v: number | null }) {
   if (v === null) return <span className="text-xs text-muted-foreground">—</span>;
@@ -144,6 +167,10 @@ function VolRow({ vol }: { vol: LigneVol }) {
       <td className="px-3 py-3 text-right tabular-nums text-xs text-red-500">
         {vol.cout_avion != null ? `−${fmt(vol.cout_avion)}` : DASH}
       </td>
+      {/* Part pilote */}
+      <td className="px-3 py-3 text-right tabular-nums">
+        <PartPilote montant={vol.part_pilote} pct={vol.part_pilote_pct} attenduePct={vol.part_attendue_pct} />
+      </td>
       {/* Résultat */}
       <td className="px-3 py-3 text-right"><Resultat v={vol.resultat} /></td>
     </>
@@ -173,6 +200,7 @@ function VoucherRow({ v }: { v: LigneVoucher }) {
       <td className="px-3 py-3 text-right tabular-nums text-xs font-semibold text-emerald-600">
         {montant != null ? `+${fmt(montant)}` : DASH}
       </td>
+      <td className="px-3 py-3 text-right text-xs text-muted-foreground">{DASH}</td>
       <td className="px-3 py-3 text-right text-xs text-muted-foreground">{DASH}</td>
       <td className="px-3 py-3 text-right text-xs text-muted-foreground">{DASH}</td>
       <td className="px-3 py-3 text-right">
@@ -211,6 +239,7 @@ function DepenseRow({
       <td className="px-3 py-3 text-right tabular-nums text-xs font-semibold text-red-500">
         −{fmt(d.montant)}
       </td>
+      <td className="px-3 py-3 text-right text-xs text-muted-foreground">{DASH}</td>
       <td className="px-3 py-3 text-right">
         <Resultat v={-d.montant} />
       </td>
@@ -274,6 +303,7 @@ function DepenseEditRow({
           className={inputCls}
         />
       </td>
+      <td className="px-3 py-2" />
       <td className="px-3 py-2">
         <input
           type="date"
@@ -405,13 +435,23 @@ export function TransactionsClient({
         {/* KPIs globaux */}
         <div>
           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">Solde caisses Fly Horizons (cumulatif)</p>
-          <StatGrid cols={5}>
+          <StatGrid cols={6}>
             <KpiCard label="Total encaissé" value={`+${fmt(soldeGlobal.encaisse)}`} cls="text-emerald-600" />
             <KpiCard label="Remboursements" value={soldeGlobal.rembourse > 0 ? `−${fmt(soldeGlobal.rembourse)}` : fmt(0)} cls="text-red-500" />
             <KpiCard
               label="Coûts avion"
               value={soldeGlobal.cout_avion > 0 ? `−${fmt(soldeGlobal.cout_avion)}` : "À renseigner"}
               cls={soldeGlobal.cout_avion > 0 ? "text-red-500" : "text-muted-foreground"}
+            />
+            <KpiCard
+              label="Part pilote moyenne"
+              value={soldeGlobal.part_pilote_moyenne_pct != null ? `${soldeGlobal.part_pilote_moyenne_pct}%` : "—"}
+              cls={
+                soldeGlobal.part_pilote_moyenne_pct == null ? "text-muted-foreground"
+                : soldeGlobal.part_pilote_moyenne_pct < 10 ? "text-red-500"
+                : "text-emerald-600"
+              }
+              sub={`sur ${soldeGlobal.vols_avec_cout} vol${soldeGlobal.vols_avec_cout > 1 ? "s" : ""} avec coût renseigné`}
             />
             <KpiCard
               label="Dépenses autres"
@@ -441,12 +481,21 @@ export function TransactionsClient({
             </div>
           }
           actions={
-            <button
-              onClick={() => { setFormOpen(true); setFormError(""); }}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:brightness-105 shadow-gold cursor-pointer transition-all"
-            >
-              <Plus size={14} /> Ajouter une dépense
-            </button>
+            <>
+              <a
+                href="/api/admin/transactions/export"
+                download
+                className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg border border-border text-foreground text-sm font-semibold hover:bg-secondary cursor-pointer transition-all"
+              >
+                <Download size={14} /> Exporter PDF
+              </a>
+              <button
+                onClick={() => { setFormOpen(true); setFormError(""); }}
+                className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:brightness-105 shadow-gold cursor-pointer transition-all"
+              >
+                <Plus size={14} /> Ajouter une dépense
+              </button>
+            </>
           }
         />
 
@@ -459,7 +508,7 @@ export function TransactionsClient({
           />
         ) : (
           <div className="bg-card border border-border rounded-xl overflow-x-auto">
-            <table className="w-full text-sm min-w-[960px]">
+            <table className="w-full text-sm min-w-[1080px]">
               <thead>
                 <tr className="border-b border-border bg-secondary">
                   <th className="text-left px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Date</th>
@@ -471,6 +520,7 @@ export function TransactionsClient({
                   <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Net client</th>
                   <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Durée</th>
                   <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Coût avion</th>
+                  <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Part pilote</th>
                   <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Résultat</th>
                   <th className="w-16 px-2" />
                 </tr>

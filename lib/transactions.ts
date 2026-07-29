@@ -1,0 +1,202 @@
+import { createAdminClient } from "@/lib/supabase/admin";
+import type { LigneVol, LigneVoucher, Depense, SoldeStats } from "@/components/admin/TransactionsClient";
+
+type TarifAvion = { prix_heure: number; actif_depuis: string };
+
+function tarifPourDate(tarifs: TarifAvion[], dateVol: string): number {
+  const sorted = [...tarifs].sort(
+    (a, b) => new Date(b.actif_depuis).getTime() - new Date(a.actif_depuis).getTime()
+  );
+  const applicable = sorted.find(t => t.actif_depuis <= dateVol);
+  return (applicable ?? sorted[sorted.length - 1])?.prix_heure ?? 0;
+}
+
+export async function getTransactionsData(): Promise<{
+  vols: LigneVol[];
+  vouchers: LigneVoucher[];
+  depenses: Depense[];
+  soldeGlobal: SoldeStats;
+}> {
+  const supabase = createAdminClient();
+
+  const [
+    { data: tarifAvions },
+    { data: resas },
+    { data: vouchersShop },
+    { data: vouchersCash },
+    { data: rawDepenses },
+  ] = await Promise.all([
+    supabase.from("avion_tarifs").select("prix_heure, actif_depuis"),
+    supabase
+      .from("reservations")
+      .select("id, date_vol, type_resa, acompte, paye, remboursement, duree, duree_reelle, passagers, voucher_code, statut, clients(prenom, nom)")
+      .neq("statut", "annulee")
+      .order("date_vol", { ascending: false }),
+    supabase
+      .from("voucher_codes")
+      .select("id, code, created_at, duration_minutes, recipient_name, recipient_email, orders(total, status)")
+      .not("order_id", "is", null)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("voucher_codes")
+      .select("id, code, created_at, duration_minutes, recipient_name, recipient_email, prix")
+      .is("order_id", null)
+      .eq("payment_method", "cash")
+      .not("prix", "is", null)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("depenses")
+      .select("id, montant, description, date")
+      .order("date", { ascending: false }),
+  ]);
+
+  // Voucher codes utilisés dans des réservations non-annulées
+  const voucherCodes = (resas ?? []).map(r => r.voucher_code).filter(Boolean) as string[];
+  const usedVoucherCodes = new Set(voucherCodes);
+
+  // Montants des vouchers utilisés → valeur encaissée à l'achat du voucher
+  const voucherMontantMap = new Map<string, number>();
+  if (voucherCodes.length > 0) {
+    const { data: usedVouchers } = await supabase
+      .from("voucher_codes")
+      .select("code, prix, order_id, orders(total, status)")
+      .in("code", voucherCodes);
+    for (const v of usedVouchers ?? []) {
+      const orderRaw = v.orders as unknown;
+      const order = Array.isArray(orderRaw)
+        ? (orderRaw[0] as { total: number; status: string } | undefined) ?? null
+        : orderRaw as { total: number; status: string } | null;
+      const montant = order?.status === "paid" ? order.total : (v.prix ?? null);
+      if (montant != null) voucherMontantMap.set(v.code, montant);
+    }
+  }
+
+  const tarifs: TarifAvion[] = tarifAvions ?? [];
+
+  // ── Lignes vols ───────────────────────────────────────────────────────────
+  const vols: LigneVol[] = (resas ?? []).map(r => {
+    const clientRaw = r.clients as unknown;
+    const client = Array.isArray(clientRaw)
+      ? (clientRaw[0] as { prenom: string; nom: string } | undefined) ?? null
+      : clientRaw as { prenom: string; nom: string } | null;
+    const paye = r.paye ?? 0;
+    const remb = r.remboursement ?? 0;
+    // Quand un voucher couvre le vol, le revenu effectif = valeur du voucher
+    const voucherMontant = r.voucher_code ? (voucherMontantMap.get(r.voucher_code) ?? null) : null;
+    const coveredByVoucher = !!r.voucher_code && paye === 0;
+    const effectivePaye = coveredByVoucher ? (voucherMontant ?? 0) : paye;
+    const net = effectivePaye - remb;
+    const prixH = tarifs.length > 0 ? tarifPourDate(tarifs, r.date_vol) : 0;
+    const coutAvion = r.duree_reelle != null && prixH > 0
+      ? Math.round((r.duree_reelle / 60) * prixH * 100) / 100
+      : null;
+    // Part réellement déboursée par le pilote = ce qui n'a pas été couvert par les passagers
+    const partPilote = coutAvion != null ? Math.max(0, Math.round((coutAvion - net) * 100) / 100) : null;
+    const partPilotePct = coutAvion != null && coutAvion > 0 && partPilote != null
+      ? Math.round((partPilote / coutAvion) * 1000) / 10
+      : null;
+    // Part "attendue" si le pilote payait une quote-part égale à chaque occupant (1 pilote + N passagers)
+    const nbOccupants = 1 + (r.passagers ?? 0);
+    const partAttenduePct = nbOccupants > 0 ? Math.round((1 / nbOccupants) * 1000) / 10 : null;
+    return {
+      id: r.id,
+      date: r.date_vol,
+      client: client ? `${client.prenom} ${client.nom}` : "—",
+      type_resa: r.type_resa ?? "standard",
+      acompte: r.acompte ?? null,
+      paye: effectivePaye,
+      remboursement: remb,
+      net_client: net,
+      duree: r.duree ?? null,
+      duree_reelle: r.duree_reelle ?? null,
+      passagers: r.passagers ?? null,
+      cout_avion: coutAvion,
+      part_pilote: partPilote,
+      part_pilote_pct: partPilotePct,
+      part_attendue_pct: partAttenduePct,
+      resultat: coutAvion != null ? Math.round((net - coutAvion) * 100) / 100 : null,
+      voucher_code: r.voucher_code ?? null,
+      voucher_montant: voucherMontant,
+    };
+  });
+
+  // ── Lignes vouchers — seulement les vouchers non encore utilisés ──────────
+  const vouchers: LigneVoucher[] = [];
+
+  for (const v of vouchersShop ?? []) {
+    if (usedVoucherCodes.has(v.code)) continue; // réservation active → ligne vol à la place
+    const orderRaw = v.orders as unknown;
+    const order = Array.isArray(orderRaw)
+      ? (orderRaw[0] as { total: number; status: string } | undefined) ?? null
+      : orderRaw as { total: number; status: string } | null;
+    if (!order || order.status !== "paid") continue;
+    vouchers.push({
+      id: v.id,
+      date: v.created_at.slice(0, 10),
+      destinataire: v.recipient_name ?? v.recipient_email ?? "—",
+      type: "boutique",
+      minutes: v.duration_minutes,
+      montant: order.total,
+      code: v.code,
+    });
+  }
+
+  for (const v of vouchersCash ?? []) {
+    if (usedVoucherCodes.has(v.code)) continue;
+    vouchers.push({
+      id: v.id,
+      date: v.created_at.slice(0, 10),
+      destinataire: v.recipient_name ?? v.recipient_email ?? "—",
+      type: "cash",
+      minutes: v.duration_minutes,
+      montant: v.prix ?? null,
+      code: v.code,
+    });
+  }
+
+  // ── Dépenses ──────────────────────────────────────────────────────────────
+  const depenses: Depense[] = (rawDepenses ?? []).map(d => ({
+    id: d.id,
+    montant: d.montant,
+    description: d.description,
+    date: d.date,
+  }));
+
+  // ── Solde global ──────────────────────────────────────────────────────────
+  // Le revenu d'un vol avec voucher est déjà dans v.paye (= voucher_montant)
+  // Les vouchers non utilisés restent dans le total (argent reçu, service pas encore rendu)
+  let globalEncaisse = 0;
+  let globalRembourse = 0;
+  let globalCoutAvion = 0;
+  let globalPartPilote = 0;
+  let volsAvecCout = 0;
+
+  for (const v of vols) {
+    globalEncaisse += v.paye;
+    globalRembourse += v.remboursement;
+    if (v.cout_avion != null) {
+      globalCoutAvion += v.cout_avion;
+      globalPartPilote += v.part_pilote ?? 0;
+      volsAvecCout++;
+    }
+  }
+  for (const v of vouchers) {
+    globalEncaisse += v.montant ?? 0;
+  }
+
+  const globalDepenses = depenses.reduce((s, d) => s + d.montant, 0);
+
+  const soldeGlobal: SoldeStats = {
+    encaisse: Math.round(globalEncaisse * 100) / 100,
+    rembourse: Math.round(globalRembourse * 100) / 100,
+    cout_avion: Math.round(globalCoutAvion * 100) / 100,
+    depenses: Math.round(globalDepenses * 100) / 100,
+    solde_net: Math.round((globalEncaisse - globalRembourse - globalCoutAvion - globalDepenses) * 100) / 100,
+    part_pilote_moyenne_pct: globalCoutAvion > 0
+      ? Math.round((globalPartPilote / globalCoutAvion) * 1000) / 10
+      : null,
+    vols_avec_cout: volsAvecCout,
+  };
+
+  return { vols, vouchers, depenses, soldeGlobal };
+}

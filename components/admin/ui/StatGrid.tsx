@@ -1,6 +1,6 @@
 interface StatGridProps {
   children: React.ReactNode;
-  cols?: 2 | 3 | 4 | 5;
+  cols?: 2 | 3 | 4 | 5 | 6;
 }
 
 // Sur mobile : bande défilante horizontale (une seule ligne, ne bouffe pas la hauteur
@@ -13,6 +13,7 @@ const COLS: Record<number, string> = {
   3: `${BASE} sm:grid-cols-3`,
   4: `${BASE} sm:grid-cols-4`,
   5: `${BASE} sm:grid-cols-5`,
+  6: `${BASE} sm:grid-cols-6`,
 };
 
 export function StatGrid({ children, cols = 4 }: StatGridProps) {
