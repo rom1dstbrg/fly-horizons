@@ -4,8 +4,8 @@ import Link from "next/link";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import { DA40Section } from "@/components/about/DA40Section";
 import {
-  BadgeCheck, Route, ArrowRight, MapPin, Clock,
-  Banknote, Compass, Users,
+  BadgeCheck, ArrowRight, MapPin, Clock,
+  CloudRain, Users, Mail,
 } from "lucide-react";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
@@ -39,7 +39,7 @@ export default function AboutPage() {
                 <span className="text-[#0b2238]">Destanberg</span>
               </h1>
               <p className="text-foreground/40 text-xs font-semibold uppercase tracking-[2px]">
-                Fondateur &amp; Pilote · Fly Horizons
+                Fondateur &amp; pilote de vols partagés en Belgique
               </p>
             </div>
 
@@ -120,44 +120,41 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ══ L'APPROCHE ══ */}
+      {/* ══ SÉCURITÉ & CONFIANCE ══ */}
       <section className="bg-[#f5f5f7] py-20 sm:py-28 overflow-hidden">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
           <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-4">
-            L&apos;approche Fly Horizons
+            Ce qui compte pour moi
           </p>
           <h2 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight mb-16">
-            Sans marge.<br />
-            <span className="text-[#0b2238]">Uniquement les frais réels.</span>
+            La sécurité avant tout.<br />
+            <span className="text-[#0b2238]">Le reste s&apos;adapte.</span>
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
               {
-                num: "01",
-                icon: <Banknote size={22} />,
-                title: "Partage de frais",
-                text: "Les vols sont organisés dans le cadre réglementé du partage de frais (NCO.GEN.104). Chaque passager contribue aux coûts réels : carburant, redevances, maintenance.",
+                icon: <BadgeCheck size={22} />,
+                title: "Pilote avant tout",
+                text: "Licence CPL(A), formation continue, heures de vol régulières. Voler est mon métier, pas une activité annexe.",
               },
               {
-                num: "02",
-                icon: <Compass size={22} />,
-                title: "Votre vol, vos règles",
-                text: "Destination, durée, nombre de passagers, escales : vous décidez de tout. Personne d'autre ne propose ça. L'itinéraire est composé avec vous, pas à votre place.",
+                icon: <CloudRain size={22} />,
+                title: "La météo décide",
+                text: "Si les conditions ne sont pas réunies, je reporte le vol sans frais. La sécurité passe toujours avant le planning.",
               },
               {
-                num: "03",
                 icon: <Users size={22} />,
-                title: "Accessible à tous",
-                text: "L'aviation légère reste hors de portée pour beaucoup. Fly Horizons a été conçu pour changer ça, sans compromis sur la qualité ni sur la sécurité.",
+                title: "Accessible, sans complexité",
+                text: "L'aviation légère reste hors de portée pour beaucoup. Fly Horizons existe pour changer ça, sans compromis sur la sécurité.",
               },
-            ].map(({ num, icon, title, text }) => (
-              <div key={title} className="relative bg-white rounded-2xl p-8 flex flex-col gap-5 shadow-[0_2px_20px_rgba(0,0,0,0.06)] overflow-hidden">
-                <span className="absolute -top-3 right-4 text-[96px] font-black leading-none select-none pointer-events-none tabular-nums text-foreground/[0.05]">
-                  {num}
-                </span>
-                <div className="relative z-10 w-14 h-14 rounded-2xl bg-[#F2B705] flex items-center justify-center text-[#0b2238] shadow-[0_6px_24px_rgba(242,183,5,0.35)]">
+            ].map(({ icon, title, text }) => (
+              <div
+                key={title}
+                className="bg-white rounded-2xl p-8 flex flex-col gap-5 shadow-[0_2px_20px_rgba(0,0,0,0.06)] transition-transform duration-300 hover:-translate-y-1"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-[#F2B705] flex items-center justify-center text-[#0b2238] shadow-[0_6px_24px_rgba(242,183,5,0.35)]">
                   {icon}
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -192,11 +189,11 @@ export default function AboutPage() {
                 <ArrowRight size={15} />
               </Link>
               <Link
-                href="/vol-sur-mesure"
+                href="/contact"
                 className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 border border-border text-foreground/70 rounded-lg text-sm font-semibold hover:border-foreground hover:text-foreground transition-colors"
               >
-                <Route size={15} />
-                Vol sur mesure
+                <Mail size={15} />
+                Nous contacter
               </Link>
             </div>
           </div>

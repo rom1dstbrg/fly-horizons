@@ -31,8 +31,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     { url: siteUrl, lastModified: new Date(), changeFrequency: "daily", priority: 1 },
     { url: `${siteUrl}/nos-offres`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.9 },
-    { url: `${siteUrl}/vol-sur-mesure`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
+    { url: `${siteUrl}/about`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.7 },
+    // Masqué 29/07/2026 en attendant confirmation légale — voir audit-legal-fly-horizons.html
+    // { url: `${siteUrl}/vol-sur-mesure`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
     { url: `${siteUrl}/shop`, lastModified: new Date(), changeFrequency: "daily", priority: 0.7 },
+    { url: `${siteUrl}/galerie`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
     { url: `${siteUrl}/faq`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
     { url: `${siteUrl}/contact`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
     { url: `${siteUrl}/politique-de-confidentialite`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.2 },

@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
   const description =
     data.short_description ??
-    `${data.title}, baptême de l'air en avion léger depuis Charleroi (Belgique). Jusqu'à 3 passagers, itinéraire libre.`;
+    `${data.title}, vol partagé en avion léger depuis Charleroi (Belgique). Jusqu'à 3 passagers, itinéraire libre.`;
   const imageUrl = (data.images as { url: string }[])?.[0]?.url ?? `${siteUrl}/piste.jpg`;
 
   return {
@@ -101,7 +101,7 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
     name: vol.title,
     description:
       vol.short_description ??
-      `Baptême de l'air en avion léger depuis Charleroi (EBCI), Belgique. Durée : ${duree} minutes.`,
+      `Vol partagé en avion léger depuis Charleroi (EBCI), Belgique. Durée : ${duree} minutes.`,
     image: image ?? `${siteUrl}/piste.jpg`,
     brand: { "@type": "Brand", name: "Fly Horizons" },
     offers: {
@@ -228,7 +228,8 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
         </div>
       )}
 
-      {/* ══════ VOL SUR MESURE — blanc ══════ */}
+      {/* ══════ VOL SUR MESURE — masqué 29/07/2026 en attendant confirmation légale, voir audit-legal-fly-horizons.html ══════ */}
+      {false && (
       <div className="bg-card border-t border-border pt-14 pb-[88px]">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div>
@@ -250,6 +251,7 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
           </Link>
         </div>
       </div>
+      )}
 
       <VolStickyBar
         id={vol.id} slug={vol.slug} title={vol.title}

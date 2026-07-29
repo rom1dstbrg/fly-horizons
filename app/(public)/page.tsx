@@ -10,17 +10,17 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
 
 export const metadata: Metadata = {
   title: {
-    absolute: "Fly Horizons, baptême de l'air en Belgique | Vols en avion léger depuis Charleroi",
+    absolute: "Fly Horizons, vol partagé en Belgique | Vols en avion léger depuis Charleroi",
   },
   description:
-    "Offrez ou vivez un baptême de l'air inoubliable en avion léger au départ de Charleroi (Belgique). Vols de 30 à 120 min, itinéraire libre, jusqu'à 3 passagers.",
+    "Offrez ou vivez un vol partagé inoubliable en avion léger au départ de Charleroi (Belgique). Vols de 30 à 120 min, itinéraire libre, jusqu'à 3 passagers.",
   alternates: { canonical: siteUrl },
   openGraph: {
-    title: "Fly Horizons, baptême de l'air en Belgique | Vols en avion léger depuis Charleroi",
+    title: "Fly Horizons, vol partagé en Belgique | Vols en avion léger depuis Charleroi",
     description:
-      "Offrez ou vivez un baptême de l'air inoubliable en avion léger au départ de Charleroi (Belgique). Vols de 30 à 120 min, itinéraire libre.",
+      "Offrez ou vivez un vol partagé inoubliable en avion léger au départ de Charleroi (Belgique). Vols de 30 à 120 min, itinéraire libre.",
     url: siteUrl,
-    images: [{ url: `${siteUrl}/piste.jpg`, width: 1200, height: 630, alt: "Fly Horizons, baptême de l'air en Belgique" }],
+    images: [{ url: `${siteUrl}/piste.jpg`, width: 1200, height: 630, alt: "Fly Horizons, vol partagé en Belgique" }],
   },
 };
 
@@ -29,7 +29,7 @@ const localBusinessSchema = {
   "@type": "LocalBusiness",
   name: "Fly Horizons",
   description:
-    "Baptêmes de l'air et vols en avion léger depuis l'aéroport de Charleroi (EBCI), Belgique. Itinéraire 100 % libre, jusqu'à 3 passagers.",
+    "Vols partagés en avion léger depuis l'aéroport de Charleroi (EBCI), Belgique. Itinéraire 100 % libre, jusqu'à 3 passagers.",
   url: siteUrl,
   logo: "https://fly-horizons.com/logo-email.png",
   image: `${siteUrl}/piste.jpg`,
@@ -219,6 +219,7 @@ export default async function HomePage() {
               })}
             </div>
 
+            {/* Masqué 29/07/2026 en attendant confirmation légale — voir audit-legal-fly-horizons.html
             <div className="mt-12 text-center">
               <p className="text-sm text-muted-foreground">
                 Vous voulez voler sur votre propre route ?{" "}
@@ -227,12 +228,14 @@ export default async function HomePage() {
                 </Link>
               </p>
             </div>
+            */}
 
           </div>
         </section>
       )}
 
-      {/* ═══ VOL SUR MESURE ═══ */}
+      {/* ═══ VOL SUR MESURE — masqué 29/07/2026 en attendant confirmation légale, voir audit-legal-fly-horizons.html ═══ */}
+      {false && (
       <section id="vol-sur-mesure" className="bg-[#0b2238] overflow-hidden relative">
 
         {/* Vague haut — background → navy */}
@@ -342,6 +345,7 @@ export default async function HomePage() {
         </div>
 
       </section>
+      )}
 
       {/* ═══ GALERIE ═══ */}
       {galleryPreview.length > 0 && (
@@ -416,11 +420,13 @@ export default async function HomePage() {
                 location: "Liège",
                 text: "Offert à notre fils pour ses 18 ans. Il en parle encore. Le briefing était sérieux sans être intimidant, et Romain lui a même laissé tenir les commandes quelques minutes. Une expérience vraiment unique, pas du tout un vol de tourisme banal.",
               },
+              /* Masqué 29/07/2026 (mentionne le vol sur mesure) — voir audit-legal-fly-horizons.html
               {
                 name: "Thomas D.",
                 location: "Charleroi",
                 text: "J'ai choisi le vol sur mesure pour survoler les Fagnes. Voir le prix se calculer en temps réel m'a mis en confiance : aucune surprise au moment de payer. Pilote à l'écoute, réponse rapide, vol sans accroc. Je recommande sans hésiter.",
               },
+              */
             ].map(({ name, location, text }) => (
               <div key={name} className="relative bg-white rounded-2xl p-8 flex flex-col gap-5 shadow-[0_2px_20px_rgba(0,0,0,0.06)] overflow-hidden">
 

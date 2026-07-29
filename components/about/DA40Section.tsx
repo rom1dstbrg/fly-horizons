@@ -119,9 +119,7 @@ export function DA40Section() {
           </div>
           <p className="text-foreground/60 text-sm leading-relaxed">
             L&apos;avion appartient à <strong className="text-foreground/85">Air Academy New CAG</strong>{" "}
-            (ATO-005, EBCI). Leur assurance couvre tous les occupants. Les vols sont organisés dans
-            le cadre du partage de frais réglementé par{" "}
-            <strong className="text-foreground/85">NCO.GEN.104</strong>.
+            (ATO-005, EBCI). Leur assurance couvre tous les occupants à bord.
           </p>
         </div>
       </div>
