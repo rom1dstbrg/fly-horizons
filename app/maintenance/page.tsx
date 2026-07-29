@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
-import { Mail } from "lucide-react";
+import Image from "next/image";
+import { Mail, Wrench, CalendarClock } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa6";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const metadata: Metadata = {
   title: { absolute: "Fly Horizons" },
@@ -8,7 +10,28 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function MaintenancePage() {
+const DEFAULT_MESSAGE =
+  "Les réservations restent possibles par mail ou WhatsApp, on vous répond vite.";
+
+function formatReopenDate(value: string) {
+  const date = new Date(`${value}T00:00:00`);
+  if (isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat("fr-BE", { dateStyle: "long" }).format(date);
+}
+
+export default async function MaintenancePage() {
+  const db = createAdminClient();
+  const { data: settings } = await db
+    .from("crm_settings")
+    .select("key, value")
+    .in("key", ["maintenance_message", "maintenance_reopen_date"]);
+
+  const get = (key: string) => settings?.find(s => s.key === key)?.value?.trim();
+
+  const message = get("maintenance_message") || DEFAULT_MESSAGE;
+  const reopenDateRaw = get("maintenance_reopen_date");
+  const reopenDate = reopenDateRaw ? formatReopenDate(reopenDateRaw) : null;
+
   return (
     <main className="relative h-dvh w-full overflow-hidden flex flex-col">
 
@@ -31,16 +54,29 @@ export default function MaintenancePage() {
 
       {/* ═══ Contenu ═══ */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 text-center">
-        <p className="animate-fade-in text-[10px] sm:text-xs font-bold tracking-[6px] text-[#F2B705] uppercase mb-4 sm:mb-5">
-          Site en maintenance
-        </p>
+        <div className="animate-fade-in inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#F2B705]/10 border border-[#F2B705]/25 mb-5 sm:mb-6">
+          <Wrench size={11} className="text-[#F2B705]" />
+          <span className="text-[10px] sm:text-xs font-bold tracking-[3px] text-[#F2B705] uppercase">
+            Site en maintenance
+          </span>
+        </div>
+
         <h1 className="animate-slide-up text-5xl sm:text-7xl md:text-8xl font-black text-white leading-[0.92] tracking-tight mb-6 sm:mb-8">
           Fly Horizons
         </h1>
-        <p className="animate-fade-in text-white/60 text-sm sm:text-[15px] leading-relaxed max-w-xs sm:max-w-sm mb-8">
-          On prépare la suite. Pour toute question, écrivez-nous directement,
-          on vous répond vite.
+
+        <p className="animate-fade-in text-white/60 text-sm sm:text-[15px] leading-relaxed max-w-xs sm:max-w-sm mb-5">
+          {message}
         </p>
+
+        {reopenDate && (
+          <div className="animate-fade-in inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.06] border border-white/10 mb-8">
+            <CalendarClock size={14} className="text-[#F2B705] shrink-0" />
+            <span className="text-white/70 text-xs sm:text-sm">
+              Réouverture prévue le <span className="text-white font-semibold">{reopenDate}</span>
+            </span>
+          </div>
+        )}
 
         <div className="animate-slide-up flex flex-col sm:flex-row gap-3">
           <a
@@ -62,9 +98,17 @@ export default function MaintenancePage() {
         </div>
       </div>
 
-      <p className="relative z-10 pb-6 sm:pb-8 text-center font-mono text-[10px] tracking-[3px] text-white/30 uppercase">
-        EBCI · Charleroi, Belgique
-      </p>
+      <div className="relative z-10 pb-6 sm:pb-8 flex justify-center">
+        <Image
+          src="/fly-horizons-logo-white.svg"
+          alt="Fly Horizons"
+          width={1206}
+          height={182}
+          unoptimized
+          className="h-7 sm:h-8 w-auto object-contain opacity-40"
+          style={{ width: "auto" }}
+        />
+      </div>
     </main>
   );
 }

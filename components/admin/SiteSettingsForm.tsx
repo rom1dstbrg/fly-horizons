@@ -9,13 +9,24 @@ interface Props {
   calendarClosedMessage: string;
   chatEnabled: boolean;
   maintenanceMode: boolean;
+  maintenanceMessage: string;
+  maintenanceReopenDate: string;
 }
 
-export function SiteSettingsForm({ calendarClosed, calendarClosedMessage, chatEnabled, maintenanceMode }: Props) {
+export function SiteSettingsForm({
+  calendarClosed,
+  calendarClosedMessage,
+  chatEnabled,
+  maintenanceMode,
+  maintenanceMessage,
+  maintenanceReopenDate,
+}: Props) {
   const [closed,      setClosed]      = useState(calendarClosed);
   const [message,     setMessage]     = useState(calendarClosedMessage);
   const [chat,        setChat]        = useState(chatEnabled);
   const [maintenance, setMaintenance] = useState(maintenanceMode);
+  const [maintMessage,    setMaintMessage]    = useState(maintenanceMessage);
+  const [maintReopenDate, setMaintReopenDate] = useState(maintenanceReopenDate);
   const [saved,   setSaved]   = useState(false);
   const [error,   setError]   = useState("");
   const [isPending, startTransition] = useTransition();
@@ -24,10 +35,12 @@ export function SiteSettingsForm({ calendarClosed, calendarClosedMessage, chatEn
     setError(""); setSaved(false);
     startTransition(async () => {
       const result = await updateSiteSettings({
-        calendar_closed:         closed,
-        calendar_closed_message: message,
-        chat_enabled:            chat,
-        maintenance_mode:        maintenance,
+        calendar_closed:          closed,
+        calendar_closed_message:  message,
+        chat_enabled:             chat,
+        maintenance_mode:         maintenance,
+        maintenance_message:      maintMessage,
+        maintenance_reopen_date:  maintReopenDate,
       });
       if (result.error) setError(result.error);
       else { setSaved(true); setTimeout(() => setSaved(false), 2500); }
@@ -59,6 +72,30 @@ export function SiteSettingsForm({ calendarClosed, calendarClosedMessage, chatEn
           <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${maintenance ? "translate-x-5" : "translate-x-0"}`} />
         </button>
       </div>
+
+      {maintenance && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pl-0">
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">Date de réouverture (optionnel)</label>
+            <input
+              type="date"
+              value={maintReopenDate}
+              onChange={e => { setMaintReopenDate(e.target.value); setSaved(false); }}
+              className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <div className="space-y-1 sm:col-span-2">
+            <label className="text-xs font-medium text-muted-foreground">Message affiché aux visiteurs</label>
+            <textarea
+              value={maintMessage}
+              onChange={e => { setMaintMessage(e.target.value); setSaved(false); }}
+              placeholder="Les réservations restent possibles par mail ou WhatsApp, on vous répond vite."
+              rows={2}
+              className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+            />
+          </div>
+        </div>
+      )}
 
       <div className="border-t border-border" />
 

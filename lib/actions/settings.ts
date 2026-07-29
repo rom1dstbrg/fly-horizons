@@ -145,24 +145,31 @@ export async function updateSiteSettings({
   calendar_closed_message,
   chat_enabled,
   maintenance_mode,
+  maintenance_message,
+  maintenance_reopen_date,
 }: {
   calendar_closed: boolean;
   calendar_closed_message: string;
   chat_enabled: boolean;
   maintenance_mode: boolean;
+  maintenance_message: string;
+  maintenance_reopen_date: string;
 }) {
   try {
     await checkAdmin();
     const db = createAdminClient();
     await Promise.all([
-      db.from("crm_settings").upsert({ key: "calendar_closed",         value: String(calendar_closed) }),
-      db.from("crm_settings").upsert({ key: "calendar_closed_message", value: calendar_closed_message.trim() }),
-      db.from("crm_settings").upsert({ key: "chat_enabled",            value: String(chat_enabled) }),
-      db.from("crm_settings").upsert({ key: "maintenance_mode",        value: String(maintenance_mode) }),
+      db.from("crm_settings").upsert({ key: "calendar_closed",          value: String(calendar_closed) }),
+      db.from("crm_settings").upsert({ key: "calendar_closed_message",  value: calendar_closed_message.trim() }),
+      db.from("crm_settings").upsert({ key: "chat_enabled",             value: String(chat_enabled) }),
+      db.from("crm_settings").upsert({ key: "maintenance_mode",         value: String(maintenance_mode) }),
+      db.from("crm_settings").upsert({ key: "maintenance_message",      value: maintenance_message.trim() }),
+      db.from("crm_settings").upsert({ key: "maintenance_reopen_date",  value: maintenance_reopen_date.trim() }),
     ]);
     revalidatePath("/admin/settings");
     revalidatePath("/reservation");
     revalidatePath("/vol-sur-mesure");
+    revalidatePath("/maintenance");
     revalidatePath("/");
     return { success: true };
   } catch {
