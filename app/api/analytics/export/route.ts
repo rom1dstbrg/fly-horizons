@@ -37,8 +37,8 @@ export async function GET() {
   const header = "date,heure,page,referrer,appareil,visiteur_id\n";
   const rows = (views ?? []).map(v => {
     const d = new Date(v.created_at);
-    const date     = d.toLocaleDateString("fr-BE");
-    const heure    = d.toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit" });
+    const date     = d.toLocaleDateString("fr-BE", { timeZone: "Europe/Brussels" });
+    const heure    = d.toLocaleTimeString("fr-BE", { timeZone: "Europe/Brussels", hour: "2-digit", minute: "2-digit" });
     const page     = `"${v.pathname}"`;
     const referrer = `"${(v as Record<string, unknown>).referrer ?? ""}"`;
     const device   = (v as Record<string, unknown>).device ?? "";

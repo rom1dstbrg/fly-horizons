@@ -2,10 +2,25 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { Monitor, Smartphone, Tablet, Download } from "lucide-react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { StatGrid } from "@/components/admin/ui";
+import { DeleteButton } from "@/components/admin/DeleteButton";
+import { resetAnalytics } from "./actions";
 
 export const metadata = { title: "Analytiques — Admin" };
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
+
+const TZ = "Europe/Brussels";
+const brusselsKeyFmt = new Intl.DateTimeFormat("en-CA", {
+  timeZone: TZ,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+// Clé de jour "YYYY-MM-DD" calculée en heure belge, pas en UTC
+function brusselsDateKey(d: Date): string {
+  return brusselsKeyFmt.format(d);
+}
 
 const PATH_LABELS: Record<string, string> = {
   "/":                                   "Accueil",
@@ -70,9 +85,22 @@ export default async function AnalyticsPage({
 
   const supabase = createAdminClient();
 
+  const now = new Date();
+
+  // Fenêtre de jours belges (ex: 30 derniers jours dont "aujourd'hui")
+  const periodKeys: string[] = [];
+  for (let i = period - 1; i >= 0; i--) {
+    const d = new Date(now); d.setUTCDate(d.getUTCDate() - i);
+    periodKeys.push(brusselsDateKey(d));
+  }
+  const periodKeySet = new Set(periodKeys);
+  const todayKey = periodKeys[periodKeys.length - 1];
+  const last7KeySet = new Set(periodKeys.slice(-7));
+
+  // Marge d'un jour côté requête pour couvrir le décalage UTC ↔ Europe/Brussels,
+  // le filtrage précis se fait ensuite en JS via brusselsDateKey()
   const since = new Date();
-  since.setDate(since.getDate() - period);
-  since.setHours(0, 0, 0, 0);
+  since.setUTCDate(since.getUTCDate() - period - 1);
 
   const { data } = await supabase
     .from("page_views")
@@ -80,19 +108,16 @@ export default async function AnalyticsPage({
     .gte("created_at", since.toISOString())
     .order("created_at", { ascending: false });
 
-  const views = data ?? [];
+  // Ne garde que les vues appartenant réellement à la période sélectionnée (heure belge)
+  const views = (data ?? []).filter(v => periodKeySet.has(brusselsDateKey(new Date(v.created_at))));
 
   function uniqueVisitors(subset: typeof views) {
     return new Set(subset.map(v => (v as Record<string, unknown>).visitor_id).filter(Boolean)).size;
   }
 
   // KPIs
-  const now = new Date();
-  const todayStart = new Date(now); todayStart.setHours(0, 0, 0, 0);
-  const weekStart  = new Date(now); weekStart.setDate(now.getDate() - 7); weekStart.setHours(0, 0, 0, 0);
-
-  const todayViews    = views.filter(v => new Date(v.created_at) >= todayStart);
-  const weekViews     = views.filter(v => new Date(v.created_at) >= weekStart);
+  const todayViews    = views.filter(v => brusselsDateKey(new Date(v.created_at)) === todayKey);
+  const weekViews     = views.filter(v => last7KeySet.has(brusselsDateKey(new Date(v.created_at))));
   const total         = views.length;
   const todayCount    = todayViews.length;
   const weekCount     = weekViews.length;
@@ -106,14 +131,11 @@ export default async function AnalyticsPage({
   const topPages = Object.entries(pageCounts).sort(([, a], [, b]) => b - a).slice(0, 10);
   const maxPage  = topPages[0]?.[1] ?? 1;
 
-  // Daily visits
+  // Daily visits (clés en heure belge)
   const dayMap: Record<string, number> = {};
-  for (let i = period - 1; i >= 0; i--) {
-    const d = new Date(now); d.setDate(d.getDate() - i); d.setHours(0, 0, 0, 0);
-    dayMap[d.toISOString().slice(0, 10)] = 0;
-  }
+  periodKeys.forEach(key => { dayMap[key] = 0; });
   views.forEach(v => {
-    const day = v.created_at.slice(0, 10);
+    const day = brusselsDateKey(new Date(v.created_at));
     if (day in dayMap) dayMap[day]++;
   });
   const dailyData = Object.entries(dayMap).map(([date, count]) => ({ date, count }));
@@ -147,6 +169,11 @@ export default async function AnalyticsPage({
               <Download size={12} />
               Exporter CSV
             </a>
+            <DeleteButton
+              onDelete={resetAnalytics}
+              label="Réinitialiser"
+              confirmMessage="Supprimer toutes les données ?"
+            />
             <div className="flex items-center gap-1 bg-secondary rounded-lg p-1 shrink-0">
               <a
                 href="/admin/analytics?period=7"
