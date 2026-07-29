@@ -41,7 +41,7 @@ export default async function SatisfactionPage({ params }: Props) {
           <div className="text-center space-y-3">
             <h1 className="text-xl font-black text-foreground">Avis déjà envoyé</h1>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Vous avez déjà partagé votre avis pour ce vol. Merci !
+              J&apos;ai bien reçu votre avis pour ce vol. Merci encore, {client.prenom} !
             </p>
           </div>
         ) : (

@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { satisfactionResultEmail, fmtDuration } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { rateLimit, getIp } from "@/lib/rate-limit";
+import { MAX_PHOTOS } from "@/lib/satisfaction";
 
 export async function POST(request: NextRequest) {
   const { allowed } = await rateLimit(`satisfaction:${getIp(request)}`, 5, 60_000);
@@ -12,7 +13,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { reservation_id, note_globale, note_accueil, note_pilote, commentaire, points_amelioration } = body;
+    const { reservation_id, note_globale, note_accueil, note_pilote, commentaire, points_amelioration, photos } = body;
 
     if (
       !reservation_id ||
@@ -24,6 +25,14 @@ export async function POST(request: NextRequest) {
       note_pilote < 1 || note_pilote > 5
     ) {
       return NextResponse.json({ error: "Données invalides." }, { status: 400 });
+    }
+
+    const photoPaths: string[] = Array.isArray(photos) ? photos.filter((p): p is string => typeof p === "string") : [];
+    if (
+      photoPaths.length > MAX_PHOTOS ||
+      photoPaths.some((p) => !p.startsWith(`${reservation_id}/`))
+    ) {
+      return NextResponse.json({ error: "Photos invalides." }, { status: 400 });
     }
 
     const supabase = createAdminClient();
@@ -49,6 +58,7 @@ export async function POST(request: NextRequest) {
       note_pilote,
       commentaire: commentaire?.trim() || null,
       points_amelioration: points_amelioration?.trim() || null,
+      photos: photoPaths,
     });
 
     if (insertErr) {
@@ -79,6 +89,7 @@ export async function POST(request: NextRequest) {
         notePilote: note_pilote,
         commentaire: commentaire?.trim() || null,
         pointsAmelioration: points_amelioration?.trim() || null,
+        nbPhotos: photoPaths.length,
       }),
     });
 

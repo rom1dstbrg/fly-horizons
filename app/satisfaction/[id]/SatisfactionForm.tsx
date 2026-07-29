@@ -1,13 +1,23 @@
 "use client";
 
-import { useState } from "react";
-import { Star, Send, CheckCircle, AlertCircle, MessageSquare } from "lucide-react";
+import { useRef, useState } from "react";
+import { Star, Send, CheckCircle, AlertCircle, MessageSquare, ImagePlus, X, Loader2 } from "lucide-react";
+import { MAX_PHOTOS } from "@/lib/satisfaction";
 
 interface Props {
   reservationId: string;
   prenom: string;
   dateStr: string;
   duree: string;
+}
+
+const MAX_PHOTO_SIZE = 12 * 1024 * 1024;
+
+interface PhotoEntry {
+  localId: string;
+  localUrl: string;
+  status: "uploading" | "done" | "error";
+  path?: string;
 }
 
 function StarRating({
@@ -48,16 +58,150 @@ function StarRating({
   );
 }
 
+function PhotoPicker({
+  photos,
+  onAdd,
+  onRemove,
+  error,
+}: {
+  photos: PhotoEntry[];
+  onAdd: (files: FileList) => void;
+  onRemove: (localId: string) => void;
+  error: string;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  return (
+    <div className="space-y-2">
+      <label className="text-sm font-semibold text-foreground">
+        Un souvenir à partager ?{" "}
+        <span className="text-muted-foreground font-normal">(facultatif)</span>
+      </label>
+      <p className="text-xs text-muted-foreground -mt-1">
+        Une photo prise pendant le vol, du décollage, du paysage... Jusqu&apos;à {MAX_PHOTOS} images ({photos.length}/{MAX_PHOTOS}).
+      </p>
+
+      <div className="flex flex-wrap gap-2">
+        {photos.map((photo) => (
+          <div key={photo.localId} className="relative w-16 h-16 rounded-lg overflow-hidden border border-border shrink-0 group">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={photo.localUrl} alt="" className="w-full h-full object-cover" />
+            {photo.status === "uploading" && (
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                <Loader2 size={16} className="text-white animate-spin" />
+              </div>
+            )}
+            {photo.status === "error" && (
+              <div className="absolute inset-0 bg-red-500/60 flex items-center justify-center">
+                <AlertCircle size={16} className="text-white" />
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => onRemove(photo.localId)}
+              className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+              aria-label="Retirer cette photo"
+            >
+              <X size={11} />
+            </button>
+          </div>
+        ))}
+
+        {photos.length < MAX_PHOTOS && (
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            className="w-16 h-16 rounded-lg border border-dashed border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/40 transition-colors shrink-0 cursor-pointer"
+            aria-label="Ajouter une photo"
+          >
+            <ImagePlus size={18} />
+          </button>
+        )}
+      </div>
+
+      {error && <p className="text-xs text-red-600">{error}</p>}
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(e) => {
+          if (e.target.files) onAdd(e.target.files);
+          e.target.value = "";
+        }}
+      />
+    </div>
+  );
+}
+
 export default function SatisfactionForm({ reservationId, prenom, dateStr, duree }: Props) {
   const [noteGlobale, setNoteGlobale] = useState(0);
   const [noteAccueil, setNoteAccueil] = useState(0);
   const [notePilote, setNotePilote] = useState(0);
   const [commentaire, setCommentaire] = useState("");
   const [pointsAmelioration, setPointsAmelioration] = useState("");
+  const [photos, setPhotos] = useState<PhotoEntry[]>([]);
+  const [photoError, setPhotoError] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
-  const canSubmit = noteGlobale > 0 && noteAccueil > 0 && notePilote > 0 && status === "idle";
+  const uploading = photos.some((p) => p.status === "uploading");
+  const canSubmit = noteGlobale > 0 && noteAccueil > 0 && notePilote > 0 && status === "idle" && !uploading;
+
+  async function uploadPhoto(localId: string, file: File) {
+    try {
+      const fd = new FormData();
+      fd.append("reservation_id", reservationId);
+      fd.append("file", file);
+      const res = await fetch("/api/satisfaction/photo", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) {
+        setPhotoError(data.error ?? "Erreur lors de l'envoi d'une photo.");
+        setPhotos((prev) => prev.map((p) => (p.localId === localId ? { ...p, status: "error" } : p)));
+        return;
+      }
+      setPhotos((prev) => prev.map((p) => (p.localId === localId ? { ...p, status: "done", path: data.path } : p)));
+    } catch {
+      setPhotoError("Impossible d'envoyer une photo. Vérifiez votre connexion.");
+      setPhotos((prev) => prev.map((p) => (p.localId === localId ? { ...p, status: "error" } : p)));
+    }
+  }
+
+  function handleAddPhotos(files: FileList) {
+    const room = MAX_PHOTOS - photos.length;
+    const incoming = Array.from(files).slice(0, room);
+    if (files.length > room) setPhotoError(`${MAX_PHOTOS} photos maximum.`);
+    else setPhotoError("");
+
+    for (const file of incoming) {
+      if (file.size > MAX_PHOTO_SIZE) {
+        setPhotoError("Une photo dépasse 12 Mo et a été ignorée.");
+        continue;
+      }
+      const localId = crypto.randomUUID();
+      const localUrl = URL.createObjectURL(file);
+      setPhotos((prev) => [...prev, { localId, localUrl, status: "uploading" }]);
+      uploadPhoto(localId, file);
+    }
+  }
+
+  function handleRemovePhoto(localId: string) {
+    setPhotos((prev) => {
+      const target = prev.find((p) => p.localId === localId);
+      if (target?.status === "done" && target.path) {
+        fetch("/api/satisfaction/photo", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reservation_id: reservationId, path: target.path }),
+        }).catch(() => {});
+      }
+      if (target) URL.revokeObjectURL(target.localUrl);
+      return prev.filter((p) => p.localId !== localId);
+    });
+    setPhotoError("");
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -74,6 +218,7 @@ export default function SatisfactionForm({ reservationId, prenom, dateStr, duree
           note_pilote: notePilote,
           commentaire,
           points_amelioration: pointsAmelioration,
+          photos: photos.filter((p) => p.status === "done").map((p) => p.path),
         }),
       });
       const data = await res.json();
@@ -90,6 +235,7 @@ export default function SatisfactionForm({ reservationId, prenom, dateStr, duree
   }
 
   if (status === "success") {
+    const nbPhotos = photos.filter((p) => p.status === "done").length;
     return (
       <div className="text-center space-y-4">
         <div className="w-14 h-14 rounded-lg bg-navy flex items-center justify-center mx-auto">
@@ -97,11 +243,11 @@ export default function SatisfactionForm({ reservationId, prenom, dateStr, duree
         </div>
         <h2 className="text-xl font-black text-foreground">Merci, {prenom} !</h2>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          Votre avis a bien été transmis, vos remarques incluses.<br />
-          Chaque retour nous aide à rendre chaque vol meilleur.
+          J&apos;ai bien reçu votre avis{nbPhotos > 0 ? " et vos photos" : ""}.<br />
+          Chaque retour m&apos;aide à rendre chaque vol meilleur, et je le lis personnellement.
         </p>
         <p className="text-xs text-muted-foreground pt-2">
-          À bientôt à bord.
+          À bientôt à bord. — Romain
         </p>
       </div>
     );
@@ -114,7 +260,9 @@ export default function SatisfactionForm({ reservationId, prenom, dateStr, duree
         <p className="text-[10px] font-black text-primary uppercase tracking-[3px] mb-1">
           Enquête de satisfaction
         </p>
-        <h1 className="text-2xl font-black text-foreground mb-1">Votre avis compte</h1>
+        <h1 className="text-2xl font-black text-foreground mb-1">
+          {prenom}, votre avis compte pour moi
+        </h1>
         <p className="text-sm text-muted-foreground">
           Vol du {dateStr} &middot; {duree}
         </p>
@@ -123,8 +271,8 @@ export default function SatisfactionForm({ reservationId, prenom, dateStr, duree
       <div className="flex items-start gap-3 bg-secondary border border-border rounded-lg px-4 py-3.5">
         <MessageSquare size={15} className="text-muted-foreground shrink-0 mt-0.5" />
         <p className="text-xs text-muted-foreground leading-relaxed">
-          <strong className="text-foreground">Nous accueillons toutes les remarques</strong>, bonnes comme mauvaises.
-          Votre honnêteté est précieuse : chaque retour nous aide à rendre chaque vol meilleur.
+          <strong className="text-foreground">J&apos;accueille toutes les remarques</strong>, bonnes comme mauvaises.
+          Je lis chaque retour moi-même : votre honnêteté m&apos;aide à faire vivre un meilleur vol au prochain passager.
         </p>
       </div>
 
@@ -158,7 +306,7 @@ export default function SatisfactionForm({ reservationId, prenom, dateStr, duree
           <span className="text-muted-foreground font-normal">(facultatif)</span>
         </label>
         <p className="text-xs text-muted-foreground -mt-1">
-          Aucun filtre. Si quelque chose n&apos;était pas parfait, dites-le nous franchement.
+          Aucun filtre. Si quelque chose n&apos;était pas parfait, dites-le moi franchement.
         </p>
         <textarea
           id="points_amelioration"
@@ -170,6 +318,8 @@ export default function SatisfactionForm({ reservationId, prenom, dateStr, duree
           className="w-full rounded-lg border border-border bg-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
         />
       </div>
+
+      <PhotoPicker photos={photos} onAdd={handleAddPhotos} onRemove={handleRemovePhoto} error={photoError} />
 
       {status === "error" && (
         <div className="flex items-start gap-2.5 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
@@ -185,6 +335,8 @@ export default function SatisfactionForm({ reservationId, prenom, dateStr, duree
       >
         {status === "loading" ? (
           <span className="animate-pulse">Envoi en cours…</span>
+        ) : uploading ? (
+          <span className="animate-pulse">Envoi des photos…</span>
         ) : (
           <>
             <Send size={16} />
