@@ -16,6 +16,7 @@ const SECTIONS = [
 
 Nom : DESTANBERG Romain
 Activité : Fly Horizons, vols en partage de coûts (NCO.GEN.104)
+Adresse : Rue des Fusillés, 6040 Charleroi, Belgique
 E-mail : info@fly-horizons.com
 Site web : fly-horizons.com
 
@@ -45,6 +46,12 @@ Données collectées : prénom, nom, adresse e-mail, message.
 Finalités : répondre à votre demande.
 Base légale : intérêt légitime (art. 6.1.f RGPD).
 
+MESURE D'AUDIENCE INTERNE
+Données collectées : pages visitées, page d'entrée sur le site (référent), type d'appareil (mobile, tablette, ordinateur), identifiant technique aléatoire stocké dans votre navigateur pour distinguer les visites d'un même appareil.
+Finalités : statistiques internes de fréquentation du site (pages consultées, appareils utilisés). Ces données ne sont jamais utilisées à des fins publicitaires ou de profilage individuel, ni transmises ou vendues à un tiers. Aucun outil tiers (Google Analytics, Meta Pixel, etc.) n'est utilisé — voir section 8.
+Conservation : 13 mois glissants, puis suppression automatique.
+Base légale : intérêt légitime (art. 6.1.f RGPD).
+
 ENQUÊTE DE SATISFACTION
 Données collectées : note et commentaire facultatif.
 Finalités : amélioration de la qualité du service.
@@ -56,7 +63,7 @@ Base légale : intérêt légitime (art. 6.1.f RGPD).`,
 - Données bancaires (numéro de carte, IBAN) : le paiement est géré exclusivement par Stripe, qui traite ces données directement selon ses propres standards de sécurité (PCI-DSS).
 - Données de santé détaillées : seule une mention d'une contre-indication éventuelle au vol peut être signalée librement par le passager dans le champ commentaire.
 - Données de géolocalisation en dehors des waypoints choisis volontairement par le client pour un vol sur mesure.
-- Données de navigation ou cookies de traçage publicitaire : aucun outil de tracking tiers (Google Analytics, Meta Pixel, etc.) n'est installé sur ce site.`,
+- Données de navigation à des fins publicitaires ou de profilage : aucun outil de tracking tiers (Google Analytics, Meta Pixel, etc.) n'est installé sur ce site. Une mesure d'audience strictement interne existe néanmoins, décrite aux sections 2 et 8.`,
   },
   {
     title: "4. Destinataires des données",
@@ -118,14 +125,16 @@ Pour exercer l'un de ces droits, envoyez un e-mail à info@fly-horizons.com en p
 - Accès administrateur protégé par authentification forte.`,
   },
   {
-    title: "8. Cookies",
-    content: `Le site fly-horizons.com utilise uniquement des cookies strictement nécessaires au fonctionnement du service :
+    title: "8. Cookies et mesure d'audience",
+    content: `Le site fly-horizons.com utilise des cookies strictement nécessaires au fonctionnement du service, ainsi qu'un identifiant technique de mesure d'audience interne :
 
 Cookie de session : utilisé pour maintenir votre connexion à votre compte. Durée : session (supprimé à la fermeture du navigateur) ou 30 jours si vous cochez « rester connecté ».
 
-Aucun cookie publicitaire, aucun cookie de traçage tiers, aucun outil d'analyse comportementale (Google Analytics, Facebook Pixel, Hotjar, etc.) n'est utilisé sur ce site.
+Identifiant de mesure d'audience : un identifiant aléatoire est stocké dans le stockage local de votre navigateur (localStorage), et non dans un cookie à proprement parler, afin de distinguer les visites d'un même appareil sur les pages du site. Il permet uniquement d'établir des statistiques internes de fréquentation (pages consultées, type d'appareil) — voir section 2. Il n'est ni partagé ni vendu à un tiers, et n'est jamais utilisé à des fins publicitaires ou de profilage. Ces données sont conservées 13 mois glissants puis supprimées automatiquement.
 
-Vous pouvez à tout moment supprimer les cookies via les paramètres de votre navigateur. La suppression du cookie de session entraîne la déconnexion de votre compte.`,
+Aucun cookie publicitaire, aucun outil tiers de suivi ou d'analyse comportementale (Google Analytics, Facebook Pixel, Hotjar, etc.) n'est utilisé sur ce site.
+
+Vous pouvez à tout moment supprimer les cookies et le stockage local via les paramètres de votre navigateur. La suppression du cookie de session entraîne la déconnexion de votre compte ; la suppression du stockage local génère un nouvel identifiant de mesure d'audience lors de votre prochaine visite.`,
   },
   {
     title: "9. Réclamations",

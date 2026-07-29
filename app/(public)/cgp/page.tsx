@@ -13,6 +13,7 @@ const CGP_SECTIONS = [
     content: `Le site fly-horizons.com est exploité par :
 
 Nom : DESTANBERG Romain
+Adresse : Rue des Fusillés, 6040 Charleroi, Belgique
 E-mail : info@fly-horizons.com
 Site web : fly-horizons.com
 
@@ -177,7 +178,7 @@ Les bons de vol et réservations de vol ne font l'objet d'aucune livraison physi
     title: "14. Protection des données personnelles (RGPD)",
     content: `Les données personnelles collectées lors d'une commande ou d'une réservation (nom, prénom, e-mail, poids déclaré) sont utilisées exclusivement pour le traitement de la commande, la gestion de la réservation et la communication associée.
 
-Responsable du traitement : DESTANBERG Romain, info@fly-horizons.com
+Responsable du traitement : DESTANBERG Romain, Rue des Fusillés, 6040 Charleroi, Belgique, info@fly-horizons.com
 
 Paiements : Les données bancaires sont traitées directement par Stripe et ne transitent pas par les serveurs de Fly Horizons.
 

@@ -53,6 +53,7 @@ export default function CheckoutPage() {
   const [clientInfo, setClientInfo] = useState<{ full_name: string; email: string; phone: string | null } | null>(null);
   const [freeShippingThreshold, setFreeShippingThreshold] = useState<number>(0);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [acceptCgp, setAcceptCgp] = useState(false);
 
   const isVoucherOnlyCart = items.length > 0 && items.every((i) => i.product_type === "voucher");
   const isVoucherOnly = isVoucherOnlyDB ?? isVoucherOnlyCart;
@@ -174,6 +175,7 @@ export default function CheckoutPage() {
   }
 
   async function handleCheckout() {
+    if (!acceptCgp) return;
     if (isLoggedIn === null) return; // auth check still pending
     if (isLoggedIn === false) {
       window.location.href = `/login?redirectTo=${encodeURIComponent("/checkout")}`;
@@ -484,6 +486,21 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={acceptCgp}
+                  onChange={(e) => setAcceptCgp(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 accent-primary shrink-0 cursor-pointer"
+                />
+                <span className="text-xs text-muted-foreground leading-relaxed">
+                  J&apos;ai lu et j&apos;accepte les{" "}
+                  <Link href="/cgp" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 font-semibold hover:brightness-90 transition-all">
+                    Conditions Générales de Vente
+                  </Link>.
+                </span>
+              </label>
+
               {error && (
                 <div className="bg-destructive/10 border border-destructive/30 text-destructive text-xs rounded-lg px-3 py-2">
                   {error}
@@ -492,7 +509,7 @@ export default function CheckoutPage() {
 
               <Button
                 onClick={handleCheckout}
-                disabled={loading}
+                disabled={loading || !acceptCgp}
                 size="lg"
                 className="w-full bg-primary text-primary-foreground hover:brightness-105 font-black shadow-gold h-12 text-base"
               >

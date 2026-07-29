@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Mail, MapPin, Lock, Clock } from "lucide-react";
-import { FaPlane, FaRoute, FaUser, FaCircleQuestion, FaMap, FaEnvelope, FaImages, FaWhatsapp } from "react-icons/fa6";
+import { FaPlane, FaUser, FaCircleQuestion, FaMap, FaEnvelope, FaImages, FaWhatsapp } from "react-icons/fa6";
 import type { IconType } from "react-icons";
 import { NewsletterForm } from "@/components/NewsletterForm";
 
@@ -25,7 +25,8 @@ function IconInstagram({ size = 16 }: { size?: number }) {
 
 const SERVICES: { href: string; label: string; icon: IconType }[] = [
   { href: "/nos-offres",     label: "Nos offres",     icon: FaPlane },
-  { href: "/vol-sur-mesure", label: "Vol sur mesure", icon: FaRoute },
+  // Masqué 29/07/2026 en attendant confirmation légale — voir audit-legal-fly-horizons.html
+  // { href: "/vol-sur-mesure", label: "Vol sur mesure", icon: FaRoute },
 ];
 
 const INFOS: { href: string; label: string; icon: IconType }[] = [
@@ -72,8 +73,7 @@ export function Footer() {
 
           {/* Tagline */}
           <p className="text-white/35 text-xs leading-relaxed">
-            Baptêmes de l&apos;air en avion léger depuis Charleroi (EBCI).
-            Partage de frais réglementé NCO.GEN.104.
+            Vols partagés en avion léger depuis Charleroi (EBCI).
           </p>
 
           {/* Séparateur gold */}
@@ -159,7 +159,7 @@ export function Footer() {
 
           {/* Barre de bas mobile */}
           <div className="flex flex-col items-center gap-2.5 text-center">
-            <p className="text-[11px] text-white/25">© {year} Fly Horizons. Tous droits réservés.</p>
+            <p className="text-[11px] text-white/25">© {year} Fly Horizons — DESTANBERG Romain, Rue des Fusillés, 6040 Charleroi. Tous droits réservés.</p>
             <div className="flex items-center gap-2.5 text-[11px] text-white/25">
               <Link href="/cgp" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">Conditions générales</Link>
               <span className="text-white/15">·</span>
@@ -191,8 +191,7 @@ export function Footer() {
                   width={160} height={40} className="block h-8 w-auto object-contain" unoptimized />
               </Link>
               <p className="text-white/40 text-sm leading-relaxed max-w-xs mt-4">
-                Baptêmes de l&apos;air et vols sur mesure en avion léger depuis Charleroi · EBCI.
-                Organisés dans le cadre du partage de frais réglementé (NCO.GEN.104).
+                Vols partagés en avion léger depuis Charleroi · EBCI.
               </p>
               <div className="mt-4 flex items-center gap-2">
                 {SOCIALS.map(({ href, label, icon }) => (
@@ -271,7 +270,7 @@ export function Footer() {
 
           {/* ── Barre de bas ────────────────────────────────────────── */}
           <div className="py-5 flex items-center justify-between gap-3">
-            <p className="text-xs text-white/25">© {year} Fly Horizons. Tous droits réservés.</p>
+            <p className="text-xs text-white/25">© {year} Fly Horizons — DESTANBERG Romain, Rue des Fusillés, 6040 Charleroi. Tous droits réservés.</p>
             <div className="flex items-center gap-4 text-xs text-white/25">
               <div className="flex items-center gap-3">
                 <Link href="/cgp" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">Conditions générales</Link>
