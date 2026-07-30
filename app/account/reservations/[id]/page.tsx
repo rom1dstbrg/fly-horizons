@@ -6,7 +6,7 @@ import { enrichWaypointNames } from "@/lib/geocode";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Suivi de réservation — Fly Horizons",
+  title: "Suivi de réservation",
 };
 
 interface PageProps {

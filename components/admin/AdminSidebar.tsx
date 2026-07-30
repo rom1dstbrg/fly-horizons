@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Users, MessageSquare, Settings, LogOut,
   Menu, X, ExternalLink, Search,
   CalendarCheck, Route, Clock, Navigation,
-  Package, Ticket, Tag, Images, Bot, Receipt, BarChart2, Mails, Star,
+  Package, Ticket, Tag, Images, Bot, Receipt, BarChart2, Mails, Star, Mail,
 } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 
@@ -57,6 +57,7 @@ const NAVIGATION: NavEntry[] = [
   { type: "section", label: "Site" },
   { type: "link", id: "analytics", icon: BarChart2, label: "Analytiques", href: "/admin/analytics" },
   { type: "link", id: "galerie",   icon: Images,    label: "Galerie",     href: "/admin/galerie"   },
+  { type: "link", id: "emails",    icon: Mail,      label: "Emails",      href: "/admin/emails-preview" },
   { type: "link", id: "settings",  icon: Settings,  label: "Paramètres",  href: "/admin/settings"  },
 ];
 
@@ -160,10 +161,11 @@ function NavContentInner({ onClose }: { onClose?: () => void }) {
       <div className="hidden lg:block px-2.5 pt-2 pb-1 border-t border-border shrink-0">
         <p className="px-3 mb-1.5 text-[9px] font-bold text-muted-foreground/40 uppercase tracking-[1.5px]">Outils</p>
         {[
-          { href: "https://app.netlify.com/teams/rom1dstbrg/projects",             label: "Netlify"  },
-          { href: "https://supabase.com/dashboard",                                label: "Supabase" },
-          { href: "https://resend.com",                                            label: "Resend"   },
-          { href: "https://dashboard.stripe.com/acct_1LMvw92UU7RkMsk7/dashboard", label: "Stripe"   },
+          { href: "https://vercel.com/romain-fly-horizons",                        label: "Vercel"       },
+          { href: "https://supabase.com/dashboard",                                label: "Supabase"     },
+          { href: "https://resend.com/emails",                                     label: "Resend"       },
+          { href: "https://dashboard.stripe.com/acct_1LMvw92UU7RkMsk7/dashboard", label: "Stripe"       },
+          { href: "https://privateemail.com/appsuite/#!!&app=io.ox/mail&folder=default0/INBOX&storeLocale=true", label: "Privatemail" },
         ].map(({ href, label }) => (
           <a
             key={href}

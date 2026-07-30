@@ -12,16 +12,16 @@ import { PackCard } from "@/components/shop/PackCard";
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
 
 export const metadata = {
-  title: "Vol partagé en Belgique | Vols 30 à 120 min | Fly Horizons",
+  title: "Vol partagé en Belgique · Vols 30 à 120 min",
   description:
-    "Vols partagés en avion léger depuis Charleroi, vols de 30 à 120 min ou sur mesure. Itinéraire libre, jusqu'à 3 passagers. Réservez votre vol en Belgique.",
+    "Vols partagés en avion léger depuis Charleroi, vols de 30 à 120 min. Itinéraire libre, jusqu'à 3 passagers. Réservez votre vol en Belgique.",
   alternates: { canonical: `${siteUrl}/nos-offres` },
   openGraph: {
-    title: "Vol partagé en Belgique | Vols 30 à 120 min | Fly Horizons",
+    title: "Vol partagé en Belgique · Vols 30 à 120 min · Fly Horizons",
     description:
-      "Vols partagés en avion léger depuis Charleroi, vols de 30 à 120 min ou sur mesure. Itinéraire libre, jusqu'à 3 passagers.",
+      "Vols partagés en avion léger depuis Charleroi, vols de 30 à 120 min. Itinéraire libre, jusqu'à 3 passagers.",
     url: `${siteUrl}/nos-offres`,
-    images: [{ url: `${siteUrl}/piste.jpg`, width: 1200, height: 630, alt: "Vol partagé, Fly Horizons Charleroi" }],
+    images: [{ url: `${siteUrl}/da-40.webp`, width: 1600, height: 1068, alt: "Vol partagé, Fly Horizons Charleroi" }],
   },
 };
 
@@ -110,7 +110,7 @@ export default async function NosOffresPage() {
                 <span className="text-[#F2B705]">Payez ce que vous volez.</span>
               </h2>
               <p className="text-white/60 text-sm leading-relaxed mb-6 max-w-md">
-                Un assistant pas à pas vous guide — villes, monuments, lieux qui vous tiennent
+                Un assistant pas à pas vous guide, villes, monuments, lieux qui vous tiennent
                 à cœur. Tracez votre route sur la carte : durée et prix s&apos;affichent en direct,
                 à la minute de vol réelle.
               </p>
@@ -123,7 +123,7 @@ export default async function NosOffresPage() {
                 <p className="text-white/70 text-xs leading-relaxed">
                   <span className="text-white font-semibold">Pas de forfait. Pas de tranche fixe.</span>{" "}
                   Vous volez 52 minutes ? Vous payez 52 minutes. Le prix s&apos;ajuste à la seconde
-                  de vol réelle — aucune surprise au moment de payer.
+                  de vol réelle, aucune surprise au moment de payer.
                 </p>
               </div>
 
@@ -134,7 +134,7 @@ export default async function NosOffresPage() {
                     n: "1",
                     icon: <MousePointerClick size={13} />,
                     title: "Choisissez vos destinations, guidé étape par étape",
-                    desc: "Villes belges, châteaux, lieux qui vous tiennent à cœur ou adresse précise — l'assistant vous propose des idées, puis la carte finalise l'itinéraire.",
+                    desc: "Villes belges, châteaux, lieux qui vous tiennent à cœur ou adresse précise, l'assistant vous propose des idées, puis la carte finalise l'itinéraire.",
                   },
                   {
                     n: "2",
@@ -145,7 +145,7 @@ export default async function NosOffresPage() {
                   {
                     n: "3",
                     icon: <PlaneTakeoff size={13} />,
-                    title: "Romain confirme sous 24 h — l'acompte vient ensuite",
+                    title: "Romain confirme sous 24 h, l'acompte vient ensuite",
                     desc: "Il vérifie la faisabilité (espaces aériens, restrictions) et vous envoie la confirmation. Le lien de paiement n'arrive qu'après votre accord.",
                   },
                 ].map(({ n, icon, title, desc }) => (
@@ -233,41 +233,51 @@ export default async function NosOffresPage() {
       )}
 
       {/* ══════════════════════════════════════════
-          Demande particulière
+          Occasion particulière
       ══════════════════════════════════════════ */}
-      <div className="bg-[#f5f5f7] py-16">
-        <div className="max-w-[860px] mx-auto px-4 sm:px-6 text-center">
-          <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-4">Demande particulière</p>
-          <h2 className="text-3xl sm:text-4xl font-black text-foreground leading-tight mb-4">
-            Vous avez une idée en tête ?
-          </h2>
-          <p className="text-muted-foreground text-sm leading-relaxed mb-8 max-w-md mx-auto">
-            Anniversaire, demande en mariage, vol en groupe, itinéraire spécial... Contactez-nous et on s&apos;adapte.
-          </p>
-          <div className="flex flex-wrap justify-center gap-2.5 mb-8">
-            {["Anniversaire", "Demande en mariage", "Vol en groupe", "Itinéraire spécial", "Cadeau original"].map((tag) => (
-              <span key={tag} className="px-4 py-2 bg-white border border-border rounded-full text-sm font-medium text-foreground shadow-sm">
-                {tag}
-              </span>
-            ))}
-          </div>
-          <div className="flex flex-wrap justify-center gap-3">
-            <a
-              href="https://wa.me/32472324135"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-5 py-3.5 text-sm font-bold bg-[#25D366] text-white rounded-lg hover:bg-[#1ebe5d] transition-colors"
-            >
-              <FaWhatsapp size={15} />
-              WhatsApp
-            </a>
-            <Link
-              href="/contact"
-              className="inline-flex items-center gap-2 px-7 py-3.5 bg-[#F2B705] text-[#0b2238] font-black text-sm rounded-lg hover:bg-[#e6a800] transition-colors shadow-md shadow-[#F2B705]/20"
-            >
-              Nous contacter
-              <ArrowRight size={15} />
-            </Link>
+      <div className="bg-[#f5f5f7] py-16 sm:py-20">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-10">
+
+            <div className="text-center lg:text-left max-w-xl">
+              <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-4">
+                Occasion particulière
+              </p>
+              <h2 className="text-3xl sm:text-4xl font-black text-foreground leading-tight tracking-tight mb-4">
+                Une occasion à célébrer ?
+              </h2>
+              <p className="text-muted-foreground text-sm leading-relaxed mb-6">
+                Anniversaire, demande en mariage, cadeau original : nos vols de 30 à 120 minutes
+                conviennent à toutes ces occasions. Une question avant de réserver ? Contactez-nous.
+              </p>
+              <div className="flex flex-wrap justify-center lg:justify-start gap-2">
+                {["Anniversaire", "Demande en mariage", "Cadeau original"].map((tag) => (
+                  <span key={tag} className="px-3.5 py-1.5 bg-white border border-border rounded-full text-[12px] font-medium text-foreground/70">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0">
+              <a
+                href="https://wa.me/32472324135"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-1.5 px-5 py-3.5 text-sm font-bold bg-[#25D366] text-white rounded-lg hover:bg-[#1ebe5d] transition-colors"
+              >
+                <FaWhatsapp size={15} />
+                WhatsApp
+              </a>
+              <Link
+                href="/contact"
+                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-[#F2B705] text-[#0b2238] font-black text-sm rounded-lg hover:bg-[#e6a800] transition-colors shadow-gold-sm"
+              >
+                Nous contacter
+                <ArrowRight size={15} />
+              </Link>
+            </div>
+
           </div>
         </div>
       </div>

@@ -1,8 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Mail, MapPin, Lock, Clock } from "lucide-react";
-import { FaPlane, FaUser, FaCircleQuestion, FaMap, FaEnvelope, FaImages, FaWhatsapp } from "react-icons/fa6";
-import type { IconType } from "react-icons";
+import { Mail, Lock } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa6";
 import { NewsletterForm } from "@/components/NewsletterForm";
 
 function IconFacebook({ size = 16 }: { size?: number }) {
@@ -23,28 +22,31 @@ function IconInstagram({ size = 16 }: { size?: number }) {
   );
 }
 
-const SERVICES: { href: string; label: string; icon: IconType }[] = [
-  { href: "/nos-offres",     label: "Nos offres",     icon: FaPlane },
-  // Masqué 29/07/2026 en attendant confirmation légale — voir audit-legal-fly-horizons.html
-  // { href: "/vol-sur-mesure", label: "Vol sur mesure", icon: FaRoute },
-];
-
-const INFOS: { href: string; label: string; icon: IconType }[] = [
-  { href: "/about",       label: "À propos",            icon: FaUser },
-  { href: "/faq",         label: "FAQ",                 icon: FaCircleQuestion },
-  { href: "/access-ebci", label: "Plan d'accès · EBCI", icon: FaMap },
-  { href: "/galerie",     label: "Galerie",             icon: FaImages },
-];
-
 const SOCIALS = [
-  { href: "https://www.facebook.com/profile.php?id=61569809631946", label: "Facebook",  icon: <IconFacebook size={15} /> },
+  { href: "mailto:info@fly-horizons.com",                            label: "E-mail",     icon: <Mail size={15} /> },
+  { href: "https://www.facebook.com/profile.php?id=61569809631946",  label: "Facebook",  icon: <IconFacebook size={15} /> },
   { href: "https://www.instagram.com/fly_horizons_belgium/",         label: "Instagram", icon: <IconInstagram size={15} /> },
+  { href: "https://wa.me/32472324135",                               label: "WhatsApp",  icon: <FaWhatsapp size={15} /> },
+];
+
+const INFOS = [
+  { href: "/nos-offres", label: "Nos offres" },
+  { href: "/about",      label: "À propos" },
+  { href: "/faq",        label: "FAQ" },
+  { href: "/galerie",    label: "Galerie" },
+];
+
+const PRATIQUE = [
+  { href: "/access-ebci", label: "Plan d'accès · EBCI" },
+  { href: "/nos-offres", label: "Réserver un vol" },
+  { href: "/account",     label: "Mon compte" },
 ];
 
 export function Footer() {
   const year = new Date().getFullYear();
   const lnk  = "text-sm text-white/45 hover:text-white transition-colors";
   const hd   = "text-[10px] font-bold text-primary uppercase tracking-[2px] mb-4";
+  const social = "text-white/40 hover:text-white transition-colors";
 
   return (
     <footer className="bg-navy border-t border-white/5 mt-auto">
@@ -53,81 +55,56 @@ export function Footer() {
         {/* ════════════════════════════════
             VERSION MOBILE  (< lg)
         ════════════════════════════════ */}
-        <div className="lg:hidden py-8 space-y-6">
+        <div className="lg:hidden py-8 space-y-7">
 
-          {/* Logo + réseaux */}
-          <div className="flex items-center justify-between">
-            <Link href="/" className="inline-block">
+          {/* Logo + tagline + réseaux */}
+          <div>
+            <Link href="/" className="inline-block mb-4">
               <Image src="/fly-horizons-logo-white.svg" alt="Fly Horizons"
                 width={140} height={36} className="block h-7 w-auto object-contain" unoptimized />
             </Link>
-            <div className="flex items-center gap-2">
+            <p className="text-white/40 text-sm leading-relaxed mb-4">
+              Vols partagés en avion léger avec Romain, pilote et fondateur, au départ de
+              l&apos;aérodrome de Charleroi (EBCI).
+            </p>
+            <div className="flex items-center gap-4">
               {SOCIALS.map(({ href, label, icon }) => (
-                <a key={href} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/8 border border-white/8 transition-all">
+                <a key={href} href={href} target={href.startsWith("http") ? "_blank" : undefined}
+                  rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
+                  aria-label={label} className={social}>
                   {icon}
                 </a>
               ))}
             </div>
           </div>
 
-          {/* Tagline */}
-          <p className="text-white/35 text-xs leading-relaxed">
-            Vols partagés en avion léger depuis Charleroi (EBCI).
-          </p>
+          {/* Séparateur */}
+          <div className="h-px bg-white/5" />
 
-          {/* Séparateur gold */}
-          <div className="h-px bg-gradient-to-r from-primary/40 via-primary/10 to-transparent" />
-
-          {/* Liens de navigation — 1 colonne */}
-          <div className="flex flex-col gap-5">
-            {/* Nos services */}
-            <div>
-              <p className="text-[9px] font-bold text-primary/70 uppercase tracking-[2px] mb-3">Nos services</p>
-              <ul className="space-y-2.5">
-                {SERVICES.map(({ href, label, icon: Icon }) => (
-                  <li key={href}>
-                    <Link href={href} className="flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors">
-                      <Icon size={12} className="shrink-0" />{label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Informations */}
+          {/* Liens — 1 colonne */}
+          <div className="flex flex-col gap-6">
             <div>
               <p className="text-[9px] font-bold text-primary/70 uppercase tracking-[2px] mb-3">Informations</p>
               <ul className="space-y-2.5">
-                {INFOS.map(({ href, label, icon: Icon }) => (
-                  <li key={href}>
-                    <Link href={href} className="flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors">
-                      <Icon size={12} className="shrink-0" />{label}
-                    </Link>
-                  </li>
+                {INFOS.map(({ href, label }) => (
+                  <li key={href}><Link href={href} className="text-sm text-white/50 hover:text-white transition-colors">{label}</Link></li>
                 ))}
               </ul>
             </div>
-
-            {/* Contact */}
+            <div>
+              <p className="text-[9px] font-bold text-primary/70 uppercase tracking-[2px] mb-3">Pratique</p>
+              <ul className="space-y-2.5">
+                {PRATIQUE.map(({ href, label }) => (
+                  <li key={href}><Link href={href} className="text-sm text-white/50 hover:text-white transition-colors">{label}</Link></li>
+                ))}
+              </ul>
+            </div>
             <div>
               <p className="text-[9px] font-bold text-primary/70 uppercase tracking-[2px] mb-3">Contact</p>
               <ul className="space-y-2.5">
-                <li>
-                  <a href="mailto:info@fly-horizons.com" className="flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors">
-                    <FaEnvelope size={12} className="shrink-0" />info@fly-horizons.com
-                  </a>
-                </li>
-                <li>
-                  <Link href="/contact" className="flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors">
-                    <FaEnvelope size={12} className="shrink-0" />Formulaire de contact
-                  </Link>
-                </li>
-                <li>
-                  <a href="https://wa.me/32472324135" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors">
-                    <FaWhatsapp size={12} className="shrink-0" />Contacter sur WhatsApp
-                  </a>
-                </li>
+                <li><a href="mailto:info@fly-horizons.com" className="text-sm text-white/50 hover:text-white transition-colors">info@fly-horizons.com</a></li>
+                <li><Link href="/contact" className="text-sm text-white/50 hover:text-white transition-colors">Formulaire de contact</Link></li>
+                <li><a href="https://wa.me/32472324135" target="_blank" rel="noopener noreferrer" className="text-sm text-white/50 hover:text-white transition-colors">WhatsApp</a></li>
               </ul>
             </div>
           </div>
@@ -138,20 +115,8 @@ export function Footer() {
           {/* Newsletter */}
           <div>
             <p className="text-[9px] font-bold text-primary/70 uppercase tracking-[2px] mb-3">Newsletter</p>
-            <p className="text-sm text-white/40 mb-4">Actus et offres exclusives en avant-première.</p>
+            <p className="text-sm text-white/40 mb-4">Recevez un email dès qu&apos;un vol est organisé.</p>
             <NewsletterForm compact />
-          </div>
-
-          {/* Infos pratiques */}
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2.5">
-              <MapPin size={11} className="text-white/30 shrink-0" />
-              <span className="text-xs text-white/30">Charleroi EBCI · Gosselies, Belgique</span>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <Clock size={11} className="text-white/30 shrink-0" />
-              <span className="text-xs text-white/30">7j/7 sur réservation · Réponse email sous 24 h</span>
-            </div>
           </div>
 
           {/* Séparateur */}
@@ -159,7 +124,7 @@ export function Footer() {
 
           {/* Barre de bas mobile */}
           <div className="flex flex-col items-center gap-2.5 text-center">
-            <p className="text-[11px] text-white/25">© {year} Fly Horizons — DESTANBERG Romain, Rue des Fusillés, 6040 Charleroi. Tous droits réservés.</p>
+            <p className="text-[11px] text-white/25">© {year} Fly Horizons, DESTANBERG Romain, Rue des Fusillés, 6040 Charleroi. Tous droits réservés.</p>
             <div className="flex items-center gap-2.5 text-[11px] text-white/25">
               <Link href="/cgp" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">Conditions générales</Link>
               <span className="text-white/15">·</span>
@@ -181,52 +146,46 @@ export function Footer() {
         ════════════════════════════════ */}
         <div className="hidden lg:block">
 
-          {/* ── Grille liens ────────────────────────────────────────── */}
-          <div className="grid lg:grid-cols-[2fr_1fr_1.2fr_1.2fr_1.6fr] gap-10 py-12 border-b border-white/5">
+          {/* ── Logo / tagline / réseaux + 3 colonnes de liens + newsletter ───────── */}
+          <div className="grid lg:grid-cols-[1.6fr_0.9fr_0.9fr_0.9fr_1.3fr] gap-8 py-12">
 
             {/* Marque */}
             <div>
-              <Link href="/" className="inline-block">
+              <Link href="/" className="inline-block mb-4">
                 <Image src="/fly-horizons-logo-white.svg" alt="Fly Horizons"
                   width={160} height={40} className="block h-8 w-auto object-contain" unoptimized />
               </Link>
-              <p className="text-white/40 text-sm leading-relaxed max-w-xs mt-4">
-                Vols partagés en avion léger depuis Charleroi · EBCI.
+              <p className="text-white/40 text-sm leading-relaxed max-w-xs mb-5">
+                Vols partagés en avion léger avec Romain, pilote et fondateur, au départ de
+                l&apos;aérodrome de Charleroi (EBCI).
               </p>
-              <div className="mt-4 flex items-center gap-2">
+              <div className="flex items-center gap-4">
                 {SOCIALS.map(({ href, label, icon }) => (
-                  <a key={href} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/8 border border-white/8 hover:border-white/20 transition-all">
+                  <a key={href} href={href} target={href.startsWith("http") ? "_blank" : undefined}
+                    rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
+                    aria-label={label} className={social}>
                     {icon}
                   </a>
                 ))}
               </div>
             </div>
 
-            {/* Nos services */}
-            <div>
-              <p className={hd}>Nos services</p>
-              <ul className="space-y-2.5">
-                {SERVICES.map(({ href, label, icon: Icon }) => (
-                  <li key={href}>
-                    <Link href={href} className={lnk + " flex items-center gap-2"}>
-                      <Icon size={12} className="shrink-0" />{label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
             {/* Informations */}
             <div>
               <p className={hd}>Informations</p>
               <ul className="space-y-2.5">
-                {INFOS.map(({ href, label, icon: Icon }) => (
-                  <li key={href}>
-                    <Link href={href} className={lnk + " flex items-center gap-2"}>
-                      <Icon size={12} className="shrink-0" />{label}
-                    </Link>
-                  </li>
+                {INFOS.map(({ href, label }) => (
+                  <li key={href}><Link href={href} className={lnk}>{label}</Link></li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Pratique */}
+            <div>
+              <p className={hd}>Pratique</p>
+              <ul className="space-y-2.5">
+                {PRATIQUE.map(({ href, label }) => (
+                  <li key={href}><Link href={href} className={lnk}>{label}</Link></li>
                 ))}
               </ul>
             </div>
@@ -234,34 +193,18 @@ export function Footer() {
             {/* Contact */}
             <div>
               <p className={hd}>Contact</p>
-              <div className="space-y-3">
-                <div className="flex items-start gap-2.5">
-                  <Mail size={13} className="text-primary shrink-0 mt-0.5" />
-                  <a href="mailto:info@fly-horizons.com" className="text-sm text-white/45 hover:text-white transition-colors">
-                    info@fly-horizons.com
-                  </a>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <FaWhatsapp size={13} className="text-primary shrink-0 mt-0.5" />
-                  <a href="https://wa.me/32472324135" target="_blank" rel="noopener noreferrer" className="text-sm text-white/45 hover:text-white transition-colors">
-                    Contacter sur WhatsApp
-                  </a>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <MapPin size={13} className="text-primary shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-white/45">Aéroport de Charleroi</p>
-                    <p className="text-xs text-white/25 mt-0.5">EBCI · Gosselies, Belgique</p>
-                  </div>
-                </div>
-              </div>
+              <ul className="space-y-2.5">
+                <li><a href="mailto:info@fly-horizons.com" className={lnk}>info@fly-horizons.com</a></li>
+                <li><Link href="/contact" className={lnk}>Formulaire de contact</Link></li>
+                <li><a href="https://wa.me/32472324135" target="_blank" rel="noopener noreferrer" className={lnk}>WhatsApp</a></li>
+              </ul>
             </div>
 
             {/* Newsletter */}
             <div>
               <p className={hd}>Newsletter</p>
-              <p className="text-sm text-white/40 leading-relaxed mb-5">
-                Actus et offres exclusives en avant-première.
+              <p className="text-sm text-white/40 leading-relaxed mb-4">
+                Recevez un email dès qu&apos;un vol est organisé.
               </p>
               <NewsletterForm compact />
             </div>
@@ -269,8 +212,8 @@ export function Footer() {
           </div>
 
           {/* ── Barre de bas ────────────────────────────────────────── */}
-          <div className="py-5 flex items-center justify-between gap-3">
-            <p className="text-xs text-white/25">© {year} Fly Horizons — DESTANBERG Romain, Rue des Fusillés, 6040 Charleroi. Tous droits réservés.</p>
+          <div className="py-5 border-t border-white/5 flex items-center justify-between gap-3">
+            <p className="text-xs text-white/25">© {year} Fly Horizons, DESTANBERG Romain, Rue des Fusillés, 6040 Charleroi. Tous droits réservés.</p>
             <div className="flex items-center gap-4 text-xs text-white/25">
               <div className="flex items-center gap-3">
                 <Link href="/cgp" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">Conditions générales</Link>

@@ -61,7 +61,7 @@ export function SiteSettingsForm({
         <div>
           <p className="text-sm font-medium text-foreground">Site en reconstruction</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Redirige tous les visiteurs vers une page &quot;site en pause&quot; (mail + WhatsApp). L&apos;admin reste accessible.
+            Redirige tous les visiteurs vers une page &quot;site en pause&quot; (mail + WhatsApp). Connecté en admin, vous continuez de voir le site normalement.
           </p>
         </div>
         <button

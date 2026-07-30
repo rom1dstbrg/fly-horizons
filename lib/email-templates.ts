@@ -107,7 +107,7 @@ function emailBase(bodyContent: string, title: string, footerExtra?: string): st
         <tr>
           <td bgcolor="#ffffff" style="background-color:#ffffff;padding:20px 0 0;text-align:center;">
             <p style="margin:0;font-size:11px;color:#94a3b8;">
-              Fly Horizons &middot; <a href="https://fly-horizons.com" style="color:#94a3b8;text-decoration:none;">fly-horizons.com</a> &middot; <a href="mailto:info@fly-horizons.com" style="color:#94a3b8;text-decoration:none;">info@fly-horizons.com</a>
+              Fly Horizons &middot; <a href="https://fly-horizons.com" style="color:#94a3b8;text-decoration:none;">fly-horizons.com</a> &middot; <a href="mailto:info@fly-horizons.com" style="color:#94a3b8;text-decoration:none;">info@fly-horizons.com</a> &middot; <a href="https://wa.me/32472324135" style="color:#94a3b8;text-decoration:none;">WhatsApp</a>
             </p>
             ${footerExtra ? `<p style="margin:6px 0 0;font-size:11px;color:#94a3b8;">${footerExtra}</p>` : ""}
           </td>
@@ -498,7 +498,7 @@ export function orderConfirmationEmail(props: OrderConfirmationProps): string {
     </table>
     ${separator()}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;text-align:center;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -603,7 +603,7 @@ export function voucherEmail(props: VoucherEmailProps): string {
     </table>
     ${separator()}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;text-align:center;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -719,7 +719,7 @@ export function volSurMesureQuoteEmail(props: VolSurMesureQuoteEmailProps): stri
       <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -846,7 +846,7 @@ export function reservationPaymentConfirmationEmail(p: ReservationPaymentConfirm
       <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
     <p class="em-muted" style="margin:0 0 24px;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>
 
@@ -918,7 +918,7 @@ export function volSurMesureAcompteEmail(p: VolSurMesureAcompteProps): string {
       <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
     <p class="em-muted" style="margin:0 0 24px;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>
 
@@ -982,7 +982,7 @@ export function reservationDateConfirmeeEmail(p: ReservationDateConfirmeeProps):
       <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
     <p class="em-muted" style="margin:0 0 24px;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>
 
@@ -1038,7 +1038,7 @@ export function reservationHeureConfirmeeEmail(p: ReservationHeureConfirmeeProps
       <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
     <p class="em-muted" style="margin:0 0 24px;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>
 
@@ -1119,9 +1119,13 @@ export function contactAcknowledgmentEmail({ nom, sujet, message, threadUrl }: C
     ${ctaButton(threadUrl, "Suivre la conversation")}` : ""}
 
     ${separator()}
+
     <p class="em-body" style="margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;">
       &Agrave; bient&ocirc;t,<br>
       <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
+    </p>
+    <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
+      C&rsquo;est urgent ? <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">Contactez-nous sur WhatsApp</a>.
     </p>`;
 
   return emailBase(body, "Votre message a été reçu · Fly Horizons");
@@ -1161,7 +1165,7 @@ export function contactReplyEmail({ nom, sujet, reponse, threadUrl }: ContactRep
       <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -1223,7 +1227,7 @@ export function reservationPaymentInvitationEmail(p: ReservationPaymentInvitatio
       <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -1296,7 +1300,7 @@ export function reservationPaymentReminderEmail(p: ReservationPaymentReminderEma
       <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -1359,15 +1363,13 @@ export function reservationAutoAnnuleeEmail(p: ReservationAutoAnnuleeEmailProps)
     ${ctaButton(p.bookingUrl, "Réserver à nouveau")}
 
     ${separator()}
-    <p class="em-body" style="margin:0 0 12px;font-size:13px;color:#334155;line-height:1.7;">
-      S&rsquo;il s&rsquo;agit d&rsquo;une erreur ou si vous avez des questions, n&rsquo;h&eacute;sitez pas &agrave; nous contacter.
-    </p>
+
     <p class="em-body" style="margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;">
       Bonne journ&eacute;e,<br>
       <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      R&eacute;pondez directement &agrave; cet email ou visitez notre
+      Il s&rsquo;agit d&rsquo;une erreur ou vous avez une question ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -1420,8 +1422,8 @@ export function flightReminderEmail(p: FlightReminderEmailProps): string {
       &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord,<br>
       <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
-    <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      Une question de derni&egrave;re minute ? R&eacute;pondez directement &agrave; cet email ou visitez notre
+    <p class="em-muted" style="margin:0 0 20px;font-size:12px;color:#64748b;">
+      Une question de derni&egrave;re minute ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>
 
@@ -1456,7 +1458,7 @@ export function postVolEmail(p: PostVolEmailProps): string {
       <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
   return emailBase(body, "Merci pour votre vol · Fly Horizons");
@@ -1539,7 +1541,7 @@ export function customEmail({ subject, body, rescheduleUrl }: { subject: string;
     ${rescheduleBlock}
     ${separator()}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;text-align:center;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -1609,13 +1611,13 @@ export function rescheduleInviteEmail(p: {
       Votre provision est bien conserv&eacute;e. Choisissez simplement une nouvelle date qui vous convient en cliquant ci-dessous. Le lien est valable 30 jours.
     </p>
     ${ctaButton(p.rescheduleUrl, "Choisir une nouvelle date")}
+
     <p class="em-body" style="margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;">
       &Agrave; tr&egrave;s bient&ocirc;t,<br>
       <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
-    ${separator()}
-    <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;text-align:center;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
+    <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
+      Une question sur ce report ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -1655,7 +1657,7 @@ export function rescheduleConfirmationEmail(p: {
     </p>
     ${separator()}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;text-align:center;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -1775,7 +1777,7 @@ export function routeProposalEmail(p: RouteProposalEmailProps): string {
       <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -1831,12 +1833,13 @@ export function paymentLinkEmail(p: PaymentLinkEmailProps): string {
     <p class="em-body" style="margin:0 0 20px;font-size:13px;color:#334155;line-height:1.7;">
       La provision encaiss&eacute;e couvre votre vol. Apr&egrave;s le vol, le montant d&eacute;finitif est calcul&eacute; selon la dur&eacute;e r&eacute;ellement effectu&eacute;e. Si la provision d&eacute;passe ce montant, la diff&eacute;rence vous est rembours&eacute;e sous 24&nbsp;h.
     </p>
+
     <p class="em-body" style="margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;">
       &Agrave; tr&egrave;s bient&ocirc;t,<br>
       <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
     </p>
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -1932,14 +1935,14 @@ export function newsletterConfirmationEmail(prenom: string | null, unsubscribeUr
     ${separator()}
 
     <p class="em-body" style="margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;">
-      Merci pour votre inscription &agrave; notre newsletter. Vous serez inform&eacute; en avant-premi&egrave;re de nos actualit&eacute;s, nouvelles disponibilit&eacute;s et offres exclusives.
+      Merci pour votre inscription. Vous recevrez un email d&egrave;s que j&rsquo;organise un vol, pour rejoindre l&rsquo;aventure si une place est disponible.
     </p>
 
     ${ctaButton(SITE_URL, "Découvrir nos vols")}
 
     ${separator()}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;text-align:center;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -1966,7 +1969,7 @@ export function newsletterCampaignEmail(subject: string, body: string, prenom: s
 
     ${separator()}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;text-align:center;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 

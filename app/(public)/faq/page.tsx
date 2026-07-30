@@ -135,8 +135,8 @@ const THEMES: Theme[] = [
       },
       {
         q: "Puis-je réserver pour quelqu'un d'autre ?",
-        aText: "Oui. Vous pouvez réserver au nom d'une autre personne, ou lui offrir un bon cadeau qu'elle utilisera elle-même pour choisir sa date. Le bon cadeau est la solution la plus flexible : le bénéficiaire réserve quand il le souhaite.",
-        a: <>Oui. Vous pouvez réserver directement au nom d'une autre personne, ou lui offrir un <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">bon cadeau</Link> qu'elle utilisera elle-même pour choisir sa date.</>,
+        aText: "Oui. Vous pouvez réserver au nom d'une autre personne, ou lui offrir un bon cadeau qu'elle utilisera elle-même pour choisir sa date (contactez-nous pour l'établir). Le bon cadeau est la solution la plus flexible : le bénéficiaire réserve quand il le souhaite.",
+        a: <>Oui. Vous pouvez réserver directement au nom d'une autre personne, ou lui offrir un bon cadeau qu'elle utilisera elle-même pour choisir sa date (<Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link> pour l'établir).</>,
       },
       {
         q: "Combien de temps à l'avance faut-il réserver ?",
@@ -184,8 +184,8 @@ const THEMES: Theme[] = [
     items: [
       {
         q: "Comment acheter un bon cadeau ?",
-        aText: "Rendez-vous sur Nos offres, choisissez la durée de vol souhaitée (30, 60, 90 ou 120 minutes) et payez via Stripe. Le code est envoyé par email dans les minutes qui suivent, au format XXXX-XXXX-XXXX-XXXX. Vous pouvez le transmettre par email ou l'imprimer.",
-        a: <>Rendez-vous sur <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Nos offres</Link>, choisissez la durée souhaitée et payez via Stripe. Le code arrive par email dans les minutes qui suivent, au format <span className="font-mono font-bold text-foreground">XXXX-XXXX-XXXX-XXXX</span>. Vous pouvez le transmettre ou l'imprimer.</>,
+        aText: "L'achat en ligne d'un bon cadeau n'est actuellement pas disponible sur le site. Contactez-nous directement (formulaire de contact ou WhatsApp) : nous établissons le bon cadeau avec vous, il vous est envoyé par email au format XXXX-XXXX-XXXX-XXXX.",
+        a: <>L&apos;achat en ligne d&apos;un bon cadeau n&apos;est actuellement pas disponible sur le site. <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Contactez-nous directement</Link> : nous établissons le bon cadeau avec vous, il vous est envoyé par email au format <span className="font-mono font-bold text-foreground">XXXX-XXXX-XXXX-XXXX</span>.</>,
       },
       {
         q: "Comment le bénéficiaire utilise-t-il le bon cadeau ?",

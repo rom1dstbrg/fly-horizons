@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { AddressBook } from "@/components/account/AddressBook";
 
-export const metadata: Metadata = { title: "Mes adresses — Fly Horizons" };
+export const metadata: Metadata = { title: "Mes adresses" };
 
 export default async function AdressesPage() {
   const supabase = await createClient();

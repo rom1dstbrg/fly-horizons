@@ -444,19 +444,40 @@
         a été remplacé par "vol partagé" sur tout le site, les PDFs et le chatbot — n'annule pas le point de
         fond, atténue juste le signal le plus visible.
       </p>
-      <p style="margin:10px 0 0;padding:10px 13px;background:var(--watch-bg);border:1px solid var(--watch-line);border-radius:8px;font-size:12.5px;color:var(--ink);">
-        <b style="color:var(--watch);">Plan décidé le 29/07/2026 (pas encore implémenté) :</b> arrêter la vente
-        de vouchers (crédit prépayé achetable à l'avance et échangeable n'importe quand) — signal le plus fort
-        de "service à la demande" plutôt que partage de frais. Romain garde la possibilité d'en créer un
-        manuellement via l'admin (<code>createManualVoucher</code>, déjà existant) pour un ami qui veut en
-        offrir un, mais plus de vente publique. <b>Découverte importante en creusant ce chantier</b> : la
-        grille "Nos vols" de la homepage et de <code>/nos-offres</code> pointe entièrement vers le système de
-        voucher (<code>/vols/[slug]</code> → panier → checkout) — ce n'est pas une section séparée de la
-        boutique, c'est la même chose. Retirer les vouchers sans rien changer d'autre ferait disparaître toute
-        la vitrine des vols standard (30/60/90/120 min) du site. Le correctif prévu : faire pointer ces cartes
-        vers <code>/reservation?duree=X</code> (réservation directe à date fixe, déjà un flux sain et
-        indépendant) au lieu de <code>/vols/[slug]</code>, puis désactiver les 4 produits voucher et retirer
-        panier/checkout de la navigation publique. Non commencé — à faire quand il y aura le temps.
+      <p style="margin:10px 0 0;padding:10px 13px;background:var(--good-bg);border:1px solid var(--good-line);border-radius:8px;font-size:12.5px;color:var(--ink);">
+        <b style="color:var(--good);">Vente publique de vouchers arrêtée le 30/07/2026</b> — Romain garde la
+        possibilité d'en créer un manuellement via l'admin (<code>createManualVoucher</code>, inchangé) pour un
+        ami qui veut en offrir un, et un client qui a déjà un code peut toujours le saisir et réserver avec
+        (<code>/api/vouchers/validate</code>, inchangé), mais plus personne ne peut en acheter un depuis le site.
+        <b>Découverte en creusant ce chantier</b> : la grille "Nos vols" de la homepage et de
+        <code>/nos-offres</code> pointait entièrement vers le système de voucher (<code>/vols/[slug]</code> →
+        panier → checkout) — ce n'était pas une section séparée de la boutique, c'était la même chose. Ces
+        cartes pointent maintenant vers <code>/reservation?duree=X</code> (réservation directe à date fixe, flux
+        déjà sain et indépendant) au lieu de <code>/vols/[slug]</code>. <b>Ajustement technique</b> : le plan
+        initial prévoyait de "désactiver les 4 produits voucher" en base (<code>products.active = false</code>),
+        mais <code>/reservation</code> et les cartes elles-mêmes lisent ce même <code>active = true</code> pour
+        retrouver prix/titre/durée — les désactiver aurait aussi cassé la réservation directe. À la place :
+        <code>/cart</code> et <code>/checkout</code> renvoient un contenu "introuvable" + <code>noindex</code>
+        (via <code>notFound()</code> dans leurs layouts, même mécanisme que le vol sur mesure), le lien "Panier"
+        a été retiré du header (desktop + mobile), et les lignes <code>products</code> restent
+        <code>active = true</code> en base. <b>Romain a demandé de garder <code>/vols/[slug]</code></b> comme
+        simple page produit (photos, description, prix, déroulement du vol) — seul le bouton "Offrir ce vol en
+        cadeau" (ajout panier) a été retiré de cette page (<code>VolDetailClient.tsx</code>,
+        <code>VolStickyBar.tsx</code>), il ne reste plus que "Réserver une date" vers
+        <code>/reservation?duree=X</code>. Les cartes "Nos vols" (homepage + <code>/nos-offres</code>) mènent
+        donc à <code>/vols/[slug]</code> comme avant (pas directement à <code>/reservation</code>) — c'est
+        cette page produit qui sert d'étape intermédiaire vers la réservation. Recherchez "30/07/2026" dans le
+        code pour tout retrouver.
+      </p>
+      <p style="margin:10px 0 0;padding:10px 13px;background:var(--good-bg);border:1px solid var(--good-line);border-radius:8px;font-size:12.5px;color:var(--ink);">
+        <b style="color:var(--good);">Chatbot et CGP mis en cohérence (30/07/2026)</b> — le prompt du chatbot
+        (<code>app/api/chat/route.ts</code>) décrivait encore le vol sur mesure comme une formule active et
+        les bons de vol comme achetables sur "Nos offres" : corrigé, il oriente maintenant vers un contact
+        direct pour ces deux cas plutôt que de décrire un achat en ligne qui n'existe plus. Le CGP
+        (<code>app/(public)/cgp/page.tsx</code>, sections 4 et 6) a reçu une mention "actuellement pas
+        disponible" en tête de chaque section concernée, sans supprimer les clauses (utiles pour les bons déjà
+        émis manuellement et si le vol sur mesure est réactivé un jour). Date de mise à jour du CGP passée au
+        30 juillet 2026.
       </p>
       <p style="margin:10px 0 0;padding:10px 13px;background:var(--good-bg);border:1px solid var(--good-line);border-radius:8px;font-size:12.5px;color:var(--ink);">
         <b style="color:var(--good);">Vol sur mesure masqué le 29/07/2026</b> (pas supprimé, code intact) — après
@@ -652,7 +673,7 @@
     </label>
     <label class="check-row" data-id="c1b">
       <input type="checkbox" />
-      <span>Arrêter la vente publique de vouchers : repointer "Nos vols" vers /reservation?duree=X, désactiver les 4 produits voucher, garder la création manuelle en admin pour les cadeaux ponctuels<span class="tag">critique</span></span>
+      <span>Arrêter la vente publique de vouchers : "Nos vols" mène toujours à /vols/[slug] (page produit conservée), bouton "Offrir"/panier retiré de cette page (ne reste que "Réserver" vers /reservation?duree=X), /cart + /checkout masqués (notFound), lien Panier retiré du header, création manuelle en admin conservée — à vérifier sur le site déployé<span class="tag">critique</span></span>
     </label>
     <label class="check-row done" data-id="c1c">
       <input type="checkbox" checked />

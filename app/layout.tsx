@@ -17,7 +17,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
 export const metadata: Metadata = {
   title: {
     default: "Fly Horizons, vol partagé en Belgique",
-    template: "%s | Fly Horizons",
+    template: "%s · Fly Horizons",
   },
   description:
     "Vols partagés et vols privés en avion léger depuis Charleroi (Belgique). Jusqu'à 3 passagers, itinéraire 100 % libre. Réservez votre expérience unique.",

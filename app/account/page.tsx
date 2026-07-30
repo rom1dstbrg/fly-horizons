@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AccountTabs } from "@/components/account/AccountTabs";
 
-export const metadata: Metadata = { title: "Mon compte — Fly Horizons" };
+export const metadata: Metadata = { title: "Mon compte" };
 
 export default async function AccountPage() {
   const supabase = await createClient();

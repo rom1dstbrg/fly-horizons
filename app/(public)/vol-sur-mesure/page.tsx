@@ -297,7 +297,7 @@ export default function VolSurMesurePage() {
                       </div>
                       <div>
                         <h2 className="text-[17px] sm:text-xl font-black text-foreground leading-snug">Des monuments à voir depuis le ciel ?</h2>
-                        <p className="text-sm text-muted-foreground mt-1 hidden sm:block">Châteaux, abbayes, champs de bataille — l&apos;histoire s&apos;ouvre d&apos;en haut.</p>
+                        <p className="text-sm text-muted-foreground mt-1 hidden sm:block">Châteaux, abbayes, champs de bataille, l&apos;histoire s&apos;ouvre d&apos;en haut.</p>
                       </div>
                     </div>
                     <div>
@@ -341,7 +341,7 @@ export default function VolSurMesurePage() {
                       </div>
                       <div>
                         <h2 className="text-[17px] sm:text-xl font-black text-foreground leading-snug">Un endroit qui vous tient à cœur ?</h2>
-                        <p className="text-sm text-muted-foreground mt-1 hidden sm:block">Votre maison, un lieu d&apos;enfance, une adresse particulière — survolé comme jamais.</p>
+                        <p className="text-sm text-muted-foreground mt-1 hidden sm:block">Votre maison, un lieu d&apos;enfance, une adresse particulière, survolé comme jamais.</p>
                       </div>
                     </div>
                     <div>
@@ -351,7 +351,7 @@ export default function VolSurMesurePage() {
                         examples={["ma maison à Namur", "Rue de la Loi 1, Bruxelles", "notre ferme à Libramont", "l'école des enfants", "le bureau à Liège"]} />
                     </div>
                     <div className="hidden sm:block bg-[#f5f5f7] rounded-xl px-4 py-3.5 text-[12px] text-muted-foreground leading-relaxed">
-                      Pas de lieu spécifique ? Aucun problème — passez à la carte pour tracer librement votre route.
+                      Pas de lieu spécifique ? Aucun problème, passez à la carte pour tracer librement votre route.
                     </div>
                   </div>
                 )}

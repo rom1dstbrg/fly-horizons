@@ -618,7 +618,7 @@ export default function ReservationPage() {
                       {!form.poids_unknown && weightWarn && !weightCrit && (
                         <div className="mt-2.5 flex items-start gap-2.5 bg-blue-50 border border-blue-100 px-3.5 py-3 rounded-lg text-sm text-blue-800">
                           <AlertTriangle size={14} className="shrink-0 mt-0.5 text-blue-400" />
-                          <p>Poids un peu élevé — pas de problème, votre pilote vérifiera les conditions le jour J et vous tiendra informé si besoin.</p>
+                          <p>Poids un peu élevé, pas de problème : votre pilote vérifiera les conditions le jour J et vous tiendra informé si besoin.</p>
                         </div>
                       )}
                       {!form.poids_unknown && weightCrit && (

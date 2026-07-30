@@ -4,7 +4,7 @@ import { fmtDuration } from "@/lib/email-templates";
 import SatisfactionForm from "./SatisfactionForm";
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "Enquête de satisfaction — Fly Horizons" };
+export const metadata: Metadata = { title: "Enquête de satisfaction" };
 
 interface Props {
   params: Promise<{ id: string }>;

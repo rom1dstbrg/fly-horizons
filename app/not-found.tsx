@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 
-export const metadata = { title: "Page introuvable — Fly Horizons" };
+export const metadata = { title: "Page introuvable" };
 
 export default function NotFound() {
   return (

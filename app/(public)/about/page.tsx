@@ -2,11 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { ChatWidget } from "@/components/chat/ChatWidget";
-import { DA40Section } from "@/components/about/DA40Section";
-import {
-  BadgeCheck, ArrowRight, MapPin, Clock,
-  CloudRain, Users, Mail,
-} from "lucide-react";
+import { ArrowRight, Mail } from "lucide-react";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
 
@@ -19,93 +15,162 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <main className="min-h-screen bg-[#f5f5f7]">
+    <main className="min-h-screen bg-white">
 
-      {/* ══ ROMAIN ══ */}
-      <section className="bg-[#f5f5f7] pt-[98px]">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-2 sm:pt-12 pb-16 sm:pb-24">
+      {/* ══ 1 · CE QU'EST FLY HORIZONS ══ */}
+      <section className="bg-white pt-[98px]">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-10 sm:pt-20 pb-20 sm:pb-28 flex flex-col items-center text-center">
+          <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-4">
+            Fly Horizons
+          </p>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-foreground leading-[1.02] tracking-tight mb-8">
+            Qu&apos;est-ce que Fly Horizons ?
+          </h1>
+          <div className="space-y-5 text-foreground/65 text-[15px] sm:text-base leading-relaxed">
+            <p>
+              Fly Horizons vous permet de monter à bord d&apos;un avion léger avec moi, au départ
+              de l&apos;aérodrome de Charleroi (EBCI). Ce n&apos;est pas une compagnie aérienne ni
+              une agence de vols touristiques : je vole pour entretenir mes heures de pilote, et je
+              partage ce vol avec des passionnés qui souhaitent se joindre à moi. En échange, vous
+              contribuez aux frais réels du vol (avion, carburant, taxes d&apos;aérodrome), sans
+              marge commerciale ni tarif touristique.
+            </p>
+            <p>
+              Concrètement, les vols durent de 30 minutes à 2 heures, jusqu&apos;à 3 passagers
+              peuvent m&apos;accompagner, et l&apos;itinéraire se construit ensemble selon vos
+              envies et la météo du jour. Casques audio et briefing sécurité sont inclus à chaque vol.
+            </p>
+          </div>
+        </div>
+      </section>
 
-          {/*
-            Mobile / tablette (< lg) : DOM order → A, photo, B
-            Desktop (lg+) : grid 2 col — A col1 row1 | photo col2 rows1-2 | B col1 row2
-          */}
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16">
+      {/* ══ 2 · LE PRINCIPE DU VOL PARTAGÉ ══ */}
+      <div className="bg-[#0b2238] overflow-hidden relative">
 
-            {/* A — Eyebrow + H1 + sous-titre */}
-            <div>
-              <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-5">Votre pilote</p>
-              <h1 className="text-5xl sm:text-6xl xl:text-7xl font-black text-foreground leading-none tracking-tight mb-3">
-                Romain<br />
-                <span className="text-[#0b2238]">Destanberg</span>
-              </h1>
-              <p className="text-foreground/40 text-xs font-semibold uppercase tracking-[2px]">
-                Fondateur &amp; pilote de vols partagés en Belgique
-              </p>
-            </div>
+        <div className="relative h-12 overflow-hidden">
+          <svg viewBox="0 0 1440 48" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,0 L1440,0 L1440,24 Q720,48 0,24 Z" fill="#ffffff" />
+          </svg>
+        </div>
 
-            {/* Photo — col droite desktop (row-span-2), entre A et B sur mobile */}
-            <div className="lg:row-span-2 relative aspect-[4/5] lg:aspect-auto rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.15)]">
-              <Image
-                src="/photo-pilote.png"
-                alt="Romain, pilote et fondateur de Fly Horizons"
-                fill
-                className="object-cover object-top"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                priority
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
-              <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between gap-3">
-                <div className="inline-flex items-center gap-2 bg-black/55 backdrop-blur-md rounded-xl px-3.5 py-2.5">
-                  <BadgeCheck size={14} className="text-[#F2B705] shrink-0" />
-                  <span className="text-white text-xs font-semibold">Licence CPL(A)</span>
-                </div>
-                <div className="bg-white/95 backdrop-blur-sm rounded-xl px-4 py-3 shadow-sm text-right">
-                  <p className="text-xl font-black text-[#0b2238] leading-none">4 ans</p>
-                  <p className="text-foreground/45 text-[10px] font-medium uppercase tracking-wide">d&apos;expérience</p>
-                </div>
+        <section className="py-20 sm:py-28">
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
+            <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-4">
+              Vol partagé
+            </p>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-[1.05] tracking-tight mb-6 max-w-2xl">
+              Le principe du vol partagé.
+            </h2>
+            <p className="text-white/60 text-[15px] sm:text-base leading-relaxed max-w-2xl mb-14">
+              Le vol partagé répond à un cadre précis, distinct d&apos;un transport aérien
+              commercial classique. Il repose sur quatre principes essentiels.
+            </p>
+
+            <div className="grid sm:grid-cols-2 gap-x-16 gap-y-10">
+              <div className="border-t border-white/10 pt-6">
+                <p className="text-white font-black text-[17px] leading-snug mb-2">
+                  Un vol effectué par le pilote, pas sur demande
+                </p>
+                <p className="text-white/50 text-[14px] leading-relaxed">
+                  Vous rejoignez un vol qui a lieu de toute façon, vous ne le commandez pas.
+                </p>
+              </div>
+              <div className="border-t border-white/10 pt-6">
+                <p className="text-white font-black text-[17px] leading-snug mb-2">
+                  Partage des frais réels, sans marge commerciale
+                </p>
+                <p className="text-white/50 text-[14px] leading-relaxed">
+                  Avion, carburant et taxes d&apos;aérodrome sont répartis entre les occupants.
+                </p>
+              </div>
+              <div className="border-t border-white/10 pt-6">
+                <p className="text-white font-black text-[17px] leading-snug mb-2">
+                  Aucun créneau garanti
+                </p>
+                <p className="text-white/50 text-[14px] leading-relaxed">
+                  La météo et mes disponibilités déterminent chaque vol, comme pour tout vol privé.
+                </p>
+              </div>
+              <div className="border-t border-white/10 pt-6">
+                <p className="text-white font-black text-[17px] leading-snug mb-2">
+                  Un cadre non commercial
+                </p>
+                <p className="text-white/50 text-[14px] leading-relaxed">
+                  Ce n&apos;est pas un service de transport aérien, mais une activité de partage
+                  de coûts entre particuliers.
+                </p>
               </div>
             </div>
+          </div>
+        </section>
 
-            {/* B — Citation + bio + tags */}
-            <div className="flex flex-col">
-              <div className="border-l-[3px] border-[#F2B705] pl-5 mb-8">
+        <div className="relative h-12 overflow-hidden">
+          <svg viewBox="0 0 1440 48" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,48 L0,24 Q360,0 720,24 Q1080,48 1440,24 L1440,48 Z" fill="#f5f5f7"/>
+          </svg>
+        </div>
+
+      </div>
+
+      {/* ══ 3 · VOTRE PILOTE ══ */}
+      {/*
+        Mobile (< lg) : la photo (déclarée une fois, dupliquée dans le markup) s'affiche entre
+        l'identité et la citation. Desktop (lg+) : colonne texte (identité + citation + bio, empilées
+        normalement, sans écart) à gauche, photo carrée dans sa propre colonne à droite — pas de
+        row-span partagé entre les deux, pour éviter que la hauteur de la photo n'étire la grille
+        et ne crée un vide entre l'identité et la citation.
+      */}
+      <section className="bg-[#f5f5f7]">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 py-20 sm:py-28">
+          <div className="grid lg:grid-cols-12 gap-10 lg:gap-16">
+
+            {/* Colonne texte */}
+            <div className="lg:col-span-7">
+              <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-4">
+                Votre pilote
+              </p>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-foreground leading-none tracking-tight mb-3">
+                Romain Destanberg
+              </h2>
+              <p className="text-foreground/45 text-[13px] font-medium uppercase tracking-wide">
+                Pilote et fondateur de Fly Horizons
+              </p>
+
+              {/* Photo — visible uniquement sur mobile/tablette, entre l'identité et la citation */}
+              <div className="relative aspect-square rounded-2xl overflow-hidden shadow-premium-xl my-7 lg:hidden">
+                <Image
+                  src="/photo-pilote.png"
+                  alt="Romain, pilote et fondateur de Fly Horizons"
+                  fill
+                  className="object-cover object-top"
+                  sizes="100vw"
+                />
+              </div>
+
+              <div className="border-l-[3px] border-[#F2B705] pl-5 mb-6 mt-7">
                 <p className="text-foreground/65 text-[15px] italic leading-relaxed">
                   &ldquo;Depuis que j&apos;ai découvert ce que c&apos;était de voir le sol
                   s&apos;éloigner à sept ans, je n&apos;ai jamais vraiment atterri.&rdquo;
                 </p>
               </div>
 
-              <div className="space-y-3.5 text-foreground/60 text-sm leading-relaxed mb-9">
-                <p>
-                  Cette passion pour l&apos;aviation, je l&apos;ai construite année après année.
-                  Depuis 4 ans, je la vis pleinement. Et depuis Fly Horizons, je la partage.
-                </p>
-                <p>
-                  Pas de barrière d&apos;entrée, pas de jargon inutile. Juste vous, l&apos;avion,
-                  et l&apos;horizon que vous choisissez. Chaque vol est préparé avec vous :
-                  itinéraire adapté à la météo et à vos envies, briefing sécurité complet avant
-                  le départ, casques audio fournis pour suivre le vol en temps réel.
-                </p>
-                <p>
-                  La sécurité n&apos;est pas un argument de vente. C&apos;est simplement
-                  la façon dont je travaille.
-                </p>
-              </div>
+              <p className="text-foreground/60 text-[15px] leading-relaxed">
+                Cette passion, je l&apos;ai construite année après année. Depuis 4 ans, je la vis
+                pleinement, et depuis Fly Horizons, je la partage. La sécurité n&apos;est pas un
+                argument de vente : c&apos;est simplement la façon dont je travaille.
+              </p>
+            </div>
 
-              <div className="flex flex-wrap gap-2.5">
-                {[
-                  { icon: <BadgeCheck size={12} />, label: "Licence CPL(A)" },
-                  { icon: <Clock size={12} />,       label: "Pilote depuis 4 ans" },
-                  { icon: <MapPin size={12} />,      label: "Aérodrome EBCI · Charleroi" },
-                ].map(({ icon, label }) => (
-                  <span
-                    key={label}
-                    className="inline-flex items-center gap-1.5 bg-white border border-border text-foreground/65 text-[11px] font-medium px-3 py-1.5 rounded-full"
-                  >
-                    <span className="text-[#F2B705]">{icon}</span>
-                    {label}
-                  </span>
-                ))}
+            {/* Photo — visible uniquement sur desktop, colonne indépendante */}
+            <div className="hidden lg:block lg:col-span-5 lg:self-start">
+              <div className="relative aspect-square rounded-2xl overflow-hidden shadow-premium-xl">
+                <Image
+                  src="/photo-pilote.png"
+                  alt="Romain, pilote et fondateur de Fly Horizons"
+                  fill
+                  className="object-cover object-top"
+                  sizes="42vw"
+                />
               </div>
             </div>
 
@@ -113,90 +178,33 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ══ L'AVION ══ */}
-      <section className="bg-white border-t border-border py-20 sm:py-28">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
-          <DA40Section />
-        </div>
-      </section>
+      {/* ══ 4 · FINAL CTA ══ */}
+      <section className="bg-white">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 py-20 flex flex-col items-center text-center">
 
-      {/* ══ SÉCURITÉ & CONFIANCE ══ */}
-      <section className="bg-[#f5f5f7] py-20 sm:py-28 overflow-hidden">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
-
-          <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-4">
-            Ce qui compte pour moi
-          </p>
-          <h2 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight mb-16">
-            La sécurité avant tout.<br />
-            <span className="text-[#0b2238]">Le reste s&apos;adapte.</span>
+          <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-4">Envie d&apos;essayer ?</p>
+          <h2 className="text-3xl sm:text-5xl font-black text-foreground leading-tight tracking-tight mb-3 max-w-2xl">
+            Prêt à embarquer ?
           </h2>
+          <p className="text-foreground/50 text-sm mb-10">Romain vous répond sous 24 heures.</p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {[
-              {
-                icon: <BadgeCheck size={22} />,
-                title: "Pilote avant tout",
-                text: "Licence CPL(A), formation continue, heures de vol régulières. Voler est mon métier, pas une activité annexe.",
-              },
-              {
-                icon: <CloudRain size={22} />,
-                title: "La météo décide",
-                text: "Si les conditions ne sont pas réunies, je reporte le vol sans frais. La sécurité passe toujours avant le planning.",
-              },
-              {
-                icon: <Users size={22} />,
-                title: "Accessible, sans complexité",
-                text: "L'aviation légère reste hors de portée pour beaucoup. Fly Horizons existe pour changer ça, sans compromis sur la sécurité.",
-              },
-            ].map(({ icon, title, text }) => (
-              <div
-                key={title}
-                className="bg-white rounded-2xl p-8 flex flex-col gap-5 shadow-[0_2px_20px_rgba(0,0,0,0.06)] transition-transform duration-300 hover:-translate-y-1"
-              >
-                <div className="w-14 h-14 rounded-2xl bg-[#F2B705] flex items-center justify-center text-[#0b2238] shadow-[0_6px_24px_rgba(242,183,5,0.35)]">
-                  {icon}
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <p className="text-foreground font-black text-[17px] leading-snug">{title}</p>
-                  <p className="text-foreground/60 text-sm leading-relaxed">{text}</p>
-                </div>
-              </div>
-            ))}
+          <div className="flex flex-wrap gap-3 justify-center">
+            <Link
+              href="/nos-offres"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#F2B705] text-[#0b2238] rounded-lg text-sm font-black hover:bg-[#e6a800] transition-colors shadow-gold-sm"
+            >
+              Voir les vols
+              <ArrowRight size={15} />
+            </Link>
+            <Link
+              href="/contact"
+              className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 border border-border text-foreground/70 rounded-lg text-sm font-semibold hover:border-foreground hover:text-foreground transition-colors"
+            >
+              <Mail size={15} />
+              Nous contacter
+            </Link>
           </div>
 
-        </div>
-      </section>
-
-      {/* ══ CTA ══ */}
-      <section className="bg-white border-t border-border py-14">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            <div className="text-center lg:text-left">
-              <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">Prêt à partir ?</p>
-              <h2 className="text-2xl sm:text-3xl font-black text-foreground leading-snug mb-1.5">
-                Regardez ce qu&apos;on propose,<br className="hidden sm:block" />
-                ou dites-nous ce que vous avez en tête.
-              </h2>
-              <p className="text-foreground/50 text-sm">Romain vous revient sous 24 heures.</p>
-            </div>
-            <div className="flex flex-wrap gap-3 justify-center lg:justify-start shrink-0">
-              <Link
-                href="/nos-offres"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#F2B705] text-[#0b2238] rounded-lg text-sm font-black hover:bg-[#e6a800] transition-colors shadow-[0_4px_16px_rgba(242,183,5,0.25)]"
-              >
-                Voir les vols
-                <ArrowRight size={15} />
-              </Link>
-              <Link
-                href="/contact"
-                className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 border border-border text-foreground/70 rounded-lg text-sm font-semibold hover:border-foreground hover:text-foreground transition-colors"
-              >
-                <Mail size={15} />
-                Nous contacter
-              </Link>
-            </div>
-          </div>
         </div>
       </section>
 

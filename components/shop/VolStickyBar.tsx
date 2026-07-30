@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { CalendarCheck, Gift, Check } from "lucide-react";
-import { useCartStore } from "@/store/cart";
+import { CalendarCheck } from "lucide-react";
 
 interface VolStickyBarProps {
   id: string;
@@ -14,10 +13,10 @@ interface VolStickyBarProps {
   image_url: string | null;
 }
 
-export function VolStickyBar({ id, slug, title, price, duree, image_url }: VolStickyBarProps) {
-  const [added, setAdded] = useState(false);
+// Bouton "Offrir" (ajout panier) retiré le 30/07/2026 — arrêt de la vente publique de vouchers,
+// voir audit-legal-fly-horizons.html point critique n°1. Ne reste que la réservation directe.
+export function VolStickyBar({ title, price, duree }: VolStickyBarProps) {
   const [show, setShow] = useState(false);
-  const addItem = useCartStore((s) => s.addItem);
 
   useEffect(() => {
     const el = document.getElementById("vol-cta");
@@ -29,12 +28,6 @@ export function VolStickyBar({ id, slug, title, price, duree, image_url }: VolSt
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
-
-  function handleAddToCart() {
-    addItem({ id, title, price, quantity: 1, image_url, slug, product_type: "voucher" });
-    setAdded(true);
-    setTimeout(() => setAdded(false), 3000);
-  }
 
   return (
     <div className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ${show ? "translate-y-0" : "translate-y-full"}`}>
@@ -54,29 +47,15 @@ export function VolStickyBar({ id, slug, title, price, duree, image_url }: VolSt
             </div>
           </div>
 
-          {/* Droite : boutons */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Droite : bouton */}
+          <Link
+            href={`/reservation?duree=${duree}`}
+            className="h-10 px-5 flex items-center gap-2 bg-[#F2B705] text-[#0b2238] rounded-lg text-sm font-black hover:bg-[#e6a800] transition-colors shadow-[0_2px_8px_rgba(242,183,5,0.35)] whitespace-nowrap shrink-0"
+          >
+            <CalendarCheck size={15} />
+            Réserver
+          </Link>
 
-            <button
-              onClick={handleAddToCart}
-              className="h-10 px-4 flex items-center gap-1.5 rounded-lg border border-[#0b2238]/20 text-sm font-semibold text-[#0b2238] hover:border-[#0b2238] transition-all cursor-pointer whitespace-nowrap"
-            >
-              {added ? (
-                <><Check size={14} className="text-[#F2B705]" /> Ajouté !</>
-              ) : (
-                <><Gift size={14} /> Offrir</>
-              )}
-            </button>
-
-            <Link
-              href={`/reservation?duree=${duree}`}
-              className="h-10 px-5 flex items-center gap-2 bg-[#F2B705] text-[#0b2238] rounded-lg text-sm font-black hover:bg-[#e6a800] transition-colors shadow-[0_2px_8px_rgba(242,183,5,0.35)] whitespace-nowrap"
-            >
-              <CalendarCheck size={15} />
-              Réserver
-            </Link>
-
-          </div>
         </div>
       </div>
     </div>

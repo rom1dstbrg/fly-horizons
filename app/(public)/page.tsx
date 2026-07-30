@@ -10,17 +10,17 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
 
 export const metadata: Metadata = {
   title: {
-    absolute: "Fly Horizons, vol partagé en Belgique | Vols en avion léger depuis Charleroi",
+    absolute: "Fly Horizons, vol partagé en Belgique · Vols en avion léger depuis Charleroi",
   },
   description:
     "Offrez ou vivez un vol partagé inoubliable en avion léger au départ de Charleroi (Belgique). Vols de 30 à 120 min, itinéraire libre, jusqu'à 3 passagers.",
   alternates: { canonical: siteUrl },
   openGraph: {
-    title: "Fly Horizons, vol partagé en Belgique | Vols en avion léger depuis Charleroi",
+    title: "Fly Horizons, vol partagé en Belgique · Vols en avion léger depuis Charleroi",
     description:
       "Offrez ou vivez un vol partagé inoubliable en avion léger au départ de Charleroi (Belgique). Vols de 30 à 120 min, itinéraire libre.",
     url: siteUrl,
-    images: [{ url: `${siteUrl}/piste.jpg`, width: 1200, height: 630, alt: "Fly Horizons, vol partagé en Belgique" }],
+    images: [{ url: `${siteUrl}/da-40.webp`, width: 1600, height: 1068, alt: "Fly Horizons, vol partagé en Belgique" }],
   },
 };
 
@@ -32,7 +32,7 @@ const localBusinessSchema = {
     "Vols partagés en avion léger depuis l'aéroport de Charleroi (EBCI), Belgique. Itinéraire 100 % libre, jusqu'à 3 passagers.",
   url: siteUrl,
   logo: "https://fly-horizons.com/logo-email.png",
-  image: `${siteUrl}/piste.jpg`,
+  image: `${siteUrl}/da-40.webp`,
   address: {
     "@type": "PostalAddress",
     addressLocality: "Charleroi",
@@ -101,7 +101,7 @@ export default async function HomePage() {
         <video
           autoPlay loop muted playsInline
           preload="none"
-          poster="/piste.jpg"
+          poster="/da-40.webp"
           className="absolute inset-0 w-full h-full object-cover"
         >
           <source src="/vol-rev%202.2.mp4" type="video/mp4" />
@@ -260,7 +260,7 @@ export default async function HomePage() {
                 <span className="text-[#F2B705]">Payez ce que vous volez.</span>
               </h2>
               <p className="text-white/60 text-sm leading-relaxed mb-7 max-w-md">
-                Un assistant pas à pas vous aide à choisir vos destinations — villes, châteaux, lieux
+                Un assistant pas à pas vous aide à choisir vos destinations, villes, châteaux, lieux
                 qui vous tiennent à cœur. Le prix s&apos;affiche en direct selon votre itinéraire.
               </p>
 
@@ -279,7 +279,7 @@ export default async function HomePage() {
                   },
                   {
                     icon: <PlaneTakeoff size={14} />,
-                    title: "Romain confirme sous 24 h — vous payez ensuite",
+                    title: "Romain confirme sous 24 h, vous payez ensuite",
                     desc: "Il vérifie l'espace aérien et vous envoie la confirmation. L'acompte n'est demandé qu'après votre accord.",
                   },
                 ].map(({ icon, title, desc }) => (

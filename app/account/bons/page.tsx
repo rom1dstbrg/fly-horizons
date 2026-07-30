@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { Ticket, Download, ChevronRight } from "lucide-react";
 import { formatDuration } from "@/lib/vouchers";
 
-export const metadata: Metadata = { title: "Mes bons de vol — Fly Horizons" };
+export const metadata: Metadata = { title: "Mes bons de vol" };
 
 interface VoucherRow {
   id: string;

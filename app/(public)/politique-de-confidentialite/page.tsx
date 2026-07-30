@@ -48,7 +48,7 @@ Base légale : intérêt légitime (art. 6.1.f RGPD).
 
 MESURE D'AUDIENCE INTERNE
 Données collectées : pages visitées, page d'entrée sur le site (référent), type d'appareil (mobile, tablette, ordinateur), identifiant technique aléatoire stocké dans votre navigateur pour distinguer les visites d'un même appareil.
-Finalités : statistiques internes de fréquentation du site (pages consultées, appareils utilisés). Ces données ne sont jamais utilisées à des fins publicitaires ou de profilage individuel, ni transmises ou vendues à un tiers. Aucun outil tiers (Google Analytics, Meta Pixel, etc.) n'est utilisé — voir section 8.
+Finalités : statistiques internes de fréquentation du site (pages consultées, appareils utilisés). Ces données ne sont jamais utilisées à des fins publicitaires ou de profilage individuel, ni transmises ou vendues à un tiers. Aucun outil tiers (Google Analytics, Meta Pixel, etc.) n'est utilisé, voir section 8.
 Conservation : 13 mois glissants, puis suppression automatique.
 Base légale : intérêt légitime (art. 6.1.f RGPD).
 
@@ -130,7 +130,7 @@ Pour exercer l'un de ces droits, envoyez un e-mail à info@fly-horizons.com en p
 
 Cookie de session : utilisé pour maintenir votre connexion à votre compte. Durée : session (supprimé à la fermeture du navigateur) ou 30 jours si vous cochez « rester connecté ».
 
-Identifiant de mesure d'audience : un identifiant aléatoire est stocké dans le stockage local de votre navigateur (localStorage), et non dans un cookie à proprement parler, afin de distinguer les visites d'un même appareil sur les pages du site. Il permet uniquement d'établir des statistiques internes de fréquentation (pages consultées, type d'appareil) — voir section 2. Il n'est ni partagé ni vendu à un tiers, et n'est jamais utilisé à des fins publicitaires ou de profilage. Ces données sont conservées 13 mois glissants puis supprimées automatiquement.
+Identifiant de mesure d'audience : un identifiant aléatoire est stocké dans le stockage local de votre navigateur (localStorage), et non dans un cookie à proprement parler, afin de distinguer les visites d'un même appareil sur les pages du site. Il permet uniquement d'établir des statistiques internes de fréquentation (pages consultées, type d'appareil), voir section 2. Il n'est ni partagé ni vendu à un tiers, et n'est jamais utilisé à des fins publicitaires ou de profilage. Ces données sont conservées 13 mois glissants puis supprimées automatiquement.
 
 Aucun cookie publicitaire, aucun outil tiers de suivi ou d'analyse comportementale (Google Analytics, Facebook Pixel, Hotjar, etc.) n'est utilisé sur ce site.
 
@@ -236,7 +236,7 @@ export default function PolitiqueConfidentialitePage() {
                 href="mailto:info@fly-horizons.com"
                 className="inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-black bg-primary text-primary-foreground rounded-lg hover:brightness-105 active:scale-[0.98] transition-all shadow-gold"
               >
-                Nous écrire
+                Nous contacter
               </a>
             </div>
           </div>

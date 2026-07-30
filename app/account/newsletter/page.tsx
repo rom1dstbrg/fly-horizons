@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NewsletterSection } from "./NewsletterSection";
 
-export const metadata: Metadata = { title: "Newsletter — Fly Horizons" };
+export const metadata: Metadata = { title: "Newsletter" };
 
 export default async function NewsletterPage() {
   const supabase = await createClient();

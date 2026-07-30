@@ -5,7 +5,7 @@ import { RouteMapView } from "./RouteMapView";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Itinéraire — Fly Horizons",
+  title: "Itinéraire",
 };
 
 interface PageProps {

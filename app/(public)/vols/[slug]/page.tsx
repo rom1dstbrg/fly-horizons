@@ -25,14 +25,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const description =
     data.short_description ??
     `${data.title}, vol partagé en avion léger depuis Charleroi (Belgique). Jusqu'à 3 passagers, itinéraire libre.`;
-  const imageUrl = (data.images as { url: string }[])?.[0]?.url ?? `${siteUrl}/piste.jpg`;
+  const imageUrl = (data.images as { url: string }[])?.[0]?.url ?? `${siteUrl}/da-40.webp`;
 
   return {
     title: data.title,
     description,
     alternates: { canonical: `${siteUrl}/vols/${slug}` },
     openGraph: {
-      title: `${data.title} | Fly Horizons`,
+      title: `${data.title} · Fly Horizons`,
       description,
       url: `${siteUrl}/vols/${slug}`,
       images: [{ url: imageUrl, alt: data.title }],
@@ -102,7 +102,7 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
     description:
       vol.short_description ??
       `Vol partagé en avion léger depuis Charleroi (EBCI), Belgique. Durée : ${duree} minutes.`,
-    image: image ?? `${siteUrl}/piste.jpg`,
+    image: image ?? `${siteUrl}/da-40.webp`,
     brand: { "@type": "Brand", name: "Fly Horizons" },
     offers: {
       "@type": "Offer",

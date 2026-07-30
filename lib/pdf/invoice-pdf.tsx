@@ -179,7 +179,7 @@ function InvoicePDF({
               <Text style={{ fontSize: 9, color: SLATE }}>
                 {data.items.length === 1
                   ? data.items[0].title
-                  : `${data.items.length} articles — Fly Horizons`}
+                  : `${data.items.length} articles · Fly Horizons`}
               </Text>
             </View>
           )}

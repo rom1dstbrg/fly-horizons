@@ -1,5 +1,6 @@
 ﻿import type { Metadata } from "next";
 import { CgvAccordion } from "@/components/shop/CgvAccordion";
+import { FaWhatsapp } from "react-icons/fa6";
 
 export const metadata: Metadata = {
   title: "Conditions Générales de Participation · Fly Horizons",
@@ -42,7 +43,9 @@ La disponibilité est indiquée sur chaque fiche produit. En cas d'indisponibili
   },
   {
     title: "4. Bons de vol (vouchers)",
-    content: `Les bons de vol sont des certificats d'expérience valant droit à une expérience de vol en partage de coûts pour la durée mentionnée (30, 60, 90 ou 120 minutes). Ils peuvent être offerts comme cadeau.
+    content: `IMPORTANT : l'achat en ligne d'un bon de vol n'est actuellement pas disponible sur le site. Un bon de vol peut néanmoins être établi directement auprès de l'exploitant (info@fly-horizons.com) pour être offert en cadeau. Les conditions ci-dessous s'appliquent à tout bon de vol émis, qu'il ait été acheté en ligne par le passé ou établi directement auprès de l'exploitant.
+
+Les bons de vol sont des certificats d'expérience valant droit à une expérience de vol en partage de coûts pour la durée mentionnée (30, 60, 90 ou 120 minutes). Ils peuvent être offerts comme cadeau.
 
 Conditions applicables aux bons de vol :
 
@@ -72,7 +75,9 @@ Durée indicative : La durée du pack est indicative et correspond à une durée
   },
   {
     title: "6. Vols sur mesure",
-    content: `Les vols sur mesure permettent au Client de définir son propre itinéraire (waypoints, escales) au départ de Charleroi (EBCI). Le prix est calculé en fonction de la durée estimée du vol au tarif horaire en vigueur.
+    content: `IMPORTANT : la formule vol sur mesure n'est actuellement pas proposée sur le site (page indisponible), en attendant une clarification du cadre légal applicable. Les conditions ci-dessous restent documentées pour référence et s'appliqueraient si cette formule était réactivée.
+
+Les vols sur mesure permettent au Client de définir son propre itinéraire (waypoints, escales) au départ de Charleroi (EBCI). Le prix est calculé en fonction de la durée estimée du vol au tarif horaire en vigueur.
 
 Processus : Le Client soumet sa demande via le formulaire vol sur mesure. Un devis est établi et une provision est demandée pour confirmer la réservation. Le montant définitif est déterminé après le vol, selon la durée effectivement réalisée.
 
@@ -226,9 +231,9 @@ export default function CgpPage() {
             {/* Métadonnées */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-border rounded-2xl overflow-hidden mb-4">
               {[
-                { label: "Version",          value: "1.0" },
+                { label: "Version",          value: "1.1" },
                 { label: "Exploitant",       value: "DESTANBERG Romain" },
-                { label: "Mise à jour",      value: "26 mai 2026" },
+                { label: "Mise à jour",      value: "30 juillet 2026" },
                 { label: "Droit applicable", value: "Droit belge · EASA" },
               ].map(({ label, value }) => (
                 <div key={label} className="bg-card px-5 py-4">
@@ -260,12 +265,23 @@ export default function CgpPage() {
               <p className="text-sm font-bold text-white mb-0.5">Une question sur ces conditions ?</p>
               <p className="text-xs text-white/50">Réponse personnelle sous 24 h.</p>
             </div>
-            <a
-              href="/contact"
-              className="shrink-0 inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-black bg-primary text-primary-foreground rounded-lg hover:brightness-105 active:scale-[0.98] transition-all shadow-gold"
-            >
-              Nous contacter
-            </a>
+            <div className="flex items-center gap-2 shrink-0">
+              <a
+                href="https://wa.me/32472324135"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-bold bg-[#25D366] text-white rounded-lg hover:bg-[#1ebe5d] transition-colors"
+              >
+                <FaWhatsapp size={15} />
+                WhatsApp
+              </a>
+              <a
+                href="/contact"
+                className="inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-black bg-primary text-primary-foreground rounded-lg hover:brightness-105 active:scale-[0.98] transition-all shadow-gold"
+              >
+                Nous contacter
+              </a>
+            </div>
           </div>
 
         </div>

@@ -4,7 +4,7 @@ import { ChatWidget } from "@/components/chat/ChatWidget";
 import GalleryClient from "./GalleryClient";
 
 export const metadata: Metadata = {
-  title: "Galerie — Fly Horizons",
+  title: "Galerie",
   description: "Découvrez nos vols en avion léger au-dessus de la Wallonie à travers notre galerie photos.",
 };
 

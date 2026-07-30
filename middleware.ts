@@ -28,12 +28,25 @@ export async function middleware(request: NextRequest) {
   // Récupère la session courante
   const { data: { user } } = await supabase.auth.getUser();
 
+  // Récupère le rôle une seule fois, réutilisé pour la maintenance et /admin
+  let profileRole: string | null = null;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    profileRole = profile?.role ?? null;
+  }
+  const isAdmin = profileRole === "admin";
+
   const pathname = request.nextUrl.pathname;
 
   // -------------------------------------------------
   // Site en reconstruction : quand le toggle admin
   // "maintenance_mode" est actif, tout le trafic public
-  // est redirigé vers /maintenance, sauf l'admin, l'auth,
+  // est redirigé vers /maintenance, sauf l'admin (connecté
+  // en tant qu'admin, il voit le site normalement), l'auth,
   // les API et les fichiers SEO/robots.
   // -------------------------------------------------
   const isMaintenanceExempt =
@@ -46,7 +59,7 @@ export async function middleware(request: NextRequest) {
     pathname === "/sitemap.xml" ||
     pathname === "/manifest.webmanifest";
 
-  if (!isMaintenanceExempt) {
+  if (!isMaintenanceExempt && !isAdmin) {
     const { data: maintenanceSetting } = await supabase
       .from("crm_settings")
       .select("value")
@@ -94,14 +107,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // Vérifie le role admin dans la table profiles
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    if (profile?.role !== "admin") {
+    if (!isAdmin) {
       const url = request.nextUrl.clone();
       url.pathname = "/";
       return NextResponse.redirect(url);

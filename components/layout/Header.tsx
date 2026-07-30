@@ -2,31 +2,32 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect, useRef } from "react";
-import { ShoppingBag, User, Menu, X, Home, Mail, Ticket, HelpCircle, Info, Images } from "lucide-react";
-import { CartCount } from "@/components/shop/CartCount";
+import { useState, useEffect } from "react";
+import { User, Menu, X, Home, Mail, Ticket, HelpCircle, Info, Images } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { useCartStore } from "@/store/cart";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
+
+// Panier masqué le 30/07/2026 (arrêt de la vente publique de vouchers, voir
+// audit-legal-fly-horizons.html point critique n°1) — imports et logique de bump retirés avec :
+// import { useRef } from "react"; import { ShoppingBag } from "lucide-react";
+// import { CartCount } from "@/components/shop/CartCount"; import { useCartStore } from "@/store/cart";
+// const cartTotal = useCartStore((s) => s.totalItems());
+// const [cartBump, setCartBump] = useState(false);
+// const prevCartTotal = useRef(cartTotal);
+// useEffect(() => {
+//   if (cartTotal > prevCartTotal.current) {
+//     setCartBump(true);
+//     const t = setTimeout(() => setCartBump(false), 700);
+//     prevCartTotal.current = cartTotal;
+//     return () => clearTimeout(t);
+//   }
+//   prevCartTotal.current = cartTotal;
+// }, [cartTotal]);
 
 export function Header() {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-
-  const cartTotal = useCartStore((s) => s.totalItems());
-  const [cartBump, setCartBump] = useState(false);
-  const prevCartTotal = useRef(cartTotal);
-
-  useEffect(() => {
-    if (cartTotal > prevCartTotal.current) {
-      setCartBump(true);
-      const t = setTimeout(() => setCartBump(false), 700);
-      prevCartTotal.current = cartTotal;
-      return () => clearTimeout(t);
-    }
-    prevCartTotal.current = cartTotal;
-  }, [cartTotal]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -113,13 +114,15 @@ export function Header() {
               </Link>
             )}
 
-            {/* Panier — caché seulement sur très petit écran (≤390px) */}
+            {/* Panier — masqué le 30/07/2026, arrêt de la vente publique de vouchers
+                (voir audit-legal-fly-horizons.html, point critique n°1, checklist c1b) — code intact
             <Link href="/cart" className={`relative max-xs:hidden flex ${iconLinkClass}`} aria-label="Panier">
               <span className={`inline-flex${cartBump ? " animate-cart-bump" : ""}`}>
                 <ShoppingBag size={19} />
               </span>
               <CartCount />
             </Link>
+            */}
 
             {/* Burger mobile uniquement */}
             <button
@@ -174,11 +177,13 @@ export function Header() {
 
             <div className="w-full h-px bg-border my-1.5" />
 
-            {/* Panier + compte dans le menu mobile */}
+            {/* Panier — masqué le 30/07/2026, arrêt de la vente publique de vouchers
+                (voir audit-legal-fly-horizons.html, point critique n°1, checklist c1b) — code intact
             <Link href="/cart" className="flex items-center gap-2.5 text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
               <ShoppingBag size={16} className="text-muted-foreground" />
               Panier
             </Link>
+            */}
             <Link href={user ? "/account" : "/login"} className="flex items-center gap-2.5 text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
               <User size={16} className="text-muted-foreground" />
               {user ? "Mon compte" : "Connexion"}

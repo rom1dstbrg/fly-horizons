@@ -6,7 +6,7 @@ import { CalendarDays, Clock, CreditCard, MapPin, CheckCircle, ChevronRight } fr
 import { RescheduleButton } from "@/components/account/RescheduleButton";
 import { formatDuration } from "@/lib/vouchers";
 
-export const metadata: Metadata = { title: "Mes réservations — Fly Horizons" };
+export const metadata: Metadata = { title: "Mes réservations" };
 
 const RESA_STATUS: Record<string, { label: string; color: string }> = {
   payment_pending:  { label: "Paiement requis",  color: "text-orange-600 bg-orange-50 border-orange-200" },

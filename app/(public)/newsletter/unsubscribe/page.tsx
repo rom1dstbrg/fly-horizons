@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import Link from "next/link";
 import { CheckCircle2, XCircle } from "lucide-react";
 
-export const metadata = { title: "Désinscription newsletter — Fly Horizons" };
+export const metadata = { title: "Désinscription newsletter" };
 
 export default async function UnsubscribePage({
   searchParams,

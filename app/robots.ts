@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/nos-offres", "/about", "/vols/", "/vol-sur-mesure", "/shop", "/product/", "/galerie", "/faq", "/contact"],
+        allow: ["/", "/nos-offres", "/about", "/vols/", "/galerie", "/faq", "/contact"],
         disallow: ["/admin/", "/account/", "/orders/", "/checkout/", "/api/", "/reservation/", "/login", "/register"],
       },
     ],
