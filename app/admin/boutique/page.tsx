@@ -10,13 +10,13 @@ export default async function BoutiquePage() {
 
   const [
     { data: rawVouchers },
-    { data: allProducts },
+    { data: voucherProducts },
     { data: rawClients },
     { data: coupons },
     { data: crmSettings },
   ] = await Promise.all([
     db.from("voucher_codes").select("*").order("created_at", { ascending: false }),
-    db.from("products").select("*, images:product_images(*)").order("created_at", { ascending: false }),
+    db.from("products").select("*, images:product_images(*)").eq("product_type", "voucher").order("created_at", { ascending: false }),
     db.from("clients").select("id, prenom, nom, email, telephone").order("nom"),
     db.from("coupons").select("*").order("created_at", { ascending: false }),
     db.from("crm_settings").select("key, value").in("key", ["prix_heure"]),
@@ -55,14 +55,6 @@ export default async function BoutiquePage() {
     (crmSettings ?? []).find((s: { key: string; value: string }) => s.key === "prix_heure")?.value ?? "0"
   ) || null;
 
-  // Split products
-  const physicalProducts = (allProducts ?? []).filter(
-    p => p.product_type !== "voucher" && !p.voucher_duration_minutes
-  );
-  const voucherProducts = (allProducts ?? []).filter(
-    p => p.product_type === "voucher" || (p.voucher_duration_minutes != null && p.voucher_duration_minutes > 0)
-  );
-
   // Deduplicate clients by email
   const seen = new Set<string>();
   const clients = (rawClients ?? []).filter(c => {
@@ -76,7 +68,7 @@ export default async function BoutiquePage() {
     vouchersTotal:    vouchers.length,
     vouchersDispos:   vouchers.filter(v => v.status === "unused").length,
     vouchersUtilises: vouchers.filter(v => v.status === "used").length,
-    produitsActifs:   (allProducts ?? []).filter(p => p.active).length,
+    produitsActifs:   (voucherProducts ?? []).filter(p => p.active).length,
     coupons:          (coupons ?? []).length,
   };
 
@@ -90,7 +82,6 @@ export default async function BoutiquePage() {
 
       <Suspense fallback={null}>
         <BoutiqueHub
-          physicalProducts={physicalProducts as never}
           voucherProducts={voucherProducts as never}
           vouchers={vouchers}
           clients={clients}

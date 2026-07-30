@@ -19,7 +19,6 @@ type Product = {
   title: string;
   slug: string;
   price: number;
-  stock: number;
   active: boolean;
   product_type?: string;
   voucher_duration_minutes?: number | null;
@@ -32,7 +31,7 @@ const TABS = [
   { key: "coupons",   label: "Coupons",   icon: Tag     },
 ];
 
-function ProductTable({ products, showStock }: { products: Product[]; showStock: boolean }) {
+function ProductTable({ products }: { products: Product[] }) {
   if (products.length === 0) {
     return (
       <div className="bg-card rounded-xl border border-border p-8 text-center">
@@ -55,9 +54,7 @@ function ProductTable({ products, showStock }: { products: Product[]; showStock:
           <tr className="border-b border-border">
             <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Produit</th>
             <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">Prix</th>
-            <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">
-              {showStock ? "Stock" : "Durée"}
-            </th>
+            <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">Durée</th>
             <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">Statut</th>
             <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Actions</th>
           </tr>
@@ -84,13 +81,7 @@ function ProductTable({ products, showStock }: { products: Product[]; showStock:
                 <span className="text-sm font-semibold text-primary">{formatPrice(product.price)}</span>
               </td>
               <td className="px-4 py-3 hidden md:table-cell">
-                {showStock ? (
-                  <span className={`text-sm font-medium ${product.stock === 0 ? "text-destructive" : product.stock <= 5 ? "text-yellow-500" : "text-foreground"}`}>
-                    {product.stock}
-                  </span>
-                ) : (
-                  <span className="text-sm text-foreground">{formatDuration(product.voucher_duration_minutes ?? 60)}</span>
-                )}
+                <span className="text-sm text-foreground">{formatDuration(product.voucher_duration_minutes ?? 60)}</span>
               </td>
               <td className="px-4 py-3 hidden lg:table-cell">
                 <ToggleProductActive productId={product.id} active={product.active} />
@@ -114,7 +105,6 @@ function ProductTable({ products, showStock }: { products: Product[]; showStock:
 }
 
 export function BoutiqueHub({
-  physicalProducts,
   voucherProducts,
   vouchers,
   clients,
@@ -122,7 +112,6 @@ export function BoutiqueHub({
   stats,
   prixHeure60,
 }: {
-  physicalProducts: Product[];
   voucherProducts: Product[];
   vouchers: unknown[];
   clients: unknown[];
@@ -161,7 +150,7 @@ export function BoutiqueHub({
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-2">
                 <Ticket size={15} className="text-navy" />
-                <h3 className="text-sm font-semibold text-foreground">Services / Vols</h3>
+                <h3 className="text-sm font-semibold text-foreground">Vols</h3>
                 <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">{voucherProducts.length}</span>
               </div>
               <Link
@@ -172,14 +161,7 @@ export function BoutiqueHub({
                 Nouveau produit
               </Link>
             </div>
-            <ProductTable products={voucherProducts} showStock={false} />
-
-            <div className="flex items-center gap-2 pt-2">
-              <Package size={15} className="text-muted-foreground" />
-              <h3 className="text-sm font-semibold text-foreground">Accessoires</h3>
-              <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">{physicalProducts.length}</span>
-            </div>
-            <ProductTable products={physicalProducts} showStock={true} />
+            <ProductTable products={voucherProducts} />
           </div>
         )}
 

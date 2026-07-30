@@ -3,7 +3,7 @@
 import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Upload, X, Star, Loader2, Package, Gift, Clock, GripVertical, Check } from "lucide-react";
+import { Upload, X, Loader2, Clock, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,9 +35,7 @@ export function ProductForm({ product }: ProductFormProps) {
   const [success, setSuccess]         = useState<string | null>(null);
   const [isPending, startTransition]  = useTransition();
 
-  const [featured, setFeatured]       = useState(product?.featured ?? false);
   const [active, setActive]           = useState(product?.active ?? true);
-  const [productType, setProductType] = useState<"physical" | "voucher">(product?.product_type ?? "physical");
   const [voucherDuration, setVoucherDuration] = useState<number>(product?.voucher_duration_minutes ?? 60);
 
   const [dragIndex, setDragIndex]         = useState<number | null>(null);
@@ -99,7 +97,6 @@ export function ProductForm({ product }: ProductFormProps) {
     setError(null);
     setSuccess(null);
     const formData = new FormData(e.currentTarget);
-    formData.set("featured", String(featured));
     formData.set("active", String(active));
     startTransition(async () => {
       if (isEdit) {
@@ -226,7 +223,7 @@ export function ProductForm({ product }: ProductFormProps) {
                 name="title"
                 required
                 defaultValue={product?.title}
-                placeholder="Ex : Vol découverte en parapente"
+                placeholder="Ex : Vol découverte 60 min"
                 className="bg-input border-border text-foreground placeholder:text-muted-foreground"
               />
             </div>
@@ -242,86 +239,41 @@ export function ProductForm({ product }: ProductFormProps) {
                 className="w-full bg-input border border-border text-foreground placeholder:text-muted-foreground rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary resize-y leading-relaxed"
               />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="tags" className="text-sm text-muted-foreground">Tags (séparés par des virgules)</Label>
-              <Input
-                id="tags"
-                name="tags"
-                defaultValue={product?.tags?.join(", ")}
-                placeholder="vol, découverte, famille…"
-                className="bg-input border-border text-foreground placeholder:text-muted-foreground"
-              />
-            </div>
           </div>
         </div>
 
         {/* ── Colonne droite : configuration ── */}
         <div className="space-y-5">
 
-          {/* Type de produit */}
+          {/* Durée */}
           <div className="card-premium p-6 space-y-4">
-            <FormSection title="Type" />
-
+            <FormSection title="Durée du vol" />
             <div className="grid grid-cols-2 gap-2">
-              {(["physical", "voucher"] as const).map(type => {
-                const selected = productType === type;
+              {VOUCHER_DURATIONS.map(d => {
+                const selected = voucherDuration === d.value;
                 return (
                   <button
-                    key={type}
+                    key={d.value}
                     type="button"
-                    onClick={() => setProductType(type)}
-                    className={`relative flex flex-col items-center gap-2 py-4 rounded-lg border-2 transition-colors cursor-pointer ${
-                      selected ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground hover:border-primary/30"
+                    onClick={() => setVoucherDuration(d.value)}
+                    className={`flex items-center gap-2 p-2.5 rounded-lg border-2 text-left transition-colors cursor-pointer ${
+                      selected ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
                     }`}
                   >
-                    {type === "physical"
-                      ? <Package size={18} />
-                      : <Gift size={18} />}
-                    <span className="text-xs font-medium">
-                      {type === "physical" ? "Physique" : "Voucher"}
-                    </span>
-                    {selected && (
-                      <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
-                        <Check size={9} className="text-white" />
-                      </span>
-                    )}
+                    <Clock size={13} className={selected ? "text-primary flex-shrink-0" : "text-muted-foreground flex-shrink-0"} />
+                    <div>
+                      <p className={`text-xs font-semibold leading-tight ${selected ? "text-primary" : "text-foreground"}`}>{d.label}</p>
+                      <p className="text-[10px] text-muted-foreground">{d.sub}</p>
+                    </div>
                   </button>
                 );
               })}
             </div>
-
-            {productType === "voucher" && (
-              <div className="space-y-2">
-                <Label className="text-sm text-muted-foreground">Durée du vol</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  {VOUCHER_DURATIONS.map(d => {
-                    const selected = voucherDuration === d.value;
-                    return (
-                      <button
-                        key={d.value}
-                        type="button"
-                        onClick={() => setVoucherDuration(d.value)}
-                        className={`flex items-center gap-2 p-2.5 rounded-lg border-2 text-left transition-colors cursor-pointer ${
-                          selected ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
-                        }`}
-                      >
-                        <Clock size={13} className={selected ? "text-primary flex-shrink-0" : "text-muted-foreground flex-shrink-0"} />
-                        <div>
-                          <p className={`text-xs font-semibold leading-tight ${selected ? "text-primary" : "text-foreground"}`}>{d.label}</p>
-                          <p className="text-[10px] text-muted-foreground">{d.sub}</p>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Prix et stock */}
-          <div className="card-premium p-6 space-y-4">
-            <FormSection title={productType === "voucher" ? "Prix" : "Prix et stock"} />
+          {/* Prix */}
+          <div className="card-premium p-6 space-y-3">
+            <FormSection title="Prix" />
 
             <div className="space-y-2">
               <Label htmlFor="price" className="text-sm text-muted-foreground">Prix (EUR) *</Label>
@@ -333,51 +285,21 @@ export function ProductForm({ product }: ProductFormProps) {
                 min="0"
                 required
                 defaultValue={product?.price}
-                placeholder="9.99"
+                placeholder="199.00"
                 className="bg-input border-border text-foreground placeholder:text-muted-foreground"
               />
             </div>
 
-            {productType === "physical" && (
-              <div className="space-y-2">
-                <Label htmlFor="stock" className="text-sm text-muted-foreground">Stock</Label>
-                <Input
-                  id="stock"
-                  name="stock"
-                  type="number"
-                  min="0"
-                  defaultValue={product?.stock ?? 0}
-                  className="bg-input border-border text-foreground"
-                />
-              </div>
-            )}
-
-            {productType === "voucher" && (
-              <p className="text-xs text-muted-foreground bg-secondary/50 rounded-md px-3 py-2">
-                Codes générés automatiquement à chaque achat — aucun stock à gérer.
-              </p>
-            )}
+            <p className="text-[11px] text-muted-foreground bg-secondary/50 rounded-md px-3 py-2 leading-relaxed">
+              Modifiable ici pour ce produit précis. Si tu enregistres le réglage &quot;Prix des vols&quot; dans
+              Paramètres, il écrasera ce prix pour les 4 packs actifs (30/60/90/120 min).
+            </p>
           </div>
 
           {/* Publication */}
-          <div className="card-premium p-6 space-y-3">
-            <FormSection title="Publication" />
-
-            <button
-              type="button"
-              onClick={() => setFeatured(!featured)}
-              className="w-full flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors cursor-pointer"
-            >
-              <span className="flex items-center gap-2 text-sm text-foreground">
-                <Star size={14} className={featured ? "text-primary fill-primary" : "text-muted-foreground"} />
-                Mis en avant
-              </span>
-              <div className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${featured ? "bg-primary" : "bg-border"}`}>
-                <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform ${featured ? "translate-x-4" : "translate-x-0.5"}`} />
-              </div>
-            </button>
-
-            {isEdit && (
+          {isEdit && (
+            <div className="card-premium p-6 space-y-3">
+              <FormSection title="Publication" />
               <button
                 type="button"
                 onClick={() => setActive(!active)}
@@ -391,17 +313,15 @@ export function ProductForm({ product }: ProductFormProps) {
                   <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform ${active ? "translate-x-4" : "translate-x-0.5"}`} />
                 </div>
               </button>
-            )}
-          </div>
+            </div>
+          )}
 
         </div>
       </div>
 
       {/* Hidden inputs */}
-      <input type="hidden" name="product_type" value={productType} />
-      {productType === "voucher" && (
-        <input type="hidden" name="voucher_duration_minutes" value={voucherDuration} />
-      )}
+      <input type="hidden" name="product_type" value="voucher" />
+      <input type="hidden" name="voucher_duration_minutes" value={voucherDuration} />
 
       {/* Actions */}
       <div className="flex gap-3 pb-6">

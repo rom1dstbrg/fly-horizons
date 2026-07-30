@@ -14,13 +14,7 @@ function fadeUp(delay: number) {
   };
 }
 
-export function HeroContent({
-  welcomeCode,
-  welcomeDiscountLabel,
-}: {
-  welcomeCode: string;
-  welcomeDiscountLabel: string;
-}) {
+export function HeroContent() {
   return (
     <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-4 pb-16 pt-[48px] md:pt-[76px]">
 
@@ -65,19 +59,6 @@ export function HeroContent({
           <Images size={16} />
           Voir la galerie
         </Link>
-      </motion.div>
-
-      <motion.div
-        className="mt-6 flex flex-col items-center gap-1.5"
-        {...fadeUp(0.65)}
-      >
-        <p className="text-sm text-white/80">
-          Utilisez le code{" "}
-          <span className="font-mono font-black text-[#F2B705] bg-[#F2B705]/10 border border-[#F2B705]/30 rounded px-2 py-0.5">
-            {welcomeCode}
-          </span>
-          {" "}pour {welcomeDiscountLabel}
-        </p>
       </motion.div>
 
     </div>

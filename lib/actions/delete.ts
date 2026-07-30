@@ -47,8 +47,6 @@ export async function deleteProduct(productId: string) {
     if (error) return { error: error.message };
 
     revalidatePath("/admin/boutique");
-    revalidatePath("/admin/boutique");
-    revalidatePath("/shop");
     redirect("/admin/boutique?tab=produits");
   } catch (err: unknown) {
     if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;

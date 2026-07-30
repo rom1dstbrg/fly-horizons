@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { calculerPrixClient } from "@/lib/pilote-pricing";
 
 async function checkAdmin() {
   const supabase = await createClient();
@@ -96,50 +97,6 @@ export async function deleteShippingCountry(id: string) {
   }
 }
 
-export async function updateOperationalSettings({
-  welcome_code,
-  welcome_discount_type,
-  welcome_discount_value,
-}: {
-  welcome_code: string;
-  welcome_discount_type: "percentage" | "fixed";
-  welcome_discount_value: number;
-}) {
-  try {
-    await checkAdmin();
-    const newCode = welcome_code.trim().toUpperCase();
-    if (!newCode) return { error: "Code invalide" };
-    if (isNaN(welcome_discount_value) || welcome_discount_value <= 0) return { error: "Remise invalide" };
-
-    const adminSupabase = createAdminClient();
-
-    const { data: oldRow } = await adminSupabase
-      .from("crm_settings").select("value").eq("key", "welcome_code").single();
-    const oldCode = (oldRow?.value as string | undefined)?.toUpperCase();
-
-    await Promise.all([
-      adminSupabase.from("crm_settings").upsert({ key: "welcome_code",           value: newCode }),
-      adminSupabase.from("crm_settings").upsert({ key: "welcome_discount_type",  value: welcome_discount_type }),
-      adminSupabase.from("crm_settings").upsert({ key: "welcome_discount_value", value: String(welcome_discount_value) }),
-    ]);
-
-    if (oldCode && oldCode !== newCode) {
-      await adminSupabase.from("coupons").update({ active: false }).eq("code", oldCode);
-    }
-
-    await adminSupabase.from("coupons").upsert(
-      { code: newCode, type: welcome_discount_type, value: welcome_discount_value, active: true, max_uses_per_user: 1 },
-      { onConflict: "code" }
-    );
-
-    revalidatePath("/admin/settings");
-    revalidatePath("/");
-    return { success: true };
-  } catch {
-    return { error: "Erreur serveur" };
-  }
-}
-
 export async function updateSiteSettings({
   calendar_closed,
   calendar_closed_message,
@@ -214,23 +171,57 @@ export async function deleteTarifAvion(id: string) {
   }
 }
 
-export async function updatePrixVol(prixHeure: number, acomptePersoHeure: number) {
+export async function updatePrixVol(
+  partType: "pourcentage" | "montant",
+  partValeur: number,
+  acomptePersoHeure: number
+) {
   try {
     await checkAdmin();
-    if (isNaN(prixHeure) || prixHeure <= 0) return { error: "Prix invalide" };
+    if (isNaN(partValeur) || partValeur < 0) return { error: "Valeur invalide" };
     if (isNaN(acomptePersoHeure) || acomptePersoHeure < 0) return { error: "Provision invalide" };
     const adminSupabase = createAdminClient();
-    await adminSupabase
-      .from("crm_settings")
-      .upsert({ key: "prix_heure", value: String(prixHeure) });
-    await adminSupabase
-      .from("crm_settings")
-      .upsert({ key: "acompte_perso_heure", value: String(acomptePersoHeure) });
+
+    // Le prix client est toujours recalcule cote serveur depuis le cout avion actif —
+    // jamais depuis une valeur envoyee par le client.
+    const today = new Date().toISOString().slice(0, 10);
+    const { data: tarif } = await adminSupabase
+      .from("avion_tarifs")
+      .select("prix_heure")
+      .lte("actif_depuis", today)
+      .order("actif_depuis", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const coutAvion = tarif?.prix_heure ?? 0;
+    if (coutAvion <= 0) return { error: "Aucun tarif avion actif — ajoutez-en un d'abord." };
+
+    const prixHeure = calculerPrixClient(coutAvion, 60, partType, partValeur);
+    if (prixHeure <= 0) return { error: "Le prix calcule est nul ou negatif — verifiez votre part." };
+
+    await adminSupabase.from("crm_settings").upsert({ key: "prix_heure", value: String(prixHeure) });
+    await adminSupabase.from("crm_settings").upsert({ key: "part_pilote_type", value: partType });
+    await adminSupabase.from("crm_settings").upsert({ key: "part_pilote_valeur", value: String(partValeur) });
+    await adminSupabase.from("crm_settings").upsert({ key: "acompte_perso_heure", value: String(acomptePersoHeure) });
+
+    // Synchronise le prix affiche sur les fiches produit (packs voucher actifs) avec le
+    // prix reellement facture au checkout, pour qu'ils ne divergent jamais.
+    for (const duree of [30, 60, 90, 120]) {
+      await adminSupabase
+        .from("products")
+        .update({ price: Math.round((prixHeure / 60) * duree) })
+        .eq("product_type", "voucher")
+        .eq("voucher_duration_minutes", duree)
+        .eq("active", true);
+    }
+
     revalidatePath("/admin/settings");
+    revalidatePath("/admin/boutique");
     revalidatePath("/packs");
     revalidatePath("/reservation");
     revalidatePath("/vol-sur-mesure");
-    return { success: true };
+    revalidatePath("/nos-offres");
+    revalidatePath("/");
+    return { success: true, prixHeure };
   } catch {
     return { error: "Erreur serveur" };
   }

@@ -62,16 +62,12 @@ export default async function HomePage() {
 
   const [
     { data: packs },
-    { data: crmSettings },
     { data: galleryRows },
   ] = await Promise.all([
     supabase.from("products")
       .select("*, images:product_images(*)")
       .eq("active", true).eq("product_type", "voucher")
       .order("voucher_duration_minutes", { ascending: true }),
-    supabase.from("crm_settings")
-      .select("key, value")
-      .in("key", ["welcome_code", "welcome_discount_type", "welcome_discount_value"]),
     supabase.from("gallery_images")
       .select("storage_path, alt")
       .order("display_order", { ascending: true })
@@ -83,11 +79,6 @@ export default async function HomePage() {
     src: `${supabaseUrl}/storage/v1/object/public/gallery/${row.storage_path}`,
     alt: row.alt,
   }));
-
-  const welcomeCode          = crmSettings?.find(s => s.key === "welcome_code")?.value ?? "WELCOME2026";
-  const welcomeDiscountType  = crmSettings?.find(s => s.key === "welcome_discount_type")?.value ?? "percentage";
-  const welcomeDiscountRaw   = crmSettings?.find(s => s.key === "welcome_discount_value")?.value ?? "10";
-  const welcomeDiscountLabel = welcomeDiscountType === "percentage" ? `−${welcomeDiscountRaw}%` : `−${welcomeDiscountRaw} €`;
 
   return (
     <main className="bg-gradient-navy">
@@ -101,7 +92,7 @@ export default async function HomePage() {
         <video
           autoPlay loop muted playsInline
           preload="none"
-          poster="/da-40.webp"
+          poster="/hero-section.png"
           className="absolute inset-0 w-full h-full object-cover"
         >
           <source src="/vol-rev%202.2.mp4" type="video/mp4" />
@@ -110,7 +101,7 @@ export default async function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/35 to-black/65" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent" />
 
-        <HeroContent welcomeCode={welcomeCode} welcomeDiscountLabel={welcomeDiscountLabel} />
+        <HeroContent />
 
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/50 z-10">
           <span className="text-xs font-medium tracking-widest uppercase">Découvrir</span>

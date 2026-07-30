@@ -113,13 +113,13 @@ const THEMES: Theme[] = [
     items: [
       {
         q: "Comment réserver un vol partagé ?",
-        aText: "Rendez-vous sur la page Nos offres, choisissez votre durée de vol : 30, 60, 90 ou 120 minutes. Cliquez sur Réserver, sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis choisissez votre mode de paiement. La réservation de votre vol partagé est confirmée dès que la provision est reçue.",
-        a: <>Rendez-vous sur la page <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Nos offres</Link>, choisissez votre durée : 30, 60, 90 ou 120 minutes. Sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis choisissez votre mode de paiement. La réservation de votre vol partagé est confirmée dès que la provision est reçue.</>,
+        aText: "Rendez-vous sur la page Nos offres, choisissez votre durée de vol : 30, 60, 90 ou 120 minutes. Ouvrez la fiche du vol pour voir les photos et le détail, puis cliquez sur Réserver une date : sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis réglez en ligne. Votre demande est validée par le pilote sous 48 heures maximum.",
+        a: <>Rendez-vous sur la page <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Nos offres</Link>, choisissez votre durée : 30, 60, 90 ou 120 minutes. Ouvrez la fiche du vol pour voir les photos et le détail, puis cliquez sur Réserver une date : sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis réglez en ligne. Votre demande est validée par le pilote sous 48 heures maximum.</>,
       },
       {
         q: "Quel est le prix d'un vol partagé en Belgique ?",
-        aText: "Le prix d'un vol partagé dépend de la durée choisie (30, 60, 90 ou 120 minutes) et se calcule au temps de vol réel. Tous les tarifs à jour sont affichés sur la page Nos offres, sans frais cachés : le tarif horaire est communiqué avant la réservation.",
-        a: <>Le prix d&apos;un vol partagé dépend de la durée choisie (30, 60, 90 ou 120 minutes) et se calcule au temps de vol réel. Tous les tarifs à jour sont affichés sur la page <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Nos offres</Link>, sans frais cachés : le tarif horaire est communiqué avant la réservation.</>,
+        aText: "Le prix d'un vol partagé dépend de la durée choisie (30, 60, 90 ou 120 minutes). Tous les tarifs à jour sont affichés sur la page Nos offres, sans frais cachés.",
+        a: <>Le prix d&apos;un vol partagé dépend de la durée choisie (30, 60, 90 ou 120 minutes). Tous les tarifs à jour sont affichés sur la page <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Nos offres</Link>, sans frais cachés.</>,
       },
       /* Masqué 29/07/2026 en attendant confirmation légale — voir audit-legal-fly-horizons.html
       {
@@ -130,13 +130,18 @@ const THEMES: Theme[] = [
       */
       {
         q: "D'où partent les vols ?",
-        aText: "Les vols partent depuis l'aéroport de Brussels South Charleroi (EBCI/CRL). Un départ depuis un autre aéroport proche est possible sur demande, mais peut entraîner des frais supplémentaires.",
-        a: "Les vols partent depuis l'aéroport de Brussels South Charleroi (EBCI/CRL). Un départ depuis un autre aéroport proche est possible sur demande, mais peut entraîner des frais supplémentaires.",
+        aText: "Les vols partent depuis l'aéroport de Brussels South Charleroi (EBCI/CRL).",
+        a: "Les vols partent depuis l'aéroport de Brussels South Charleroi (EBCI/CRL).",
+      },
+      {
+        q: "À quelles heures les vols sont-ils possibles ?",
+        aText: "Les vols ont lieu entre 7h et 21h environ, avec un retour au plus tard avant la fermeture de l'aérodrome à 22h. Pour un horaire précis ou tardif, contactez-nous : nous verrons ce qui est possible.",
+        a: <>Les vols ont lieu entre 7h et 21h environ, avec un retour au plus tard avant la fermeture de l&apos;aérodrome à 22h. Pour un horaire précis ou tardif, <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link> : nous verrons ce qui est possible.</>,
       },
       {
         q: "Puis-je réserver pour quelqu'un d'autre ?",
         aText: "Oui. Vous pouvez réserver au nom d'une autre personne, ou lui offrir un bon cadeau qu'elle utilisera elle-même pour choisir sa date (contactez-nous pour l'établir). Le bon cadeau est la solution la plus flexible : le bénéficiaire réserve quand il le souhaite.",
-        a: <>Oui. Vous pouvez réserver directement au nom d'une autre personne, ou lui offrir un bon cadeau qu'elle utilisera elle-même pour choisir sa date (<Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link> pour l'établir).</>,
+        a: <>Oui. Vous pouvez réserver directement au nom d&apos;une autre personne, ou lui offrir un bon cadeau qu&apos;elle utilisera elle-même pour choisir sa date (<Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link> pour l&apos;établir).</>,
       },
       {
         q: "Combien de temps à l'avance faut-il réserver ?",
@@ -152,28 +157,23 @@ const THEMES: Theme[] = [
     items: [
       {
         q: "Comment fonctionne le paiement de la provision ?",
-        aText: "Lors de la réservation, deux options s'offrent à vous. Payer maintenant : la provision est débitée immédiatement via Stripe, le créneau est sécurisé sur-le-champ. Payer plus tard : un email avec un lien de paiement Stripe vous est envoyé. Aucune saisie de carte n'est effectuée sur ce site dans ce cas.",
-        a: "Lors de la réservation, deux options s'offrent à vous : payer maintenant (la provision est débitée immédiatement via Stripe, le créneau est sécurisé sur-le-champ) ou payer plus tard (un email avec un lien de paiement vous est envoyé, aucune saisie de carte sur ce site).",
-      },
-      {
-        q: "Mon créneau est-il garanti si je choisis de payer plus tard ?",
-        aText: "Non. Tant que la provision n'est pas reçue, le créneau n'est pas sécurisé. Un autre client peut réserver la même date et payer avant vous. Dès que vous réglez via le lien reçu par email, le créneau vous est attribué définitivement. Il est donc conseillé de payer le plus tôt possible.",
-        a: "Non. Tant que la provision n'est pas reçue, le créneau n'est pas sécurisé. Un autre client peut réserver la même date et payer avant vous. Dès que vous réglez via le lien reçu par email, le créneau vous est attribué définitivement.",
+        aText: "Le paiement se fait en ligne au moment de la réservation, via Stripe : c'est ce paiement qui valide votre demande. Aucune saisie de carte n'a lieu ailleurs que sur la page sécurisée Stripe.",
+        a: "Le paiement se fait en ligne au moment de la réservation, via Stripe : c'est ce paiement qui valide votre demande. Aucune saisie de carte n'a lieu ailleurs que sur la page sécurisée Stripe.",
       },
       {
         q: "Quels moyens de paiement sont acceptés ?",
-        aText: "Le paiement se fait exclusivement via Stripe : carte Visa, Mastercard et American Express. Aucun virement bancaire ni paiement en espèces n'est accepté.",
-        a: "Le paiement se fait exclusivement via Stripe : carte Visa, Mastercard et American Express. Aucun virement bancaire ni paiement en espèces n'est accepté.",
+        aText: "Le paiement en ligne se fait exclusivement via Stripe : carte Visa, Mastercard et American Express. Aucun virement bancaire n'est accepté sur le site.",
+        a: "Le paiement en ligne se fait exclusivement via Stripe : carte Visa, Mastercard et American Express. Aucun virement bancaire n'est accepté sur le site.",
       },
       {
         q: "Y a-t-il des frais supplémentaires après le vol ?",
-        aText: "Le prix final est calculé à partir du compteur HOBBS de l'avion (temps moteur réel). Formule : tarif horaire ÷ 60 × minutes réelles. Si le vol est plus court que la durée réservée, la différence vous est remboursée sous 24 heures. Si le vol est plus long, le supplément vous est facturé dans les mêmes délais. Aucune surprise : le tarif horaire est communiqué avant la réservation.",
-        a: "Le prix final est calculé à partir du compteur HOBBS de l'avion (temps moteur réel). Formule : tarif horaire ÷ 60 × minutes réelles. Si le vol est plus court que la durée réservée, la différence vous est remboursée sous 24 heures. Si le vol est plus long, le supplément vous est facturé dans les mêmes délais. Aucune surprise : le tarif horaire est communiqué avant la réservation.",
+        aText: "Non, normalement. Le prix payé au moment de la réservation couvre l'intégralité du vol prévu, il n'y a pas de solde à régler après coup. Dans de rares cas exceptionnels, un ajustement peut être fait sur base du temps de vol réel, mais ce n'est pas systématique.",
+        a: "Non, normalement. Le prix payé au moment de la réservation couvre l'intégralité du vol prévu, il n'y a pas de solde à régler après coup. Dans de rares cas exceptionnels, un ajustement peut être fait sur base du temps de vol réel, mais ce n'est pas systématique.",
       },
       {
         q: "Un bon cadeau peut-il couvrir la provision en totalité ?",
-        aText: "Oui. Si le bon cadeau couvre la totalité de la provision, aucun paiement supplémentaire n'est demandé et le créneau est immédiatement confirmé. S'il ne couvre qu'une partie, le bénéficiaire règle le solde via Stripe.",
-        a: "Oui. Si le bon cadeau couvre la totalité de la provision, aucun paiement supplémentaire n'est demandé et le créneau est immédiatement confirmé. S'il ne couvre qu'une partie, le bénéficiaire règle le solde via Stripe.",
+        aText: "Oui. Si le bon cadeau couvre la totalité du prix, aucun paiement supplémentaire n'est demandé : votre demande est enregistrée directement, puis validée par le pilote comme toute réservation, sous 48 heures maximum. S'il ne couvre qu'une partie, vous réglez le solde via Stripe.",
+        a: "Oui. Si le bon cadeau couvre la totalité du prix, aucun paiement supplémentaire n'est demandé : votre demande est enregistrée directement, puis validée par le pilote comme toute réservation, sous 48 heures maximum. S'il ne couvre qu'une partie, vous réglez le solde via Stripe.",
       },
     ],
   },
@@ -202,7 +202,7 @@ const THEMES: Theme[] = [
       {
         q: "Quelle est la durée de validité d'un bon cadeau ?",
         aText: "La durée de validité est indiquée sur le bon lors de l'achat. Passé ce délai, le code ne peut plus être utilisé. En cas de doute, contactez-nous.",
-        a: <>La durée de validité est indiquée sur le bon lors de l'achat. Passé ce délai, le code ne peut plus être utilisé. En cas de doute, <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link>.</>,
+        a: <>La durée de validité est indiquée sur le bon lors de l&apos;achat. Passé ce délai, le code ne peut plus être utilisé. En cas de doute, <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link>.</>,
       },
       {
         q: "Un bon cadeau est-il remboursable ?",
@@ -223,13 +223,13 @@ const THEMES: Theme[] = [
       },
       {
         q: "Puis-je annuler ou reporter mon vol ?",
-        aText: "Oui. Annulation sans frais jusqu'à 48 heures avant le vol. En deçà de 48 heures, des frais de replanning pouvant aller jusqu'à 50 € peuvent s'appliquer pour couvrir les démarches administratives. En cas d'absence sans prévenir (no-show), la provision est conservée et aucun remboursement n'est effectué. Pour reporter votre vol, connectez-vous à votre espace client : un lien de report vous sera proposé.",
-        a: <>Annulation sans frais jusqu'à 48 heures avant le vol. En deçà, des frais de replanning jusqu'à 50 € peuvent s'appliquer. En cas d'absence sans prévenir, la provision est conservée. Pour reporter, connectez-vous à votre <Link href="/account" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">espace client</Link> ou <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link>.</>,
+        aText: "Pour reporter à une nouvelle date, c'est gratuit jusqu'à 48 heures avant le vol : connectez-vous à votre espace client, un lien de report vous sera proposé. Pour annuler : avec plus de 48 heures de préavis, le montant payé est converti en crédit de vol valable 12 mois (pas de remboursement en espèces, les frais du vol étant engagés dès la réservation). Entre 24 et 48 heures, la situation est traitée au cas par cas, contactez-nous rapidement. En cas d'absence sans prévenir, aucun remboursement ni crédit n'est accordé.",
+        a: <>Pour reporter à une nouvelle date, c&apos;est gratuit jusqu&apos;à 48 heures avant le vol : connectez-vous à votre <Link href="/account" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">espace client</Link>, un lien de report vous sera proposé. Pour annuler : avec plus de 48 heures de préavis, le montant payé est converti en <strong>crédit de vol valable 12 mois</strong> (pas de remboursement en espèces, les frais du vol étant engagés dès la réservation). Entre 24 et 48 heures, la situation est traitée au cas par cas, <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link> rapidement. En cas d&apos;absence sans prévenir, aucun remboursement ni crédit n&apos;est accordé.</>,
       },
       {
         q: "Combien de temps avant le vol dois-je arriver ?",
-        aText: "Arrivez 15 minutes avant l'heure prévue du départ. Ce temps est nécessaire pour les vérifications d'usage, le briefing de sécurité et l'embarquement.",
-        a: "Arrivez 15 minutes avant l'heure prévue du départ. Ce temps est nécessaire pour les vérifications d'usage, le briefing de sécurité et l'embarquement.",
+        aText: "Arrivez 15 minutes avant l'heure prévue du départ. Ce temps est nécessaire pour les vérifications d'usage, le briefing de sécurité et l'embarquement. Le plan d'accès complet (parking, entrée) est disponible sur notre page Accès à l'aérodrome.",
+        a: <>Arrivez 15 minutes avant l&apos;heure prévue du départ. Ce temps est nécessaire pour les vérifications d&apos;usage, le briefing de sécurité et l&apos;embarquement. Le plan d&apos;accès complet (parking, entrée) est disponible sur notre page <Link href="/access-ebci" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Accès à l&apos;aérodrome</Link>.</>,
       },
       {
         q: "Que dois-je porter et apporter pour le vol ?",
@@ -260,8 +260,8 @@ const THEMES: Theme[] = [
       },
       {
         q: "Y a-t-il une limite de poids ?",
-        aText: "Oui. Le poids total des passagers ne peut pas dépasser 190 kg. Au-delà, le vol n'est pas réalisable pour des raisons de sécurité et de centrage (calcul masse & centrage de l'avion). C'est pourquoi le poids total est demandé lors de la réservation.",
-        a: "Oui. Le poids total des passagers ne peut pas dépasser 190 kg. Au-delà, le vol n'est pas réalisable pour des raisons de sécurité et de centrage (calcul masse & centrage de l'avion). C'est pourquoi le poids total est demandé lors de la réservation.",
+        aText: "Le poids total des passagers ne doit idéalement pas dépasser 190 kg. Ce n'est pas un couperet strict : jusqu'à 250 kg, le pilote adapte le plein de carburant pour rester en sécurité ; au-delà, il vous contacte pour confirmer la faisabilité (calcul masse & centrage de l'avion). C'est pourquoi le poids total est demandé lors de la réservation.",
+        a: "Le poids total des passagers ne doit idéalement pas dépasser 190 kg. Ce n'est pas un couperet strict : jusqu'à 250 kg, le pilote adapte le plein de carburant pour rester en sécurité ; au-delà, il vous contacte pour confirmer la faisabilité (calcul masse & centrage de l'avion). C'est pourquoi le poids total est demandé lors de la réservation.",
       },
       {
         q: "Y a-t-il un âge minimum pour voler ?",
@@ -285,8 +285,18 @@ const THEMES: Theme[] = [
       },
       {
         q: "Les passagers sont-ils assurés pendant le vol ?",
-        aText: "Oui. L'avion utilisé (Diamond DA40) appartient à Air Academy New CAG (ATO-005, EBCI), école d'aviation certifiée. L'assurance de l'école couvre tous les occupants à bord. Pour toute question sur les garanties, contactez-nous avant de réserver.",
-        a: <>Oui. L&apos;avion utilisé (Diamond DA40) appartient à Air Academy New CAG (ATO-005, EBCI), école d&apos;aviation certifiée. L&apos;assurance de l&apos;école couvre tous les occupants à bord. Pour toute question, <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link> avant de réserver.</>,
+        aText: "L'avion utilisé (Diamond DA40) appartient à Air Academy New CAG (ATO-005, EBCI), école d'aviation certifiée, et vole sous sa police d'assurance. Pour toute question précise sur les garanties applicables à votre vol, contactez-nous avant de réserver : nous vous transmettons les informations disponibles.",
+        a: <>L&apos;avion utilisé (Diamond DA40) appartient à Air Academy New CAG (ATO-005, EBCI), école d&apos;aviation certifiée, et vole sous sa police d&apos;assurance. Pour toute question précise sur les garanties applicables à votre vol, <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link> avant de réserver : nous vous transmettons les informations disponibles.</>,
+      },
+      {
+        q: "Vais-je recevoir une demande d'avis après mon vol ?",
+        aText: "Oui. Après votre vol, un email vous invite à répondre à une courte enquête de satisfaction. Cela prend moins d'une minute et aide à améliorer chaque prochain vol.",
+        a: "Oui. Après votre vol, un email vous invite à répondre à une courte enquête de satisfaction. Cela prend moins d'une minute et aide à améliorer chaque prochain vol.",
+      },
+      {
+        q: "Puis-je recevoir un certificat de vol ?",
+        aText: "Oui, sur simple demande et sans frais. Contactez-nous après votre vol pour le recevoir.",
+        a: <>Oui, sur simple demande et sans frais. <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Contactez-nous</Link> après votre vol pour le recevoir.</>,
       },
     ],
   },
@@ -296,6 +306,11 @@ const THEMES: Theme[] = [
     Icon: Users,
     items: [
       {
+        q: "Dois-je créer un compte pour réserver ?",
+        aText: "Non, ce n'est pas une étape séparée : un compte client est créé automatiquement lors de votre première réservation, à partir de l'email que vous renseignez. Vous pouvez ensuite vous connecter pour suivre vos réservations.",
+        a: "Non, ce n'est pas une étape séparée : un compte client est créé automatiquement lors de votre première réservation, à partir de l'email que vous renseignez. Vous pouvez ensuite vous connecter pour suivre vos réservations.",
+      },
+      {
         q: "Comment suivre l'état de ma réservation ?",
         aText: "Connectez-vous à votre espace client : vous y retrouvez le statut de votre réservation en temps réel (en attente, provision reçue, date confirmée, heure confirmée). Chaque changement de statut vous est également notifié par email.",
         a: <>Connectez-vous à votre <Link href="/account" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">espace client</Link> : vous y retrouvez le statut en temps réel (en attente, provision reçue, date confirmée, heure confirmée). Chaque changement vous est notifié par email.</>,
@@ -303,7 +318,7 @@ const THEMES: Theme[] = [
       {
         q: "Je n'ai pas reçu l'email de confirmation, que faire ?",
         aText: "Vérifiez vos spams. Si l'email n'y est pas, connectez-vous à votre espace client : le statut et les détails de votre réservation y sont toujours accessibles. En dernier recours, contactez-nous.",
-        a: <>Vérifiez vos spams. Si l'email n'y est pas, connectez-vous à votre <Link href="/account" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">espace client</Link> : le statut et les détails de votre réservation y sont toujours accessibles. En dernier recours, <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link>.</>,
+        a: <>Vérifiez vos spams. Si l&apos;email n&apos;y est pas, connectez-vous à votre <Link href="/account" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">espace client</Link> : le statut et les détails de votre réservation y sont toujours accessibles. En dernier recours, <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link>.</>,
       },
     ],
   },

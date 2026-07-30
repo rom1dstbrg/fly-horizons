@@ -31,7 +31,6 @@ export async function toggleProductActive(productId: string, active: boolean) {
 
     if (error) return { error: error.message };
     revalidatePath("/admin/boutique");
-    revalidatePath("/admin/boutique");
     return { success: true };
   } catch {
     return { error: "Non autorise" };
@@ -46,18 +45,10 @@ export async function createProduct(formData: FormData) {
     const title = formData.get("title") as string;
     const short_description = formData.get("short_description") as string;
     const price = parseFloat(formData.get("price") as string);
-    const stock = parseInt(formData.get("stock") as string, 10);
-    const featured = formData.get("featured") === "true";
-    const product_type = (formData.get("product_type") as string) || "physical";
     const voucherDurationRaw = formData.get("voucher_duration_minutes");
-    const voucher_duration_minutes =
-      product_type === "voucher" && voucherDurationRaw
-        ? parseInt(voucherDurationRaw as string, 10)
-        : null;
-    const tagsRaw = formData.get("tags") as string;
-    const tags = tagsRaw
-      ? tagsRaw.split(",").map((t) => t.trim()).filter(Boolean)
-      : [];
+    const voucher_duration_minutes = voucherDurationRaw
+      ? parseInt(voucherDurationRaw as string, 10)
+      : null;
 
     if (!title || isNaN(price)) {
       return { error: "Titre et prix requis." };
@@ -70,11 +61,8 @@ export async function createProduct(formData: FormData) {
         slug: "",
         short_description: short_description || null,
         price,
-        stock: product_type === "voucher" ? 0 : (isNaN(stock) ? 0 : stock),
-        featured,
-        tags,
         active: true,
-        product_type,
+        product_type: "voucher",
         voucher_duration_minutes,
       })
       .select()
@@ -85,8 +73,6 @@ export async function createProduct(formData: FormData) {
     }
 
     revalidatePath("/admin/boutique");
-    revalidatePath("/admin/boutique");
-    revalidatePath("/shop");
     redirect(`/admin/products/${product.id}`);
   } catch (err: unknown) {
     if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
@@ -102,19 +88,11 @@ export async function updateProduct(productId: string, formData: FormData) {
     const title = formData.get("title") as string;
     const short_description = formData.get("short_description") as string;
     const price = parseFloat(formData.get("price") as string);
-    const stock = parseInt(formData.get("stock") as string, 10);
-    const featured = formData.get("featured") === "true";
     const active = formData.get("active") === "true";
-    const product_type = (formData.get("product_type") as string) || "physical";
     const voucherDurationRaw = formData.get("voucher_duration_minutes");
-    const voucher_duration_minutes =
-      product_type === "voucher" && voucherDurationRaw
-        ? parseInt(voucherDurationRaw as string, 10)
-        : null;
-    const tagsRaw = formData.get("tags") as string;
-    const tags = tagsRaw
-      ? tagsRaw.split(",").map((t) => t.trim()).filter(Boolean)
-      : [];
+    const voucher_duration_minutes = voucherDurationRaw
+      ? parseInt(voucherDurationRaw as string, 10)
+      : null;
 
     const { error } = await adminSupabase
       .from("products")
@@ -122,11 +100,8 @@ export async function updateProduct(productId: string, formData: FormData) {
         title,
         short_description: short_description || null,
         price,
-        stock: product_type === "voucher" ? 0 : (isNaN(stock) ? 0 : stock),
-        featured,
         active,
-        tags,
-        product_type,
+        product_type: "voucher",
         voucher_duration_minutes,
       })
       .eq("id", productId);
@@ -134,9 +109,7 @@ export async function updateProduct(productId: string, formData: FormData) {
     if (error) return { error: error.message };
 
     revalidatePath("/admin/boutique");
-    revalidatePath("/admin/boutique");
     revalidatePath(`/admin/products/${productId}`);
-    revalidatePath("/shop");
     return { success: true };
   } catch {
     return { error: "Erreur serveur" };
@@ -177,7 +150,6 @@ export async function deleteProductImage(imageId: string, imageUrl: string) {
         .remove([urlParts[1]]);
     }
 
-    revalidatePath("/admin/boutique");
     revalidatePath("/admin/boutique");
     return { success: true };
   } catch {

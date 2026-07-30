@@ -25,6 +25,7 @@ export async function getTransactionsData(): Promise<{
     { data: vouchersShop },
     { data: vouchersCash },
     { data: rawDepenses },
+    { data: crmSettings },
   ] = await Promise.all([
     supabase.from("avion_tarifs").select("prix_heure, actif_depuis"),
     supabase
@@ -48,7 +49,14 @@ export async function getTransactionsData(): Promise<{
       .from("depenses")
       .select("id, montant, description, date")
       .order("date", { ascending: false }),
+    supabase
+      .from("crm_settings")
+      .select("key, value")
+      .in("key", ["part_pilote_type", "part_pilote_valeur"]),
   ]);
+
+  const partPiloteType = (crmSettings?.find(s => s.key === "part_pilote_type")?.value ?? "pourcentage") as "pourcentage" | "montant";
+  const partPiloteValeur = parseFloat(crmSettings?.find(s => s.key === "part_pilote_valeur")?.value ?? "25");
 
   // Voucher codes utilisés dans des réservations non-annulées
   const voucherCodes = (resas ?? []).map(r => r.voucher_code).filter(Boolean) as string[];
@@ -95,9 +103,11 @@ export async function getTransactionsData(): Promise<{
     const partPilotePct = coutAvion != null && coutAvion > 0 && partPilote != null
       ? Math.round((partPilote / coutAvion) * 1000) / 10
       : null;
-    // Part "attendue" si le pilote payait une quote-part égale à chaque occupant (1 pilote + N passagers)
-    const nbOccupants = 1 + (r.passagers ?? 0);
-    const partAttenduePct = nbOccupants > 0 ? Math.round((1 / nbOccupants) * 1000) / 10 : null;
+    // Part "attendue" = ce que Romain a réellement déclaré payer dans /admin/settings
+    // (réglage %/€), pas une quote-part théorique égale entre occupants.
+    const partAttenduePct = partPiloteType === "pourcentage"
+      ? partPiloteValeur
+      : (coutAvion != null && coutAvion > 0 ? Math.round((partPiloteValeur / coutAvion) * 1000) / 10 : null);
     return {
       id: r.id,
       date: r.date_vol,

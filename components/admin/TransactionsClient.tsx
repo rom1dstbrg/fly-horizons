@@ -81,7 +81,7 @@ const DASH = <span className="text-muted-foreground">—</span>;
 
 function PartPilote({ montant, pct, attenduePct }: { montant: number | null; pct: number | null; attenduePct: number | null }) {
   if (montant == null || pct == null) return <span className="text-xs text-muted-foreground">—</span>;
-  // Vert si la part payée atteint ~la quote-part attendue (1 personne parmi pilote+passagers), orange sinon, rouge si quasi nulle
+  // Vert si la part payée atteint ~la part déclarée dans /admin/settings, orange sinon, rouge si quasi nulle
   const ratio = attenduePct != null && attenduePct > 0 ? pct / attenduePct : null;
   const cls = pct < 0.5 ? "text-red-500"
     : ratio != null && ratio < 0.6 ? "text-amber-600"
