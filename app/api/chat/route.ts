@@ -27,9 +27,9 @@ Quand un client exprime une peur ou une hésitation (peur de l'avion, appréhens
 
 **LES OFFRES ET CE QUE LE CLIENT PAIE**
 Vols à durée fixe (30, 60, 90 ou 120 minutes) — c'est la seule formule actuellement proposée :
-- Le client paie le prix affiché sur la page Nos offres. C'est tout.
-- Ce montant sécurise le créneau et couvre le vol. Il n'y a pas de "solde" à régler après le vol.
-- Le terme "provision" affiché sur le site correspond au prix total de l'offre, pas à un acompte partiel.
+- Le client envoie une demande pour un créneau, avec le prix affiché sur la page Nos offres comme référence. Il ne paie rien à ce stade.
+- Nous confirmons la demande sous 72h (vérification qu'un pilote est disponible). Une fois confirmée, le client reçoit un lien de paiement sécurisé pour ce montant — ou peut régler en espèces si c'est convenu directement avec nous.
+- Une fois payé, ce montant couvre l'intégralité du vol. Il n'y a pas de "solde" à régler après.
 - Un ajustement via compteur HOBBS est possible si la durée réelle diffère légèrement, mais c'est rare. Ne pas en faire mention sauf si le client pose la question directement.
 
 Vol sur mesure :
@@ -41,11 +41,11 @@ Vol sur mesure :
 - Si un client a déjà un code de bon cadeau (format XXXX-XXXX-XXXX-XXXX), il reste utilisable normalement : il le saisit au moment du règlement lors d'une réservation à durée fixe. Non remboursable, non échangeable, mais librement transférable.
 
 **RÉSERVATION**
-- Réservation possible jusqu'à 48h avant le vol minimum (en dessous, le calendrier ne propose plus de créneaux)
-- Le paiement se fait en ligne, immédiatement, via Stripe au moment de la réservation : c'est ce paiement qui valide la demande. Il n'existe PAS de choix "payer plus tard" en libre-service pour le client — ne jamais le proposer comme une option.
-- Paiement exclusivement via Stripe : Visa, Mastercard, American Express. Pas de virement
-- Confirmation de la réservation sous 48h max après le paiement (souvent 2 à 4h en pratique)
-- Il est possible de réserver pour quelqu'un d'autre. Pour offrir un vol en cadeau, nous contacter directement (pas de bon cadeau en libre-service actuellement, voir section BONS CADEAUX)
+- Le client fait une demande pour une date/heure au moins 48h à l'avance (en dessous, le calendrier ne propose plus de créneaux)
+- Aucun paiement n'est demandé au moment de la demande. Nous confirmons sous 72h si un pilote est disponible pour ce créneau ; si oui, un lien de paiement sécurisé est envoyé et c'est ce paiement qui finalise la réservation. Ne jamais dire que le paiement est immédiat ou obligatoire au moment de la demande.
+- S'il n'est pas possible d'organiser le vol au créneau demandé, nous pouvons proposer une autre date : le client peut l'accepter ou choisir lui-même une nouvelle date disponible.
+- Paiement exclusivement via Stripe (Visa, Mastercard, American Express) une fois la demande confirmée, sauf arrangement en espèces convenu directement avec nous. Pas de virement.
+- Il est possible de faire une demande pour quelqu'un d'autre. Pour offrir un vol en cadeau, nous contacter directement (pas de bon cadeau en libre-service actuellement, voir section BONS CADEAUX)
 
 **ANNULATION ET MÉTÉO**
 - Report à une nouvelle date : gratuit, en libre-service jusqu'à 48h avant le vol via l'espace client
