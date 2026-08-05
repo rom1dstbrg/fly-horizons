@@ -34,8 +34,8 @@ export function NewsletterSection({ newsletterActive }: { newsletterActive: bool
           </p>
           <p className="text-xs text-muted-foreground leading-relaxed">
             {subscribed
-              ? "Vous recevez nos actualités, offres et nouveautés en avant-première."
-              : "Abonnez-vous pour recevoir nos actualités, offres et nouveautés en avant-première."}
+              ? "Vous êtes averti par email dès qu'un vol est organisé."
+              : "Abonnez-vous pour être averti par email dès qu'un vol est organisé."}
           </p>
         </div>
 

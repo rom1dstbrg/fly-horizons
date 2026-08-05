@@ -7,7 +7,7 @@ import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import {
-  ChevronLeft, ChevronRight, Clock, Lock,
+  ChevronLeft, ChevronRight, Clock,
   CheckCircle, AlertCircle, AlertTriangle, Loader2, ArrowRight, X,
 } from "lucide-react";
 import { formatDuration } from "@/lib/vouchers";
@@ -29,7 +29,7 @@ interface FormState {
   product: VolProduct | null;
   date: string; heure: string;
   prenom: string; nom: string; email: string; telephone: string;
-  passengers: number; poids_total: string; poids_unknown: boolean; commentaire: string;
+  passengers: number; poids_total: string; commentaire: string;
   codeInput: string;
   voucher: VoucherInfo | null;
   coupon: CouponInfo | null;
@@ -76,7 +76,7 @@ export default function ReservationPage() {
   const [form, setForm] = useState<FormState>({
     product: null, date: "", heure: "",
     prenom: "", nom: "", email: "", telephone: "",
-    passengers: 0, poids_total: "", poids_unknown: false, commentaire: "",
+    passengers: 0, poids_total: "", commentaire: "",
     codeInput: "", voucher: null, coupon: null,
     accept_cgp: false, newsletter_opt_in: false,
   });
@@ -127,14 +127,13 @@ export default function ReservationPage() {
     try {
       const saved = sessionStorage.getItem("rsv_state");
       if (saved) {
-        const { prenom, nom, email, telephone, passengers, poids_total, poids_unknown, commentaire, date, heure } =
+        const { prenom, nom, email, telephone, passengers, poids_total, commentaire, date, heure } =
           JSON.parse(saved) as Partial<FormState>;
         setForm(f => ({
           ...f,
           prenom: prenom ?? f.prenom, nom: nom ?? f.nom,
           email: email ?? f.email, telephone: telephone ?? f.telephone,
           passengers: passengers ?? f.passengers, poids_total: poids_total ?? f.poids_total,
-          poids_unknown: poids_unknown ?? f.poids_unknown,
           commentaire: commentaire ?? f.commentaire,
           date: date ?? f.date, heure: heure ?? f.heure,
         }));
@@ -250,7 +249,7 @@ export default function ReservationPage() {
     const search = window.location.search;
     sessionStorage.setItem("rsv_state", JSON.stringify({
       prenom: form.prenom, nom: form.nom, email: form.email, telephone: form.telephone,
-      passengers: form.passengers, poids_total: form.poids_total, poids_unknown: form.poids_unknown, commentaire: form.commentaire,
+      passengers: form.passengers, poids_total: form.poids_total, commentaire: form.commentaire,
       date: form.date, heure: form.heure,
     }));
     window.location.href = `/login?redirectTo=${encodeURIComponent(`/reservation${search}`)}`;
@@ -292,7 +291,7 @@ export default function ReservationPage() {
     const payload = {
       prenom: form.prenom, nom: form.nom, email: form.email, telephone: form.telephone,
       duree, date: form.date, heure: form.heure,
-      passengers: form.passengers, poids_total: form.poids_unknown ? null : (form.poids_total ? parseInt(form.poids_total) : null),
+      passengers: form.passengers, poids_total: form.poids_total ? parseInt(form.poids_total) : null,
       voucher_code: form.voucher?.code,
       coupon_code: form.coupon?.code || undefined,
       commentaire: form.commentaire || undefined,
@@ -307,7 +306,7 @@ export default function ReservationPage() {
       const r = await fetch("/api/reservation/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, amount_cents: price * 100 }) });
       const d = await r.json();
       if (!r.ok) { setSubmitError(d.error || "Erreur."); setSubmitting(false); return; }
-      window.location.href = d.url;
+      router.push("/reservation/success");
     }
   }
 
@@ -326,7 +325,7 @@ export default function ReservationPage() {
 
   const ctaDisabled =
     step === "datetime" ? !form.date || !form.heure :
-    step === "infos"    ? !form.prenom || !form.nom || !form.email || !form.passengers || submitting :
+    step === "infos"    ? !form.prenom || !form.nom || !form.email || !form.passengers || !form.poids_total || submitting :
                           !form.accept_cgp || submitting || codeLoading;
 
   async function handleCTA() {
@@ -407,12 +406,12 @@ export default function ReservationPage() {
           <h1 className="text-xl font-black text-foreground">
             {step === "datetime" && "Date & heure de vol"}
             {step === "infos"    && "Vos informations"}
-            {step === "paiement" && "Récapitulatif de votre réservation"}
+            {step === "paiement" && "Récapitulatif de votre demande"}
           </h1>
           <p className="text-sm text-foreground/50 mt-1">
             {step === "datetime" && `Sélectionnez votre créneau pour un vol de ${formatDuration(duree)}.`}
             {step === "infos"    && "Ces informations servent à confirmer et préparer votre vol."}
-            {step === "paiement" && "Vérifiez les détails avant de procéder au paiement."}
+            {step === "paiement" && "Vérifiez les détails avant d'envoyer votre demande. Vous ne payez pas à cette étape."}
           </p>
         </div>
 
@@ -574,54 +573,23 @@ export default function ReservationPage() {
 
                     <div>
                       <label className="block text-sm font-semibold text-foreground mb-2">
-                        Poids total des passagers <span className="text-foreground/40 font-normal">(kg, facultatif)</span>
+                        Poids total des passagers <span className="text-foreground/40 font-normal">(kg, requis)</span>
                       </label>
 
-                      {!form.poids_unknown && (
-                        <div className="flex items-center gap-3">
-                          <input type="number" value={form.poids_total} min={1} max={500} placeholder="ex : 160"
-                            onChange={e => setForm(f => ({ ...f, poids_total: e.target.value }))}
-                            className="w-36 h-10 px-3 rounded-lg border border-border bg-input text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-foreground/30" />
-                          <span className="text-sm text-foreground/50">kg</span>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-3">
+                        <input type="number" value={form.poids_total} min={1} max={500} placeholder="ex : 160"
+                          onChange={e => setForm(f => ({ ...f, poids_total: e.target.value }))}
+                          className="w-36 h-10 px-3 rounded-lg border border-border bg-input text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-foreground/30" />
+                        <span className="text-sm text-foreground/50">kg</span>
+                      </div>
 
-                      {form.poids_unknown && (
-                        <div className="flex items-center gap-2 bg-green-50 border border-green-100 px-3.5 py-2.5 rounded-lg">
-                          <CheckCircle size={14} className="text-green-600 shrink-0" />
-                          <span className="text-sm font-medium text-green-800">Certifié inférieur à 250 kg</span>
-                        </div>
-                      )}
-
-                      <label className="flex items-start gap-2.5 mt-2.5 cursor-pointer group">
-                        <input type="checkbox" checked={form.poids_unknown}
-                          onChange={e => setForm(f => ({ ...f, poids_unknown: e.target.checked, poids_total: e.target.checked ? "" : f.poids_total }))}
-                          className="sr-only" />
-                        <div className={[
-                          "mt-0.5 w-4 h-4 rounded border-2 shrink-0 flex items-center justify-center transition-all duration-150",
-                          form.poids_unknown
-                            ? "bg-primary border-primary"
-                            : "border-border bg-input group-hover:border-primary/60",
-                        ].join(" ")}>
-                          {form.poids_unknown && (
-                            <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
-                              <path d="M1 3.5L3.5 6L8 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          )}
-                        </div>
-                        <span className="text-xs text-foreground/50 group-hover:text-foreground/70 transition-colors leading-relaxed">
-                          Je ne connais pas le poids exact, je certifie ne pas dépasser 250 kg
-                        </span>
-                      </label>
-
-
-                      {!form.poids_unknown && weightWarn && !weightCrit && (
+                      {weightWarn && !weightCrit && (
                         <div className="mt-2.5 flex items-start gap-2.5 bg-blue-50 border border-blue-100 px-3.5 py-3 rounded-lg text-sm text-blue-800">
                           <AlertTriangle size={14} className="shrink-0 mt-0.5 text-blue-400" />
                           <p>Poids un peu élevé, pas de problème : votre pilote vérifiera les conditions le jour J et vous tiendra informé si besoin.</p>
                         </div>
                       )}
-                      {!form.poids_unknown && weightCrit && (
+                      {weightCrit && (
                         <div className="mt-2.5 flex items-start gap-2.5 bg-blue-50 border border-blue-100 px-3.5 py-3 rounded-lg text-sm text-blue-800">
                           <AlertCircle size={14} className="shrink-0 mt-0.5 text-blue-400" />
                           <p>Pour ce poids, votre pilote vous contactera avant le vol pour confirmer ensemble. <a href="/contact" className="underline font-semibold hover:brightness-90">Contactez-nous</a> si vous souhaitez vérifier dès maintenant.</p>
@@ -673,7 +641,7 @@ export default function ReservationPage() {
                     {[
                       { l: "Passager principal", v: `${form.prenom} ${form.nom}` },
                       { l: "Email",              v: form.email },
-                      { l: "Passagers / Masse",  v: form.poids_unknown ? `${form.passengers} pax · certifié < 250 kg` : form.poids_total ? `${form.passengers} pax · ${form.poids_total} kg` : `${form.passengers} pax` },
+                      { l: "Passagers / Masse",  v: `${form.passengers} pax · ${form.poids_total} kg` },
                       { l: "Aéroport",           v: "Charleroi · EBCI" },
                     ].map(({ l, v }) => (
                       <div key={l}>
@@ -697,12 +665,22 @@ export default function ReservationPage() {
                       <p className="text-xs text-foreground/40">Par avion · jusqu&apos;à 3 passagers</p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-[9px] font-black text-foreground/40 uppercase tracking-[2px] mb-0.5">Prix du vol</p>
+                      <p className="text-[9px] font-black text-foreground/40 uppercase tracking-[2px] mb-0.5">
+                        {price === 0 ? "Prix du vol" : "Participation aux frais estimée"}
+                      </p>
                       <p className={`text-3xl font-black tabular-nums ${price === 0 ? "text-green-600" : "text-foreground"}`}>
                         {price === 0 ? "Gratuit" : `${price} €`}
                       </p>
                     </div>
                   </div>
+
+                  {price > 0 && (
+                    <div className="px-6 pb-5 -mt-1">
+                      <p className="text-xs text-foreground/50 leading-relaxed">
+                        Vous ne payez pas maintenant. Nous confirmons votre créneau sous 72h ; si le vol peut avoir lieu, vous recevrez un lien de paiement sécurisé pour ce montant.
+                      </p>
+                    </div>
+                  )}
 
                 </div>
 
@@ -718,6 +696,16 @@ export default function ReservationPage() {
                     onClear={() => { setForm(f => ({ ...f, codeInput: "", voucher: null, coupon: null })); setCodeError(""); }}
                     size="lg"
                   />
+                </div>
+
+                {/* Partage de coûts */}
+                <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg">
+                  <p className="text-xs font-bold text-foreground uppercase tracking-[2px] mb-1">
+                    Vol en partage de coûts · NCO.GEN.104
+                  </p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Fly Horizons n&apos;est pas un service de transport aérien commercial. Nous partageons un vol que nous organisons déjà : votre participation couvre une quote-part des frais réels (avion, carburant, taxes d&apos;aérodrome), sans marge commerciale.
+                  </p>
                 </div>
 
                 {/* CGP + Newsletter */}
@@ -739,7 +727,7 @@ export default function ReservationPage() {
                       onChange={e => setForm(f => ({ ...f, newsletter_opt_in: e.target.checked }))}
                       className="mt-0.5 w-4 h-4 accent-primary shrink-0 cursor-pointer" />
                     <span className="text-sm text-foreground/60 leading-relaxed">
-                      Je souhaite recevoir les actualités et offres de Fly Horizons par email. <span className="text-foreground/40">(optionnel)</span>
+                      Je souhaite être notifié par email quand un vol est organisé. <span className="text-foreground/40">(optionnel)</span>
                     </span>
                   </label>
                 </div>
@@ -767,12 +755,11 @@ export default function ReservationPage() {
                 <button type="button" disabled={ctaDisabled} onClick={handleCTA}
                   className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-primary text-primary-foreground rounded-lg text-sm font-black transition-all disabled:opacity-30 hover:brightness-105 shadow-gold hover:-translate-y-px active:translate-y-0 active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed">
                   {(submitting || codeLoading) && <Loader2 size={14} className="animate-spin" />}
-                  {step === "paiement" && !submitting && price > 0 && <Lock size={13} />}
-                  {step === "paiement" && !submitting && price === 0 && <CheckCircle size={13} />}
+                  {step === "paiement" && !submitting && <CheckCircle size={13} />}
                   <span>
                     {step === "datetime" && (form.date && form.heure ? "Continuer" : form.date ? "Sélectionnez un créneau" : "Sélectionnez une date")}
-                    {step === "infos" && (submitting ? "En cours…" : "Continuer vers le paiement")}
-                    {step === "paiement" && (submitting ? "Traitement en cours…" : price === 0 ? "Confirmer gratuitement" : `Payer ${price} € en toute sécurité`)}
+                    {step === "infos" && (submitting ? "En cours…" : "Continuer")}
+                    {step === "paiement" && (submitting ? "Envoi en cours…" : price === 0 ? "Confirmer gratuitement" : "Envoyer ma demande")}
                   </span>
                   {!submitting && step !== "paiement" && <ChevronRight size={15} />}
                 </button>

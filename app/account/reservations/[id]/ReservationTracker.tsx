@@ -65,13 +65,14 @@ interface Props {
 // ── Status order ───────────────────────────────────────────────────────────
 
 const STATUS_RANK: Record<string, number> = {
-  payment_pending:  0,
-  en_attente:       1,
+  demande_recue:    0,
+  payment_pending:  1,
+  en_attente:       2,
   en_attente_perso: 1,
-  acompte_recu:     2,
-  date_confirmee:   3,
-  heure_confirmee:  4,
-  vol_effectue:     5,
+  acompte_recu:     3,
+  date_confirmee:   4,
+  heure_confirmee:  5,
+  vol_effectue:     6,
 };
 
 // ── Timelines ──────────────────────────────────────────────────────────────
@@ -121,6 +122,12 @@ const PROPOSAL_STEP = {
 
 const STANDARD_TIMELINE = [
   {
+    key: "demande_recue",
+    label: "Demande reçue",
+    desc: () => "Votre pilote vérifie la disponibilité",
+    doneDesc: () => "Demande reçue",
+  },
+  {
     key: "payment_pending",
     label: "Confirmation du paiement",
     desc: () => "En attente de votre paiement",
@@ -136,6 +143,12 @@ const STANDARD_TIMELINE = [
 ];
 
 const STANDARD_TIMELINE_WITH_PROPOSAL = [
+  {
+    key: "demande_recue",
+    label: "Demande reçue",
+    desc: () => "Votre pilote vérifie la disponibilité",
+    doneDesc: () => "Demande reçue",
+  },
   {
     key: "payment_pending",
     label: "Confirmation du paiement",
@@ -255,7 +268,7 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
   }
 
   const canReschedule =
-    !["annulee", "vol_effectue", "payment_pending"].includes(resa.statut) &&
+    !["annulee", "vol_effectue", "payment_pending", "demande_recue"].includes(resa.statut) &&
     (new Date(resa.date_vol + "T23:59:59Z").getTime() - Date.now()) > 48 * 60 * 60 * 1000;
 
   const isPerso = resa.type_resa === "perso";
@@ -268,7 +281,7 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
     ? STANDARD_TIMELINE_WITH_PROPOSAL
     : STANDARD_TIMELINE;
 
-  const isPaid = !["payment_pending", "en_attente_perso"].includes(resa.statut);
+  const isPaid = !["payment_pending", "en_attente_perso", "demande_recue"].includes(resa.statut);
   const hasPaymentLink = resa.payment_token && !isPaid && !isCancelled;
 
   const paymentUrl = isPerso

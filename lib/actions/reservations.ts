@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationPaymentInvitationEmail, reservationConfirmationFreeEmail, reservationPaymentConfirmationEmail, volSurMesureAcompteEmail, postVolEmail, customEmail, rescheduleInviteEmail, rescheduleConfirmationEmail, reservationAutoAnnuleeEmail } from "@/lib/email-templates";
+import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationPaymentInvitationEmail, reservationConfirmationFreeEmail, reservationPaymentConfirmationEmail, volSurMesureAcompteEmail, postVolEmail, customEmail, rescheduleInviteEmail, rescheduleConfirmationEmail, reservationAutoAnnuleeEmail, slotProposalEmail } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { makeRescheduleToken, parseRescheduleToken } from "@/lib/reschedule-token";
 
@@ -15,7 +15,7 @@ async function checkAdmin() {
   if (profile?.role !== "admin") throw new Error("Non autorisé");
 }
 
-const VALID_STATUTS_STD = ["en_attente", "acompte_recu", "heure_confirmee", "vol_effectue", "annulee", "payment_pending"] as const;
+const VALID_STATUTS_STD = ["demande_recue", "en_attente", "acompte_recu", "heure_confirmee", "vol_effectue", "annulee", "payment_pending"] as const;
 const VALID_STATUTS_PERSO = ["en_attente", "acompte_recu", "date_confirmee", "heure_confirmee", "solde", "vol_effectue", "annulee", "payment_pending"] as const;
 
 export async function updateStatutReservation(
@@ -52,6 +52,23 @@ export async function updateStatutReservation(
     if (statut === "heure_confirmee") extra.heure_confirmee_at = new Date().toISOString();
     const { error: updateErr } = await supabase.from("reservations").update({ statut, ...extra }).eq("id", id);
     if (updateErr) return { error: "Erreur mise à jour réservation" };
+
+    // Libérer le voucher réservé si on annule (ex. demande déclinée) — sinon le code
+    // reste bloqué en "reserved" indéfiniment alors que le vol n'aura jamais lieu.
+    if (statut === "annulee") {
+      const { data: resaData } = await supabase
+        .from("reservations")
+        .select("voucher_code")
+        .eq("id", id)
+        .single();
+      if (resaData?.voucher_code) {
+        await supabase
+          .from("voucher_codes")
+          .update({ status: "unused" })
+          .eq("code", resaData.voucher_code)
+          .eq("status", "reserved");
+      }
+    }
 
     // Le statut est déjà mis à jour en base à ce stade : un échec d'envoi d'email
     // ci-dessous ne doit jamais faire remonter "Erreur serveur" (ce qui laisserait
@@ -1237,6 +1254,233 @@ export async function generateClientRescheduleToken(reservationId: string) {
     return { success: true, token: makeRescheduleToken(uuid) };
   } catch (e) {
     console.error("generateClientRescheduleToken error:", e);
+    return { error: "Erreur serveur" };
+  }
+}
+
+// ── Proposer un créneau précis au client (admin) ────────────────────────────
+// Le client reçoit un lien pour accepter ce créneau exact, ou refuser et choisir
+// lui-même une autre date (bascule sur le report libre existant, generateClientRescheduleToken).
+
+export async function proposeSlot(id: string, date: string, heure: string) {
+  try {
+    await checkAdmin();
+    const supabase = createAdminClient();
+
+    const { data: resa } = await supabase
+      .from("reservations")
+      .select("*, clients(*)")
+      .eq("id", id)
+      .single();
+
+    if (!resa) return { error: "Réservation introuvable" };
+    if (["annulee", "vol_effectue"].includes(resa.statut)) {
+      return { error: "Impossible de proposer un créneau pour cette réservation" };
+    }
+
+    const client = resa.clients as { prenom: string; nom: string; email: string } | null;
+    if (!client?.email) return { error: "Email client introuvable" };
+
+    // Vérification de disponibilité du créneau proposé
+    const { data: conflicts } = await supabase
+      .from("reservations")
+      .select("id, heure_vol, duree")
+      .eq("date_vol", date)
+      .neq("statut", "annulee")
+      .neq("id", id);
+
+    const [nh, nm] = heure.split(":").map(Number);
+    const newStart = nh * 60 + nm;
+    const newEnd = newStart + resa.duree;
+    const taken = (conflicts ?? []).some(r => {
+      if (!r.heure_vol) return false;
+      const [rh, rm] = r.heure_vol.split(":").map(Number);
+      const rStart = rh * 60 + rm;
+      const rEnd = rStart + r.duree + 30;
+      return newEnd + 30 > rStart && newStart < rEnd;
+    });
+    if (taken) return { error: "Ce créneau est déjà pris par une autre réservation" };
+
+    const token = crypto.randomUUID();
+    await supabase.from("reservations").update({
+      slot_proposal_token: token,
+      slot_proposal_date: date,
+      slot_proposal_heure: heure,
+    }).eq("id", id);
+
+    const rawUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+    const siteUrl = rawUrl.startsWith("http://localhost") || rawUrl.startsWith("http://127")
+      ? rawUrl : "https://fly-horizons.com";
+
+    const requestedDateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
+      weekday: "long", day: "numeric", month: "long", year: "numeric",
+    });
+    const proposedDateStr = new Date(date + "T12:00:00Z").toLocaleDateString("fr-BE", {
+      weekday: "long", day: "numeric", month: "long", year: "numeric",
+    });
+
+    // Le token est déjà en base à ce stade : un échec d'envoi ne doit pas remonter
+    // une erreur générique, l'admin peut relancer depuis le même bouton.
+    let emailError = false;
+    try {
+      await resend.emails.send({
+        from: EMAIL_FROM,
+        to: [client.email],
+        replyTo: EMAIL_REPLY_TO,
+        subject: "Fly Horizons · Je vous propose un autre créneau",
+        html: slotProposalEmail({
+          prenom: client.prenom,
+          requestedDateStr,
+          proposedDateStr,
+          proposedHeure: heure,
+          duree: resa.duree,
+          respondUrl: `${siteUrl}/reservation/creneau-propose/${token}`,
+        }),
+      });
+    } catch (e) {
+      console.error("[proposeSlot] Erreur email:", e);
+      emailError = true;
+    }
+
+    await supabase.from("reservation_history").insert({
+      reservation_id: id,
+      action: "field_changed",
+      field: "slot_proposal",
+      new_value: `${date} à ${heure}`,
+      author: "admin",
+      note: "Créneau proposé au client",
+    });
+
+    revalidatePath("/admin/vols");
+    return { success: true, emailError, token };
+  } catch (e) {
+    console.error("proposeSlot error:", e);
+    return { error: "Erreur serveur" };
+  }
+}
+
+// ── Réponse du client à un créneau proposé (public, sans checkAdmin) ────────
+
+export async function respondToSlotProposal(token: string, action: "accept" | "decline") {
+  try {
+    const supabase = createAdminClient();
+
+    const { data: resa } = await supabase
+      .from("reservations")
+      .select("*, clients(*)")
+      .eq("slot_proposal_token", token)
+      .single();
+
+    if (!resa) return { error: "Lien invalide ou déjà traité" };
+
+    if (action === "accept") {
+      // Revérifier la disponibilité au moment de l'acceptation (le créneau a pu être pris entre-temps)
+      const { data: conflicts } = await supabase
+        .from("reservations")
+        .select("id, heure_vol, duree")
+        .eq("date_vol", resa.slot_proposal_date)
+        .neq("statut", "annulee")
+        .neq("id", resa.id);
+
+      const [nh, nm] = (resa.slot_proposal_heure as string).split(":").map(Number);
+      const newStart = nh * 60 + nm;
+      const newEnd = newStart + resa.duree;
+      const taken = (conflicts ?? []).some(r => {
+        if (!r.heure_vol) return false;
+        const [rh, rm] = r.heure_vol.split(":").map(Number);
+        const rStart = rh * 60 + rm;
+        const rEnd = rStart + r.duree + 30;
+        return newEnd + 30 > rStart && newStart < rEnd;
+      });
+      if (taken) return { error: "Ce créneau vient d'être pris. Contactez-nous pour en choisir un autre." };
+
+      const { data: updated } = await supabase
+        .from("reservations")
+        .update({
+          date_vol: resa.slot_proposal_date,
+          heure_vol: resa.slot_proposal_heure,
+          slot_proposal_token: null,
+          slot_proposal_date: null,
+          slot_proposal_heure: null,
+        })
+        .eq("id", resa.id)
+        .eq("slot_proposal_token", token)
+        .select("id")
+        .maybeSingle();
+
+      if (!updated) return { error: "Ce créneau a déjà été traité" };
+
+      await supabase.from("reservation_history").insert({
+        reservation_id: resa.id,
+        action: "client_response",
+        field: "slot_proposal",
+        new_value: "accepted",
+        author: "client",
+      });
+
+      // Notification admin
+      const client = resa.clients as { prenom: string; nom: string; email: string } | null;
+      await resend.emails.send({
+        from: EMAIL_FROM,
+        to: [EMAIL_REPLY_TO],
+        subject: `[Créneau accepté] ${client?.prenom ?? ""} ${client?.nom ?? ""}`,
+        html: customEmail({
+          subject: "Créneau accepté",
+          body: `${client?.prenom ?? ""} ${client?.nom ?? ""} a accepté le créneau proposé : ${resa.slot_proposal_date} à ${resa.slot_proposal_heure}.`,
+        }),
+      });
+
+      revalidatePath("/admin/vols");
+      return { success: true };
+    }
+
+    // action === "decline" — le client choisit lui-même une autre date (report libre existant)
+    const rescheduleUuid = crypto.randomUUID();
+    const { data: declined } = await supabase
+      .from("reservations")
+      .update({
+        slot_proposal_token: null,
+        slot_proposal_date: null,
+        slot_proposal_heure: null,
+        reschedule_token: rescheduleUuid,
+      })
+      .eq("id", resa.id)
+      .eq("slot_proposal_token", token)
+      .select("id")
+      .maybeSingle();
+
+    if (!declined) return { error: "Ce créneau a déjà été traité" };
+
+    await supabase.from("reservation_history").insert({
+      reservation_id: resa.id,
+      action: "client_response",
+      field: "slot_proposal",
+      new_value: "declined",
+      author: "client",
+      note: "Le client choisit une autre date lui-même",
+    });
+
+    revalidatePath("/admin/vols");
+    return { success: true, redirectUrl: `/reservation/reporter/${makeRescheduleToken(rescheduleUuid)}` };
+  } catch (e) {
+    console.error("respondToSlotProposal error:", e);
+    return { error: "Erreur serveur" };
+  }
+}
+
+// ── Paiement en espèces prévu (admin) ────────────────────────────────────────
+// Coché : l'acceptation d'un itinéraire par le client n'envoie pas de lien de
+// paiement en ligne automatique (respondToRouteProposal, lib/actions/reservation-edit.ts).
+
+export async function setCashPayment(id: string, cashPayment: boolean) {
+  try {
+    await checkAdmin();
+    const supabase = createAdminClient();
+    const { error } = await supabase.from("reservations").update({ cash_payment: cashPayment }).eq("id", id);
+    if (error) return { error: error.message };
+    revalidatePath("/admin/vols");
+    return { success: true };
+  } catch {
     return { error: "Erreur serveur" };
   }
 }

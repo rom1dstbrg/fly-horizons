@@ -86,6 +86,7 @@ export default async function AdminDashboardPage() {
   const clientsUniques = new Set((allClients ?? []).map(c => c.email?.toLowerCase() ?? c.id)).size;
 
   // ── Actionnables
+  const demandeRecue     = resaStd.filter(r => r.statut === "demande_recue").length;
   const paymentPending   = resaStd.filter(r => r.statut === "payment_pending").length;
   const enAttenteStd     = resaStd.filter(r => r.statut === "en_attente").length;
   const enAttentePerso   = resaPerso.filter(r => r.statut === "en_attente").length;
@@ -102,6 +103,7 @@ export default async function AdminDashboardPage() {
   const expiringCount = expiringList.length;
 
   const urgentItems: ActionItem[] = [
+    ...(demandeRecue      > 0 ? [{ label: `${demandeRecue} nouvelle${demandeRecue > 1 ? "s" : ""} demande${demandeRecue > 1 ? "s" : ""} à traiter sous 72h`,   href: "/admin/vols",           icon: AlertTriangle }] : []),
     ...(paymentPending    > 0 ? [{ label: `${paymentPending} paiement${paymentPending > 1 ? "s" : ""} en attente de confirmation`,                         href: "/admin/vols",           icon: AlertTriangle }] : []),
     ...(volsDemainSansH   > 0 ? [{ label: `${volsDemainSansH} vol${volsDemainSansH > 1 ? "s" : ""} demain sans heure confirmée`,                           href: "/admin/vols",           icon: AlertTriangle }] : []),
     ...(expiringCritical  > 0 ? [{ label: `${expiringCritical} voucher${expiringCritical > 1 ? "s" : ""} expirent dans moins de 7 jours`,                  href: "/admin/boutique?tab=vouchers", icon: AlertTriangle }] : []),

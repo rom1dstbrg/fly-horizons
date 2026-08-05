@@ -7,6 +7,7 @@ import { WeatherWidget } from "@/components/account/WeatherWidget";
 import { formatDuration } from "@/lib/vouchers";
 
 const RESA_STATUS: Record<string, { label: string; color: string }> = {
+  demande_recue:    { label: "Demande envoyée",   color: "text-yellow-600 bg-yellow-50 border-yellow-200" },
   payment_pending:  { label: "Paiement requis",  color: "text-orange-600 bg-orange-50 border-orange-200" },
   en_attente:       { label: "En attente",        color: "text-yellow-600 bg-yellow-50 border-yellow-200" },
   date_confirmee:   { label: "Date confirmée",    color: "text-foreground bg-secondary border-border" },
@@ -87,7 +88,7 @@ export function ReservationsSection({ reservations }: { reservations: Reservatio
 function ResaCard({ resa, upcoming, showWeather = false }: { resa: Reservation; upcoming: boolean; showWeather?: boolean }) {
   const status     = RESA_STATUS[resa.statut] ?? RESA_STATUS.en_attente;
   const isPerso    = resa.type_resa === "perso";
-  const isPaid     = !["en_attente", "payment_pending", "en_attente_perso"].includes(resa.statut);
+  const isPaid     = !["en_attente", "payment_pending", "en_attente_perso", "demande_recue"].includes(resa.statut);
   const hasPayLink = resa.payment_token && !isPaid;
   const payUrl     = isPerso
     ? `/api/vol-sur-mesure/pay/${resa.payment_token}`
@@ -100,7 +101,7 @@ function ResaCard({ resa, upcoming, showWeather = false }: { resa: Reservation; 
   const heure = formatHeure(resa.heure_vol);
 
   const canReschedule =
-    !["annulee", "vol_effectue", "payment_pending"].includes(resa.statut) &&
+    !["annulee", "vol_effectue", "payment_pending", "demande_recue"].includes(resa.statut) &&
     (new Date(resa.date_vol + "T23:59:59Z").getTime() - Date.now()) > 48 * 60 * 60 * 1000;
 
   const carteHref = resa.latestProposalToken

@@ -18,7 +18,7 @@ export default async function PropositionPage({ params }: PageProps) {
 
   const { data: proposal } = await supabase
     .from("route_proposals")
-    .select("*, reservations(id, date_vol, heure_vol, duree, type_resa, statut, payment_status, clients(prenom, nom))")
+    .select("*, reservations(id, date_vol, heure_vol, duree, acompte, type_resa, statut, payment_status, cash_payment, clients(prenom, nom))")
     .eq("token", token)
     .single();
 
@@ -29,9 +29,11 @@ export default async function PropositionPage({ params }: PageProps) {
     date_vol: string;
     heure_vol: string | null;
     duree: number;
+    acompte: number | null;
     type_resa: string;
     statut: string;
     payment_status: string | null;
+    cash_payment: boolean | null;
     clients: { prenom: string; nom: string } | null;
   } | null;
 
@@ -43,6 +45,7 @@ export default async function PropositionPage({ params }: PageProps) {
   });
 
   const alreadyPaid = resa.statut === "acompte_recu" || resa.payment_status === "paid";
+  const proposalAcompte = (proposal as { acompte?: number | null }).acompte ?? resa.acompte ?? 0;
 
   const proposalDuree = (proposal as { duree?: number | null }).duree ?? resa.duree;
 
@@ -56,8 +59,9 @@ export default async function PropositionPage({ params }: PageProps) {
       adminComment={proposal.admin_comment ?? ""}
       alreadyResponded={proposal.status !== "pending"}
       existingStatus={proposal.status}
-      typeResa={resa.type_resa}
       alreadyPaid={alreadyPaid}
+      cashPayment={resa.cash_payment === true}
+      hasAmountDue={proposalAcompte > 0}
     />
   );
 }

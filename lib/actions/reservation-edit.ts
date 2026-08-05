@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { toForeFlight, buildForeFlightRoute } from "@/lib/foreflight";
-import { routeProposalEmail, paymentLinkEmail, routeFeedbackAdminEmail } from "@/lib/email-templates";
+import { routeProposalEmail, paymentLinkEmail, routeFeedbackAdminEmail, reservationPaymentInvitationEmail } from "@/lib/email-templates";
 
 async function checkAdmin() {
   const supabase = await createClient();
@@ -338,7 +338,7 @@ export async function respondToRouteProposal(
 
     const { data: proposal } = await supabase
       .from("route_proposals")
-      .select("*, reservations(id, acompte, payment_token, duree, date_vol, type_resa, statut, payment_status, clients(prenom, nom, email))")
+      .select("*, reservations(id, acompte, payment_token, duree, date_vol, heure_vol, type_resa, statut, payment_status, cash_payment, clients(prenom, nom, email))")
       .eq("token", token)
       .single();
 
@@ -366,9 +366,11 @@ export async function respondToRouteProposal(
       payment_token: string | null;
       duree: number;
       date_vol: string;
+      heure_vol: string | null;
       type_resa: string;
       statut: string;
       payment_status: string | null;
+      cash_payment: boolean | null;
       clients: { prenom: string; nom: string; email: string } | null;
     } | null;
 
@@ -394,7 +396,7 @@ export async function respondToRouteProposal(
     // au cas où le webhook Stripe aurait mis à jour entre le fetch initial et maintenant
     let freshPaymentToken: string | null = resa?.payment_token ?? null;
     let alreadyPaid = resa?.statut === "acompte_recu" || resa?.payment_status === "paid";
-    if (isPerso && resa?.id) {
+    if (resa?.id) {
       const { data: freshResa } = await supabase
         .from("reservations")
         .select("statut, payment_status, payment_token")
@@ -406,17 +408,21 @@ export async function respondToRouteProposal(
       }
     }
 
-    // Lien de paiement uniquement pour les vols sur mesure non encore payés
-    // (les vols fixe sont déjà payés via Stripe ; les perso peuvent avoir payé via le lien initial)
+    // Lien de paiement automatique quand le client accepte l'itinéraire — sauf si déjà payé
+    // ou si l'admin a coché "paiement en espèces" (cash_payment) pour cette réservation.
+    const skipPayment = alreadyPaid || resa?.cash_payment === true;
     let paymentToken: string | null = null;
-    if (isPerso && !alreadyPaid) {
+    if (!skipPayment && status === "accepted" && resa?.id && proposalAcompte > 0) {
       paymentToken = freshPaymentToken;
-      // Si pas de payment_token (admin a modifié l'acompte ou voucher initial), en générer un
-      if (status === "accepted" && resa?.id && !paymentToken && proposalAcompte > 0) {
+      if (!paymentToken) {
         paymentToken = crypto.randomUUID();
+        // Le tunnel standard (/api/reservation/pay/[token]) exige le statut "payment_pending"
+        // pour générer une session Stripe — sans ça il redirige directement vers /success sans encaisser.
+        const extra: Record<string, unknown> = { payment_token: paymentToken };
+        if (!isPerso) extra.statut = "payment_pending";
         await supabase
           .from("reservations")
-          .update({ payment_token: paymentToken })
+          .update(extra)
           .eq("id", resa.id);
       }
     }
@@ -446,23 +452,42 @@ export async function respondToRouteProposal(
       }),
     });
 
-    // Lien de paiement au client — uniquement vol sur mesure non encore payé avec acompte
-    if (isPerso && !alreadyPaid && status === "accepted" && client?.email && paymentToken && proposalAcompte > 0) {
-      const paymentUrl = `${siteUrl}/api/vol-sur-mesure/pay/${paymentToken}`;
-
-      await resend.emails.send({
-        from: EMAIL_FROM,
-        to: [client.email],
-        replyTo: EMAIL_REPLY_TO,
-        subject: `Fly Horizons · Finalisez votre réservation`,
-        html: paymentLinkEmail({
-          prenom: client.prenom,
-          dateStr,
-          duree: proposalDuree,
-          acompte: proposalAcompte,
-          paymentUrl,
-        }),
-      });
+    // Lien de paiement au client — uniquement si non encore payé, montant dû, et pas de paiement cash prévu
+    if (!skipPayment && status === "accepted" && client?.email && paymentToken && proposalAcompte > 0) {
+      if (isPerso) {
+        const paymentUrl = `${siteUrl}/api/vol-sur-mesure/pay/${paymentToken}`;
+        await resend.emails.send({
+          from: EMAIL_FROM,
+          to: [client.email],
+          replyTo: EMAIL_REPLY_TO,
+          subject: `Fly Horizons · Finalisez votre réservation`,
+          html: paymentLinkEmail({
+            prenom: client.prenom,
+            dateStr,
+            duree: proposalDuree,
+            acompte: proposalAcompte,
+            paymentUrl,
+          }),
+        });
+      } else {
+        const paymentUrl = `${siteUrl}/api/reservation/pay/${paymentToken}`;
+        await resend.emails.send({
+          from: EMAIL_FROM,
+          to: [client.email],
+          replyTo: EMAIL_REPLY_TO,
+          subject: "Votre réservation : lien de paiement Fly Horizons",
+          html: reservationPaymentInvitationEmail({
+            prenom: client.prenom,
+            nom: client.nom,
+            dateStr,
+            heure: resa?.heure_vol ?? "",
+            duree: proposalDuree,
+            montant: proposalAcompte,
+            paymentUrl,
+            voucherCode: null,
+          }),
+        });
+      }
     }
 
     return { success: true };

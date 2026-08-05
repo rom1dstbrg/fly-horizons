@@ -1111,7 +1111,7 @@ export default function ConfigurerPage() {
                         className="sr-only" />
                     </div>
                     <span className="text-sm text-foreground/70 leading-relaxed">
-                      Je souhaite recevoir les actualités et offres de Fly Horizons par email.{" "}
+                      Je souhaite être notifié par email quand un vol est organisé.{" "}
                       <span className="text-foreground/40">(optionnel)</span>
                     </span>
                   </label>

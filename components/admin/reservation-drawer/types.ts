@@ -23,6 +23,10 @@ export interface DrawerReservation {
   payment_token: string | null;
   created_at: string;
   avion_reserve?: boolean;
+  cash_payment?: boolean;
+  slot_proposal_token?: string | null;
+  slot_proposal_date?: string | null;
+  slot_proposal_heure?: string | null;
 
   // Route — ancien système texte (standard uniquement)
   route?: string | null;
@@ -137,7 +141,7 @@ Romain, pilote et fondateur de Fly Horizons`,
 export const ROUTE_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   pending:                 { label: "En attente de validation", color: "bg-amber-50 text-amber-700 border-amber-200" },
   sent:                    { label: "En attente de validation", color: "bg-amber-50 text-amber-700 border-amber-200" },
-  accepted:                { label: "Validée ✓",               color: "bg-green-50 text-green-700 border-green-200" },
-  validated:               { label: "Validée ✓",               color: "bg-green-50 text-green-700 border-green-200" },
-  modification_requested:  { label: "Modification demandée",   color: "bg-red-50 text-red-700 border-red-200" },
+  accepted:                { label: "Validée ✓",               color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  validated:               { label: "Validée ✓",               color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  modification_requested:  { label: "Modification demandée",   color: "bg-amber-50 text-amber-700 border-amber-200" },
 };

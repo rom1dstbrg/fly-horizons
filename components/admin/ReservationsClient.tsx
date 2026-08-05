@@ -20,7 +20,7 @@ const PROPOSAL_BADGE: Record<string, { label: string; variant: BadgeVariant }> =
 const FILTERS = ["Tous", "En attente", "Confirmées", "Effectuées", "Annulées"] as const;
 const FILTER_MAP: Record<string, string[] | null> = {
   "Tous":       null,
-  "En attente": ["payment_pending", "en_attente"],
+  "En attente": ["payment_pending", "en_attente", "demande_recue"],
   "Confirmées": ["date_confirmee", "heure_confirmee"],
   "Effectuées": ["vol_effectue"],
   "Annulées":   ["annulee"],

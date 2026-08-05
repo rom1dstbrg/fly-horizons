@@ -9,6 +9,10 @@
       "schedule": "0 8 * * *"
     },
     {
+      "path": "/api/cron/demande-deadline",
+      "schedule": "0 8 * * *"
+    },
+    {
       "path": "/api/cron/purge-analytics",
       "schedule": "0 3 1 * *"
     }

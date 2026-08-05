@@ -47,6 +47,7 @@ export function AdminBadge({
 // ── Status maps — source unique de vérité ──────────────────────
 
 export const STATUT_RESA: Record<string, { label: string; variant: BadgeVariant }> = {
+  demande_recue:   { label: "Nouvelle demande",       variant: "warning" },
   payment_pending: { label: "Att. paiement en ligne", variant: "orange"  },
   en_attente:      { label: "À encaisser",            variant: "warning" },
   // Standard n'utilise pas ce statut dans son flux automatique (Stripe → en_attente directement),

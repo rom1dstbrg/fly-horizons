@@ -21,7 +21,7 @@ export default async function NewsletterPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Newsletter</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Actualités et offres Fly Horizons</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Notifications de vols organisés</p>
       </div>
       <NewsletterSection newsletterActive={sub?.active ?? null} />
     </div>

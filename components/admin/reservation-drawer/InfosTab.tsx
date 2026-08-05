@@ -29,11 +29,15 @@ export function InfosTab({
   linkCopied, onCopyPaymentLink,
   onOpenEmailComposer, onApplyTemplate,
   isPending,
+  cashPayment, isCashPaymentPending, onToggleCashPayment,
 }: {
   reservation: DrawerReservation;
   avionReserve: boolean;
   isReservePending: boolean;
   onToggleAvion: (val: boolean) => void;
+  cashPayment: boolean;
+  isCashPaymentPending: boolean;
+  onToggleCashPayment: (val: boolean) => void;
   bilan: {
     open: boolean; toggle: () => void;
     dureeReelle: string; setDureeReelle: (v: string) => void;
@@ -79,8 +83,8 @@ export function InfosTab({
     <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
 
       {/* Client */}
-      <div className="bg-secondary rounded-xl p-4 space-y-2.5">
-        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-3">Client</p>
+      <div className="pb-4 border-b border-border space-y-2">
+        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-1">Client</p>
         <div className="flex items-center gap-2.5">
           <User size={13} className="text-muted-foreground shrink-0" />
           <span className="text-sm font-semibold text-foreground">{r.clients?.prenom} {r.clients?.nom}</span>
@@ -109,17 +113,17 @@ export function InfosTab({
       {/* Encart NewCAG */}
       {showNewCAG && (
         avionReserve ? (
-          <div className="bg-green-50 border border-green-200 rounded-xl p-3.5 flex items-start gap-3">
-            <span className="text-green-500 mt-0.5 shrink-0">✓</span>
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 flex items-start gap-3">
+            <span className="text-emerald-500 mt-0.5 shrink-0">✓</span>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-green-800 mb-1">Avion réservé sur NewCAG</p>
+              <p className="text-xs font-semibold text-emerald-800 mb-1">Avion réservé sur NewCAG</p>
               {dateLabelNewCAG && (
-                <p className="text-[11px] text-green-700">{dateLabelNewCAG}{r.heure_vol ? ` à ${r.heure_vol}` : ""} — {dureeLabel}</p>
+                <p className="text-[11px] text-emerald-700">{dateLabelNewCAG}{r.heure_vol ? ` à ${r.heure_vol}` : ""} — {dureeLabel}</p>
               )}
               <button
                 onClick={() => onToggleAvion(false)}
                 disabled={isReservePending}
-                className="mt-2 text-[10px] text-green-600 hover:text-green-900 underline underline-offset-2 cursor-pointer transition-colors"
+                className="mt-2 text-[10px] text-emerald-600 hover:text-emerald-900 underline underline-offset-2 cursor-pointer transition-colors"
               >
                 Annuler la réservation avion
               </button>
@@ -156,7 +160,7 @@ export function InfosTab({
       {/* Vol details */}
       <div>
         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-2">Vol</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Field label="Date du vol">
             <div className="flex items-center gap-1.5 mt-0.5">
               <Calendar size={13} className="text-muted-foreground shrink-0" />
@@ -166,7 +170,7 @@ export function InfosTab({
           <Field label="Heure">
             <div className="flex items-center gap-1.5 mt-0.5">
               <Clock size={13} className="text-muted-foreground shrink-0" />
-              {r.heure_vol ? <span>{r.heure_vol.slice(0, 5)}</span> : <span className="text-orange-400 text-xs">À définir</span>}
+              {r.heure_vol ? <span>{r.heure_vol.slice(0, 5)}</span> : <span className="text-amber-500 text-xs">À définir</span>}
             </div>
           </Field>
           <Field label="Passagers">
@@ -196,47 +200,6 @@ export function InfosTab({
               <span className="text-sm">{r.taxes_escales} €</span>
             </Field>
           )}
-          {r.acompte != null && (
-            <Field label="Paiement">
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <CreditCard size={13} className="text-muted-foreground" />
-                <span className="text-muted-foreground text-xs">Prévu :</span>
-                <span>{r.acompte} €</span>
-              </div>
-              {r.paye != null && r.paye > 0 ? (
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <CheckCircle2 size={13} className="text-emerald-500" />
-                  <span className="text-emerald-600 font-semibold">{r.paye} € encaissé</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <XCircle size={13} className="text-amber-400" />
-                  <span className="text-amber-600 text-xs">Pas encore encaissé</span>
-                </div>
-              )}
-              {r.remboursement != null && r.remboursement > 0 && (
-                <>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <RotateCcw size={13} className="text-blue-500" />
-                    <span className="text-blue-600 font-semibold">−{r.remboursement} € remboursé</span>
-                  </div>
-                  {r.paye != null && (
-                    <div className="flex items-center gap-1.5 mt-1 pt-1 border-t border-border">
-                      <span className="text-xs text-muted-foreground">Net :</span>
-                      <span className="font-semibold text-sm">{r.paye - r.remboursement} €</span>
-                    </div>
-                  )}
-                </>
-              )}
-            </Field>
-          )}
-          {r.payment_status && PAYMENT_STATUS_CONFIG[r.payment_status] && (
-            <Field label="Statut paiement">
-              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold mt-0.5 ${PAYMENT_STATUS_CONFIG[r.payment_status].color}`}>
-                {PAYMENT_STATUS_CONFIG[r.payment_status].label}
-              </span>
-            </Field>
-          )}
           {r.voucher_code && (
             <Field label="Voucher">
               <div className="flex items-center gap-1.5 mt-0.5">
@@ -251,6 +214,62 @@ export function InfosTab({
             </Field>
           )}
         </div>
+
+        {/* Paiement — pleine largeur, pas coincé dans la grille */}
+        {r.acompte != null && (
+          <div className="mt-3 pt-3 border-t border-border">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-3 flex-wrap text-sm">
+                <span className="flex items-center gap-1.5 text-foreground">
+                  <CreditCard size={13} className="text-muted-foreground" />
+                  Prévu : <strong>{r.acompte} €</strong>
+                </span>
+                {r.paye != null && r.paye > 0 ? (
+                  <span className="flex items-center gap-1.5 text-emerald-600 font-semibold">
+                    <CheckCircle2 size={13} />
+                    {r.paye} € encaissé
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5 text-amber-600 text-xs">
+                    <XCircle size={13} className="text-amber-400" />
+                    Pas encore encaissé
+                  </span>
+                )}
+              </div>
+              {r.payment_status && PAYMENT_STATUS_CONFIG[r.payment_status] && (
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${PAYMENT_STATUS_CONFIG[r.payment_status].color}`}>
+                  {PAYMENT_STATUS_CONFIG[r.payment_status].label}
+                </span>
+              )}
+            </div>
+            <label className="flex items-center gap-2 mt-2 cursor-pointer group w-fit">
+              <input
+                type="checkbox"
+                checked={cashPayment}
+                disabled={isCashPaymentPending}
+                onChange={e => onToggleCashPayment(e.target.checked)}
+                className="w-3.5 h-3.5 accent-emerald-600 cursor-pointer disabled:cursor-not-allowed"
+              />
+              <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
+                Le client paie en espèces
+              </span>
+              {isCashPaymentPending && <Loader2 size={11} className="animate-spin text-muted-foreground" />}
+            </label>
+            {r.remboursement != null && r.remboursement > 0 && (
+              <div className="flex items-center gap-3 mt-2 pt-2 border-t border-border flex-wrap text-sm">
+                <span className="flex items-center gap-1.5 text-blue-600 font-semibold">
+                  <RotateCcw size={13} />
+                  −{r.remboursement} € remboursé
+                </span>
+                {r.paye != null && (
+                  <span className="text-muted-foreground text-xs">
+                    Net : <strong className="text-foreground">{r.paye - r.remboursement} €</strong>
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {isPerso && r.commentaire && (
           <div className="mt-3">

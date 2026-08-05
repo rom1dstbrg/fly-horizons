@@ -13,6 +13,8 @@ import {
   resendPaymentLinkAdmin,
   sendPaymentLinkAdmin,
   sendRescheduleInvite,
+  proposeSlot,
+  setCashPayment,
 } from "@/lib/actions/reservations";
 import { AdminBadge, STATUT_RESA, STATUT_PERSO, type BadgeVariant } from "@/components/admin/ui/AdminBadge";
 import type { DrawerReservation, EmailTemplate } from "./types";
@@ -55,7 +57,10 @@ export function ReservationDrawer({
   const [isPending, startTransition] = useTransition();
   const [isReservePending, startReserveTransition] = useTransition();
   const [isCashPending, startCashTransition] = useTransition();
+  const [isProposePending, startProposeTransition] = useTransition();
+  const [isCashPaymentPending, startCashPaymentTransition] = useTransition();
   const [avionReserve, setAvionReserveLocal] = useState(reservation?.avion_reserve ?? false);
+  const [cashPayment, setCashPaymentLocal] = useState(reservation?.cash_payment ?? false);
   const [activeTab, setActiveTab] = useState<"infos" | "modifier" | "historique">("infos");
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null);
   const [mapFullscreen, setMapFullscreen] = useState(false);
@@ -81,6 +86,7 @@ export function ReservationDrawer({
   useEffect(() => {
     if (!reservation) return;
     setAvionReserveLocal(reservation.avion_reserve ?? false);
+    setCashPaymentLocal(reservation.cash_payment ?? false);
     setActiveTab("infos");
     setEmailOpen(false);
     setIncludeReschedule(false);
@@ -186,6 +192,26 @@ export function ReservationDrawer({
     startReserveTransition(async () => {
       await setAvionReserve(reservation.id, val);
       setAvionReserveLocal(val);
+    });
+  }
+
+  function doProposeSlot(date: string, heure: string) {
+    if (!reservation) return;
+    startProposeTransition(async () => {
+      const r = await proposeSlot(reservation.id, date, heure);
+      if (r.error) { showFeedback("Erreur : " + r.error, false); return; }
+      onFieldsChange?.(reservation.id, { slot_proposal_token: r.token, slot_proposal_date: date, slot_proposal_heure: heure });
+      showFeedback(r.emailError ? "Créneau proposé · email non envoyé, réessayez" : "Créneau proposé au client ✓", !r.emailError);
+    });
+  }
+
+  function doToggleCashPayment(val: boolean) {
+    if (!reservation) return;
+    startCashPaymentTransition(async () => {
+      const r = await setCashPayment(reservation.id, val);
+      if (r.error) { showFeedback("Erreur : " + r.error, false); return; }
+      setCashPaymentLocal(val);
+      onFieldsChange?.(reservation.id, { cash_payment: val });
     });
   }
 
@@ -317,6 +343,9 @@ export function ReservationDrawer({
                   onOpenEmailComposer={openEmailComposer}
                   onApplyTemplate={applyTemplate}
                   isPending={isPending}
+                  cashPayment={cashPayment}
+                  isCashPaymentPending={isCashPaymentPending}
+                  onToggleCashPayment={doToggleCashPayment}
                 />
               )}
 
@@ -353,6 +382,7 @@ export function ReservationDrawer({
                   activeTab={activeTab}
                   isPending={isPending}
                   isCashPending={isCashPending}
+                  isProposePending={isProposePending}
                   hasRoute={hasRoute}
                   onChangeStatut={doChangeStatut}
                   onConfirmHeureConfirmee={doConfirmHeureConfirmee}
@@ -360,6 +390,7 @@ export function ReservationDrawer({
                   onSendPaymentLink={doSendPaymentLink}
                   onResendPaymentLink={doResendPaymentLink}
                   onRecordCash={doRecordCash}
+                  onProposeSlot={doProposeSlot}
                   modifier={{ isPending: draft.isPending, save: draft.save }}
                 />
               )}

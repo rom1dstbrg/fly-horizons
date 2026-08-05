@@ -3,14 +3,17 @@
 import { useState } from "react";
 import {
   Send, Check, ChevronRight, XCircle, CheckCircle2, RotateCcw,
-  Loader2, AlertTriangle, Banknote, X,
+  Loader2, AlertTriangle, Banknote, X, CalendarClock,
 } from "lucide-react";
 import type { DrawerReservation, Tab } from "./types";
 
 const TERMINAL_STATUTS = ["vol_effectue", "annulee"];
 
-const primaryBtn = "inline-flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-semibold transition-colors disabled:opacity-50 cursor-pointer whitespace-nowrap";
-const chipBtn = "inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer whitespace-nowrap";
+// Palette du footer, volontairement réduite à 3 usages :
+// navy = action principale (une seule à la fois) · neutre = tout le reste · rouge = destructif uniquement.
+const primaryBtn = "inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-navy text-white text-sm font-semibold hover:brightness-90 transition-colors disabled:opacity-50 cursor-pointer whitespace-nowrap";
+const chipBtn = "inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border text-muted-foreground text-xs font-semibold hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-50 cursor-pointer whitespace-nowrap";
+const chipDanger = "inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-red-200 text-red-500 text-xs font-semibold hover:bg-red-50 transition-colors disabled:opacity-50 cursor-pointer whitespace-nowrap";
 
 function CashChip({ acompte, isCashPending, onRecordCash }: {
   acompte: number;
@@ -22,7 +25,7 @@ function CashChip({ acompte, isCashPending, onRecordCash }: {
 
   if (!open) {
     return (
-      <button onClick={() => { setAmount(String(acompte)); setOpen(true); }} className={`${chipBtn} border-emerald-200 text-emerald-700 hover:bg-emerald-50`}>
+      <button onClick={() => { setAmount(String(acompte)); setOpen(true); }} className={chipBtn}>
         <Banknote size={13} />
         Encaisser
       </button>
@@ -30,26 +33,78 @@ function CashChip({ acompte, isCashPending, onRecordCash }: {
   }
 
   return (
-    <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-emerald-200 bg-emerald-50">
+    <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-border bg-secondary">
       <input
         type="number" min={0} step={0.01} autoFocus
         value={amount}
         onChange={e => setAmount(e.target.value)}
-        className="w-20 h-7 px-2 rounded-md border border-emerald-200 bg-white text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-400"
+        className="w-20 h-7 px-2 rounded-md border border-border bg-white text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-navy/30"
       />
-      <span className="text-xs text-emerald-700 font-semibold">€</span>
+      <span className="text-xs text-muted-foreground font-semibold">€</span>
       <button
         onClick={() => { const a = parseFloat(amount); if (a > 0) { onRecordCash(a); setOpen(false); } }}
         disabled={isCashPending || !amount || parseFloat(amount) <= 0}
         title="Confirmer l'encaissement"
-        className="flex items-center justify-center w-7 h-7 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-colors disabled:opacity-50 cursor-pointer"
+        className="flex items-center justify-center w-7 h-7 rounded-md bg-navy text-white hover:brightness-90 transition-colors disabled:opacity-50 cursor-pointer"
       >
         {isCashPending ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
       </button>
       <button
         onClick={() => setOpen(false)}
         title="Annuler"
-        className="flex items-center justify-center w-7 h-7 rounded-md text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer"
+        className="flex items-center justify-center w-7 h-7 rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
+      >
+        <X size={12} />
+      </button>
+    </div>
+  );
+}
+
+function ProposeSlotChip({ currentDate, currentHeure, isPending, onProposeSlot }: {
+  currentDate: string;
+  currentHeure: string | null;
+  isPending: boolean;
+  onProposeSlot: (date: string, heure: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [date, setDate] = useState(currentDate);
+  const [heure, setHeure] = useState(currentHeure ?? "");
+
+  if (!open) {
+    return (
+      <button onClick={() => { setDate(currentDate); setHeure(currentHeure ?? ""); setOpen(true); }} className={chipBtn}>
+        <CalendarClock size={13} />
+        Proposer un créneau
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-border bg-secondary">
+      <input
+        type="date" autoFocus
+        value={date}
+        onChange={e => setDate(e.target.value)}
+        className="h-7 px-2 rounded-md border border-border bg-white text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-navy/30"
+      />
+      <input
+        type="time"
+        value={heure}
+        onChange={e => setHeure(e.target.value)}
+        className="h-7 px-2 rounded-md border border-border bg-white text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-navy/30"
+      />
+      <button
+        onClick={() => { if (date && heure) { onProposeSlot(date, heure); setOpen(false); } }}
+        disabled={isPending || !date || !heure}
+        title="Envoyer la proposition"
+        className="flex items-center justify-center w-7 h-7 rounded-md bg-navy text-white hover:brightness-90 transition-colors disabled:opacity-50 cursor-pointer"
+      >
+        {isPending ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+      </button>
+      <button
+        onClick={() => setOpen(false)}
+        title="Annuler"
+        className="flex items-center justify-center w-7 h-7 rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
       >
         <X size={12} />
       </button>
@@ -62,6 +117,7 @@ export function ActionFooter({
   activeTab,
   isPending,
   isCashPending,
+  isProposePending,
   hasRoute,
   onChangeStatut,
   onConfirmHeureConfirmee,
@@ -69,12 +125,14 @@ export function ActionFooter({
   onSendPaymentLink,
   onResendPaymentLink,
   onRecordCash,
+  onProposeSlot,
   modifier,
 }: {
   reservation: DrawerReservation;
   activeTab: Tab;
   isPending: boolean;
   isCashPending: boolean;
+  isProposePending: boolean;
   hasRoute: boolean;
   onChangeStatut: (statut: string) => void;
   onConfirmHeureConfirmee: () => void;
@@ -82,6 +140,7 @@ export function ActionFooter({
   onSendPaymentLink: () => void;
   onResendPaymentLink: () => void;
   onRecordCash: (amount: number) => void;
+  onProposeSlot: (date: string, heure: string) => void;
   modifier: { isPending: boolean; save: () => void };
 }) {
   const isStandard = r.type_resa !== "perso";
@@ -91,7 +150,7 @@ export function ActionFooter({
   if (activeTab === "modifier") {
     return (
       <div className="px-5 pt-3 border-t border-border shrink-0 flex justify-end pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-        <button onClick={modifier.save} disabled={modifier.isPending} className={`${primaryBtn} bg-navy hover:brightness-90`}>
+        <button onClick={modifier.save} disabled={modifier.isPending} className={primaryBtn}>
           {modifier.isPending ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
           Sauvegarder les modifications
         </button>
@@ -110,43 +169,60 @@ export function ActionFooter({
         </p>
       )}
 
-      {/* Statut */}
-      <div className="flex items-center gap-2 px-5 pt-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))] flex-wrap">
+      {/* Actions principales — spécifiques au statut */}
+      <div className={`flex items-center gap-2 px-5 pt-2.5 flex-wrap ${isTerminal ? "pb-[calc(0.625rem+env(safe-area-inset-bottom))]" : "pb-2.5"}`}>
         {r.statut === "payment_pending" && (
           <>
-            <button onClick={() => onChangeStatut("acompte_recu")} disabled={isPending} className={`${primaryBtn} bg-navy hover:brightness-90`}>
+            <button onClick={() => onChangeStatut("acompte_recu")} disabled={isPending} className={primaryBtn}>
               <Check size={14} />
               Marquer paiement reçu
             </button>
-            <button onClick={onResendPaymentLink} disabled={isPending} className={`${chipBtn} border-orange-200 text-orange-600 hover:bg-orange-50`}>
+            <button onClick={onResendPaymentLink} disabled={isPending} className={chipBtn}>
               {isPending ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
               Renvoyer le lien
             </button>
           </>
         )}
 
-        {(r.statut === "en_attente" || r.statut === "acompte_recu") && (
+        {(r.statut === "en_attente" || r.statut === "acompte_recu" || r.statut === "demande_recue") && (
           <>
-            <button onClick={onConfirmHeureConfirmee} disabled={isPending} className={`${primaryBtn} bg-green-500 hover:bg-green-600`}>
+            <button onClick={onConfirmHeureConfirmee} disabled={isPending} className={primaryBtn}>
               {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
               Confirmer date + heure
             </button>
-            {isStandard && r.statut === "en_attente" && (
-              <button onClick={onSendPaymentLink} disabled={isPending} className={`${chipBtn} border-orange-200 text-orange-600 hover:bg-orange-50`}>
+            {isStandard && (r.statut === "en_attente" || r.statut === "demande_recue") && (
+              <button onClick={onSendPaymentLink} disabled={isPending} className={chipBtn}>
                 {isPending ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
                 Lien de paiement
               </button>
+            )}
+            {r.statut === "demande_recue" && (
+              r.slot_proposal_token
+                ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border bg-secondary text-xs font-semibold text-muted-foreground">
+                    <CalendarClock size={13} />
+                    Créneau proposé, en attente de réponse
+                  </span>
+                )
+                : (
+                  <ProposeSlotChip
+                    currentDate={r.date_vol}
+                    currentHeure={r.heure_vol}
+                    isPending={isProposePending}
+                    onProposeSlot={onProposeSlot}
+                  />
+                )
             )}
           </>
         )}
 
         {r.statut === "date_confirmee" && (
           <>
-            <button onClick={onConfirmHeureConfirmee} disabled={isPending} className={`${primaryBtn} bg-green-500 hover:bg-green-600`}>
+            <button onClick={onConfirmHeureConfirmee} disabled={isPending} className={primaryBtn}>
               {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
               Confirmer l&apos;heure
             </button>
-            <button onClick={() => onChangeStatut("en_attente")} disabled={isPending} className={`${chipBtn} border-border text-muted-foreground hover:bg-secondary`}>
+            <button onClick={() => onChangeStatut("en_attente")} disabled={isPending} className={chipBtn}>
               <ChevronRight size={13} className="rotate-180" />
               Revenir en attente
             </button>
@@ -155,11 +231,11 @@ export function ActionFooter({
 
         {r.statut === "heure_confirmee" && (
           <>
-            <button onClick={() => onChangeStatut("vol_effectue")} disabled={isPending} className={`${primaryBtn} bg-purple-500 hover:bg-purple-600`}>
+            <button onClick={() => onChangeStatut("vol_effectue")} disabled={isPending} className={primaryBtn}>
               {isPending ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
               Marquer vol effectué
             </button>
-            <button onClick={() => onChangeStatut("en_attente")} disabled={isPending} className={`${chipBtn} border-border text-muted-foreground hover:bg-secondary`}>
+            <button onClick={() => onChangeStatut("en_attente")} disabled={isPending} className={chipBtn}>
               <ChevronRight size={13} className="rotate-180" />
               Revenir en attente
             </button>
@@ -167,14 +243,14 @@ export function ActionFooter({
         )}
 
         {r.statut === "vol_effectue" && (
-          <span className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-purple-50 border border-purple-200 text-sm text-purple-700 font-medium">
-            <CheckCircle2 size={14} className="text-purple-600" />
+          <span className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-700 font-medium">
+            <CheckCircle2 size={14} className="text-emerald-600" />
             Vol effectué, dossier clôturé
           </span>
         )}
 
         {r.statut === "annulee" && (
-          <button onClick={() => onChangeStatut("en_attente")} disabled={isPending} className={`${primaryBtn} bg-navy hover:brightness-90`}>
+          <button onClick={() => onChangeStatut("en_attente")} disabled={isPending} className={primaryBtn}>
             <ChevronRight size={14} />
             Réactiver la réservation
           </button>
@@ -183,20 +259,21 @@ export function ActionFooter({
         {showCash && r.acompte != null && (
           <CashChip acompte={r.acompte} isCashPending={isCashPending} onRecordCash={onRecordCash} />
         )}
-
-        {!isTerminal && (
-          <>
-            <button onClick={onSendReschedule} disabled={isPending} className={`${chipBtn} border-amber-200 text-amber-600 hover:bg-amber-50 ml-auto`}>
-              {isPending ? <Loader2 size={13} className="animate-spin" /> : <RotateCcw size={13} />}
-              Reporter
-            </button>
-            <button onClick={() => onChangeStatut("annulee")} disabled={isPending} className={`${chipBtn} border-red-200 text-red-500 hover:bg-red-50`}>
-              <XCircle size={13} />
-              Annuler
-            </button>
-          </>
-        )}
       </div>
+
+      {/* Actions toujours disponibles — séparées visuellement des actions du statut */}
+      {!isTerminal && (
+        <div className="flex items-center justify-between gap-2 px-5 py-2 border-t border-border/60 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+          <button onClick={onSendReschedule} disabled={isPending} className={chipBtn}>
+            {isPending ? <Loader2 size={13} className="animate-spin" /> : <RotateCcw size={13} />}
+            Reporter
+          </button>
+          <button onClick={() => onChangeStatut("annulee")} disabled={isPending} className={chipDanger}>
+            <XCircle size={13} />
+            Annuler
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -220,8 +220,8 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
               Changer de durée
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {(autres ?? []).map((p, index) => (
-                <PackCard key={p.id} pack={p} isPopular={p.voucher_duration_minutes === 60} />
+              {(autres ?? []).map((p) => (
+                <PackCard key={p.id} pack={p} />
               ))}
             </div>
           </div>

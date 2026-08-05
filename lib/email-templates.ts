@@ -739,6 +739,8 @@ export interface ReservationConfirmationProps {
   voucherCode?: string | null;
   reservationId?: string | null;
   dateISO?: string | null;
+  /** Montant à payer une fois la demande confirmée par le pilote (undefined/0 = vol déjà couvert, rien à payer). */
+  montant?: number | null;
 }
 
 export function reservationConfirmationFreeEmail(p: ReservationConfirmationProps): string {
@@ -756,6 +758,10 @@ export function reservationConfirmationFreeEmail(p: ReservationConfirmationProps
     ? ctaButton(`${SITE_URL}/account/reservations/${p.reservationId}`, "Suivre ma réservation")
     : "";
 
+  const calloutText = p.montant
+    ? `Ce vol n&rsquo;est pas encore confirm&eacute;. Je v&eacute;rifie la disponibilit&eacute; d&rsquo;un pilote et reviens vers vous sous 72h. Si le vol peut avoir lieu, vous recevrez un lien de paiement s&eacute;curis&eacute; pour la participation aux frais (${fmt(p.montant)}) — aucun paiement n&rsquo;est demand&eacute; avant cette confirmation.`
+    : "Votre vol est enti&egrave;rement pris en charge par votre voucher, aucun paiement suppl&eacute;mentaire requis. En cas de m&eacute;t&eacute;o d&eacute;favorable, le vol est report&eacute; sans frais.";
+
   const body = `
     <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">R&eacute;servation</p>
     <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Demande de vol re&ccedil;ue &#10003;</h1>
@@ -765,7 +771,7 @@ export function reservationConfirmationFreeEmail(p: ReservationConfirmationProps
     ${label("D&eacute;tails du vol")}
     ${infoRows(rows)}
 
-    ${callout("Votre vol est enti&egrave;rement pris en charge par votre voucher, aucun paiement suppl&eacute;mentaire requis. En cas de m&eacute;t&eacute;o d&eacute;favorable, le vol est report&eacute; sans frais.")}
+    ${callout(calloutText)}
 
     ${nextStep("Je vous enverrai votre itin&eacute;raire de vol dans les prochains jours, avec les lieux que nous survolerons.")}
 
@@ -1662,6 +1668,48 @@ export function rescheduleConfirmationEmail(p: {
     </p>`;
 
   return emailBase(body, "Votre report est confirmé · Fly Horizons");
+}
+
+// ── Proposition d'un créneau précis par le pilote (accepter/refuser) ─────────
+
+export function slotProposalEmail(p: {
+  prenom: string;
+  requestedDateStr: string;
+  proposedDateStr: string;
+  proposedHeure: string;
+  duree: number;
+  respondUrl: string;
+}): string {
+  const body = `
+    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Fly Horizons</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Je vous propose un autre cr&eacute;neau</h1>
+    <p class="em-body" style="margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;">
+      Bonjour ${esc(p.prenom)},
+    </p>
+    ${separator()}
+    <p class="em-body" style="margin:0 0 16px;font-size:14px;color:#334155;line-height:1.7;">
+      Je ne peux malheureusement pas organiser votre vol du <strong style="color:#0b2238;">${esc(p.requestedDateStr)}</strong> comme demand&eacute;. Voici un cr&eacute;neau que je peux vous proposer &agrave; la place.
+    </p>
+    ${infoRows([
+      ["Nouvelle date", `<span style="text-transform:capitalize;color:#16a34a;font-weight:700;">${esc(p.proposedDateStr)} &agrave; ${esc(p.proposedHeure)}</span>`],
+      ["Dur&eacute;e", `${p.duree}&nbsp;min`],
+    ])}
+    <p class="em-body" style="margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;">
+      Ce cr&eacute;neau vous convient ? Vous pouvez l&rsquo;accepter directement, ou choisir une autre date vous-m&ecirc;me si celui-ci ne convient pas.
+    </p>
+    ${ctaButton(p.respondUrl, "Voir la proposition")}
+
+    <p class="em-body" style="margin:20px 0 12px;font-size:14px;color:#334155;line-height:1.7;">
+      &Agrave; tr&egrave;s bient&ocirc;t,<br>
+      <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
+    </p>
+    ${separator()}
+    <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;text-align:center;">
+      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
+    </p>`;
+
+  return emailBase(body, "Nouveau créneau proposé · Fly Horizons");
 }
 
 // ── Route proposal (nouveau flux waypoints, /vol/proposition/[token]) ────────

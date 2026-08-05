@@ -110,7 +110,7 @@ export function AccountTabs({ user, stats, addresses, vouchers, reservations, ne
         ? "Aucune adresse"
         : `${addresses.length} adresse${addresses.length !== 1 ? "s" : ""} enregistrée${addresses.length !== 1 ? "s" : ""}`;
     }
-    if (id === "newsletter") return "Actualités et offres Fly Horizons";
+    if (id === "newsletter") return "Notifications de vols organisés";
     if (id === "securite") return "Mot de passe et session";
     return undefined;
   }

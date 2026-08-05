@@ -67,8 +67,8 @@ export default async function NosOffresPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-              {packs.map((pack, index) => (
-                <PackCard key={pack.id} pack={pack} isPopular={index === 1} />
+              {packs.map((pack) => (
+                <PackCard key={pack.id} pack={pack} />
               ))}
             </div>
           )}

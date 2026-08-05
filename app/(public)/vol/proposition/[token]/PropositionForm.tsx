@@ -32,13 +32,14 @@ interface Props {
   adminComment: string;
   alreadyResponded: boolean;
   existingStatus: string;
-  typeResa: string;
   alreadyPaid: boolean;
+  cashPayment: boolean;
+  hasAmountDue: boolean;
 }
 
 export function PropositionForm({
   token, prenom, dateStr, duree, waypoints, adminComment,
-  alreadyResponded, existingStatus, typeResa, alreadyPaid,
+  alreadyResponded, existingStatus, alreadyPaid, cashPayment, hasAmountDue,
 }: Props) {
   const [isPending, startTransition] = useTransition();
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
@@ -48,6 +49,14 @@ export function PropositionForm({
   const [showModify, setShowModify] = useState(false);
   const [modifyText, setModifyText] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  const acceptedMessage = cashPayment
+    ? "Votre pilote a bien été notifié. Vous réglerez en espèces le jour du vol."
+    : alreadyPaid
+    ? "Votre pilote a bien été notifié. Votre paiement a déjà été enregistré."
+    : hasAmountDue
+    ? "Votre lien de paiement vous a été envoyé par email."
+    : "Votre pilote a bien été notifié, à bientôt pour le vol !";
 
   // Verrouille le scroll sur tous les formats (layout fixe plein écran)
   useEffect(() => {
@@ -83,11 +92,7 @@ export function PropositionForm({
           <div>
             <p className="font-semibold text-green-800 text-sm">Itinéraire accepté !</p>
             <p className="text-xs text-green-700 mt-0.5">
-              {typeResa === "perso" && !alreadyPaid
-                ? "Votre lien de paiement vous a été envoyé par email."
-                : typeResa === "perso" && alreadyPaid
-                ? "Votre pilote a bien été notifié. Votre paiement a déjà été enregistré."
-                : "Votre pilote a bien été notifié, à bientôt pour le vol !"}
+              {acceptedMessage}
             </p>
           </div>
         </div>
@@ -301,9 +306,7 @@ export function PropositionForm({
                   <div>
                     <p className="font-semibold text-green-800 text-sm">Itinéraire accepté !</p>
                     <p className="text-xs text-green-700 mt-0.5">
-                      {typeResa === "perso" && !alreadyPaid
-                        ? "Votre lien de paiement vous a été envoyé par email."
-                        : "Votre pilote a bien été notifié."}
+                      {acceptedMessage}
                     </p>
                   </div>
                 </div>
@@ -329,9 +332,7 @@ export function PropositionForm({
                 <div>
                   <p className="font-semibold text-green-800 text-sm">Itinéraire accepté !</p>
                   <p className="text-xs text-green-700 mt-0.5">
-                    {typeResa === "perso" && !alreadyPaid
-                      ? "Votre lien de paiement vous a été envoyé par email."
-                      : "Votre pilote a bien été notifié."}
+                    {acceptedMessage}
                   </p>
                 </div>
               </div>

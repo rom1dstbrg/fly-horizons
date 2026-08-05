@@ -18,7 +18,7 @@ interface PackBase {
 }
 
 // ── Version "lien" — landing page & nos-offres ─────────────────────────
-export function PackCard({ pack, isPopular }: { pack: PackBase; isPopular?: boolean }) {
+export function PackCard({ pack }: { pack: PackBase }) {
   const duree = pack.voucher_duration_minutes ?? 60;
   const image = [...(pack.images ?? [])].sort((a, b) => (a.position ?? 0) - (b.position ?? 0))[0]?.url ?? null;
 
@@ -38,16 +38,11 @@ export function PackCard({ pack, isPopular }: { pack: PackBase; isPopular?: bool
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/92 via-black/20 to-transparent" />
 
-        {/* Badges haut */}
-        <div className="absolute top-4 left-4 right-4 flex items-start justify-between">
+        {/* Badge durée */}
+        <div className="absolute top-4 left-4 right-4 flex items-start">
           <div className="inline-flex items-center bg-black/40 backdrop-blur-md border border-white/20 rounded-lg px-3.5 py-2">
             <span className="text-[#F2B705] font-black text-[15px] leading-none">{duree} min</span>
           </div>
-          {isPopular && (
-            <div className="inline-flex items-center bg-[#F2B705] rounded-lg px-3 py-2">
-              <span className="text-[#0b2238] font-black text-[11px] leading-none uppercase tracking-wide">Le plus offert</span>
-            </div>
-          )}
         </div>
 
         {/* Contenu bas */}

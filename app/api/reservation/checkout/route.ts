@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { rateLimit, getIp } from "@/lib/rate-limit";
 import { optInNewsletter } from "@/lib/newsletter";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2026-04-22.dahlia",
-});
+import { reservationConfirmationFreeEmail } from "@/lib/email-templates";
+import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
+import { escapeHtml } from "@/lib/utils";
 
 export async function POST(request: NextRequest) {
   const { allowed } = await rateLimit(`reservation-checkout:${getIp(request)}`, 5, 60_000);
@@ -18,7 +16,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { prenom, nom, email, telephone, duree, date, heure, voucher_code, voucher_id, poids_total, passengers, coupon_code, commentaire, newsletter_opt_in } = body;
 
-    if (!prenom || !nom || !email || !duree || !date || !heure) {
+    if (!prenom || !nom || !email || !duree || !date || !heure || !poids_total) {
       return NextResponse.json({ error: "Champs obligatoires manquants" }, { status: 400 });
     }
 
@@ -181,7 +179,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Ce créneau vient d'être réservé. Veuillez en choisir un autre." }, { status: 409 });
     }
 
-    // Créer la réservation en attente de paiement
+    // Créer la demande — pas de paiement à ce stade. Romain valide la demande
+    // depuis l'admin et déclenche lui-même l'envoi du lien de paiement (sendPaymentLinkAdmin).
+    // Le voucher reste "reserved" (claimé plus haut) jusqu'à confirmation ou refus.
+    const montantDemande = amountCents / 100;
     const { data: resa, error: resaErr } = await supabase
       .from("reservations")
       .insert({
@@ -190,12 +191,13 @@ export async function POST(request: NextRequest) {
         heure_vol: heure,
         duree: dureeMins,
         passagers: passengers ? parseInt(passengers) : 1,
-        statut: "payment_pending",
+        statut: "demande_recue",
         type_resa: "standard",
         voucher_code: voucher_code || null,
         coupon_code: appliedCouponCode,
         poids_total: poids_total ? parseInt(poids_total) : null,
         commentaire: commentaire || null,
+        acompte: montantDemande,
       })
       .select()
       .single();
@@ -215,57 +217,59 @@ export async function POST(request: NextRequest) {
 
     if (newsletter_opt_in) await optInNewsletter(email, prenom);
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
     const dateStr = new Date(date + "T12:00:00Z").toLocaleDateString("fr-BE", {
-      day: "numeric", month: "long", year: "numeric",
+      weekday: "long", day: "numeric", month: "long", year: "numeric",
     });
 
-    let session;
-    try {
-      session = await stripe.checkout.sessions.create({
-        mode: "payment",
-        payment_method_types: ["card"],
-        customer_email: email,
-        locale: "fr",
-        expires_at: Math.floor(Date.now() / 1000) + 30 * 60, // 30 min — libère le voucher plus vite
-        line_items: [
-          {
-            price_data: {
-              currency: "eur",
-              product_data: {
-                name: `Vol Fly Horizons — ${dureeMins} min`,
-                description: `${dateStr} à ${heure} · ${prenom} ${nom}`,
-              },
-              unit_amount: amountCents,
-            },
-            quantity: 1,
-          },
-        ],
-        metadata: {
-          type: "reservation",
-          reservationId: resa.id,
-          clientId,
-          voucherId: resolvedVoucherId ?? "",
-          voucherCode: voucher_code || "",
-          couponCode: appliedCouponCode ?? "",
-        },
-        success_url: `${siteUrl}/reservation/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${siteUrl}/reservation?cancelled=1`,
-      });
-    } catch (stripeError) {
-      // Rollback: release voucher and delete orphan reservation
-      // Pas de release_coupon : l'incrément n'a pas encore eu lieu (différé au webhook)
-      if (resolvedVoucherId) {
-        await supabase.from("voucher_codes").update({ status: "unused" }).eq("id", resolvedVoucherId).eq("status", "reserved");
-      }
-      await supabase.from("reservations").delete().eq("id", resa.id).eq("statut", "payment_pending");
-      console.error("Stripe session creation error:", stripeError);
-      return NextResponse.json({ error: "Erreur création session paiement" }, { status: 500 });
-    }
+    // Email de confirmation de la demande au client
+    await resend.emails.send({
+      from: EMAIL_FROM,
+      to: [email],
+      replyTo: EMAIL_REPLY_TO,
+      subject: "Demande de vol reçue · Fly Horizons",
+      html: reservationConfirmationFreeEmail({
+        prenom, nom, dateStr, heure,
+        duree: dureeMins,
+        passengers: passengers ? parseInt(passengers) : 1,
+        poids_total: poids_total ? parseInt(poids_total) : null,
+        voucherCode: voucher_code || null,
+        reservationId: resa.id,
+        montant: montantDemande,
+      }),
+    });
 
-    return NextResponse.json({ url: session.url });
+    // Notification admin
+    const passagersCount = passengers ? parseInt(passengers) : 1;
+    const ePrenom = escapeHtml(prenom);
+    const eNom = escapeHtml(nom);
+    const eEmail = escapeHtml(email);
+    const eTel = escapeHtml(telephone || "non renseigné");
+    const eVoucher = voucher_code ? escapeHtml(voucher_code.toUpperCase().trim()) : null;
+    const eComment = commentaire ? escapeHtml(commentaire) : null;
+    await resend.emails.send({
+      from: EMAIL_FROM,
+      to: [EMAIL_REPLY_TO],
+      subject: `[Nouvelle demande] ${ePrenom} ${eNom} · ${date} à ${heure}`,
+      html: `<p><strong>✈️ Nouvelle demande de vol — ${montantDemande} €</strong></p>
+<table style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;">
+  <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Client</td><td><strong>${ePrenom} ${eNom}</strong> (${clientId})</td></tr>
+  <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Email</td><td><a href="mailto:${eEmail}">${eEmail}</a></td></tr>
+  <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Téléphone</td><td>${eTel}</td></tr>
+  <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Date</td><td><strong>${dateStr}</strong></td></tr>
+  <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Heure</td><td><strong>${heure}</strong></td></tr>
+  <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Durée</td><td>${dureeMins} min</td></tr>
+  <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Passagers</td><td>${passagersCount}</td></tr>
+  <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Montant</td><td><strong>${montantDemande} €</strong></td></tr>
+  ${poids_total ? `<tr><td style="padding:4px 12px 4px 0;color:#64748b;">Poids total</td><td>${poids_total} kg</td></tr>` : ""}
+  ${eVoucher ? `<tr><td style="padding:4px 12px 4px 0;color:#64748b;">Voucher</td><td style="color:#16a34a;font-weight:600;">${eVoucher} ✓</td></tr>` : ""}
+  ${eComment ? `<tr><td style="padding:4px 12px 4px 0;color:#64748b;vertical-align:top;">Remarque</td><td style="font-style:italic;">${eComment}</td></tr>` : ""}
+</table>
+<p>Créneau bloqué 72h en attente de votre décision (lien de paiement ou refus depuis l'admin).</p>`,
+    });
+
+    return NextResponse.json({ success: true, reservationId: resa.id });
   } catch (error) {
-    console.error("Reservation checkout error:", error);
+    console.error("Reservation demande error:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }

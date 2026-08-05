@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { prenom, nom, email, telephone, duree, date, heure, voucher_code, poids_total, passengers, commentaire, newsletter_opt_in } = body;
 
-    if (!prenom || !nom || !email || !duree || !date || !heure) {
+    if (!prenom || !nom || !email || !duree || !date || !heure || !poids_total) {
       return NextResponse.json({ error: "Champs obligatoires manquants" }, { status: 400 });
     }
 

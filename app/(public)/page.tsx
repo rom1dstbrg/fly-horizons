@@ -151,10 +151,9 @@ export default async function HomePage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              {(packs ?? []).map((pack, index) => {
+              {(packs ?? []).map((pack) => {
                 const image = pack.images?.[0]?.url ?? null;
                 const duree = pack.voucher_duration_minutes ?? 60;
-                const isPopular = index === 1;
                 return (
                   <Link key={pack.id} href={`/vols/${pack.slug}`} className="group block focus-visible:outline-none">
                     <article className="relative overflow-hidden rounded-lg aspect-[4/3] sm:aspect-[3/4]">
@@ -171,16 +170,11 @@ export default async function HomePage() {
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/92 via-black/20 to-transparent" />
 
-                      {/* Badges haut */}
-                      <div className="absolute top-4 left-4 right-4 flex items-start justify-between">
+                      {/* Badge durée */}
+                      <div className="absolute top-4 left-4 right-4 flex items-start">
                         <div className="inline-flex items-center bg-black/40 backdrop-blur-md border border-white/20 rounded-lg px-3.5 py-2">
                           <span className="text-[#F2B705] font-black text-[15px] leading-none">{duree} min</span>
                         </div>
-                        {isPopular && (
-                          <div className="inline-flex items-center bg-[#F2B705] rounded-lg px-3 py-2">
-                            <span className="text-[#0b2238] font-black text-[11px] leading-none uppercase tracking-wide">Le plus offert</span>
-                          </div>
-                        )}
                       </div>
 
                       <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-5">
