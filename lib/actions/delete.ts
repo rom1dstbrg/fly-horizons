@@ -54,27 +54,6 @@ export async function deleteProduct(productId: string) {
   }
 }
 
-export async function deleteOrder(orderId: string) {
-  try {
-    await checkAdmin();
-    const adminSupabase = createAdminClient();
-
-    const { error } = await adminSupabase
-      .from("orders")
-      .delete()
-      .eq("id", orderId);
-
-    if (error) return { error: error.message };
-
-    revalidatePath("/admin/boutique");
-    revalidatePath("/admin/boutique");
-    revalidatePath("/admin");
-    return { success: true };
-  } catch {
-    return { error: "Erreur suppression commande" };
-  }
-}
-
 export async function deleteReservationPerso(resaId: string) {
   try {
     await checkAdmin();

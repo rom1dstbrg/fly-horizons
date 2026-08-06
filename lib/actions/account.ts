@@ -11,29 +11,6 @@ async function getUser() {
 }
 
 // -----------------------------------------------
-// PROFIL
-// -----------------------------------------------
-export async function updateProfile(formData: FormData) {
-  try {
-    const { supabase, user } = await getUser();
-
-    const full_name = formData.get("full_name") as string;
-    const phone = formData.get("phone") as string;
-
-    const { error } = await supabase
-      .from("profiles")
-      .update({ full_name: full_name || null, phone: phone || null })
-      .eq("id", user.id);
-
-    if (error) return { error: error.message };
-    revalidatePath("/account");
-    return { success: true };
-  } catch {
-    return { error: "Non connecte" };
-  }
-}
-
-// -----------------------------------------------
 // ADRESSES
 // -----------------------------------------------
 export async function createAddress(formData: FormData) {

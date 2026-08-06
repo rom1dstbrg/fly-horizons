@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { resend, EMAIL_FROM } from "@/lib/resend";
 import { revalidatePath } from "next/cache";
-import { newsletterConfirmationEmail, newsletterCampaignEmail, newsletterFromBlocksEmail, type NewsletterBlock } from "@/lib/email-templates";
+import { newsletterConfirmationEmail, newsletterFromBlocksEmail, type NewsletterBlock } from "@/lib/email-templates";
 
 async function checkAdmin() {
   const supabase = await createClient();
@@ -35,39 +35,6 @@ export async function getNewsletterStats() {
 }
 
 export type SendResult = { sent?: number; failed?: number; error?: string } | null;
-
-export async function sendNewsletter(_prev: SendResult, formData: FormData): Promise<SendResult> {
-  await checkAdmin();
-
-  const subject = (formData.get("subject") as string)?.trim();
-  const body    = (formData.get("body") as string)?.trim();
-
-  if (!subject || !body) return { error: "Sujet et contenu requis." };
-
-  const supabase = createAdminClient();
-  const { data: subscribers } = await supabase
-    .from("newsletter_subscribers")
-    .select("email, prenom, unsubscribe_token")
-    .eq("active", true);
-
-  if (!subscribers?.length) return { error: "Aucun abonné actif." };
-
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
-
-  const emailBatch = subscribers.map(sub => ({
-    from: EMAIL_FROM,
-    to: [sub.email],
-    subject,
-    html: newsletterCampaignEmail(subject, body, sub.prenom, `${siteUrl}/newsletter/unsubscribe?token=${sub.unsubscribe_token}`),
-  }));
-
-  const { data: batchData, error: batchError } = await resend.batch.send(emailBatch);
-  const sent = batchError ? 0 : (batchData?.data?.length ?? subscribers.length);
-  const failed = subscribers.length - sent;
-
-  revalidatePath("/admin/newsletter");
-  return { sent, failed };
-}
 
 export async function sendNewsletterBlocks(_prev: SendResult, formData: FormData): Promise<SendResult> {
   await checkAdmin();

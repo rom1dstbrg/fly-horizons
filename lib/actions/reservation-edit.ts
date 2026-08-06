@@ -40,42 +40,6 @@ async function logHistory(params: {
   }
 }
 
-// ── Mise à jour statut de paiement (manuel) ────────────────────────────────────
-
-export async function updatePaymentStatus(
-  reservationId: string,
-  payment_status: "paid" | "unpaid" | "partial" | "refunded"
-) {
-  try {
-    await checkAdmin();
-    const supabase = createAdminClient();
-
-    const { data: current } = await supabase
-      .from("reservations")
-      .select("payment_status")
-      .eq("id", reservationId)
-      .single();
-
-    await supabase
-      .from("reservations")
-      .update({ payment_status })
-      .eq("id", reservationId);
-
-    await logHistory({
-      reservation_id: reservationId,
-      action: "field_changed",
-      field: "payment_status",
-      old_value: current?.payment_status ?? null,
-      new_value: payment_status,
-    });
-
-    revalidatePath("/admin/vols");
-    return { success: true };
-  } catch {
-    return { error: "Erreur serveur" };
-  }
-}
-
 // ── Mise à jour complète de tous les champs ────────────────────────────────────
 
 type ClientFields = {

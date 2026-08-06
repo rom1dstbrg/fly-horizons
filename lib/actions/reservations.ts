@@ -804,22 +804,6 @@ export async function setAvionReserve(id: string, reserved: boolean) {
   }
 }
 
-export async function updateReservationDateHeure(id: string, fields: {
-  date_vol?: string;
-  heure_vol?: string | null;
-}) {
-  try {
-    await checkAdmin();
-    const supabase = createAdminClient();
-    const { error } = await supabase.from("reservations").update(fields).eq("id", id);
-    if (error) return { error: "Erreur mise à jour" };
-    revalidatePath("/admin/vols");
-    return { success: true };
-  } catch {
-    return { error: "Erreur serveur" };
-  }
-}
-
 export async function sendCustomEmail(id: string, subject: string, body: string, withReschedule = false) {
   try {
     await checkAdmin();
@@ -857,43 +841,6 @@ export async function sendCustomEmail(id: string, subject: string, body: string,
   } catch (err) {
     console.error("sendCustomEmail exception:", err);
     return { error: "Erreur envoi email" };
-  }
-}
-
-export async function updateReservationFields(id: string, fields: {
-  duree?: number;
-  passagers?: number;
-  poids_total?: number | null;
-  acompte?: number | null;
-}) {
-  try {
-    await checkAdmin();
-    const supabase = createAdminClient();
-    const { error } = await supabase.from("reservations").update(fields).eq("id", id);
-    if (error) return { error: "Erreur mise à jour" };
-    revalidatePath("/admin/vols");
-    return { success: true };
-  } catch {
-    return { error: "Erreur serveur" };
-  }
-}
-
-export async function updateReservationPersoFields(id: string, fields: {
-  passagers?: number;
-  poids_total?: number | null;
-  commentaire?: string | null;
-  acompte?: number | null;
-  duree?: number;
-}) {
-  try {
-    await checkAdmin();
-    const supabase = createAdminClient();
-    const { error } = await supabase.from("reservations").update(fields).eq("id", id);
-    if (error) return { error: "Erreur mise à jour" };
-    revalidatePath("/admin/vols");
-    return { success: true };
-  } catch {
-    return { error: "Erreur serveur" };
   }
 }
 
@@ -1019,19 +966,6 @@ export async function resendPaymentLinkAdmin(id: string) {
       }),
     });
 
-    return { success: true };
-  } catch {
-    return { error: "Erreur serveur" };
-  }
-}
-
-export async function updateReservationRoute(id: string, route: string) {
-  try {
-    await checkAdmin();
-    const supabase = createAdminClient();
-    const { error } = await supabase.from("reservations").update({ route }).eq("id", id);
-    if (error) return { error: "Erreur mise à jour" };
-    revalidatePath("/admin/vols");
     return { success: true };
   } catch {
     return { error: "Erreur serveur" };
