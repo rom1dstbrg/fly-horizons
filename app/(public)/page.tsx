@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronDown, Route, Lock, Users, Clock, PlaneTakeoff, Zap, ArrowRight, MousePointerClick } from "lucide-react";
+import { ChevronDown, Route, Lock, Users, Clock, PlaneTakeoff, Zap, ArrowRight, MousePointerClick, Eye } from "lucide-react";
 import { HeroContent } from "@/components/HeroContent";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import { PackCard } from "@/components/shop/PackCard";
@@ -136,7 +136,7 @@ export default async function HomePage() {
 
       {/* ═══ NOS VOLS ═══ */}
       {(packs ?? []).length > 0 && (
-        <section id="nos-vols" className="py-16 bg-gradient-navy border-t border-border">
+        <section id="nos-vols" className="py-20 sm:py-28 bg-gradient-navy">
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
             <div className="mb-10">
@@ -325,6 +325,11 @@ export default async function HomePage() {
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <span className="w-11 h-11 rounded-full bg-white/12 border border-white/18 backdrop-blur-md flex items-center justify-center">
+                      <Eye size={17} className="text-white" />
+                    </span>
+                  </div>
                 </Link>
               ))}
             </div>
@@ -346,7 +351,7 @@ export default async function HomePage() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl">
             {[
               {
                 name: "Sophie M.",
@@ -366,33 +371,22 @@ export default async function HomePage() {
               },
               */
             ].map(({ name, location, text }) => (
-              <div key={name} className="relative bg-white rounded-2xl p-8 flex flex-col gap-5 shadow-[0_2px_20px_rgba(0,0,0,0.06)] overflow-hidden">
+              <div key={name} className="bg-white rounded-2xl p-7 flex flex-col gap-6 shadow-[0_2px_20px_rgba(0,0,0,0.06)]">
 
-                {/* Guillemet décoratif */}
-                <span className="absolute top-3 right-6 text-[88px] font-black leading-none select-none pointer-events-none text-primary/12" style={{ fontFamily: "Georgia, serif" }}>
-                  &ldquo;
-                </span>
-
-                {/* Étoiles */}
-                <div className="flex gap-1">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <svg key={i} className="w-4 h-4 fill-primary" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
+                {/* Accent doré */}
+                <span className="w-8 h-1 bg-[#F2B705] rounded-full" />
 
                 {/* Texte */}
-                <p className="text-foreground/70 text-[15px] leading-relaxed flex-1">{text}</p>
+                <p className="text-foreground/80 text-base leading-relaxed flex-1">{text}</p>
 
                 {/* Auteur */}
-                <div className="flex items-center gap-3 pt-4 border-t border-border">
-                  <div className="w-9 h-9 rounded-full bg-[#0b2238] flex items-center justify-center shrink-0">
+                <div className="flex items-center gap-3 pt-5 border-t border-border/70">
+                  <div className="w-9 h-9 rounded-lg bg-[#0b2238] flex items-center justify-center shrink-0">
                     <span className="text-white text-xs font-black">{name.charAt(0)}</span>
                   </div>
                   <div>
-                    <p className="text-foreground font-bold text-sm">{name}</p>
-                    <p className="text-primary text-[11px] font-semibold tracking-wide">{location}</p>
+                    <p className="text-[#0b2238] font-bold text-sm">{name}</p>
+                    <p className="text-[#F2B705] text-xs font-semibold tracking-wide">{location}</p>
                   </div>
                 </div>
 
