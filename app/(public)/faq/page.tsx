@@ -113,8 +113,13 @@ const THEMES: Theme[] = [
     items: [
       {
         q: "Comment réserver un vol partagé ?",
-        aText: "Rendez-vous sur la page Nos offres, choisissez votre durée de vol : 30, 60, 90 ou 120 minutes. Ouvrez la fiche du vol pour voir les photos et le détail, puis cliquez sur Faire une demande : sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis envoyez votre demande. Aucun paiement n'est demandé à ce stade. Le pilote confirme le créneau sous 72 heures maximum, puis vous recevez un lien de paiement sécurisé (ou convenez d'un paiement en espèces avec nous).",
-        a: <>Rendez-vous sur la page <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Nos offres</Link>, choisissez votre durée : 30, 60, 90 ou 120 minutes. Ouvrez la fiche du vol pour voir les photos et le détail, puis cliquez sur Faire une demande : sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis envoyez votre demande. Aucun paiement n&apos;est demandé à ce stade. Le pilote confirme le créneau sous 72 heures maximum, puis vous recevez un lien de paiement sécurisé (ou convenez d&apos;un paiement en espèces avec nous).</>,
+        aText: "Rendez-vous sur la page Nos offres, choisissez votre durée de vol : 30, 60, 90 ou 120 minutes. Ouvrez la fiche du vol pour voir les photos et le détail, puis cliquez sur Faire une demande : sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis envoyez votre demande. Aucun paiement n'est demandé à ce stade. Le pilote étudie votre demande et vous répond sous 72 heures maximum : si le vol peut avoir lieu, vous recevez un lien de paiement sécurisé (ou convenez d'un paiement en espèces avec nous).",
+        a: <>Rendez-vous sur la page <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Nos offres</Link>, choisissez votre durée : 30, 60, 90 ou 120 minutes. Ouvrez la fiche du vol pour voir les photos et le détail, puis cliquez sur Faire une demande : sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis envoyez votre demande. Aucun paiement n&apos;est demandé à ce stade. Le pilote étudie votre demande et vous répond sous 72 heures maximum : si le vol peut avoir lieu, vous recevez un lien de paiement sécurisé (ou convenez d&apos;un paiement en espèces avec nous).</>,
+      },
+      {
+        q: "Le pilote peut-il refuser ma demande de vol ?",
+        aText: "Oui. Fly Horizons se réserve le droit d'accepter ou de refuser toute demande de vol, à sa seule discrétion (disponibilité, météo, faisabilité technique...), tant que le paiement n'a pas été reçu et confirmé. Une demande envoyée n'est donc pas une réservation ferme : elle ne le devient qu'une fois acceptée par le pilote.",
+        a: "Oui. Fly Horizons se réserve le droit d'accepter ou de refuser toute demande de vol, à sa seule discrétion (disponibilité, météo, faisabilité technique...), tant que le paiement n'a pas été reçu et confirmé. Une demande envoyée n'est donc pas une réservation ferme : elle ne le devient qu'une fois acceptée par le pilote.",
       },
       {
         q: "Quel est le prix d'un vol partagé en Belgique ?",
@@ -157,8 +162,8 @@ const THEMES: Theme[] = [
     items: [
       {
         q: "Comment fonctionne le paiement de la provision ?",
-        aText: "Une fois votre demande confirmée par le pilote (sous 72 heures maximum), vous recevez un lien de paiement sécurisé via Stripe pour valider votre créneau — ou vous pouvez convenir d'un paiement en espèces avec nous. Aucun paiement n'est demandé au moment de la demande, et aucune saisie de carte n'a lieu ailleurs que sur la page sécurisée Stripe.",
-        a: "Une fois votre demande confirmée par le pilote (sous 72 heures maximum), vous recevez un lien de paiement sécurisé via Stripe pour valider votre créneau — ou vous pouvez convenir d'un paiement en espèces avec nous. Aucun paiement n'est demandé au moment de la demande, et aucune saisie de carte n'a lieu ailleurs que sur la page sécurisée Stripe.",
+        aText: "Le pilote étudie votre demande sous 72 heures maximum ; si le vol peut avoir lieu, vous recevez un lien de paiement sécurisé via Stripe pour valider votre créneau — ou vous pouvez convenir d'un paiement en espèces avec nous. Aucun paiement n'est demandé au moment de la demande, et aucune saisie de carte n'a lieu ailleurs que sur la page sécurisée Stripe.",
+        a: "Le pilote étudie votre demande sous 72 heures maximum ; si le vol peut avoir lieu, vous recevez un lien de paiement sécurisé via Stripe pour valider votre créneau — ou vous pouvez convenir d'un paiement en espèces avec nous. Aucun paiement n'est demandé au moment de la demande, et aucune saisie de carte n'a lieu ailleurs que sur la page sécurisée Stripe.",
       },
       {
         q: "Quels moyens de paiement sont acceptés ?",
@@ -172,8 +177,8 @@ const THEMES: Theme[] = [
       },
       {
         q: "Un bon cadeau peut-il couvrir la provision en totalité ?",
-        aText: "Oui. Si le bon cadeau couvre la totalité du prix, aucun paiement supplémentaire n'est demandé : votre demande est enregistrée directement, puis confirmée par le pilote comme toute demande, sous 72 heures maximum. S'il ne couvre qu'une partie, le solde vous est demandé via Stripe une fois la demande confirmée.",
-        a: "Oui. Si le bon cadeau couvre la totalité du prix, aucun paiement supplémentaire n'est demandé : votre demande est enregistrée directement, puis confirmée par le pilote comme toute demande, sous 72 heures maximum. S'il ne couvre qu'une partie, le solde vous est demandé via Stripe une fois la demande confirmée.",
+        aText: "Oui. Si le bon cadeau couvre la totalité du prix, aucun paiement supplémentaire n'est demandé : votre demande est enregistrée directement, puis étudiée par le pilote comme toute demande, sous 72 heures maximum. S'il ne couvre qu'une partie, le solde vous est demandé via Stripe une fois le vol confirmé.",
+        a: "Oui. Si le bon cadeau couvre la totalité du prix, aucun paiement supplémentaire n'est demandé : votre demande est enregistrée directement, puis étudiée par le pilote comme toute demande, sous 72 heures maximum. S'il ne couvre qu'une partie, le solde vous est demandé via Stripe une fois le vol confirmé.",
       },
     ],
   },
@@ -243,8 +248,8 @@ const THEMES: Theme[] = [
       },
       {
         q: "Dans quel délai ma réservation est-elle confirmée ?",
-        aText: "Le pilote confirme votre demande dans un délai maximum de 72 heures, en pratique souvent en quelques heures. Vous recevez un email dès que le créneau est confirmé, avec un lien de paiement sécurisé (ou les modalités convenues pour un paiement en espèces). L'heure précise de décollage est communiquée dans les jours qui précèdent le vol, en fonction des conditions météo et du trafic.",
-        a: "Le pilote confirme votre demande dans un délai maximum de 72 heures, en pratique souvent en quelques heures. Vous recevez un email dès que le créneau est confirmé, avec un lien de paiement sécurisé (ou les modalités convenues pour un paiement en espèces). L'heure précise de décollage est communiquée dans les jours qui précèdent le vol, en fonction des conditions météo et du trafic.",
+        aText: "Le pilote étudie votre demande dans un délai maximum de 72 heures, en pratique souvent en quelques heures. Si le vol peut avoir lieu, vous recevez un email de confirmation avec un lien de paiement sécurisé (ou les modalités convenues pour un paiement en espèces). L'heure précise de décollage est communiquée dans les jours qui précèdent le vol, en fonction des conditions météo et du trafic.",
+        a: "Le pilote étudie votre demande dans un délai maximum de 72 heures, en pratique souvent en quelques heures. Si le vol peut avoir lieu, vous recevez un email de confirmation avec un lien de paiement sécurisé (ou les modalités convenues pour un paiement en espèces). L'heure précise de décollage est communiquée dans les jours qui précèdent le vol, en fonction des conditions météo et du trafic.",
       },
     ],
   },

@@ -97,7 +97,9 @@ Paiement sécurisé : Les paiements en ligne sont traités par Stripe (stripe.co
 
 Lien de paiement : Pour les réservations créées par l'exploitant à la suite d'un contact par e-mail, un lien de paiement sécurisé est envoyé au Client par e-mail.
 
-Validation : La commande ou la réservation est définitivement validée à réception de la confirmation de paiement.`,
+Validation : La commande ou la réservation est définitivement validée à réception de la confirmation de paiement.
+
+Droit de refus : Fly Horizons se réserve le droit d'accepter ou de refuser toute demande de vol, à sa seule discrétion et sans obligation de justification, tant que le paiement n'a pas été reçu et confirmé. La soumission d'une demande ne constitue ni une réservation ferme ni un engagement de la part de Fly Horizons.`,
   },
   {
     title: "8. Conditions de participation et limite de masse",
