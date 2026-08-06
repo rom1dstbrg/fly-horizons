@@ -50,7 +50,7 @@ export function HeroContent() {
           className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-[#F2B705] text-[#0b2238] rounded-lg font-bold text-sm hover:bg-[#e6a800] transition-all shadow-[0_8px_30px_rgba(242,183,5,.35)] hover:-translate-y-0.5 active:translate-y-0"
         >
           <PlaneTakeoff size={16} />
-          Réserver un vol
+          Découvrir nos vols
         </a>
         <Link
           href="/galerie"
@@ -60,6 +60,13 @@ export function HeroContent() {
           Voir la galerie
         </Link>
       </motion.div>
+
+      <motion.p
+        className="text-white/45 text-[11px] mt-5 max-w-sm"
+        {...fadeUp(0.6)}
+      >
+        Créneau souhaité, pas garanti : le vol étant partagé, une autre date ou heure peut vous être proposée.
+      </motion.p>
 
     </div>
   );

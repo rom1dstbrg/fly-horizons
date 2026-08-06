@@ -58,6 +58,9 @@ export default async function NosOffresPage() {
             <p className="text-muted-foreground text-sm max-w-lg mx-auto leading-relaxed">
               30, 60, 90 ou 120 minutes de vol depuis Charleroi. Prix fixe, réservation en quelques clics, jusqu&apos;à 3 passagers.
             </p>
+            <p className="text-xs text-foreground/50 max-w-lg mx-auto mt-2.5 leading-relaxed">
+              Créneau souhaité, pas garanti : le vol étant partagé, une autre date ou heure peut vous être proposée.
+            </p>
           </div>
 
           {/* Grille packs */}

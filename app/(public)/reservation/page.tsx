@@ -423,6 +423,11 @@ export default function ReservationPage() {
             {/* ─ Step 1 : Date & heure ─ */}
             {step === "datetime" && (
               <>
+                <p className="flex items-start gap-1.5 text-xs text-foreground/60 mb-3">
+                  <AlertCircle size={13} className="shrink-0 mt-0.5 text-primary" />
+                  Créneau souhaité, pas garanti : le vol étant partagé, une autre date ou heure peut vous être proposée.
+                </p>
+
                 <div className="card-premium overflow-hidden">
 
                   {/* Calendrier */}

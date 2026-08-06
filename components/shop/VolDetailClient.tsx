@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarCheck, Lock } from "lucide-react";
+import { CalendarCheck, Lock, AlertCircle } from "lucide-react";
 
 interface VolDetailClientProps {
   id: string;
@@ -36,6 +36,10 @@ export function VolDetailClient({ price, duree }: VolDetailClientProps) {
 
       {/* Notes */}
       <div className="space-y-1.5">
+        <p className="text-xs text-foreground/70 flex items-start gap-1.5 leading-relaxed">
+          <AlertCircle size={12} className="shrink-0 mt-0.5 text-primary" />
+          Créneau souhaité, pas garanti : le vol étant partagé, une autre date ou heure peut vous être proposée.
+        </p>
         <p className="text-[10px] text-muted-foreground leading-relaxed">
           Nous confirmons votre créneau sous 72h. Aucun paiement n&apos;est demandé avant cette confirmation.
         </p>
