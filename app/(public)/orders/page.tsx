@@ -171,7 +171,7 @@ export default async function OrdersPage() {
                                   href={`/reservation?duree=${v.duration_minutes}&code=${encodeURIComponent(v.code)}`}
                                   className="text-[10px] font-semibold text-foreground hover:text-primary transition-colors whitespace-nowrap"
                                 >
-                                  Réserver →
+                                  Faire une demande →
                                 </Link>
                               )}
                             </div>

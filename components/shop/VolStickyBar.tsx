@@ -53,7 +53,7 @@ export function VolStickyBar({ title, price, duree }: VolStickyBarProps) {
             className="h-10 px-5 flex items-center gap-2 bg-[#F2B705] text-[#0b2238] rounded-lg text-sm font-black hover:bg-[#e6a800] transition-colors shadow-[0_2px_8px_rgba(242,183,5,0.35)] whitespace-nowrap shrink-0"
           >
             <CalendarCheck size={15} />
-            Réserver
+            Faire une demande
           </Link>
 
         </div>

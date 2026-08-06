@@ -56,7 +56,7 @@ export function ReservationsSection({ reservations }: { reservations: Reservatio
           href="/reservation"
           className="inline-flex items-center gap-1 mt-4 text-xs font-semibold text-foreground hover:text-primary transition-colors"
         >
-          Réserver un vol <ChevronRight size={12} />
+          Faire une demande <ChevronRight size={12} />
         </Link>
       </div>
     );

@@ -38,7 +38,7 @@ const INFOS = [
 
 const PRATIQUE = [
   { href: "/access-ebci", label: "Plan d'accès · EBCI" },
-  { href: "/nos-offres", label: "Réserver un vol" },
+  { href: "/nos-offres", label: "Faire une demande" },
   { href: "/account",     label: "Mon compte" },
 ];
 

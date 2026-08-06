@@ -585,7 +585,7 @@ export function AccountClient({
                     href="/reservation"
                     className="inline-flex items-center gap-1 mt-4 text-xs text-foreground font-semibold hover:text-primary transition-colors"
                   >
-                    Réserver un vol <ChevronRight size={12} />
+                    Faire une demande <ChevronRight size={12} />
                   </Link>
                 </div>
               ) : (

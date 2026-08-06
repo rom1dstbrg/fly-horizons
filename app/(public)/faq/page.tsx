@@ -113,8 +113,8 @@ const THEMES: Theme[] = [
     items: [
       {
         q: "Comment réserver un vol partagé ?",
-        aText: "Rendez-vous sur la page Nos offres, choisissez votre durée de vol : 30, 60, 90 ou 120 minutes. Ouvrez la fiche du vol pour voir les photos et le détail, puis cliquez sur Réserver une date : sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis réglez en ligne. Votre demande est validée par le pilote sous 48 heures maximum.",
-        a: <>Rendez-vous sur la page <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Nos offres</Link>, choisissez votre durée : 30, 60, 90 ou 120 minutes. Ouvrez la fiche du vol pour voir les photos et le détail, puis cliquez sur Réserver une date : sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis réglez en ligne. Votre demande est validée par le pilote sous 48 heures maximum.</>,
+        aText: "Rendez-vous sur la page Nos offres, choisissez votre durée de vol : 30, 60, 90 ou 120 minutes. Ouvrez la fiche du vol pour voir les photos et le détail, puis cliquez sur Faire une demande : sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis envoyez votre demande. Aucun paiement n'est demandé à ce stade. Le pilote confirme le créneau sous 72 heures maximum, puis vous recevez un lien de paiement sécurisé (ou convenez d'un paiement en espèces avec nous).",
+        a: <>Rendez-vous sur la page <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Nos offres</Link>, choisissez votre durée : 30, 60, 90 ou 120 minutes. Ouvrez la fiche du vol pour voir les photos et le détail, puis cliquez sur Faire une demande : sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis envoyez votre demande. Aucun paiement n&apos;est demandé à ce stade. Le pilote confirme le créneau sous 72 heures maximum, puis vous recevez un lien de paiement sécurisé (ou convenez d&apos;un paiement en espèces avec nous).</>,
       },
       {
         q: "Quel est le prix d'un vol partagé en Belgique ?",
@@ -157,23 +157,23 @@ const THEMES: Theme[] = [
     items: [
       {
         q: "Comment fonctionne le paiement de la provision ?",
-        aText: "Le paiement se fait en ligne au moment de la réservation, via Stripe : c'est ce paiement qui valide votre demande. Aucune saisie de carte n'a lieu ailleurs que sur la page sécurisée Stripe.",
-        a: "Le paiement se fait en ligne au moment de la réservation, via Stripe : c'est ce paiement qui valide votre demande. Aucune saisie de carte n'a lieu ailleurs que sur la page sécurisée Stripe.",
+        aText: "Une fois votre demande confirmée par le pilote (sous 72 heures maximum), vous recevez un lien de paiement sécurisé via Stripe pour valider votre créneau — ou vous pouvez convenir d'un paiement en espèces avec nous. Aucun paiement n'est demandé au moment de la demande, et aucune saisie de carte n'a lieu ailleurs que sur la page sécurisée Stripe.",
+        a: "Une fois votre demande confirmée par le pilote (sous 72 heures maximum), vous recevez un lien de paiement sécurisé via Stripe pour valider votre créneau — ou vous pouvez convenir d'un paiement en espèces avec nous. Aucun paiement n'est demandé au moment de la demande, et aucune saisie de carte n'a lieu ailleurs que sur la page sécurisée Stripe.",
       },
       {
         q: "Quels moyens de paiement sont acceptés ?",
-        aText: "Le paiement en ligne se fait exclusivement via Stripe : carte Visa, Mastercard et American Express. Aucun virement bancaire n'est accepté sur le site.",
-        a: "Le paiement en ligne se fait exclusivement via Stripe : carte Visa, Mastercard et American Express. Aucun virement bancaire n'est accepté sur le site.",
+        aText: "Le paiement en ligne se fait via Stripe : carte Visa, Mastercard et American Express. Un paiement en espèces le jour du vol est aussi possible si c'est convenu avec nous au moment de la confirmation. Aucun virement bancaire n'est accepté sur le site.",
+        a: "Le paiement en ligne se fait via Stripe : carte Visa, Mastercard et American Express. Un paiement en espèces le jour du vol est aussi possible si c'est convenu avec nous au moment de la confirmation. Aucun virement bancaire n'est accepté sur le site.",
       },
       {
         q: "Y a-t-il des frais supplémentaires après le vol ?",
-        aText: "Non, normalement. Le prix payé au moment de la réservation couvre l'intégralité du vol prévu, il n'y a pas de solde à régler après coup. Dans de rares cas exceptionnels, un ajustement peut être fait sur base du temps de vol réel, mais ce n'est pas systématique.",
-        a: "Non, normalement. Le prix payé au moment de la réservation couvre l'intégralité du vol prévu, il n'y a pas de solde à régler après coup. Dans de rares cas exceptionnels, un ajustement peut être fait sur base du temps de vol réel, mais ce n'est pas systématique.",
+        aText: "Non, normalement. Le prix réglé pour votre vol couvre l'intégralité du vol prévu, il n'y a pas de solde à régler après coup. Dans de rares cas exceptionnels, un ajustement peut être fait sur base du temps de vol réel, mais ce n'est pas systématique.",
+        a: "Non, normalement. Le prix réglé pour votre vol couvre l'intégralité du vol prévu, il n'y a pas de solde à régler après coup. Dans de rares cas exceptionnels, un ajustement peut être fait sur base du temps de vol réel, mais ce n'est pas systématique.",
       },
       {
         q: "Un bon cadeau peut-il couvrir la provision en totalité ?",
-        aText: "Oui. Si le bon cadeau couvre la totalité du prix, aucun paiement supplémentaire n'est demandé : votre demande est enregistrée directement, puis validée par le pilote comme toute réservation, sous 48 heures maximum. S'il ne couvre qu'une partie, vous réglez le solde via Stripe.",
-        a: "Oui. Si le bon cadeau couvre la totalité du prix, aucun paiement supplémentaire n'est demandé : votre demande est enregistrée directement, puis validée par le pilote comme toute réservation, sous 48 heures maximum. S'il ne couvre qu'une partie, vous réglez le solde via Stripe.",
+        aText: "Oui. Si le bon cadeau couvre la totalité du prix, aucun paiement supplémentaire n'est demandé : votre demande est enregistrée directement, puis confirmée par le pilote comme toute demande, sous 72 heures maximum. S'il ne couvre qu'une partie, le solde vous est demandé via Stripe une fois la demande confirmée.",
+        a: "Oui. Si le bon cadeau couvre la totalité du prix, aucun paiement supplémentaire n'est demandé : votre demande est enregistrée directement, puis confirmée par le pilote comme toute demande, sous 72 heures maximum. S'il ne couvre qu'une partie, le solde vous est demandé via Stripe une fois la demande confirmée.",
       },
     ],
   },
@@ -189,8 +189,8 @@ const THEMES: Theme[] = [
       },
       {
         q: "Comment le bénéficiaire utilise-t-il le bon cadeau ?",
-        aText: "Il se rend sur la page de réservation, choisit une date et un horaire, remplit ses informations, puis entre son code au moment du paiement. Le code est déduit automatiquement de la provision.",
-        a: "Il se rend sur la page de réservation, choisit une date et un horaire disponibles, remplit ses informations, puis entre son code au moment du paiement. Le code est déduit automatiquement de la provision.",
+        aText: "Il se rend sur la page de réservation, choisit une date et un horaire, renseigne ses informations en indiquant son code, puis envoie sa demande. Le code est appliqué automatiquement et réduit le montant qui sera demandé une fois le créneau confirmé par le pilote.",
+        a: "Il se rend sur la page de réservation, choisit une date et un horaire disponibles, renseigne ses informations en indiquant son code, puis envoie sa demande. Le code est appliqué automatiquement et réduit le montant qui sera demandé une fois le créneau confirmé par le pilote.",
       },
       /* Masqué 29/07/2026 (mentionne le vol sur mesure) — voir audit-legal-fly-horizons.html
       {
@@ -243,8 +243,8 @@ const THEMES: Theme[] = [
       },
       {
         q: "Dans quel délai ma réservation est-elle confirmée ?",
-        aText: "La réservation est validée dans un délai maximum de 48 heures après réception de la provision, en pratique souvent en 2 à 4 heures. Vous recevez un email de confirmation dès que le pilote a validé la disponibilité. L'heure précise de décollage est communiquée dans les jours qui précèdent le vol, en fonction des conditions météo et du trafic.",
-        a: "La réservation est validée dans un délai maximum de 48 heures après réception de la provision, en pratique souvent en 2 à 4 heures. Vous recevez un email dès que le pilote a validé la disponibilité. L'heure précise de décollage est communiquée dans les jours qui précèdent le vol, en fonction des conditions météo et du trafic.",
+        aText: "Le pilote confirme votre demande dans un délai maximum de 72 heures, en pratique souvent en quelques heures. Vous recevez un email dès que le créneau est confirmé, avec un lien de paiement sécurisé (ou les modalités convenues pour un paiement en espèces). L'heure précise de décollage est communiquée dans les jours qui précèdent le vol, en fonction des conditions météo et du trafic.",
+        a: "Le pilote confirme votre demande dans un délai maximum de 72 heures, en pratique souvent en quelques heures. Vous recevez un email dès que le créneau est confirmé, avec un lien de paiement sécurisé (ou les modalités convenues pour un paiement en espèces). L'heure précise de décollage est communiquée dans les jours qui précèdent le vol, en fonction des conditions météo et du trafic.",
       },
     ],
   },
