@@ -3,17 +3,13 @@ import { Suspense } from "react";
 import Link from "next/link";
 import {
   AlertTriangle, AlertCircle, CheckCircle2,
-  ArrowRight, Route, MessageSquare, Ticket,
-  Users, Plus, Package,
-  CalendarDays, Tag, CreditCard,
-  PlaneTakeoff, TrendingUp, TrendingDown, WifiOff,
+  ArrowRight, Route, MessageSquare,
+  Plus, PlaneTakeoff, WifiOff,
 } from "lucide-react";
-import { PremiumPlaneIcon } from "@/components/admin/PremiumPlaneIcon";
-import { formatPrice } from "@/lib/utils";
 import { DashboardCalendar } from "@/components/admin/DashboardCalendar";
 import { MetarWidget } from "@/components/admin/MetarWidget";
 import { PageHeader } from "@/components/admin/PageHeader";
-import { StatGrid, StatCard, FormSection, AdminBadge, STATUT_RESA, STATUT_PERSO } from "@/components/admin/ui";
+import { FormSection, AdminBadge, STATUT_RESA, STATUT_PERSO } from "@/components/admin/ui";
 
 const RESA_ALL = { ...STATUT_RESA, ...STATUT_PERSO };
 
@@ -28,22 +24,15 @@ type ActionItem = { label: string; href: string; icon: React.ElementType };
 export default async function AdminDashboardPage() {
   const supabase = createAdminClient();
   const now         = new Date();
-  const todayStr    = now.toISOString().split("T")[0];
   const tomorrowStr = new Date(now.getTime() + 86400000).toISOString().split("T")[0];
 
   const thirtyDaysFromNow = new Date(now.getTime() + 30 * 86400000).toISOString();
 
   const [
-    { data: allOrders },
     { data: reservations },
-    { data: allClients },
-    { count: vouchersDispoCount },
     { data: newContacts },
     { data: vouchersExpiring },
   ] = await Promise.all([
-    // CA total depuis le début
-    supabase.from("orders").select("id, total, status")
-      .not("status", "in", "(cancelled,refunded)"),
     // Réservations — tous les champs requis par DrawerReservation
     supabase.from("reservations").select(
       `id, date_vol, heure_vol, duree, statut, type_resa, created_at,
@@ -51,8 +40,6 @@ export default async function AdminDashboardPage() {
        route, route_token, route_status, route_feedback, passagers, poids_total, avion_reserve,
        clients(id, prenom, nom, email, telephone)`
     ).order("created_at", { ascending: false }),
-    supabase.from("clients").select("id, email"),
-    supabase.from("voucher_codes").select("id", { count: "exact", head: true }).eq("status", "unused"),
     supabase.from("contacts").select("id, prenom, nom, created_at")
       .eq("statut", "nouveau").order("created_at", { ascending: false }).limit(5),
     supabase.from("voucher_codes")
@@ -68,22 +55,6 @@ export default async function AdminDashboardPage() {
   const allResas  = (reservations ?? []) as any[];
   const resaStd   = allResas.filter(r => r.type_resa === "standard");
   const resaPerso = allResas.filter(r => r.type_resa === "perso");
-
-  // ── Net encaissé vols (même logique que /admin/transactions)
-  const soldeGlobal = allResas
-    .filter((r: { statut: string }) => r.statut !== "annulee")
-    .reduce(
-      (s: number, r: { paye: number | null; remboursement: number | null }) =>
-        s + (r.paye ?? 0) - (r.remboursement ?? 0),
-      0
-    );
-
-  // ── KPIs
-  // caAllOrders = toute la boutique (orders) ; ne pas ajouter soldeGlobal qui est déjà
-  // inclus via les vouchers achetés en boutique (les vols payés par voucher ont paye=0).
-  const caAllOrders    = (allOrders ?? []).reduce((s, o) => s + (o.total ?? 0), 0);
-  const resasTotal     = allResas.filter(r => r.statut !== "annulee").length;
-  const clientsUniques = new Set((allClients ?? []).map(c => c.email?.toLowerCase() ?? c.id)).size;
 
   // ── Actionnables
   const demandeRecue     = resaStd.filter(r => r.statut === "demande_recue").length;
@@ -117,10 +88,7 @@ export default async function AdminDashboardPage() {
   const allActionItems = [...urgentItems, ...todayItems];
   const isUrgent = urgentItems.length > 0;
 
-  // ── Vols du jour / demain
-  const volsToday    = allResas
-    .filter(r => r.date_vol === todayStr    && r.statut !== "annulee")
-    .sort((a, b) => (a.heure_vol ?? "99:99").localeCompare(b.heure_vol ?? "99:99"));
+  // ── Vols de demain
   const volsTomorrow = allResas
     .filter(r => r.date_vol === tomorrowStr && r.statut !== "annulee")
     .sort((a, b) => (a.heure_vol ?? "99:99").localeCompare(b.heure_vol ?? "99:99"));
@@ -164,126 +132,74 @@ export default async function AdminDashboardPage() {
         }
       />
 
-      <StatGrid cols={4}>
-        <StatCard label="CA boutique"   value={formatPrice(caAllOrders)}                                          icon={CreditCard}                                   variant="primary"                                  />
-        <StatCard label="Solde vols"    value={`${soldeGlobal >= 0 ? "+" : ""}${formatPrice(soldeGlobal)}`}       icon={soldeGlobal >= 0 ? TrendingUp : TrendingDown} variant={soldeGlobal >= 0 ? "success" : "danger"}  />
-        <StatCard label="Vols réservés" value={String(resasTotal)}                                                icon={PremiumPlaneIcon as unknown as typeof CreditCard} variant="gold"                              href="/admin/vols" />
-        <StatCard label="Clients"       value={String(clientsUniques)}                                            icon={Users}                                        variant="success"                                  href="/admin/clients" />
-      </StatGrid>
-
-      {/* ── MAIN GRID ────────────────────────────────────────────────── */}
-      <div className="grid lg:grid-cols-[7fr_3fr] gap-5 items-start">
-
-        {/* ── GAUCHE : À traiter + Calendrier ──────────────────────── */}
-        <div className="space-y-5">
-
-          {/* À traiter */}
-          {allActionItems.length === 0 ? (
-            <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center gap-3">
-              <CheckCircle2 size={14} className="text-green-500 shrink-0" />
-              <p className="text-sm font-medium text-green-700">Tout est en ordre, rien à traiter.</p>
-            </div>
-          ) : (
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <h2 className="text-[11px] font-bold text-muted-foreground uppercase tracking-[1.8px]">À traiter</h2>
-                <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold text-white ${isUrgent ? "bg-red-500" : "bg-amber-500"}`}>
-                  {allActionItems.length}
-                </span>
-              </div>
-              <div className="bg-card rounded-xl border border-border overflow-hidden">
-                {urgentItems.length > 0 && (
-                  <>
-                    <div className="px-4 py-1.5 bg-red-50 border-b border-red-100/80">
-                      <span className="text-[9px] font-bold text-red-400 uppercase tracking-[1.5px]">Urgent</span>
-                    </div>
-                    {urgentItems.map((item, i) => {
-                      const Icon = item.icon;
-                      return (
-                        <Link key={`u${i}`} href={item.href}
-                          className="flex items-center gap-3 px-4 py-3 bg-red-50/40 hover:bg-red-50/80 transition-colors group border-b border-red-100/60"
-                        >
-                          <Icon size={12} className="text-red-500 shrink-0" />
-                          <span className="text-xs font-medium text-red-800 flex-1 leading-snug">{item.label}</span>
-                          <ArrowRight size={10} className="text-red-300 group-hover:text-red-400 transition-colors shrink-0" />
-                        </Link>
-                      );
-                    })}
-                  </>
-                )}
-                {todayItems.length > 0 && (
-                  <>
-                    {urgentItems.length > 0 && (
-                      <div className="px-4 py-1.5 bg-amber-50/60 border-b border-amber-100/80">
-                        <span className="text-[9px] font-bold text-amber-400 uppercase tracking-[1.5px]">Aussi</span>
-                      </div>
-                    )}
-                    {todayItems.map((item, i) => {
-                      const Icon = item.icon;
-                      return (
-                        <Link key={`t${i}`} href={item.href}
-                          className={`flex items-center gap-3 px-4 py-3 hover:bg-secondary transition-colors group ${i < todayItems.length - 1 ? "border-b border-border" : ""}`}
-                        >
-                          <Icon size={12} className="text-amber-500 shrink-0" />
-                          <span className="text-xs text-foreground flex-1 leading-snug">{item.label}</span>
-                          <ArrowRight size={10} className="text-muted-foreground/30 group-hover:text-muted-foreground transition-colors shrink-0" />
-                        </Link>
-                      );
-                    })}
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Calendrier */}
-          <div>
-            <FormSection title="Calendrier des vols" />
-            <DashboardCalendar reservations={allResas as never} />
-          </div>
+      {/* ── À traiter ────────────────────────────────────────────────── */}
+      {allActionItems.length === 0 ? (
+        <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center gap-3">
+          <CheckCircle2 size={14} className="text-green-500 shrink-0" />
+          <p className="text-sm font-medium text-green-700">Tout est en ordre, rien à traiter.</p>
         </div>
-
-        {/* ── DROITE : Vols du jour + Demain + Actions rapides ─────── */}
-        <div className="space-y-4">
-
-          {/* Vols aujourd'hui */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-[11px] font-bold text-muted-foreground uppercase tracking-[1.8px]">Aujourd&apos;hui</h2>
-              <Link href="/admin/vols" className="text-xs text-muted-foreground hover:text-navy transition-colors flex items-center gap-1">
-                Tous <ArrowRight size={11} />
-              </Link>
-            </div>
-            <div className="bg-card rounded-xl border border-border overflow-hidden">
-              {volsToday.length === 0 ? (
-                <div className="px-4 py-3 flex items-center gap-2.5">
-                  <span className="w-2 h-2 rounded-full bg-muted-foreground/20 shrink-0" />
-                  <p className="text-xs text-muted-foreground">Aucun vol aujourd&apos;hui</p>
+      ) : (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <h2 className="text-[11px] font-bold text-muted-foreground uppercase tracking-[1.8px]">À traiter</h2>
+            <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold text-white ${isUrgent ? "bg-red-500" : "bg-amber-500"}`}>
+              {allActionItems.length}
+            </span>
+          </div>
+          <div className="bg-card rounded-xl border border-border overflow-hidden">
+            {urgentItems.length > 0 && (
+              <>
+                <div className="px-4 py-1.5 bg-red-50 border-b border-red-100/80">
+                  <span className="text-[9px] font-bold text-red-400 uppercase tracking-[1.5px]">Urgent</span>
                 </div>
-              ) : (
-                volsToday.map((r, i) => {
-                  const client = r.clients as { prenom: string; nom: string } | null;
-                  const name   = client ? `${client.prenom} ${client.nom}`.trim() : "—";
-                  const statut = RESA_ALL[r.statut] ?? { label: r.statut, variant: "secondary" as const };
+                {urgentItems.map((item, i) => {
+                  const Icon = item.icon;
                   return (
-                    <Link key={r.id} href="/admin/vols"
-                      className={`flex items-center gap-3 px-3.5 py-2.5 hover:bg-secondary transition-colors group ${i < volsToday.length - 1 ? "border-b border-border" : ""}`}
+                    <Link key={`u${i}`} href={item.href}
+                      className="flex items-center gap-3 px-4 py-3 bg-red-50/40 hover:bg-red-50/80 transition-colors group border-b border-red-100/60"
                     >
-                      {r.type_resa === "perso"
-                        ? <Route size={12} className="text-emerald-500 shrink-0" />
-                        : <PlaneTakeoff size={12} className="text-navy shrink-0" />
-                      }
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-foreground truncate">{name}</p>
-                        <p className="text-[10px] text-muted-foreground">{r.heure_vol ?? "Heure à confirmer"}</p>
-                      </div>
-                      <AdminBadge variant={statut.variant} label={statut.label} />
+                      <Icon size={12} className="text-red-500 shrink-0" />
+                      <span className="text-xs font-medium text-red-800 flex-1 leading-snug">{item.label}</span>
+                      <ArrowRight size={10} className="text-red-300 group-hover:text-red-400 transition-colors shrink-0" />
                     </Link>
                   );
-                })
-              )}
-            </div>
+                })}
+              </>
+            )}
+            {todayItems.length > 0 && (
+              <>
+                {urgentItems.length > 0 && (
+                  <div className="px-4 py-1.5 bg-amber-50/60 border-b border-amber-100/80">
+                    <span className="text-[9px] font-bold text-amber-400 uppercase tracking-[1.5px]">Aussi</span>
+                  </div>
+                )}
+                {todayItems.map((item, i) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link key={`t${i}`} href={item.href}
+                      className={`flex items-center gap-3 px-4 py-3 hover:bg-secondary transition-colors group ${i < todayItems.length - 1 ? "border-b border-border" : ""}`}
+                    >
+                      <Icon size={12} className="text-amber-500 shrink-0" />
+                      <span className="text-xs text-foreground flex-1 leading-snug">{item.label}</span>
+                      <ArrowRight size={10} className="text-muted-foreground/30 group-hover:text-muted-foreground transition-colors shrink-0" />
+                    </Link>
+                  );
+                })}
+              </>
+            )}
           </div>
+        </div>
+      )}
+
+      {/* ── CALENDRIER + Demain/Météo ────────────────────────────────── */}
+      <div className="grid lg:grid-cols-[3fr_2fr] gap-5 items-start">
+
+        <div>
+          <FormSection title="Calendrier des vols" />
+          <DashboardCalendar reservations={allResas as never} />
+        </div>
+
+        <div className="space-y-4">
 
           {/* Vols demain — affiché seulement s'il y en a */}
           {volsTomorrow.length > 0 && (
@@ -324,30 +240,6 @@ export default async function AdminDashboardPage() {
             }>
               <MetarWidget />
             </Suspense>
-          </div>
-
-          {/* Actions rapides */}
-          <div>
-            <FormSection title="Actions rapides" />
-            <div className="bg-card rounded-xl border border-border overflow-hidden">
-              {([
-                { href: "/admin/reservations/new",          icon: Plus,    label: "Nouvelle réservation",   color: "text-navy" },
-                { href: "/admin/reservations/new-mesure",  icon: Route,   label: "Nouveau vol sur mesure", color: "text-emerald-600" },
-                { href: "/admin/reservations/new-horsite", icon: WifiOff, label: "Vol hors-site",          color: "text-slate-500" },
-                { href: "/admin/boutique?tab=vouchers",   icon: Ticket,       label: "Nouveau voucher",      color: "text-purple-600" },
-                { href: "/admin/boutique?tab=produits",   icon: Package,      label: "Nouvelle offre",       color: "text-amber-600" },
-                { href: "/admin/boutique?tab=coupons",    icon: Tag,          label: "Nouveau coupon",       color: "text-blue-600" },
-                { href: "/admin/vols?tab=disponibilites", icon: CalendarDays, label: "Disponibilités",       color: "text-muted-foreground" },
-              ] as { href: string; icon: React.ElementType; label: string; color: string }[]).map(({ href, icon: Icon, label, color }, idx, arr) => (
-                <Link key={href} href={href}
-                  className={`flex items-center gap-3 px-4 py-2.5 hover:bg-secondary transition-colors ${idx < arr.length - 1 ? "border-b border-border" : ""}`}
-                >
-                  <Icon size={13} className={`shrink-0 ${color}`} />
-                  <span className="flex-1 text-xs text-foreground">{label}</span>
-                  <ArrowRight size={10} className="text-muted-foreground/30 shrink-0" />
-                </Link>
-              ))}
-            </div>
           </div>
 
         </div>
