@@ -35,12 +35,6 @@ const AdminRouteEditorDynamic = dynamic(
   { ssr: false, loading: () => <div className="h-[280px] rounded-lg bg-secondary animate-pulse" /> }
 );
 
-// Fusionné : couvre standard + perso, source unique de vérité pour le badge de statut.
-const STATUT_MAP: Record<string, { label: string; variant: BadgeVariant }> = {
-  ...STATUT_RESA,
-  ...STATUT_PERSO,
-};
-
 export function ReservationDrawer({
   reservation,
   onClose,
@@ -253,7 +247,8 @@ export function ReservationDrawer({
   // ── Render ───────────────────────────────────────────────────────────────
 
   const r = reservation;
-  const statut = r ? (STATUT_MAP[r.statut] ?? { label: r.statut, variant: "secondary" as const }) : null;
+  const statutMap = isPerso ? STATUT_PERSO : STATUT_RESA;
+  const statut = r ? (statutMap[r.statut] ?? { label: r.statut, variant: "secondary" as const }) : null;
   const hasRoute = !!route.localRouteStatus || route.routeDraft.length > 0;
 
   return (
