@@ -45,6 +45,11 @@ export interface DrawerReservation {
   heure_confirmee_at?: string | null;
   route_proposals?: Array<{ status: string; created_at: string }> | null;
 
+  // Marketplace pilotes (annonces) — uniquement pour type_resa === "annonce_pilote"
+  pilote_id?: string | null;
+  annonce_id?: string | null;
+  pilotes?: { nom: string } | null;
+
   clients: {
     id: string;
     prenom: string;

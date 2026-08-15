@@ -2023,3 +2023,103 @@ export function newsletterCampaignEmail(subject: string, body: string, prenom: s
 
   return emailBase(bodyContent, subject, unsubLink);
 }
+
+// ── 21. Marketplace pilotes — annonce réservée (client) ───────────────────────
+// Email dédié et neutre (pas de "je" impersonnant Romain) : ces vols sont
+// publiés et assurés par différents pilotes, pas toujours le fondateur.
+
+export interface AnnoncePiloteConfirmationProps {
+  prenom: string;
+  piloteName: string;
+  dateStr: string;
+  heure: string;
+  duree: number;
+  passagers: number;
+  montantPaye: number;
+  reservationId: string;
+  dateISO?: string | null;
+}
+
+export function annoncePiloteConfirmationEmail(p: AnnoncePiloteConfirmationProps): string {
+  const body = `
+    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Vol r&eacute;serv&eacute;</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Votre vol partag&eacute; est confirm&eacute;</h1>
+    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">Bonjour <strong style="color:#0b2238;">${esc(p.prenom)}</strong>, votre paiement a bien &eacute;t&eacute; re&ccedil;u.</p>
+
+    ${separator()}
+
+    <p class="em-muted" style="margin:0 0 6px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.12em;text-align:center;">Montant pay&eacute;</p>
+    <p class="em-gold" style="margin:0 0 28px;font-size:42px;font-weight:800;color:#F2B705;text-align:center;line-height:1;">${fmt(p.montantPaye)}</p>
+
+    ${separator()}
+    ${label("D&eacute;tails du vol")}
+    ${infoRows([
+      ["Pilote", `<strong>${esc(p.piloteName)}</strong>`],
+      ["Date", `<span style="text-transform:capitalize;">${esc(p.dateStr)}</span>`],
+      ["Heure", `<strong>${esc(p.heure)}</strong>`],
+      ["Durée", fmtDuration(p.duree)],
+      ["Passager(s)", `${p.passagers}`],
+      ["Lieu", "Aéroport de Charleroi (EBCI)"],
+    ])}
+
+    ${separator()}
+    ${label("Informations pratiques")}
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">A&eacute;roport de Charleroi (EBCI), Rue des Fr&egrave;res Wright 8, Gosselies</td></tr>
+      <tr><td class="em-body" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;">Pr&eacute;sentez-vous <strong>15 minutes avant</strong> le d&eacute;collage. ${esc(p.piloteName)} vous accueillera &agrave; l&rsquo;accueil.</td></tr>
+      <tr><td class="em-body" style="padding:8px 0;font-size:13px;color:#334155;">Questions : <a href="mailto:info@fly-horizons.com" style="color:#F2B705;font-weight:600;text-decoration:none;">info@fly-horizons.com</a> &middot; <a href="${SITE_URL}/faq" style="color:#F2B705;font-weight:600;text-decoration:none;">FAQ</a></td></tr>
+    </table>
+
+    <p class="em-body" style="margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;">
+      &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord,<br>
+      <strong class="em-dark" style="color:#0b2238;">L&rsquo;&eacute;quipe Fly Horizons</strong>
+    </p>
+    <p class="em-muted" style="margin:0 0 24px;font-size:12px;color:#64748b;">
+      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
+      <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
+    </p>
+
+    ${ctaButtons2(
+      { href: `${SITE_URL}/account/reservations/${p.reservationId}`, text: "Suivre ma réservation" },
+      { href: `${SITE_URL}/access-ebci`, text: "Plan d'accès" }
+    )}
+
+    ${p.dateISO ? addToCalendarBlock(p.dateISO, p.heure, p.duree) : ""}`;
+
+  return emailBase(body, "Vol confirmé · Fly Horizons");
+}
+
+// ── 22. Marketplace pilotes — annonce réservée (notification pilote) ─────────
+
+export interface AnnoncePiloteBookedNotifProps {
+  piloteNom: string;
+  clientNom: string;
+  dateStr: string;
+  heure: string;
+  passagers: number;
+  partPilote: number;
+}
+
+export function annoncePiloteBookedNotifEmail(p: AnnoncePiloteBookedNotifProps): string {
+  const body = `
+    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Annonce r&eacute;serv&eacute;e</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Votre vol du ${esc(p.dateStr)} est r&eacute;serv&eacute; !</h1>
+    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">Bonjour <strong style="color:#0b2238;">${esc(p.piloteNom)}</strong>, un client vient de r&eacute;server ce vol.</p>
+
+    ${separator()}
+    ${label("D&eacute;tails")}
+    ${infoRows([
+      ["Client", `<strong>${esc(p.clientNom)}</strong>`],
+      ["Date", `<span style="text-transform:capitalize;">${esc(p.dateStr)}</span>`],
+      ["Heure", `<strong>${esc(p.heure)}</strong>`],
+      ["Passager(s)", `${p.passagers}`],
+      ["Votre part re&ccedil;ue", `<strong>${fmt(p.partPilote)}</strong>`],
+    ])}
+
+    ${separator()}
+    <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;text-align:center;">
+      Retrouvez ce vol dans votre espace pilote, section &laquo;&nbsp;Mes vols&nbsp;&raquo;.
+    </p>`;
+
+  return emailBase(body, `Annonce réservée · ${p.dateStr}`);
+}

@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export type UserRole = "customer" | "admin";
+export type UserRole = "customer" | "admin" | "pilote";
 
 export type OrderStatus =
   | "pending"
@@ -27,6 +27,17 @@ export interface Profile {
   role: UserRole;
   created_at: string;
   updated_at: string;
+}
+
+export interface Pilote {
+  id: string;
+  user_id: string | null;
+  nom: string;
+  email: string;
+  telephone: string | null;
+  iban: string | null;
+  statut: "actif" | "inactif";
+  created_at: string;
 }
 
 export interface Product {

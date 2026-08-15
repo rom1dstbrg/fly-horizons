@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fly Horizons — Espace pilote : conception &amp; avancement</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --navy:       #0b2238;
+  --gold:       #F2B705;
+  --gold-hover: #e6a800;
+  --bg:         #f5f5f7;
+  --card:       #ffffff;
+  --secondary:  #edf0f7;
+  --fg:         #1e2535;
+  --muted:      #64748b;
+  --border:     #e0e5ef;
+  --r-sm: 10px; --r-md: 16px; --r-lg: 22px;
+  --sh-card: 0 2px 14px rgba(11,34,56,.07);
+  --green: #0f9d58; --green-bg: #e9f9f0; --green-bd: #bfe9d2;
+  --amber: #b7791f; --amber-bg: #fef6e6; --amber-bd: #f3dfa8;
+  --red: #c53030; --red-bg: #fdecec; --red-bd: #f5c2c2;
+  --gray: #64748b; --gray-bg: #f1f3f7; --gray-bd: #dde2ec;
+  --blue: #1d5fbf; --blue-bg: #eaf1fd; --blue-bd: #c7dafa;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--fg); display: flex; line-height: 1.55; }
+
+nav {
+  position: fixed; top: 0; left: 0; bottom: 0; width: 240px;
+  background: var(--navy); overflow-y: auto; padding: 24px 0; z-index: 100;
+}
+nav .logo { padding: 0 22px 20px; font-size: 13px; font-weight: 900; color: #fff; letter-spacing: .5px; border-bottom: 1px solid rgba(255,255,255,.08); }
+nav .logo span { color: var(--gold); }
+nav .logo small { display:block; font-weight:500; font-size:10px; color: rgba(255,255,255,.45); margin-top:4px; letter-spacing:.3px; }
+nav ul { list-style: none; padding: 12px 0; }
+nav li a { display: block; padding: 7px 22px; font-size: 12px; font-weight: 500; color: rgba(255,255,255,.55); text-decoration: none; transition: color .15s, background .15s; }
+nav li a:hover { color: #fff; background: rgba(255,255,255,.04); }
+nav li.group > span { display: block; padding: 14px 22px 4px; font-size: 9px; font-weight: 700; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; }
+
+main { margin-left: 240px; max-width: 920px; padding: 44px 48px 100px; }
+
+.hero { margin-bottom: 40px; }
+.status-pill { display: inline-flex; align-items:center; gap:6px; font-size: 10.5px; font-weight: 700; letter-spacing: .5px; padding: 5px 12px; border-radius: 100px; background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-bd); margin-bottom: 16px; }
+.hero h1 { font-size: 27px; font-weight: 900; color: var(--navy); margin-bottom: 10px; }
+.hero p { color: var(--muted); font-size: 14px; max-width: 640px; }
+.hero .meta { margin-top: 14px; font-size: 12px; color: var(--muted); }
+
+/* ── Barre de progression globale ─────────────────────────────── */
+.progress-wrap { margin-top: 22px; }
+.progress-bar { height: 10px; border-radius: 100px; background: var(--secondary); overflow: hidden; display: flex; }
+.progress-bar .seg { height: 100%; }
+.progress-bar .seg.done { background: var(--green); }
+.progress-bar .seg.todo { background: transparent; }
+.progress-legend { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--muted); }
+
+section { padding-top: 50px; scroll-margin-top: 24px; }
+.section-label { font-size: 10px; font-weight: 700; color: var(--gold-hover); letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 6px; }
+.section-title { font-size: 20px; font-weight: 900; color: var(--navy); margin-bottom: 10px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.section-intro { color: var(--muted); font-size: 13.5px; margin-bottom: 22px; max-width: 680px; }
+
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-md); box-shadow: var(--sh-card); padding: 20px 22px; margin-bottom: 14px; }
+.card h3 { font-size: 14.5px; font-weight: 700; color: var(--navy); margin-bottom: 8px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.card p { font-size: 13px; color: var(--fg); }
+.card p + p { margin-top: 8px; }
+.card ul { margin: 8px 0 0 18px; font-size: 13px; }
+.card li { margin-bottom: 4px; }
+.card code { background: var(--secondary); padding: 1px 6px; border-radius: 5px; font-size: 12px; }
+
+.flow { display: flex; flex-direction: column; gap: 0; margin: 20px 0; }
+.flow-step { display: flex; gap: 14px; align-items: flex-start; padding: 12px 0; }
+.flow-step .num { flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; background: var(--navy); color: #fff; font-size: 11.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.flow-step .txt { padding-top: 2px; font-size: 13px; }
+.flow-step .txt b { color: var(--navy); }
+.flow-arrow { margin-left: 12px; width: 2px; height: 14px; background: var(--border); }
+
+.badge { display: inline-flex; align-items:center; gap:5px; font-size: 10.5px; font-weight: 700; padding: 4px 10px; border-radius: 100px; white-space: nowrap; }
+.badge.block { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-bd); }
+.badge.warn  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-bd); }
+.badge.ok    { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bd); }
+.badge.done  { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bd); }
+.badge.progress { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-bd); }
+.badge.todo  { background: var(--gray-bg); color: var(--gray); border: 1px solid var(--gray-bd); }
+.badge.action { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-bd); }
+
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 12.5px; }
+th { text-align: left; font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--muted); padding: 8px 10px; border-bottom: 2px solid var(--border); }
+td { padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+td code { background: var(--secondary); padding: 1px 6px; border-radius: 5px; font-size: 11.5px; }
+
+.example { background: var(--secondary); border-radius: var(--r-sm); padding: 16px 18px; font-size: 13px; margin: 14px 0; }
+.example .row { display: flex; justify-content: space-between; padding: 4px 0; }
+.example .row.total { border-top: 1px solid var(--border); margin-top: 6px; padding-top: 8px; font-weight: 700; color: var(--navy); }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 720px) { .two-col { grid-template-columns: 1fr; } }
+
+.tag { display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: .3px; color: var(--navy); background: var(--secondary); padding: 3px 9px; border-radius: 6px; margin-right: 6px; margin-bottom: 4px; }
+
+ol.phases { counter-reset: phase; list-style: none; }
+ol.phases li { counter-increment: phase; position: relative; padding: 16px 0 16px 42px; border-bottom: 1px solid var(--border); }
+ol.phases li:last-child { border-bottom: none; }
+ol.phases li.is-done::before { background: var(--green); }
+ol.phases li.is-progress::before { background: var(--amber); }
+ol.phases li.is-todo::before { background: var(--gray); }
+ol.phases li::before { content: counter(phase); position: absolute; left: 0; top: 16px; width: 26px; height: 26px; border-radius: 50%; color: #fff; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+ol.phases li .head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+ol.phases li b { color: var(--navy); font-size: 14px; }
+ol.phases li span.desc { font-size: 12.5px; color: var(--muted); display: block; }
+ol.phases li .filelist { margin-top: 8px; }
+ol.phases li .filelist code { font-size: 11px; }
+
+.note { border-left: 3px solid var(--gold); background: #fffdf5; padding: 14px 18px; border-radius: 0 var(--r-sm) var(--r-sm) 0; font-size: 13px; margin: 18px 0; }
+.note.action { border-left-color: var(--blue); background: var(--blue-bg); }
+.note b { color: var(--navy); }
+
+.checklist { list-style: none; margin: 14px 0; }
+.checklist li { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; font-size: 13px; }
+.checklist .box { flex-shrink:0; width: 16px; height: 16px; border-radius: 4px; margin-top: 2px; display:flex; align-items:center; justify-content:center; font-size: 10px; color: #fff; font-weight: 900; }
+.checklist .box.done { background: var(--green); }
+.checklist .box.todo { background: var(--gray-bd); }
+
+footer { margin-left: 240px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">FLY HORIZONS <span>·</span> ESPACE PILOTE<small>Conception &amp; avancement — mis à jour le 13/08/2026</small></div>
+  <ul>
+    <li><a href="#avancement">État d'avancement</a></li>
+    <li><a href="#tester">Comment tester maintenant</a></li>
+    <li class="group"><span>Concept</span></li>
+    <li><a href="#objectif">Objectif</a></li>
+    <li><a href="#comptes">Comptes &amp; rôles</a></li>
+    <li><a href="#annonce">1 · Annonce publiée par le pilote</a></li>
+    <li><a href="#regle25">La règle des 25%</a></li>
+    <li><a href="#assignation">2 · Vol assigné par toi</a></li>
+    <li><a href="#paiements">Suivi des virements</a></li>
+    <li><a href="#dispos">Disponibilités</a></li>
+    <li class="group"><span>Chantier</span></li>
+    <li><a href="#technique">Détails techniques livrés</a></li>
+    <li><a href="#construction">Feuille de route</a></li>
+    <li><a href="#decisions">Décisions en attente</a></li>
+    <li><a href="#historique">Historique &amp; contexte</a></li>
+  </ul>
+</nav>
+
+<main>
+  <div class="hero">
+    <div class="status-pill">● En construction — Phase 2 sur 5 terminée</div>
+    <h1>Espace pilote : conception et avancement</h1>
+    <p>Ce document combine deux choses : le fonctionnement complet du système tel que décidé ensemble, et l'état réel de ce qui a été construit jusqu'ici. Sert de base si la conversation avec Claude est interrompue.</p>
+    <div class="meta">Créé le 13/08/2026 · dernière mise à jour le 13/08/2026 (après la phase 2)</div>
+
+    <div class="progress-wrap">
+      <div class="progress-bar">
+        <div class="seg done" style="width: 40%"></div>
+        <div class="seg todo" style="width: 60%; background: var(--border);"></div>
+      </div>
+      <div class="progress-legend">
+        <span>2/5 phases faites</span>
+        <span>3 phases restantes</span>
+      </div>
+    </div>
+  </div>
+
+  <section id="avancement">
+    <div class="section-label">Résumé</div>
+    <div class="section-title">État d'avancement</div>
+    <div class="section-intro">Vue d'ensemble rapide. Le détail technique complet est plus bas dans <a href="#technique">Détails techniques livrés</a>.</div>
+
+    <table>
+      <tr><th style="width:32px">#</th><th>Phase</th><th>Statut</th><th>Contenu</th></tr>
+      <tr>
+        <td>1</td>
+        <td><b>Comptes &amp; rôle pilote</b></td>
+        <td><span class="badge done">Fait</span></td>
+        <td>Table <code>pilotes</code>, rôle <code>pilote</code>, invitation par email, connexion, espace <code>/pilote</code> protégé. Testé et confirmé fonctionnel par toi.</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><b>Annonce publiée par le pilote</b></td>
+        <td><span class="badge done">Fait</span></td>
+        <td>Formulaire de création (prix, durée, part payée), vérification des 25% en direct + côté serveur + verrouillée en base, liste et annulation de ses annonces.</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td><b>Assignation par toi</b></td>
+        <td><span class="badge todo">À faire</span></td>
+        <td>Assignation directe + "premier arrivé, premier servi" par email pour les demandes classiques.</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td><b>Disponibilités</b></td>
+        <td><span class="badge todo">À faire</span></td>
+        <td>Créneaux libres déclarés par chaque pilote.</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td><b>Suivi des paiements</b></td>
+        <td><span class="badge todo">À faire</span></td>
+        <td>Écran "à qui je dois virer combien" + historique côté pilote.</td>
+      </tr>
+      <tr>
+        <td>—</td>
+        <td><b>Page publique de réservation des annonces</b></td>
+        <td><span class="badge action">Décision en attente</span></td>
+        <td>Où et comment un client voit et réserve une annonce publiée par un pilote (chemin 1). Volontairement pas construit — voir <a href="#decisions">Décisions en attente</a>.</td>
+      </tr>
+    </table>
+
+    <div class="note action">
+      <b>Deux migrations SQL à coller dans Supabase</b> (SQL Editor → Run) si ce n'est pas déjà fait :
+      <code>supabase/migrations/20260813_pilotes_espace.sql</code> (phase 1) et
+      <code>supabase/migrations/20260813b_annonces_pilote.sql</code> (phase 2). Sans elles, les pages correspondantes plantent en cherchant des tables qui n'existent pas encore côté base.
+    </div>
+  </section>
+
+  <section id="tester">
+    <div class="section-label">Vérification</div>
+    <div class="section-title">Comment tester maintenant</div>
+    <ul class="checklist">
+      <li><span class="box done">✓</span> Coller les deux migrations SQL dans Supabase (si pas déjà fait)</li>
+      <li><span class="box done">✓</span> Lancer le site en local (<code>npm run dev</code>)</li>
+      <li><span class="box done">✓</span> Aller sur <code>/admin/pilotes</code>, s'inviter soi-même comme pilote avec une adresse email accessible</li>
+      <li><span class="box done">✓</span> Ouvrir l'email d'invitation, fixer un mot de passe sur <code>/pilote/mot-de-passe</code></li>
+      <li><span class="box done">✓</span> Arriver sur <code>/pilote</code>, cliquer "Publier un vol"</li>
+      <li><span class="box done">✓</span> Remplir le formulaire avec une part à 0€ → vérifier que c'est bloqué</li>
+      <li><span class="box done">✓</span> Remettre une part entre 1% et 24% → vérifier l'avertissement, publier quand même</li>
+      <li><span class="box done">✓</span> Remettre une part ≥ 25% → vérifier que ça publie sans avertissement</li>
+      <li><span class="box done">✓</span> Vérifier que l'annonce apparaît dans "Mes annonces" avec le bon prix client calculé</li>
+    </ul>
+  </section>
+
+  <section id="objectif">
+    <div class="section-label">Pourquoi</div>
+    <div class="section-title">Objectif</div>
+    <div class="section-intro">Aujourd'hui, toi seul pilotes tous les vols. Demain, plusieurs pilotes vont voler pour Fly Horizons. Il faut donc un espace où chaque pilote peut gérer ses propres vols, et un système qui t'aide à savoir qui vole quoi et qui payer.</div>
+    <div class="card">
+      <h3>Contexte important</h3>
+      <p>Un premier essai de "portail pilote" avait été construit le 30/07/2026 puis abandonné le 01/08/2026 (voir <a href="#historique">Historique</a>). Ce système-ci est différent : il ajoute une vérification légale sur la part de frais du pilote, absente de la première tentative.</p>
+    </div>
+  </section>
+
+  <section id="comptes">
+    <div class="section-label">Base <span class="badge done" style="margin-left:6px">Fait</span></div>
+    <div class="section-title">Comptes &amp; rôles pilotes</div>
+    <div class="section-intro">C'est toi qui crées le compte de chaque pilote (pas d'inscription libre). Le pilote reçoit un email d'invitation, choisit son mot de passe, et se connecte via la page de connexion habituelle — il atterrit automatiquement sur son espace <code>/pilote</code> au lieu de l'espace client.</div>
+    <table>
+      <tr><th>Information</th><th>À quoi ça sert</th></tr>
+      <tr><td>Nom, email, téléphone</td><td>Identification, contact</td></tr>
+      <tr><td>IBAN</td><td>Pour savoir où virer sa part, sans devoir la redemander à chaque vol</td></tr>
+      <tr><td>Statut actif / inactif</td><td>Un pilote inactif ne reçoit plus de propositions de vol et ne peut plus publier d'annonce</td></tr>
+    </table>
+  </section>
+
+  <section id="annonce">
+    <div class="section-label">Chemin 1 <span class="badge done" style="margin-left:6px">Fait</span></div>
+    <div class="section-title">Le pilote publie sa propre annonce</div>
+    <div class="section-intro">Le pilote crée lui-même un vol depuis son espace. Ça devient une offre réservable par les clients sur le site, comme les offres actuelles — sauf la partie "réservable côté client", voir <a href="#decisions">Décisions en attente</a>.</div>
+
+    <div class="flow">
+      <div class="flow-step"><div class="num">1</div><div class="txt">Le pilote va dans son espace (<code>/pilote/annonces</code>), clique <b>« Publier un vol »</b></div></div>
+      <div class="flow-arrow"></div>
+      <div class="flow-step"><div class="num">2</div><div class="txt">Il remplit : <b>date, heure, durée, nombre de places</b> disponibles pour des passagers</div></div>
+      <div class="flow-arrow"></div>
+      <div class="flow-step"><div class="num">3</div><div class="txt">Il indique <b>le prix total du vol</b>, à la main</div></div>
+      <div class="flow-arrow"></div>
+      <div class="flow-step"><div class="num">4</div><div class="txt">Il indique <b>sa part à lui</b> sur ce total, à la main</div></div>
+      <div class="flow-arrow"></div>
+      <div class="flow-step"><div class="num">5</div><div class="txt">Le site calcule automatiquement son pourcentage et applique <a href="#regle25"><b>la règle des 25%</b></a> — en direct pendant la saisie</div></div>
+      <div class="flow-arrow"></div>
+      <div class="flow-step"><div class="num">6</div><div class="txt">Si ce n'est pas bloqué, l'annonce est <b>enregistrée</b> et visible dans "Mes annonces"</div></div>
+    </div>
+
+    <div class="example">
+      <div class="row"><span>Prix total du vol</span><b>300 €</b></div>
+      <div class="row"><span>Part payée par le pilote</span><b>90 €</b></div>
+      <div class="row total"><span>Part du pilote = 90 ÷ 300</span><span><span class="badge ok">30% · OK</span></span></div>
+    </div>
+
+    <div class="note">
+      Prix affiché au pilote (et futur prix client) = prix total − part du pilote, réparti sur les places passagers.
+      <br>Exemple : 300 € − 90 € = <b>210 €</b> à répartir entre les passagers.
+      <br>Ce calcul est déjà fait et affiché au pilote dans sa liste d'annonces. Reste à décider où et comment un client le voit et paie — voir <a href="#decisions">Décisions en attente</a>.
+    </div>
+  </section>
+
+  <section id="regle25">
+    <div class="section-label">Garde-fou légal <span class="badge done" style="margin-left:6px">Fait</span></div>
+    <div class="section-title">La règle des 25%</div>
+    <div class="section-intro">Fly Horizons fonctionne avec des vols « à frais partagés » (pas une compagnie aérienne). La règle européenne NCO.GEN.104 impose que le pilote paie une vraie part du coût du vol — sinon ça ressemble à un vol commercial déguisé, ce qui n'est pas autorisé sans licence de compagnie.</div>
+
+    <table>
+      <tr><th>Part payée par le pilote</th><th>Résultat</th><th>Ce qui se passe</th></tr>
+      <tr><td>0 € ou 0%</td><td><span class="badge block">Bloqué</span></td><td>Impossible de publier / valider le vol tant que le pilote n'indique pas une part réelle. Vérifié à 3 niveaux : en direct dans le formulaire, côté serveur, et en base de données (contrainte <code>part_pilote &gt; 0</code>).</td></tr>
+      <tr><td>Entre 0% et 25%</td><td><span class="badge warn">Avertissement</span></td><td>Un message s'affiche, mais le pilote peut quand même publier / valider</td></tr>
+      <tr><td>25% ou plus</td><td><span class="badge ok">OK</span></td><td>Rien de spécial, tout est normal</td></tr>
+    </table>
+
+    <div class="note">
+      Le seuil de 25% correspond à une part égale entre occupants pour un avion 4 places (pilote + 3 passagers max). Si un vol donné a moins d'occupants, la part « équitable » réelle serait mathématiquement plus élevée (ex : 50% pour pilote + 1 passager) — mais on garde un seuil fixe à 25% partout, comme décidé. Ce point reste à valider avec l'avocat si besoin d'affiner un jour (voir l'audit légal réouverture).
+    </div>
+    <div class="card">
+      <h3>Où c'est implémenté</h3>
+      <p>La logique est centralisée dans <code>lib/annonces-pilote.ts</code> (fonction <code>evaluerPartPilote</code>), réutilisée à la fois côté formulaire (aperçu en direct) et côté serveur (<code>lib/actions/annonces.ts</code>) pour ne jamais dépendre uniquement du client.</p>
+    </div>
+  </section>
+
+  <section id="assignation">
+    <div class="section-label">Chemin 2 <span class="badge todo" style="margin-left:6px">À faire — phase 3</span></div>
+    <div class="section-title">Toi tu assignes un vol existant à un pilote</div>
+    <div class="section-intro">Un client fait une demande classique sur le site, comme aujourd'hui. Toi, tu choisis ensuite quel pilote va la prendre — de deux façons possibles. Les deux chemins (annonce du pilote et assignation par toi) coexistent.</div>
+
+    <div class="two-col">
+      <div class="card">
+        <h3>Assignation directe</h3>
+        <p>Tu sais déjà qui tu veux : tu choisis le pilote directement dans la fiche de la réservation.</p>
+      </div>
+      <div class="card">
+        <h3>« Premier arrivé, premier servi »</h3>
+        <p>Tu proposes le vol par email à tous les pilotes actifs. Le premier qui clique « je le prends » est assigné. Les autres voient « déjà pris » s'ils cliquent après.</p>
+      </div>
+    </div>
+
+    <div class="flow">
+      <div class="flow-step"><div class="num">1</div><div class="txt">Le vol est assigné (direct ou premier arrivé)</div></div>
+      <div class="flow-arrow"></div>
+      <div class="flow-step"><div class="num">2</div><div class="txt">Le pilote assigné doit <b>renseigner le prix total et sa part</b> sur ce vol précis</div></div>
+      <div class="flow-arrow"></div>
+      <div class="flow-step"><div class="num">3</div><div class="txt">Même <a href="#regle25">vérification à 25%</a> avant que le vol soit considéré comme validé</div></div>
+      <div class="flow-arrow"></div>
+      <div class="flow-step"><div class="num">4</div><div class="txt">Le pilote peut <b>remettre le vol en dispo</b> s'il ne peut finalement pas le faire → ça repart aux autres pilotes actifs</div></div>
+    </div>
+
+    <div class="note">
+      Pas encore codé. Prévu : <code>reservations.pilote_id</code>, <code>reservations.montant_pilote</code>, <code>reservations.pilote_paye_at</code>, plus deux tables pour le système "premier arrivé" (le vol proposé, et un jeton par pilote invité) — même principe que les jetons déjà utilisés ailleurs sur le site pour les propositions de créneau.
+    </div>
+  </section>
+
+  <section id="paiements">
+    <div class="section-label">Argent <span class="badge todo" style="margin-left:6px">À faire — phase 5</span></div>
+    <div class="section-title">Suivi des virements</div>
+    <div class="section-intro">Peu importe le chemin (annonce ou assignation), chaque vol garde en mémoire : prix total, part du pilote, ce que les clients ont payé.</div>
+    <div class="card">
+      <h3>Côté toi (admin)</h3>
+      <p>Un écran « à qui je dois virer combien », avec l'IBAN de chaque pilote déjà enregistré (déjà stocké depuis la phase 1). Tu coches une fois le virement fait.</p>
+    </div>
+    <div class="card">
+      <h3>Côté pilote</h3>
+      <p>Historique de ses vols effectués, avec le statut « payé / pas encore payé » — en lecture seule, c'est toi qui coches.</p>
+    </div>
+  </section>
+
+  <section id="dispos">
+    <div class="section-label">Planning <span class="badge todo" style="margin-left:6px">À faire — phase 4</span></div>
+    <div class="section-title">Disponibilités des pilotes</div>
+    <div class="section-intro">Chaque pilote indique ses créneaux libres dans son espace. Ça t'aide à savoir à qui proposer un vol en priorité. C'est séparé des horaires d'ouverture globaux du site (qui restent gérés comme aujourd'hui).</div>
+  </section>
+
+  <section id="technique">
+    <div class="section-label">Pour la suite du chantier</div>
+    <div class="section-title">Détails techniques livrés</div>
+    <div class="section-intro">Le détail précis de ce qui existe déjà en code, phase par phase — utile pour reprendre le travail sans tout redécouvrir.</div>
+
+    <div class="card">
+      <h3>Phase 1 — Comptes &amp; rôle pilote <span class="badge done">Fait</span></h3>
+      <p><b>Base de données</b></p>
+      <ul>
+        <li><code>supabase/migrations/20260813_pilotes_espace.sql</code> — table <code>pilotes</code> (id, user_id, nom, email, telephone, iban, statut, created_at) + ajoute <code>'pilote'</code> à la contrainte de rôle sur <code>profiles</code></li>
+      </ul>
+      <p><b>Code</b></p>
+      <ul>
+        <li><code>types/database.ts</code> — <code>UserRole</code> inclut <code>"pilote"</code>, interface <code>Pilote</code></li>
+        <li><code>lib/actions/pilotes.ts</code> — <code>createPilote</code> (invitation email via Supabase Auth), <code>togglePiloteActif</code>, <code>updatePilote</code>, <code>deletePilote</code></li>
+        <li><code>middleware.ts</code> — protection de <code>/pilote/*</code>, exemption maintenance, redirection post-connexion selon le rôle</li>
+        <li><code>lib/actions/auth.ts</code> — <code>login()</code> redirige vers <code>/pilote</code> si rôle pilote</li>
+        <li><code>app/pilote/layout.tsx</code>, <code>app/pilote/page.tsx</code> — espace protégé + tableau de bord</li>
+        <li><code>app/pilote/mot-de-passe/page.tsx</code> — étape de choix du mot de passe après invitation</li>
+        <li><code>app/admin/pilotes/page.tsx</code>, <code>components/admin/PilotesClient.tsx</code> — gestion des pilotes côté admin</li>
+        <li><code>components/admin/AdminSidebar.tsx</code> — entrée "Pilotes" dans la section "Équipe"</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Phase 2 — Annonce publiée par le pilote <span class="badge done">Fait</span></h3>
+      <p><b>Base de données</b></p>
+      <ul>
+        <li><code>supabase/migrations/20260813b_annonces_pilote.sql</code> — table <code>annonces_pilote</code> (id, pilote_id, date_vol, heure_vol, duree, places, prix_total, part_pilote, statut, created_at) avec contrainte <code>part_pilote &gt; 0</code></li>
+      </ul>
+      <p><b>Code</b></p>
+      <ul>
+        <li><code>lib/annonces-pilote.ts</code> — <code>evaluerPartPilote()</code>, logique pure de la règle des 25%, réutilisée côté client et serveur</li>
+        <li><code>lib/actions/annonces.ts</code> — <code>createAnnonce</code> (avec <code>checkPilote()</code>, vérifie rôle + statut actif), <code>cancelAnnonce</code></li>
+        <li><code>components/pilote/AnnonceForm.tsx</code> — formulaire avec aperçu live du badge bloqué/averti/ok</li>
+        <li><code>components/pilote/AnnoncesList.tsx</code>, <code>PiloteAnnoncesClient.tsx</code> — liste des annonces + annulation</li>
+        <li><code>components/pilote/PiloteNav.tsx</code> — navigation de l'espace pilote (Tableau de bord / Mes annonces)</li>
+        <li><code>app/pilote/annonces/page.tsx</code> — page listant les annonces du pilote connecté</li>
+        <li><code>app/pilote/page.tsx</code> — mis à jour avec un lien "Publier un vol"</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Vérifications faites à chaque phase</h3>
+      <ul>
+        <li><code>npx tsc --noEmit</code> propre après chaque phase</li>
+        <li>Serveur local lancé (<code>npm run dev</code>), routes testées (redirections, protection par rôle)</li>
+        <li>Phase 1 confirmée fonctionnelle en conditions réelles par toi (invitation, connexion, accès à l'espace)</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="construction">
+    <div class="section-label">Suite</div>
+    <div class="section-title">Feuille de route</div>
+    <div class="section-intro">Ordre de construction, mis à jour au fil de l'avancement.</div>
+    <ol class="phases">
+      <li class="is-done">
+        <div class="head"><b>1 · Comptes &amp; rôle pilote</b><span class="badge done">Fait</span></div>
+        <span class="desc">Table pilotes, rôle "pilote" dans profiles, invitation, connexion, espace /pilote protégé</span>
+      </li>
+      <li class="is-done">
+        <div class="head"><b>2 · Espace pilote + création d'annonce</b><span class="badge done">Fait</span></div>
+        <span class="desc">Formulaire de vol avec prix, durée, part payée, et la vérification des 25%</span>
+      </li>
+      <li class="is-todo">
+        <div class="head"><b>3 · Assignation par toi</b><span class="badge todo">À faire</span></div>
+        <span class="desc">Assignation directe + système "premier arrivé, premier servi" par email</span>
+      </li>
+      <li class="is-todo">
+        <div class="head"><b>4 · Disponibilités</b><span class="badge todo">À faire</span></div>
+        <span class="desc">Créneaux libres déclarés par chaque pilote</span>
+      </li>
+      <li class="is-todo">
+        <div class="head"><b>5 · Suivi des paiements</b><span class="badge todo">À faire</span></div>
+        <span class="desc">Écran "à qui je dois virer combien" + historique côté pilote</span>
+      </li>
+    </ol>
+  </section>
+
+  <section id="decisions">
+    <div class="section-label">À trancher</div>
+    <div class="section-title">Décisions en attente</div>
+    <div class="section-intro">Points volontairement laissés ouverts pour ne pas construire quelque chose que tu n'as pas validé.</div>
+
+    <div class="card">
+      <h3>Page publique de réservation des annonces pilote <span class="badge action">Décision en attente</span></h3>
+      <p>Aujourd'hui, une annonce publiée par un pilote (phase 2) est visible uniquement par le pilote lui-même dans son espace. Il n'existe pas encore de page publique où un client peut la voir et la réserver/payer.</p>
+      <p>C'est un morceau à part entière : nouvelle page publique (liste des vols disponibles avec date/heure fixe, différent du système actuel "je demande une date, on me confirme"), plus un parcours de paiement Stripe pour un vol précis plutôt qu'un produit à durée fixe.</p>
+      <p>À décider : construire cette page maintenant, ou continuer d'abord sur les phases 3 à 5 (le côté "toi tu assignes") et y revenir ensuite ?</p>
+    </div>
+
+    <div class="card">
+      <h3>Prix client automatique vs fixé par le pilote</h3>
+      <p>Actuellement, le prix visible par le pilote = prix total − sa part, réparti sur les places. Ça reste le calcul par défaut. Si un jour tu préfères que le pilote fixe ce prix client lui-même (indépendamment du calcul), c'est à signaler.</p>
+    </div>
+  </section>
+
+  <section id="historique">
+    <div class="section-label">Pour mémoire</div>
+    <div class="section-title">Historique &amp; contexte</div>
+    <div class="card">
+      <h3>Tentative abandonnée (30/07 → 01/08/2026)</h3>
+      <p>Un premier "portail pilote" avait été construit : table <span class="tag">pilotes</span>, rôle <span class="tag">pilote</span>, produits de type <span class="tag">vol_pilote</span> avec une part fixe (% ou montant) par pilote — sans vérification légale sur cette part. Le projet a été annulé, toutes les traces retirées de la base le 01/08/2026.</p>
+      <p>Ce nouveau système reprend l'idée d'annonces publiées par les pilotes, mais ajoute le garde-fou des 25% qui manquait, et coexiste avec un flux d'assignation par l'admin (absent de la première tentative).</p>
+    </div>
+    <div class="card">
+      <h3>Point légal en suspens</h3>
+      <p>L'audit légal de réouverture du site (voir <code>audit-legal-fly-horizons.html</code> et les notes internes) a un point encore ouvert avec l'avocat : la définition exacte de la part de frais du pilote au sens de NCO.GEN.104. Le seuil de 25% choisi ici est une règle pratique, pas un avis juridique définitif.</p>
+    </div>
+  </section>
+
+</main>
+
+</body>
+</html>

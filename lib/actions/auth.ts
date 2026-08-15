@@ -19,7 +19,7 @@ export async function login(formData: FormData) {
     return { error: "Email et mot de passe requis." };
   }
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data: signInData, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
@@ -28,10 +28,17 @@ export async function login(formData: FormData) {
     return { error: "Email ou mot de passe incorrect." };
   }
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", signInData.user.id)
+    .single();
+  const defaultPath = profile?.role === "admin" ? "/admin" : profile?.role === "pilote" ? "/pilote" : "/account";
+
   // Prevent open redirect — only allow same-origin relative paths
   const safeRedirect = redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//")
     ? redirectTo
-    : "/account";
+    : defaultPath;
 
   revalidatePath("/", "layout");
   redirect(safeRedirect);

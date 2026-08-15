@@ -39,6 +39,7 @@ export async function middleware(request: NextRequest) {
     profileRole = profile?.role ?? null;
   }
   const isAdmin = profileRole === "admin";
+  const isPilote = profileRole === "pilote";
 
   const pathname = request.nextUrl.pathname;
 
@@ -52,6 +53,7 @@ export async function middleware(request: NextRequest) {
   const isMaintenanceExempt =
     pathname === "/maintenance" ||
     pathname.startsWith("/admin") ||
+    pathname.startsWith("/pilote") ||
     pathname === "/login" ||
     pathname === "/register" ||
     pathname.startsWith("/api") ||
@@ -59,7 +61,7 @@ export async function middleware(request: NextRequest) {
     pathname === "/sitemap.xml" ||
     pathname === "/manifest.webmanifest";
 
-  if (!isMaintenanceExempt && !isAdmin) {
+  if (!isMaintenanceExempt && !isAdmin && !isPilote) {
     const { data: maintenanceSetting } = await supabase
       .from("crm_settings")
       .select("value")
@@ -115,16 +117,37 @@ export async function middleware(request: NextRequest) {
   }
 
   // -------------------------------------------------
+  // Protection routes /pilote/*
+  // Redirige vers /login si pas connecté, vers / si connecté mais pas pilote
+  // -------------------------------------------------
+  if (pathname === "/pilote" || pathname.startsWith("/pilote/")) {
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("redirectTo", pathname);
+      return NextResponse.redirect(url);
+    }
+
+    if (!isPilote) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/";
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // -------------------------------------------------
   // Redirige /login et /register si déjà connecté
-  // Honore le paramètre redirectTo pour les flows comme /checkout
+  // Honore le paramètre redirectTo pour les flows comme /checkout ;
+  // sinon atterrit selon le rôle (admin/pilote gardent leur espace dédié)
   // -------------------------------------------------
   if ((pathname === "/login" || pathname === "/register") && user) {
     const url = request.nextUrl.clone();
     const redirectTo = request.nextUrl.searchParams.get("redirectTo");
+    const defaultPath = isAdmin ? "/admin" : isPilote ? "/pilote" : "/account";
     url.pathname =
       redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//")
         ? redirectTo
-        : "/account";
+        : defaultPath;
     url.searchParams.delete("redirectTo");
     return NextResponse.redirect(url);
   }

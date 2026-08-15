@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import {
   Clock, Route, Zap, PlaneTakeoff, ArrowRight, MousePointerClick,
@@ -8,6 +9,7 @@ import {
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa6";
 import { PackCard } from "@/components/shop/PackCard";
+import { AnnonceCard } from "@/components/vols/AnnonceCard";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
 
@@ -34,6 +36,28 @@ export default async function NosOffresPage() {
     .eq("active", true)
     .eq("product_type", "voucher")
     .order("voucher_duration_minutes", { ascending: true });
+
+  // annonces_pilote et pilotes sont verrouillées à service_role côté RLS (données
+  // sensibles : IBAN, email pilote) — lecture via le client admin, filtrée
+  // explicitement ici à statut='publiee' pour ne montrer que les vols disponibles.
+  const adminSupabase = createAdminClient();
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: rawAnnonces } = await adminSupabase
+    .from("annonces_pilote")
+    .select("id, date_vol, heure_vol, duree, places, prix_total, part_pilote, pilotes(nom)")
+    .eq("statut", "publiee")
+    .gte("date_vol", today)
+    .order("date_vol", { ascending: true });
+
+  const annonces = (rawAnnonces ?? []).map(a => ({
+    id: a.id,
+    date_vol: a.date_vol,
+    heure_vol: a.heure_vol,
+    duree: a.duree,
+    places: a.places,
+    prix_client: Math.round((a.prix_total - a.part_pilote) * 100) / 100,
+    pilote_nom: (a.pilotes as unknown as { nom: string } | null)?.nom ?? "un pilote",
+  }));
 
   return (
     <main className="bg-gradient-navy">
@@ -73,6 +97,25 @@ export default async function NosOffresPage() {
               {packs.map((pack) => (
                 <PackCard key={pack.id} pack={pack} />
               ))}
+            </div>
+          )}
+
+          {/* Vols publiés par les pilotes — n'apparaît que s'il y en a au moins un */}
+          {annonces.length > 0 && (
+            <div className="mt-14">
+              <div className="text-center mb-8">
+                <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">
+                  Places disponibles
+                </p>
+                <h2 className="text-2xl sm:text-3xl font-black text-foreground leading-tight">
+                  Vols proposés par nos pilotes
+                </h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+                {annonces.map((a) => (
+                  <AnnonceCard key={a.id} annonce={a} />
+                ))}
+              </div>
             </div>
           )}
 

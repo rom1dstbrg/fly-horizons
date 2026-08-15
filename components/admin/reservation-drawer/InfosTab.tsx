@@ -106,6 +106,15 @@ export function InfosTab({
         </p>
       </div>
 
+      {r.type_resa === "annonce_pilote" && r.pilotes && (
+        <div className="bg-navy/5 border border-navy/15 rounded-xl p-3.5 flex items-center gap-2.5">
+          <User size={13} className="text-navy shrink-0" />
+          <p className="text-xs text-foreground">
+            Vol partagé assuré par <strong>{r.pilotes.nom}</strong>
+          </p>
+        </div>
+      )}
+
       {r.statut === "payment_pending" && r.payment_token && (
         <PaymentLinkCard paymentToken={r.payment_token} linkCopied={linkCopied} onCopy={onCopyPaymentLink} />
       )}

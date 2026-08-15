@@ -9,6 +9,7 @@ import {
   Menu, X, ExternalLink, Search,
   CalendarCheck, Route, Clock, Navigation,
   Package, Ticket, Tag, Images, Bot, Receipt, BarChart2, Mails, Star, Mail,
+  UserCog,
 } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 
@@ -38,6 +39,9 @@ const NAVIGATION: NavEntry[] = [
   { type: "link", id: "sur-mesure",     icon: Route,         label: "Sur mesure",     href: "/admin/vols?tab=sur-mesure",     tab: "sur-mesure",     tabBase: "/admin/vols" },
   { type: "link", id: "disponibilites", icon: Clock,         label: "Disponibilités", href: "/admin/vols?tab=disponibilites", tab: "disponibilites", tabBase: "/admin/vols" },
   { type: "link", id: "itineraires",    icon: Navigation,    label: "Itinéraires",    href: "/admin/itineraires" },
+
+  { type: "section", label: "Équipe" },
+  { type: "link", id: "pilotes", icon: UserCog, label: "Pilotes", href: "/admin/pilotes" },
 
   { type: "section", label: "Boutique" },
   { type: "link", id: "vouchers", icon: Ticket,  label: "Vouchers", href: "/admin/boutique",              tab: "vouchers", tabBase: "/admin/boutique" },
