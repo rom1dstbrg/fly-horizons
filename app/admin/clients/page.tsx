@@ -12,7 +12,7 @@ export default async function ClientsPage() {
     .from("clients")
     .select(`
       id, prenom, nom, email, telephone, created_at,
-      reservations(id, date_vol, heure_vol, duree, statut, type_resa, created_at)
+      reservations(id, date_vol, heure_vol, duree, statut, type_resa, payment_status, created_at)
     `)
     .order("created_at", { ascending: false });
 
