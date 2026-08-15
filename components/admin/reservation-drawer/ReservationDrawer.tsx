@@ -41,11 +41,15 @@ export function ReservationDrawer({
   onClose,
   onStatusChange,
   onFieldsChange,
+  viewerRole = "admin",
 }: {
   reservation: DrawerReservation | null;
   onClose: () => void;
   onStatusChange?: (id: string, newStatut: string) => void;
   onFieldsChange?: (id: string, fields: Partial<DrawerReservation>) => void;
+  // Un pilote gère ses propres demandes (marketplace) avec ce même drawer, mais
+  // sans les sections internes à l'admin (bilan financier, réservation NewCAG).
+  viewerRole?: "admin" | "pilote";
 }) {
   const isPerso = reservation?.type_resa === "perso";
 
@@ -312,6 +316,7 @@ export function ReservationDrawer({
               {!emailOpen && activeTab === "infos" && (
                 <InfosTab
                   reservation={r}
+                  viewerRole={viewerRole}
                   avionReserve={avionReserve}
                   isReservePending={isReservePending}
                   onToggleAvion={doToggleAvion}

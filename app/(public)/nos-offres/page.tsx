@@ -41,22 +41,19 @@ export default async function NosOffresPage() {
   // sensibles : IBAN, email pilote) — lecture via le client admin, filtrée
   // explicitement ici à statut='publiee' pour ne montrer que les vols disponibles.
   const adminSupabase = createAdminClient();
-  const today = new Date().toISOString().slice(0, 10);
   const { data: rawAnnonces } = await adminSupabase
     .from("annonces_pilote")
-    .select("id, date_vol, heure_vol, duree, places, prix_total, part_pilote, pilotes(nom)")
+    .select("id, duree, places, prix_total, part_pilote, images, pilotes(nom)")
     .eq("statut", "publiee")
-    .gte("date_vol", today)
-    .order("date_vol", { ascending: true });
+    .order("created_at", { ascending: false });
 
   const annonces = (rawAnnonces ?? []).map(a => ({
     id: a.id,
-    date_vol: a.date_vol,
-    heure_vol: a.heure_vol,
     duree: a.duree,
     places: a.places,
     prix_client: Math.round((a.prix_total - a.part_pilote) * 100) / 100,
     pilote_nom: (a.pilotes as unknown as { nom: string } | null)?.nom ?? "un pilote",
+    cover_image: a.images?.[0] ?? null,
   }));
 
   return (

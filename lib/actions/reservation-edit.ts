@@ -7,12 +7,21 @@ import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { toForeFlight, buildForeFlightRoute } from "@/lib/foreflight";
 import { routeProposalEmail, paymentLinkEmail, routeFeedbackAdminEmail, reservationPaymentInvitationEmail } from "@/lib/email-templates";
 
-async function checkAdmin() {
+// Autorise l'admin, ou le pilote propriétaire de la réservation — voir même helper
+// dans lib/actions/reservations.ts (dupliqué ici comme checkAdmin() l'est déjà).
+async function checkAdminOrOwningPilote(reservationId: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Non autorisé");
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "admin") throw new Error("Non autorisé");
+  if (profile?.role === "admin") return;
+  if (profile?.role !== "pilote") throw new Error("Non autorisé");
+
+  const admin = createAdminClient();
+  const { data: pilote } = await admin.from("pilotes").select("id").eq("user_id", user.id).single();
+  if (!pilote) throw new Error("Non autorisé");
+  const { data: resa } = await admin.from("reservations").select("pilote_id").eq("id", reservationId).single();
+  if (!resa || resa.pilote_id !== pilote.id) throw new Error("Non autorisé");
 }
 
 async function logHistory(params: {
@@ -73,7 +82,7 @@ export async function updateReservationAllFields(
   reservationFields: ReservationFields
 ) {
   try {
-    await checkAdmin();
+    await checkAdminOrOwningPilote(reservationId);
     const supabase = createAdminClient();
 
     // Récupérer les valeurs actuelles pour le diff
@@ -151,7 +160,7 @@ export async function updateReservationAllFields(
 
 export async function getReservationForDrawer(id: string, isPerso: boolean) {
   try {
-    await checkAdmin();
+    await checkAdminOrOwningPilote(id);
     const supabase = createAdminClient();
     const select = isPerso
       ? "*, clients(*), route_proposals(status, created_at)"
@@ -175,7 +184,7 @@ export async function saveFinalWaypoints(
   final_waypoints: Array<{ lat: number; lng: number; nom?: string }>
 ) {
   try {
-    await checkAdmin();
+    await checkAdminOrOwningPilote(reservationId);
     const supabase = createAdminClient();
 
     await supabase
@@ -206,7 +215,7 @@ export async function sendRouteProposalToClient(
   adminComment: string
 ) {
   try {
-    await checkAdmin();
+    await checkAdminOrOwningPilote(reservationId);
     const supabase = createAdminClient();
 
     const { data: resa } = await supabase
@@ -465,7 +474,7 @@ export async function respondToRouteProposal(
 
 export async function getReservationHistory(reservationId: string) {
   try {
-    await checkAdmin();
+    await checkAdminOrOwningPilote(reservationId);
     const supabase = createAdminClient();
 
     const { data, error } = await supabase
@@ -485,7 +494,7 @@ export async function getReservationHistory(reservationId: string) {
 
 export async function getRouteProposals(reservationId: string) {
   try {
-    await checkAdmin();
+    await checkAdminOrOwningPilote(reservationId);
     const supabase = createAdminClient();
 
     const { data, error } = await supabase

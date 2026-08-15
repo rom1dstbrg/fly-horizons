@@ -5,7 +5,7 @@ import { sendOrderConfirmation, sendVoucherEmail } from "@/lib/email-service";
 import { generateVoucherPDFBuffer } from "@/lib/pdf/voucher-pdf";
 import { generateVoucherCode } from "@/lib/vouchers";
 import type { VoucherEmailCode } from "@/lib/email-templates";
-import { reservationPaymentConfirmationEmail, volSurMesureAcompteEmail, annoncePiloteConfirmationEmail, annoncePiloteBookedNotifEmail } from "@/lib/email-templates";
+import { reservationPaymentConfirmationEmail, volSurMesureAcompteEmail } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -138,96 +138,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
-    // ── Marketplace pilotes — annonce réservée ─────────────────
-    if (session.metadata?.type === "annonce_pilote") {
-      const { reservationId, annonceId, piloteId } = session.metadata;
-      if (reservationId) {
-        const montantPayeAnnonce = session.amount_total ? session.amount_total / 100 : 0;
-        // La date/heure est déjà fixée à la publication de l'annonce — on saute
-        // directement le cycle de confirmation admin classique (payment_pending →
-        // heure_confirmee), ce qui rend la résa immédiatement compatible avec le
-        // cron de rappel de vol et le bouton "Marquer vol effectué" du drawer admin.
-        const { data: annonceUpdated } = await adminSupabase
-          .from("reservations")
-          .update({ statut: "heure_confirmee", paye: montantPayeAnnonce, payment_status: "paid", heure_confirmee_at: new Date().toISOString() })
-          .eq("id", reservationId)
-          .eq("statut", "payment_pending")
-          .select("id")
-          .maybeSingle();
-
-        if (!annonceUpdated) {
-          const { data: cur } = await adminSupabase.from("reservations").select("payment_status").eq("id", reservationId).maybeSingle();
-          if (cur?.payment_status === "paid") return NextResponse.json({ received: true }); // idempotent (webhook retried)
-          return NextResponse.json({ received: true }); // état inattendu
-        }
-
-        const { data: resa } = await adminSupabase
-          .from("reservations")
-          .select("*, clients(*)")
-          .eq("id", reservationId)
-          .single();
-        const { data: pilote } = await adminSupabase
-          .from("pilotes")
-          .select("nom, email")
-          .eq("id", piloteId)
-          .maybeSingle();
-        const { data: annonce } = await adminSupabase
-          .from("annonces_pilote")
-          .select("part_pilote")
-          .eq("id", annonceId)
-          .maybeSingle();
-
-        if (resa?.clients && pilote) {
-          const c = resa.clients as { prenom: string; nom: string; email: string };
-          const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
-            weekday: "long", day: "numeric", month: "long", year: "numeric",
-          });
-          const heure = (resa.heure_vol ?? "00:00").slice(0, 5);
-
-          await resend.emails.send({
-            from: EMAIL_FROM, to: [c.email], replyTo: EMAIL_REPLY_TO,
-            subject: "Vol confirmé · Fly Horizons",
-            html: annoncePiloteConfirmationEmail({
-              prenom: c.prenom,
-              piloteName: pilote.nom,
-              dateStr,
-              heure,
-              duree: resa.duree,
-              passagers: resa.passagers,
-              montantPaye: montantPayeAnnonce,
-              reservationId,
-              dateISO: resa.date_vol,
-            }),
-          });
-
-          if (pilote.email) {
-            await resend.emails.send({
-              from: EMAIL_FROM, to: [pilote.email], replyTo: EMAIL_REPLY_TO,
-              subject: `Annonce réservée · ${dateStr}`,
-              html: annoncePiloteBookedNotifEmail({
-                piloteNom: pilote.nom,
-                clientNom: `${c.prenom} ${c.nom}`,
-                dateStr,
-                heure,
-                passagers: resa.passagers,
-                partPilote: annonce?.part_pilote ?? 0,
-              }),
-            });
-          }
-
-          await resend.emails.send({
-            from: EMAIL_FROM, to: [EMAIL_REPLY_TO],
-            subject: `[Annonce réservée] ${c.prenom} ${c.nom} · ${resa.date_vol} à ${heure}`,
-            html: `<p>${c.prenom} ${c.nom} (${c.email}) a réservé et payé le vol de <strong>${pilote.nom}</strong> le <strong>${resa.date_vol} à ${heure}</strong> (${resa.passagers} passager${resa.passagers > 1 ? "s" : ""}), montant : ${montantPayeAnnonce} €.</p>`,
-          });
-        } else if (annonceId) {
-          console.error("[webhook/annonce_pilote] client ou pilote introuvable pour l'envoi des emails", { reservationId, annonceId });
-        }
-      }
-      return NextResponse.json({ received: true });
-    }
-
     // ── Réservation standard ──────────────────────────────────
+    // Couvre aussi les réservations "annonce_pilote" : le lien de paiement partagé
+    // (/api/reservation/pay/[token]) leur attribue déjà metadata.type="reservation",
+    // et cette branche ne filtre jamais par type_resa — rien à ajouter ici.
     if (session.metadata?.type === "reservation") {
       const { reservationId, voucherId, voucherCode, couponCode } = session.metadata;
       if (reservationId) {
@@ -527,7 +441,7 @@ export async function POST(request: NextRequest) {
 
   if (event.type === "checkout.session.expired") {
     const session = event.data.object as Stripe.Checkout.Session;
-    const { orderId, voucherId, reservationId, type, paymentToken, couponCode, annonceId } = session.metadata ?? {};
+    const { orderId, voucherId, reservationId, type, paymentToken, couponCode } = session.metadata ?? {};
 
     // Release any voucher that was atomically reserved for this session.
     // Exception : réservations perso — le voucher est réservé dès la création de la
@@ -563,25 +477,6 @@ export async function POST(request: NextRequest) {
         .update({ statut: "annulee" })
         .eq("id", reservationId)
         .eq("statut", "payment_pending");
-    }
-
-    // Annonce pilote : le client n'a pas payé — on relâche l'annonce (redevient
-    // réservable) et on annule la réservation créée au moment du checkout.
-    if (type === "annonce_pilote") {
-      if (annonceId) {
-        await adminSupabase
-          .from("annonces_pilote")
-          .update({ statut: "publiee" })
-          .eq("id", annonceId)
-          .eq("statut", "reservee");
-      }
-      if (reservationId) {
-        await adminSupabase
-          .from("reservations")
-          .update({ statut: "annulee" })
-          .eq("id", reservationId)
-          .eq("statut", "payment_pending");
-      }
     }
 
     // Pas de release_coupon ici : l'incrément coupon n'a jamais lieu avant le paiement Stripe.

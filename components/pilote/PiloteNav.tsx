@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, PlaneTakeoff } from "lucide-react";
+import { LayoutDashboard, PlaneTakeoff, Plane } from "lucide-react";
 
 const LINKS = [
   { href: "/pilote", label: "Tableau de bord", icon: LayoutDashboard, exact: true },
   { href: "/pilote/annonces", label: "Mes annonces", icon: PlaneTakeoff, exact: false },
+  { href: "/pilote/vols", label: "Mes vols", icon: Plane, exact: false },
 ];
 
 export function PiloteNav() {

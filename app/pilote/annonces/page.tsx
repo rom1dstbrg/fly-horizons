@@ -14,9 +14,9 @@ export default async function PiloteAnnoncesPage() {
   const { data: annonces } = pilote
     ? await admin
         .from("annonces_pilote")
-        .select("id, date_vol, heure_vol, duree, places, prix_total, part_pilote, statut")
+        .select("id, duree, places, prix_total, part_pilote, description, images, statut")
         .eq("pilote_id", pilote.id)
-        .order("date_vol", { ascending: true })
+        .order("created_at", { ascending: false })
     : { data: [] };
 
   return (
@@ -24,7 +24,7 @@ export default async function PiloteAnnoncesPage() {
       <div>
         <h1 className="text-xl sm:text-2xl font-bold text-foreground">Mes annonces</h1>
         <p className="text-muted-foreground text-sm mt-0.5">
-          Publiez vos vols à venir avec leur prix et votre part personnelle payée.
+          Publiez vos offres de vol : durée, prix, photos — le client choisit sa date.
         </p>
       </div>
 

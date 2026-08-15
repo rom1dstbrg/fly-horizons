@@ -15,6 +15,23 @@ async function checkAdmin() {
   if (profile?.role !== "admin") throw new Error("Non autorisé");
 }
 
+// Autorise l'admin, ou le pilote propriétaire de la réservation (marketplace pilotes —
+// il gère ses propres demandes comme l'admin gère les siennes : confirme, route, paiement).
+async function checkAdminOrOwningPilote(reservationId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Non autorisé");
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+  if (profile?.role === "admin") return;
+  if (profile?.role !== "pilote") throw new Error("Non autorisé");
+
+  const admin = createAdminClient();
+  const { data: pilote } = await admin.from("pilotes").select("id").eq("user_id", user.id).single();
+  if (!pilote) throw new Error("Non autorisé");
+  const { data: resa } = await admin.from("reservations").select("pilote_id").eq("id", reservationId).single();
+  if (!resa || resa.pilote_id !== pilote.id) throw new Error("Non autorisé");
+}
+
 const VALID_STATUTS_STD = ["demande_recue", "en_attente", "acompte_recu", "heure_confirmee", "vol_effectue", "annulee", "payment_pending"] as const;
 const VALID_STATUTS_PERSO = ["en_attente", "acompte_recu", "date_confirmee", "heure_confirmee", "solde", "vol_effectue", "annulee", "payment_pending"] as const;
 
@@ -24,7 +41,7 @@ export async function updateStatutReservation(
   routePayload?: { waypoints: Array<{ lat: number; lng: number; nom?: string }>; comment?: string } | null
 ) {
   try {
-    await checkAdmin();
+    await checkAdminOrOwningPilote(id);
     if (!(VALID_STATUTS_STD as readonly string[]).includes(statut)) return { error: "Statut invalide" };
     const supabase = createAdminClient();
     const hasFreshRoute = !!routePayload?.waypoints?.length;
@@ -715,7 +732,7 @@ export async function createHorSiteReservation(data: {
 
 export async function recordCashPayment(id: string, montant: number) {
   try {
-    await checkAdmin();
+    await checkAdminOrOwningPilote(id);
     const supabase = createAdminClient();
     const { error } = await supabase
       .from("reservations")
@@ -806,7 +823,7 @@ export async function setAvionReserve(id: string, reserved: boolean) {
 
 export async function sendCustomEmail(id: string, subject: string, body: string, withReschedule = false) {
   try {
-    await checkAdmin();
+    await checkAdminOrOwningPilote(id);
     const supabase = createAdminClient();
     const { data: resa } = await supabase
       .from("reservations")
@@ -848,7 +865,7 @@ export async function sendCustomEmail(id: string, subject: string, body: string,
 
 export async function sendPaymentLinkAdmin(id: string) {
   try {
-    await checkAdmin();
+    await checkAdminOrOwningPilote(id);
     const supabase = createAdminClient();
 
     const { data: resa } = await supabase
@@ -916,7 +933,7 @@ export async function sendPaymentLinkAdmin(id: string) {
 
 export async function resendPaymentLinkAdmin(id: string) {
   try {
-    await checkAdmin();
+    await checkAdminOrOwningPilote(id);
     const supabase = createAdminClient();
 
     const { data: resa } = await supabase
@@ -976,7 +993,7 @@ export async function resendPaymentLinkAdmin(id: string) {
 
 export async function sendRescheduleInvite(id: string) {
   try {
-    await checkAdmin();
+    await checkAdminOrOwningPilote(id);
     const supabase = createAdminClient();
 
     const { data: resa } = await supabase
@@ -1198,7 +1215,7 @@ export async function generateClientRescheduleToken(reservationId: string) {
 
 export async function proposeSlot(id: string, date: string, heure: string) {
   try {
-    await checkAdmin();
+    await checkAdminOrOwningPilote(id);
     const supabase = createAdminClient();
 
     const { data: resa } = await supabase

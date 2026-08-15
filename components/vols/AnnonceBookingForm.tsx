@@ -1,26 +1,32 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Loader2, ArrowRight } from "lucide-react";
 
 export function AnnonceBookingForm({ annonceId, places }: { annonceId: string; places: number }) {
+  const router = useRouter();
   const [prenom, setPrenom] = useState("");
   const [nom, setNom] = useState("");
   const [email, setEmail] = useState("");
   const [telephone, setTelephone] = useState("");
+  const [dateVol, setDateVol] = useState("");
+  const [heureVol, setHeureVol] = useState("");
   const [passagers, setPassagers] = useState(1);
+  const [commentaire, setCommentaire] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [minDate] = useState(() => new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10));
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
     try {
-      const r = await fetch("/api/vol-annonce/checkout", {
+      const r = await fetch("/api/vol-annonce/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ annonce_id: annonceId, prenom, nom, email, telephone, passagers }),
+        body: JSON.stringify({ annonce_id: annonceId, prenom, nom, email, telephone, passagers, date_vol: dateVol, heure_vol: heureVol, commentaire }),
       });
       const data = await r.json();
       if (!r.ok) {
@@ -28,7 +34,7 @@ export function AnnonceBookingForm({ annonceId, places }: { annonceId: string; p
         setLoading(false);
         return;
       }
-      if (data.url) window.location.href = data.url;
+      router.push("/reservation/success");
     } catch {
       setError("Erreur réseau, veuillez réessayer.");
       setLoading(false);
@@ -64,6 +70,25 @@ export function AnnonceBookingForm({ annonceId, places }: { annonceId: string; p
         placeholder="Téléphone (optionnel)"
         className="w-full h-11 px-3.5 rounded-lg border border-border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-navy/20"
       />
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Date souhaitée</label>
+          <input
+            required type="date" min={minDate} value={dateVol} onChange={e => setDateVol(e.target.value)}
+            className="w-full h-11 px-3.5 rounded-lg border border-border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-navy/20"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Heure souhaitée</label>
+          <input
+            required type="time" value={heureVol} onChange={e => setHeureVol(e.target.value)}
+            className="w-full h-11 px-3.5 rounded-lg border border-border bg-white text-sm focus:outline-none focus:ring-2 focus:ring-navy/20"
+          />
+        </div>
+      </div>
+      <p className="text-xs text-muted-foreground/70">
+        Créneau souhaité, pas garanti : le pilote confirme votre demande sous peu.
+      </p>
       <div>
         <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Nombre de passagers</label>
         <select
@@ -76,12 +101,17 @@ export function AnnonceBookingForm({ annonceId, places }: { annonceId: string; p
           ))}
         </select>
       </div>
+      <textarea
+        value={commentaire} onChange={e => setCommentaire(e.target.value)}
+        rows={2} maxLength={500} placeholder="Un message pour le pilote ? (optionnel)"
+        className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-navy/20"
+      />
       <button
         type="submit"
         disabled={loading}
         className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#F2B705] text-[#0b2238] rounded-lg text-sm font-black hover:bg-[#e6a800] transition-colors disabled:opacity-60 cursor-pointer"
       >
-        {loading ? <Loader2 size={16} className="animate-spin" /> : <>Réserver et payer <ArrowRight size={15} /></>}
+        {loading ? <Loader2 size={16} className="animate-spin" /> : <>Faire une demande <ArrowRight size={15} /></>}
       </button>
     </form>
   );

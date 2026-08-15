@@ -23,6 +23,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 export function InfosTab({
   reservation: r,
+  viewerRole = "admin",
   avionReserve, isReservePending, onToggleAvion,
   bilan,
   route,
@@ -32,6 +33,7 @@ export function InfosTab({
   cashPayment, isCashPaymentPending, onToggleCashPayment,
 }: {
   reservation: DrawerReservation;
+  viewerRole?: "admin" | "pilote";
   avionReserve: boolean;
   isReservePending: boolean;
   onToggleAvion: (val: boolean) => void;
@@ -71,7 +73,9 @@ export function InfosTab({
     ? new Date(r.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long" })
     : null;
 
-  const showNewCAG = r.statut !== "annulee" && (
+  // NewCAG (réservation avion) est un outil propre à l'exploitant admin — pas pertinent
+  // pour un pilote tiers qui gère son propre avion en dehors de ce système.
+  const showNewCAG = viewerRole === "admin" && r.statut !== "annulee" && (
     isPerso || ["acompte_recu", "date_confirmee", "heure_confirmee", "vol_effectue"].includes(r.statut)
   );
 
@@ -330,7 +334,8 @@ export function InfosTab({
         onFullscreen={route.openFullscreen}
       />
 
-      {/* Bilan vol — après la route, c'est un calcul secondaire/post-vol, pas une info de premier plan */}
+      {/* Bilan vol — calcul de rentabilité interne (coût avion école), réservé à l'admin */}
+      {viewerRole === "admin" && (
       <div>
         <button
           type="button"
@@ -413,6 +418,7 @@ export function InfosTab({
           </div>
         )}
       </div>
+      )}
 
       {/* Free email */}
       <div>

@@ -24,7 +24,7 @@ export async function GET(
     .from("reservations")
     .select("*, clients(*)")
     .eq("payment_token", token)
-    .eq("type_resa", "standard")
+    .neq("type_resa", "perso") // couvre standard + annonce_pilote (perso a son propre tunnel de paiement)
     .single();
 
   if (!resa) {
