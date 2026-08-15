@@ -5,7 +5,8 @@ import Link from "next/link";
 import { Tag, ExternalLink, Mail, Send, Loader2, Users } from "lucide-react";
 import { deleteClient } from "@/lib/actions/delete";
 import { sendEmailToClient } from "@/lib/actions/clients";
-import { AdminBadge, STATUT_RESA, STATUT_VOUCHER } from "@/components/admin/ui/AdminBadge";
+import { AdminBadge, STATUT_VOUCHER } from "@/components/admin/ui/AdminBadge";
+import { getResaBadge } from "@/components/admin/ui/resaBadge";
 import { AdminRowActions } from "@/components/admin/ui/AdminRowActions";
 import { AdminSheet, SheetSection, SheetRow } from "@/components/admin/ui/AdminSheet";
 import { PageToolbar, EmptyState } from "@/components/admin/ui";
@@ -17,6 +18,7 @@ interface Reservation {
   duree: number;
   statut: string;
   type_resa: string;
+  payment_status: string | null;
   created_at: string;
 }
 
@@ -85,7 +87,7 @@ function DrawerBody({ client }: { client: Client }) {
         ) : (
           <div className="space-y-2">
             {client.reservations.map(r => {
-              const statut = STATUT_RESA[r.statut] ?? { label: r.statut, variant: "secondary" as const };
+              const statut = getResaBadge(r);
               const dateStr = new Date(r.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
                 day: "numeric", month: "short", year: "numeric",
               });
@@ -95,7 +97,7 @@ function DrawerBody({ client }: { client: Client }) {
                   <span className="font-medium text-foreground">{dateStr}{r.heure_vol ? ` · ${r.heure_vol.slice(0, 5)}` : ""}</span>
                   <span className="text-muted-foreground">{r.duree} min</span>
                   <span className="text-muted-foreground opacity-60">
-                    {r.type_resa === "standard" ? "Standard" : "Sur mesure"}
+                    {r.type_resa === "perso" ? "Sur mesure" : r.type_resa === "annonce_pilote" ? "Vol partagé" : "Standard"}
                   </span>
                 </div>
               );
@@ -236,34 +238,27 @@ function ClientCard({
 }) {
   const resaCount = client.reservations.length;
   const voucherCount = client.vouchers.length;
-  const lastResa = client.reservations[0];
 
   return (
-    <div className="card-premium p-4 hover:border-primary/30 transition-colors">
-      <div className="flex items-start justify-between gap-4">
+    <div className="card-premium px-4 py-2.5 hover:border-primary/30 transition-colors">
+      <div className="flex items-center justify-between gap-4">
         {/* Infos — cliquables */}
-        <div className="flex-1 min-w-0 cursor-pointer" onClick={onOpen}>
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="font-semibold text-foreground text-sm">
-              {client.prenom} {client.nom}
-            </p>
-            {resaCount > 0 && (
-              <AdminBadge variant="info" label={`${resaCount} vol${resaCount > 1 ? "s" : ""}`} />
-            )}
-            {voucherCount > 0 && (
-              <AdminBadge variant="primary" label={`${voucherCount} voucher${voucherCount > 1 ? "s" : ""}`} />
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {client.email}{client.telephone ? ` · ${client.telephone}` : ""}
+        <div className="flex-1 min-w-0 cursor-pointer flex items-center gap-3 flex-wrap" onClick={onOpen}>
+          <span className="font-mono text-[10px] font-semibold text-muted-foreground/70 shrink-0">
+            {client.id}
+          </span>
+          <p className="font-semibold text-foreground text-sm shrink-0">
+            {client.prenom} {client.nom}
           </p>
-          {lastResa && (
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Dernier vol : {new Date(lastResa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
-                day: "numeric", month: "short", year: "numeric",
-              })}
-            </p>
+          {resaCount > 0 && (
+            <AdminBadge variant="info" label={`${resaCount} vol${resaCount > 1 ? "s" : ""}`} />
           )}
+          {voucherCount > 0 && (
+            <AdminBadge variant="primary" label={`${voucherCount} voucher${voucherCount > 1 ? "s" : ""}`} />
+          )}
+          <span className="text-xs text-muted-foreground truncate">
+            {client.email}{client.telephone ? ` · ${client.telephone}` : ""}
+          </span>
         </div>
 
         {/* Actions */}
@@ -317,7 +312,7 @@ export function ClientsClient({ clients: initial }: { clients: Client[] }) {
             description={search ? "Aucun client ne correspond à cette recherche." : "Les clients apparaîtront ici dès la première réservation."}
           />
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {filtered.map(c => (
               <ClientCard
                 key={c.id}

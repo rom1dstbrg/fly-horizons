@@ -16,7 +16,8 @@ import {
   proposeSlot,
   setCashPayment,
 } from "@/lib/actions/reservations";
-import { AdminBadge, STATUT_RESA, STATUT_PERSO, type BadgeVariant } from "@/components/admin/ui/AdminBadge";
+import { AdminBadge, type BadgeVariant } from "@/components/admin/ui/AdminBadge";
+import { getResaBadge } from "@/components/admin/ui/resaBadge";
 import type { DrawerReservation, EmailTemplate } from "./types";
 import { InfosTab } from "./InfosTab";
 import { ModifierTab } from "./ModifierTab";
@@ -247,8 +248,7 @@ export function ReservationDrawer({
   // ── Render ───────────────────────────────────────────────────────────────
 
   const r = reservation;
-  const statutMap = isPerso ? STATUT_PERSO : STATUT_RESA;
-  const statut = r ? (statutMap[r.statut] ?? { label: r.statut, variant: "secondary" as const }) : null;
+  const statut = r ? getResaBadge(r) : null;
   const hasRoute = !!route.localRouteStatus || route.routeDraft.length > 0;
 
   return (

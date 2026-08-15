@@ -9,9 +9,7 @@ import {
 import { DashboardCalendar } from "@/components/admin/DashboardCalendar";
 import { MetarWidget } from "@/components/admin/MetarWidget";
 import { PageHeader } from "@/components/admin/PageHeader";
-import { FormSection, AdminBadge, STATUT_RESA, STATUT_PERSO } from "@/components/admin/ui";
-
-const RESA_ALL = { ...STATUT_RESA, ...STATUT_PERSO };
+import { FormSection, AdminBadge, getResaBadge } from "@/components/admin/ui";
 
 export const metadata = { title: "Cockpit — Admin" };
 
@@ -80,7 +78,7 @@ export default async function AdminDashboardPage() {
     ...(expiringCritical  > 0 ? [{ label: `${expiringCritical} voucher${expiringCritical > 1 ? "s" : ""} expirent dans moins de 7 jours`,                  href: "/admin/boutique?tab=vouchers", icon: AlertTriangle }] : []),
   ];
   const todayItems: ActionItem[] = [
-    ...(enAttenteStd    > 0 ? [{ label: `${enAttenteStd} réservation${enAttenteStd > 1 ? "s" : ""} standard sans date`,                                    href: "/admin/vols",           icon: AlertCircle   }] : []),
+    ...(enAttenteStd    > 0 ? [{ label: `${enAttenteStd} réservation${enAttenteStd > 1 ? "s" : ""} standard en attente de confirmation`,                    href: "/admin/vols",           icon: AlertCircle   }] : []),
     ...(enAttentePerso  > 0 ? [{ label: `${enAttentePerso} vol${enAttentePerso > 1 ? "s" : ""} sur mesure en attente`,                                     href: "/admin/vols",           icon: AlertCircle   }] : []),
     ...(newContactsCount > 0 ? [{ label: `${newContactsCount} message${newContactsCount > 1 ? "s" : ""} non lu${newContactsCount > 1 ? "s" : ""}`,         href: "/admin/contacts",       icon: MessageSquare }] : []),
     ...(!expiringCritical && expiringCount > 0 ? [{ label: `${expiringCount} voucher${expiringCount > 1 ? "s" : ""} expirent dans moins de 30 jours`,      href: "/admin/boutique?tab=vouchers", icon: AlertCircle }] : []),
@@ -209,7 +207,7 @@ export default async function AdminDashboardPage() {
                 {volsTomorrow.map((r, i) => {
                   const client = r.clients as { prenom: string; nom: string } | null;
                   const name   = client ? `${client.prenom} ${client.nom}`.trim() : "—";
-                  const statut = RESA_ALL[r.statut] ?? { label: r.statut, variant: "secondary" as const };
+                  const statut = getResaBadge(r);
                   return (
                     <Link key={r.id} href="/admin/vols"
                       className={`flex items-center gap-3 px-3.5 py-2.5 hover:bg-secondary transition-colors group ${i < volsTomorrow.length - 1 ? "border-b border-border" : ""}`}
@@ -261,7 +259,7 @@ export default async function AdminDashboardPage() {
               const date   = r.date_vol
                 ? new Date(r.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", { day: "numeric", month: "short" })
                 : new Date(r.created_at).toLocaleDateString("fr-BE", { day: "numeric", month: "short" });
-              const statut = RESA_ALL[r.statut] ?? { label: r.statut, variant: "secondary" as const };
+              const statut = getResaBadge(r);
               return (
                 <div key={r.id} className={`flex items-center gap-4 px-5 py-3 hover:bg-secondary transition-colors ${idx < recentResas.length - 1 ? "border-b border-border" : ""}`}>
                   {r.type_resa === "perso"

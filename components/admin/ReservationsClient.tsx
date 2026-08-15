@@ -4,7 +4,7 @@ import { useState } from "react";
 import { deleteReservationStandard } from "@/lib/actions/delete";
 import { ReservationDrawer } from "@/components/admin/reservation-drawer/ReservationDrawer";
 import type { DrawerReservation } from "@/components/admin/reservation-drawer/types";
-import { AdminBadge, STATUT_RESA, PageToolbar, FilterChip, EmptyState } from "@/components/admin/ui";
+import { AdminBadge, getResaBadge, PageToolbar, FilterChip, EmptyState } from "@/components/admin/ui";
 import type { BadgeVariant } from "@/components/admin/ui/AdminBadge";
 import { AdminRowActions } from "@/components/admin/ui/AdminRowActions";
 import { MapPin, CalendarCheck } from "lucide-react";
@@ -37,7 +37,7 @@ function ReservationCard({
   onOpen: () => void;
   onDelete: () => Promise<{ error?: string } | void>;
 }) {
-  const statut = STATUT_RESA[r.statut] ?? { label: r.statut, variant: "secondary" as const };
+  const statut = getResaBadge(r);
   const client = r.clients;
   const dateStr = new Date(r.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
     weekday: "short", day: "numeric", month: "short", year: "numeric",
@@ -92,11 +92,6 @@ function ReservationCard({
               </span>
             )}
           </div>
-          {client && (
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {client.email}{client.telephone ? ` · ${client.telephone}` : ""}
-            </p>
-          )}
         </div>
 
         <div onClick={e => e.stopPropagation()} className="shrink-0">
@@ -137,7 +132,9 @@ export function ReservationsClient({ reservations: initial }: { reservations: Re
       const name = `${r.clients?.prenom ?? ""} ${r.clients?.nom ?? ""}`.toLowerCase();
       const email = (r.clients?.email ?? "").toLowerCase();
       return name.includes(searchTerm) || email.includes(searchTerm);
-    });
+    })
+    // Plus lointain dans le futur en premier, vols déjà passés en dernier
+    .sort((a, b) => `${b.date_vol}${b.heure_vol ?? ""}`.localeCompare(`${a.date_vol}${a.heure_vol ?? ""}`));
 
   function countFor(f: typeof FILTERS[number]) {
     const values = FILTER_MAP[f];

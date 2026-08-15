@@ -64,11 +64,6 @@ function ReservationCard({
               <p className="text-xs text-primary font-semibold">Provision : {r.acompte} €</p>
             )}
           </div>
-          {client && (
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {client.email}{client.telephone ? ` · ${client.telephone}` : ""}
-            </p>
-          )}
         </div>
 
         <div onClick={e => e.stopPropagation()} className="shrink-0">
@@ -112,10 +107,15 @@ export function VolsPersoClient({ reservations: initial }: { reservations: Reser
     );
   }
 
+  // Plus lointain dans le futur en premier, vols déjà passés en dernier
+  const sorted = [...reservations].sort((a, b) =>
+    `${b.date_vol}${b.heure_vol ?? ""}`.localeCompare(`${a.date_vol}${a.heure_vol ?? ""}`)
+  );
+
   return (
     <>
       <div className="space-y-3">
-        {reservations.map(r => (
+        {sorted.map(r => (
           <ReservationCard
             key={r.id}
             reservation={r}

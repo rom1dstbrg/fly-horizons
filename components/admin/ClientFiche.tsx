@@ -7,11 +7,9 @@ import {
   Phone, Mail, Calendar, Pencil, Check, X, Loader2,
 } from "lucide-react";
 import { updateClient } from "@/lib/actions/clients";
-import { AdminBadge, STATUT_RESA, STATUT_PERSO, STATUT_VOUCHER } from "@/components/admin/ui/AdminBadge";
+import { AdminBadge, STATUT_VOUCHER } from "@/components/admin/ui/AdminBadge";
+import { getResaBadge } from "@/components/admin/ui/resaBadge";
 import { StatCard, StatGrid, EmptyState } from "@/components/admin/ui";
-
-// Map fusionné : couvre standard (payment_pending…) + perso (acompte_recu…)
-const RESA_MAP = { ...STATUT_RESA, ...STATUT_PERSO };
 
 interface Reservation {
   id: string;
@@ -20,6 +18,7 @@ interface Reservation {
   duree: number;
   statut: string;
   type_resa: string;
+  payment_status: string | null;
   acompte: number | null;
   paye: number | null;
   passagers: number | null;
@@ -242,7 +241,7 @@ export function ClientFiche({
 
               if (item.type === "reservation") {
                 const r = item.data;
-                const statut = RESA_MAP[r.statut] ?? { label: r.statut, variant: "secondary" as const };
+                const statut = getResaBadge(r);
                 const volDate = new Date(r.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
                   weekday: "short", day: "numeric", month: "short", year: "numeric",
                 });
@@ -254,7 +253,7 @@ export function ClientFiche({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-medium text-foreground">
-                          {r.type_resa === "standard" ? "Réservation standard" : "Vol sur mesure"}
+                          {r.type_resa === "perso" ? "Vol sur mesure" : r.type_resa === "annonce_pilote" ? "Vol partagé (pilote)" : "Réservation standard"}
                         </span>
                         <AdminBadge variant={statut.variant} label={statut.label} />
                       </div>

@@ -1,5 +1,6 @@
 export { AdminBadge, STATUT_RESA, STATUT_PERSO, STATUT_ORDER, STATUT_VOUCHER, STATUT_CONTACT, PAYMENT_STATUS_CONFIG, ACTION_LABELS } from "./AdminBadge";
 export type { BadgeVariant } from "./AdminBadge";
+export { getResaBadge } from "./resaBadge";
 
 export { AdminRowActions } from "./AdminRowActions";
 export type { RowExtraAction } from "./AdminRowActions";
