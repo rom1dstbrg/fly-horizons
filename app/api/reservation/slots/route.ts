@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { computeEffectiveDay } from "@/lib/dispo-utils";
 
 function calcSlots(
   heureDebut: string,
@@ -58,30 +59,18 @@ export async function GET(request: NextRequest) {
   if (new Date(date + "T12:00:00Z") < minBookable) {
     return NextResponse.json({ slots: [] });
   }
-  const jsDay = new Date(date + "T12:00:00Z").getDay();
-
   const { data: reservations } = await supabase
     .from("reservations")
     .select("heure_vol, duree")
     .eq("date_vol", date)
     .neq("statut", "annulee");
 
-  // Priorité 1 : override individuel
   const { data: jourIndiv } = await supabase
     .from("disponibilites_jours")
     .select("*")
     .eq("date", date)
     .maybeSingle();
 
-  if (jourIndiv) {
-    if (jourIndiv.ferme || !jourIndiv.heure_debut || !jourIndiv.heure_fin) {
-      return NextResponse.json({ slots: [] });
-    }
-    const slots = calcSlots(jourIndiv.heure_debut, jourIndiv.heure_fin, dureeMins, reservations ?? []);
-    return NextResponse.json({ slots: [...new Set(slots)].sort() });
-  }
-
-  // Priorité 2 : plages générales
   const { data: dispos } = await supabase
     .from("disponibilites")
     .select("*")
@@ -89,16 +78,21 @@ export async function GET(request: NextRequest) {
     .gte("date_fin", date)
     .eq("actif", true);
 
-  const disposDuJour = (dispos ?? []).filter(
-    (d) => !d.jours || d.jours.includes(jsDay)
-  );
+  const effective = computeEffectiveDay(date, dispos ?? [], jourIndiv ? [jourIndiv] : []);
 
-  if (!disposDuJour.length) return NextResponse.json({ slots: [] });
-
-  const allSlots: string[] = [];
-  for (const dispo of disposDuJour) {
-    allSlots.push(...calcSlots(dispo.heure_debut, dispo.heure_fin, dureeMins, reservations ?? []));
+  if (effective.type === "override") {
+    if (effective.ferme) return NextResponse.json({ slots: [] });
+    const slots = calcSlots(effective.heure_debut, effective.heure_fin, dureeMins, reservations ?? []);
+    return NextResponse.json({ slots: [...new Set(slots)].sort() });
   }
 
-  return NextResponse.json({ slots: [...new Set(allSlots)].sort() });
+  if (effective.type === "plage") {
+    const allSlots: string[] = [];
+    for (const w of effective.windows) {
+      allSlots.push(...calcSlots(w.heure_debut, w.heure_fin, dureeMins, reservations ?? []));
+    }
+    return NextResponse.json({ slots: [...new Set(allSlots)].sort() });
+  }
+
+  return NextResponse.json({ slots: [] });
 }

@@ -116,6 +116,36 @@ export async function upsertJourIndiv(formData: FormData) {
   }
 }
 
+// Duplique un créneau (ou une fermeture) vers plusieurs dates en un seul aller-retour —
+// évite de rappeler upsertJourIndiv une fois par date depuis le client.
+export async function upsertJoursIndivBulk(
+  dates: string[],
+  data: { ferme: boolean; heure_debut: string | null; heure_fin: string | null }
+) {
+  try {
+    await checkAdmin();
+    if (!dates.length) return { error: "Aucune date sélectionnée" };
+    const db = createAdminClient();
+
+    const rows = dates.map((date) => ({
+      date,
+      ferme: data.ferme,
+      heure_debut: data.ferme ? null : data.heure_debut,
+      heure_fin: data.ferme ? null : data.heure_fin,
+    }));
+
+    const { error } = await db
+      .from("disponibilites_jours")
+      .upsert(rows, { onConflict: "date" });
+
+    if (error) return { error: error.message };
+    revalidatePath("/admin/vols");
+    return { success: true };
+  } catch {
+    return { error: "Erreur serveur" };
+  }
+}
+
 export async function deleteJourIndiv(id: string) {
   try {
     await checkAdmin();

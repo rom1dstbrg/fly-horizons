@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { computeEffectiveDay } from "@/lib/dispo-utils";
 
 function hasSlot(
   heureDebut: string,
@@ -62,9 +63,6 @@ export async function GET(request: NextRequest) {
     resasByDate[k].push(r);
   });
 
-  const joursMap: Record<string, { ferme: boolean; heure_debut: string; heure_fin: string }> = {};
-  (joursIndiv ?? []).forEach((j) => { joursMap[j.date] = j; });
-
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const minBookable = new Date(today);
@@ -79,14 +77,13 @@ export async function GET(request: NextRequest) {
     if (date < today) continue;                            // passé : masquer
     if (date < minBookable) { unavailable.push(dateStr); continue; } // J+0/J+1 : indisponible
 
-    const jsDay = date.getDay();
     const resasDuJour = resasByDate[dateStr] ?? [];
-    const jourIndiv = joursMap[dateStr];
+    const effective = computeEffectiveDay(dateStr, plages ?? [], joursIndiv ?? []);
 
-    if (jourIndiv) {
-      if (jourIndiv.ferme || !jourIndiv.heure_debut || !jourIndiv.heure_fin) {
+    if (effective.type === "override") {
+      if (effective.ferme) {
         unavailable.push(dateStr);
-      } else if (hasSlot(jourIndiv.heure_debut, jourIndiv.heure_fin, dureeMins, resasDuJour)) {
+      } else if (hasSlot(effective.heure_debut, effective.heure_fin, dureeMins, resasDuJour)) {
         available.push(dateStr);
       } else {
         unavailable.push(dateStr);
@@ -94,22 +91,17 @@ export async function GET(request: NextRequest) {
       continue;
     }
 
-    const plage = (plages ?? []).find((p) => {
-      const pDebut = new Date(p.date_debut + "T00:00:00Z");
-      const pFin = new Date(p.date_fin + "T23:59:59Z");
-      if (date < pDebut || date > pFin) return false;
-      return !p.jours || p.jours.includes(jsDay);
-    });
-
-    if (plage) {
-      if (hasSlot(plage.heure_debut, plage.heure_fin, dureeMins, resasDuJour)) {
+    if (effective.type === "plage") {
+      const fits = effective.windows.some((w) => hasSlot(w.heure_debut, w.heure_fin, dureeMins, resasDuJour));
+      if (fits) {
         available.push(dateStr);
       } else {
         unavailable.push(dateStr);
       }
-    } else {
-      unavailable.push(dateStr);
+      continue;
     }
+
+    unavailable.push(dateStr);
   }
 
   return NextResponse.json({ available, unavailable });
