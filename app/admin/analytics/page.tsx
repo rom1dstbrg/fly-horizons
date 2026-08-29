@@ -104,7 +104,7 @@ export default async function AnalyticsPage({
 
   const { data } = await supabase
     .from("page_views")
-    .select("pathname, referrer, device, created_at")
+    .select("pathname, referrer, device, created_at, visitor_id")
     .gte("created_at", since.toISOString())
     .order("created_at", { ascending: false });
 
