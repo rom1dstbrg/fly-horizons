@@ -160,9 +160,9 @@ function DrawerBody({
         <textarea
           value={reponse}
           onChange={e => setReponse(e.target.value)}
-          rows={5}
+          rows={12}
           placeholder={`Votre réponse à ${contact.nom}…`}
-          className="w-full px-3.5 py-3 rounded-xl border border-input bg-background text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full px-3.5 py-3 rounded-xl border border-input bg-background text-sm resize-y min-h-[140px] focus:outline-none focus:ring-2 focus:ring-ring"
         />
         {feedback && (
           <p className={`text-xs mt-1 ${feedback.includes("✓") ? "text-emerald-600" : "text-destructive"}`}>
