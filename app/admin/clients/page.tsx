@@ -53,15 +53,31 @@ export default async function ClientsPage() {
     }
   }
 
-  const all = Array.from(emailMap.values()).map(c => ({
-    ...c,
-    reservations: c.reservations.sort(
-      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    ),
-    vouchers: c.vouchers.sort(
-      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    ),
-  }));
+  // Rôle (client/pilote/admin) — lié par email au compte auth (profiles), quand il existe.
+  const roleMap = new Map<string, string>();
+  if (emails.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("email, role")
+      .in("email", emails);
+    for (const p of profiles ?? []) {
+      if (p.email) roleMap.set(p.email.toLowerCase(), p.role ?? "customer");
+    }
+  }
+
+  const all = Array.from(emailMap.values())
+    .map(c => ({
+      ...c,
+      role: roleMap.get((c.email ?? "").toLowerCase()) ?? "customer",
+      reservations: c.reservations.sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      ),
+      vouchers: c.vouchers.sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      ),
+    }))
+    // FH-0001 en premier — ordre numérique de création du client
+    .sort((a, b) => a.id.localeCompare(b.id));
 
   const avecVols = all.filter(c => c.reservations.length > 0).length;
   const totalVols = all.reduce((sum, c) => sum + c.reservations.length, 0);

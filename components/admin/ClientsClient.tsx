@@ -5,11 +5,21 @@ import Link from "next/link";
 import { Tag, ExternalLink, Mail, Send, Loader2, Users } from "lucide-react";
 import { deleteClient } from "@/lib/actions/delete";
 import { sendEmailToClient } from "@/lib/actions/clients";
-import { AdminBadge, STATUT_VOUCHER } from "@/components/admin/ui/AdminBadge";
+import { AdminBadge, STATUT_VOUCHER, type BadgeVariant } from "@/components/admin/ui/AdminBadge";
 import { getResaBadge } from "@/components/admin/ui/resaBadge";
 import { AdminRowActions } from "@/components/admin/ui/AdminRowActions";
 import { AdminSheet, SheetSection, SheetRow } from "@/components/admin/ui/AdminSheet";
 import { PageToolbar, EmptyState } from "@/components/admin/ui";
+
+// Rôle du compte lié (par email) — "customer" = pas de compte élevé = badge "Client"
+const ROLE_BADGE: Record<string, { label: string; variant: BadgeVariant }> = {
+  admin:    { label: "Admin",  variant: "primary"   },
+  pilote:   { label: "Pilote", variant: "orange"    },
+  customer: { label: "Client", variant: "secondary" },
+};
+function roleBadge(role: string) {
+  return ROLE_BADGE[role] ?? ROLE_BADGE.customer;
+}
 
 interface Reservation {
   id: string;
@@ -41,13 +51,14 @@ interface Client {
   email: string;
   telephone: string | null;
   created_at: string;
+  role: string;
   reservations: Reservation[];
   vouchers: Voucher[];
 }
 
 // ── Corps du drawer (remonté à chaque client pour reset l'état) ─
-function DrawerBody({ client }: { client: Client }) {
-  const [emailOpen, setEmailOpen] = useState(false);
+function DrawerBody({ client, startWithEmailOpen }: { client: Client; startWithEmailOpen: boolean }) {
+  const [emailOpen, setEmailOpen] = useState(startWithEmailOpen);
   const [emailSubject, setEmailSubject] = useState(`Fly Horizons — Message pour ${client.prenom} ${client.nom}`);
   const [emailBody, setEmailBody] = useState(`Bonjour ${client.prenom},\n\n\n\nCordialement,\nL'équipe Fly Horizons`);
   const [feedback, setFeedback] = useState("");
@@ -198,9 +209,11 @@ function DrawerBody({ client }: { client: Client }) {
 // ── Drawer de détail client ────────────────────────────────────
 function ClientDrawer({
   client,
+  startWithEmailOpen,
   onClose,
 }: {
   client: Client | null;
+  startWithEmailOpen: boolean;
   onClose: () => void;
 }) {
   if (!client) return null;
@@ -221,55 +234,69 @@ function ClientDrawer({
         </Link>
       }
     >
-      <DrawerBody key={client.id} client={client} />
+      <DrawerBody key={`${client.id}-${startWithEmailOpen}`} client={client} startWithEmailOpen={startWithEmailOpen} />
     </AdminSheet>
   );
 }
 
-// ── Carte client ───────────────────────────────────────────────
-function ClientCard({
+// ── Ligne du tableau ─────────────────────────────────────────────
+function ClientRow({
   client,
   onOpen,
+  onOpenEmail,
   onDelete,
 }: {
   client: Client;
   onOpen: () => void;
+  onOpenEmail: () => void;
   onDelete: () => Promise<{ error?: string } | void>;
 }) {
   const resaCount = client.reservations.length;
-  const voucherCount = client.vouchers.length;
+  const badge = roleBadge(client.role);
 
   return (
-    <div className="card-premium px-4 py-2.5 hover:border-primary/30 transition-colors">
-      <div className="flex items-center justify-between gap-4">
-        {/* Infos — cliquables */}
-        <div className="flex-1 min-w-0 cursor-pointer flex items-center gap-3 flex-wrap" onClick={onOpen}>
-          <span className="font-mono text-[10px] font-semibold text-muted-foreground/70 shrink-0">
-            {client.id}
-          </span>
-          <p className="font-semibold text-foreground text-sm shrink-0">
-            {client.prenom} {client.nom}
-          </p>
-          {resaCount > 0 && (
-            <AdminBadge variant="info" label={`${resaCount} vol${resaCount > 1 ? "s" : ""}`} />
-          )}
-          {voucherCount > 0 && (
-            <AdminBadge variant="primary" label={`${voucherCount} voucher${voucherCount > 1 ? "s" : ""}`} />
-          )}
-          <span className="text-xs text-muted-foreground truncate">
-            {client.email}{client.telephone ? ` · ${client.telephone}` : ""}
-          </span>
+    <tr className="border-b border-border last:border-0 hover:bg-secondary/20 transition-colors">
+      <td className="px-4 py-3 hidden sm:table-cell cursor-pointer" onClick={onOpen}>
+        <span className="font-mono text-xs font-semibold text-muted-foreground/70">{client.id}</span>
+      </td>
+      <td className="px-4 py-3 cursor-pointer" onClick={onOpen}>
+        <span className="font-semibold text-foreground text-sm whitespace-nowrap">
+          {client.prenom} {client.nom}
+        </span>
+      </td>
+      <td className="px-4 py-3">
+        <button
+          type="button"
+          onClick={e => { e.stopPropagation(); onOpenEmail(); }}
+          title="Envoyer un email"
+          className="text-sm text-muted-foreground hover:text-primary hover:underline transition-colors cursor-pointer text-left truncate max-w-[220px] block"
+        >
+          {client.email}
+        </button>
+      </td>
+      <td className="px-4 py-3 hidden md:table-cell cursor-pointer" onClick={onOpen}>
+        <span className="text-sm text-muted-foreground whitespace-nowrap">{client.telephone || "—"}</span>
+      </td>
+      <td className="px-4 py-3 text-center cursor-pointer" onClick={onOpen}>
+        <span className="text-sm text-foreground font-medium">{resaCount}</span>
+      </td>
+      <td className="px-4 py-3 cursor-pointer" onClick={onOpen}>
+        <AdminBadge variant={badge.variant} label={badge.label} />
+      </td>
+      <td className="px-4 py-3">
+        <div className="flex items-center justify-end gap-1 flex-wrap">
+          <Link
+            href={`/admin/clients/${client.id}`}
+            title="Voir la fiche complète"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
+          >
+            <ExternalLink size={12} />
+            Fiche complète
+          </Link>
+          <AdminRowActions onDelete={onDelete} />
         </div>
-
-        {/* Actions */}
-        <div onClick={e => e.stopPropagation()} className="shrink-0">
-          <AdminRowActions
-            onView={onOpen}
-            onDelete={onDelete}
-          />
-        </div>
-      </div>
-    </div>
+      </td>
+    </tr>
   );
 }
 
@@ -278,6 +305,7 @@ export function ClientsClient({ clients: initial }: { clients: Client[] }) {
   const [clients, setClients] = useState<Client[]>(initial);
   const [search, setSearch] = useState("");
   const [drawer, setDrawer] = useState<Client | null>(null);
+  const [drawerEmailShortcut, setDrawerEmailShortcut] = useState(false);
 
   async function handleDelete(id: string) {
     const result = await deleteClient(id);
@@ -286,6 +314,11 @@ export function ClientsClient({ clients: initial }: { clients: Client[] }) {
       if (drawer?.id === id) setDrawer(null);
     }
     return result;
+  }
+
+  function openDrawer(client: Client, emailShortcut = false) {
+    setDrawerEmailShortcut(emailShortcut);
+    setDrawer(client);
   }
 
   const filtered = clients.filter(c => {
@@ -312,21 +345,40 @@ export function ClientsClient({ clients: initial }: { clients: Client[] }) {
             description={search ? "Aucun client ne correspond à cette recherche." : "Les clients apparaîtront ici dès la première réservation."}
           />
         ) : (
-          <div className="space-y-2">
-            {filtered.map(c => (
-              <ClientCard
-                key={c.id}
-                client={c}
-                onOpen={() => setDrawer(c)}
-                onDelete={() => handleDelete(c.id)}
-              />
-            ))}
+          <div className="card-premium overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">ID</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nom</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Email</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">Téléphone</th>
+                    <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Vols</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Rôle</th>
+                    <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map(c => (
+                    <ClientRow
+                      key={c.id}
+                      client={c}
+                      onOpen={() => openDrawer(c)}
+                      onOpenEmail={() => openDrawer(c, true)}
+                      onDelete={() => handleDelete(c.id)}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
 
       <ClientDrawer
         client={drawer}
+        startWithEmailOpen={drawerEmailShortcut}
         onClose={() => setDrawer(null)}
       />
     </>
