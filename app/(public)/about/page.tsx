@@ -69,10 +69,10 @@ export default function AboutPage() {
             <div className="grid sm:grid-cols-2 gap-x-16 gap-y-10">
               <div className="border-t border-white/10 pt-6">
                 <p className="text-white font-black text-[17px] leading-snug mb-2">
-                  Un vol effectué par le pilote, pas sur demande
+                  Le pilote décide, vous ne commandez pas un vol
                 </p>
                 <p className="text-white/50 text-[14px] leading-relaxed">
-                  Vous rejoignez un vol qui a lieu de toute façon, vous ne le commandez pas.
+                  Vous envoyez une demande pour vous joindre à un vol ; le pilote l&apos;accepte ou la décline selon ses disponibilités, à sa seule discrétion.
                 </p>
               </div>
               <div className="border-t border-white/10 pt-6">
