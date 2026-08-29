@@ -7,6 +7,7 @@ import {
   volSurMesureAcompteEmail,
   reservationDateConfirmeeEmail,
   reservationHeureConfirmeeEmail,
+  reservationReportConfirmeeEmail,
   contactNotificationEmail,
   contactAcknowledgmentEmail,
   contactReplyEmail,
@@ -191,6 +192,18 @@ export default function EmailsPreviewPage() {
         newDateStr: "samedi 22 août 2026",
         duree: 60,
         accountUrl: "https://fly-horizons.com/account/reservations/exemple",
+      }),
+    },
+    {
+      id: "report-confirmee",
+      category: "Rappels & annulation",
+      label: "Nouvelle date confirmée · après un report",
+      html: reservationReportConfirmeeEmail({
+        prenom: "Camille",
+        dateStr: "samedi 22 août 2026",
+        heure: "14:00",
+        duree: 60,
+        dateISO: "2026-08-22",
       }),
     },
     {

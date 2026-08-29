@@ -7,6 +7,7 @@ import { generateVoucherCode } from "@/lib/vouchers";
 import type { VoucherEmailCode } from "@/lib/email-templates";
 import { reservationPaymentConfirmationEmail, volSurMesureAcompteEmail } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
+import { buildBoardingPassAttachment } from "@/lib/pdf/boarding-pass-attachment";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-04-22.dahlia",
@@ -43,10 +44,26 @@ export async function POST(request: NextRequest) {
       const { reservationId, voucherId, voucherCode, couponCode, paymentToken } = session.metadata;
       if (reservationId) {
         const montantPayePerso = session.amount_total ? session.amount_total / 100 : 0;
-        const { data: persoUpdated } = await adminSupabase.from("reservations")
-          .update({ statut: "acompte_recu", payment_token: null, paye: montantPayePerso, payment_status: "paid" })
+
+        // Statut à écrire : on ne rétrograde jamais une réservation qui a déjà avancé
+        // au-delà de "acompte_recu" (route/date/heure déjà confirmées avant que le client
+        // paie via l'acceptation d'une proposition — voir respondToRouteProposal, qui ne
+        // force pas payment_pending côté perso). "en_attente"/"payment_pending" sont promus
+        // vers "acompte_recu" comme avant ; tout statut plus avancé est préservé tel quel.
+        const { data: curPerso } = await adminSupabase
+          .from("reservations")
+          .select("statut")
           .eq("id", reservationId)
-          .in("statut", ["en_attente", "payment_pending"]) // Couvre les deux flux (public + admin)
+          .maybeSingle();
+        const restoreStatutPerso =
+          curPerso && !["en_attente", "payment_pending"].includes(curPerso.statut)
+            ? curPerso.statut
+            : "acompte_recu";
+
+        const { data: persoUpdated } = await adminSupabase.from("reservations")
+          .update({ statut: restoreStatutPerso, payment_token: null, paye: montantPayePerso, payment_status: "paid" })
+          .eq("id", reservationId)
+          .not("statut", "in", "(acompte_recu,solde,vol_effectue,annulee)") // exclut déjà-payé/terminal
           .select("id")
           .maybeSingle();
 
@@ -113,6 +130,11 @@ export async function POST(request: NextRequest) {
           const c = resa.clients as { prenom: string; nom: string; email: string };
           const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
           const montantPaye = session.amount_total ? session.amount_total / 100 : 0;
+          // Statut déjà "heure_confirmee" avant ce paiement (préservé plus haut) : date,
+          // heure et route sont réunis, on peut joindre le boarding pass.
+          const boardingPass = restoreStatutPerso === "heure_confirmee"
+            ? await buildBoardingPassAttachment(adminSupabase, reservationId, resa.date_vol, resa.heure_vol, resa.duree)
+            : null;
           await resend.emails.send({
             from: EMAIL_FROM, to: [c.email], replyTo: EMAIL_REPLY_TO,
             subject: "Confirmation de paiement · Vol sur mesure Fly Horizons",
@@ -127,6 +149,7 @@ export async function POST(request: NextRequest) {
               reservationId: reservationId,
               dateISO: resa.date_vol,
             }),
+            ...(boardingPass ? { attachments: [boardingPass] } : {}),
           });
           await resend.emails.send({
             from: EMAIL_FROM, to: [EMAIL_REPLY_TO],
@@ -146,9 +169,20 @@ export async function POST(request: NextRequest) {
       const { reservationId, voucherId, voucherCode, couponCode } = session.metadata;
       if (reservationId) {
         const montantPayeStd = session.amount_total ? session.amount_total / 100 : 0;
+
+        // Statut à restaurer après paiement : "en_attente" pour une première invitation de
+        // paiement, ou le statut d'avant (typiquement "heure_confirmee") si le paiement fait
+        // suite à l'acceptation d'une route déjà confirmée — voir respondToRouteProposal.
+        const { data: preResa } = await adminSupabase
+          .from("reservations")
+          .select("pre_payment_statut")
+          .eq("id", reservationId)
+          .maybeSingle();
+        const restoreStatut = preResa?.pre_payment_statut || "en_attente";
+
         const { data: stdUpdated } = await adminSupabase
           .from("reservations")
-          .update({ statut: "en_attente", payment_token: null, paye: montantPayeStd, payment_status: "paid" })
+          .update({ statut: restoreStatut, payment_token: null, paye: montantPayeStd, payment_status: "paid", pre_payment_statut: null })
           .eq("id", reservationId)
           .eq("statut", "payment_pending")
           .select("id")
@@ -161,7 +195,7 @@ export async function POST(request: NextRequest) {
           if (cur?.statut === "annulee") {
             // RC-02: force-restaurer + alerte admin
             await adminSupabase.from("reservations")
-              .update({ statut: "en_attente", payment_token: null, paye: montantPayeStd, payment_status: "paid" })
+              .update({ statut: restoreStatut, payment_token: null, paye: montantPayeStd, payment_status: "paid", pre_payment_statut: null })
               .eq("id", reservationId);
             // Le cron avait libéré le coupon (release_coupon) — le re-incrémenter
             if (couponCode) {
@@ -170,7 +204,7 @@ export async function POST(request: NextRequest) {
             await resend.emails.send({
               from: EMAIL_FROM, to: [EMAIL_REPLY_TO],
               subject: "[URGENT] Paiement reçu sur réservation annulée, restaurée",
-              html: `<p>La réservation <strong>${reservationId}</strong> avait été annulée par le cron T-48h mais un paiement Stripe vient d'être reçu. Elle a été automatiquement restaurée au statut <em>en_attente</em>. À vérifier manuellement.</p>`,
+              html: `<p>La réservation <strong>${reservationId}</strong> avait été annulée par le cron T-48h mais un paiement Stripe vient d'être reçu. Elle a été automatiquement restaurée au statut <em>${restoreStatut}</em>. À vérifier manuellement.</p>`,
             });
           } else {
             return NextResponse.json({ received: true }); // état inattendu
@@ -238,6 +272,11 @@ export async function POST(request: NextRequest) {
             weekday: "long", day: "numeric", month: "long", year: "numeric",
           });
           const montantPaye = session.amount_total ? session.amount_total / 100 : 0;
+          // Le paiement fait suite à une route déjà acceptée (restoreStatut === "heure_confirmee",
+          // voir plus haut) : date + heure + itinéraire sont réunis, on peut joindre le boarding pass.
+          const boardingPass = restoreStatut === "heure_confirmee"
+            ? await buildBoardingPassAttachment(adminSupabase, reservationId, resa.date_vol, resa.heure_vol, resa.duree)
+            : null;
           await resend.emails.send({
             from: EMAIL_FROM,
             to: [c.email],
@@ -256,6 +295,7 @@ export async function POST(request: NextRequest) {
               reservationId: reservationId,
               dateISO: resa.date_vol,
             }),
+            ...(boardingPass ? { attachments: [boardingPass] } : {}),
           });
 
           await resend.emails.send({

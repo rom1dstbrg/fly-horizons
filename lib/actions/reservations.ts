@@ -3,9 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationPaymentInvitationEmail, reservationConfirmationFreeEmail, reservationPaymentConfirmationEmail, volSurMesureAcompteEmail, postVolEmail, customEmail, rescheduleInviteEmail, rescheduleConfirmationEmail, reservationAutoAnnuleeEmail, slotProposalEmail } from "@/lib/email-templates";
+import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationReportConfirmeeEmail, boardingPassEmail, reservationPaymentInvitationEmail, reservationConfirmationFreeEmail, reservationPaymentConfirmationEmail, volSurMesureAcompteEmail, postVolEmail, customEmail, rescheduleInviteEmail, rescheduleConfirmationEmail, reservationAutoAnnuleeEmail, slotProposalEmail } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { makeRescheduleToken, parseRescheduleToken } from "@/lib/reschedule-token";
+import { buildBoardingPassAttachment } from "@/lib/pdf/boarding-pass-attachment";
 
 async function checkAdmin() {
   const supabase = await createClient();
@@ -129,6 +130,20 @@ export async function updateStatutReservation(
                 dateISO: resa.date_vol,
               }),
             });
+          } else if (statut === "heure_confirmee" && resa.reschedule_pending) {
+            // Report déjà traité par le client : la route et les infos pratiques ont
+            // été envoyées lors de la confirmation initiale, avant le report — on se
+            // contente ici de confirmer la nouvelle date/heure, sans tout renvoyer.
+            const boardingPass = await buildBoardingPassAttachment(supabase, id, resa.date_vol, resa.heure_vol, resa.duree);
+            await resend.emails.send({
+              from: EMAIL_FROM,
+              to: [client.email],
+              replyTo: EMAIL_REPLY_TO,
+              subject: "Fly Horizons · Votre nouvelle date de vol est confirmée",
+              html: reservationReportConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, dateISO: resa.date_vol }),
+              ...(boardingPass ? { attachments: [boardingPass] } : {}),
+            });
+            await supabase.from("reservations").update({ reschedule_pending: false }).eq("id", id);
           } else if (statut === "heure_confirmee") {
             let routeUrl: string | null = null;
             if (hasFreshRoute && routePayload) {
@@ -176,12 +191,14 @@ export async function updateStatutReservation(
                 routeUrl = `${siteUrl}/vol/itineraire/${routeToken}`;
               }
             }
+            const boardingPass = await buildBoardingPassAttachment(supabase, id, resa.date_vol, resa.heure_vol, resa.duree);
             await resend.emails.send({
               from: EMAIL_FROM,
               to: [client.email],
               replyTo: EMAIL_REPLY_TO,
               subject: "Fly Horizons · Votre créneau horaire est confirmé",
               html: reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, route: resa.route, routeUrl, dateISO: resa.date_vol }),
+              ...(boardingPass ? { attachments: [boardingPass] } : {}),
             });
           } else if (statut === "vol_effectue") {
             await resend.emails.send({
@@ -297,6 +314,22 @@ export async function updateStatutReservationPerso(id: string, statut: string) {
                 dateISO: resa.date_vol,
               }),
             });
+          } else if ((statut === "date_confirmee" || statut === "heure_confirmee") && resa.reschedule_pending) {
+            // Report déjà traité par le client : les infos pratiques ont été envoyées
+            // lors de la confirmation initiale, avant le report — on se contente ici de
+            // confirmer la nouvelle date/heure, sans tout renvoyer.
+            const boardingPass = statut === "heure_confirmee"
+              ? await buildBoardingPassAttachment(supabase, id, resa.date_vol, resa.heure_vol, resa.duree)
+              : null;
+            await resend.emails.send({
+              from: EMAIL_FROM,
+              to: [client.email],
+              replyTo: EMAIL_REPLY_TO,
+              subject: "Fly Horizons · Votre nouvelle date de vol est confirmée",
+              html: reservationReportConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, dateISO: resa.date_vol }),
+              ...(boardingPass ? { attachments: [boardingPass] } : {}),
+            });
+            await supabase.from("reservations").update({ reschedule_pending: false }).eq("id", id);
           } else if (statut === "date_confirmee") {
             await resend.emails.send({
               from: EMAIL_FROM,
@@ -306,12 +339,14 @@ export async function updateStatutReservationPerso(id: string, statut: string) {
               html: reservationDateConfirmeeEmail({ prenom: client.prenom, dateStr, duree: resa.duree }),
             });
           } else if (statut === "heure_confirmee") {
+            const boardingPass = await buildBoardingPassAttachment(supabase, id, resa.date_vol, resa.heure_vol, resa.duree);
             await resend.emails.send({
               from: EMAIL_FROM,
               to: [client.email],
               replyTo: EMAIL_REPLY_TO,
               subject: "Fly Horizons · Votre créneau horaire est confirmé",
               html: reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, dateISO: resa.date_vol }),
+              ...(boardingPass ? { attachments: [boardingPass] } : {}),
             });
           } else if (statut === "vol_effectue") {
             await resend.emails.send({
@@ -734,9 +769,16 @@ export async function recordCashPayment(id: string, montant: number) {
   try {
     await checkAdminOrOwningPilote(id);
     const supabase = createAdminClient();
+
+    // Ne jamais rétrograder une réservation déjà confirmée plus loin (date/heure confirmée,
+    // solde) — on préserve son statut actuel et on se contente d'enregistrer le paiement.
+    const { data: curResa } = await supabase.from("reservations").select("statut").eq("id", id).maybeSingle();
+    const ADVANCED_STATUTS = ["date_confirmee", "heure_confirmee", "solde", "vol_effectue"];
+    const nextStatut = curResa && ADVANCED_STATUTS.includes(curResa.statut) ? curResa.statut : "acompte_recu";
+
     const { error } = await supabase
       .from("reservations")
-      .update({ paye: montant, payment_status: "paid", statut: "acompte_recu" })
+      .update({ paye: montant, payment_status: "paid", statut: nextStatut })
       .eq("id", id);
     if (error) return { error: error.message };
 
@@ -751,6 +793,11 @@ export async function recordCashPayment(id: string, montant: number) {
       const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
         weekday: "long", day: "numeric", month: "long", year: "numeric",
       });
+      // Statut déjà "heure_confirmee" avant cet encaissement (préservé ci-dessus) : date,
+      // heure et route sont réunis, on peut joindre le boarding pass.
+      const boardingPass = nextStatut === "heure_confirmee"
+        ? await buildBoardingPassAttachment(supabase, id, resa.date_vol, resa.heure_vol, resa.duree)
+        : null;
       try {
         if (resa.type_resa === "perso") {
           await resend.emails.send({
@@ -769,6 +816,7 @@ export async function recordCashPayment(id: string, montant: number) {
               reservationId: id,
               dateISO: resa.date_vol,
             }),
+            ...(boardingPass ? { attachments: [boardingPass] } : {}),
           });
         } else {
           await resend.emails.send({
@@ -789,6 +837,7 @@ export async function recordCashPayment(id: string, montant: number) {
               reservationId: id,
               dateISO: resa.date_vol,
             }),
+            ...(boardingPass ? { attachments: [boardingPass] } : {}),
           });
         }
       } catch (e) {
@@ -1050,6 +1099,50 @@ export async function sendRescheduleInvite(id: string) {
   }
 }
 
+// ── Envoyer le boarding pass au client (admin, en un clic) ────────────────────
+
+export async function sendBoardingPassEmail(id: string) {
+  try {
+    await checkAdminOrOwningPilote(id);
+    const supabase = createAdminClient();
+
+    const { data: resa } = await supabase
+      .from("reservations")
+      .select("*, clients(*)")
+      .eq("id", id)
+      .single();
+
+    if (!resa) return { error: "Réservation introuvable" };
+    const client = resa.clients as { prenom: string; nom: string; email: string } | null;
+    if (!client?.email) return { error: "Email client introuvable" };
+
+    const boardingPass = await buildBoardingPassAttachment(supabase, id, resa.date_vol, resa.heure_vol, resa.duree);
+    if (!boardingPass) return { error: "Erreur de génération du boarding pass" };
+
+    const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
+      weekday: "long", day: "numeric", month: "long", year: "numeric",
+    });
+
+    const { error: sendError } = await resend.emails.send({
+      from: EMAIL_FROM,
+      to: [client.email],
+      replyTo: EMAIL_REPLY_TO,
+      subject: "Fly Horizons · Votre boarding pass",
+      html: boardingPassEmail({ prenom: client.prenom, dateStr, heure: (resa.heure_vol ?? "-").slice(0, 5), duree: resa.duree }),
+      attachments: [boardingPass],
+    });
+    if (sendError) {
+      console.error("[sendBoardingPassEmail] Erreur email:", sendError);
+      return { error: "Email non envoyé, réessayez" };
+    }
+
+    return { success: true };
+  } catch (e) {
+    console.error("sendBoardingPassEmail error:", e);
+    return { error: "Erreur serveur" };
+  }
+}
+
 // â"€â"€ Report de vol : traitement du choix de date par le client (public) â"€â"€â"€â"€â"€â"€â"€â"€
 
 export async function rescheduleReservation(token: string, newDate: string, newHeure: string) {
@@ -1126,6 +1219,7 @@ export async function rescheduleReservation(token: string, newDate: string, newH
       heure_vol: newHeure,
       statut: newStatut,
       reschedule_token: null,
+      reschedule_pending: true,
     }).eq("id", resa.id);
 
     // Email de confirmation au client

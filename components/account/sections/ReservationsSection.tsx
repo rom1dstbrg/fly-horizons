@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarDays, Clock, CreditCard, MapPin, CheckCircle, ChevronRight, Download, AlertCircle, Star } from "lucide-react";
+import { CalendarDays, Clock, CreditCard, MapPin, CheckCircle, ChevronRight, Download, AlertCircle, Star, Ticket } from "lucide-react";
 import { RescheduleButton } from "@/components/account/RescheduleButton";
 import { WeatherWidget } from "@/components/account/WeatherWidget";
 import { formatDuration } from "@/lib/vouchers";
@@ -247,6 +247,15 @@ function ResaCard({ resa, upcoming, showWeather = false }: { resa: Reservation; 
           >
             <MapPin size={11} /> Carte
           </Link>
+        )}
+
+        {["heure_confirmee", "vol_effectue"].includes(resa.statut) && (
+          <a
+            href={`/api/boarding-pass/${resa.id}`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-foreground bg-card hover:bg-secondary transition-colors cursor-pointer"
+          >
+            <Ticket size={11} /> Boarding pass
+          </a>
         )}
 
         {resa.acompte != null && resa.acompte > 0 && (

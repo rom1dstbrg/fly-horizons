@@ -1061,6 +1061,90 @@ export function reservationHeureConfirmeeEmail(p: ReservationHeureConfirmeeProps
   return emailBase(body, "Votre créneau horaire est confirmé · Fly Horizons");
 }
 
+// ── 10bis. Nouvelle date confirmée après un report (admin) ────────────────────
+// Volontairement minimal : le client a déjà reçu l'itinéraire et les informations
+// pratiques lors de la confirmation initiale, avant le report. On ne fait ici que
+// confirmer la nouvelle date/heure, sans reproduire tout l'onboarding.
+
+export interface ReservationReportConfirmeeProps {
+  prenom: string;
+  dateStr: string;
+  heure: string;
+  duree: number;
+  dateISO?: string | null;
+}
+
+export function reservationReportConfirmeeEmail(p: ReservationReportConfirmeeProps): string {
+  const body = `
+    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Fly Horizons</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Nouvelle date confirm&eacute;e</h1>
+    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">Bonjour <strong style="color:#0b2238;">${esc(p.prenom)}</strong>, la nouvelle date de votre vol report&eacute; est confirm&eacute;e.</p>
+
+    ${separator()}
+    ${label("D&eacute;tails")}
+    ${infoRows([
+      ["Date", `<strong style="text-transform:capitalize;">${esc(p.dateStr)}</strong>`],
+      ["Heure de d&eacute;part", `<strong>${esc(p.heure)}</strong>`],
+      ["Dur&eacute;e estim&eacute;e", `~${fmtDuration(p.duree)}`],
+    ])}
+
+    <p class="em-body" style="margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;">
+      Rien d&rsquo;autre ne change&nbsp;: vous avez d&eacute;j&agrave; re&ccedil;u l&rsquo;itin&eacute;raire et les informations pratiques pour votre vol.
+    </p>
+
+    ${p.dateISO ? addToCalendarBlock(p.dateISO, p.heure, p.duree) : ""}
+
+    <p class="em-body" style="margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;">
+      &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord,<br>
+      <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
+    </p>
+    <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
+      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
+    </p>`;
+
+  return emailBase(body, "Votre nouvelle date de vol est confirmée · Fly Horizons");
+}
+
+// ── 10ter. Boarding pass (envoyé manuellement depuis l'admin) ─────────────────
+
+export interface BoardingPassEmailProps {
+  prenom: string;
+  dateStr: string;
+  heure: string;
+  duree: number;
+}
+
+export function boardingPassEmail(p: BoardingPassEmailProps): string {
+  const body = `
+    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Fly Horizons</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Votre boarding pass</h1>
+    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">Bonjour <strong style="color:#0b2238;">${esc(p.prenom)}</strong>, le voici en pi&egrave;ce jointe.</p>
+
+    ${separator()}
+    ${label("D&eacute;tails")}
+    ${infoRows([
+      ["Date", `<strong style="text-transform:capitalize;">${esc(p.dateStr)}</strong>`],
+      ["Heure de d&eacute;part", `<strong>${esc(p.heure)}</strong>`],
+      ["Dur&eacute;e estim&eacute;e", `~${fmtDuration(p.duree)}`],
+    ])}
+
+    <p class="em-body" style="margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;">
+      Imprimez-le et pr&eacute;sentez-le le jour du vol &agrave; l&rsquo;a&eacute;roport de Charleroi (EBCI).
+    </p>
+
+    <p class="em-body" style="margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;">
+      &Agrave; tr&egrave;s bient&ocirc;t &agrave; bord,<br>
+      <strong class="em-dark" style="color:#0b2238;">Romain, pilote et fondateur de Fly Horizons</strong>
+    </p>
+    <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
+      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
+    </p>`;
+
+  return emailBase(body, "Votre boarding pass · Fly Horizons");
+}
+
 // ── 11. Contact — notification interne ───────────────────────────────────────
 
 export interface ContactNotificationProps {

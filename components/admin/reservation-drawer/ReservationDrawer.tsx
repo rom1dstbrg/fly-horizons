@@ -13,6 +13,7 @@ import {
   resendPaymentLinkAdmin,
   sendPaymentLinkAdmin,
   sendRescheduleInvite,
+  sendBoardingPassEmail,
   proposeSlot,
   setCashPayment,
 } from "@/lib/actions/reservations";
@@ -172,6 +173,15 @@ export function ReservationDrawer({
       const r = await sendRescheduleInvite(reservation.id);
       if (r.error) { showFeedback("Erreur : " + r.error, false); return; }
       showFeedback(r.emailError ? "Lien de report créé · email non envoyé, réessayez" : "Email de report envoyé au client ✓", !r.emailError);
+    });
+  }
+
+  function doSendBoardingPass() {
+    if (!reservation) return;
+    startTransition(async () => {
+      const r = await sendBoardingPassEmail(reservation.id);
+      if (r.error) { showFeedback("Erreur : " + r.error, false); return; }
+      showFeedback("Boarding pass envoyé au client ✓");
     });
   }
 
@@ -387,6 +397,7 @@ export function ReservationDrawer({
                   onChangeStatut={doChangeStatut}
                   onConfirmHeureConfirmee={doConfirmHeureConfirmee}
                   onSendReschedule={doSendRescheduleInvite}
+                  onSendBoardingPass={doSendBoardingPass}
                   onSendPaymentLink={doSendPaymentLink}
                   onResendPaymentLink={doResendPaymentLink}
                   onRecordCash={doRecordCash}

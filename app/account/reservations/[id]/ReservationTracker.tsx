@@ -22,6 +22,7 @@ import {
   PlaneLanding,
   RotateCcw,
   Loader2,
+  Download,
 } from "lucide-react";
 import { formatDuration } from "@/lib/vouchers";
 import { generateClientRescheduleToken } from "@/lib/actions/reservations";
@@ -714,6 +715,27 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
                 <Link href="/access-ebci" className="shrink-0 text-xs font-bold text-foreground hover:text-primary transition-colors">
                   Voir →
                 </Link>
+              </div>
+            )}
+
+            {/* Boarding pass */}
+            {["heure_confirmee", "vol_effectue"].includes(resa.statut) &&
+              ((resa.latestProposalWaypoints?.length ?? 0) > 0 || resa.route) && (
+              <div className="card-premium p-4 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                  <PlaneTakeoff size={15} className="text-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground">Boarding pass</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">À imprimer avant le vol</p>
+                </div>
+                <a
+                  href={`/api/boarding-pass/${resa.id}`}
+                  className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-foreground text-background text-xs font-bold hover:opacity-90 transition-opacity cursor-pointer"
+                >
+                  <Download size={12} />
+                  Télécharger
+                </a>
               </div>
             )}
 

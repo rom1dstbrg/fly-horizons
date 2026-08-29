@@ -368,6 +368,7 @@ export async function respondToRouteProposal(
     // Relecture fraîche juste avant la logique de paiement — réduit la fenêtre de race condition
     // au cas où le webhook Stripe aurait mis à jour entre le fetch initial et maintenant
     let freshPaymentToken: string | null = resa?.payment_token ?? null;
+    let freshStatut: string | null = resa?.statut ?? null;
     let alreadyPaid = resa?.statut === "acompte_recu" || resa?.payment_status === "paid";
     if (resa?.id) {
       const { data: freshResa } = await supabase
@@ -378,6 +379,7 @@ export async function respondToRouteProposal(
       if (freshResa) {
         alreadyPaid = freshResa.statut === "acompte_recu" || freshResa.payment_status === "paid";
         freshPaymentToken = freshResa.payment_token ?? null;
+        freshStatut = freshResa.statut;
       }
     }
 
@@ -391,8 +393,14 @@ export async function respondToRouteProposal(
         paymentToken = crypto.randomUUID();
         // Le tunnel standard (/api/reservation/pay/[token]) exige le statut "payment_pending"
         // pour générer une session Stripe — sans ça il redirige directement vers /success sans encaisser.
+        // On mémorise le statut d'avant (normalement "heure_confirmee", route déjà envoyée) dans
+        // pre_payment_statut : le webhook Stripe le restaure après paiement au lieu de retomber
+        // sur "en_attente", ce qui redemanderait à l'admin de reconfirmer une date déjà actée.
         const extra: Record<string, unknown> = { payment_token: paymentToken };
-        if (!isPerso) extra.statut = "payment_pending";
+        if (!isPerso) {
+          extra.statut = "payment_pending";
+          extra.pre_payment_statut = freshStatut ?? "heure_confirmee";
+        }
         await supabase
           .from("reservations")
           .update(extra)

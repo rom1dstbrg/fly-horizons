@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
   Send, Check, ChevronRight, XCircle, CheckCircle2, RotateCcw,
-  Loader2, AlertTriangle, Banknote, X, CalendarClock,
+  Loader2, AlertTriangle, Banknote, X, CalendarClock, Ticket,
 } from "lucide-react";
 import type { DrawerReservation, Tab } from "./types";
 
@@ -122,6 +122,7 @@ export function ActionFooter({
   onChangeStatut,
   onConfirmHeureConfirmee,
   onSendReschedule,
+  onSendBoardingPass,
   onSendPaymentLink,
   onResendPaymentLink,
   onRecordCash,
@@ -137,6 +138,7 @@ export function ActionFooter({
   onChangeStatut: (statut: string) => void;
   onConfirmHeureConfirmee: () => void;
   onSendReschedule: () => void;
+  onSendBoardingPass: () => void;
   onSendPaymentLink: () => void;
   onResendPaymentLink: () => void;
   onRecordCash: (amount: number) => void;
@@ -235,6 +237,12 @@ export function ActionFooter({
               {isPending ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
               Marquer vol effectué
             </button>
+            {hasRoute && (
+              <button onClick={onSendBoardingPass} disabled={isPending} className={chipBtn}>
+                {isPending ? <Loader2 size={13} className="animate-spin" /> : <Ticket size={13} />}
+                Envoyer le boarding pass
+              </button>
+            )}
             <button onClick={() => onChangeStatut("en_attente")} disabled={isPending} className={chipBtn}>
               <ChevronRight size={13} className="rotate-180" />
               Revenir en attente
