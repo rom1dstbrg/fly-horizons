@@ -43,7 +43,7 @@ export function DeleteButton({
     <button
       onClick={handleClick}
       disabled={isPending}
-      className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded transition-colors ${
+      className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded transition-colors cursor-pointer ${
         confirming
           ? "bg-destructive text-white hover:bg-destructive/80"
           : "text-muted-foreground hover:text-destructive hover:bg-destructive/10"

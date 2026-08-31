@@ -7,6 +7,7 @@ import {
   CalendarDays, Package, Ticket, Tag,
   Users, MessageSquare, Settings, ArrowRight, User,
   ShoppingBag, X, Loader2,
+  Navigation, UserCog, Star, Mails, Bot, BarChart2, Images, Mail, Receipt, LayoutGrid,
 } from "lucide-react";
 import { STATUT_ORDER } from "@/components/admin/ui";
 
@@ -17,20 +18,30 @@ interface SearchResult {
 }
 
 const QUICK_LINKS = [
-  { href: "/admin",                            label: "Vue globale",          icon: LayoutDashboard, group: "Navigation" },
   { href: "/admin/vols",                       label: "Réservations",         icon: CalendarCheck,   group: "Navigation" },
-  { href: "/admin/vols?tab=sur-mesure",        label: "Vols sur mesure",      icon: Route,           group: "Navigation" },
   { href: "/admin/vols?tab=disponibilites",    label: "Disponibilités",       icon: CalendarDays,    group: "Navigation" },
-  { href: "/admin/boutique",                   label: "Vouchers",             icon: Ticket,          group: "Navigation" },
-  { href: "/admin/boutique?tab=produits",      label: "Offres",               icon: Package,         group: "Navigation" },
-  { href: "/admin/boutique?tab=coupons",       label: "Coupons",              icon: Tag,             group: "Navigation" },
+  { href: "/admin/itineraires",                label: "Itinéraires",          icon: Navigation,      group: "Navigation" },
+  { href: "/admin/boutique?tab=produits",      label: "Les vols",             icon: Package,         group: "Navigation" },
   { href: "/admin/clients",                    label: "Clients",              icon: Users,           group: "Navigation" },
   { href: "/admin/contacts",                   label: "Messages",             icon: MessageSquare,   group: "Navigation" },
+  { href: "/admin/transactions",               label: "Transactions",         icon: Receipt,         group: "Navigation" },
   { href: "/admin/settings",                   label: "Paramètres",           icon: Settings,        group: "Navigation" },
+  { href: "/admin/plus",                       label: "Plus",                 icon: LayoutGrid,      group: "Navigation" },
+  { href: "/admin",                            label: "Vue globale",          icon: LayoutDashboard, group: "Plus" },
+  { href: "/admin/vols?tab=sur-mesure",        label: "Vol sur mesure",       icon: Route,           group: "Plus" },
+  { href: "/admin/pilotes",                    label: "Pilotes",              icon: UserCog,         group: "Plus" },
+  { href: "/admin/boutique?tab=vouchers",      label: "Vouchers",             icon: Ticket,          group: "Plus" },
+  { href: "/admin/boutique?tab=coupons",       label: "Coupons",              icon: Tag,             group: "Plus" },
+  { href: "/admin/satisfaction",               label: "Satisfaction",         icon: Star,            group: "Plus" },
+  { href: "/admin/newsletter",                 label: "Newsletter",           icon: Mails,           group: "Plus" },
+  { href: "/admin/chat",                       label: "Assistant",            icon: Bot,             group: "Plus" },
+  { href: "/admin/analytics",                  label: "Analytiques",          icon: BarChart2,       group: "Plus" },
+  { href: "/admin/galerie",                    label: "Galerie",              icon: Images,          group: "Plus" },
+  { href: "/admin/emails-preview",             label: "Emails",               icon: Mail,            group: "Plus" },
   { href: "/admin/reservations/new",           label: "Nouvelle réservation", icon: CalendarCheck,   group: "Actions rapides" },
   { href: "/admin/reservations/new-horsite",   label: "Vol hors-site",        icon: Plane,           group: "Actions rapides" },
-  { href: "/admin/boutique",                   label: "Nouveau voucher",      icon: Ticket,          group: "Actions rapides" },
-  { href: "/admin/products/new",               label: "Nouveau produit",      icon: Package,         group: "Actions rapides" },
+  { href: "/admin/boutique?tab=vouchers",      label: "Nouveau voucher",      icon: Ticket,          group: "Actions rapides" },
+  { href: "/admin/products/new",               label: "Nouveau vol",          icon: Package,         group: "Actions rapides" },
 ];
 
 

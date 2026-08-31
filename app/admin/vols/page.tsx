@@ -21,8 +21,8 @@ export default async function VolsPage({
     { data: plages },
     { data: joursIndiv },
   ] = await Promise.all([
-    db.from("reservations").select("*, clients(*), pilotes(nom), route_proposals(status, created_at)").neq("type_resa", "perso").order("date_vol", { ascending: true }),
-    db.from("reservations").select("*, clients(*), route_proposals(status, created_at)").eq("type_resa", "perso").order("date_vol", { ascending: true }),
+    db.from("reservations").select("*, clients(*), pilotes(nom), route_proposals(status, created_at), products(route_waypoints)").neq("type_resa", "perso").order("date_vol", { ascending: true }),
+    db.from("reservations").select("*, clients(*), route_proposals(status, created_at), products(route_waypoints)").eq("type_resa", "perso").order("date_vol", { ascending: true }),
     db.from("disponibilites").select("*").order("date_debut", { ascending: true }),
     db.from("disponibilites_jours").select("*").order("date", { ascending: true }),
   ]);
@@ -30,18 +30,6 @@ export default async function VolsPage({
   const resaStd   = rawStd   ?? [];
   const resaPerso = rawPerso ?? [];
   const allResas  = [...resaStd, ...resaPerso];
-
-  function countStatuses(resas: typeof resaStd) {
-    return {
-      payment_pending: resas.filter(r => r.statut === "payment_pending").length,
-      en_attente:      resas.filter(r => r.statut === "en_attente").length,
-      acompte_recu:    resas.filter(r => r.statut === "acompte_recu").length,
-      date_confirmee:  resas.filter(r => r.statut === "date_confirmee").length,
-      heure_confirmee: resas.filter(r => r.statut === "heure_confirmee").length,
-      vol_effectue:    resas.filter(r => r.statut === "vol_effectue").length,
-      annulee:         resas.filter(r => r.statut === "annulee").length,
-    };
-  }
 
   return (
     <div className="space-y-5">
@@ -59,8 +47,6 @@ export default async function VolsPage({
           resaPerso={resaPerso as never}
           plages={plages ?? []}
           joursIndiv={joursIndiv ?? []}
-          statsStd={countStatuses(resaStd)}
-          statsPerso={countStatuses(resaPerso)}
         />
       </Suspense>
     </div>

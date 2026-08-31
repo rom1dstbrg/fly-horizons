@@ -19,8 +19,9 @@ import {
 } from "@/lib/actions/reservations";
 import { AdminBadge, type BadgeVariant } from "@/components/admin/ui/AdminBadge";
 import { getResaBadge } from "@/components/admin/ui/resaBadge";
-import type { DrawerReservation, EmailTemplate } from "./types";
+import type { DrawerReservation, EmailTemplate, Tab } from "./types";
 import { InfosTab } from "./InfosTab";
+import { RouteSection } from "./RouteSection";
 import { ModifierTab } from "./ModifierTab";
 import { HistoriqueTab } from "./HistoriqueTab";
 import { EmailComposer } from "./EmailComposer";
@@ -61,7 +62,7 @@ export function ReservationDrawer({
   const [isCashPaymentPending, startCashPaymentTransition] = useTransition();
   const [avionReserve, setAvionReserveLocal] = useState(reservation?.avion_reserve ?? false);
   const [cashPayment, setCashPaymentLocal] = useState(reservation?.cash_payment ?? false);
-  const [activeTab, setActiveTab] = useState<"infos" | "modifier" | "historique">("infos");
+  const [activeTab, setActiveTab] = useState<Tab>("infos");
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null);
   const [mapFullscreen, setMapFullscreen] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
@@ -263,7 +264,7 @@ export function ReservationDrawer({
 
   const r = reservation;
   const statut = r ? getResaBadge(r) : null;
-  const hasRoute = !!route.localRouteStatus || route.routeDraft.length > 0;
+  const hasRoute = !!route.localRouteStatus || route.routeDraft.length > 0 || !!r?.products?.route_waypoints?.length;
 
   return (
     <>
@@ -309,7 +310,7 @@ export function ReservationDrawer({
 
               {!emailOpen && (
                 <div className="flex border-b border-border shrink-0">
-                  {(["infos", "modifier", "historique"] as const).map(tab => (
+                  {(["infos", "route", "modifier", "historique"] as const).map(tab => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
@@ -317,7 +318,7 @@ export function ReservationDrawer({
                         activeTab === tab ? "text-navy border-b-2 border-navy -mb-px" : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
-                      {tab === "infos" ? "Infos" : tab === "modifier" ? "Modifier" : "Historique"}
+                      {tab === "infos" ? "Infos" : tab === "route" ? "Route" : tab === "modifier" ? "Modifier" : "Historique"}
                     </button>
                   ))}
                 </div>
@@ -331,23 +332,6 @@ export function ReservationDrawer({
                   isReservePending={isReservePending}
                   onToggleAvion={doToggleAvion}
                   bilan={bilan}
-                  route={{
-                    routeDraft: route.routeDraft,
-                    setRouteDraft: route.setRouteDraft,
-                    routeComment: route.routeComment,
-                    setRouteComment: route.setRouteComment,
-                    proposalLoaded: route.proposalLoaded,
-                    localRouteStatus: route.localRouteStatus,
-                    localRouteFeedback: route.localRouteFeedback,
-                    routeStats: route.routeStats,
-                    isPending: route.isPending,
-                    foreFlightCopied: route.foreFlightCopied,
-                    saveRoute: route.saveRoute,
-                    sendRoute: route.sendRoute,
-                    copyForeFlight: route.copyForeFlight,
-                    openItineraires: itineraires.open,
-                    openFullscreen: () => setMapFullscreen(true),
-                  }}
                   linkCopied={linkCopied}
                   onCopyPaymentLink={copyPaymentLink}
                   onOpenEmailComposer={openEmailComposer}
@@ -357,6 +341,29 @@ export function ReservationDrawer({
                   isCashPaymentPending={isCashPaymentPending}
                   onToggleCashPayment={doToggleCashPayment}
                 />
+              )}
+
+              {!emailOpen && activeTab === "route" && (
+                <div className="flex-1 overflow-y-auto px-5 py-4">
+                  <RouteSection
+                    reservation={r}
+                    routeDraft={route.routeDraft}
+                    setRouteDraft={route.setRouteDraft}
+                    routeComment={route.routeComment}
+                    setRouteComment={route.setRouteComment}
+                    proposalLoaded={route.proposalLoaded}
+                    localRouteStatus={route.localRouteStatus}
+                    localRouteFeedback={route.localRouteFeedback}
+                    routeStats={route.routeStats}
+                    isPending={route.isPending}
+                    foreFlightCopied={route.foreFlightCopied}
+                    onSave={route.saveRoute}
+                    onSend={route.sendRoute}
+                    onCopyForeFlight={route.copyForeFlight}
+                    onOpenItineraires={itineraires.open}
+                    onFullscreen={() => setMapFullscreen(true)}
+                  />
+                </div>
               )}
 
               {!emailOpen && activeTab === "modifier" && (
@@ -408,7 +415,7 @@ export function ReservationDrawer({
             </motion.aside>
 
             {mapFullscreen && (
-              <div className="fixed inset-0 z-[200] flex flex-col bg-[#0b1a28]">
+              <div className="fixed inset-0 z-[200] flex flex-col bg-background">
                 <div className="flex items-center justify-between px-4 py-3 bg-card border-b border-border shrink-0">
                   <p className="text-sm font-semibold text-foreground flex items-center gap-2">
                     Tracé de route

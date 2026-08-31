@@ -1,7 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ClientsClient } from "@/components/admin/ClientsClient";
 import { PageHeader } from "@/components/admin/PageHeader";
-import { StatCard, StatGrid } from "@/components/admin/ui";
 
 export const metadata = { title: "Clients — Admin" };
 
@@ -79,9 +78,6 @@ export default async function ClientsPage() {
     // FH-0001 en premier — ordre numérique de création du client
     .sort((a, b) => a.id.localeCompare(b.id));
 
-  const avecVols = all.filter(c => c.reservations.length > 0).length;
-  const totalVols = all.reduce((sum, c) => sum + c.reservations.length, 0);
-
   return (
     <div className="space-y-6">
       <PageHeader
@@ -89,12 +85,6 @@ export default async function ClientsPage() {
         title="Clients"
         subtitle="Clients ayant effectué une réservation de vol (standard ou sur mesure)"
       />
-
-      <StatGrid cols={3}>
-        <StatCard label="Clients total"       value={all.length}   variant="primary" />
-        <StatCard label="Avec réservations"   value={avecVols}     variant="info"    />
-        <StatCard label="Vols au total"       value={totalVols}    variant="purple"  />
-      </StatGrid>
 
       <ClientsClient clients={all} />
     </div>

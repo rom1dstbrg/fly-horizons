@@ -3,19 +3,10 @@
 import { useState } from "react";
 import { deleteReservationStandard } from "@/lib/actions/delete";
 import { ReservationDrawer } from "@/components/admin/reservation-drawer/ReservationDrawer";
-import type { DrawerReservation } from "@/components/admin/reservation-drawer/types";
+import type { DrawerReservation, Waypoint } from "@/components/admin/reservation-drawer/types";
 import { AdminBadge, getResaBadge, PageToolbar, FilterChip, EmptyState } from "@/components/admin/ui";
-import type { BadgeVariant } from "@/components/admin/ui/AdminBadge";
 import { AdminRowActions } from "@/components/admin/ui/AdminRowActions";
-import { MapPin, CalendarCheck } from "lucide-react";
-
-// Badge de statut de la proposition de route la plus récente (système carte, route_proposals) —
-// prioritaire sur route_status (ancien système texte, gardé en repli pour les résas historiques).
-const PROPOSAL_BADGE: Record<string, { label: string; variant: BadgeVariant }> = {
-  pending:                 { label: "Proposition envoyée", variant: "info"    },
-  accepted:                { label: "Route acceptée ✓",    variant: "emerald" },
-  modification_requested:  { label: "Modif. demandée",      variant: "warning" },
-};
+import { CalendarCheck } from "lucide-react";
 
 const FILTERS = ["Tous", "En attente", "Confirmées", "Effectuées", "Annulées"] as const;
 const FILTER_MAP: Record<string, string[] | null> = {
@@ -28,7 +19,17 @@ const FILTER_MAP: Record<string, string[] | null> = {
 
 type Reservation = DrawerReservation;
 
-function ReservationCard({
+// Route affichée sous forme "Ville → Ville → Ville" — priorité au tracé final confirmé
+// (final_waypoints), puis à l'itinéraire fixe de l'offre achetée (produits avec route),
+// sinon aucune route à afficher (durée libre, pas encore tracée).
+function routeCities(r: Reservation): string | null {
+  const wps: Waypoint[] | null | undefined =
+    r.final_waypoints?.length ? r.final_waypoints : r.products?.route_waypoints;
+  if (!wps || wps.length === 0) return null;
+  return wps.map(w => w.nom?.trim() || "?").join(" → ");
+}
+
+function ReservationRow({
   reservation: r,
   onOpen,
   onDelete,
@@ -40,65 +41,48 @@ function ReservationCard({
   const statut = getResaBadge(r);
   const client = r.clients;
   const dateStr = new Date(r.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
-    weekday: "short", day: "numeric", month: "short", year: "numeric",
+    day: "numeric", month: "short", year: "numeric",
   });
-  const latestProposal = r.route_proposals
-    ?.slice().sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
+  const route = routeCities(r);
 
   return (
-    <div className="card-premium p-4 hover:border-primary/30 transition-colors">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0 cursor-pointer" onClick={onOpen}>
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="font-semibold text-foreground text-sm">
-              {client ? `${client.prenom} ${client.nom}` : "—"}
-            </p>
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-navy/8 text-navy border border-navy/20">
-              {r.duree} min
-            </span>
-            <AdminBadge variant={statut.variant} label={statut.label} />
-            {r.remboursement != null && r.remboursement > 0 && (
-              <AdminBadge variant="secondary" label={`Remboursé −${r.remboursement} €`} />
-            )}
-            {latestProposal && PROPOSAL_BADGE[latestProposal.status] ? (
-              <AdminBadge
-                variant={PROPOSAL_BADGE[latestProposal.status].variant}
-                label={PROPOSAL_BADGE[latestProposal.status].label}
-              />
-            ) : (
-              <>
-                {r.route_status === "modification_requested" && (
-                  <AdminBadge variant="danger" label="Modif. demandée" />
-                )}
-                {r.route_status === "validated" && (
-                  <AdminBadge variant="success" label="Route ✓" />
-                )}
-              </>
-            )}
-          </div>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 mt-1">
-            <p className="text-xs text-muted-foreground capitalize">
-              {dateStr}{r.heure_vol ? ` · ${r.heure_vol.slice(0, 5)}` : ""}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {r.passagers} pax{r.poids_total ? ` · ${r.poids_total} kg` : ""}
-            </p>
-            {r.voucher_code && (
-              <p className="text-xs text-emerald-600 font-mono font-semibold">{r.voucher_code}</p>
-            )}
-            {r.route && (
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                <MapPin size={10} />Route définie
-              </span>
-            )}
-          </div>
+    <tr className="border-b border-border last:border-0 hover:bg-secondary/20 transition-colors">
+      <td className="px-4 py-3 cursor-pointer whitespace-nowrap" onClick={onOpen}>
+        <span className="text-sm text-foreground font-medium capitalize">{dateStr}</span>
+        {r.heure_vol && <span className="text-xs text-muted-foreground"> · {r.heure_vol.slice(0, 5)}</span>}
+      </td>
+      <td className="px-4 py-3 cursor-pointer" onClick={onOpen}>
+        <span className="font-semibold text-foreground text-sm whitespace-nowrap">
+          {client ? `${client.prenom} ${client.nom}` : "—"}
+        </span>
+        {r.voucher_code && (
+          <p className="text-[10px] text-emerald-600 font-mono font-semibold">{r.voucher_code}</p>
+        )}
+      </td>
+      <td className="px-4 py-3 cursor-pointer" onClick={onOpen}>
+        {route ? (
+          <span className="text-xs text-foreground truncate block max-w-[280px]" title={route}>{route}</span>
+        ) : (
+          <span className="text-xs text-muted-foreground">—</span>
+        )}
+      </td>
+      <td className="px-4 py-3 text-center cursor-pointer whitespace-nowrap" onClick={onOpen}>
+        <span className="text-sm text-foreground">{r.duree} min</span>
+      </td>
+      <td className="px-4 py-3 cursor-pointer" onClick={onOpen}>
+        <div className="flex flex-col items-start gap-1">
+          <AdminBadge variant={statut.variant} label={statut.label} />
+          {r.remboursement != null && r.remboursement > 0 && (
+            <span className="text-[10px] font-semibold text-red-500">Remboursé −{r.remboursement} €</span>
+          )}
         </div>
-
-        <div onClick={e => e.stopPropagation()} className="shrink-0">
+      </td>
+      <td className="px-4 py-3">
+        <div className="flex items-center justify-end gap-1">
           <AdminRowActions onView={onOpen} onDelete={onDelete} />
         </div>
-      </div>
-    </div>
+      </td>
+    </tr>
   );
 }
 
@@ -174,15 +158,31 @@ export function ReservationsClient({ reservations: initial }: { reservations: Re
             description="Aucune réservation ne correspond à ces critères."
           />
         ) : (
-          <div className="space-y-3">
-            {filtered.map(r => (
-              <ReservationCard
-                key={r.id}
-                reservation={r}
-                onOpen={() => setDrawer(r)}
-                onDelete={() => handleDelete(r.id)}
-              />
-            ))}
+          <div className="card-premium overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Date</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Client</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Route</th>
+                    <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Durée</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Statut</th>
+                    <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map(r => (
+                    <ReservationRow
+                      key={r.id}
+                      reservation={r}
+                      onOpen={() => setDrawer(r)}
+                      onDelete={() => handleDelete(r.id)}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

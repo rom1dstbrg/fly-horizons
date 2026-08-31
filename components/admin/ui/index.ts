@@ -12,9 +12,6 @@ export type { StatVariant } from "./StatCard";
 
 export { StatGrid } from "./StatGrid";
 
-export { PageTabs } from "./PageTabs";
-export type { TabDef } from "./PageTabs";
-
 export { PageToolbar } from "./PageToolbar";
 
 export { EmptyState } from "./EmptyState";

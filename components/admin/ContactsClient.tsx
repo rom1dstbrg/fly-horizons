@@ -275,8 +275,10 @@ export function ContactsClient({ contacts: initial }: { contacts: Contact[] }) {
     return result;
   }
 
+  // "Tous" exclut les archivés par défaut — ils ne sont plus actionnables au quotidien,
+  // toujours consultables via le filtre "Archivés" dédié.
   const filtered = filter === "Tous"
-    ? contacts
+    ? contacts.filter(c => c.statut !== "archive")
     : contacts.filter(c => c.statut === FILTER_VALUES[filter]);
 
   return (
@@ -288,7 +290,7 @@ export function ContactsClient({ contacts: initial }: { contacts: Contact[] }) {
               {FILTERS.map(f => {
                 const val   = FILTER_VALUES[f];
                 const count = val === null
-                  ? contacts.length
+                  ? contacts.filter(c => c.statut !== "archive").length
                   : contacts.filter(c => c.statut === val).length;
                 return (
                   <FilterChip

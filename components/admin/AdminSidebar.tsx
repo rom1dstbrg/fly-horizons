@@ -3,13 +3,13 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import {
   LayoutDashboard, Users, MessageSquare, Settings, LogOut,
   Menu, X, ExternalLink, Search,
-  CalendarCheck, Route, Clock, Navigation,
-  Package, Ticket, Tag, Images, Bot, Receipt, BarChart2, Mails, Star, Mail,
-  UserCog,
+  CalendarCheck, Clock, Navigation,
+  Package, Receipt,
+  LayoutGrid,
 } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 
@@ -23,46 +23,58 @@ type NavLink = {
   exact?: boolean;
   tab?: string;
   tabBase?: string;
+  badgeKey?: keyof PendingCounts;
 };
 type NavEntry = NavLink | NavSection;
 
+interface PendingCounts {
+  contacts: number;
+}
+
+function usePendingCounts(): PendingCounts {
+  const [counts, setCounts] = useState<PendingCounts>({ contacts: 0 });
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const r = await fetch("/api/admin/pending-counts");
+        if (!r.ok) return;
+        const d = await r.json();
+        if (!cancelled) setCounts({ contacts: d.contacts ?? 0 });
+      } catch { /* ignore — badge reste à sa dernière valeur connue */ }
+    }
+    load();
+    const interval = setInterval(load, 45_000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
+
+  return counts;
+}
+
 const DEFAULT_TABS: Record<string, string> = {
   "/admin/vols":     "reservations",
-  "/admin/boutique": "vouchers",
+  "/admin/boutique": "produits",
 };
 
+// Pages peu utilisées (dashboard, sur mesure, pilotes, vouchers, coupons, satisfaction,
+// newsletter, assistant, analytiques, galerie, emails) regroupées dans /admin/plus —
+// voir PLUS_PAGES ci-dessous, gardé synchronisé avec cette liste.
 const NAVIGATION: NavEntry[] = [
-  { type: "link", id: "dashboard", icon: LayoutDashboard, label: "Vue globale", href: "/admin", exact: true },
-
   { type: "section", label: "Vols" },
   { type: "link", id: "reservations",   icon: CalendarCheck, label: "Réservations",   href: "/admin/vols",                    tab: "reservations",   tabBase: "/admin/vols" },
-  { type: "link", id: "sur-mesure",     icon: Route,         label: "Sur mesure",     href: "/admin/vols?tab=sur-mesure",     tab: "sur-mesure",     tabBase: "/admin/vols" },
   { type: "link", id: "disponibilites", icon: Clock,         label: "Disponibilités", href: "/admin/vols?tab=disponibilites", tab: "disponibilites", tabBase: "/admin/vols" },
   { type: "link", id: "itineraires",    icon: Navigation,    label: "Itinéraires",    href: "/admin/itineraires" },
-
-  { type: "section", label: "Équipe" },
-  { type: "link", id: "pilotes", icon: UserCog, label: "Pilotes", href: "/admin/pilotes" },
-
-  { type: "section", label: "Boutique" },
-  { type: "link", id: "vouchers", icon: Ticket,  label: "Vouchers", href: "/admin/boutique",              tab: "vouchers", tabBase: "/admin/boutique" },
-  { type: "link", id: "produits", icon: Package, label: "Offres",   href: "/admin/boutique?tab=produits", tab: "produits", tabBase: "/admin/boutique" },
-  { type: "link", id: "coupons",  icon: Tag,     label: "Coupons",  href: "/admin/boutique?tab=coupons",  tab: "coupons",  tabBase: "/admin/boutique" },
+  { type: "link", id: "produits",       icon: Package,       label: "Les vols",       href: "/admin/boutique?tab=produits",   tab: "produits",       tabBase: "/admin/boutique" },
 
   { type: "section", label: "CRM" },
-  { type: "link", id: "clients",      icon: Users,         label: "Clients",      href: "/admin/clients"      },
-  { type: "link", id: "contacts",     icon: MessageSquare, label: "Contacts",     href: "/admin/contacts"     },
-  { type: "link", id: "satisfaction", icon: Star,          label: "Satisfaction", href: "/admin/satisfaction" },
-  { type: "link", id: "newsletter",   icon: Mails,         label: "Newsletter",   href: "/admin/newsletter"   },
-  { type: "link", id: "chat",         icon: Bot,           label: "Assistant",    href: "/admin/chat"         },
+  { type: "link", id: "clients",  icon: Users,         label: "Clients",  href: "/admin/clients"  },
+  { type: "link", id: "contacts", icon: MessageSquare, label: "Contacts", href: "/admin/contacts", badgeKey: "contacts" },
 
-  { type: "section", label: "Finances" },
-  { type: "link", id: "transactions", icon: Receipt, label: "Transactions", href: "/admin/transactions" },
-
-  { type: "section", label: "Site" },
-  { type: "link", id: "analytics", icon: BarChart2, label: "Analytiques", href: "/admin/analytics" },
-  { type: "link", id: "galerie",   icon: Images,    label: "Galerie",     href: "/admin/galerie"   },
-  { type: "link", id: "emails",    icon: Mail,      label: "Emails",      href: "/admin/emails-preview" },
-  { type: "link", id: "settings",  icon: Settings,  label: "Paramètres",  href: "/admin/settings"  },
+  { type: "section", label: "" },
+  { type: "link", id: "transactions", icon: Receipt,  label: "Transactions", href: "/admin/transactions" },
+  { type: "link", id: "settings",     icon: Settings, label: "Paramètres",   href: "/admin/settings"     },
+  { type: "link", id: "plus",         icon: LayoutGrid, label: "Plus",       href: "/admin/plus" },
 ];
 
 function isLinkActive(item: NavLink, pathname: string, currentTab: string | null): boolean {
@@ -83,6 +95,7 @@ function NavContentInner({ onClose }: { onClose?: () => void }) {
   const pathname   = usePathname();
   const searchParams = useSearchParams();
   const currentTab = searchParams.get("tab");
+  const pendingCounts = usePendingCounts();
 
   return (
     <div className="flex flex-col h-full bg-card border-r border-border">
@@ -143,6 +156,7 @@ function NavContentInner({ onClose }: { onClose?: () => void }) {
 
           const isActive = isLinkActive(entry, pathname, currentTab);
           const Icon = entry.icon;
+          const badgeCount = entry.badgeKey ? pendingCounts[entry.badgeKey] : 0;
           return (
             <Link
               key={entry.id}
@@ -155,7 +169,14 @@ function NavContentInner({ onClose }: { onClose?: () => void }) {
               }`}
             >
               <Icon size={15} className="shrink-0" />
-              {entry.label}
+              <span className="flex-1">{entry.label}</span>
+              {badgeCount > 0 && (
+                <span className={`shrink-0 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center ${
+                  isActive ? "bg-primary text-[#0b2238]" : "bg-primary/15 text-primary"
+                }`}>
+                  {badgeCount > 99 ? "99+" : badgeCount}
+                </span>
+              )}
             </Link>
           );
         })}
@@ -211,7 +232,7 @@ function NavContent({ onClose }: { onClose?: () => void }) {
 const BOTTOM_NAV = [
   { id: "dashboard", icon: LayoutDashboard, label: "Accueil",  href: "/admin",          exact: true },
   { id: "vols",      icon: CalendarCheck,   label: "Vols",     href: "/admin/vols",     base: "/admin/vols"     },
-  { id: "boutique",  icon: Package,         label: "Boutique", href: "/admin/boutique", base: "/admin/boutique" },
+  { id: "boutique",  icon: Package,         label: "Les vols", href: "/admin/boutique", base: "/admin/boutique" },
   { id: "clients",   icon: Users,           label: "Clients",  href: "/admin/clients",  base: "/admin/clients"  },
 ] as const;
 

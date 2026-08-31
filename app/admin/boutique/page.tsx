@@ -64,20 +64,12 @@ export default async function BoutiquePage() {
     return true;
   });
 
-  const stats = {
-    vouchersTotal:    vouchers.length,
-    vouchersDispos:   vouchers.filter(v => v.status === "unused").length,
-    vouchersUtilises: vouchers.filter(v => v.status === "used").length,
-    produitsActifs:   (voucherProducts ?? []).filter(p => p.active).length,
-    coupons:          (coupons ?? []).length,
-  };
-
   return (
     <div className="space-y-5">
       <PageHeader
         domain="boutique"
-        title="Boutique"
-        subtitle="Vouchers, produits et coupons"
+        title="Les vols"
+        subtitle="Offres, itinéraires et escales"
       />
 
       <Suspense fallback={null}>
@@ -86,7 +78,6 @@ export default async function BoutiquePage() {
           vouchers={vouchers}
           clients={clients}
           coupons={coupons ?? []}
-          stats={stats}
           prixHeure60={prixHeure60}
         />
       </Suspense>

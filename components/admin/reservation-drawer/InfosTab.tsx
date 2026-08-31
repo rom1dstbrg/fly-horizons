@@ -5,11 +5,10 @@ import {
   CheckCircle2, XCircle, RotateCcw, ExternalLink, Calculator, ChevronDown,
   Loader2, Check, Sparkles, Send, MapPin,
 } from "lucide-react";
-import type { WaypointDraft } from "@/components/admin/AdminRouteEditor";
 import { PAYMENT_STATUS_CONFIG } from "@/components/admin/ui/AdminBadge";
 import { toForeFlight } from "@/lib/foreflight";
+import { stripeNetInfo } from "@/lib/stripe-fee";
 import { EMAIL_TEMPLATES, type DrawerReservation } from "./types";
-import { RouteSection } from "./RouteSection";
 import { PaymentLinkCard } from "./PaymentLinkCard";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -26,7 +25,6 @@ export function InfosTab({
   viewerRole = "admin",
   avionReserve, isReservePending, onToggleAvion,
   bilan,
-  route,
   linkCopied, onCopyPaymentLink,
   onOpenEmailComposer, onApplyTemplate,
   isPending,
@@ -45,16 +43,6 @@ export function InfosTab({
     dureeReelle: string; setDureeReelle: (v: string) => void;
     tarifEcole: number | null; prixDemande: number; coutEcole: number | null; resultat: number | null; dureeR: number;
     isPending: boolean; save: () => void;
-  };
-  route: {
-    routeDraft: WaypointDraft[]; setRouteDraft: (wps: WaypointDraft[]) => void;
-    routeComment: string; setRouteComment: (v: string) => void;
-    proposalLoaded: boolean;
-    localRouteStatus: string | null; localRouteFeedback: string | null;
-    routeStats: { distKm: number; totalMin: number } | null;
-    isPending: boolean; foreFlightCopied: boolean;
-    saveRoute: () => void; sendRoute: () => void; copyForeFlight: () => void;
-    openItineraires: () => void; openFullscreen: () => void;
   };
   linkCopied: boolean;
   onCopyPaymentLink: () => void;
@@ -81,6 +69,13 @@ export function InfosTab({
 
   const dateLabel = new Date(r.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
     weekday: "long", day: "numeric", month: "long", year: "numeric",
+  });
+
+  const netInfo = stripeNetInfo({
+    paye: r.paye ?? 0,
+    stripeFee: r.stripe_fee,
+    cashPayment,
+    coveredByVoucher: !!r.voucher_code && (r.paye ?? 0) === 0,
   });
 
   return (
@@ -173,7 +168,7 @@ export function InfosTab({
       {/* Vol details */}
       <div>
         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-2">Vol</p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <Field label="Date du vol">
             <div className="flex items-center gap-1.5 mt-0.5">
               <Calendar size={13} className="text-muted-foreground shrink-0" />
@@ -240,7 +235,15 @@ export function InfosTab({
                 {r.paye != null && r.paye > 0 ? (
                   <span className="flex items-center gap-1.5 text-emerald-600 font-semibold">
                     <CheckCircle2 size={13} />
-                    {r.paye} € encaissé
+                    {netInfo ? `${netInfo.isEstimate ? "~" : ""}${netInfo.net}` : r.paye} € encaissé
+                    {netInfo && (
+                      <span
+                        className="text-[10px] text-muted-foreground font-normal"
+                        title={netInfo.isEstimate ? "Estimé (1,5 % + 0,25 €) — frais réel non capturé pour ce paiement" : "Frais réel Stripe"}
+                      >
+                        (brut {r.paye} €, −{netInfo.fee} € Stripe)
+                      </span>
+                    )}
                   </span>
                 ) : (
                   <span className="flex items-center gap-1.5 text-amber-600 text-xs">
@@ -313,26 +316,6 @@ export function InfosTab({
           </div>
         )}
       </div>
-
-      {/* Route */}
-      <RouteSection
-        reservation={r}
-        routeDraft={route.routeDraft}
-        setRouteDraft={route.setRouteDraft}
-        routeComment={route.routeComment}
-        setRouteComment={route.setRouteComment}
-        proposalLoaded={route.proposalLoaded}
-        localRouteStatus={route.localRouteStatus}
-        localRouteFeedback={route.localRouteFeedback}
-        routeStats={route.routeStats}
-        isPending={route.isPending}
-        foreFlightCopied={route.foreFlightCopied}
-        onSave={route.saveRoute}
-        onSend={route.sendRoute}
-        onCopyForeFlight={route.copyForeFlight}
-        onOpenItineraires={route.openItineraires}
-        onFullscreen={route.openFullscreen}
-      />
 
       {/* Bilan vol — calcul de rentabilité interne (coût avion école), réservé à l'admin */}
       {viewerRole === "admin" && (

@@ -6,6 +6,7 @@ import {
   Loader2, AlertTriangle, Banknote, X, CalendarClock, Ticket,
 } from "lucide-react";
 import type { DrawerReservation, Tab } from "./types";
+import { ConfirmActionDialog, type PendingAction } from "./ConfirmActionDialog";
 
 const TERMINAL_STATUTS = ["vol_effectue", "annulee"];
 
@@ -149,6 +150,23 @@ export function ActionFooter({
   const isTerminal = TERMINAL_STATUTS.includes(r.statut);
   const showCash = !isTerminal && r.acompte != null && (r.paye ?? 0) < r.acompte;
 
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
+  function confirm(action: PendingAction) { setPendingAction(action); }
+  function runConfirmed() {
+    if (!pendingAction) return;
+    pendingAction.run();
+    setPendingAction(null);
+  }
+
+  const dialog = (
+    <ConfirmActionDialog
+      action={pendingAction}
+      isPending={isPending}
+      onCancel={() => setPendingAction(null)}
+      onConfirm={runConfirmed}
+    />
+  );
+
   if (activeTab === "modifier") {
     return (
       <div className="px-5 pt-3 border-t border-border shrink-0 flex justify-end pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
@@ -175,11 +193,29 @@ export function ActionFooter({
       <div className={`flex items-center gap-2 px-5 pt-2.5 flex-wrap ${isTerminal ? "pb-[calc(0.625rem+env(safe-area-inset-bottom))]" : "pb-2.5"}`}>
         {r.statut === "payment_pending" && (
           <>
-            <button onClick={() => onChangeStatut("acompte_recu")} disabled={isPending} className={primaryBtn}>
+            <button
+              onClick={() => confirm({
+                title: "Marquer le paiement reçu ?",
+                description: "Le client recevra un email confirmant que son paiement a bien été enregistré.",
+                confirmLabel: "Marquer reçu et envoyer",
+                run: () => onChangeStatut("acompte_recu"),
+              })}
+              disabled={isPending}
+              className={primaryBtn}
+            >
               <Check size={14} />
               Marquer paiement reçu
             </button>
-            <button onClick={onResendPaymentLink} disabled={isPending} className={chipBtn}>
+            <button
+              onClick={() => confirm({
+                title: "Renvoyer le lien de paiement ?",
+                description: "Le client recevra à nouveau l'email avec son lien de paiement Stripe.",
+                confirmLabel: "Renvoyer",
+                run: onResendPaymentLink,
+              })}
+              disabled={isPending}
+              className={chipBtn}
+            >
               {isPending ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
               Renvoyer le lien
             </button>
@@ -188,12 +224,30 @@ export function ActionFooter({
 
         {(r.statut === "en_attente" || r.statut === "acompte_recu" || r.statut === "demande_recue") && (
           <>
-            <button onClick={onConfirmHeureConfirmee} disabled={isPending} className={primaryBtn}>
+            <button
+              onClick={() => confirm({
+                title: "Confirmer date et heure ?",
+                description: "Le client recevra un email confirmant son créneau (avec la route et le boarding pass si le vol est prêt).",
+                confirmLabel: "Confirmer et envoyer",
+                run: onConfirmHeureConfirmee,
+              })}
+              disabled={isPending}
+              className={primaryBtn}
+            >
               {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
               Confirmer date + heure
             </button>
             {isStandard && (r.statut === "en_attente" || r.statut === "demande_recue") && (
-              <button onClick={onSendPaymentLink} disabled={isPending} className={chipBtn}>
+              <button
+                onClick={() => confirm({
+                  title: "Envoyer le lien de paiement ?",
+                  description: "Le client recevra un email avec son lien de paiement Stripe.",
+                  confirmLabel: "Envoyer",
+                  run: onSendPaymentLink,
+                })}
+                disabled={isPending}
+                className={chipBtn}
+              >
                 {isPending ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
                 Lien de paiement
               </button>
@@ -220,7 +274,16 @@ export function ActionFooter({
 
         {r.statut === "date_confirmee" && (
           <>
-            <button onClick={onConfirmHeureConfirmee} disabled={isPending} className={primaryBtn}>
+            <button
+              onClick={() => confirm({
+                title: "Confirmer l'heure ?",
+                description: "Le client recevra un email confirmant l'heure de son vol (avec la route et le boarding pass si le vol est prêt).",
+                confirmLabel: "Confirmer et envoyer",
+                run: onConfirmHeureConfirmee,
+              })}
+              disabled={isPending}
+              className={primaryBtn}
+            >
               {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
               Confirmer l&apos;heure
             </button>
@@ -233,12 +296,30 @@ export function ActionFooter({
 
         {r.statut === "heure_confirmee" && (
           <>
-            <button onClick={() => onChangeStatut("vol_effectue")} disabled={isPending} className={primaryBtn}>
+            <button
+              onClick={() => confirm({
+                title: "Marquer le vol comme effectué ?",
+                description: "Le client recevra un email de remerciement avec une demande d'avis de satisfaction.",
+                confirmLabel: "Marquer effectué et envoyer",
+                run: () => onChangeStatut("vol_effectue"),
+              })}
+              disabled={isPending}
+              className={primaryBtn}
+            >
               {isPending ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
               Marquer vol effectué
             </button>
             {hasRoute && (
-              <button onClick={onSendBoardingPass} disabled={isPending} className={chipBtn}>
+              <button
+                onClick={() => confirm({
+                  title: "Envoyer le boarding pass ?",
+                  description: "Le client recevra son boarding pass par email, en pièce jointe PDF.",
+                  confirmLabel: "Envoyer",
+                  run: onSendBoardingPass,
+                })}
+                disabled={isPending}
+                className={chipBtn}
+              >
                 {isPending ? <Loader2 size={13} className="animate-spin" /> : <Ticket size={13} />}
                 Envoyer le boarding pass
               </button>
@@ -272,16 +353,37 @@ export function ActionFooter({
       {/* Actions toujours disponibles — séparées visuellement des actions du statut */}
       {!isTerminal && (
         <div className="flex items-center justify-between gap-2 px-5 py-2 border-t border-border/60 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-          <button onClick={onSendReschedule} disabled={isPending} className={chipBtn}>
+          <button
+            onClick={() => confirm({
+              title: "Proposer un report ?",
+              description: "Le client recevra un email l'invitant à choisir lui-même une nouvelle date pour son vol.",
+              confirmLabel: "Envoyer",
+              run: onSendReschedule,
+            })}
+            disabled={isPending}
+            className={chipBtn}
+          >
             {isPending ? <Loader2 size={13} className="animate-spin" /> : <RotateCcw size={13} />}
             Reporter
           </button>
-          <button onClick={() => onChangeStatut("annulee")} disabled={isPending} className={chipDanger}>
+          <button
+            onClick={() => confirm({
+              title: "Annuler cette réservation ?",
+              description: "Le client recevra un email l'informant de l'annulation de son vol. Cette action est irréversible côté communication client.",
+              confirmLabel: "Annuler la réservation",
+              danger: true,
+              run: () => onChangeStatut("annulee"),
+            })}
+            disabled={isPending}
+            className={chipDanger}
+          >
             <XCircle size={13} />
             Annuler
           </button>
         </div>
       )}
+
+      {dialog}
     </div>
   );
 }
