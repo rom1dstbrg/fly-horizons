@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { prenom, nom, email, telephone, duree, date, heure, voucher_code, voucher_id, poids_total, passengers, coupon_code, commentaire, newsletter_opt_in } = body;
+    const { prenom, nom, email, telephone, duree, date, heure, voucher_code, voucher_id, poids_total, passengers, coupon_code, commentaire, newsletter_opt_in, produit_id } = body;
 
     if (!prenom || !nom || !email || !duree || !date || !heure || !poids_total) {
       return NextResponse.json({ error: "Champs obligatoires manquants" }, { status: 400 });
@@ -52,14 +52,32 @@ export async function POST(request: NextRequest) {
       settings?.find((s) => s.key === "prix_heure")?.value ?? "254"
     );
 
-    // Prix du pack depuis les produits (priorité sur le taux horaire)
-    const { data: packProduct } = await supabase
-      .from("products")
-      .select("price")
-      .eq("active", true)
-      .eq("product_type", "voucher")
-      .eq("voucher_duration_minutes", dureeMins)
-      .maybeSingle();
+    // Prix du pack depuis les produits (priorité sur le taux horaire).
+    // Si le client vient d'une fiche produit précise (produit_id), on le résout par id —
+    // sinon (lien générique ?duree=, ex. voucher) on ne matche jamais une offre à itinéraire.
+    const { data: packProduct } = produit_id
+      ? await supabase
+          .from("products")
+          .select("id, price, quantity_available, route_waypoints")
+          .eq("active", true)
+          .eq("product_type", "voucher")
+          .eq("id", produit_id)
+          .maybeSingle()
+      : await supabase
+          .from("products")
+          .select("id, price, quantity_available, route_waypoints")
+          .eq("active", true)
+          .eq("product_type", "voucher")
+          .eq("voucher_duration_minutes", dureeMins)
+          .is("route_waypoints", null)
+          .maybeSingle();
+
+    if (produit_id && !packProduct) {
+      return NextResponse.json({ error: "Cette offre n'est plus disponible." }, { status: 404 });
+    }
+    if (packProduct && packProduct.quantity_available === 0) {
+      return NextResponse.json({ error: "Cette offre vient d'être vendue." }, { status: 409 });
+    }
 
     const prixPlein = packProduct?.price ?? Math.round((prixHeure / 60) * dureeMins);
 
@@ -179,6 +197,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Ce créneau vient d'être réservé. Veuillez en choisir un autre." }, { status: 409 });
     }
 
+    // Réserver le stock de l'offre si elle est en quantité limitée — décrément atomique
+    // pour éviter que deux clients réservent la même place en même temps.
+    if (packProduct && packProduct.quantity_available != null) {
+      const { data: claimed } = await supabase.rpc("claim_product_stock", { p_product_id: packProduct.id });
+      if (!claimed) {
+        if (resolvedVoucherId) {
+          await supabase.from("voucher_codes").update({ status: "unused" }).eq("id", resolvedVoucherId).eq("status", "reserved");
+        }
+        return NextResponse.json({ error: "Cette offre vient d'être vendue." }, { status: 409 });
+      }
+    }
+
     // Créer la demande — pas de paiement à ce stade. Romain valide la demande
     // depuis l'admin et déclenche lui-même l'envoi du lien de paiement (sendPaymentLinkAdmin).
     // Le voucher reste "reserved" (claimé plus haut) jusqu'à confirmation ou refus.
@@ -187,6 +217,7 @@ export async function POST(request: NextRequest) {
       .from("reservations")
       .insert({
         client_id: clientId,
+        product_id: packProduct?.id ?? null,
         date_vol: date,
         heure_vol: heure,
         duree: dureeMins,
@@ -206,6 +237,10 @@ export async function POST(request: NextRequest) {
       // Rollback voucher claim if reservation creation failed
       if (resolvedVoucherId) {
         await supabase.from("voucher_codes").update({ status: "unused" }).eq("id", resolvedVoucherId).eq("status", "reserved");
+      }
+      // Rollback du stock produit claimé plus haut
+      if (packProduct && packProduct.quantity_available != null) {
+        await supabase.rpc("release_product_stock", { p_product_id: packProduct.id });
       }
       // Pas de release_coupon : l'incrément n'a pas encore eu lieu (différé au webhook)
       // Unique constraint violation = slot taken by a concurrent request

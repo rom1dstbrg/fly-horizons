@@ -1,13 +1,18 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { MapPin, Maximize2, Navigation, ChevronDown, Zap, Save, Send, Copy, Loader2 } from "lucide-react";
+import { MapPin, Maximize2, Navigation, ChevronDown, Zap, Save, Send, Copy, Loader2, Route as RouteIcon } from "lucide-react";
 import type { WaypointDraft } from "@/components/admin/AdminRouteEditor";
 import { ROUTE_STATUS_CONFIG, type DrawerReservation } from "./types";
 
 const AdminRouteEditorDynamic = dynamic(
   () => import("@/components/admin/AdminRouteEditor").then(m => ({ default: m.AdminRouteEditor })),
   { ssr: false, loading: () => <div className="h-[280px] rounded-lg bg-secondary animate-pulse" /> }
+);
+
+const RouteMapReadOnlyDynamic = dynamic(
+  () => import("@/components/maps/RouteMapReadOnly"),
+  { ssr: false, loading: () => <div className="h-[220px] rounded-lg bg-secondary animate-pulse" /> }
 );
 
 export function RouteSection({
@@ -41,6 +46,23 @@ export function RouteSection({
 }) {
   const isPerso = reservation.type_resa === "perso";
   const routeStatusCfg = localRouteStatus ? ROUTE_STATUS_CONFIG[localRouteStatus] : null;
+  const productRoute = reservation.products?.route_waypoints;
+
+  if (productRoute && productRoute.length > 0) {
+    return (
+      <div>
+        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] flex items-center gap-1.5 mb-2">
+          <RouteIcon size={11} />
+          Itinéraire de l&apos;offre
+        </p>
+        <RouteMapReadOnlyDynamic waypoints={productRoute} height="220px" />
+        <p className="text-[11px] text-muted-foreground mt-2 px-3 py-2 rounded-lg bg-secondary/50">
+          Itinéraire fixé par l&apos;offre achetée — non modifiable ici, déjà connu du client avant la réservation,
+          donc pas renvoyé par email.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div>

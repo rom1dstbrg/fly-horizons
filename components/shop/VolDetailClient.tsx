@@ -8,11 +8,15 @@ interface VolDetailClientProps {
   price: number;
   duree: number;
   image_url: string | null;
+  soldOut?: boolean;
+  escales?: { icao: string; nom: string; taxe: number }[] | null;
 }
 
 // Bouton "Offrir ce vol en cadeau" (ajout panier) retiré le 30/07/2026 — arrêt de la vente publique
 // de vouchers, voir audit-legal-fly-horizons.html point critique n°1. Ne reste que la réservation directe.
-export function VolDetailClient({ price, duree }: VolDetailClientProps) {
+export function VolDetailClient({ id, price, duree, soldOut, escales }: VolDetailClientProps) {
+  const taxesTotal = (escales ?? []).reduce((a, e) => a + e.taxe, 0);
+
   return (
     <div id="vol-cta" className="space-y-5">
 
@@ -23,16 +27,28 @@ export function VolDetailClient({ price, duree }: VolDetailClientProps) {
           <span className="text-[44px] font-black text-foreground leading-none">{price}&nbsp;€</span>
           <span className="text-muted-foreground text-sm">/ avion</span>
         </div>
+        {taxesTotal > 0 && (
+          <p className="text-xs text-muted-foreground mt-1.5">
+            Dont {taxesTotal} € de taxe{taxesTotal > 1 && (escales?.length ?? 0) > 1 ? "s" : ""} d&apos;escale
+            ({escales?.map(e => e.icao).join(", ")}).
+          </p>
+        )}
       </div>
 
       {/* Bouton */}
-      <Link
-        href={`/reservation?duree=${duree}`}
-        className="w-full h-12 flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-lg font-black text-sm hover:bg-[#e6a800] transition-colors shadow-gold"
-      >
-        <CalendarCheck size={16} />
-        Faire une demande
-      </Link>
+      {soldOut ? (
+        <div className="w-full h-12 flex items-center justify-center gap-2 bg-secondary text-muted-foreground rounded-lg font-black text-sm">
+          Offre épuisée
+        </div>
+      ) : (
+        <Link
+          href={`/reservation?produit=${id}&duree=${duree}`}
+          className="w-full h-12 flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-lg font-black text-sm hover:bg-[#e6a800] transition-colors shadow-gold"
+        >
+          <CalendarCheck size={16} />
+          Faire une demande
+        </Link>
+      )}
 
       {/* Notes */}
       <div className="space-y-1.5">

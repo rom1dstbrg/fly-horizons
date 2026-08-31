@@ -35,7 +35,11 @@ export default async function NosOffresPage() {
     .select("*, images:product_images(*)")
     .eq("active", true)
     .eq("product_type", "voucher")
+    .or("quantity_available.is.null,quantity_available.gt.0")
     .order("voucher_duration_minutes", { ascending: true });
+
+  const packsFixes = (packs ?? []).filter(p => !p.route_waypoints?.length);
+  const packsItineraire = (packs ?? []).filter(p => !!p.route_waypoints?.length);
 
   // annonces_pilote et pilotes sont verrouillées à service_role côté RLS (données
   // sensibles : IBAN, email pilote) — lecture via le client admin, filtrée
@@ -84,16 +88,35 @@ export default async function NosOffresPage() {
             </p>
           </div>
 
-          {/* Grille packs */}
+          {/* Grille packs — durée fixe */}
           {(!packs || packs.length === 0) ? (
             <div className="text-center py-16 text-muted-foreground text-sm">
               Aucun vol disponible pour le moment.
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-              {packs.map((pack) => (
+              {packsFixes.map((pack) => (
                 <PackCard key={pack.id} pack={pack} />
               ))}
+            </div>
+          )}
+
+          {/* Itinéraires sélectionnés — route fixée à l'avance */}
+          {packsItineraire.length > 0 && (
+            <div className="mt-14">
+              <div className="text-center mb-8">
+                <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">
+                  Routes préparées par votre pilote
+                </p>
+                <h2 className="text-2xl sm:text-3xl font-black text-foreground leading-tight">
+                  Itinéraires sélectionnés
+                </h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+                {packsItineraire.map((pack) => (
+                  <PackCard key={pack.id} pack={pack} />
+                ))}
+              </div>
             </div>
           )}
 

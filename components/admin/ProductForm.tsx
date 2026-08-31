@@ -3,7 +3,8 @@
 import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Upload, X, Loader2, Clock, GripVertical } from "lucide-react";
+import dynamic from "next/dynamic";
+import { Upload, X, Loader2, Clock, GripVertical, Route, Ticket, Navigation, Plane, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,19 +12,32 @@ import { FormSection } from "@/components/admin/ui";
 import { createProduct, updateProduct, deleteProductImage, reorderProductImages } from "@/lib/actions/products";
 import { createClient } from "@/lib/supabase/client";
 import type { Product, ProductImage } from "@/types/database";
+import type { WaypointDraft } from "@/components/admin/AdminRouteEditor";
+import type { Itineraire } from "@/lib/actions/itineraires";
+import { useItineraires } from "@/components/admin/reservation-drawer/hooks/useItineraires";
+import { ItinerairesModal } from "@/components/admin/reservation-drawer/ItinerairesModal";
+
+const AdminRouteEditorDynamic = dynamic(
+  () => import("@/components/admin/AdminRouteEditor").then(m => ({ default: m.AdminRouteEditor })),
+  { ssr: false, loading: () => <div className="h-[260px] rounded-lg bg-secondary animate-pulse" /> }
+);
+
+interface StopoverOption {
+  id: string;
+  icao: string;
+  nom: string;
+  taxe: number;
+  lat?: number | null;
+  lng?: number | null;
+}
 
 interface ProductFormProps {
   product?: Product & { images?: ProductImage[] };
+  prixHeure?: number | null;
+  stopovers?: StopoverOption[];
 }
 
-const VOUCHER_DURATIONS = [
-  { value: 30,  label: "30 min",   sub: "Découverte" },
-  { value: 60,  label: "1 heure",  sub: "Exploration" },
-  { value: 90,  label: "1 h 30",   sub: "Immersion" },
-  { value: 120, label: "2 heures", sub: "Ultime" },
-];
-
-export function ProductForm({ product }: ProductFormProps) {
+export function ProductForm({ product, prixHeure, stopovers = [] }: ProductFormProps) {
   const router = useRouter();
   const isEdit = !!product;
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -37,6 +51,46 @@ export function ProductForm({ product }: ProductFormProps) {
 
   const [active, setActive]           = useState(product?.active ?? true);
   const [voucherDuration, setVoucherDuration] = useState<number>(product?.voucher_duration_minutes ?? 60);
+
+  const [hasRoute, setHasRoute] = useState(!!product?.route_waypoints?.length);
+  const [routeDraft, setRouteDraft] = useState<WaypointDraft[]>(
+    (product?.route_waypoints ?? []).map(w => ({ lat: String(w.lat), lng: String(w.lng), nom: w.nom ?? "" }))
+  );
+  const itineraires = useItineraires(setRouteDraft);
+  function handleApplyItineraire(itin: Itineraire) {
+    itineraires.apply(itin);
+    setHasRoute(true);
+  }
+
+  const [selectedEscales, setSelectedEscales] = useState<StopoverOption[]>(
+    (product?.escales ?? []).map(e => ({
+      id: e.icao,
+      icao: e.icao,
+      nom: e.nom,
+      taxe: e.taxe,
+      lat: e.lat ?? null,
+      lng: e.lng ?? null,
+    }))
+  );
+  const [escalesOpen, setEscalesOpen] = useState(false);
+  const escalesTaxTotal = selectedEscales.reduce((acc, s) => acc + s.taxe, 0);
+  function addEscale(s: StopoverOption) {
+    setSelectedEscales(prev => [...prev, s]);
+    setEscalesOpen(false);
+  }
+  function removeEscale(id: string) {
+    setSelectedEscales(prev => prev.filter(s => s.id !== id));
+  }
+
+  const initialTotalPrice = product?.price ?? 0;
+  const [prixVol, setPrixVol] = useState<string>(
+    product ? String(Math.max(0, initialTotalPrice - (product.escales ?? []).reduce((a, e) => a + e.taxe, 0))) : ""
+  );
+
+  const [unlimited, setUnlimited] = useState(product?.quantity_available == null);
+  const [quantityAvailable, setQuantityAvailable] = useState<string>(
+    product?.quantity_available != null ? String(product.quantity_available) : "1"
+  );
 
   const [dragIndex, setDragIndex]         = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -111,6 +165,7 @@ export function ProductForm({ product }: ProductFormProps) {
   }
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="space-y-5 max-w-5xl">
 
       {error && (
@@ -124,8 +179,8 @@ export function ProductForm({ product }: ProductFormProps) {
         </div>
       )}
 
-      {/* Disposition principale : galerie à gauche, config à droite */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5 items-start">
+      {/* Disposition principale : contenu (large) à gauche, réglages (compacts) à droite */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-5 items-start">
 
         {/* ── Colonne gauche : galerie + contenu ── */}
         <div className="space-y-5">
@@ -233,67 +288,238 @@ export function ProductForm({ product }: ProductFormProps) {
               <textarea
                 id="short_description"
                 name="short_description"
-                rows={9}
+                rows={6}
                 defaultValue={product?.short_description ?? ""}
                 placeholder="Décrivez l'expérience que vous offrez…"
                 className="w-full bg-input border border-border text-foreground placeholder:text-muted-foreground rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary resize-y leading-relaxed"
               />
             </div>
           </div>
+
+          {/* Itinéraire — carte pleine largeur, seulement si activé */}
+          <div className="card-premium p-6 space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <FormSection title="Itinéraire" />
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => itineraires.open()}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
+                >
+                  <Navigation size={12} />
+                  Charger un itinéraire
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHasRoute(v => {
+                    // Repasser en "durée seule" retire aussi les escales — sinon leur taxe
+                    // continuerait d'être ajoutée au prix alors que le panneau est masqué.
+                    if (v) setSelectedEscales([]);
+                    return !v;
+                  })}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors cursor-pointer ${
+                    hasRoute ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"
+                  }`}
+                >
+                  <Route size={12} />
+                  {hasRoute ? "Itinéraire fixe" : "Durée seule"}
+                </button>
+              </div>
+            </div>
+            {hasRoute ? (
+              <>
+                <AdminRouteEditorDynamic
+                  waypoints={routeDraft}
+                  onChange={setRouteDraft}
+                  height="340px"
+                  stopovers={selectedEscales.map(s => ({ icao: s.icao, nom: s.nom, taxe: s.taxe, lat: s.lat ?? undefined, lng: s.lng ?? undefined }))}
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Cet itinéraire est affiché sur la fiche produit avant l&apos;achat. Il ne sera pas retracé ni
+                  renvoyé au client après la réservation.
+                </p>
+
+                {/* Escales — destination hors Charleroi, avec taxe d'atterrissage */}
+                <div className="pt-3 border-t border-border">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] flex items-center gap-1.5">
+                      <Plane size={11} />
+                      Escales
+                    </p>
+                    {stopovers.some(s => !selectedEscales.find(ss => ss.id === s.id)) && (
+                      <button
+                        type="button"
+                        onClick={() => setEscalesOpen(v => !v)}
+                        className="flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-2 py-1 rounded-lg transition-colors cursor-pointer"
+                      >
+                        <Plus size={11} /> Ajouter
+                      </button>
+                    )}
+                  </div>
+
+                  {selectedEscales.length === 0 && !escalesOpen && (
+                    <p className="text-[11px] text-muted-foreground italic">Aucune escale — vol EBCI ↔ EBCI uniquement.</p>
+                  )}
+
+                  {selectedEscales.map(s => (
+                    <div key={s.id} className="flex items-center gap-2 bg-secondary rounded-lg px-2.5 py-1.5 border border-border mb-1.5">
+                      <span className="font-mono text-[10px] font-bold text-foreground shrink-0">{s.icao}</span>
+                      <span className="flex-1 text-[11px] text-muted-foreground truncate">{s.nom}</span>
+                      {s.taxe > 0 && <span className="text-[10px] font-bold text-foreground shrink-0">+{s.taxe} €</span>}
+                      <button
+                        type="button"
+                        onClick={() => removeEscale(s.id)}
+                        className="text-muted-foreground/50 hover:text-destructive transition-colors cursor-pointer shrink-0"
+                      >
+                        <X size={11} />
+                      </button>
+                    </div>
+                  ))}
+
+                  {escalesOpen && (
+                    <div className="rounded-lg overflow-hidden border border-border mt-1">
+                      {stopovers.length === 0 ? (
+                        <p className="text-[11px] text-muted-foreground px-3 py-2.5">
+                          Aucune escale enregistrée — ajoutez-en une dans Itinéraires &gt; Escales.
+                        </p>
+                      ) : (
+                        stopovers
+                          .filter(s => !selectedEscales.find(ss => ss.id === s.id))
+                          .map((s, i, arr) => (
+                            <button
+                              key={s.id}
+                              type="button"
+                              onClick={() => addEscale(s)}
+                              className={`w-full flex items-center gap-2.5 px-3 py-2 hover:bg-primary/5 text-left transition-colors cursor-pointer ${i < arr.length - 1 ? "border-b border-border" : ""}`}
+                            >
+                              <span className="font-mono text-[10px] font-bold text-foreground shrink-0 w-11">{s.icao}</span>
+                              <span className="flex-1 text-[11px] text-foreground/80 truncate">{s.nom}</span>
+                              {s.taxe > 0 && <span className="text-[10px] text-muted-foreground shrink-0">+{s.taxe} €</span>}
+                            </button>
+                          ))
+                      )}
+                    </div>
+                  )}
+
+                  {selectedEscales.length > 0 && (
+                    <p className="text-[11px] text-muted-foreground mt-2">
+                      Taxe(s) d&apos;escale ajoutée(s) automatiquement au prix affiché. Les frais additionnels
+                      (extras, douane…) restent à ajouter par toi au cas par cas, sur la réservation.
+                    </p>
+                  )}
+                </div>
+              </>
+            ) : (
+              <p className="text-[11px] text-muted-foreground bg-secondary/50 rounded-md px-3 py-2">
+                Le client réserve une date/heure libre, la route sera tracée et envoyée après paiement comme
+                aujourd&apos;hui.
+              </p>
+            )}
+          </div>
         </div>
 
-        {/* ── Colonne droite : configuration ── */}
+        {/* ── Colonne droite : réglages compacts ── */}
         <div className="space-y-5">
 
-          {/* Durée */}
+          {/* Durée & Prix */}
           <div className="card-premium p-6 space-y-4">
-            <FormSection title="Durée du vol" />
-            <div className="grid grid-cols-2 gap-2">
-              {VOUCHER_DURATIONS.map(d => {
-                const selected = voucherDuration === d.value;
-                return (
-                  <button
-                    key={d.value}
-                    type="button"
-                    onClick={() => setVoucherDuration(d.value)}
-                    className={`flex items-center gap-2 p-2.5 rounded-lg border-2 text-left transition-colors cursor-pointer ${
-                      selected ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
-                    }`}
-                  >
-                    <Clock size={13} className={selected ? "text-primary flex-shrink-0" : "text-muted-foreground flex-shrink-0"} />
-                    <div>
-                      <p className={`text-xs font-semibold leading-tight ${selected ? "text-primary" : "text-foreground"}`}>{d.label}</p>
-                      <p className="text-[10px] text-muted-foreground">{d.sub}</p>
-                    </div>
-                  </button>
-                );
-              })}
+            <FormSection title="Durée & prix" />
+            <div className="space-y-1.5">
+              <Label htmlFor="voucher_duration_minutes_input" className="text-sm text-muted-foreground">Durée (minutes) *</Label>
+              <div className="relative">
+                <Clock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="voucher_duration_minutes_input"
+                  type="number"
+                  min={1}
+                  step={1}
+                  required
+                  value={voucherDuration}
+                  onChange={e => setVoucherDuration(Number(e.target.value))}
+                  placeholder="60"
+                  className="pl-9 bg-input border-border text-foreground placeholder:text-muted-foreground"
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Prix */}
-          <div className="card-premium p-6 space-y-3">
-            <FormSection title="Prix" />
-
-            <div className="space-y-2">
-              <Label htmlFor="price" className="text-sm text-muted-foreground">Prix (EUR) *</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="price" className="text-sm text-muted-foreground">
+                {escalesTaxTotal > 0 ? "Prix du vol (EUR) *" : "Prix (EUR) *"}
+              </Label>
               <Input
                 id="price"
-                name="price"
                 type="number"
                 step="0.01"
                 min="0"
                 required
-                defaultValue={product?.price}
+                value={prixVol}
+                onChange={e => setPrixVol(e.target.value)}
                 placeholder="199.00"
                 className="bg-input border-border text-foreground placeholder:text-muted-foreground"
               />
+              {!!prixHeure && prixHeure > 0 && voucherDuration > 0 && (
+                <p className="text-[11px] text-muted-foreground">
+                  Indicatif au tarif actuel : {Math.round((prixHeure / 60) * voucherDuration)} €
+                </p>
+              )}
+              {escalesTaxTotal > 0 && (
+                <p className="text-[11px] text-primary bg-primary/5 border border-primary/20 rounded-md px-3 py-2">
+                  + {escalesTaxTotal} € de taxe(s) d&apos;escale = <strong>{(parseFloat(prixVol) || 0) + escalesTaxTotal} €</strong> facturés au client.
+                </p>
+              )}
             </div>
 
-            <p className="text-[11px] text-muted-foreground bg-secondary/50 rounded-md px-3 py-2 leading-relaxed">
-              Modifiable ici pour ce produit précis. Si tu enregistres le réglage &quot;Prix des vols&quot; dans
-              Paramètres, il écrasera ce prix pour les 4 packs actifs (30/60/90/120 min).
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              30/60/90/120 min restent synchronisées avec &quot;Prix des vols&quot; dans Paramètres à chaque
+              enregistrement ; toute autre durée garde ce prix fixé manuellement.
             </p>
+          </div>
+
+          {/* Disponibilité */}
+          <div className="card-premium p-6 space-y-3">
+            <FormSection title="Disponibilité" />
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setUnlimited(true)}
+                className={`flex-1 px-3 py-2 rounded-lg border-2 text-xs font-semibold transition-colors cursor-pointer ${
+                  unlimited ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground hover:border-primary/30"
+                }`}
+              >
+                Illimité
+              </button>
+              <button
+                type="button"
+                onClick={() => setUnlimited(false)}
+                className={`flex-1 px-3 py-2 rounded-lg border-2 text-xs font-semibold transition-colors cursor-pointer ${
+                  !unlimited ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground hover:border-primary/30"
+                }`}
+              >
+                Nombre limité
+              </button>
+            </div>
+            {!unlimited && (
+              <div className="space-y-1.5">
+                <Label htmlFor="quantity_available_input" className="text-sm text-muted-foreground">Places disponibles</Label>
+                <div className="relative">
+                  <Ticket size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="quantity_available_input"
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={quantityAvailable}
+                    onChange={e => setQuantityAvailable(e.target.value)}
+                    placeholder="1"
+                    className="pl-9 bg-input border-border text-foreground placeholder:text-muted-foreground"
+                  />
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Chaque réservation en consomme une. À 0, l&apos;offre disparaît des pages publiques (republiable
+                  en un clic depuis la liste des produits).
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Publication */}
@@ -322,6 +548,30 @@ export function ProductForm({ product }: ProductFormProps) {
       {/* Hidden inputs */}
       <input type="hidden" name="product_type" value="voucher" />
       <input type="hidden" name="voucher_duration_minutes" value={voucherDuration} />
+      <input
+        type="hidden"
+        name="route_waypoints"
+        value={
+          hasRoute
+            ? JSON.stringify(
+                routeDraft
+                  .filter(w => w.lat.trim() && w.lng.trim())
+                  .map(w => ({ lat: Number(w.lat), lng: Number(w.lng), nom: w.nom || undefined }))
+              )
+            : ""
+        }
+      />
+      <input type="hidden" name="quantity_available" value={unlimited ? "" : quantityAvailable} />
+      <input type="hidden" name="price" value={(parseFloat(prixVol) || 0) + escalesTaxTotal} />
+      <input
+        type="hidden"
+        name="escales"
+        value={
+          hasRoute && selectedEscales.length > 0
+            ? JSON.stringify(selectedEscales.map(s => ({ icao: s.icao, nom: s.nom, taxe: s.taxe, lat: s.lat ?? undefined, lng: s.lng ?? undefined })))
+            : ""
+        }
+      />
 
       {/* Actions */}
       <div className="flex gap-3 pb-6">
@@ -334,5 +584,17 @@ export function ProductForm({ product }: ProductFormProps) {
       </div>
 
     </form>
+
+    <ItinerairesModal
+      open={itineraires.showModal}
+      onClose={() => itineraires.setShowModal(false)}
+      duree={voucherDuration}
+      items={itineraires.items}
+      loading={itineraires.loading}
+      showAll={itineraires.showAll}
+      setShowAll={itineraires.setShowAll}
+      onApply={handleApplyItineraire}
+    />
+    </>
   );
 }

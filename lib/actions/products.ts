@@ -20,6 +20,45 @@ async function checkAdmin() {
   return user;
 }
 
+function parseRouteWaypoints(formData: FormData): { lat: number; lng: number; nom?: string }[] | null {
+  const raw = formData.get("route_waypoints") as string | null;
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) return null;
+    return parsed.map((p: { lat: number; lng: number; nom?: string }) => ({
+      lat: Number(p.lat), lng: Number(p.lng), nom: p.nom || undefined,
+    }));
+  } catch {
+    return null;
+  }
+}
+
+function parseQuantityAvailable(formData: FormData): number | null {
+  const raw = formData.get("quantity_available") as string | null;
+  if (!raw || !raw.trim()) return null;
+  const n = parseInt(raw, 10);
+  return isNaN(n) || n < 0 ? null : n;
+}
+
+function parseEscales(formData: FormData): { icao: string; nom: string; taxe: number; lat?: number; lng?: number }[] | null {
+  const raw = formData.get("escales") as string | null;
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) return null;
+    return parsed.map((e: { icao: string; nom: string; taxe: number; lat?: number; lng?: number }) => ({
+      icao: String(e.icao).toUpperCase().trim(),
+      nom: String(e.nom),
+      taxe: Math.max(0, Number(e.taxe) || 0),
+      lat: e.lat != null ? Number(e.lat) : undefined,
+      lng: e.lng != null ? Number(e.lng) : undefined,
+    }));
+  } catch {
+    return null;
+  }
+}
+
 export async function toggleProductActive(productId: string, active: boolean) {
   try {
     await checkAdmin();
@@ -49,6 +88,9 @@ export async function createProduct(formData: FormData) {
     const voucher_duration_minutes = voucherDurationRaw
       ? parseInt(voucherDurationRaw as string, 10)
       : null;
+    const route_waypoints = parseRouteWaypoints(formData);
+    const quantity_available = parseQuantityAvailable(formData);
+    const escales = parseEscales(formData);
 
     if (!title || isNaN(price)) {
       return { error: "Titre et prix requis." };
@@ -64,6 +106,9 @@ export async function createProduct(formData: FormData) {
         active: true,
         product_type: "voucher",
         voucher_duration_minutes,
+        route_waypoints,
+        quantity_available,
+        escales,
       })
       .select()
       .single();
@@ -93,6 +138,9 @@ export async function updateProduct(productId: string, formData: FormData) {
     const voucher_duration_minutes = voucherDurationRaw
       ? parseInt(voucherDurationRaw as string, 10)
       : null;
+    const route_waypoints = parseRouteWaypoints(formData);
+    const quantity_available = parseQuantityAvailable(formData);
+    const escales = parseEscales(formData);
 
     const { error } = await adminSupabase
       .from("products")
@@ -103,6 +151,9 @@ export async function updateProduct(productId: string, formData: FormData) {
         active,
         product_type: "voucher",
         voucher_duration_minutes,
+        route_waypoints,
+        quantity_available,
+        escales,
       })
       .eq("id", productId);
 
@@ -110,6 +161,43 @@ export async function updateProduct(productId: string, formData: FormData) {
 
     revalidatePath("/admin/boutique");
     revalidatePath(`/admin/products/${productId}`);
+    revalidatePath("/nos-offres");
+    revalidatePath("/");
+    return { success: true };
+  } catch {
+    return { error: "Erreur serveur" };
+  }
+}
+
+export async function republishProduct(
+  productId: string,
+  data: { price: number; voucher_duration_minutes: number; quantity_available: number | null }
+) {
+  try {
+    await checkAdmin();
+    const adminSupabase = createAdminClient();
+
+    if (isNaN(data.price) || data.price < 0) return { error: "Prix invalide." };
+    if (isNaN(data.voucher_duration_minutes) || data.voucher_duration_minutes <= 0) {
+      return { error: "Durée invalide." };
+    }
+
+    const { error } = await adminSupabase
+      .from("products")
+      .update({
+        price: data.price,
+        voucher_duration_minutes: data.voucher_duration_minutes,
+        quantity_available: data.quantity_available,
+        active: true,
+      })
+      .eq("id", productId);
+
+    if (error) return { error: error.message };
+
+    revalidatePath("/admin/boutique");
+    revalidatePath(`/admin/products/${productId}`);
+    revalidatePath("/nos-offres");
+    revalidatePath("/");
     return { success: true };
   } catch {
     return { error: "Erreur serveur" };

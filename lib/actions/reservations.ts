@@ -48,14 +48,19 @@ export async function updateStatutReservation(
     const hasFreshRoute = !!routePayload?.waypoints?.length;
 
     // For heure_confirmee, route is required on standard reservations — sauf si routePayload
-    // est fourni : dans ce cas la route est envoyée dans le même geste (voir plus bas).
+    // est fourni : dans ce cas la route est envoyée dans le même geste (voir plus bas), ou si
+    // l'offre achetée a un itinéraire fixe (déjà connu du client avant l'achat, rien à tracer).
     if (statut === "heure_confirmee" && !hasFreshRoute) {
       const { data: check } = await supabase
         .from("reservations")
-        .select("route, type_resa")
+        .select("route, type_resa, product_id")
         .eq("id", id)
         .single();
-      if (check?.type_resa === "standard" && !check?.route?.trim()) {
+      const hasProductRoute = check?.product_id
+        ? !!(await supabase.from("products").select("route_waypoints").eq("id", check.product_id).single())
+            .data?.route_waypoints?.length
+        : false;
+      if (check?.type_resa === "standard" && !check?.route?.trim() && !hasProductRoute) {
         // final_waypoints seul ne suffit pas : c'est un brouillon (bouton "Sauvegarder"),
         // pas une preuve que le client a reçu la route. Il faut au moins un envoi ("Envoyer au client").
         const { count } = await supabase
@@ -73,10 +78,11 @@ export async function updateStatutReservation(
 
     // Libérer le voucher réservé si on annule (ex. demande déclinée) — sinon le code
     // reste bloqué en "reserved" indéfiniment alors que le vol n'aura jamais lieu.
+    // Idem pour le stock d'une offre à quantité limitée : la place redevient disponible.
     if (statut === "annulee") {
       const { data: resaData } = await supabase
         .from("reservations")
-        .select("voucher_code")
+        .select("voucher_code, product_id")
         .eq("id", id)
         .single();
       if (resaData?.voucher_code) {
@@ -85,6 +91,9 @@ export async function updateStatutReservation(
           .update({ status: "unused" })
           .eq("code", resaData.voucher_code)
           .eq("status", "reserved");
+      }
+      if (resaData?.product_id) {
+        await supabase.rpc("release_product_stock", { p_product_id: resaData.product_id });
       }
     }
 

@@ -4,13 +4,16 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  Package, Ticket, Tag, Pencil, Plus,
+  Package, Pencil, Plus,
 } from "lucide-react";
 import { VouchersClient } from "./VouchersClient";
 import { CouponForm } from "./CouponForm";
 import { CouponsTableClient } from "./CouponsTableClient";
 import { ToggleProductActive } from "./ToggleProductActive";
-import { StatCard, StatGrid, PageTabs } from "@/components/admin/ui";
+import { RepublishProductButton } from "./RepublishProductButton";
+import { DeleteButton } from "./DeleteButton";
+import { StopoversAdmin } from "./StopoversAdmin";
+import { deleteProduct } from "@/lib/actions/delete";
 import { formatPrice } from "@/lib/utils";
 import { formatDuration } from "@/lib/vouchers";
 
@@ -22,16 +25,12 @@ type Product = {
   active: boolean;
   product_type?: string;
   voucher_duration_minutes?: number | null;
+  route_waypoints?: { lat: number; lng: number; nom?: string }[] | null;
+  quantity_available?: number | null;
   images?: { url: string }[];
 };
 
-const TABS = [
-  { key: "vouchers",  label: "Vouchers",  icon: Ticket  },
-  { key: "produits",  label: "Offres",    icon: Package },
-  { key: "coupons",   label: "Coupons",   icon: Tag     },
-];
-
-function ProductTable({ products }: { products: Product[] }) {
+function ProductTable({ products, prixHeure60 }: { products: Product[]; prixHeure60?: number | null }) {
   if (products.length === 0) {
     return (
       <div className="bg-card rounded-xl border border-border p-8 text-center">
@@ -55,6 +54,7 @@ function ProductTable({ products }: { products: Product[] }) {
             <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Produit</th>
             <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">Prix</th>
             <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">Durée</th>
+            <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">Stock</th>
             <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">Statut</th>
             <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Actions</th>
           </tr>
@@ -84,16 +84,37 @@ function ProductTable({ products }: { products: Product[] }) {
                 <span className="text-sm text-foreground">{formatDuration(product.voucher_duration_minutes ?? 60)}</span>
               </td>
               <td className="px-4 py-3 hidden lg:table-cell">
+                {product.quantity_available == null ? (
+                  <span className="text-xs text-muted-foreground">Illimité</span>
+                ) : product.quantity_available === 0 ? (
+                  <span className="text-xs font-semibold text-destructive">Épuisé</span>
+                ) : (
+                  <span className="text-xs text-foreground">{product.quantity_available} restante{product.quantity_available > 1 ? "s" : ""}</span>
+                )}
+              </td>
+              <td className="px-4 py-3 hidden lg:table-cell">
                 <ToggleProductActive productId={product.id} active={product.active} />
               </td>
               <td className="px-4 py-3 text-right">
-                <Link
-                  href={`/admin/products/${product.id}`}
-                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors px-2 py-1 rounded hover:bg-secondary"
-                >
-                  <Pencil size={13} />
-                  Modifier
-                </Link>
+                <div className="inline-flex items-center gap-1">
+                  {!!product.route_waypoints?.length && product.quantity_available === 0 && (
+                    <RepublishProductButton
+                      productId={product.id}
+                      title={product.title}
+                      price={product.price}
+                      voucherDurationMinutes={product.voucher_duration_minutes ?? 60}
+                      prixHeure={prixHeure60}
+                    />
+                  )}
+                  <Link
+                    href={`/admin/products/${product.id}`}
+                    className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors px-2 py-1 rounded hover:bg-secondary"
+                  >
+                    <Pencil size={13} />
+                    Modifier
+                  </Link>
+                  <DeleteButton onDelete={() => deleteProduct(product.id)} label="Supprimer" confirmMessage="Confirmer ?" />
+                </div>
               </td>
             </tr>
           ))}
@@ -109,36 +130,18 @@ export function BoutiqueHub({
   vouchers,
   clients,
   coupons,
-  stats,
   prixHeure60,
 }: {
   voucherProducts: Product[];
   vouchers: unknown[];
   clients: unknown[];
   coupons: unknown[];
-  stats: {
-    vouchersTotal: number;
-    vouchersDispos: number;
-    vouchersUtilises: number;
-    produitsActifs: number;
-    coupons: number;
-  };
   prixHeure60?: number | null;
 }) {
-  const tab = useSearchParams().get("tab") ?? "vouchers";
+  const tab = useSearchParams().get("tab") ?? "produits";
 
   return (
     <div className="space-y-5">
-      <StatGrid cols={5}>
-        <StatCard label="Vouchers total"  value={stats.vouchersTotal}    variant="primary"  />
-        <StatCard label="Disponibles"     value={stats.vouchersDispos}   variant="emerald"  />
-        <StatCard label="Utilisés"        value={stats.vouchersUtilises} variant="purple"   />
-        <StatCard label="Offres actives"  value={stats.produitsActifs}   variant="info"     />
-        <StatCard label="Coupons"         value={stats.coupons}          variant="gold"     />
-      </StatGrid>
-
-      <PageTabs tabs={TABS} defaultTab="vouchers" basePath="/admin/boutique" />
-
       {/* Tab content */}
       <div>
         {tab === "vouchers" && (
@@ -149,8 +152,8 @@ export function BoutiqueHub({
           <div className="space-y-6">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-2">
-                <Ticket size={15} className="text-navy" />
-                <h3 className="text-sm font-semibold text-foreground">Vols</h3>
+                <Package size={15} className="text-navy" />
+                <h3 className="text-sm font-semibold text-foreground">Les vols</h3>
                 <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">{voucherProducts.length}</span>
               </div>
               <Link
@@ -158,10 +161,11 @@ export function BoutiqueHub({
                 className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:brightness-105 transition-all font-medium shrink-0"
               >
                 <Plus size={13} />
-                Nouveau produit
+                Nouveau vol
               </Link>
             </div>
-            <ProductTable products={voucherProducts} />
+            <ProductTable products={voucherProducts} prixHeure60={prixHeure60} />
+            <StopoversAdmin />
           </div>
         )}
 

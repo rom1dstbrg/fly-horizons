@@ -22,6 +22,7 @@ interface VolProduct {
   price: number;
   voucher_duration_minutes: number;
   images?: { url: string }[];
+  escales?: { icao: string; nom: string; taxe: number }[] | null;
 }
 interface VoucherInfo { code: string; duration_minutes: number; product_title: string; }
 interface CouponInfo { code: string; type: string; value: number; }
@@ -30,6 +31,7 @@ interface FormState {
   date: string; heure: string;
   prenom: string; nom: string; email: string; telephone: string;
   passengers: number; poids_total: string; commentaire: string;
+  dureeSurPlace: string;
   codeInput: string;
   voucher: VoucherInfo | null;
   coupon: CouponInfo | null;
@@ -76,7 +78,7 @@ export default function ReservationPage() {
   const [form, setForm] = useState<FormState>({
     product: null, date: "", heure: "",
     prenom: "", nom: "", email: "", telephone: "",
-    passengers: 0, poids_total: "", commentaire: "",
+    passengers: 0, poids_total: "", commentaire: "", dureeSurPlace: "",
     codeInput: "", voucher: null, coupon: null,
     accept_cgp: false, newsletter_opt_in: false,
   });
@@ -118,10 +120,11 @@ export default function ReservationPage() {
   useEffect(() => {
     const sb = createClient();
     const params = new URLSearchParams(window.location.search);
+    const produitParam = params.get("produit") ?? "";
     const dureeParam = parseInt(params.get("duree") ?? "");
     const codeParam  = params.get("code") ?? "";
 
-    if (!dureeParam) { router.replace("/nos-offres"); return; }
+    if (!produitParam && !dureeParam) { router.replace("/nos-offres"); return; }
 
     // Restore form saved before optional login redirect
     try {
@@ -141,10 +144,17 @@ export default function ReservationPage() {
       }
     } catch { /* ignore */ }
 
-    sb.from("products")
-      .select("id, title, short_description, price, voucher_duration_minutes, images:product_images(url)")
-      .eq("active", true).eq("product_type", "voucher").eq("voucher_duration_minutes", dureeParam)
-      .single()
+    (produitParam
+      ? sb.from("products")
+          .select("id, title, short_description, price, voucher_duration_minutes, images:product_images(url), escales")
+          .eq("active", true).eq("product_type", "voucher").eq("id", produitParam)
+          .single()
+      : sb.from("products")
+          .select("id, title, short_description, price, voucher_duration_minutes, images:product_images(url), escales")
+          .eq("active", true).eq("product_type", "voucher").eq("voucher_duration_minutes", dureeParam)
+          .is("route_waypoints", null)
+          .single()
+    )
       .then(({ data }) => {
         if (data) {
           setForm(f => ({ ...f, product: data as VolProduct }));
@@ -288,14 +298,19 @@ export default function ReservationPage() {
   async function handleSubmit() {
     setSubmitting(true); setSubmitError("");
     const { price } = computePrice(form.product, form.voucher, form.coupon);
+    const dureeSurPlaceNote = form.dureeSurPlace
+      ? `Temps souhaité sur place (${form.product?.escales?.map(e => e.icao).join("/")}) : ${form.dureeSurPlace}.`
+      : "";
+    const commentaireFinal = [dureeSurPlaceNote, form.commentaire].filter(Boolean).join(" ");
     const payload = {
       prenom: form.prenom, nom: form.nom, email: form.email, telephone: form.telephone,
       duree, date: form.date, heure: form.heure,
       passengers: form.passengers, poids_total: form.poids_total ? parseInt(form.poids_total) : null,
       voucher_code: form.voucher?.code,
       coupon_code: form.coupon?.code || undefined,
-      commentaire: form.commentaire || undefined,
+      commentaire: commentaireFinal || undefined,
       newsletter_opt_in: form.newsletter_opt_in,
+      produit_id: form.product?.id || undefined,
     };
     if (price === 0) {
       const r = await fetch("/api/reservation/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
@@ -601,6 +616,28 @@ export default function ReservationPage() {
                         </div>
                       )}
                     </div>
+
+                    {!!form.product?.escales?.length && (
+                      <div>
+                        <label className="block text-sm font-semibold text-foreground mb-2">
+                          Temps souhaité sur place {form.product.escales.map(e => e.icao).join(" / ")}
+                        </label>
+                        <select
+                          value={form.dureeSurPlace}
+                          onChange={e => setForm(f => ({ ...f, dureeSurPlace: e.target.value }))}
+                          className="w-full h-10 px-3 rounded-lg border border-border bg-input text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                        >
+                          <option value="">À convenir avec le pilote</option>
+                          <option value="2h">Environ 2 h</option>
+                          <option value="4h">Environ 4 h</option>
+                          <option value="Demi-journée">Demi-journée</option>
+                          <option value="Journée complète">Journée complète</option>
+                        </select>
+                        <p className="mt-1.5 text-xs text-foreground/40">
+                          Indicatif : la durée exacte au sol dépend de la disponibilité de l&apos;avion et sera confirmée avec vous.
+                        </p>
+                      </div>
+                    )}
 
                     <div>
                       <label className="block text-sm font-semibold text-foreground mb-2">

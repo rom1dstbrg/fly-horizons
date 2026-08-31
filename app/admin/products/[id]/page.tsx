@@ -14,11 +14,20 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
   const { id } = await params;
   const adminSupabase = createAdminClient();
 
-  const { data: product } = await adminSupabase
-    .from("products")
-    .select("*, images:product_images(*)")
-    .eq("id", id)
-    .single();
+  const [{ data: product }, { data: setting }, { data: stopovers }] = await Promise.all([
+    adminSupabase
+      .from("products")
+      .select("*, images:product_images(*)")
+      .eq("id", id)
+      .single(),
+    adminSupabase
+      .from("crm_settings")
+      .select("value")
+      .eq("key", "prix_heure")
+      .maybeSingle(),
+    adminSupabase.from("stopovers").select("id, icao, nom, taxe, lat, lng").eq("actif", true).order("nom"),
+  ]);
+  const prixHeure = setting?.value ? parseFloat(setting.value) : null;
 
   if (!product) notFound();
 
@@ -42,7 +51,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
           action={<DeleteProductButton productId={product.id} />}
         />
       </div>
-      <ProductForm product={product} />
+      <ProductForm product={product} prixHeure={prixHeure} stopovers={stopovers ?? []} />
     </div>
   );
 }

@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   // ── Récupération des réservations en attente de paiement ─────────────────
   const { data: reservations, error } = await supabase
     .from("reservations")
-    .select("id, date_vol, heure_vol, duree, acompte, payment_token, voucher_code, coupon_code, clients(prenom, nom, email)")
+    .select("id, date_vol, heure_vol, duree, acompte, payment_token, voucher_code, coupon_code, product_id, clients(prenom, nom, email)")
     .eq("statut", "payment_pending")
     .in("type_resa", ["standard", "perso"])
     .not("payment_token", "is", null);
@@ -74,6 +74,12 @@ export async function POST(request: NextRequest) {
             .update({ status: "unused" })
             .eq("code", resa.voucher_code)
             .eq("status", "reserved");
+        }
+
+        // Libérer le stock produit — sinon une offre à quantité limitée reste bloquée
+        // "épuisée" pour toujours dès qu'une demande expire sans paiement.
+        if (resa.product_id) {
+          await supabase.rpc("release_product_stock", { p_product_id: resa.product_id });
         }
 
         // Pas de release_coupon : l'incrément coupon n'a lieu qu'au webhook (après paiement).

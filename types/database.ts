@@ -52,6 +52,9 @@ export interface Product {
   tags: string[];
   product_type: "physical" | "voucher";
   voucher_duration_minutes: number | null;
+  route_waypoints: { lat: number; lng: number; nom?: string }[] | null;
+  escales: { icao: string; nom: string; taxe: number; lat?: number; lng?: number }[] | null;
+  quantity_available: number | null;
   created_at: string;
   updated_at: string;
   images?: ProductImage[];

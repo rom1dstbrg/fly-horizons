@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { prenom, nom, email, telephone, duree, date, heure, voucher_code, poids_total, passengers, commentaire, newsletter_opt_in } = body;
+    const { prenom, nom, email, telephone, duree, date, heure, voucher_code, poids_total, passengers, commentaire, newsletter_opt_in, produit_id } = body;
 
     if (!prenom || !nom || !email || !duree || !date || !heure || !poids_total) {
       return NextResponse.json({ error: "Champs obligatoires manquants" }, { status: 400 });
@@ -40,19 +40,21 @@ export async function POST(request: NextRequest) {
     // Claim atomique du voucher : .eq("status","unused") garantit l'unicité (élimine TOCTOU).
     // On marque "reserved" d'abord — passage à "used" après insertion réussie de la réservation.
     let voucherId: string | null = null;
+    let voucherDurationMinutes = 0;
     if (voucher_code) {
       const { data: claimed } = await supabase
         .from("voucher_codes")
         .update({ status: "reserved" })
         .eq("code", voucher_code.toUpperCase().trim())
         .eq("status", "unused")
-        .select("id")
+        .select("id, duration_minutes")
         .maybeSingle();
 
       if (!claimed) {
         return NextResponse.json({ error: "Code voucher invalide ou déjà utilisé" }, { status: 400 });
       }
       voucherId = claimed.id;
+      voucherDurationMinutes = claimed.duration_minutes ?? 0;
     }
 
     // Find or create client by email
@@ -102,11 +104,43 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Ce créneau vient d'être réservé. Veuillez en choisir un autre." }, { status: 409 });
     }
 
+    // Résoudre le produit (offre précise si produit_id fourni, sinon match par durée
+    // restreint aux offres "durée seule" — jamais une offre à itinéraire depuis un lien générique).
+    // Toujours filtré actif/voucher, comme /api/reservation/checkout — ce endpoint ne doit
+    // jamais laisser un appelant piocher un produit inactif/brouillon ou d'un autre type.
+    const { data: product } = produit_id
+      ? await supabase.from("products").select("id, quantity_available, price, voucher_duration_minutes")
+          .eq("id", produit_id).eq("active", true).eq("product_type", "voucher").maybeSingle()
+      : await supabase.from("products").select("id, quantity_available, price, voucher_duration_minutes")
+          .eq("active", true).eq("product_type", "voucher").eq("voucher_duration_minutes", dureeMins)
+          .is("route_waypoints", null).maybeSingle();
+
+    // Ce endpoint ne fait jamais payer — un produit avec un prix doit être intégralement
+    // couvert par le voucher fourni, sinon on refuse (sans ça, n'importe qui peut réserver
+    // gratuitement une offre payante en appelant directement l'API avec un produit_id).
+    if (product && product.price > 0 && voucherDurationMinutes < (product.voucher_duration_minutes ?? dureeMins)) {
+      if (voucherId) {
+        await supabase.from("voucher_codes").update({ status: "unused" }).eq("id", voucherId).eq("status", "reserved");
+      }
+      return NextResponse.json({ error: "Cette offre n'est pas gratuite. Utilisez le paiement en ligne." }, { status: 400 });
+    }
+
+    if (product && product.quantity_available != null) {
+      const { data: claimed } = await supabase.rpc("claim_product_stock", { p_product_id: product.id });
+      if (!claimed) {
+        if (voucherId) {
+          await supabase.from("voucher_codes").update({ status: "unused" }).eq("id", voucherId).eq("status", "reserved");
+        }
+        return NextResponse.json({ error: "Cette offre vient d'être vendue." }, { status: 409 });
+      }
+    }
+
     // Créer la réservation
     const { data: resa, error: resaErr } = await supabase
       .from("reservations")
       .insert({
         client_id: clientId,
+        product_id: product?.id ?? null,
         date_vol: date,
         heure_vol: heure,
         duree: parseInt(duree),
@@ -124,6 +158,10 @@ export async function POST(request: NextRequest) {
       // Rollback voucher claim so the code can be reused
       if (voucherId) {
         await supabase.from("voucher_codes").update({ status: "unused" }).eq("id", voucherId).eq("status", "reserved");
+      }
+      // Rollback du stock produit claimé plus haut
+      if (product && product.quantity_available != null) {
+        await supabase.rpc("release_product_stock", { p_product_id: product.id });
       }
       // Unique constraint violation = slot taken by a concurrent request
       if ((resaErr as { code?: string }).code === "23505") {

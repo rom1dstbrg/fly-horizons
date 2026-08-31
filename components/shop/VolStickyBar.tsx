@@ -11,11 +11,12 @@ interface VolStickyBarProps {
   price: number;
   duree: number;
   image_url: string | null;
+  soldOut?: boolean;
 }
 
 // Bouton "Offrir" (ajout panier) retiré le 30/07/2026 — arrêt de la vente publique de vouchers,
 // voir audit-legal-fly-horizons.html point critique n°1. Ne reste que la réservation directe.
-export function VolStickyBar({ title, price, duree }: VolStickyBarProps) {
+export function VolStickyBar({ id, title, price, duree, soldOut }: VolStickyBarProps) {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -48,13 +49,19 @@ export function VolStickyBar({ title, price, duree }: VolStickyBarProps) {
           </div>
 
           {/* Droite : bouton */}
-          <Link
-            href={`/reservation?duree=${duree}`}
-            className="h-10 px-5 flex items-center gap-2 bg-[#F2B705] text-[#0b2238] rounded-lg text-sm font-black hover:bg-[#e6a800] transition-colors shadow-[0_2px_8px_rgba(242,183,5,0.35)] whitespace-nowrap shrink-0"
-          >
-            <CalendarCheck size={15} />
-            Faire une demande
-          </Link>
+          {soldOut ? (
+            <div className="h-10 px-5 flex items-center gap-2 bg-secondary text-muted-foreground rounded-lg text-sm font-black whitespace-nowrap shrink-0">
+              Offre épuisée
+            </div>
+          ) : (
+            <Link
+              href={`/reservation?produit=${id}&duree=${duree}`}
+              className="h-10 px-5 flex items-center gap-2 bg-[#F2B705] text-[#0b2238] rounded-lg text-sm font-black hover:bg-[#e6a800] transition-colors shadow-[0_2px_8px_rgba(242,183,5,0.35)] whitespace-nowrap shrink-0"
+            >
+              <CalendarCheck size={15} />
+              Faire une demande
+            </Link>
+          )}
 
         </div>
       </div>

@@ -5,6 +5,7 @@ import { Route, ArrowRight, CalendarCheck, Map, Headphones, PlaneTakeoff } from 
 import { formatDuration } from "@/lib/vouchers";
 import { VolDetailClient } from "@/components/shop/VolDetailClient";
 import { VolImageGallery } from "@/components/shop/VolImageGallery";
+import { VolItineraryCard } from "@/components/shop/VolItineraryCard";
 import { PackCard } from "@/components/shop/PackCard";
 import { BackLink } from "@/components/shop/BackLink";
 import { VolStickyBar } from "@/components/shop/VolStickyBar";
@@ -85,6 +86,7 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
       .eq("product_type", "voucher")
       .eq("active", true)
       .neq("slug", slug)
+      .or("quantity_available.is.null,quantity_available.gt.0")
       .order("voucher_duration_minutes", { ascending: true }),
   ]);
 
@@ -94,6 +96,7 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
   const sortedImages = [...(vol.images ?? [])].sort((a: { position?: number }, b: { position?: number }) => (a.position ?? 0) - (b.position ?? 0));
   const image = sortedImages[0]?.url ?? null;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
+  const soldOut = vol.quantity_available === 0;
 
   const productSchema = {
     "@context": "https://schema.org",
@@ -155,9 +158,13 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
                 )}
               </div>
 
+              {vol.route_waypoints && vol.route_waypoints.length > 0 && (
+                <VolItineraryCard waypoints={vol.route_waypoints} />
+              )}
+
               <VolDetailClient
                 id={vol.id} slug={vol.slug} title={vol.title}
-                price={vol.price} duree={duree} image_url={image}
+                price={vol.price} duree={duree} image_url={image} soldOut={soldOut} escales={vol.escales}
               />
 
             </div>
@@ -255,7 +262,7 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
 
       <VolStickyBar
         id={vol.id} slug={vol.slug} title={vol.title}
-        price={vol.price} duree={duree} image_url={image}
+        price={vol.price} duree={duree} image_url={image} soldOut={soldOut}
       />
 
     </main>

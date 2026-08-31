@@ -17,6 +17,9 @@ interface Props {
   waypoints: Waypoint[];
   height?: string;
   className?: string;
+  // Aperçu statique (petites cartes en liste) : pas de contrôles ni d'interaction,
+  // juste un visuel. Par défaut true partout ailleurs (carte pleine, popup détaillée).
+  compact?: boolean;
 }
 
 function makeEBCIIcon() {
@@ -37,7 +40,7 @@ function makeNumberedIcon(n: number) {
   });
 }
 
-export default function RouteMapReadOnly({ waypoints, height = "280px", className }: Props) {
+export default function RouteMapReadOnly({ waypoints, height = "280px", className, compact = false }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
 
@@ -45,9 +48,14 @@ export default function RouteMapReadOnly({ waypoints, height = "280px", classNam
     if (!containerRef.current || mapRef.current) return;
 
     const map = L.map(containerRef.current, {
-      zoomControl: true,
+      zoomControl: !compact,
       scrollWheelZoom: false,
-      dragging: true,
+      dragging: !compact,
+      doubleClickZoom: !compact,
+      touchZoom: !compact,
+      boxZoom: !compact,
+      keyboard: !compact,
+      attributionControl: !compact,
     }).setView([EBCI.lat, EBCI.lng], 8);
 
     const layerSat = L.tileLayer(
@@ -66,19 +74,21 @@ export default function RouteMapReadOnly({ waypoints, height = "280px", classNam
     layerSat.addTo(map);
     layerLabels.addTo(map);
 
-    L.control.layers(
-      { "Satellite": layerSat, "Carte": layerCarte },
-      { "Noms": layerLabels },
-      { position: "bottomleft", collapsed: false }
-    ).addTo(map);
+    if (!compact) {
+      L.control.layers(
+        { "Satellite": layerSat, "Carte": layerCarte },
+        { "Noms": layerLabels },
+        { position: "bottomleft", collapsed: false }
+      ).addTo(map);
 
-    map.on("baselayerchange", (e: L.LayersControlEvent) => {
-      if (e.name === "Satellite") {
-        if (!map.hasLayer(layerLabels)) layerLabels.addTo(map);
-      } else {
-        if (map.hasLayer(layerLabels)) map.removeLayer(layerLabels);
-      }
-    });
+      map.on("baselayerchange", (e: L.LayersControlEvent) => {
+        if (e.name === "Satellite") {
+          if (!map.hasLayer(layerLabels)) layerLabels.addTo(map);
+        } else {
+          if (map.hasLayer(layerLabels)) map.removeLayer(layerLabels);
+        }
+      });
+    }
 
     // EBCI fixed marker
     L.marker([EBCI.lat, EBCI.lng], { icon: makeEBCIIcon(), interactive: false })
@@ -116,6 +126,10 @@ export default function RouteMapReadOnly({ waypoints, height = "280px", classNam
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div ref={containerRef} style={{ height }} className={className ?? "w-full rounded-xl overflow-hidden border border-border"} />
+    <div
+      ref={containerRef}
+      style={{ height }}
+      className={`isolate ${className ?? "w-full rounded-xl overflow-hidden border border-border"}`}
+    />
   );
 }

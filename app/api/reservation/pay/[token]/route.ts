@@ -47,11 +47,18 @@ export async function GET(
 
   if (hoursUntilFlight < 48) {
     // Annuler silencieusement (le créneau est libéré)
-    await supabase
+    const { data: cancelledRow } = await supabase
       .from("reservations")
       .update({ statut: "annulee", payment_token: null })
       .eq("id", resa.id)
-      .eq("statut", "payment_pending");
+      .eq("statut", "payment_pending")
+      .select("id")
+      .maybeSingle();
+    // Libérer le stock produit — sinon une offre à quantité limitée reste bloquée
+    // "épuisée" pour toujours dès qu'un lien de paiement expire sans être utilisé.
+    if (cancelledRow && resa.product_id) {
+      await supabase.rpc("release_product_stock", { p_product_id: resa.product_id });
+    }
     return NextResponse.redirect(new URL("/reservation?error=lien_paiement_expire", siteUrl));
   }
 

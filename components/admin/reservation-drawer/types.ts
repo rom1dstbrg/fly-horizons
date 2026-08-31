@@ -24,6 +24,7 @@ export interface DrawerReservation {
   created_at: string;
   avion_reserve?: boolean;
   cash_payment?: boolean;
+  stripe_fee?: number | null;
   slot_proposal_token?: string | null;
   slot_proposal_date?: string | null;
   slot_proposal_heure?: string | null;
@@ -57,9 +58,14 @@ export interface DrawerReservation {
     email: string;
     telephone: string | null;
   } | null;
+
+  // Offre à itinéraire fixe (produit associé à la réservation, si achetée depuis une fiche
+  // avec route pré-définie) — la route est déjà connue, rien à tracer ni renvoyer au client.
+  product_id?: string | null;
+  products?: { route_waypoints: Waypoint[] | null } | null;
 }
 
-export type Tab = "infos" | "modifier" | "historique";
+export type Tab = "infos" | "route" | "modifier" | "historique";
 
 export type HistoryItem = {
   id: string;

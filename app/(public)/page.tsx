@@ -68,12 +68,16 @@ export default async function HomePage() {
     supabase.from("products")
       .select("*, images:product_images(*)")
       .eq("active", true).eq("product_type", "voucher")
+      .or("quantity_available.is.null,quantity_available.gt.0")
       .order("voucher_duration_minutes", { ascending: true }),
     supabase.from("gallery_images")
       .select("storage_path, alt")
       .order("display_order", { ascending: true })
       .limit(5),
   ]);
+
+  const packsFixes = (packs ?? []).filter(p => !p.route_waypoints?.length);
+  const packsItineraire = (packs ?? []).filter(p => !!p.route_waypoints?.length);
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const galleryPreview = (galleryRows ?? []).map(row => ({
@@ -134,8 +138,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ═══ NOS VOLS ═══ */}
-      {(packs ?? []).length > 0 && (
+      {/* ═══ NOS VOLS — durée fixe, itinéraire libre ═══ */}
+      {packsFixes.length > 0 && (
         <section id="nos-vols" className="py-20 sm:py-28 bg-gradient-navy">
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
@@ -152,7 +156,7 @@ export default async function HomePage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              {(packs ?? []).map((pack) => (
+              {packsFixes.map((pack) => (
                 <PackCard key={pack.id} pack={pack} />
               ))}
             </div>
@@ -167,6 +171,33 @@ export default async function HomePage() {
               </p>
             </div>
             */}
+
+          </div>
+        </section>
+      )}
+
+      {/* ═══ ITINÉRAIRES SÉLECTIONNÉS — route fixée à l'avance ═══ */}
+      {packsItineraire.length > 0 && (
+        <section id="itineraires" className="py-20 sm:py-28 bg-[#f5f5f7]">
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
+
+            <div className="mb-10">
+              <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-4">
+                Routes préparées par votre pilote
+              </p>
+              <h2 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight">
+                Itinéraires sélectionnés
+              </h2>
+              <p className="text-muted-foreground text-sm mt-4">
+                Un parcours déjà tracé, prêt à réserver — vous connaissez la route avant de partir.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              {packsItineraire.map((pack) => (
+                <PackCard key={pack.id} pack={pack} />
+              ))}
+            </div>
 
           </div>
         </section>
