@@ -13,6 +13,24 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-04-22.dahlia",
 });
 
+// Frais réel prélevé par Stripe (variable selon type de carte, pas une formule fixe) —
+// lu sur la balance_transaction du charge plutôt que déduit d'un pourcentage supposé.
+// Ne doit jamais faire échouer le webhook : un paiement reste valide même si ce lookup rate.
+async function getStripeFee(paymentIntentId: string | null | undefined): Promise<number | null> {
+  if (!paymentIntentId) return null;
+  try {
+    const pi = await stripe.paymentIntents.retrieve(paymentIntentId, {
+      expand: ["latest_charge.balance_transaction"],
+    });
+    const charge = pi.latest_charge as Stripe.Charge | null;
+    const bt = charge?.balance_transaction as Stripe.BalanceTransaction | null;
+    return bt?.fee != null ? bt.fee / 100 : null;
+  } catch (err) {
+    console.error("getStripeFee error:", err);
+    return null;
+  }
+}
+
 export async function POST(request: NextRequest) {
   const body = await request.text();
   const signature = request.headers.get("stripe-signature");
@@ -44,6 +62,7 @@ export async function POST(request: NextRequest) {
       const { reservationId, voucherId, voucherCode, couponCode, paymentToken } = session.metadata;
       if (reservationId) {
         const montantPayePerso = session.amount_total ? session.amount_total / 100 : 0;
+        const stripeFeePerso = await getStripeFee(session.payment_intent as string | null);
 
         // Statut à écrire : on ne rétrograde jamais une réservation qui a déjà avancé
         // au-delà de "acompte_recu" (route/date/heure déjà confirmées avant que le client
@@ -61,7 +80,7 @@ export async function POST(request: NextRequest) {
             : "acompte_recu";
 
         const { data: persoUpdated } = await adminSupabase.from("reservations")
-          .update({ statut: restoreStatutPerso, payment_token: null, paye: montantPayePerso, payment_status: "paid" })
+          .update({ statut: restoreStatutPerso, payment_token: null, paye: montantPayePerso, payment_status: "paid", stripe_fee: stripeFeePerso })
           .eq("id", reservationId)
           .not("statut", "in", "(acompte_recu,solde,vol_effectue,annulee)") // exclut déjà-payé/terminal
           .select("id")
@@ -74,7 +93,7 @@ export async function POST(request: NextRequest) {
           if (cur?.statut === "annulee") {
             // RC-02: force-restaurer + alerte admin
             await adminSupabase.from("reservations")
-              .update({ statut: "acompte_recu", payment_token: null, paye: montantPayePerso, payment_status: "paid" })
+              .update({ statut: "acompte_recu", payment_token: null, paye: montantPayePerso, payment_status: "paid", stripe_fee: stripeFeePerso })
               .eq("id", reservationId);
             await resend.emails.send({
               from: EMAIL_FROM, to: [EMAIL_REPLY_TO],
@@ -169,6 +188,7 @@ export async function POST(request: NextRequest) {
       const { reservationId, voucherId, voucherCode, couponCode } = session.metadata;
       if (reservationId) {
         const montantPayeStd = session.amount_total ? session.amount_total / 100 : 0;
+        const stripeFeeStd = await getStripeFee(session.payment_intent as string | null);
 
         // Statut à restaurer après paiement : "en_attente" pour une première invitation de
         // paiement, ou le statut d'avant (typiquement "heure_confirmee") si le paiement fait
@@ -182,7 +202,7 @@ export async function POST(request: NextRequest) {
 
         const { data: stdUpdated } = await adminSupabase
           .from("reservations")
-          .update({ statut: restoreStatut, payment_token: null, paye: montantPayeStd, payment_status: "paid", pre_payment_statut: null })
+          .update({ statut: restoreStatut, payment_token: null, paye: montantPayeStd, payment_status: "paid", pre_payment_statut: null, stripe_fee: stripeFeeStd })
           .eq("id", reservationId)
           .eq("statut", "payment_pending")
           .select("id")
@@ -195,7 +215,7 @@ export async function POST(request: NextRequest) {
           if (cur?.statut === "annulee") {
             // RC-02: force-restaurer + alerte admin
             await adminSupabase.from("reservations")
-              .update({ statut: restoreStatut, payment_token: null, paye: montantPayeStd, payment_status: "paid", pre_payment_statut: null })
+              .update({ statut: restoreStatut, payment_token: null, paye: montantPayeStd, payment_status: "paid", pre_payment_statut: null, stripe_fee: stripeFeeStd })
               .eq("id", reservationId);
             // Le cron avait libéré le coupon (release_coupon) — le re-incrémenter
             if (couponCode) {
@@ -512,11 +532,18 @@ export async function POST(request: NextRequest) {
     // - perso : NE PAS annuler — le payment_token reste valide jusqu'à J-4, chaque clic sur le
     //   lien crée une nouvelle session Stripe. L'annulation se fait manuellement par l'admin.
     if (reservationId && type === "reservation" && !paymentToken) {
-      await adminSupabase
+      const { data: cancelledRow } = await adminSupabase
         .from("reservations")
         .update({ statut: "annulee" })
         .eq("id", reservationId)
-        .eq("statut", "payment_pending");
+        .eq("statut", "payment_pending")
+        .select("id, product_id")
+        .maybeSingle();
+      // Libérer le stock produit — sinon une offre à quantité limitée reste bloquée
+      // "épuisée" pour toujours dès qu'une session Stripe expire sans paiement.
+      if (cancelledRow?.product_id) {
+        await adminSupabase.rpc("release_product_stock", { p_product_id: cancelledRow.product_id });
+      }
     }
 
     // Pas de release_coupon ici : l'incrément coupon n'a jamais lieu avant le paiement Stripe.

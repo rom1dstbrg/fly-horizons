@@ -27,6 +27,9 @@ export type LigneVol = {
   resultat: number | null;
   voucher_code: string | null;
   voucher_montant: number | null;
+  stripe_fee: number | null;
+  stripe_net: number | null;
+  stripe_fee_estimated: boolean;
 };
 
 export type LigneVoucher = {
@@ -52,6 +55,7 @@ export type SoldeStats = {
   cout_avion: number;
   depenses: number;
   solde_net: number;
+  stripe_fees: number;
   part_pilote_moyenne_pct: number | null;
   vols_avec_cout: number;
 };
@@ -69,10 +73,10 @@ function fmt(n: number) {
 
 function KpiCard({ label, value, cls, sub }: { label: string; value: string; cls?: string; sub?: string }) {
   return (
-    <div className="bg-card border border-border rounded-xl p-4">
-      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">{label}</p>
-      <p className={`text-xl font-black ${cls ?? "text-foreground"}`}>{value}</p>
-      {sub && <p className="text-[10px] text-muted-foreground mt-1">{sub}</p>}
+    <div className="bg-card border border-border rounded-xl p-3">
+      <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1 truncate">{label}</p>
+      <p className={`text-base font-black whitespace-nowrap ${cls ?? "text-foreground"}`}>{value}</p>
+      {sub && <p className="text-[9px] text-muted-foreground mt-1 leading-tight">{sub}</p>}
     </div>
   );
 }
@@ -124,7 +128,7 @@ function VolRow({ vol }: { vol: LigneVol }) {
       <td className="px-3 py-3 text-right tabular-nums text-xs text-emerald-600">
         {vol.acompte != null ? fmt(vol.acompte) : DASH}
       </td>
-      {/* Versé */}
+      {/* Brut payé */}
       <td className="px-3 py-3 text-right tabular-nums text-xs">
         {coveredByVoucher ? (
           <div className="flex flex-col items-end gap-0.5">
@@ -136,17 +140,27 @@ function VolRow({ vol }: { vol: LigneVol }) {
           : DASH
         }
       </td>
+      {/* Net reçu — brut moins commission Stripe (cash/voucher : identique au brut, pas de frais) */}
+      <td className="px-3 py-3 text-right tabular-nums text-xs">
+        {vol.paye > 0 ? (
+          <div className="flex flex-col items-end gap-0.5">
+            <span className="font-semibold text-foreground">
+              {vol.stripe_net != null && vol.stripe_fee_estimated && "~"}{fmt(vol.stripe_net ?? vol.paye)}
+            </span>
+            {vol.stripe_net != null && (
+              <span
+                className="text-[10px] text-red-400"
+                title={vol.stripe_fee_estimated ? "Estimé (1,5 % + 0,25 €) — frais réel non capturé pour ce paiement" : "Frais réel Stripe"}
+              >
+                −{fmt(vol.stripe_fee ?? 0)} frais
+              </span>
+            )}
+          </div>
+        ) : DASH}
+      </td>
       {/* Remboursement */}
       <td className="px-3 py-3 text-right tabular-nums text-xs text-red-500">
         {vol.remboursement > 0 ? `−${fmt(vol.remboursement)}` : DASH}
-      </td>
-      {/* Net client */}
-      <td className={`px-3 py-3 text-right tabular-nums text-xs font-semibold ${
-        vol.net_client > 0 ? "text-emerald-600"
-        : vol.net_client < 0 ? "text-red-500"
-        : "text-foreground"
-      }`}>
-        {vol.net_client !== 0 ? fmt(vol.net_client) : DASH}
       </td>
       {/* Durée */}
       <td className="px-3 py-3 text-right tabular-nums text-xs text-muted-foreground whitespace-nowrap">
@@ -236,9 +250,7 @@ function DepenseRow({
       <td className="px-3 py-3 text-right text-xs text-muted-foreground">{DASH}</td>
       <td className="px-3 py-3 text-right text-xs text-muted-foreground">{DASH}</td>
       <td className="px-3 py-3 text-right text-xs text-muted-foreground">{DASH}</td>
-      <td className="px-3 py-3 text-right tabular-nums text-xs font-semibold text-red-500">
-        −{fmt(d.montant)}
-      </td>
+      <td className="px-3 py-3 text-right text-xs text-muted-foreground">{DASH}</td>
       <td className="px-3 py-3 text-right text-xs text-muted-foreground">{DASH}</td>
       <td className="px-3 py-3 text-right">
         <Resultat v={-d.montant} />
@@ -435,7 +447,7 @@ export function TransactionsClient({
         {/* KPIs globaux */}
         <div>
           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">Solde caisses Fly Horizons (cumulatif)</p>
-          <StatGrid cols={6}>
+          <StatGrid cols={7}>
             <KpiCard label="Total encaissé" value={`+${fmt(soldeGlobal.encaisse)}`} cls="text-emerald-600" />
             <KpiCard label="Remboursements" value={soldeGlobal.rembourse > 0 ? `−${fmt(soldeGlobal.rembourse)}` : fmt(0)} cls="text-red-500" />
             <KpiCard
@@ -462,6 +474,12 @@ export function TransactionsClient({
               label="Solde net"
               value={`${soldeNet >= 0 ? "+" : ""}${fmt(soldeNet)}`}
               cls={soldeNet >= 0 ? "text-emerald-600" : "text-red-500"}
+            />
+            <KpiCard
+              label="Frais Stripe"
+              value={soldeGlobal.stripe_fees > 0 ? `−${fmt(soldeGlobal.stripe_fees)}` : fmt(0)}
+              cls={soldeGlobal.stripe_fees > 0 ? "text-red-500" : "text-muted-foreground"}
+              sub="paiements carte uniquement, hors cash/voucher"
             />
           </StatGrid>
         </div>
@@ -515,9 +533,9 @@ export function TransactionsClient({
                   <th className="text-left px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Label</th>
                   <th className="text-left px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Type</th>
                   <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Dû</th>
-                  <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Versé</th>
+                  <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Brut payé</th>
+                  <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Net reçu</th>
                   <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Remb.</th>
-                  <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Net client</th>
                   <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Durée</th>
                   <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Coût avion</th>
                   <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Part pilote</th>

@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { stripeNetInfo } from "@/lib/stripe-fee";
 import type { LigneVol, LigneVoucher, Depense, SoldeStats } from "@/components/admin/TransactionsClient";
 
 type TarifAvion = { prix_heure: number; actif_depuis: string };
@@ -30,7 +31,7 @@ export async function getTransactionsData(): Promise<{
     supabase.from("avion_tarifs").select("prix_heure, actif_depuis"),
     supabase
       .from("reservations")
-      .select("id, date_vol, type_resa, acompte, paye, remboursement, duree, duree_reelle, passagers, voucher_code, statut, clients(prenom, nom)")
+      .select("id, date_vol, type_resa, acompte, paye, remboursement, duree, duree_reelle, passagers, voucher_code, statut, cash_payment, stripe_fee, clients(prenom, nom)")
       .neq("statut", "annulee")
       .order("date_vol", { ascending: false }),
     supabase
@@ -94,6 +95,13 @@ export async function getTransactionsData(): Promise<{
     const coveredByVoucher = !!r.voucher_code && paye === 0;
     const effectivePaye = coveredByVoucher ? (voucherMontant ?? 0) : paye;
     const net = effectivePaye - remb;
+    // Net réellement encaissé après commission Stripe — seulement pertinent pour un paiement
+    // carte non couvert par un voucher (le cash n'a pas de frais, le voucher a déjà été
+    // encaissé — avec sa propre commission — lors de son achat, pas de ce vol-ci).
+    const netInfo = stripeNetInfo({ paye, stripeFee: r.stripe_fee, cashPayment: r.cash_payment, coveredByVoucher });
+    const stripeFee = netInfo?.fee ?? null;
+    const stripeFeeEstimated = netInfo?.isEstimate ?? false;
+    const stripeNet = netInfo?.net ?? null;
     const prixH = tarifs.length > 0 ? tarifPourDate(tarifs, r.date_vol) : 0;
     const coutAvion = r.duree_reelle != null && prixH > 0
       ? Math.round((r.duree_reelle / 60) * prixH * 100) / 100
@@ -127,6 +135,9 @@ export async function getTransactionsData(): Promise<{
       resultat: coutAvion != null ? Math.round((net - coutAvion) * 100) / 100 : null,
       voucher_code: r.voucher_code ?? null,
       voucher_montant: voucherMontant,
+      stripe_fee: stripeFee,
+      stripe_net: stripeNet,
+      stripe_fee_estimated: stripeFeeEstimated,
     };
   });
 
@@ -180,6 +191,7 @@ export async function getTransactionsData(): Promise<{
   let globalCoutAvion = 0;
   let globalPartPilote = 0;
   let volsAvecCout = 0;
+  let globalStripeFees = 0;
 
   for (const v of vols) {
     globalEncaisse += v.paye;
@@ -189,6 +201,8 @@ export async function getTransactionsData(): Promise<{
       globalPartPilote += v.part_pilote ?? 0;
       volsAvecCout++;
     }
+    // stripe_net non-null ⇔ paiement carte (pas cash, pas voucher) — cf. calcul plus haut
+    if (v.stripe_net != null) globalStripeFees += v.stripe_fee ?? 0;
   }
   for (const v of vouchers) {
     globalEncaisse += v.montant ?? 0;
@@ -206,6 +220,7 @@ export async function getTransactionsData(): Promise<{
       ? Math.round((globalPartPilote / globalCoutAvion) * 1000) / 10
       : null,
     vols_avec_cout: volsAvecCout,
+    stripe_fees: Math.round(globalStripeFees * 100) / 100,
   };
 
   return { vols, vouchers, depenses, soldeGlobal };
