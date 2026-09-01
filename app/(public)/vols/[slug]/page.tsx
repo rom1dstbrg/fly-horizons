@@ -10,6 +10,15 @@ import { PackCard } from "@/components/shop/PackCard";
 import { BackLink } from "@/components/shop/BackLink";
 import { VolStickyBar } from "@/components/shop/VolStickyBar";
 
+function shuffle<T>(arr: T[]): T[] {
+  const result = [...arr];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const supabase = await createClient();
@@ -45,20 +54,20 @@ const STEPS = [
   {
     num: "01",
     icon: <CalendarCheck size={22} />,
-    title: "Réservation en ligne",
-    desc: "Choisissez votre durée et réglez en sécurité. La confirmation et votre bon de vol arrivent par email dans la minute, pour vous ou pour l'offrir.",
+    title: "Demande en ligne",
+    desc: "Choisissez votre vol, une date et un horaire souhaités, puis envoyez votre demande. Aucun paiement n'est demandé à ce stade, que ce soit pour vous ou pour l'offrir.",
   },
   {
     num: "02",
     icon: <Map size={22} />,
-    title: "Votre pilote trace la route",
-    desc: "Romain, pilote et fondateur de Fly Horizons, vous contacte pour composer l'itinéraire ensemble. Namur, Bruxelles, les Ardennes... la route s'adapte à vos envies et à la météo du jour.",
+    title: "Confirmation par le pilote",
+    desc: "Votre pilote étudie votre demande sous 72h maximum (créneau, météo, faisabilité). Itinéraire libre, la route se compose avec vous ; destination fixée, elle est déjà tracée. Le lien de paiement suit.",
   },
   {
     num: "03",
     icon: <Headphones size={22} />,
     title: "Briefing à Charleroi",
-    desc: "Rendez-vous sur l'aérodrome de Charleroi (EBCI) : accueil personnalisé, briefing sécurité, casques audio fournis. Vous montez à bord en toute sérénité.",
+    desc: "Rendez-vous sur l'aérodrome de Charleroi (EBCI) : briefing sécurité, casques audio fournis. Vous montez à bord en toute sérénité.",
   },
   {
     num: "04",
@@ -93,8 +102,8 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
   if (!vol) notFound();
 
   const toutesAutres = autres ?? [];
-  const autresDurees = toutesAutres.filter((p) => !p.route_waypoints || p.route_waypoints.length === 0);
-  const autresItineraires = toutesAutres.filter((p) => p.route_waypoints && p.route_waypoints.length > 0);
+  const autresDurees = shuffle(toutesAutres.filter((p) => !p.route_waypoints || p.route_waypoints.length === 0)).slice(0, 3);
+  const autresItineraires = shuffle(toutesAutres.filter((p) => p.route_waypoints && p.route_waypoints.length > 0)).slice(0, 3);
 
   const duree = vol.voucher_duration_minutes ?? 60;
   const sortedImages = [...(vol.images ?? [])].sort((a: { position?: number }, b: { position?: number }) => (a.position ?? 0) - (b.position ?? 0));

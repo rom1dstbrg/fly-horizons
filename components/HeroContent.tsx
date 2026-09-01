@@ -1,8 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Link from "next/link";
-import { PlaneTakeoff, Images } from "lucide-react";
+import { PlaneTakeoff, Route } from "lucide-react";
 
 const ease: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94];
 
@@ -38,7 +37,7 @@ export function HeroContent() {
         className="text-white/75 text-base sm:text-lg md:text-xl leading-relaxed max-w-xl mb-10 font-light"
         {...fadeUp(0.4)}
       >
-        Le vol partagé en avion léger, depuis Charleroi. Itinéraire libre, jusqu&apos;à 3 passagers.
+        Depuis Charleroi, jusqu&apos;à 3 passagers. Itinéraire libre ou destination fixée à l&apos;avance.
       </motion.p>
 
       <motion.div
@@ -52,21 +51,14 @@ export function HeroContent() {
           <PlaneTakeoff size={16} />
           Découvrir nos vols
         </a>
-        <Link
-          href="/galerie"
+        <a
+          href="#itineraires"
           className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-white/10 text-white border border-white/30 rounded-lg font-semibold text-sm hover:bg-white/20 hover:border-white/50 transition-all backdrop-blur-sm"
         >
-          <Images size={16} />
-          Voir la galerie
-        </Link>
+          <Route size={16} />
+          Voir les itinéraires
+        </a>
       </motion.div>
-
-      <motion.p
-        className="text-white/45 text-[11px] mt-5 max-w-sm"
-        {...fadeUp(0.6)}
-      >
-        Créneau souhaité, pas garanti : le vol étant partagé, une autre date ou heure peut vous être proposée.
-      </motion.p>
 
     </div>
   );

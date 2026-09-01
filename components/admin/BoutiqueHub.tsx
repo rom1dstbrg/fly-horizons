@@ -48,22 +48,22 @@ function ProductTable({ products, prixHeure60 }: { products: Product[]; prixHeur
   return (
     <div className="bg-card rounded-xl border border-border overflow-hidden">
       <div className="overflow-x-auto">
-      <table className="w-full">
+      <table className="w-full table-fixed">
         <thead>
           <tr className="border-b border-border">
-            <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Produit</th>
-            <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">Prix</th>
-            <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">Durée</th>
-            <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">Stock</th>
-            <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">Statut</th>
-            <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Actions</th>
+            <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide w-[30%]">Produit</th>
+            <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell w-[13%]">Prix</th>
+            <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell w-[13%]">Durée</th>
+            <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell w-[15%]">Stock</th>
+            <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell w-[11%]">Statut</th>
+            <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide w-[18%]">Actions</th>
           </tr>
         </thead>
         <tbody>
           {products.map((product) => (
             <tr key={product.id} className="border-b border-border last:border-0 hover:bg-secondary transition-colors">
               <td className="px-4 py-3">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0">
                   <div className="w-10 h-10 rounded-md bg-muted overflow-hidden shrink-0 border border-border">
                     {product.images?.[0]?.url ? (
                       <Image src={[...(product.images ?? [])].sort((a, b) => ((a as {position?: number}).position ?? 0) - ((b as {position?: number}).position ?? 0))[0].url} alt={product.title} width={40} height={40} className="w-full h-full object-cover" unoptimized />
@@ -71,9 +71,9 @@ function ProductTable({ products, prixHeure60 }: { products: Product[]; prixHeur
                       <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">—</div>
                     )}
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm font-medium text-foreground line-clamp-1">{product.title}</p>
-                    <p className="text-xs text-muted-foreground">{product.slug}</p>
+                    <p className="text-xs text-muted-foreground truncate">{product.slug}</p>
                   </div>
                 </div>
               </td>
