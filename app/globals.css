@@ -238,7 +238,6 @@
 
   html {
     @apply scroll-smooth;
-    overflow-x: hidden;
   }
 
   body {

@@ -29,7 +29,7 @@ IMPORTANT. Nature non commerciale des vols : Les vols proposés sur ce site ne c
 Elles couvrent trois catégories d'achats :
 - Produits physiques (accessoires aéronautiques et articles de la boutique)
 - Bons de vol (vouchers cadeaux pour une expérience de vol en partage de coûts)
-- Réservations de vol (packs 30 / 60 / 90 / 120 min ou vol sur mesure)
+- Réservations de vol (packs 30 / 60 / 90 / 120 min, vols à itinéraire fixe, ou vol sur mesure)
 
 En passant commande sur le site, le Client reconnaît avoir pris connaissance des présentes CGP et les accepte sans réserve. Les CGP applicables sont celles en vigueur au moment de la passation de la commande.`,
   },
@@ -45,7 +45,7 @@ La disponibilité est indiquée sur chaque fiche produit. En cas d'indisponibili
     title: "4. Bons de vol (vouchers)",
     content: `IMPORTANT : l'achat en ligne d'un bon de vol n'est actuellement pas disponible sur le site. Un bon de vol peut néanmoins être établi directement auprès de l'exploitant (info@fly-horizons.com) pour être offert en cadeau. Les conditions ci-dessous s'appliquent à tout bon de vol émis, qu'il ait été acheté en ligne par le passé ou établi directement auprès de l'exploitant.
 
-Les bons de vol sont des certificats d'expérience valant droit à une expérience de vol en partage de coûts pour la durée mentionnée (30, 60, 90 ou 120 minutes). Ils peuvent être offerts comme cadeau.
+Les bons de vol sont des certificats d'expérience valant droit à une expérience de vol en partage de coûts pour la formule mentionnée sur le bon (durée libre de 30 à 120 minutes, ou vol à itinéraire fixe vers une destination donnée). Ils peuvent être offerts comme cadeau.
 
 Conditions applicables aux bons de vol :
 
@@ -62,16 +62,20 @@ Perte ou vol : Fly Horizons ne peut être tenu responsable de la perte, du vol o
 Droit de rétractation sur les bons de vol : Le Client dispose d'un droit de rétractation de 14 jours calendaires à compter de l'achat, à condition que le bon de vol n'ait pas encore été utilisé pour initier une réservation. Pour exercer ce droit, le Client envoie un e-mail à info@fly-horizons.com.`,
   },
   {
-    title: "5. Réservations de vol : Packs standards",
-    content: `Les packs de vol (30, 60, 90 ou 120 minutes) permettent de réserver un créneau de vol sur le calendrier disponible, au départ de l'aéroport de Charleroi (EBCI).
+    title: "5. Réservations de vol : Packs standards et vols à itinéraire fixe",
+    content: `Les vols proposés en réservation directe se déclinent en deux familles, au départ de l'aéroport de Charleroi (EBCI) :
 
-Processus de réservation : Le Client choisit sa durée de vol, une date et un horaire disponibles, renseigne ses informations personnelles et procède au paiement ou utilise un bon de vol couvrant le montant total.
+Packs à durée libre (30, 60, 90 ou 120 minutes) : le Client choisit une durée de vol ; l'itinéraire est composé avec le pilote selon les envies du Client et la météo du jour.
+
+Vols à itinéraire fixe (destination ou circuit prédéfini, par exemple Wallonie Panoramique ou Destination Le Touquet) : l'itinéraire et la durée estimée sont fixés à l'avance sur la fiche du vol. Lorsque l'itinéraire comporte une escale, le prix affiché inclut la taxe d'escale correspondante.
+
+Processus de réservation : Le Client choisit sa formule, une date et un horaire disponibles, renseigne ses informations personnelles et procède au paiement ou utilise un bon de vol couvrant le montant total.
 
 Confirmation : La réservation est confirmée dès réception du paiement (ou validation du bon de vol). Un e-mail de confirmation est envoyé au Client.
 
 Nombre de passagers : Maximum 3 passagers par vol, sous réserve des contraintes de masse (voir article 8).
 
-Durée indicative : La durée du pack est indicative et correspond à une durée de vol estimée. Des variations mineures peuvent survenir selon les conditions aéronautiques.`,
+Durée indicative : La durée annoncée, pour un pack comme pour un vol à itinéraire fixe, est indicative et correspond à une durée de vol estimée. Des variations mineures peuvent survenir selon les conditions aéronautiques.`,
   },
   {
     title: "6. Vols sur mesure",
@@ -233,9 +237,9 @@ export default function CgpPage() {
             {/* Métadonnées */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-border rounded-2xl overflow-hidden mb-4">
               {[
-                { label: "Version",          value: "1.1" },
+                { label: "Version",          value: "1.2" },
                 { label: "Exploitant",       value: "DESTANBERG Romain" },
-                { label: "Mise à jour",      value: "30 juillet 2026" },
+                { label: "Mise à jour",      value: "1er septembre 2026" },
                 { label: "Droit applicable", value: "Droit belge · EASA" },
               ].map(({ label, value }) => (
                 <div key={label} className="bg-card px-5 py-4">

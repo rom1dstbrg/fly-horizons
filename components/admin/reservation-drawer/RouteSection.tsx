@@ -115,7 +115,7 @@ export function RouteSection({
       <textarea
         value={routeComment}
         onChange={e => setRouteComment(e.target.value)}
-        rows={2}
+        rows={16}
         placeholder="Message pour le client (optionnel)…"
         className="w-full mt-2 px-2.5 py-2 rounded-lg border border-input bg-background text-xs resize-none focus:outline-none focus:ring-1 focus:ring-navy/30 placeholder:text-muted-foreground"
       />

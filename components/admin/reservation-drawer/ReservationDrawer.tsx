@@ -27,6 +27,7 @@ import { HistoriqueTab } from "./HistoriqueTab";
 import { EmailComposer } from "./EmailComposer";
 import { ItinerairesModal } from "./ItinerairesModal";
 import { ActionFooter } from "./ActionFooter";
+import { AvionReserveBadge } from "./AvionReserveBadge";
 import { useReservationDraft } from "./hooks/useReservationDraft";
 import { useBilanVol } from "./hooks/useBilanVol";
 import { useRouteProposal } from "./hooks/useRouteProposal";
@@ -265,6 +266,11 @@ export function ReservationDrawer({
   const r = reservation;
   const statut = r ? getResaBadge(r) : null;
   const hasRoute = !!route.localRouteStatus || route.routeDraft.length > 0 || !!r?.products?.route_waypoints?.length;
+  // NewCAG (réservation avion) est un outil propre à l'exploitant admin — pas pertinent
+  // pour un pilote tiers qui gère son propre avion en dehors de ce système.
+  const showNewCAG = !!r && viewerRole === "admin" && r.statut !== "annulee" && (
+    isPerso || ["acompte_recu", "date_confirmee", "heure_confirmee", "vol_effectue"].includes(r.statut)
+  );
 
   return (
     <>
@@ -286,6 +292,9 @@ export function ReservationDrawer({
                 <div className="min-w-0">
                   <div className="flex items-center gap-2.5 mb-1">
                     {statut && <AdminBadge variant={statut.variant} label={statut.label} />}
+                    {showNewCAG && avionReserve && (
+                      <AvionReserveBadge onCancel={() => doToggleAvion(false)} isPending={isReservePending} />
+                    )}
                     <span className="text-xs text-muted-foreground font-mono">#{r.id.slice(0, 8).toUpperCase()}</span>
                   </div>
                   <p className="text-sm font-semibold text-foreground truncate">{r.clients?.prenom} {r.clients?.nom}</p>
@@ -401,6 +410,7 @@ export function ReservationDrawer({
                   isCashPending={isCashPending}
                   isProposePending={isProposePending}
                   hasRoute={hasRoute}
+                  routeProposalLoaded={route.proposalLoaded}
                   onChangeStatut={doChangeStatut}
                   onConfirmHeureConfirmee={doConfirmHeureConfirmee}
                   onSendReschedule={doSendRescheduleInvite}

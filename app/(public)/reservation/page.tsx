@@ -630,8 +630,7 @@ export default function ReservationPage() {
                           <option value="">À convenir avec le pilote</option>
                           <option value="2h">Environ 2 h</option>
                           <option value="4h">Environ 4 h</option>
-                          <option value="Demi-journée">Demi-journée</option>
-                          <option value="Journée complète">Journée complète</option>
+                          <option value="6h">Environ 6 h</option>
                         </select>
                         <p className="mt-1.5 text-xs text-foreground/40">
                           Indicatif : la durée exacte au sol dépend de la disponibilité de l&apos;avion et sera confirmée avec vous.

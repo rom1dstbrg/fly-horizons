@@ -115,8 +115,8 @@ const THEMES: Theme[] = [
     items: [
       {
         q: "Comment participer à un vol partagé ?",
-        aText: "Rendez-vous sur la page Nos offres, choisissez votre durée de vol : 30, 60, 90 ou 120 minutes. Ouvrez la fiche du vol pour voir les photos et le détail, puis cliquez sur Faire une demande : sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis envoyez votre demande. Aucun paiement n'est demandé à ce stade. Le pilote étudie votre demande et vous répond sous 72 heures maximum : si le vol peut avoir lieu, vous recevez un lien de paiement sécurisé (ou convenez d'un paiement en espèces avec nous).",
-        a: <>Rendez-vous sur la page <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Nos offres</Link>, choisissez votre durée : 30, 60, 90 ou 120 minutes. Ouvrez la fiche du vol pour voir les photos et le détail, puis cliquez sur Faire une demande : sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis envoyez votre demande. Aucun paiement n&apos;est demandé à ce stade. Le pilote étudie votre demande et vous répond sous 72 heures maximum : si le vol peut avoir lieu, vous recevez un lien de paiement sécurisé (ou convenez d&apos;un paiement en espèces avec nous).</>,
+        aText: "Rendez-vous sur la page Nos offres, choisissez une durée libre (30, 60, 90 ou 120 minutes) ou un vol à itinéraire fixe vers une destination. Ouvrez la fiche du vol pour voir les photos et le détail, puis cliquez sur Faire une demande : sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis envoyez votre demande. Aucun paiement n'est demandé à ce stade. Le pilote étudie votre demande et vous répond sous 72 heures maximum : si le vol peut avoir lieu, vous recevez un lien de paiement sécurisé (ou convenez d'un paiement en espèces avec nous).",
+        a: <>Rendez-vous sur la page <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Nos offres</Link>, choisissez une durée libre (30, 60, 90 ou 120 minutes) ou un vol à itinéraire fixe vers une destination. Ouvrez la fiche du vol pour voir les photos et le détail, puis cliquez sur Faire une demande : sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis envoyez votre demande. Aucun paiement n&apos;est demandé à ce stade. Le pilote étudie votre demande et vous répond sous 72 heures maximum : si le vol peut avoir lieu, vous recevez un lien de paiement sécurisé (ou convenez d&apos;un paiement en espèces avec nous).</>,
       },
       {
         q: "Le pilote peut-il refuser ma demande de vol ?",
@@ -125,8 +125,8 @@ const THEMES: Theme[] = [
       },
       {
         q: "Quelle est la contribution pour un vol partagé en Belgique ?",
-        aText: "La contribution aux frais pour un vol partagé dépend de la durée choisie (30, 60, 90 ou 120 minutes). Tous les montants à jour sont affichés sur la page Nos offres, sans frais cachés.",
-        a: <>La contribution aux frais pour un vol partagé dépend de la durée choisie (30, 60, 90 ou 120 minutes). Tous les montants à jour sont affichés sur la page <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Nos offres</Link>, sans frais cachés.</>,
+        aText: "La contribution aux frais pour un vol partagé dépend de la formule choisie : durée libre (30, 60, 90 ou 120 minutes) ou vol à itinéraire fixe vers une destination, taxes d'escale incluses le cas échéant. Tous les montants à jour sont affichés sur la page Nos offres, sans frais cachés.",
+        a: <>La contribution aux frais pour un vol partagé dépend de la formule choisie : durée libre (30, 60, 90 ou 120 minutes) ou vol à itinéraire fixe vers une destination, taxes d&apos;escale incluses le cas échéant. Tous les montants à jour sont affichés sur la page <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Nos offres</Link>, sans frais cachés.</>,
       },
       /* Masqué 29/07/2026 en attendant confirmation légale — voir audit-legal-fly-horizons.html
       {

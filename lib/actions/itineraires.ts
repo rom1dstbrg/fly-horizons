@@ -35,6 +35,7 @@ export async function getItineraires(): Promise<Itineraire[]> {
   const { data, error } = await supabase
     .from("itineraires")
     .select("*")
+    .order("duree_estimee", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
   return (data ?? []) as Itineraire[];

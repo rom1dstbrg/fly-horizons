@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarCheck, Lock, AlertCircle } from "lucide-react";
+import { CalendarCheck, AlertCircle } from "lucide-react";
 
 interface VolDetailClientProps {
   id: string;
@@ -51,20 +51,14 @@ export function VolDetailClient({ id, price, duree, soldOut, escales }: VolDetai
       )}
 
       {/* Notes */}
-      <div className="space-y-1.5">
+      <div className="space-y-1">
         <p className="text-xs text-foreground/70 flex items-start gap-1.5 leading-relaxed">
           <AlertCircle size={12} className="shrink-0 mt-0.5 text-primary" />
-          Créneau souhaité, pas garanti : le vol étant partagé, une autre date ou heure peut vous être proposée.
+          Créneau souhaité, pas garanti : le vol étant partagé, une autre date ou heure peut vous être proposée. Confirmation sous 72h, sans paiement avant.
         </p>
-        <p className="text-[10px] text-muted-foreground leading-relaxed">
-          Nous confirmons votre créneau sous 72h. Aucun paiement n&apos;est demandé avant cette confirmation.
-        </p>
-        <p className="text-[10px] text-[#0b2238]/40 flex items-start gap-1.5 leading-relaxed">
-          <Lock size={9} className="shrink-0 mt-0.5" />
-          <span>
-            Demande jusqu&apos;à <strong className="text-foreground/60">48 h avant le vol</strong>. Urgent ?{" "}
-            <Link href="/contact" className="underline underline-offset-2 hover:text-foreground transition-colors">Contactez-nous</Link>.
-          </span>
+        <p className="text-[10px] text-muted-foreground leading-relaxed pl-[18px]">
+          Demande possible jusqu&apos;à 48 h avant le vol. Urgent ?{" "}
+          <Link href="/contact" className="underline underline-offset-2 hover:text-foreground transition-colors">Contactez-nous</Link>.
         </p>
       </div>
 

@@ -148,26 +148,46 @@ export function BoutiqueHub({
           <VouchersClient vouchers={vouchers as never} clients={clients as never} prixHeure60={prixHeure60} />
         )}
 
-        {tab === "produits" && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-              <div className="flex items-center gap-2">
-                <Package size={15} className="text-navy" />
-                <h3 className="text-sm font-semibold text-foreground">Les vols</h3>
-                <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">{voucherProducts.length}</span>
+        {tab === "produits" && (() => {
+          const dureeLibre = voucherProducts.filter(p => !p.route_waypoints || p.route_waypoints.length === 0);
+          const itineraires = voucherProducts.filter(p => p.route_waypoints && p.route_waypoints.length > 0);
+          return (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Package size={15} className="text-navy" />
+                  <h3 className="text-sm font-semibold text-foreground">Les vols</h3>
+                  <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">{voucherProducts.length}</span>
+                </div>
+                <Link
+                  href="/admin/products/new"
+                  className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:brightness-105 transition-all font-medium shrink-0"
+                >
+                  <Plus size={13} />
+                  Nouveau vol
+                </Link>
               </div>
-              <Link
-                href="/admin/products/new"
-                className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:brightness-105 transition-all font-medium shrink-0"
-              >
-                <Plus size={13} />
-                Nouveau vol
-              </Link>
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Durée libre</h4>
+                  <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">{dureeLibre.length}</span>
+                </div>
+                <ProductTable products={dureeLibre} prixHeure60={prixHeure60} />
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Itinéraires &amp; destinations</h4>
+                  <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">{itineraires.length}</span>
+                </div>
+                <ProductTable products={itineraires} prixHeure60={prixHeure60} />
+              </div>
+
+              <StopoversAdmin />
             </div>
-            <ProductTable products={voucherProducts} prixHeure60={prixHeure60} />
-            <StopoversAdmin />
-          </div>
-        )}
+          );
+        })()}
 
         {tab === "coupons" && (
           <div className="space-y-6">

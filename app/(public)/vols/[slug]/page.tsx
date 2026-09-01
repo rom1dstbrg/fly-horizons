@@ -92,6 +92,10 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
 
   if (!vol) notFound();
 
+  const toutesAutres = autres ?? [];
+  const autresDurees = toutesAutres.filter((p) => !p.route_waypoints || p.route_waypoints.length === 0);
+  const autresItineraires = toutesAutres.filter((p) => p.route_waypoints && p.route_waypoints.length > 0);
+
   const duree = vol.voucher_duration_minutes ?? 60;
   const sortedImages = [...(vol.images ?? [])].sort((a: { position?: number }, b: { position?: number }) => (a.position ?? 0) - (b.position ?? 0));
   const image = sortedImages[0]?.url ?? null;
@@ -132,8 +136,8 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
 
           <div className="grid md:grid-cols-[1fr_380px] lg:grid-cols-[1fr_400px] gap-10 lg:gap-14 items-start">
 
-            {/* ── Gauche : galerie ── */}
-            <div>
+            {/* ── Gauche : galerie (sticky, suit le scroll jusqu'en bas de la colonne droite) ── */}
+            <div className="md:sticky md:top-28">
               <VolImageGallery
                 images={sortedImages}
                 title={vol.title}
@@ -141,8 +145,8 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
               />
             </div>
 
-            {/* ── Droite : info + CTA (sticky) ── */}
-            <div className="md:sticky md:top-28 space-y-6">
+            {/* ── Droite : info + CTA ── */}
+            <div className="space-y-6">
 
               <div>
                 <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-3">
@@ -216,9 +220,9 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
         </div>
       </div>
 
-      {/* ══════ AUTRES DURÉES — bg-[#f5f5f7] ══════ */}
-      {(autres ?? []).length > 0 && (
-        <div className="bg-gradient-navy py-20 sm:py-28">
+      {/* ══════ AUTRES DURÉES — vols à durée libre ══════ */}
+      {autresDurees.length > 0 && (
+        <div className="bg-gradient-navy pt-20 sm:pt-28 pb-10 sm:pb-14">
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
             <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-4">
               Autres durées disponibles
@@ -227,7 +231,26 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
               Changer de durée
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {(autres ?? []).map((p) => (
+              {autresDurees.map((p) => (
+                <PackCard key={p.id} pack={p} />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════ AUTRES ITINÉRAIRES — vols avec destination/circuit fixé ══════ */}
+      {autresItineraires.length > 0 && (
+        <div className={`bg-gradient-navy ${autresDurees.length > 0 ? "pt-10 sm:pt-14" : "pt-20 sm:pt-28"} pb-20 sm:pb-28`}>
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
+            <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-4">
+              Autres itinéraires
+            </p>
+            <h2 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight mb-10">
+              Destinations &amp; circuits
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {autresItineraires.map((p) => (
                 <PackCard key={p.id} pack={p} />
               ))}
             </div>

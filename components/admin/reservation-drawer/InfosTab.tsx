@@ -119,25 +119,7 @@ export function InfosTab({
       )}
 
       {/* Encart NewCAG */}
-      {showNewCAG && (
-        avionReserve ? (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 flex items-start gap-3">
-            <span className="text-emerald-500 mt-0.5 shrink-0">✓</span>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-emerald-800 mb-1">Avion réservé sur NewCAG</p>
-              {dateLabelNewCAG && (
-                <p className="text-[11px] text-emerald-700">{dateLabelNewCAG}{r.heure_vol ? ` à ${r.heure_vol}` : ""} — {dureeLabel}</p>
-              )}
-              <button
-                onClick={() => onToggleAvion(false)}
-                disabled={isReservePending}
-                className="mt-2 text-[10px] text-emerald-600 hover:text-emerald-900 underline underline-offset-2 cursor-pointer transition-colors"
-              >
-                Annuler la réservation avion
-              </button>
-            </div>
-          </div>
-        ) : (
+      {showNewCAG && !avionReserve && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 space-y-2">
             <p className="text-xs font-semibold text-amber-800">Réserve l&apos;avion sur NewCAG avant de confirmer.</p>
             <div className="text-[11px] text-amber-700 space-y-0.5">
@@ -162,7 +144,6 @@ export function InfosTab({
               </button>
             </div>
           </div>
-        )
       )}
 
       {/* Vol details */}

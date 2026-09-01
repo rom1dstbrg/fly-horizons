@@ -120,6 +120,7 @@ export function ActionFooter({
   isCashPending,
   isProposePending,
   hasRoute,
+  routeProposalLoaded,
   onChangeStatut,
   onConfirmHeureConfirmee,
   onSendReschedule,
@@ -136,6 +137,7 @@ export function ActionFooter({
   isCashPending: boolean;
   isProposePending: boolean;
   hasRoute: boolean;
+  routeProposalLoaded: boolean;
   onChangeStatut: (statut: string) => void;
   onConfirmHeureConfirmee: () => void;
   onSendReschedule: () => void;
@@ -182,7 +184,7 @@ export function ActionFooter({
 
   return (
     <div className="border-t border-border shrink-0 bg-card">
-      {isStandard && !hasRoute && !isTerminal && (
+      {isStandard && routeProposalLoaded && !hasRoute && !isTerminal && (
         <p className="text-xs text-amber-600 flex items-center gap-1.5 px-5 pt-2.5">
           <AlertTriangle size={12} className="shrink-0" />
           Tracez une route sur la carte avant de confirmer — elle sera envoyée avec la confirmation
