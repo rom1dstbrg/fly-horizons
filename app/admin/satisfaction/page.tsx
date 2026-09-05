@@ -11,7 +11,8 @@ export default async function AdminSatisfactionPage() {
   const { data: rows } = await db
     .from("satisfaction_surveys")
     .select(`
-      id, note_globale, note_accueil, note_pilote, commentaire, points_amelioration, photos, created_at,
+      id, note_preparation, note_pilote, note_vol, note_qualite_prix,
+      recommandation, source_decouverte, commentaire, photos, created_at,
       reservations ( id, date_vol, duree, client_id, clients ( id, prenom, nom, email ) )
     `)
     .order("created_at", { ascending: false });
@@ -27,13 +28,22 @@ export default async function AdminSatisfactionPage() {
       client_id: string;
       clients: { id: string; prenom: string; nom: string; email: string } | null;
     } | null;
+    const notePreparation = (r.note_preparation as number | null) ?? 0;
+    const notePilote = (r.note_pilote as number | null) ?? 0;
+    const noteVol = (r.note_vol as number | null) ?? 0;
+    const noteQualitePrix = (r.note_qualite_prix as number | null) ?? 0;
+    const moyenne =
+      Math.round(((notePreparation + notePilote + noteVol + noteQualitePrix) / 4) * 10) / 10;
     return {
       id: r.id,
-      noteGlobale: r.note_globale as number,
-      noteAccueil: r.note_accueil as number,
-      notePilote: r.note_pilote as number,
+      notePreparation,
+      notePilote,
+      noteVol,
+      noteQualitePrix,
+      moyenne,
+      recommandation: (r.recommandation as string | null) ?? null,
+      sourceDecouverte: (r.source_decouverte as string | null) ?? null,
       commentaire: r.commentaire as string | null,
-      pointsAmelioration: r.points_amelioration as string | null,
       photos: (r.photos as string[] | null) ?? [],
       createdAt: r.created_at as string,
       dateVol: resa?.date_vol ?? "",
@@ -46,8 +56,13 @@ export default async function AdminSatisfactionPage() {
   });
 
   const total = surveys.length;
-  const avg = (key: "noteGlobale" | "noteAccueil" | "notePilote") =>
+  const avg = (key: "notePreparation" | "notePilote" | "noteVol" | "noteQualitePrix" | "moyenne") =>
     total === 0 ? 0 : Math.round((surveys.reduce((s, x) => s + x[key], 0) / total) * 10) / 10;
+
+  const nbRecommande = surveys.filter(
+    (s) => s.recommandation === "oui_sans_hesiter" || s.recommandation === "oui_probablement"
+  ).length;
+  const tauxRecommande = total > 0 ? Math.round((nbRecommande / total) * 100) : 0;
 
   const tauxReponse = volsEffectues && volsEffectues > 0
     ? Math.round((total / volsEffectues) * 100)
@@ -63,9 +78,9 @@ export default async function AdminSatisfactionPage() {
 
       <StatGrid cols={5}>
         <StatCard label="Avis reçus" value={total} variant="primary" subtitle={`sur ${volsEffectues ?? 0} vols effectués`} />
-        <StatCard label="Note globale" value={total ? `${avg("noteGlobale")}/5` : "—"} variant="gold" />
-        <StatCard label="Accueil" value={total ? `${avg("noteAccueil")}/5` : "—"} variant="info" />
-        <StatCard label="Pilote" value={total ? `${avg("notePilote")}/5` : "—"} variant="emerald" />
+        <StatCard label="Note moyenne" value={total ? `${avg("moyenne")}/5` : "—"} variant="gold" subtitle="4 axes confondus" />
+        <StatCard label="Le vol" value={total ? `${avg("noteVol")}/5` : "—"} variant="info" />
+        <StatCard label="Recommandent" value={total ? `${tauxRecommande}%` : "—"} variant="emerald" />
         <StatCard label="Taux de réponse" value={`${tauxReponse}%`} variant="neutral" />
       </StatGrid>
 

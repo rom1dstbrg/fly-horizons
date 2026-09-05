@@ -2,20 +2,24 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Star, MessageSquareHeart, ImageIcon, X, User, Download, Trash2, Loader2 } from "lucide-react";
+import { Star, ThumbsDown, ImageIcon, X, User, Download, Trash2, Loader2, Compass } from "lucide-react";
 import { deleteSatisfactionSurvey, deleteSurveyPhotos } from "@/lib/actions/satisfaction";
 import { fmtDuration } from "@/lib/email-templates";
+import { recoLabel, sourceLabel } from "@/lib/satisfaction";
 import { AdminSheet, SheetSection, SheetRow } from "@/components/admin/ui/AdminSheet";
 import { AdminRowActions } from "@/components/admin/ui/AdminRowActions";
 import { PageToolbar, FilterChip, EmptyState } from "@/components/admin/ui";
 
 interface Survey {
   id: string;
-  noteGlobale: number;
-  noteAccueil: number;
+  notePreparation: number;
   notePilote: number;
+  noteVol: number;
+  noteQualitePrix: number;
+  moyenne: number;
+  recommandation: string | null;
+  sourceDecouverte: string | null;
   commentaire: string | null;
-  pointsAmelioration: string | null;
   photos: string[];
   photoUrls: string[];
   createdAt: string;
@@ -24,7 +28,9 @@ interface Survey {
   client: { id: string; prenom: string; nom: string; email: string } | null;
 }
 
-const FILTERS = ["Tous", "5 étoiles", "3 étoiles ou moins", "Avec photos", "À améliorer"] as const;
+const FILTERS = ["Tous", "Excellents", "En retrait", "Ne recommande pas", "Avec photos"] as const;
+
+const isTiede = (s: Survey) => s.recommandation === "non" || s.recommandation === "pas_sur";
 
 function Stars({ n }: { n: number }) {
   return (
@@ -40,6 +46,17 @@ function Stars({ n }: { n: number }) {
       ))}
     </span>
   );
+}
+
+function RecoBadge({ value }: { value: string | null }) {
+  if (!value) return null;
+  const tone =
+    value === "non"
+      ? "text-red-700"
+      : value === "pas_sur"
+      ? "text-amber-700"
+      : "text-emerald-700";
+  return <span className={`text-xs font-semibold ${tone}`}>{recoLabel(value)}</span>;
 }
 
 function DrawerBody({
@@ -99,23 +116,22 @@ function DrawerBody({
   return (
     <>
       <SheetSection title="Notes">
-        <SheetRow label="Note globale" value={<Stars n={survey.noteGlobale} />} />
-        <SheetRow label="Qualité de l'accueil" value={<Stars n={survey.noteAccueil} />} />
-        <SheetRow label="Professionnalisme du pilote" value={<Stars n={survey.notePilote} />} />
+        <SheetRow label="Préparation de la venue" value={<Stars n={survey.notePreparation} />} />
+        <SheetRow label="Le pilote en vol" value={<Stars n={survey.notePilote} />} />
+        <SheetRow label="Le vol en lui-même" value={<Stars n={survey.noteVol} />} />
+        <SheetRow label="Rapport qualité / prix" value={<Stars n={survey.noteQualitePrix} />} />
+        <SheetRow label="Moyenne" value={<span className="text-sm font-semibold text-foreground">{survey.moyenne}/5</span>} />
+      </SheetSection>
+
+      <SheetSection title="Recommandation & découverte">
+        <SheetRow label="Recommanderait Fly Horizons" value={<RecoBadge value={survey.recommandation} />} />
+        <SheetRow label="Nous a connus par" value={<span className="text-sm text-foreground">{sourceLabel(survey.sourceDecouverte)}</span>} />
       </SheetSection>
 
       {survey.commentaire && (
-        <SheetSection title="Expérience générale">
-          <p className="text-sm text-foreground leading-relaxed bg-secondary rounded-lg px-4 py-3">
+        <SheetSection title="Un mot du client">
+          <p className="text-sm text-foreground leading-relaxed bg-secondary rounded-lg px-4 py-3 whitespace-pre-wrap">
             {survey.commentaire}
-          </p>
-        </SheetSection>
-      )}
-
-      {survey.pointsAmelioration && (
-        <SheetSection title="Points à améliorer">
-          <p className="text-sm text-foreground leading-relaxed bg-[#fef3c7] border-l-2 border-primary rounded-lg px-4 py-3">
-            {survey.pointsAmelioration}
           </p>
         </SheetSection>
       )}
@@ -218,7 +234,8 @@ function SurveyCard({
             <p className="font-semibold text-foreground text-sm">
               {survey.client ? `${survey.client.prenom} ${survey.client.nom}` : "Client inconnu"}
             </p>
-            <Stars n={survey.noteGlobale} />
+            <Stars n={Math.round(survey.moyenne)} />
+            <span className="text-xs text-muted-foreground">{survey.moyenne}/5</span>
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">
             Vol du {dateStr} · {fmtDuration(survey.duree)}
@@ -228,10 +245,15 @@ function SurveyCard({
               {survey.commentaire}
             </p>
           )}
-          <div className="flex items-center gap-3 mt-2">
-            {survey.pointsAmelioration && (
+          <div className="flex items-center gap-3 mt-2 flex-wrap">
+            {isTiede(survey) && (
               <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700">
-                <MessageSquareHeart size={11} /> À améliorer
+                <ThumbsDown size={11} /> {recoLabel(survey.recommandation)}
+              </span>
+            )}
+            {survey.sourceDecouverte && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-muted-foreground">
+                <Compass size={11} /> {sourceLabel(survey.sourceDecouverte)}
               </span>
             )}
             {survey.photos.length > 0 && (
@@ -269,22 +291,24 @@ export function SatisfactionClient({ surveys: initial }: { surveys: Survey[] }) 
     setDrawer((prev) => (prev?.id === id ? { ...prev, ...cleared } : prev));
   }
 
-  const filtered = surveys.filter((s) => {
+  const matches = (s: Survey) => {
     switch (filter) {
-      case "5 étoiles": return s.noteGlobale === 5;
-      case "3 étoiles ou moins": return s.noteGlobale <= 3;
+      case "Excellents": return s.moyenne >= 4.5;
+      case "En retrait": return s.moyenne > 0 && s.moyenne <= 3;
+      case "Ne recommande pas": return isTiede(s);
       case "Avec photos": return s.photos.length > 0;
-      case "À améliorer": return !!s.pointsAmelioration;
       default: return true;
     }
-  });
+  };
+
+  const filtered = surveys.filter(matches);
 
   const counts: Record<typeof FILTERS[number], number> = {
     "Tous": surveys.length,
-    "5 étoiles": surveys.filter((s) => s.noteGlobale === 5).length,
-    "3 étoiles ou moins": surveys.filter((s) => s.noteGlobale <= 3).length,
+    "Excellents": surveys.filter((s) => s.moyenne >= 4.5).length,
+    "En retrait": surveys.filter((s) => s.moyenne > 0 && s.moyenne <= 3).length,
+    "Ne recommande pas": surveys.filter(isTiede).length,
     "Avec photos": surveys.filter((s) => s.photos.length > 0).length,
-    "À améliorer": surveys.filter((s) => !!s.pointsAmelioration).length,
   };
 
   return (

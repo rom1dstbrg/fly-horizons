@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { satisfactionResultEmail, fmtDuration } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { rateLimit, getIp } from "@/lib/rate-limit";
-import { MAX_PHOTOS } from "@/lib/satisfaction";
+import { MAX_PHOTOS, RECO_VALUES, SOURCE_VALUES } from "@/lib/satisfaction";
 
 export async function POST(request: NextRequest) {
   const { allowed } = await rateLimit(`satisfaction:${getIp(request)}`, 5, 60_000);
@@ -13,16 +13,26 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { reservation_id, note_globale, note_accueil, note_pilote, commentaire, points_amelioration, photos } = body;
+    const {
+      reservation_id,
+      note_preparation,
+      note_pilote,
+      note_vol,
+      note_qualite_prix,
+      recommandation,
+      source_decouverte,
+      commentaire,
+      photos,
+    } = body;
+
+    const notes = [note_preparation, note_pilote, note_vol, note_qualite_prix];
+    const notesValid = notes.every((n) => typeof n === "number" && n >= 1 && n <= 5);
 
     if (
       !reservation_id ||
-      typeof note_globale !== "number" ||
-      typeof note_accueil !== "number" ||
-      typeof note_pilote !== "number" ||
-      note_globale < 1 || note_globale > 5 ||
-      note_accueil < 1 || note_accueil > 5 ||
-      note_pilote < 1 || note_pilote > 5
+      !notesValid ||
+      !RECO_VALUES.includes(recommandation) ||
+      !SOURCE_VALUES.includes(source_decouverte)
     ) {
       return NextResponse.json({ error: "Données invalides." }, { status: 400 });
     }
@@ -53,11 +63,13 @@ export async function POST(request: NextRequest) {
 
     const { error: insertErr } = await supabase.from("satisfaction_surveys").insert({
       reservation_id,
-      note_globale,
-      note_accueil,
+      note_preparation,
       note_pilote,
+      note_vol,
+      note_qualite_prix,
+      recommandation,
+      source_decouverte,
       commentaire: commentaire?.trim() || null,
-      points_amelioration: points_amelioration?.trim() || null,
       photos: photoPaths,
     });
 
@@ -84,11 +96,13 @@ export async function POST(request: NextRequest) {
         nom: client.nom,
         dateStr,
         duree: resa.duree,
-        noteGlobale: note_globale,
-        noteAccueil: note_accueil,
+        notePreparation: note_preparation,
         notePilote: note_pilote,
+        noteVol: note_vol,
+        noteQualitePrix: note_qualite_prix,
+        recommandation,
+        sourceDecouverte: source_decouverte,
         commentaire: commentaire?.trim() || null,
-        pointsAmelioration: points_amelioration?.trim() || null,
         nbPhotos: photoPaths.length,
       }),
     });

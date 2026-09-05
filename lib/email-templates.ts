@@ -1561,17 +1561,42 @@ interface SatisfactionResultEmailProps {
   nom: string;
   dateStr: string;
   duree: number;
-  noteGlobale: number;
-  noteAccueil: number;
+  notePreparation: number;
   notePilote: number;
+  noteVol: number;
+  noteQualitePrix: number;
+  recommandation: string;
+  sourceDecouverte: string;
   commentaire?: string | null;
-  pointsAmelioration?: string | null;
   nbPhotos?: number;
 }
 
 export function satisfactionResultEmail(p: SatisfactionResultEmailProps): string {
   const stars = (n: number) =>
     `<span style="color:#F2B705;font-size:16px;">${"★".repeat(n)}</span><span style="color:#e2e8f0;font-size:16px;">${"☆".repeat(5 - n)}</span> <span style="font-size:13px;color:#64748b;">(${n}/5)</span>`;
+
+  const recoLabels: Record<string, string> = {
+    oui_sans_hesiter: "Oui, sans hésiter",
+    oui_probablement: "Oui, probablement",
+    pas_sur: "Pas sûr",
+    non: "Non",
+  };
+  const sourceLabels: Record<string, string> = {
+    bouche_a_oreille: "Bouche à oreille",
+    instagram: "Instagram",
+    facebook: "Facebook",
+    google: "Recherche Google",
+    autre: "Autre",
+  };
+  const recoTxt = recoLabels[p.recommandation] ?? p.recommandation;
+  const sourceTxt = sourceLabels[p.sourceDecouverte] ?? p.sourceDecouverte;
+  const recoColor = p.recommandation === "non" ? "#dc2626" : p.recommandation === "pas_sur" ? "#d97706" : "#0b2238";
+
+  const noteRow = (name: string, n: number, last = false) => `
+      <tr>
+        <td class="em-muted" style="padding:11px 0;${last ? "" : "border-bottom:1px solid #f1f5f9;"}font-size:13px;color:#64748b;">${name}</td>
+        <td style="padding:11px 0;${last ? "" : "border-bottom:1px solid #f1f5f9;"}text-align:right;">${stars(n)}</td>
+      </tr>`;
 
   const body = `
     <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Nouvel avis re&ccedil;u</p>
@@ -1582,21 +1607,24 @@ export function satisfactionResultEmail(p: SatisfactionResultEmailProps): string
     ${separator()}
     ${label("Notes")}
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+      ${noteRow("Pr&eacute;paration de la venue", p.notePreparation)}
+      ${noteRow("Le pilote en vol", p.notePilote)}
+      ${noteRow("Le vol en lui-m&ecirc;me", p.noteVol)}
+      ${noteRow("Rapport qualit&eacute; / prix", p.noteQualitePrix, true)}
+    </table>
+    ${separator()}
+    ${label("Recommandation &amp; d&eacute;couverte")}
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
       <tr>
-        <td class="em-muted" style="padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;">Note globale</td>
-        <td style="padding:11px 0;border-bottom:1px solid #f1f5f9;text-align:right;">${stars(p.noteGlobale)}</td>
+        <td class="em-muted" style="padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;">Recommanderait Fly Horizons</td>
+        <td style="padding:11px 0;border-bottom:1px solid #f1f5f9;text-align:right;font-size:13px;font-weight:700;color:${recoColor};">${esc(recoTxt)}</td>
       </tr>
       <tr>
-        <td class="em-muted" style="padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;">Qualit&eacute; de l&rsquo;accueil</td>
-        <td style="padding:11px 0;border-bottom:1px solid #f1f5f9;text-align:right;">${stars(p.noteAccueil)}</td>
-      </tr>
-      <tr>
-        <td class="em-muted" style="padding:11px 0;font-size:13px;color:#64748b;">Professionnalisme du pilote</td>
-        <td style="padding:11px 0;text-align:right;">${stars(p.notePilote)}</td>
+        <td class="em-muted" style="padding:11px 0;font-size:13px;color:#64748b;">Nous a connus par</td>
+        <td style="padding:11px 0;text-align:right;font-size:13px;font-weight:600;color:#0b2238;">${esc(sourceTxt)}</td>
       </tr>
     </table>
-    ${p.commentaire ? `${separator()}${label("Exp&eacute;rience g&eacute;n&eacute;rale")}${callout(esc(p.commentaire))}` : ""}
-    ${p.pointsAmelioration ? `${separator()}${label("Points &agrave; am&eacute;liorer")}<p style="margin:0;padding:12px 16px;background:#fef3c7;border-left:3px solid #F2B705;border-radius:6px;font-size:13px;color:#334155;line-height:1.7;">${esc(p.pointsAmelioration)}</p>` : ""}
+    ${p.commentaire ? `${separator()}${label("Un mot du client")}${callout(esc(p.commentaire))}` : ""}
     ${p.nbPhotos ? `${separator()}${label("Photos")}<p style="margin:0;font-size:13px;color:#64748b;">${p.nbPhotos} photo${p.nbPhotos > 1 ? "s" : ""} partag&eacute;e${p.nbPhotos > 1 ? "s" : ""} par le client, consultable${p.nbPhotos > 1 ? "s" : ""} dans l&rsquo;admin.</p>` : ""}
     ${separator()}
     ${ctaButton(`${SITE_URL}/admin/satisfaction`, "Voir dans l'admin")}`;

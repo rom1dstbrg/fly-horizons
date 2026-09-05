@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fmtDuration } from "@/lib/email-templates";
@@ -43,6 +44,12 @@ export default async function SatisfactionPage({ params }: Props) {
             <p className="text-sm text-muted-foreground leading-relaxed">
               J&apos;ai bien reçu votre avis pour ce vol. Merci encore, {client.prenom} !
             </p>
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center rounded-lg bg-navy text-white font-semibold px-5 py-2.5 text-sm hover:brightness-110 transition-all cursor-pointer mt-1"
+            >
+              Retour à l&apos;accueil
+            </Link>
           </div>
         ) : (
           <SatisfactionForm

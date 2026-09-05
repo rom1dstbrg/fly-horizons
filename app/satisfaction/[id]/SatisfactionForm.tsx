@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Star, Send, CheckCircle, AlertCircle, MessageSquare, ImagePlus, X, Loader2 } from "lucide-react";
-import { MAX_PHOTOS } from "@/lib/satisfaction";
+import Link from "next/link";
+import { Star, Send, CheckCircle, AlertCircle, ImagePlus, X, Loader2 } from "lucide-react";
+import { MAX_PHOTOS, RECO_OPTIONS, SOURCE_OPTIONS } from "@/lib/satisfaction";
 
 interface Props {
   reservationId: string;
@@ -22,18 +23,21 @@ interface PhotoEntry {
 
 function StarRating({
   label,
+  hint,
   value,
   onChange,
 }: {
   label: string;
+  hint?: string;
   value: number;
   onChange: (v: number) => void;
 }) {
   const [hovered, setHovered] = useState(0);
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       <p className="text-sm font-semibold text-foreground">{label}</p>
-      <div className="flex gap-1">
+      {hint && <p className="text-xs text-muted-foreground -mt-0.5">{hint}</p>}
+      <div className="flex gap-1 pt-0.5">
         {[1, 2, 3, 4, 5].map((n) => (
           <button
             key={n}
@@ -51,6 +55,43 @@ function StarRating({
               stroke={(hovered || value) >= n ? "#F2B705" : "#d1d8e4"}
               strokeWidth={1.5}
             />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ChoiceGroup({
+  label,
+  hint,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  options: readonly { value: string; label: string }[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="space-y-2">
+      <p className="text-sm font-semibold text-foreground">{label}</p>
+      {hint && <p className="text-xs text-muted-foreground -mt-1">{hint}</p>}
+      <div className="flex flex-wrap gap-2 pt-0.5">
+        {options.map((o) => (
+          <button
+            key={o.value}
+            type="button"
+            onClick={() => onChange(o.value)}
+            className={`rounded-lg border px-3.5 py-2 text-sm font-medium transition-colors cursor-pointer ${
+              value === o.value
+                ? "bg-navy text-white border-navy"
+                : "border-border text-foreground hover:border-primary/50"
+            }`}
+          >
+            {o.label}
           </button>
         ))}
       </div>
@@ -137,18 +178,28 @@ function PhotoPicker({
 }
 
 export default function SatisfactionForm({ reservationId, prenom, dateStr, duree }: Props) {
-  const [noteGlobale, setNoteGlobale] = useState(0);
-  const [noteAccueil, setNoteAccueil] = useState(0);
+  const [notePreparation, setNotePreparation] = useState(0);
   const [notePilote, setNotePilote] = useState(0);
+  const [noteVol, setNoteVol] = useState(0);
+  const [noteQualitePrix, setNoteQualitePrix] = useState(0);
+  const [recommandation, setRecommandation] = useState("");
+  const [source, setSource] = useState("");
   const [commentaire, setCommentaire] = useState("");
-  const [pointsAmelioration, setPointsAmelioration] = useState("");
   const [photos, setPhotos] = useState<PhotoEntry[]>([]);
   const [photoError, setPhotoError] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
   const uploading = photos.some((p) => p.status === "uploading");
-  const canSubmit = noteGlobale > 0 && noteAccueil > 0 && notePilote > 0 && status === "idle" && !uploading;
+  const canSubmit =
+    notePreparation > 0 &&
+    notePilote > 0 &&
+    noteVol > 0 &&
+    noteQualitePrix > 0 &&
+    recommandation !== "" &&
+    source !== "" &&
+    status === "idle" &&
+    !uploading;
 
   async function uploadPhoto(localId: string, file: File) {
     try {
@@ -213,11 +264,13 @@ export default function SatisfactionForm({ reservationId, prenom, dateStr, duree
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           reservation_id: reservationId,
-          note_globale: noteGlobale,
-          note_accueil: noteAccueil,
+          note_preparation: notePreparation,
           note_pilote: notePilote,
+          note_vol: noteVol,
+          note_qualite_prix: noteQualitePrix,
+          recommandation,
+          source_decouverte: source,
           commentaire,
-          points_amelioration: pointsAmelioration,
           photos: photos.filter((p) => p.status === "done").map((p) => p.path),
         }),
       });
@@ -243,12 +296,15 @@ export default function SatisfactionForm({ reservationId, prenom, dateStr, duree
         </div>
         <h2 className="text-xl font-black text-foreground">Merci, {prenom} !</h2>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          J&apos;ai bien reçu votre avis{nbPhotos > 0 ? " et vos photos" : ""}.<br />
-          Chaque retour m&apos;aide à rendre chaque vol meilleur, et je le lis personnellement.
+          J&apos;ai bien reçu votre avis{nbPhotos > 0 ? " et vos photos" : ""}. Je lis chaque retour personnellement.
         </p>
-        <p className="text-xs text-muted-foreground pt-2">
-          À bientôt à bord. — Romain
-        </p>
+        <p className="text-xs text-muted-foreground">À bientôt à bord. Romain</p>
+        <Link
+          href="/"
+          className="inline-flex items-center justify-center rounded-lg bg-navy text-white font-semibold px-5 py-2.5 text-sm hover:brightness-110 transition-all cursor-pointer mt-2"
+        >
+          Retour à l&apos;accueil
+        </Link>
       </div>
     );
   }
@@ -256,11 +312,11 @@ export default function SatisfactionForm({ reservationId, prenom, dateStr, duree
   return (
     <form onSubmit={handleSubmit} className="space-y-7">
 
-      <div className="text-center">
-        <p className="text-[10px] font-black text-primary uppercase tracking-[3px] mb-1">
+      <div className="text-center space-y-1">
+        <p className="text-[10px] font-black text-primary uppercase tracking-[3px]">
           Enquête de satisfaction
         </p>
-        <h1 className="text-2xl font-black text-foreground mb-1">
+        <h1 className="text-2xl font-black text-foreground">
           {prenom}, votre avis compte pour moi
         </h1>
         <p className="text-sm text-muted-foreground">
@@ -268,53 +324,72 @@ export default function SatisfactionForm({ reservationId, prenom, dateStr, duree
         </p>
       </div>
 
-      <div className="flex items-start gap-3 bg-secondary border border-border rounded-lg px-4 py-3.5">
-        <MessageSquare size={15} className="text-muted-foreground shrink-0 mt-0.5" />
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          <strong className="text-foreground">J&apos;accueille toutes les remarques</strong>, bonnes comme mauvaises.
-          Je lis chaque retour moi-même : votre honnêteté m&apos;aide à faire vivre un meilleur vol au prochain passager.
-        </p>
+      <p className="text-xs text-muted-foreground text-center leading-relaxed">
+        Bonnes ou mauvaises, je lis toutes les réponses moi-même. Une minute suffit.
+      </p>
+
+      <hr className="border-border" />
+
+      <div className="space-y-5">
+        <StarRating
+          label="La préparation de votre venue"
+          hint="Infos reçues, échanges avant le vol, briefing"
+          value={notePreparation}
+          onChange={setNotePreparation}
+        />
+        <StarRating
+          label="Le pilote en vol"
+          hint="Mise en confiance, explications, contact"
+          value={notePilote}
+          onChange={setNotePilote}
+        />
+        <StarRating
+          label="Le vol en lui-même"
+          hint="À la hauteur de ce que vous imaginiez"
+          value={noteVol}
+          onChange={setNoteVol}
+        />
+        <StarRating
+          label="Le rapport qualité / prix"
+          hint="Par rapport à ce que vous avez payé"
+          value={noteQualitePrix}
+          onChange={setNoteQualitePrix}
+        />
       </div>
 
       <hr className="border-border" />
 
-      <StarRating label="Note globale" value={noteGlobale} onChange={setNoteGlobale} />
-      <StarRating label="Qualité de l'accueil" value={noteAccueil} onChange={setNoteAccueil} />
-      <StarRating label="Professionnalisme du pilote" value={notePilote} onChange={setNotePilote} />
+      <ChoiceGroup
+        label="Recommanderiez-vous Fly Horizons autour de vous ?"
+        options={RECO_OPTIONS}
+        value={recommandation}
+        onChange={setRecommandation}
+      />
+
+      <ChoiceGroup
+        label="Comment avez-vous connu Fly Horizons ?"
+        options={SOURCE_OPTIONS}
+        value={source}
+        onChange={setSource}
+      />
 
       <hr className="border-border" />
 
       <div className="space-y-2">
         <label htmlFor="commentaire" className="text-sm font-semibold text-foreground">
-          Votre expérience globale{" "}
-          <span className="text-muted-foreground font-normal">(facultatif)</span>
-        </label>
-        <textarea
-          id="commentaire"
-          rows={3}
-          value={commentaire}
-          onChange={(e) => setCommentaire(e.target.value)}
-          placeholder="Comment s'est passé votre vol ? Ce qui vous a marqué..."
-          maxLength={1000}
-          className="w-full rounded-lg border border-border bg-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <label htmlFor="points_amelioration" className="text-sm font-semibold text-foreground">
-          Ce qu&apos;on pourrait améliorer{" "}
+          Un mot sur votre vol, ou ce qu&apos;on pourrait améliorer{" "}
           <span className="text-muted-foreground font-normal">(facultatif)</span>
         </label>
         <p className="text-xs text-muted-foreground -mt-1">
-          Aucun filtre. Si quelque chose n&apos;était pas parfait, dites-le moi franchement.
+          Aucun filtre. Ce qui vous a marqué, ou ce qui n&apos;était pas parfait : dites-le moi franchement.
         </p>
         <textarea
-          id="points_amelioration"
-          rows={3}
-          value={pointsAmelioration}
-          onChange={(e) => setPointsAmelioration(e.target.value)}
-          placeholder="Par exemple : l'accueil à l'arrivée, la durée du briefing, la communication avant le vol..."
-          maxLength={1000}
+          id="commentaire"
+          rows={4}
+          value={commentaire}
+          onChange={(e) => setCommentaire(e.target.value)}
+          placeholder="Par exemple : l'accueil à l'arrivée, la durée du briefing, un moment fort du vol..."
+          maxLength={1500}
           className="w-full rounded-lg border border-border bg-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
         />
       </div>
