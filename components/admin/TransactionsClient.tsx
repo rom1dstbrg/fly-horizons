@@ -160,7 +160,7 @@ function VolRow({ vol }: { vol: LigneVol }) {
       </td>
       {/* Remboursement */}
       <td className="px-3 py-3 text-right tabular-nums text-xs text-red-500">
-        {vol.remboursement > 0 ? `−${fmt(vol.remboursement)}` : DASH}
+        {vol.remboursement > 0 ? `−${fmt(vol.remboursement)}` : <span className="text-muted-foreground">{fmt(0)}</span>}
       </td>
       {/* Durée */}
       <td className="px-3 py-3 text-right tabular-nums text-xs text-muted-foreground whitespace-nowrap">
