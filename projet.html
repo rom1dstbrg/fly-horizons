@@ -156,6 +156,45 @@
     <div class="col">
       <h3><span class="tag t-grey">Backlog</span> plus tard, pas encore ordonnancé</h3>
       <ul>
+        <li><b>Annonces — modèle A (le client paie le pilote en direct)</b> — décision prise 08/09,
+          <b>pas encore codé</b> (Romain : « on ne le fait pas maintenant »). À construire :
+          <ol>
+            <li><b>Paiement</b> : email au client à l'acceptation de la route = lien qui ouvre
+              l'appli bancaire du client (URI de virement / <code>SEPA</code>) <b>+</b> QR code.
+              Le plus simple possible, pas de carte, pas de Stripe.</li>
+            <li><b>Le pilote marque « payé »</b> dans l'espace pilote : case à cocher ou montant
+              reçu à saisir. Fait avancer le dossier.</li>
+            <li><b>Bilan de vol par le pilote</b> : minutes réellement volées (<code>duree_reelle</code>)
+              + éventuel commentaire, au moment de marquer le vol effectué.</li>
+            <li><b>Satisfaction</b> : l'enquête part quand le vol est marqué « effectué » — vérifier
+              que ça se déclenche aussi depuis l'action pilote sur une annonce, pas seulement le
+              flux standard de Romain.</li>
+            <li><b>Reçu émis par le pilote</b> (nom + IBAN) une fois « payé » coché.</li>
+            <li><b>Filet si le client ne paie jamais</b> : pas de Stripe = pas de cron deadline.
+              Le pilote doit pouvoir annuler une demande non payée (sinon l'annonce reste bloquée
+              en <code>reservee</code>). Relance auto optionnelle.</li>
+            <li><b>IBAN obligatoire</b> avant de publier une annonce (ou avant de confirmer la
+              route) — sinon l'email de paiement est cassé. À brancher sur le gating profil /
+              <code>legal_ok</code>.</li>
+            <li><b>Modèle de statuts</b> à définir : demande_recue → route confirmée → payé (coché
+              par le pilote) → effectué. « Payé » = vrai statut ou simple booléen ?</li>
+            <li><b>Annulation après paiement</b> = strictement pilote ↔ client (Fly Horizons ne
+              touche pas au remboursement). Prévoir un chemin « le client a annulé » côté pilote +
+              le dire clairement.</li>
+            <li><b>Plomberie Stripe</b> : <code>/api/reservation/pay</code> + webhook cessent de
+              couvrir <code>annonce_pilote</code>. Annonces sorties de la P&amp;L
+              (<code>lib/transactions.ts</code>).</li>
+            <li><b>Clarté client</b> : page publique de l'annonce + email de confirmation de demande
+              disent « vous réglerez le pilote directement par virement, pas de paiement par carte
+              ici ».</li>
+            <li><b>« 1 booking = tout l'avion »</b> à verrouiller : le modèle A ne marche
+              proprement qu'avec un seul client qui règle le pilote (pas de vente à la place).</li>
+            <li><b>Migration</b> : sous-ensemble de <code>20260909_pilote_paiement</code> —
+              <code>reservations.pilote_paye</code> + <code>pilote_paye_at</code> seulement
+              (pas <code>montant_pilote</code> : l'<code>acompte</code> porte déjà le montant client ;
+              pas <code>paylink</code> en v1).</li>
+          </ol>
+        </li>
         <li><b>Chantier Option 3 « annonces à fond »</b> — détail dans
           <code>plan-attaque-espace-pilote.html</code> § Option 3. Périmètre resserré (décision
           08/09 : pas de découverte légale, pas d'ouverture publique).
@@ -171,8 +210,10 @@
         </li>
         <li><b>Refonte complète des ~32 emails</b> — tout dernier chantier de l'espace pilote. Romain
           a demandé un rappel explicite le moment venu.</li>
-        <li>Migration <code>20260909_pilote_paiement.sql</code> — <b>ne pas exécuter</b> tant que le
-          paiement des annonces n'est pas tranché.</li>
+        <li>Migration <code>20260909_pilote_paiement.sql</code> — <b>ne pas exécuter telle quelle</b>
+          (câblée sur l'assignation gelée). Le modèle A des annonces (décision 08/09) n'en a besoin
+          que de <code>reservations.pilote_paye</code> + <code>pilote_paye_at</code> : un fichier SQL
+          réduit sera préparé au moment du chantier.</li>
       </ul>
     </div>
   </section>
