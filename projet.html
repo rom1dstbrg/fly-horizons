@@ -109,8 +109,13 @@
             <li>reçu émis par le pilote pour une annonce vendue.</li>
           </ol>
         </li>
+        <li><b>Bouton « renvoyer le lien de paiement » pour le pilote</b> — sur une résa
+          <code>annonce_pilote</code> en <code>demande_recue</code> / <code>payment_pending</code>,
+          le pilote doit pouvoir relancer le lien Stripe lui-même (aujourd'hui réservé à l'admin).</li>
         <li><b>Vérifier en local que l'app tourne toujours</b> (<code>npm run dev</code>) après le
-          nettoyage git — admin, drawer réservation, tunnel public, espace pilote (annonces + M&amp;B).</li>
+          nettoyage git — admin, drawer réservation, tunnel public, espace pilote (annonces + M&amp;B).
+          Le fix « colonnes Bloc D » du 08/09 montre que la neutralisation initiale avait laissé des
+          <code>SELECT</code> cassés : re-tester le parcours annonce de bout en bout.</li>
         <li><b>Pousser <code>main</code></b> (<code>git push</code>) — plusieurs commits d'avance
           (batch M&amp;B, Bloc A, refonte M&amp;B, doc). Sur demande de Romain uniquement.</li>
       </ol>
@@ -433,6 +438,25 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-08 — fix : acceptation de route cassée (colonnes Bloc D absentes)</h3>
+      <ul>
+        <li><b>Symptôme</b> (test annonce de Romain) : le client accepte l'itinéraire, aucun lien
+          de paiement n'arrive, et le pilote n'a aucun moyen d'en envoyer un.</li>
+        <li><b>Cause</b> : la neutralisation Bloc D du 08/09 n'avait retiré que le câblage visible.
+          Plusieurs <code>SELECT</code> référençaient encore <code>reservations.montant_pilote</code> /
+          <code>pilote_paye</code> / <code>pilote_paye_at</code> et <code>pilotes.paylink</code> —
+          colonnes de la migration <code>20260909_pilote_paiement</code> <b>jamais exécutée</b>.
+          PostgREST renvoyait une erreur → <code>respondToRouteProposal</code> sortait sur
+          « Proposition introuvable » <b>pour toutes les résas</b> (standard et annonce).</li>
+        <li><b>Fix</b> (<code>respondToRouteProposal</code> ramené à l'état <code>origin/main</code> ;
+          nettoyage des mêmes colonnes dans le reçu PDF, le tracker client, <code>lib/transactions.ts</code>,
+          <code>/api/pay-qr</code>, le profil pilote). Le flux Stripe normal refonctionne pour
+          <code>annonce_pilote</code> : le client paie <code>prix_total − part_pilote</code> via le
+          lien, encaissé sur le Stripe de Romain (modèle B de fait — toujours « à trancher »).</li>
+        <li><b>Reste</b> : donner au pilote un bouton « renvoyer le lien de paiement » depuis
+          l'espace pilote (aujourd'hui réservé à l'admin).</li>
+      </ul>
+
       <h3>2026-09-08 — durcissement du système d'annonces (part pilote + garde-fou légal)</h3>
       <ul>
         <li><b>Part pilote bloquante et seuil adaptatif.</b> <code>lib/annonces-pilote.ts</code> :
