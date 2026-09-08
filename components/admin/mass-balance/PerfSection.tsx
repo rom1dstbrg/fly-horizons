@@ -5,7 +5,7 @@ import { Cloud, Loader2, CornerDownLeft } from "lucide-react";
 import type { AerodromeInput, PerfInputs, PerfComputed } from "@/lib/mass-balance/da40-calc";
 import { extractFromRawMetar } from "@/lib/mass-balance/da40-calc";
 import { findAerodrome } from "@/lib/mass-balance/aerodromes";
-import { VerdictBox } from "./fields";
+import { MB, NumberField, VerdictBox } from "./fields";
 
 type Which = "dep" | "dest" | "alt";
 
@@ -14,42 +14,6 @@ export interface RunwayPick {
   elev: number;
   toda: number | null;
   lda: number | null;
-}
-
-const inputCls =
-  "h-8 px-1.5 rounded-md border border-input bg-background text-sm font-mono tabular-nums text-right focus:outline-none focus:ring-2 focus:ring-ring [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
-
-function Field({
-  label,
-  value,
-  onChange,
-  min,
-  max,
-  width = 72,
-}: {
-  label: string;
-  value: number | null;
-  onChange: (n: number | null) => void;
-  min?: number;
-  max?: number;
-  width?: number;
-}) {
-  return (
-    <label className="flex flex-col gap-0.5">
-      <span className="text-[10px] font-medium text-muted-foreground whitespace-nowrap">{label}</span>
-      <input
-        type="number"
-        inputMode="decimal"
-        value={value ?? ""}
-        min={min}
-        max={max}
-        placeholder="—"
-        onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
-        style={{ width }}
-        className={inputCls}
-      />
-    </label>
-  );
 }
 
 function Kv({ label, value, bad }: { label: string; value: string; bad?: boolean }) {
@@ -159,7 +123,7 @@ function AeroRow({
           maxLength={4}
           placeholder="ICAO"
           onChange={(e) => setIcao(e.target.value)}
-          className="w-[68px] h-8 px-1.5 rounded-md border border-input bg-background text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-ring"
+          className={`w-20 ${MB.input} px-1.5 font-mono uppercase`}
         />
         <button
           type="button"
@@ -216,12 +180,12 @@ function AeroRow({
 
       {/* Ligne 2 : valeurs */}
       <div className="mt-2 flex flex-wrap items-end gap-x-3 gap-y-1.5">
-        {!narrow && <Field label="RWY °" value={ad.rwy} onChange={(v) => onChange({ rwy: v })} min={0} max={360} width={62} />}
-        {!narrow && <Field label="Élévation ft" value={ad.elev} onChange={(v) => onChange({ elev: v })} width={74} />}
-        <Field label="QNH hPa" value={ad.qnh} onChange={(v) => onChange({ qnh: v })} width={74} />
-        <Field label="OAT °C" value={ad.oat} onChange={(v) => onChange({ oat: v })} width={62} />
-        <Field label="Vent °" value={ad.wdir} onChange={(v) => onChange({ wdir: v })} min={0} max={360} width={62} />
-        <Field label="Vent kt" value={ad.wspd} onChange={(v) => onChange({ wspd: v })} min={0} width={62} />
+        {!narrow && <NumberField label="RWY °" value={ad.rwy} onChange={(v) => onChange({ rwy: v })} min={0} max={360} size="sm" />}
+        {!narrow && <NumberField label="Élévation ft" value={ad.elev} onChange={(v) => onChange({ elev: v })} size="md" />}
+        <NumberField label="QNH hPa" value={ad.qnh} onChange={(v) => onChange({ qnh: v })} size="md" />
+        <NumberField label="OAT °C" value={ad.oat} onChange={(v) => onChange({ oat: v })} size="sm" />
+        <NumberField label="Vent °" value={ad.wdir} onChange={(v) => onChange({ wdir: v })} min={0} max={360} size="sm" />
+        <NumberField label="Vent kt" value={ad.wspd} onChange={(v) => onChange({ wspd: v })} min={0} size="sm" />
       </div>
 
       {status.msg && (
@@ -304,9 +268,7 @@ export function PerfSection({
     <div className="space-y-4">
       {/* Conditions par aérodrome */}
       <div className="space-y-2">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-          Conditions &amp; pistes
-        </p>
+        <p className={MB.groupLabel}>Conditions &amp; pistes</p>
         <AeroRow
           label="Départ"
           ad={perf.dep}
@@ -338,7 +300,7 @@ export function PerfSection({
         <div className="rounded-lg border border-border bg-white px-3 py-2.5 space-y-2">
           <div className="flex flex-wrap items-end justify-between gap-2">
             <h3 className="text-xs font-bold text-navy uppercase tracking-wide">Décollage — TODR</h3>
-            <Field label="TODA m (départ)" value={perf.toda} onChange={(v) => onChange({ toda: v })} width={92} />
+            <NumberField label="TODA m (départ)" value={perf.toda} onChange={(v) => onChange({ toda: v })} size="md" />
           </div>
           <div className="flex flex-wrap gap-1.5">
             <Kv label="X-wind" value={d.xwind != null ? `${d.xwind} kt` : "—"} bad={d.xwind != null && d.xwind > 20} />
@@ -355,8 +317,8 @@ export function PerfSection({
           <div className="flex flex-wrap items-end justify-between gap-2">
             <h3 className="text-xs font-bold text-navy uppercase tracking-wide">Atterrissage — LDR</h3>
             <div className="flex gap-2">
-              <Field label="LDA dest. m" value={perf.ldaDest} onChange={(v) => onChange({ ldaDest: v })} width={84} />
-              <Field label="LDA alt. m" value={perf.ldaAlt} onChange={(v) => onChange({ ldaAlt: v })} width={84} />
+              <NumberField label="LDA dest. m" value={perf.ldaDest} onChange={(v) => onChange({ ldaDest: v })} size="md" />
+              <NumberField label="LDA alt. m" value={perf.ldaAlt} onChange={(v) => onChange({ ldaAlt: v })} size="md" />
             </div>
           </div>
           <div className="flex flex-wrap gap-1.5">

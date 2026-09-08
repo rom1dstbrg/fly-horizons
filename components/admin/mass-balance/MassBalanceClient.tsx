@@ -16,6 +16,7 @@ import { saveMassBalanceSheet, updateMassBalanceSheet } from "@/lib/actions/mass
 import { CgEnvelopeChart } from "./CgEnvelopeChart";
 import { PerfSection } from "./PerfSection";
 import { SheetsList, type MbSheetRow } from "./SheetsList";
+import { MB, ValueRow } from "./fields";
 
 export interface ResaContext {
   id: string;
@@ -29,8 +30,6 @@ function fr(v: number | null | undefined, d = 1): string {
   if (v == null || Number.isNaN(v)) return "—";
   return v.toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d });
 }
-
-// ── Petits blocs de structure ─────────────────────────────────────────────
 
 function Section({
   n,
@@ -50,46 +49,19 @@ function Section({
           {n}
         </span>
         <h2 className="text-base font-semibold text-foreground">{title}</h2>
-        {subtitle && <span className="text-[11px] text-muted-foreground">{subtitle}</span>}
+        {subtitle && <span className={MB.help}>{subtitle}</span>}
       </div>
       {children}
     </section>
   );
 }
 
-function LoadRow({
-  label,
-  sub,
-  value,
-  onChange,
-  step = 1,
-  bad,
-}: {
-  label: string;
-  sub?: string;
-  value: number;
-  onChange: (n: number) => void;
-  step?: number;
-  bad?: boolean;
-}) {
+function Group({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="flex items-center justify-between gap-2 min-w-0">
-      <span className="text-xs text-foreground truncate">
-        {label}
-        {sub && <span className="text-[11px] text-muted-foreground"> · {sub}</span>}
-      </span>
-      <input
-        type="number"
-        inputMode="decimal"
-        min={0}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(e.target.value === "" ? 0 : Number(e.target.value))}
-        className={`w-[74px] shrink-0 h-8 px-2 rounded-md border bg-background text-sm font-mono tabular-nums text-right focus:outline-none focus:ring-2 focus:ring-ring [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
-          bad ? "border-red-500 bg-red-50" : "border-input"
-        }`}
-      />
-    </label>
+    <div className="space-y-1.5">
+      <p className={MB.groupLabel}>{label}</p>
+      {children}
+    </div>
   );
 }
 
@@ -109,8 +81,6 @@ function buildInitialInputs(resa: ResaContext | null, sheet: MbSheetRow | null):
   }
   return base;
 }
-
-// ── Composant ─────────────────────────────────────────────────────────────
 
 export function MassBalanceClient({
   resa,
@@ -138,10 +108,7 @@ export function MassBalanceClient({
 
   const patch = (p: Partial<MassBalanceInputs>) => setInputs((prev) => ({ ...prev, ...p }));
   const patchAero = (which: "dep" | "dest" | "alt", p: Partial<AerodromeInput>) =>
-    setInputs((prev) => ({
-      ...prev,
-      perf: { ...prev.perf, [which]: { ...prev.perf[which], ...p } },
-    }));
+    setInputs((prev) => ({ ...prev, perf: { ...prev.perf, [which]: { ...prev.perf[which], ...p } } }));
   const patchPerf = (p: Partial<Pick<PerfInputs, "toda" | "ldaDest" | "ldaAlt">>) =>
     setInputs((prev) => ({ ...prev, perf: { ...prev.perf, ...p } }));
 
@@ -257,14 +224,14 @@ export function MassBalanceClient({
               })}
             </span>
           )}
-          <span className="text-xs text-muted-foreground">
+          <span className={MB.help}>
             {resa.passagers ?? 1} pax ·{" "}
             {resa.poids_total != null ? `${resa.poids_total} kg au total` : "poids non renseigné"}
           </span>
           <button
             type="button"
             onClick={importFromResa}
-            className="ml-auto inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-navy text-white text-xs font-semibold hover:bg-navy/90 transition-colors cursor-pointer"
+            className="ml-auto inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-navy text-white text-xs font-semibold hover:bg-navy/90 transition-colors cursor-pointer"
           >
             Importer les poids
           </button>
@@ -275,11 +242,11 @@ export function MassBalanceClient({
       <Section n="1" title="Le vol">
         <div className="flex flex-wrap items-end gap-4">
           <label className="space-y-1">
-            <span className="block text-[11px] font-medium text-muted-foreground">Avion</span>
+            <span className={`block ${MB.label}`}>Avion</span>
             <select
               value={inputs.aircraftReg}
               onChange={(e) => patch({ aircraftReg: e.target.value })}
-              className="h-9 px-2.5 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
+              className={`${MB.input} px-2.5 cursor-pointer`}
             >
               {AIRCRAFT.map(([r]) => (
                 <option key={r} value={r}>
@@ -289,33 +256,30 @@ export function MassBalanceClient({
             </select>
           </label>
           <label className="space-y-1">
-            <span className="block text-[11px] font-medium text-muted-foreground">Date du vol</span>
+            <span className={`block ${MB.label}`}>Date du vol</span>
             <input
               type="date"
               value={inputs.flightDate}
               onChange={(e) => patch({ flightDate: e.target.value })}
-              className="h-9 px-2.5 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className={`${MB.input} px-2.5`}
             />
           </label>
-          <p className="text-[11px] text-muted-foreground pb-2">
+          <p className={`${MB.help} pb-2.5`}>
             {reg} — masse à vide <span className="font-mono">{fr(bem)}</span> kg · bras{" "}
             <span className="font-mono">{fr(bemArm, 3)}</span> m
           </p>
         </div>
-        <p className="mt-2 text-[11px] text-muted-foreground">
-          Les aérodromes (départ, destination, alternate) et la météo se règlent au § 3.
-        </p>
+        <p className={`mt-2 ${MB.help}`}>Aérodromes et météo (départ, destination, alternate) : au § 3.</p>
       </Section>
 
       {/* ═══ 2 · CHARGEMENT ═══ */}
       <Section n="2" title="Chargement" subtitle="masse et centrage">
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,360px)_1fr] lg:items-start">
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-[280px_minmax(260px,320px)_minmax(0,1fr)] xl:items-start">
           {/* saisie */}
-          <div className="space-y-3">
-            <div className="space-y-1.5">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Carburant</p>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-                <LoadRow
+          <div className="space-y-4">
+            <Group label="Carburant">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                <ValueRow
                   label="Plein"
                   sub="gal"
                   value={inputs.fuelGal}
@@ -323,7 +287,7 @@ export function MassBalanceClient({
                   step={0.5}
                   bad={inputs.fuelGal > FUEL_MAX_GAL}
                 />
-                <LoadRow
+                <ValueRow
                   label="Trajet"
                   sub="gal"
                   value={inputs.tripGal}
@@ -332,100 +296,100 @@ export function MassBalanceClient({
                   bad={inputs.tripGal > inputs.fuelGal}
                 />
               </div>
-              <p className="text-[11px] text-muted-foreground">
-                Plein max {FUEL_MAX_GAL} gal · embarqué {fr(computed.fuelL, 0)} l / {fr(computed.fuelKg, 1)} kg · roulage − 1,5 kg.
+              <p className={MB.help}>
+                Plein max {FUEL_MAX_GAL} gal · embarqué {fr(computed.fuelL, 0)} l / {fr(computed.fuelKg, 1)} kg ·
+                roulage − 1,5 kg.
               </p>
-            </div>
+            </Group>
 
-            <div className="space-y-1.5 border-t border-border pt-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Occupants &amp; bagages</p>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-                <LoadRow label="Pilote" sub="2,30 m" value={inputs.pilot} onChange={(v) => patch({ pilot: v })} />
-                <LoadRow label="Pax avant" sub="2,30 m" value={inputs.fpax} onChange={(v) => patch({ fpax: v })} />
-                <LoadRow label="Pax arrière 1" sub="3,25 m" value={inputs.rpax1} onChange={(v) => patch({ rpax1: v })} />
-                <LoadRow label="Pax arrière 2" sub="3,25 m" value={inputs.rpax2} onChange={(v) => patch({ rpax2: v })} />
-                <LoadRow
-                  label="Bagages"
-                  sub="≤ 30 · 3,65 m"
-                  value={inputs.bag}
-                  onChange={(v) => patch({ bag: v })}
-                  bad={inputs.bag > 30}
-                />
-              </div>
+            <div className="border-t border-border pt-3">
+              <Group label="Occupants & bagages">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                  <ValueRow label="Pilote" sub="2,30 m" value={inputs.pilot} onChange={(v) => patch({ pilot: v })} />
+                  <ValueRow label="Pax avant" sub="2,30 m" value={inputs.fpax} onChange={(v) => patch({ fpax: v })} />
+                  <ValueRow label="Pax arrière 1" sub="3,25 m" value={inputs.rpax1} onChange={(v) => patch({ rpax1: v })} />
+                  <ValueRow label="Pax arrière 2" sub="3,25 m" value={inputs.rpax2} onChange={(v) => patch({ rpax2: v })} />
+                  <ValueRow
+                    label="Bagages"
+                    sub="≤ 30 · 3,65 m"
+                    value={inputs.bag}
+                    onChange={(v) => patch({ bag: v })}
+                    bad={inputs.bag > 30}
+                  />
+                </div>
+              </Group>
             </div>
           </div>
 
-          {/* résultat */}
-          <div className="space-y-3 min-w-0">
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-sm">
-                <thead>
-                  <tr>
-                    {["Poste", "Masse (kg)", "Bras (m)", "Moment (kgm)"].map((h, i) => (
-                      <th
-                        key={h}
-                        className={`border border-border bg-secondary px-2 py-1.5 font-semibold ${
-                          i === 0 ? "text-left" : "text-right"
-                        }`}
-                      >
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="font-mono tabular-nums">
-                  {computed.rows.map((row, i) => (
-                    <tr key={i} className={row.total ? "bg-secondary font-semibold" : ""}>
-                      <td
-                        className={`border border-border px-2 py-1.5 text-left font-sans ${
-                          row.out ? "text-red-600 font-semibold" : ""
-                        }`}
-                      >
-                        {row.poste}
-                        {row.sub && (
-                          <span className="block text-[11px] text-muted-foreground font-normal">{row.sub}</span>
-                        )}
-                      </td>
-                      <td className={`border border-border px-2 py-1.5 text-right ${row.out ? "text-red-600" : ""}`}>
-                        {fr(row.masse, 1)}
-                      </td>
-                      <td className="border border-border px-2 py-1.5 text-right">
-                        {row.bras == null ? "—" : fr(row.bras, row.total ? 3 : row.bras < 3 ? 2 : 3)}
-                      </td>
-                      <td className={`border border-border px-2 py-1.5 text-right ${row.out ? "text-red-600" : ""}`}>
-                        {fr(row.moment, 2)}
-                      </td>
-                    </tr>
+          {/* tableau — largeur contenue */}
+          <div className="min-w-0 overflow-x-auto">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr>
+                  {["Poste", "Masse (kg)", "Bras (m)", "Moment (kgm)"].map((h, i) => (
+                    <th
+                      key={h}
+                      className={`border border-border bg-secondary px-2 py-1.5 font-semibold ${
+                        i === 0 ? "text-left" : "text-right"
+                      }`}
+                    >
+                      {h}
+                    </th>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </tr>
+              </thead>
+              <tbody className="font-mono tabular-nums">
+                {computed.rows.map((row, i) => (
+                  <tr key={i} className={row.total ? "bg-secondary font-semibold" : ""}>
+                    <td
+                      className={`border border-border px-2 py-1.5 text-left font-sans ${
+                        row.out ? "text-red-600 font-semibold" : ""
+                      }`}
+                    >
+                      {row.poste}
+                      {row.sub && (
+                        <span className={`block ${MB.help} font-normal`}>{row.sub}</span>
+                      )}
+                    </td>
+                    <td className={`border border-border px-2 py-1.5 text-right ${row.out ? "text-red-600" : ""}`}>
+                      {fr(row.masse, 1)}
+                    </td>
+                    <td className="border border-border px-2 py-1.5 text-right">
+                      {row.bras == null ? "—" : fr(row.bras, row.total ? 3 : row.bras < 3 ? 2 : 3)}
+                    </td>
+                    <td className={`border border-border px-2 py-1.5 text-right ${row.out ? "text-red-600" : ""}`}>
+                      {fr(row.moment, 2)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-            <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
-              <div className="space-y-2 order-2 sm:order-1">
-                {computed.withinLimits ? (
-                  <p className="rounded-lg border border-green-300 bg-green-50 px-3 py-2 text-sm font-semibold text-green-700">
-                    Centrage dans l&apos;enveloppe — catégorie {computed.category}
-                  </p>
-                ) : (
-                  <div className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
-                    Centrage hors limites
-                    <ul className="mt-1.5 ml-4 list-disc text-xs font-normal">
-                      {computed.issues.map((it, i) => (
-                        <li key={i}>{it}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                <p className="text-[11px] text-muted-foreground">
-                  Limites : avant 2,40 m (jusqu&apos;à 980 kg) → 2,46 m à 1150 kg ; arrière 2,59 m ; Utility ≤ 980 kg ;
-                  mini 780 kg. Réf. NewCAG rév. 4.1 — vérifier l&apos;AFM.
-                </p>
-              </div>
-              <div className="order-1 sm:order-2 w-full sm:w-[300px] mx-auto sm:mx-0">
-                <CgEnvelopeChart points={computed.points} />
-              </div>
+          {/* enveloppe — grande, à droite du tableau */}
+          <div className="md:col-span-2 xl:col-span-1 space-y-3">
+            <p className={MB.groupLabel}>Enveloppe de centrage</p>
+            <div className="mx-auto w-full max-w-[520px] xl:mx-0 xl:max-w-none">
+              <CgEnvelopeChart points={computed.points} />
             </div>
+            {computed.withinLimits ? (
+              <p className="rounded-lg border border-green-300 bg-green-50 px-3 py-2 text-sm font-semibold text-green-700">
+                Dans l&apos;enveloppe — catégorie {computed.category}
+              </p>
+            ) : (
+              <div className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
+                Hors limites
+                <ul className="mt-1.5 ml-4 list-disc text-xs font-normal">
+                  {computed.issues.map((it, i) => (
+                    <li key={i}>{it}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <p className={MB.help}>
+              Limites : avant 2,40 m (jusqu&apos;à 980 kg) → 2,46 m à 1150 kg ; arrière 2,59 m ; Utility ≤ 980 kg ;
+              mini 780 kg. Réf. NewCAG rév. 4.1 — vérifier l&apos;AFM.
+            </p>
           </div>
         </div>
       </Section>
@@ -440,7 +404,7 @@ export function MassBalanceClient({
       </Section>
 
       {/* ═══ 4 · VERDICT ═══ */}
-      <Section n="4" title="Verdict &amp; feuille">
+      <Section n="4" title="Verdict & feuille">
         {overall === "go" && (
           <p className="rounded-lg border border-green-300 bg-green-50 px-4 py-3 text-base font-bold text-green-700">
             GO — masse, centrage et performances dans les limites.
@@ -471,7 +435,7 @@ export function MassBalanceClient({
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               placeholder="ex. Baptême Dupont"
-              className="w-full h-9 px-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className={`w-full ${MB.input} px-2.5`}
             />
           </label>
 
