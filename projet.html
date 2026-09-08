@@ -159,9 +159,12 @@
         <li><b>Annonces — modèle A (le client paie le pilote en direct)</b> — décision prise 08/09,
           <b>pas encore codé</b> (Romain : « on ne le fait pas maintenant »). À construire :
           <ol>
-            <li><b>Paiement</b> : email au client à l'acceptation de la route = lien qui ouvre
-              l'appli bancaire du client (URI de virement / <code>SEPA</code>) <b>+</b> QR code.
-              Le plus simple possible, pas de carte, pas de Stripe.</li>
+            <li><b>Paiement = Mollie Connect</b> (décision 08/09 après-midi, cf. onglet Décisions) :
+              compte plateforme Mollie, chaque pilote connecté en OAuth avec son IBAN. À
+              l'acceptation de la route, l'app crée un paiement Mollie <b>au nom du pilote</b>
+              (Bancontact, éventuellement carte) ; fonds versés direct sur son compte puis son
+              IBAN, 0 € de commission, aucun passage par un solde Fly Horizons. Webhook Mollie
+              → « payé » automatique. <i>(Remplace le « URI de virement + QR SEPA » du matin.)</i></li>
             <li><b>Le pilote marque « payé »</b> dans l'espace pilote : case à cocher ou montant
               reçu à saisir. Fait avancer le dossier.</li>
             <li><b>Bilan de vol par le pilote</b> : minutes réellement volées (<code>duree_reelle</code>)
@@ -170,29 +173,32 @@
               que ça se déclenche aussi depuis l'action pilote sur une annonce, pas seulement le
               flux standard de Romain.</li>
             <li><b>Reçu émis par le pilote</b> (nom + IBAN) une fois « payé » coché.</li>
-            <li><b>Filet si le client ne paie jamais</b> : pas de Stripe = pas de cron deadline.
-              Le pilote doit pouvoir annuler une demande non payée (sinon l'annonce reste bloquée
-              en <code>reservee</code>). Relance auto optionnelle.</li>
-            <li><b>IBAN obligatoire</b> avant de publier une annonce (ou avant de confirmer la
-              route) — sinon l'email de paiement est cassé. À brancher sur le gating profil /
-              <code>legal_ok</code>.</li>
+            <li><b>Filet si le client ne paie jamais</b> : Mollie donne l'état du paiement
+              (<code>open</code> / <code>expired</code> / <code>failed</code>) → relance et
+              libération de l'annonce automatisables. Le pilote garde un bouton « annuler cette
+              demande » (sinon l'annonce reste bloquée en <code>reservee</code>).</li>
+            <li><b>Onboarding Mollie Connect du pilote obligatoire</b> avant de publier une annonce
+              (l'IBAN vit désormais chez Mollie) — sinon le paiement est impossible. À brancher sur
+              le gating profil / <code>legal_ok</code>.</li>
             <li><b>Modèle de statuts</b> à définir : demande_recue → route confirmée → payé (coché
               par le pilote) → effectué. « Payé » = vrai statut ou simple booléen ?</li>
             <li><b>Annulation après paiement</b> = strictement pilote ↔ client (Fly Horizons ne
               touche pas au remboursement). Prévoir un chemin « le client a annulé » côté pilote +
               le dire clairement.</li>
             <li><b>Plomberie Stripe</b> : <code>/api/reservation/pay</code> + webhook cessent de
-              couvrir <code>annonce_pilote</code>. Annonces sorties de la P&amp;L
-              (<code>lib/transactions.ts</code>).</li>
+              couvrir <code>annonce_pilote</code> (remplacés par le paiement Mollie sur le compte
+              connecté du pilote + webhook <code>/api/mollie/webhook</code>). Annonces sorties de la
+              P&amp;L (<code>lib/transactions.ts</code>).</li>
             <li><b>Clarté client</b> : page publique de l'annonce + email de confirmation de demande
               disent « vous réglerez le pilote directement par virement, pas de paiement par carte
               ici ».</li>
             <li><b>« 1 booking = tout l'avion »</b> à verrouiller : le modèle A ne marche
               proprement qu'avec un seul client qui règle le pilote (pas de vente à la place).</li>
             <li><b>Migration</b> : sous-ensemble de <code>20260909_pilote_paiement</code> —
-              <code>reservations.pilote_paye</code> + <code>pilote_paye_at</code> seulement
-              (pas <code>montant_pilote</code> : l'<code>acompte</code> porte déjà le montant client ;
-              pas <code>paylink</code> en v1).</li>
+              <code>reservations.pilote_paye</code> + <code>pilote_paye_at</code> + un identifiant
+              de compte connecté Mollie sur <code>pilotes</code> (remplace <code>paylink</code>).
+              Pas de <code>montant_pilote</code> : l'<code>acompte</code> porte déjà le montant
+              client.</li>
           </ol>
         </li>
         <li><b>Messagerie pilote ↔ client (fil de ticket)</b> — décision 08/09, pas commencé.
@@ -246,6 +252,69 @@
     <p class="meta"><b>Append-only.</b> On n'édite jamais une décision passée : on en ajoute une
       nouvelle qui la remplace, avec un lien. Chaque entrée : <i>Contexte · Décision · Alternatives
       écartées · Conséquences</i>. Plus récent en haut.</p>
+
+    <div class="dec">
+      <p class="date">2026-09-08 (après-midi) · Espace pilote — paiement</p>
+      <h3>Paiement des annonces : Mollie Connect (compte connecté par pilote), à la place du QR SEPA manuel</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>La décision « modèle A » du matin prévoyait le paiement le plus rudimentaire possible :
+          email au client à l'acceptation de la route avec une URI de virement + un QR SEPA vers
+          l'IBAN du pilote, aucun PSP. Limites apparues à l'usage : <b>aucune confirmation
+          automatique</b> (le pilote coche « payé » à la main, sur sa bonne foi), le client peut
+          modifier montant et communication dans son appli bancaire, <b>pas de Bancontact</b> en un
+          clic (le moyen de paiement par défaut en Belgique), et le filet anti-impayé est
+          entièrement à écrire (pas d'état de paiement à interroger). Reste aussi actif, depuis le
+          fix <code>01f37e2</code>, le flux Stripe de Romain sur <code>annonce_pilote</code>
+          (modèle B de fait).</dd>
+        <dt>Décision</dt>
+        <dd>Le paiement d'une annonce passe par <b>Mollie Connect</b>. Un compte plateforme Mollie
+          appartient à Fly Horizons ; chaque pilote s'y connecte une fois (OAuth) et rattache son
+          IBAN. À l'acceptation de la route, l'app crée le paiement <b>au nom du pilote</b> via
+          l'API Mollie ; le client règle en <b>Bancontact</b> (ou carte), les fonds sont versés
+          <b>sur le compte Mollie du pilote puis sur son IBAN</b>, sans jamais transiter par un
+          solde Fly Horizons. <b>Commission plateforme = 0 €</b> — Fly Horizons ne se rémunère pas
+          sur le flux (principe : Romain ne touche pas l'argent des pilotes, inchangé). Un
+          <b>webhook Mollie</b> fait passer la réservation à « payé » automatiquement ; le pilote
+          n'a plus qu'à émettre le reçu.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd><b>QR SEPA / URI de virement pré-rempli</b> (retenu le matin) : vraiment zéro
+          intermédiaire, mais pas de confirmation auto, montant modifiable par le client, pas de
+          Bancontact natif, filet anti-impayé à coder de zéro. <b>Garder le Stripe de Romain</b>
+          (modèle B de fait, encore actif) : c'est l'intermédiation de paiement qu'on refuse depuis
+          le matin du 08/09 — l'argent d'un vol pilote passe par la compta de Romain.
+          <b>Stripe Connect</b> : équivalent fonctionnel de Mollie Connect, mais Bancontact /
+          Payconiq moins central et facturé au pourcentage plutôt qu'au forfait — Mollie est le
+          standard belge pour ce cas.</dd>
+        <dt>Conséquences</dt>
+        <dd><b>Amende la décision « Annonces = modèle A » du 08/09 matin sur le seul volet « comment
+          le client paie »</b> : ce n'est plus « virement / QR, aucun PSP » mais « Mollie Connect,
+          compte du pilote ». L'esprit tient : Fly Horizons ne détient jamais les fonds, ne prend
+          pas de commission, n'apparaît pas comme bénéficiaire. Point de vigilance inchangé : c'est
+          l'app FH qui <b>orchestre</b> l'encaissement — la question « une mise en relation payante
+          est-elle permise » reste non tranchée (on avance sans avocat). Le cadre juridique déjà
+          choisi (« plateforme de mise en relation ») est cohérent avec ça, et Mollie fournit une
+          piste d'audit + de vrais reçus que le virement nu ne donnait pas.
+          <br><b>À intégrer</b> : compte plateforme Mollie + activation Connect (OAuth) ; onboarding
+          pilote dans <code>/pilote/profil</code> (remplace la simple saisie d'IBAN — l'IBAN vit
+          désormais chez Mollie) ; <code>respondToRouteProposal</code> crée un paiement Mollie sur
+          le compte connecté du pilote au lieu d'ouvrir une session Stripe ; webhook
+          <code>/api/mollie/webhook</code> → <code>reservations.pilote_paye</code> +
+          <code>pilote_paye_at</code> ; page de retour client après paiement.
+          <br><code>/api/reservation/pay</code> + webhook Stripe cessent de couvrir
+          <code>annonce_pilote</code> (déjà prévu au 08/09). Annonces hors P&amp;L
+          (<code>lib/transactions.ts</code>) : inchangé.
+          <br><b>Migration</b> : toujours le sous-ensemble <code>reservations.pilote_paye</code> +
+          <code>pilote_paye_at</code> ; + un identifiant de compte connecté Mollie sur
+          <code>pilotes</code> (à la place de l'ancien <code>paylink</code>). Pas de
+          <code>montant_pilote</code> (l'<code>acompte</code> porte déjà le montant client).
+          <br>Le <b>QR SEPA du Bloc D</b> (<code>lib/pilote/payment.ts</code>,
+          <code>/api/pay-qr</code>) n'est plus le chemin principal — à garder éventuellement comme
+          repli hors ligne, sinon à retirer. Ouvre la <b>carte bancaire</b> côté client (Mollie la
+          propose à côté de Bancontact) — à confirmer : Bancontact seul ou Bancontact + carte.
+          Voir <code>[[project_espace_pilote_build]]</code>.</dd>
+      </dl>
+    </div>
 
     <div class="dec">
       <p class="date">2026-09-08 · Espace pilote — messagerie</p>
@@ -541,8 +610,9 @@
         on redéploie (batch M&amp;B + Bloc A + refonte M&amp;B partiraient en prod, ils sont sains).</li>
       <li><b>Validation visuelle M&amp;B</b> — Romain regarde la refonte et donne ses derniers
         ajustements.</li>
-      <li><b>Suite Option 3</b> (périmètre resserré) — paiement d'une annonce, steps panel version
-        annonce, fiche pilote publique, garde-fous transverses. Pas d'ouverture publique.</li>
+      <li><b>Suite Option 3</b> (périmètre resserré) — paiement d'une annonce (<b>Mollie Connect</b>,
+        cf. Décisions), steps panel version annonce, fiche pilote publique, garde-fous transverses.
+        Pas d'ouverture publique.</li>
       <li><b>Refonte des emails</b> — tout à la fin, quand l'espace pilote est stabilisé.</li>
     </ol>
 
@@ -711,7 +781,9 @@
           <code>20260907_pilote_legal</code> · <code>20260908_reservations_pilote_assign</code> ·
           <code>20260908_flight_offers</code></li>
         <li><span class="tag t-red">Non exécutée</span> <code>20260909_pilote_paiement</code>
-          (bloc D — en attente de la décision « paiement des annonces »)</li>
+          (bloc D — <b>à remplacer</b> par un fichier réduit : <code>reservations.pilote_paye</code>
+          + <code>pilote_paye_at</code> + id de compte connecté Mollie sur <code>pilotes</code>.
+          Décision paiement des annonces tranchée 08/09 : Mollie Connect.)</li>
       </ul>
     </div>
   </section>
