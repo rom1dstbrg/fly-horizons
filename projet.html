@@ -195,6 +195,29 @@
               pas <code>paylink</code> en v1).</li>
           </ol>
         </li>
+        <li><b>Messagerie pilote ↔ client (fil de ticket)</b> — décision 08/09, pas commencé.
+          <ol>
+            <li>Onglet « Messages » dans le drawer de réservation (fil rattaché à la résa).</li>
+            <li>Envoi depuis <code>info@fly-horizons.com</code>, corps au nom du pilote.</li>
+            <li><b>Signature = template éditable / supprimable</b> par le pilote : « Prénom Nom ·
+              Pilote · téléphone (si renseigné) ». Champ signature dans la fiche profil pilote.</li>
+            <li>Client reçoit un mail avec bouton « répondre » → page publique du fil ; réponse par
+              email directe captée par webhook <code>/api/inbound-email</code> et re-cousue au fil.</li>
+            <li>Table <code>reservation_messages</code> (ou <code>contact_messages</code> +
+              <code>reservation_id</code>) ; page publique de fil par réservation.</li>
+            <li>Remplacer l'actuel « Composer un email… » one-shot signé « L'équipe Fly Horizons »
+              (<code>ReservationDrawer.openEmailComposer</code>) côté pilote.</li>
+          </ol>
+        </li>
+        <li><b>Escales gérées par le pilote</b> (plus tard) — le pilote qui gère sa réservation
+          doit pouvoir ajouter des escales et tout ce que ça implique (waypoints, taxes d'escale,
+          durée, affichage client, M&amp;B). Réutiliser le modèle <code>route_waypoints</code> /
+          <code>escales</code> des produits (cf. mémoire <code>project_products_itineraire_escales</code> :
+          <code>product.price</code> inclut déjà les taxes d'escale — ne jamais les rajouter).</li>
+        <li><b>Page publique « nos pilotes »</b> — liste avec photo, prénom + nom, et titre
+          (ex. « Pilote »). Réutiliser <code>/nos-pilotes/[id]</code> (fiche individuelle déjà
+          construite au Bloc B) pour les liens. Décider indexation (probablement <code>noindex</code>
+          tant que l'espace pilote n'est pas ouvert).</li>
         <li><b>Chantier Option 3 « annonces à fond »</b> — détail dans
           <code>plan-attaque-espace-pilote.html</code> § Option 3. Périmètre resserré (décision
           08/09 : pas de découverte légale, pas d'ouverture publique).
@@ -223,6 +246,40 @@
     <p class="meta"><b>Append-only.</b> On n'édite jamais une décision passée : on en ajoute une
       nouvelle qui la remplace, avec un lien. Chaque entrée : <i>Contexte · Décision · Alternatives
       écartées · Conséquences</i>. Plus récent en haut.</p>
+
+    <div class="dec">
+      <p class="date">2026-09-08 · Espace pilote — messagerie</p>
+      <h3>Emails pilote ↔ client : fil de ticket + onglet « Messages » dans le drawer</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Dans l'espace pilote, « Composer un email… » envoie un one-shot signé
+          <i>« L'équipe Fly Horizons »</i>, sans fil, sans capture des réponses. Romain veut que ça
+          parte au nom du pilote, avec sa signature perso, et que l'échange devienne une vraie
+          conversation. Il laisse le choix de l'emplacement UI (onglet ou drawer séparé) à Claude.</dd>
+        <dt>Décision</dt>
+        <dd>Réutiliser l'infra fil de ticket du formulaire de contact
+          (<code>[[project_contact_tickets]]</code> : table type <code>contact_messages</code>,
+          page publique <code>/…/ticket/[token]</code>, email « vous avez reçu une réponse » avec
+          bouton). Ici le fil est <b>rattaché à la réservation</b>. UI = <b>un onglet « Messages »
+          dans le drawer de réservation</b> (à côté de Infos / Modifier / Route / Historique) —
+          contextuel, le pilote voit client + vol + échanges au même endroit, pas de drawer en plus.
+          Envoi depuis <code>info@fly-horizons.com</code>, nom du pilote dans le corps (pas d'alias
+          par pilote — cf. décision routage email du 07/09). <b>Signature = template pré-rempli
+          éditable / supprimable par le pilote</b> : « Prénom Nom · Pilote · téléphone (si
+          renseigné) ». Le client reçoit un mail avec bouton « répondre » → page publique du fil ;
+          s'il répond directement par email, la réponse est captée (webhook
+          <code>/api/inbound-email</code>) et re-cousue au fil.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Drawer séparé « Messagerie » (une couche d'UI de plus pour rien) ; vue globale « Mes
+          messages » dans <code>/pilote</code> (les échanges sont par-réservation, pas besoin en
+          v1) ; garder le one-shot sans fil (Romain le refuse).</dd>
+        <dt>Conséquences</dt>
+        <dd>Nouvelle table <code>reservation_messages</code> (ou réutilisation de
+          <code>contact_messages</code> avec un <code>reservation_id</code>), page publique de fil
+          par réservation, onglet drawer, signature pilote dans la fiche profil. Chantier à
+          ordonnancer, pas commencé.</dd>
+      </dl>
+    </div>
 
     <div class="dec">
       <p class="date">2026-09-08 · Espace pilote — paiement</p>
