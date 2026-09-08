@@ -399,10 +399,16 @@
     <div class="log">
       <h3>2026-09-08 — refonte interface Masse &amp; centrage</h3>
       <ul>
-        <li><code>7943759</code> : <code>MassBalanceClient</code> + <code>PerfSection</code> réécrits.
-          Page en flux vertical numéroté 1→4 ; boutons d'action au § 4 ; verdict GO/NO-GO/incomplet
-          combiné ; grille de perfs remise en cartes par aérodrome. <b>Calcul, PDF, METAR inchangés.</b>
-          <code>next build</code> + <code>tsc</code> OK. À valider par Romain.</li>
+        <li><code>7943759</code> : page en flux vertical numéroté 1→4 (Le vol · Chargement ·
+          Performances · Verdict &amp; feuille) ; boutons d'action au § 4 ; verdict GO/NO-GO/incomplet
+          combiné ; grille de perfs remise en cartes par aérodrome.</li>
+        <li><code>b432a50</code> : <b>échelle de style unique</b> dans <code>fields.tsx</code> (tokens
+          <code>MB</code> : label / groupLabel / help / input / num ; 2 largeurs de champ ;
+          <code>NumberField</code> + <code>ValueRow</code> partagés) — fini les <code>text-[10/11px]</code>
+          et <code>width={62..92}</code> au hasard. § 2 en 3 colonnes
+          [saisie] [tableau contenu] [enveloppe agrandie à droite].</li>
+        <li><b>Calcul, PDF, METAR inchangés.</b> <code>next build</code> + <code>tsc</code> OK.
+          À valider par Romain dans le navigateur.</li>
       </ul>
 
       <h3>2026-09-08 — règle « ne pas push »</h3>
