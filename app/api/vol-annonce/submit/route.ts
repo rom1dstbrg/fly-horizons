@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { rateLimit, getIp } from "@/lib/rate-limit";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { reservationConfirmationFreeEmail } from "@/lib/email-templates";
+import { evaluerPartPilote } from "@/lib/annonces-pilote";
 import { escapeHtml } from "@/lib/utils";
 
 export async function POST(request: NextRequest) {
@@ -51,6 +52,11 @@ export async function POST(request: NextRequest) {
 
     if (!annonce || annonce.statut !== "publiee") {
       return NextResponse.json({ error: "Ce vol n'est plus disponible." }, { status: 410 });
+    }
+    // Garde-fou partage de frais : une annonce dont la part pilote est sous le
+    // minimum légal (part égale, pilote compris) ne peut pas être réservée.
+    if (evaluerPartPilote(annonce.prix_total, annonce.part_pilote, annonce.places).level === "block") {
+      return NextResponse.json({ error: "Ce vol n'est pas réservable pour le moment." }, { status: 409 });
     }
     if (passagersCount > annonce.places) {
       return NextResponse.json({ error: `Ce vol n'a que ${annonce.places} place(s) disponible(s).` }, { status: 400 });

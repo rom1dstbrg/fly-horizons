@@ -433,6 +433,28 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-08 — durcissement du système d'annonces (part pilote + garde-fou légal)</h3>
+      <ul>
+        <li><b>Part pilote bloquante et seuil adaptatif.</b> <code>lib/annonces-pilote.ts</code> :
+          <code>evaluerPartPilote(prixTotal, partPilote, places)</code> — le minimum n'est plus un
+          25 % fixe mais la <b>part égale entre tous les occupants, pilote compris</b>
+          (<code>100 / (places + 1)</code> : 1 pax → 50 %, 2 → 33 %, 3 → 25 %, 4 → 20 %…). En
+          dessous = <code>block</code> (avant : simple <code>warn</code> qui laissait publier).
+          Helper <code>partMinPourcent()</code> + <code>minPct</code> dans le résultat.</li>
+        <li><b>Garde-fou <code>legal_ok</code> à la publication.</b> Nouvelle case à cocher obligatoire
+          dans <code>AnnonceForm</code> (« je réalise réellement ce vol et je partage mes frais »),
+          refusée côté serveur dans <code>createAnnonce</code> / <code>updateAnnonce</code> si non
+          cochée. Colonnes <code>legal_ok</code> / <code>legal_ok_at</code> sur
+          <code>annonces_pilote</code> (migration <code>20260908_annonces_legal_ok.sql</code>,
+          <b>à exécuter à la main</b>). Annonces d'avant = <code>false</code> → badge « À confirmer »
+          dans <code>AnnoncesList</code>.</li>
+        <li><b>Réservation publique bloquée</b> pour une annonce sous le minimum légal
+          (<code>app/api/vol-annonce/submit</code>) — vérif serveur au moment de la demande.</li>
+        <li>Câblage : <code>lib/actions/annonces.ts</code>, <code>AnnonceForm.tsx</code>,
+          <code>AnnoncesList.tsx</code>, <code>app/pilote/annonces/page.tsx</code>.
+          <code>next build</code> + <code>tsc</code> OK.</li>
+      </ul>
+
       <h3>2026-09-08 — refonte interface Masse &amp; centrage</h3>
       <ul>
         <li><code>7943759</code> : page en flux vertical numéroté 1→4 (Le vol · Chargement ·

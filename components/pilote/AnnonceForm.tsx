@@ -20,6 +20,7 @@ export function AnnonceForm({ onDone, editing }: { onDone: () => void; editing?:
   const [partMode, setPartMode] = useState<"pct" | "eur">("eur");
   const [partValue, setPartValue] = useState(editing ? String(editing.part_pilote) : "");
   const [description, setDescription] = useState(editing?.description ?? "");
+  const [legalOk, setLegalOk] = useState(editing?.legal_ok ?? false);
   const [images, setImages] = useState<ImageItem[]>(
     () => (editing?.images ?? []).map(path => ({ path, url: `${SUPABASE_URL}/storage/v1/object/public/annonces/${path}` }))
   );
@@ -36,8 +37,8 @@ export function AnnonceForm({ onDone, editing }: { onDone: () => void; editing?:
   const prixClient = Math.max(0, prixTotalNum - Math.max(0, partPiloteEuros));
 
   const check = useMemo(
-    () => evaluerPartPilote(prixTotalNum, partPiloteEuros),
-    [prixTotalNum, partPiloteEuros]
+    () => evaluerPartPilote(prixTotalNum, partPiloteEuros, Number(places)),
+    [prixTotalNum, partPiloteEuros, places]
   );
   const showCheck = prixTotal !== "" && partValue !== "";
 
@@ -90,6 +91,7 @@ export function AnnonceForm({ onDone, editing }: { onDone: () => void; editing?:
         part_pilote: Math.max(0, partPiloteEuros),
         description: description.trim() || undefined,
         images: images.map(i => i.path),
+        legal_ok: legalOk,
       };
       const result = editing
         ? await updateAnnonce(editing.id, payload)
@@ -174,10 +176,12 @@ export function AnnonceForm({ onDone, editing }: { onDone: () => void; editing?:
           {check.level === "ok"    && <ShieldCheck size={16} className="shrink-0 mt-0.5" />}
           <div>
             <p className="font-semibold">
-              {check.level === "ok" ? `Votre part : ${check.pct}%` : (check.message ?? "")}
+              {check.level === "ok"
+                ? `Votre part : ${check.pct}% (minimum ${check.minPct}% pour ${places} passager${Number(places) > 1 ? "s" : ""})`
+                : (check.message ?? "")}
             </p>
             {check.level !== "ok" && partValue !== "" && (
-              <p className="text-xs opacity-80 mt-0.5">Part actuelle : {check.pct}%</p>
+              <p className="text-xs opacity-80 mt-0.5">Part actuelle : {check.pct}% · minimum {check.minPct}%</p>
             )}
           </div>
         </div>
@@ -234,9 +238,22 @@ export function AnnonceForm({ onDone, editing }: { onDone: () => void; editing?:
         />
       </div>
 
+      <label className="flex items-start gap-2.5 rounded-lg border border-border bg-secondary/30 px-4 py-3 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={legalOk}
+          onChange={e => setLegalOk(e.target.checked)}
+          className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-primary"
+        />
+        <span className="text-xs text-muted-foreground">
+          Je confirme que je réalise réellement ce vol et que je partage mes frais avec les
+          passagers. Je ne fais pas de transport à titre onéreux : ma part reste à ma charge.
+        </span>
+      </label>
+
       <button
         type="submit"
-        disabled={isPending || uploading || check.level === "block"}
+        disabled={isPending || uploading || check.level === "block" || !legalOk}
         className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-[#e6a800] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
       >
         <PlaneTakeoff size={14} />

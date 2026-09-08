@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import { cancelAnnonce, republishAnnonce } from "@/lib/actions/annonces";
 import { evaluerPartPilote } from "@/lib/annonces-pilote";
-import { Loader2, X, Users, Clock, Pencil, RotateCcw } from "lucide-react";
+import { Loader2, X, Users, Clock, Pencil, RotateCcw, ShieldAlert } from "lucide-react";
 
 export interface AnnonceRow {
   id: string;
@@ -14,6 +14,7 @@ export interface AnnonceRow {
   description: string | null;
   images: string[];
   statut: "publiee" | "reservee" | "annulee";
+  legal_ok?: boolean;
 }
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -21,8 +22,9 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 function AnnonceCard({ annonce, onEdit }: { annonce: AnnonceRow; onEdit: (a: AnnonceRow) => void }) {
   const [isPending, startTransition] = useTransition();
   const [isRepublishPending, startRepublishTransition] = useTransition();
-  const check = evaluerPartPilote(annonce.prix_total, annonce.part_pilote);
+  const check = evaluerPartPilote(annonce.prix_total, annonce.part_pilote, annonce.places);
   const prixClient = Math.max(0, annonce.prix_total - annonce.part_pilote);
+  const aConfirmer = annonce.statut === "publiee" && (check.level === "block" || annonce.legal_ok === false);
   const coverUrl = annonce.images[0] ? `${SUPABASE_URL}/storage/v1/object/public/annonces/${annonce.images[0]}` : null;
 
   const STATUT_LABEL: Record<AnnonceRow["statut"], string> = {
@@ -42,6 +44,11 @@ function AnnonceCard({ annonce, onEdit }: { annonce: AnnonceRow; onEdit: (a: Ann
           <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground bg-secondary px-2 py-0.5 rounded">
             {STATUT_LABEL[annonce.statut]}
           </span>
+          {aConfirmer && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded">
+              <ShieldAlert size={11} /> À confirmer
+            </span>
+          )}
           {annonce.description && (
             <span className="text-xs text-muted-foreground truncate max-w-[220px]">{annonce.description}</span>
           )}

@@ -30,15 +30,19 @@ export async function createAnnonce(data: {
   part_pilote: number;
   description?: string;
   images?: string[];
+  legal_ok?: boolean;
 }) {
   try {
     const pilote = await checkPilote();
 
     if (!(data.duree >= 10 && data.duree <= 240)) return { error: "Durée invalide (10 à 240 minutes)" };
     if (!(data.places >= 1 && data.places <= 6)) return { error: "Nombre de places invalide (1 à 6)" };
+    if (!data.legal_ok) {
+      return { error: "Vous devez confirmer que vous réalisez ce vol et partagez vos frais pour publier." };
+    }
     const images = (data.images ?? []).slice(0, MAX_IMAGES);
 
-    const check = evaluerPartPilote(data.prix_total, data.part_pilote);
+    const check = evaluerPartPilote(data.prix_total, data.part_pilote, data.places);
     if (check.level === "block") return { error: check.message };
 
     const admin = createAdminClient();
@@ -50,6 +54,8 @@ export async function createAnnonce(data: {
       part_pilote: data.part_pilote,
       description: data.description?.trim() || null,
       images,
+      legal_ok: true,
+      legal_ok_at: new Date().toISOString(),
     });
 
     if (error) return { error: "Erreur création de l'annonce" };
@@ -68,15 +74,19 @@ export async function updateAnnonce(id: string, data: {
   part_pilote: number;
   description?: string;
   images?: string[];
+  legal_ok?: boolean;
 }) {
   try {
     const pilote = await checkPilote();
 
     if (!(data.duree >= 10 && data.duree <= 240)) return { error: "Durée invalide (10 à 240 minutes)" };
     if (!(data.places >= 1 && data.places <= 6)) return { error: "Nombre de places invalide (1 à 6)" };
+    if (!data.legal_ok) {
+      return { error: "Vous devez confirmer que vous réalisez ce vol et partagez vos frais pour publier." };
+    }
     const images = (data.images ?? []).slice(0, MAX_IMAGES);
 
-    const check = evaluerPartPilote(data.prix_total, data.part_pilote);
+    const check = evaluerPartPilote(data.prix_total, data.part_pilote, data.places);
     if (check.level === "block") return { error: check.message };
 
     const admin = createAdminClient();
@@ -89,6 +99,8 @@ export async function updateAnnonce(id: string, data: {
         part_pilote: data.part_pilote,
         description: data.description?.trim() || null,
         images,
+        legal_ok: true,
+        legal_ok_at: new Date().toISOString(),
       })
       .eq("id", id)
       .eq("pilote_id", pilote.id)
@@ -113,7 +125,7 @@ export async function republishAnnonce(id: string) {
 
     const { data: source } = await admin
       .from("annonces_pilote")
-      .select("duree, places, prix_total, part_pilote, description, images")
+      .select("duree, places, prix_total, part_pilote, description, images, legal_ok, legal_ok_at")
       .eq("id", id)
       .eq("pilote_id", pilote.id)
       .single();
@@ -128,6 +140,11 @@ export async function republishAnnonce(id: string) {
       part_pilote: source.part_pilote,
       description: source.description,
       images: source.images,
+      // On reporte l'attestation de la source. Si elle n'était pas attestée
+      // (annonce d'avant le garde-fou), la copie reste « à confirmer » : le
+      // pilote devra l'éditer, ce qui repasse par la case à cocher.
+      legal_ok: source.legal_ok ?? false,
+      legal_ok_at: source.legal_ok_at ?? null,
     });
 
     if (error) return { error: "Erreur republication de l'annonce" };

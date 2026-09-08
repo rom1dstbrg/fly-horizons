@@ -14,7 +14,7 @@ export default async function PiloteAnnoncesPage() {
   const { data: annonces } = pilote
     ? await admin
         .from("annonces_pilote")
-        .select("id, duree, places, prix_total, part_pilote, description, images, statut")
+        .select("id, duree, places, prix_total, part_pilote, description, images, statut, legal_ok")
         .eq("pilote_id", pilote.id)
         .order("created_at", { ascending: false })
     : { data: [] };
