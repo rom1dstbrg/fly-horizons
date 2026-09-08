@@ -2,27 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { toForeFlight, buildForeFlightRoute } from "@/lib/foreflight";
-import { routeProposalEmail, paymentLinkEmail, routeFeedbackAdminEmail, reservationPaymentInvitationEmail } from "@/lib/email-templates";
-
-// Autorise l'admin, ou le pilote propriétaire de la réservation — voir même helper
-// dans lib/actions/reservations.ts (dupliqué ici comme checkAdmin() l'est déjà).
-async function checkAdminOrOwningPilote(reservationId: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Non autorisé");
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role === "admin") return;
-  if (profile?.role !== "pilote") throw new Error("Non autorisé");
-
-  const admin = createAdminClient();
-  const { data: pilote } = await admin.from("pilotes").select("id").eq("user_id", user.id).single();
-  if (!pilote) throw new Error("Non autorisé");
-  const { data: resa } = await admin.from("reservations").select("pilote_id").eq("id", reservationId).single();
-  if (!resa || resa.pilote_id !== pilote.id) throw new Error("Non autorisé");
-}
+import { routeProposalEmail, paymentLinkEmail, routeFeedbackAdminEmail, reservationPaymentInvitationEmail, piloteParticipationEmail } from "@/lib/email-templates";
+import { requireAdminOrOwningPilote as checkAdminOrOwningPilote } from "./auth-guards";
+import { isPiloteVol, piloteVirementCommunication } from "@/lib/pilote/payment";
 
 async function logHistory(params: {
   reservation_id: string;
@@ -311,7 +295,7 @@ export async function respondToRouteProposal(
 
     const { data: proposal } = await supabase
       .from("route_proposals")
-      .select("*, reservations(id, acompte, payment_token, duree, date_vol, heure_vol, type_resa, statut, payment_status, cash_payment, clients(prenom, nom, email))")
+      .select("*, reservations(id, acompte, payment_token, duree, date_vol, heure_vol, type_resa, statut, payment_status, cash_payment, pilote_id, montant_pilote, clients(prenom, nom, email), pilotes(nom, iban, paylink))")
       .eq("token", token)
       .single();
 
@@ -344,8 +328,16 @@ export async function respondToRouteProposal(
       statut: string;
       payment_status: string | null;
       cash_payment: boolean | null;
+      pilote_id: string | null;
+      montant_pilote: number | string | null;
       clients: { prenom: string; nom: string; email: string } | null;
+      pilotes: { nom: string; iban: string | null; paylink: string | null } | { nom: string; iban: string | null; paylink: string | null }[] | null;
     } | null;
+
+    const piloteVol = !!resa && isPiloteVol(resa);
+    const piloteRow = resa
+      ? ((Array.isArray(resa.pilotes) ? resa.pilotes[0] : resa.pilotes) as { nom: string; iban: string | null; paylink: string | null } | null)
+      : null;
 
     // Valeurs capturées au moment de l'envoi de la proposition (reflètent la route proposée)
     const proposalDuree = (proposal as { duree?: number | null }).duree ?? resa?.duree ?? 0;
@@ -383,9 +375,10 @@ export async function respondToRouteProposal(
       }
     }
 
-    // Lien de paiement automatique quand le client accepte l'itinéraire — sauf si déjà payé
-    // ou si l'admin a coché "paiement en espèces" (cash_payment) pour cette réservation.
-    const skipPayment = alreadyPaid || resa?.cash_payment === true;
+    // Lien de paiement automatique quand le client accepte l'itinéraire — sauf si déjà payé,
+    // si l'admin a coché "paiement en espèces", ou si c'est un vol pilote (modèle A : le client
+    // règle en direct le pilote, aucun flux Stripe — email de participation à la place).
+    const skipPayment = alreadyPaid || resa?.cash_payment === true || piloteVol;
     let paymentToken: string | null = null;
     if (!skipPayment && status === "accepted" && resa?.id && proposalAcompte > 0) {
       paymentToken = freshPaymentToken;
@@ -432,6 +425,28 @@ export async function respondToRouteProposal(
         adminUrl: `${siteUrl}/admin/reservations/${resa?.id ?? ""}`,
       }),
     });
+
+    // Vol pilote (modèle A) : le client vient de valider la route → on lui envoie
+    // comment régler la participation aux frais directement au pilote.
+    if (piloteVol && status === "accepted" && client?.email && resa) {
+      await resend.emails.send({
+        from: EMAIL_FROM,
+        to: [client.email],
+        replyTo: EMAIL_REPLY_TO,
+        subject: "Fly Horizons · Itinéraire validé",
+        html: piloteParticipationEmail({
+          prenom: client.prenom,
+          dateStr,
+          piloteNom: piloteRow?.nom ?? "votre pilote",
+          montant: resa.montant_pilote != null ? Number(resa.montant_pilote) : null,
+          iban: piloteRow?.iban ?? null,
+          paylink: piloteRow?.paylink ?? null,
+          communication: piloteVirementCommunication(resa.date_vol, client.nom ?? ""),
+          qrUrl: `${siteUrl}/api/pay-qr/${resa.id}`,
+          trackerUrl: `${siteUrl}/account/reservations/${resa.id}`,
+        }),
+      });
+    }
 
     // Lien de paiement au client — uniquement si non encore payé, montant dû, et pas de paiement cash prévu
     if (!skipPayment && status === "accepted" && client?.email && paymentToken && proposalAcompte > 0) {

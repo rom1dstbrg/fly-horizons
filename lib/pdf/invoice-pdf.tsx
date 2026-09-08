@@ -35,6 +35,9 @@ export interface InvoiceData {
     city?: string;
     country?: string;
   } | null;
+  // Émetteur du reçu — par défaut Fly Horizons / DESTANBERG Romain. Sur un vol
+  // pilote tiers (modèle A), c'est le pilote qui encaisse : on met son nom + IBAN.
+  issuer?: { name: string; details?: string } | null;
 }
 
 function euros(n: number) {
@@ -80,7 +83,9 @@ function InvoicePDF({
             <View>
               <Image src={logoDataUrl} style={{ height: 18, width: 80, objectFit: "contain", marginBottom: 10 }} />
               <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 8, lineHeight: 1.7 }}>
-                {"DESTANBERG Romain\nAéroport de Charleroi (EBCI)\nRue des Frères Wright 8 · 6041 Gosselies\ninfo@fly-horizons.com · fly-horizons.com"}
+                {data.issuer
+                  ? `${data.issuer.name}${data.issuer.details ? `\n${data.issuer.details}` : ""}\nvia Fly Horizons · fly-horizons.com`
+                  : "DESTANBERG Romain\nAéroport de Charleroi (EBCI)\nRue des Frères Wright 8 · 6041 Gosselies\ninfo@fly-horizons.com · fly-horizons.com"}
               </Text>
             </View>
 

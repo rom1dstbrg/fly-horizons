@@ -5,7 +5,7 @@ import { getTransactionsData } from "@/lib/transactions";
 export const metadata = { title: "Transactions — Admin" };
 
 export default async function TransactionsPage() {
-  const { vols, vouchers, depenses, soldeGlobal } = await getTransactionsData();
+  const { vols, piloteVols, vouchers, depenses, soldeGlobal } = await getTransactionsData();
 
   return (
     <div className="space-y-5">
@@ -15,6 +15,7 @@ export default async function TransactionsPage() {
       />
       <TransactionsClient
         vols={vols}
+        piloteVols={piloteVols}
         vouchers={vouchers}
         depenses={depenses}
         soldeGlobal={soldeGlobal}

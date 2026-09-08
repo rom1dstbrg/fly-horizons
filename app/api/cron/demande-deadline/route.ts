@@ -38,9 +38,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ cancelled: 0 });
   }
 
+  // Un vol mis en jeu auprès des pilotes (offre ouverte) ne doit pas être
+  // auto-annulé sous l'offre : on l'exclut de ce passage.
+  const { data: openOffers } = await supabase
+    .from("flight_offers")
+    .select("reservation_id")
+    .eq("statut", "ouverte");
+  const offered = new Set((openOffers ?? []).map((o) => o.reservation_id as string));
+
   let cancelled = 0;
 
   for (const resa of reservations) {
+    if (offered.has(resa.id)) continue;
     const { data: cancelledRow } = await supabase
       .from("reservations")
       .update({ statut: "annulee" })

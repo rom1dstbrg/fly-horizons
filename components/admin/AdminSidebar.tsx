@@ -9,7 +9,7 @@ import {
   Menu, X, ExternalLink, Search,
   CalendarCheck, Clock, Navigation,
   Package, Receipt,
-  LayoutGrid,
+  LayoutGrid, Scale,
 } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 
@@ -66,6 +66,7 @@ const NAVIGATION: NavEntry[] = [
   { type: "link", id: "disponibilites", icon: Clock,         label: "Disponibilités", href: "/admin/vols?tab=disponibilites", tab: "disponibilites", tabBase: "/admin/vols" },
   { type: "link", id: "itineraires",    icon: Navigation,    label: "Itinéraires",    href: "/admin/itineraires" },
   { type: "link", id: "produits",       icon: Package,       label: "Les vols",       href: "/admin/boutique?tab=produits",   tab: "produits",       tabBase: "/admin/boutique" },
+  { type: "link", id: "masse-centrage", icon: Scale,         label: "Masse & centrage", href: "/admin/mass-balance" },
 
   { type: "section", label: "CRM" },
   { type: "link", id: "clients",  icon: Users,         label: "Clients",  href: "/admin/clients"  },

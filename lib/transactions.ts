@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { stripeNetInfo } from "@/lib/stripe-fee";
-import type { LigneVol, LigneVoucher, Depense, SoldeStats } from "@/components/admin/TransactionsClient";
+import { isPiloteVol } from "@/lib/pilote/payment";
+import type { LigneVol, LigneVoucher, LignePiloteVol, Depense, SoldeStats } from "@/components/admin/TransactionsClient";
 
 type TarifAvion = { prix_heure: number; actif_depuis: string };
 
@@ -14,6 +15,7 @@ function tarifPourDate(tarifs: TarifAvion[], dateVol: string): number {
 
 export async function getTransactionsData(): Promise<{
   vols: LigneVol[];
+  piloteVols: LignePiloteVol[];
   vouchers: LigneVoucher[];
   depenses: Depense[];
   soldeGlobal: SoldeStats;
@@ -31,7 +33,7 @@ export async function getTransactionsData(): Promise<{
     supabase.from("avion_tarifs").select("prix_heure, actif_depuis"),
     supabase
       .from("reservations")
-      .select("id, date_vol, type_resa, acompte, paye, remboursement, duree, duree_reelle, passagers, voucher_code, statut, cash_payment, stripe_fee, clients(prenom, nom)")
+      .select("id, date_vol, type_resa, acompte, paye, remboursement, duree, duree_reelle, passagers, voucher_code, statut, cash_payment, stripe_fee, pilote_id, montant_pilote, pilote_paye, clients(prenom, nom), pilotes(nom)")
       .neq("statut", "annulee")
       .order("date_vol", { ascending: false }),
     supabase
@@ -59,8 +61,28 @@ export async function getTransactionsData(): Promise<{
   const partPiloteType = (crmSettings?.find(s => s.key === "part_pilote_type")?.value ?? "pourcentage") as "pourcentage" | "montant";
   const partPiloteValeur = parseFloat(crmSettings?.find(s => s.key === "part_pilote_valeur")?.value ?? "25");
 
+  // Vols confiés à un pilote tiers (modèle A) : l'argent va en direct au pilote,
+  // 0 € pour Fly Horizons → exclus des lignes/totaux, listés à part (info).
+  const ownResas = (resas ?? []).filter(r => !isPiloteVol(r));
+  const piloteResas = (resas ?? []).filter(r => isPiloteVol(r));
+
+  const piloteVols: LignePiloteVol[] = piloteResas.map(r => {
+    const cRaw = r.clients as unknown;
+    const c = Array.isArray(cRaw) ? (cRaw[0] as { prenom: string; nom: string } | undefined) ?? null : cRaw as { prenom: string; nom: string } | null;
+    const pRaw = r.pilotes as unknown;
+    const p = Array.isArray(pRaw) ? (pRaw[0] as { nom: string } | undefined) ?? null : pRaw as { nom: string } | null;
+    return {
+      id: r.id,
+      date: r.date_vol,
+      client: c ? `${c.prenom} ${c.nom}` : "—",
+      pilote: p?.nom ?? "—",
+      montant: r.montant_pilote != null ? Number(r.montant_pilote) : null,
+      paye: !!r.pilote_paye,
+    };
+  });
+
   // Voucher codes utilisés dans des réservations non-annulées
-  const voucherCodes = (resas ?? []).map(r => r.voucher_code).filter(Boolean) as string[];
+  const voucherCodes = ownResas.map(r => r.voucher_code).filter(Boolean) as string[];
   const usedVoucherCodes = new Set(voucherCodes);
 
   // Montants des vouchers utilisés → valeur encaissée à l'achat du voucher
@@ -83,7 +105,7 @@ export async function getTransactionsData(): Promise<{
   const tarifs: TarifAvion[] = tarifAvions ?? [];
 
   // ── Lignes vols ───────────────────────────────────────────────────────────
-  const vols: LigneVol[] = (resas ?? []).map(r => {
+  const vols: LigneVol[] = ownResas.map(r => {
     const clientRaw = r.clients as unknown;
     const client = Array.isArray(clientRaw)
       ? (clientRaw[0] as { prenom: string; nom: string } | undefined) ?? null
@@ -132,7 +154,11 @@ export async function getTransactionsData(): Promise<{
       part_pilote: partPilote,
       part_pilote_pct: partPilotePct,
       part_attendue_pct: partAttenduePct,
-      resultat: coutAvion != null ? Math.round((net - coutAvion) * 100) / 100 : null,
+      // Résultat = ce qui reste réellement en caisse : net encaissé (brut − remboursement
+      // − commission Stripe) moins le coût avion.
+      resultat: coutAvion != null
+        ? Math.round((net - (stripeFee ?? 0) - coutAvion) * 100) / 100
+        : null,
       voucher_code: r.voucher_code ?? null,
       voucher_montant: voucherMontant,
       stripe_fee: stripeFee,
@@ -215,7 +241,7 @@ export async function getTransactionsData(): Promise<{
     rembourse: Math.round(globalRembourse * 100) / 100,
     cout_avion: Math.round(globalCoutAvion * 100) / 100,
     depenses: Math.round(globalDepenses * 100) / 100,
-    solde_net: Math.round((globalEncaisse - globalRembourse - globalCoutAvion - globalDepenses) * 100) / 100,
+    solde_net: Math.round((globalEncaisse - globalRembourse - globalStripeFees - globalCoutAvion - globalDepenses) * 100) / 100,
     part_pilote_moyenne_pct: globalCoutAvion > 0
       ? Math.round((globalPartPilote / globalCoutAvion) * 1000) / 10
       : null,
@@ -223,5 +249,5 @@ export async function getTransactionsData(): Promise<{
     stripe_fees: Math.round(globalStripeFees * 100) / 100,
   };
 
-  return { vols, vouchers, depenses, soldeGlobal };
+  return { vols, piloteVols, vouchers, depenses, soldeGlobal };
 }

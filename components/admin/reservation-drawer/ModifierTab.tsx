@@ -1,6 +1,6 @@
 "use client";
 
-import { Ticket } from "lucide-react";
+import { Ticket, Lock } from "lucide-react";
 import type { DrawerReservation } from "./types";
 
 function InputField({ label, children }: { label: string; children: React.ReactNode }) {
@@ -12,15 +12,20 @@ function InputField({ label, children }: { label: string; children: React.ReactN
   );
 }
 
-const inputCls = "w-full h-8 px-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-1 focus:ring-navy/30";
+const baseInput = "w-full h-8 px-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-1 focus:ring-navy/30";
+const roInput = "w-full h-8 px-2 rounded-lg border border-border bg-secondary text-sm text-muted-foreground cursor-not-allowed";
 
 // Le bouton de sauvegarde vit dans le footer sticky du drawer (ActionFooter), pas ici —
 // cet onglet ne gère que la saisie des champs.
+// readOnly (pilote) : les infos sont affichées mais non modifiables, et les champs
+// paiement / codes sont masqués (hors périmètre pilote).
 export function ModifierTab({
   reservation: r,
   fields, setters,
+  readOnly = false,
 }: {
   reservation: DrawerReservation;
+  readOnly?: boolean;
   fields: {
     prenom: string; nom: string; email: string; telephone: string;
     date: string; heure: string; duree: string; passagers: string; poids: string;
@@ -38,26 +43,35 @@ export function ModifierTab({
   };
 }) {
   const isPerso = r.type_resa === "perso";
+  const inputCls = readOnly ? roInput : baseInput;
+  const ro = readOnly;
 
   return (
     <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+
+      {readOnly && (
+        <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground bg-secondary rounded-lg px-3 py-2">
+          <Lock size={11} className="shrink-0" />
+          Informations en lecture seule. Pour un changement, contactez Romain.
+        </p>
+      )}
 
       <div>
         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-3">Client</p>
         <div className="space-y-2.5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <InputField label="Prénom">
-              <input type="text" value={fields.prenom} onChange={e => setters.setPrenom(e.target.value)} className={inputCls} />
+              <input type="text" value={fields.prenom} onChange={e => setters.setPrenom(e.target.value)} disabled={ro} className={inputCls} />
             </InputField>
             <InputField label="Nom">
-              <input type="text" value={fields.nom} onChange={e => setters.setNom(e.target.value)} className={inputCls} />
+              <input type="text" value={fields.nom} onChange={e => setters.setNom(e.target.value)} disabled={ro} className={inputCls} />
             </InputField>
           </div>
           <InputField label="Email">
-            <input type="email" value={fields.email} onChange={e => setters.setEmail(e.target.value)} className={inputCls} />
+            <input type="email" value={fields.email} onChange={e => setters.setEmail(e.target.value)} disabled={ro} className={inputCls} />
           </InputField>
           <InputField label="Téléphone">
-            <input type="tel" value={fields.telephone} onChange={e => setters.setTelephone(e.target.value)} placeholder="Optionnel" className={inputCls} />
+            <input type="tel" value={fields.telephone} onChange={e => setters.setTelephone(e.target.value)} disabled={ro} placeholder="Optionnel" className={inputCls} />
           </InputField>
         </div>
       </div>
@@ -66,34 +80,39 @@ export function ModifierTab({
         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-3">Vol</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           <InputField label="Date">
-            <input type="date" value={fields.date} onChange={e => setters.setDate(e.target.value)} className={inputCls} />
+            <input type="date" value={fields.date} onChange={e => setters.setDate(e.target.value)} disabled={ro} className={inputCls} />
           </InputField>
           <InputField label="Heure">
-            <input type="time" value={fields.heure} onChange={e => setters.setHeure(e.target.value)} className={inputCls} />
+            <input type="time" value={fields.heure} onChange={e => setters.setHeure(e.target.value)} disabled={ro} className={inputCls} />
           </InputField>
           <InputField label="Durée (min)">
-            <input type="number" value={fields.duree} onChange={e => setters.setDuree(e.target.value)} min={1} className={inputCls} />
+            <input type="number" value={fields.duree} onChange={e => setters.setDuree(e.target.value)} disabled={ro} min={1} className={inputCls} />
           </InputField>
           <InputField label="Passagers">
-            <input type="number" value={fields.passagers} onChange={e => setters.setPassagers(e.target.value)} min={1} className={inputCls} />
+            <input type="number" value={fields.passagers} onChange={e => setters.setPassagers(e.target.value)} disabled={ro} min={1} className={inputCls} />
           </InputField>
           <InputField label="Poids total (kg)">
-            <input type="number" value={fields.poids} onChange={e => setters.setPoids(e.target.value)} min={0} placeholder="—" className={inputCls} />
+            <input type="number" value={fields.poids} onChange={e => setters.setPoids(e.target.value)} disabled={ro} min={0} placeholder="—" className={inputCls} />
           </InputField>
-          <InputField label="Prix demandé au client (€)">
-            <input type="number" value={fields.acompte} onChange={e => setters.setAcompte(e.target.value)} min={0} placeholder="—" className={inputCls} />
-          </InputField>
-          <InputField label="Montant payé (€)">
-            <input type="number" value={fields.paye} onChange={e => setters.setPaye(e.target.value)} min={0} placeholder="—" className={inputCls} />
-          </InputField>
-          <InputField label="Montant remboursé (€)">
-            <input type="number" value={fields.remboursement} onChange={e => setters.setRemboursement(e.target.value)} min={0} placeholder="—" className={inputCls} />
-          </InputField>
+          {!ro && (
+            <>
+              <InputField label="Prix demandé au client (€)">
+                <input type="number" value={fields.acompte} onChange={e => setters.setAcompte(e.target.value)} min={0} placeholder="—" className={inputCls} />
+              </InputField>
+              <InputField label="Montant payé (€)">
+                <input type="number" value={fields.paye} onChange={e => setters.setPaye(e.target.value)} min={0} placeholder="—" className={inputCls} />
+              </InputField>
+              <InputField label="Montant remboursé (€)">
+                <input type="number" value={fields.remboursement} onChange={e => setters.setRemboursement(e.target.value)} min={0} placeholder="—" className={inputCls} />
+              </InputField>
+            </>
+          )}
           {isPerso && (
             <InputField label="Style de vol">
               <select
                 value={fields.styleVol}
                 onChange={e => setters.setStyleVol(e.target.value as "rapide" | "vues" | "")}
+                disabled={ro}
                 className={inputCls}
               >
                 <option value="">—</option>
@@ -103,7 +122,7 @@ export function ModifierTab({
             </InputField>
           )}
         </div>
-        {r.voucher_code && (
+        {!ro && r.voucher_code && (
           <p className="text-[10px] text-amber-600 mt-2 flex items-center gap-1">
             <Ticket size={10} />
             Prix et montant payé pré-remplis depuis le voucher {r.voucher_code}
@@ -111,26 +130,31 @@ export function ModifierTab({
         )}
       </div>
 
-      <div>
-        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-3">Codes</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          <InputField label="Code voucher">
-            <input type="text" value={fields.voucherCode} onChange={e => setters.setVoucherCode(e.target.value)} placeholder="—" className={`${inputCls} font-mono`} />
-          </InputField>
-          <InputField label="Code promo">
-            <input type="text" value={fields.couponCode} onChange={e => setters.setCouponCode(e.target.value)} placeholder="—" className={`${inputCls} font-mono`} />
-          </InputField>
+      {!ro && (
+        <div>
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-3">Codes</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <InputField label="Code voucher">
+              <input type="text" value={fields.voucherCode} onChange={e => setters.setVoucherCode(e.target.value)} placeholder="—" className={`${inputCls} font-mono`} />
+            </InputField>
+            <InputField label="Code promo">
+              <input type="text" value={fields.couponCode} onChange={e => setters.setCouponCode(e.target.value)} placeholder="—" className={`${inputCls} font-mono`} />
+            </InputField>
+          </div>
         </div>
-      </div>
+      )}
 
       <div>
         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-2">Remarques</p>
         <textarea
           value={fields.commentaire}
           onChange={e => setters.setCommentaire(e.target.value)}
+          disabled={ro}
           rows={3}
           placeholder="Notes internes ou remarques client…"
-          className="w-full px-2.5 py-2 rounded-lg border border-input bg-background text-xs resize-none focus:outline-none focus:ring-1 focus:ring-navy/30 placeholder:text-muted-foreground/40"
+          className={`w-full px-2.5 py-2 rounded-lg border text-xs resize-none focus:outline-none focus:ring-1 focus:ring-navy/30 placeholder:text-muted-foreground/40 ${
+            ro ? "border-border bg-secondary text-muted-foreground cursor-not-allowed" : "border-input bg-background"
+          }`}
         />
       </div>
     </div>

@@ -3,11 +3,12 @@
 import {
   User, Mail, Phone, Calendar, Clock, Users, Weight, Ticket, CreditCard,
   CheckCircle2, XCircle, RotateCcw, ExternalLink, Calculator, ChevronDown,
-  Loader2, Check, Sparkles, Send, MapPin,
+  Loader2, Check, Sparkles, Send, MapPin, ListChecks,
 } from "lucide-react";
 import { PAYMENT_STATUS_CONFIG } from "@/components/admin/ui/AdminBadge";
 import { toForeFlight } from "@/lib/foreflight";
 import { stripeNetInfo } from "@/lib/stripe-fee";
+import { isPiloteVol } from "@/lib/pilote/payment";
 import { EMAIL_TEMPLATES, type DrawerReservation } from "./types";
 import { PaymentLinkCard } from "./PaymentLinkCard";
 
@@ -16,6 +17,59 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div>
       <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">{label}</p>
       <div className="text-sm text-foreground">{children}</div>
+    </div>
+  );
+}
+
+// Guide du pilote : les gestes à faire sur ce vol, selon le statut.
+function piloteNextSteps(statut: string): { title: string; steps: string[] } {
+  if (statut === "vol_effectue") {
+    return { title: "Vol effectué", steps: ["Dossier clôturé."] };
+  }
+  if (statut === "annulee") {
+    return { title: "Vol annulé", steps: ["Ce vol a été annulé."] };
+  }
+  if (["demande_recue", "en_attente"].includes(statut)) {
+    return {
+      title: "Vos étapes",
+      steps: [
+        "Tracez l'itinéraire dans l'onglet Route.",
+        "Renseignez la participation aux frais dans le bloc plus bas.",
+        "Cliquez « Confirmer date + heure » : la route part au client dans le même geste.",
+        "Si le client demande une modification, ajustez le tracé et renvoyez-le.",
+        "Préparez la masse & centrage (bouton M&B).",
+      ],
+    };
+  }
+  // heure_confirmee / acompte_recu / date_confirmee : le vol est planifié.
+  return {
+    title: "Vos étapes",
+    steps: [
+      "Préparez la masse & centrage (bouton M&B).",
+      "Le jour du vol, accueillez le client 15 min avant le décollage.",
+      "Après le vol (au moins 8 h plus tard), marquez-le « effectué » en bas.",
+    ],
+  };
+}
+
+function PiloteStepsPanel({ statut }: { statut: string }) {
+  const { title, steps } = piloteNextSteps(statut);
+  return (
+    <div className="rounded-xl border border-navy/15 bg-navy/5 p-3.5">
+      <p className="text-[10px] font-bold text-navy uppercase tracking-[1.5px] flex items-center gap-1.5 mb-2">
+        <ListChecks size={11} />
+        {title}
+      </p>
+      <ol className="space-y-1.5">
+        {steps.map((s, i) => (
+          <li key={i} className="flex gap-2 text-xs text-foreground leading-relaxed">
+            {steps.length > 1 && (
+              <span className="shrink-0 font-bold text-navy tabular-nums">{i + 1}.</span>
+            )}
+            <span>{s}</span>
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }
@@ -29,9 +83,14 @@ export function InfosTab({
   onOpenEmailComposer, onApplyTemplate,
   isPending,
   cashPayment, isCashPaymentPending, onToggleCashPayment,
+  piloteAssignSlot,
+  piloteParticipationSlot,
 }: {
   reservation: DrawerReservation;
   viewerRole?: "admin" | "pilote";
+  piloteAssignSlot?: React.ReactNode;
+  // Bloc D · remplace le bloc paiement Stripe sur les vols pilote (modèle A).
+  piloteParticipationSlot?: React.ReactNode;
   avionReserve: boolean;
   isReservePending: boolean;
   onToggleAvion: (val: boolean) => void;
@@ -52,6 +111,7 @@ export function InfosTab({
 }) {
   const isStandard = r.type_resa !== "perso";
   const isPerso = !isStandard;
+  const piloteVol = isPiloteVol(r);
 
   const dureeNewCAG = isPerso ? Math.ceil(r.duree / 15) * 15 + 45 : r.duree + 60;
   const h = Math.floor(dureeNewCAG / 60);
@@ -80,6 +140,8 @@ export function InfosTab({
 
   return (
     <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+
+      {viewerRole === "pilote" && isStandard && <PiloteStepsPanel statut={r.statut} />}
 
       {/* Client */}
       <div className="pb-4 border-b border-border space-y-2">
@@ -113,6 +175,8 @@ export function InfosTab({
           </p>
         </div>
       )}
+
+      {piloteAssignSlot}
 
       {r.statut === "payment_pending" && r.payment_token && (
         <PaymentLinkCard paymentToken={r.payment_token} linkCopied={linkCopied} onCopy={onCopyPaymentLink} />
@@ -204,8 +268,22 @@ export function InfosTab({
           )}
         </div>
 
-        {/* Paiement — pleine largeur, pas coincé dans la grille */}
-        {r.acompte != null && (
+        {viewerRole === "admin" && (
+          <a
+            href={`/admin/mass-balance?resa=${r.id}`}
+            className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold text-navy hover:text-navy/80 underline underline-offset-2 transition-colors"
+          >
+            <Calculator size={12} />
+            Ouvrir la masse &amp; centrage
+          </a>
+        )}
+
+        {/* Paiement — pleine largeur, pas coincé dans la grille.
+            Sur un vol pilote (modèle A), on remplace par le bloc « participation
+            aux frais » : l'argent va en direct au pilote, pas de flux Stripe. */}
+        {piloteVol && piloteParticipationSlot}
+
+        {!piloteVol && r.acompte != null && (
           <div className="mt-3 pt-3 border-t border-border">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-3 flex-wrap text-sm">
@@ -387,24 +465,26 @@ export function InfosTab({
       {/* Free email */}
       <div>
         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-2">Email libre</p>
-        <div className="mb-2">
-          <p className="text-[10px] text-muted-foreground flex items-center gap-1 mb-1.5">
-            <Sparkles size={9} />
-            Templates rapides
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {EMAIL_TEMPLATES.map((tpl, idx) => (
-              <button
-                key={tpl.label}
-                disabled={isPending}
-                onClick={() => onApplyTemplate(tpl, idx === 0)}
-                className="text-[11px] px-2.5 py-1 rounded-lg border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-50 cursor-pointer"
-              >
-                {tpl.label}
-              </button>
-            ))}
+        {viewerRole === "admin" && (
+          <div className="mb-2">
+            <p className="text-[10px] text-muted-foreground flex items-center gap-1 mb-1.5">
+              <Sparkles size={9} />
+              Templates rapides
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {EMAIL_TEMPLATES.map((tpl, idx) => (
+                <button
+                  key={tpl.label}
+                  disabled={isPending}
+                  onClick={() => onApplyTemplate(tpl, idx === 0)}
+                  className="text-[11px] px-2.5 py-1 rounded-lg border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  {tpl.label}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
         <button
           onClick={onOpenEmailComposer}
           className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"

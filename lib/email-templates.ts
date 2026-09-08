@@ -960,6 +960,54 @@ export interface ReservationHeureConfirmeeProps {
   dateISO?: string | null;
 }
 
+// Vol pilote (modèle A) : participation aux frais réglée en direct au pilote,
+// envoyée au client quand il valide l'itinéraire (pas avant).
+export interface PiloteParticipationInfo {
+  piloteNom: string;
+  montant: number | null;
+  iban: string | null;
+  paylink: string | null;
+  communication: string;
+  qrUrl: string;
+  trackerUrl: string;
+}
+
+function piloteParticipationBlock(pp: PiloteParticipationInfo): string {
+  if (pp.montant == null) {
+    return `
+      ${separator()}
+      ${label("Participation aux frais")}
+      <p class="em-body" style="margin:0 0 24px;font-size:13px;color:#334155;line-height:1.7;">
+        ${esc(pp.piloteNom)} vous communiquera le montant de la participation aux frais et vous contactera pour le r&egrave;glement. Fly Horizons n&rsquo;encaisse rien sur ce vol.
+      </p>`;
+  }
+  return `
+    ${separator()}
+    ${label("Participation aux frais")}
+    <p class="em-body" style="margin:0 0 16px;font-size:13px;color:#334155;line-height:1.7;">
+      <strong>${fmt(pp.montant)}</strong> &agrave; r&eacute;gler directement &agrave; votre pilote <strong>${esc(pp.piloteNom)}</strong>
+      (virement / QR / Payconiq). Fly Horizons n&rsquo;encaisse rien et ne prend aucune commission.
+    </p>
+    ${pp.iban ? `
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+      <tr>
+        <td width="140" style="vertical-align:top;padding-right:12px;">
+          <img src="${esc(pp.qrUrl)}" alt="QR virement SEPA" width="130" height="130" style="display:block;border:1px solid #e8ecf4;border-radius:8px;" />
+        </td>
+        <td style="vertical-align:top;font-size:12px;color:#64748b;line-height:1.7;">
+          Scannez le QR avec votre appli bancaire, ou virez manuellement&nbsp;:<br>
+          <span style="font-family:'Courier New',monospace;color:#0b2238;">${esc(pp.iban)}</span><br>
+          B&eacute;n&eacute;ficiaire&nbsp;: ${esc(pp.piloteNom)}<br>
+          Communication&nbsp;: ${esc(pp.communication)}
+        </td>
+      </tr>
+    </table>` : ""}
+    ${pp.paylink ? secondaryButton(pp.paylink, "Payer via Payconiq / Revolut") : ""}
+    <p class="em-muted" style="margin:12px 0 24px;font-size:12px;color:#64748b;">
+      Le d&eacute;tail est aussi sur <a href="${esc(pp.trackerUrl)}" style="color:#F2B705;font-weight:600;text-decoration:none;">votre page de suivi</a>.
+    </p>`;
+}
+
 export function reservationDateConfirmeeEmail(p: ReservationDateConfirmeeProps): string {
   const hasRoute = !!p.routeUrl;
   const routeSection = routeSectionBlock(p.route, p.routeUrl);
@@ -1004,6 +1052,28 @@ export function reservationDateConfirmeeEmail(p: ReservationDateConfirmeeProps):
 }
 
 // ── 10. Créneau horaire confirmé (admin) ──────────────────────────────────────
+
+/** Email envoyé au client quand il valide l'itinéraire d'un vol pilote : comment régler la participation. */
+export function piloteParticipationEmail(p: { prenom: string; dateStr: string } & PiloteParticipationInfo): string {
+  const body = `
+    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Fly Horizons</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Itin&eacute;raire valid&eacute; &#10003;</h1>
+    <p class="em-muted" style="margin:0 0 20px;font-size:14px;color:#64748b;">
+      Bonjour <strong style="color:#0b2238;">${esc(p.prenom)}</strong>, votre itin&eacute;raire du
+      <strong style="color:#0b2238;">${esc(p.dateStr)}</strong> est valid&eacute;. Il ne reste plus qu&rsquo;&agrave; r&eacute;gler la participation aux frais &agrave; votre pilote.
+    </p>
+    ${piloteParticipationBlock(p)}
+    <p class="em-body" style="margin:0 0 20px;font-size:13px;color:#334155;line-height:1.7;">
+      Une fois le r&egrave;glement effectu&eacute;, votre vol est d&eacute;finitivement confirm&eacute;. Votre pilote vous
+      donnera les derniers d&eacute;tails pratiques.
+    </p>
+    ${separator()}
+    <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;text-align:center;">
+      Une question ? R&eacute;pondez directement &agrave; cet email ou visitez notre
+      <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
+    </p>`;
+  return emailBase(body, "Itinéraire validé · Fly Horizons");
+}
 
 export function reservationHeureConfirmeeEmail(p: ReservationHeureConfirmeeProps): string {
   const hasRoute = !!p.routeUrl;
@@ -2134,4 +2204,201 @@ export function newsletterCampaignEmail(subject: string, body: string, prenom: s
     </p>`;
 
   return emailBase(bodyContent, subject, unsubLink);
+}
+
+// ── Attribution d'un vol à un pilote (Bloc B) ───────────────────────────────
+
+export function piloteAssignedClientEmail(p: {
+  prenom: string;
+  dateStr: string;
+  duree: number;
+  piloteNom: string;
+  piloteUrl?: string;
+}): string {
+  const body = `
+    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Fly Horizons</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Votre pilote pour ce vol</h1>
+    <p class="em-body" style="margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;">
+      Bonjour ${esc(p.prenom)},
+    </p>
+    ${separator()}
+    <p class="em-body" style="margin:0 0 16px;font-size:14px;color:#334155;line-height:1.7;">
+      Votre vol du <strong style="color:#0b2238;">${esc(p.dateStr)}</strong> (${esc(fmtDuration(p.duree))}) sera assur&eacute; par
+      <strong style="color:#0b2238;">${esc(p.piloteNom)}</strong>.
+    </p>
+    <p class="em-body" style="margin:0 0 ${p.piloteUrl ? "20px" : "28px"};font-size:14px;color:#334155;line-height:1.7;">
+      ${esc(p.piloteNom)} va vous contacter directement pour convenir de l&rsquo;heure et vous donner les d&eacute;tails pratiques. Vous pouvez lui r&eacute;pondre par retour de mail.
+    </p>
+    ${p.piloteUrl ? secondaryButton(p.piloteUrl, "Voir la fiche de votre pilote") : ""}
+    <p class="em-body" style="margin:${p.piloteUrl ? "24px" : "0"} 0 20px;font-size:14px;color:#334155;line-height:1.7;">
+      &Agrave; tr&egrave;s bient&ocirc;t,<br>
+      <strong class="em-dark" style="color:#0b2238;">L&rsquo;&eacute;quipe Fly Horizons</strong>
+    </p>
+    ${separator()}
+    <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;text-align:center;">
+      Une question ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
+    </p>`;
+
+  return emailBase(body, "Votre pilote pour ce vol · Fly Horizons");
+}
+
+export function piloteAssignedPiloteEmail(p: {
+  piloteNom: string;
+  clientNom: string;
+  dateStr: string;
+  heure: string | null;
+  duree: number;
+  passagers: number;
+  volsUrl: string;
+}): string {
+  const body = `
+    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Fly Horizons</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Un vol vous a &eacute;t&eacute; attribu&eacute;</h1>
+    <p class="em-body" style="margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;">
+      Bonjour ${esc(p.piloteNom)},
+    </p>
+    ${separator()}
+    <p class="em-body" style="margin:0 0 16px;font-size:14px;color:#334155;line-height:1.7;">
+      Romain vous a attribu&eacute; un vol. Voici l&rsquo;essentiel.
+    </p>
+    ${infoRows([
+      ["Client", esc(p.clientNom)],
+      ["Date", `<span style="text-transform:capitalize;">${esc(p.dateStr)}</span>${p.heure ? ` &agrave; ${esc(p.heure)}` : ""}`],
+      ["Dur&eacute;e", `${p.duree}&nbsp;min`],
+      ["Passagers", String(p.passagers)],
+    ])}
+    ${nextStep("Contactez le client, convenez du cr&eacute;neau, tracez la route et pr&eacute;parez la masse et centrage depuis votre espace.")}
+    ${ctaButton(p.volsUrl, "Ouvrir mes vols")}
+    <p class="em-body" style="margin:20px 0 12px;font-size:14px;color:#334155;line-height:1.7;">
+      Merci,<br>
+      <strong class="em-dark" style="color:#0b2238;">Fly Horizons</strong>
+    </p>`;
+
+  return emailBase(body, "Un vol vous a été attribué · Fly Horizons");
+}
+
+// ── Retour client sur l'itinéraire → notification au pilote assigné (Bloc B) ──
+
+export function piloteRouteFeedbackEmail(p: {
+  piloteNom: string;
+  clientNom: string;
+  dateStr: string;
+  type: "validated" | "modification_requested";
+  feedback: string | null;
+  volsUrl: string;
+}): string {
+  const valide = p.type === "validated";
+  const body = `
+    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Fly Horizons</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">${valide ? "Itin&eacute;raire valid&eacute; par le client" : "Le client demande une modification"}</h1>
+    <p class="em-body" style="margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;">
+      Bonjour ${esc(p.piloteNom)},
+    </p>
+    ${separator()}
+    <p class="em-body" style="margin:0 0 16px;font-size:14px;color:#334155;line-height:1.7;">
+      ${esc(p.clientNom)} vient de r&eacute;pondre &agrave; la route que vous avez propos&eacute;e pour le vol du
+      <strong style="color:#0b2238;">${esc(p.dateStr)}</strong>.
+    </p>
+    ${p.feedback ? infoRows([["Message du client", esc(p.feedback)]]) : ""}
+    ${nextStep(valide
+      ? "Rien &agrave; faire de plus sur la route. Poursuivez la pr&eacute;paration du vol."
+      : "Ajustez le trac&eacute; depuis votre espace et renvoyez la route au client.")}
+    ${ctaButton(p.volsUrl, "Ouvrir mes vols")}
+    <p class="em-body" style="margin:20px 0 12px;font-size:14px;color:#334155;line-height:1.7;">
+      Merci,<br>
+      <strong class="em-dark" style="color:#0b2238;">Fly Horizons</strong>
+    </p>`;
+
+  return emailBase(body, (valide ? "Itinéraire validé" : "Modification demandée") + " · Fly Horizons");
+}
+
+// ── Mise en jeu d'un vol à tous les pilotes (Bloc C) ────────────────────────
+
+export function flightOfferEmail(p: {
+  piloteNom: string;
+  dateStr: string;
+  heure: string | null;
+  duree: number;
+  passagers: number;
+  routeStr?: string | null;
+  expiresStr: string;
+  offreUrl: string;
+}): string {
+  const body = `
+    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Fly Horizons</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Un vol est disponible</h1>
+    <p class="em-body" style="margin:0 0 28px;font-size:14px;color:#334155;line-height:1.7;">
+      Bonjour ${esc(p.piloteNom)}, un vol est propos&eacute; &agrave; l&rsquo;&eacute;quipe &mdash;
+      <strong style="color:#0b2238;">premier arriv&eacute;, premier servi</strong>.
+    </p>
+    ${separator()}
+    ${infoRows([
+      ["Date", `<span style="text-transform:capitalize;">${esc(p.dateStr)}</span>${p.heure ? ` &agrave; ${esc(p.heure)}` : ""}`],
+      ["Dur&eacute;e", `${p.duree}&nbsp;min`],
+      ["Passagers", String(p.passagers)],
+      ...(p.routeStr ? [["Itin&eacute;raire", esc(p.routeStr)] as [string, string]] : []),
+    ])}
+    ${nextStep(`Ouvrez l&rsquo;offre pour la prendre ou passer votre tour. Sans preneur, elle expire le <strong>${esc(p.expiresStr)}</strong>.`)}
+    ${ctaButton(p.offreUrl, "Voir l'offre")}
+    <p class="em-body" style="margin:20px 0 12px;font-size:14px;color:#334155;line-height:1.7;">
+      Merci,<br>
+      <strong class="em-dark" style="color:#0b2238;">Fly Horizons</strong>
+    </p>`;
+
+  return emailBase(body, "Un vol est disponible · Fly Horizons");
+}
+
+export function flightOfferExpiredAdminEmail(p: {
+  offers: Array<{ dateStr: string; heure: string | null }>;
+  volsUrl: string;
+}): string {
+  const rows = p.offers
+    .map(
+      (o) =>
+        `<li style="margin:4px 0;font-size:13px;color:#334155;"><span style="text-transform:capitalize;">${esc(o.dateStr)}</span>${o.heure ? ` &agrave; ${esc(o.heure)}` : ""}</li>`,
+    )
+    .join("");
+  const body = `
+    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Fly Horizons</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">${p.offers.length > 1 ? `${p.offers.length} vols sans preneur` : "Un vol sans preneur"}</h1>
+    ${separator()}
+    <p class="em-body" style="margin:0 0 12px;font-size:14px;color:#334155;line-height:1.7;">
+      Aucun pilote n&rsquo;a pris ${p.offers.length > 1 ? "ces vols" : "ce vol"} dans les 48&nbsp;h. À g&eacute;rer à la main.
+    </p>
+    <ul style="margin:0 0 20px;padding-left:18px;">${rows}</ul>
+    ${ctaButton(p.volsUrl, "Ouvrir les vols")}
+    <p class="em-body" style="margin:20px 0 12px;font-size:14px;color:#334155;line-height:1.7;">
+      &mdash; Fly Horizons
+    </p>`;
+
+  return emailBase(body, "Vol sans preneur · Fly Horizons");
+}
+
+// ── Un pilote rend un vol attribué → notification à Romain (Bloc B) ──────────
+
+export function piloteReleasedFlightAdminEmail(p: {
+  piloteNom: string;
+  clientNom: string;
+  dateStr: string;
+  heure: string | null;
+  volsUrl: string;
+}): string {
+  const body = `
+    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Fly Horizons</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Un pilote a rendu un vol</h1>
+    ${separator()}
+    <p class="em-body" style="margin:0 0 16px;font-size:14px;color:#334155;line-height:1.7;">
+      <strong style="color:#0b2238;">${esc(p.piloteNom)}</strong> a rendu ce vol. Il n&rsquo;est plus attribu&eacute; &agrave; personne, il faut le r&eacute;assigner.
+    </p>
+    ${infoRows([
+      ["Client", esc(p.clientNom)],
+      ["Date", `<span style="text-transform:capitalize;">${esc(p.dateStr)}</span>${p.heure ? ` &agrave; ${esc(p.heure)}` : ""}`],
+    ])}
+    ${ctaButton(p.volsUrl, "Ouvrir les vols")}
+    <p class="em-body" style="margin:20px 0 12px;font-size:14px;color:#334155;line-height:1.7;">
+      &mdash; Fly Horizons
+    </p>`;
+
+  return emailBase(body, "Un pilote a rendu un vol · Fly Horizons");
 }

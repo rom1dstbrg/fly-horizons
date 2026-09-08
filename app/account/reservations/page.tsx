@@ -12,7 +12,7 @@ const RESA_STATUS: Record<string, { label: string; color: string }> = {
   payment_pending:  { label: "Paiement requis",  color: "text-orange-600 bg-orange-50 border-orange-200" },
   en_attente:       { label: "En attente",        color: "text-yellow-600 bg-yellow-50 border-yellow-200" },
   date_confirmee:   { label: "Date confirmée",    color: "text-foreground bg-secondary border-border" },
-  heure_confirmee:  { label: "Heure confirmée",   color: "text-green-600 bg-green-50 border-green-200" },
+  heure_confirmee:  { label: "Vol confirmé",     color: "text-green-600 bg-green-50 border-green-200" },
   vol_effectue:     { label: "Vol effectué",      color: "text-purple-600 bg-purple-50 border-purple-200" },
   annulee:          { label: "Annulée",           color: "text-red-600 bg-red-50 border-red-200" },
   en_attente_perso: { label: "En cours",          color: "text-yellow-600 bg-yellow-50 border-yellow-200" },

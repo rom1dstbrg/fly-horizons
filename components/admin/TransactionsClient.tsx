@@ -42,6 +42,16 @@ export type LigneVoucher = {
   code: string;
 };
 
+// Vol confié à un pilote tiers (modèle A) — informatif, 0 € dans la caisse.
+export type LignePiloteVol = {
+  id: string;
+  date: string;
+  client: string;
+  pilote: string;
+  montant: number | null;
+  paye: boolean;
+};
+
 export type Depense = {
   id: string;
   montant: number;
@@ -347,11 +357,13 @@ function DepenseEditRow({
 
 export function TransactionsClient({
   vols,
+  piloteVols = [],
   vouchers,
   depenses: initialDepenses,
   soldeGlobal,
 }: {
   vols: LigneVol[];
+  piloteVols?: LignePiloteVol[];
   vouchers: LigneVoucher[];
   depenses: Depense[];
   soldeGlobal: SoldeStats;
@@ -374,7 +386,7 @@ export function TransactionsClient({
 
   // Solde global mis à jour en temps réel avec les dépenses locales
   const totalDepenses = depenses.reduce((s, d) => s + d.montant, 0);
-  const soldeNet = Math.round((soldeGlobal.encaisse - soldeGlobal.rembourse - soldeGlobal.cout_avion - totalDepenses) * 100) / 100;
+  const soldeNet = Math.round((soldeGlobal.encaisse - soldeGlobal.rembourse - soldeGlobal.stripe_fees - soldeGlobal.cout_avion - totalDepenses) * 100) / 100;
 
   async function openVolDrawer(vol: LigneVol) {
     if (loadingVolId) return;
@@ -471,15 +483,15 @@ export function TransactionsClient({
               cls={totalDepenses > 0 ? "text-red-500" : "text-muted-foreground"}
             />
             <KpiCard
-              label="Solde net"
-              value={`${soldeNet >= 0 ? "+" : ""}${fmt(soldeNet)}`}
-              cls={soldeNet >= 0 ? "text-emerald-600" : "text-red-500"}
-            />
-            <KpiCard
               label="Frais Stripe"
               value={soldeGlobal.stripe_fees > 0 ? `−${fmt(soldeGlobal.stripe_fees)}` : fmt(0)}
               cls={soldeGlobal.stripe_fees > 0 ? "text-red-500" : "text-muted-foreground"}
               sub="paiements carte uniquement, hors cash/voucher"
+            />
+            <KpiCard
+              label="Solde net"
+              value={`${soldeNet >= 0 ? "+" : ""}${fmt(soldeNet)}`}
+              cls={soldeNet >= 0 ? "text-emerald-600" : "text-red-500"}
             />
           </StatGrid>
         </div>
@@ -605,6 +617,48 @@ export function TransactionsClient({
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {piloteVols.length > 0 && (
+          <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-border">
+              <p className="text-sm font-bold text-foreground">Vols pilotes tiers</p>
+              <p className="text-xs text-muted-foreground">
+                Le client règle directement le pilote. 0 € dans ta caisse — listés ici pour info uniquement.
+              </p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[560px]">
+                <thead>
+                  <tr className="border-b border-border bg-secondary">
+                    <th className="text-left px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Date</th>
+                    <th className="text-left px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Client</th>
+                    <th className="text-left px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Pilote</th>
+                    <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Montant</th>
+                    <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Payé</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/60">
+                  {piloteVols.map((v) => {
+                    const rawDate = v.date.length === 10 ? v.date + "T12:00:00Z" : v.date;
+                    return (
+                      <tr key={v.id} className="hover:bg-secondary/30 transition-colors">
+                        <td className="px-3 py-3 text-xs text-muted-foreground whitespace-nowrap">
+                          {new Date(rawDate).toLocaleDateString("fr-BE", { day: "numeric", month: "short", year: "2-digit" })}
+                        </td>
+                        <td className="px-3 py-3 text-sm text-foreground">{v.client}</td>
+                        <td className="px-3 py-3 text-sm text-foreground">{v.pilote}</td>
+                        <td className="px-3 py-3 text-sm text-right text-foreground">{v.montant != null ? `${v.montant} €` : "—"}</td>
+                        <td className="px-3 py-3 text-xs text-right">
+                          {v.paye ? <span className="text-emerald-600 font-semibold">oui</span> : <span className="text-amber-600">non</span>}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

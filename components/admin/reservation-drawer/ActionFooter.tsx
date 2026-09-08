@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import type { DrawerReservation, Tab } from "./types";
 import { ConfirmActionDialog, type PendingAction } from "./ConfirmActionDialog";
+import { isPiloteVol } from "@/lib/pilote/payment";
 
 const TERMINAL_STATUTS = ["vol_effectue", "annulee"];
 
@@ -121,6 +122,7 @@ export function ActionFooter({
   isProposePending,
   hasRoute,
   routeProposalLoaded,
+  viewerRole = "admin",
   onChangeStatut,
   onConfirmHeureConfirmee,
   onSendReschedule,
@@ -129,6 +131,7 @@ export function ActionFooter({
   onResendPaymentLink,
   onRecordCash,
   onProposeSlot,
+  onReleaseFlight,
   modifier,
 }: {
   reservation: DrawerReservation;
@@ -138,6 +141,9 @@ export function ActionFooter({
   isProposePending: boolean;
   hasRoute: boolean;
   routeProposalLoaded: boolean;
+  // Un pilote gère la préparation du vol (créneau, route, statut) mais pas
+  // l'encaissement, le boarding pass, le report ni l'annulation — réservés à l'admin.
+  viewerRole?: "admin" | "pilote";
   onChangeStatut: (statut: string) => void;
   onConfirmHeureConfirmee: () => void;
   onSendReschedule: () => void;
@@ -146,11 +152,23 @@ export function ActionFooter({
   onResendPaymentLink: () => void;
   onRecordCash: (amount: number) => void;
   onProposeSlot: (date: string, heure: string) => void;
+  onReleaseFlight: () => void;
   modifier: { isPending: boolean; save: () => void };
 }) {
   const isStandard = r.type_resa !== "perso";
+  const isAdmin = viewerRole === "admin";
   const isTerminal = TERMINAL_STATUTS.includes(r.statut);
-  const showCash = !isTerminal && r.acompte != null && (r.paye ?? 0) < r.acompte;
+  // Vol pilote (modèle A) : l'argent va en direct au pilote → pas de lien Stripe
+  // ni d'encaissement côté Fly Horizons. Le boarding pass reste envoyé normalement.
+  const piloteVol = isPiloteVol(r);
+
+  // Le pilote peut rendre un vol qui lui est attribué jusqu'à J-3 ; au-delà, il
+  // doit appeler Romain (garde-fou anti-abus).
+  const j3 = new Date();
+  j3.setHours(0, 0, 0, 0);
+  j3.setDate(j3.getDate() + 3);
+  const canRelease = r.date_vol >= j3.toISOString().slice(0, 10);
+  const showCash = !isTerminal && isAdmin && !piloteVol && r.acompte != null && (r.paye ?? 0) < r.acompte;
 
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   function confirm(action: PendingAction) { setPendingAction(action); }
@@ -170,6 +188,7 @@ export function ActionFooter({
   );
 
   if (activeTab === "modifier") {
+    if (!isAdmin) return null; // pilote : onglet en lecture seule, pas de sauvegarde
     return (
       <div className="px-5 pt-3 border-t border-border shrink-0 flex justify-end pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
         <button onClick={modifier.save} disabled={modifier.isPending} className={primaryBtn}>
@@ -193,7 +212,7 @@ export function ActionFooter({
 
       {/* Actions principales — spécifiques au statut */}
       <div className={`flex items-center gap-2 px-5 pt-2.5 flex-wrap ${isTerminal ? "pb-[calc(0.625rem+env(safe-area-inset-bottom))]" : "pb-2.5"}`}>
-        {r.statut === "payment_pending" && (
+        {r.statut === "payment_pending" && isAdmin && !piloteVol && (
           <>
             <button
               onClick={() => confirm({
@@ -239,7 +258,7 @@ export function ActionFooter({
               {isPending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
               Confirmer date + heure
             </button>
-            {isStandard && (r.statut === "en_attente" || r.statut === "demande_recue") && (
+            {isStandard && isAdmin && !piloteVol && (r.statut === "en_attente" || r.statut === "demande_recue") && (
               <button
                 onClick={() => confirm({
                   title: "Envoyer le lien de paiement ?",
@@ -254,7 +273,9 @@ export function ActionFooter({
                 Lien de paiement
               </button>
             )}
-            {r.statut === "demande_recue" && (
+            {/* Proposer un autre créneau : réservé à l'admin. Le pilote se plie à
+                la date choisie par le client ; s'il ne peut pas, il rend le vol. */}
+            {r.statut === "demande_recue" && isAdmin && (
               r.slot_proposal_token
                 ? (
                   <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border bg-secondary text-xs font-semibold text-muted-foreground">
@@ -311,7 +332,7 @@ export function ActionFooter({
               {isPending ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
               Marquer vol effectué
             </button>
-            {hasRoute && (
+            {hasRoute && isAdmin && (
               <button
                 onClick={() => confirm({
                   title: "Envoyer le boarding pass ?",
@@ -340,7 +361,7 @@ export function ActionFooter({
           </span>
         )}
 
-        {r.statut === "annulee" && (
+        {r.statut === "annulee" && isAdmin && (
           <button onClick={() => onChangeStatut("en_attente")} disabled={isPending} className={primaryBtn}>
             <ChevronRight size={14} />
             Réactiver la réservation
@@ -352,8 +373,35 @@ export function ActionFooter({
         )}
       </div>
 
-      {/* Actions toujours disponibles — séparées visuellement des actions du statut */}
-      {!isTerminal && (
+      {/* Actions toujours disponibles — séparées visuellement des actions du statut.
+          Report et annulation restent la main de l'admin (le pilote demande, il ne décide pas). */}
+      {/* Pilote : rendre un vol qui lui a été attribué par Romain (pas ses propres
+          annonces marketplace). Report / annulation restent à l'admin. */}
+      {!isTerminal && !isAdmin && !!r.pilote_id && r.type_resa !== "annonce_pilote" && (
+        <div className="flex items-center justify-end gap-2 px-5 py-2 border-t border-border/60 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+          {!canRelease && (
+            <span className="text-[11px] text-muted-foreground mr-auto">
+              Moins de 3 jours avant le vol — appelez Romain pour le rendre.
+            </span>
+          )}
+          <button
+            onClick={() => confirm({
+              title: "Rendre ce vol ?",
+              description: "Romain sera prévenu et le vol repassera en demande à réassigner. Vous n'aurez plus ce vol dans votre espace.",
+              confirmLabel: "Rendre le vol",
+              danger: true,
+              run: onReleaseFlight,
+            })}
+            disabled={isPending || !canRelease}
+            className={chipDanger}
+          >
+            {isPending ? <Loader2 size={13} className="animate-spin" /> : <RotateCcw size={13} />}
+            Je rends ce vol
+          </button>
+        </div>
+      )}
+
+      {!isTerminal && isAdmin && (
         <div className="flex items-center justify-between gap-2 px-5 py-2 border-t border-border/60 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
           <button
             onClick={() => confirm({

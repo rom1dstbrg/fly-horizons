@@ -1,8 +1,8 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { routeFeedbackAdminEmail } from "@/lib/email-templates";
-import { resend, EMAIL_FROM } from "@/lib/resend";
+import { routeFeedbackAdminEmail, piloteRouteFeedbackEmail } from "@/lib/email-templates";
+import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 
 const ADMIN_EMAIL = "info@fly-horizons.com";
 
@@ -15,7 +15,7 @@ export async function submitRouteResponse(
 
   const { data: resa } = await supabase
     .from("reservations")
-    .select("id, date_vol, heure_vol, route_responded_at, clients(prenom, nom, email)")
+    .select("id, date_vol, heure_vol, route_responded_at, pilote_id, clients(prenom, nom, email), pilotes(nom, email)")
     .eq("route_token", token)
     .single();
 
@@ -64,6 +64,38 @@ export async function submitRouteResponse(
   } catch (err) {
     // L'email admin ne doit pas faire échouer la réponse du client
     console.error("Route feedback admin email error:", err);
+  }
+
+  // Notifier le pilote assigné (vol standard attribué ou annonce).
+  try {
+    const pilote = (Array.isArray(resa.pilotes) ? resa.pilotes[0] : resa.pilotes) as
+      | { nom: string; email: string | null }
+      | null;
+    if (resa.pilote_id && pilote?.email) {
+      const client = (Array.isArray(resa.clients) ? resa.clients[0] : resa.clients) as
+        | { prenom: string; nom: string }
+        | null;
+      const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
+        weekday: "long", day: "numeric", month: "long", year: "numeric",
+      });
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
+      await resend.emails.send({
+        from: EMAIL_FROM,
+        to: [pilote.email],
+        replyTo: EMAIL_REPLY_TO,
+        subject: `[Route] ${type === "validated" ? "Itinéraire validé" : "Modification demandée"} · ${client?.prenom ?? ""} ${client?.nom ?? ""}`.trim(),
+        html: piloteRouteFeedbackEmail({
+          piloteNom: pilote.nom,
+          clientNom: `${client?.prenom ?? ""} ${client?.nom ?? ""}`.trim() || "Le client",
+          dateStr,
+          type,
+          feedback: feedback?.trim() || null,
+          volsUrl: `${siteUrl}/pilote/vols`,
+        }),
+      });
+    }
+  } catch (err) {
+    console.error("Route feedback pilote email error:", err);
   }
 
   return { success: true };

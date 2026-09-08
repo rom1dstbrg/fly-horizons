@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { createPilote, togglePiloteActif, updatePilote, deletePilote } from "@/lib/actions/pilotes";
 import { AdminRowActions } from "@/components/admin/ui/AdminRowActions";
 import { EmptyState } from "@/components/admin/ui";
+import { ConfirmActionDialog, type PendingAction } from "@/components/admin/reservation-drawer/ConfirmActionDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { UserPlus, Loader2, Check, Plane } from "lucide-react";
@@ -13,11 +14,13 @@ import type { Pilote } from "@/types/database";
 
 function InviteForm({ onDone }: { onDone: () => void }) {
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+    setNotice(null);
     const fd = new FormData(e.currentTarget);
 
     startTransition(async () => {
@@ -28,7 +31,10 @@ function InviteForm({ onDone }: { onDone: () => void }) {
         iban: (fd.get("iban") as string) || undefined,
       });
       if (result?.error) setError(result.error);
-      else {
+      else if (result?.promoted) {
+        (document.getElementById("invite-form") as HTMLFormElement | null)?.reset();
+        setNotice("Ce compte existait déjà : il a été promu en pilote, sans email d'invitation. La personne se connecte avec son mot de passe habituel.");
+      } else {
         (document.getElementById("invite-form") as HTMLFormElement | null)?.reset();
         onDone();
       }
@@ -40,6 +46,11 @@ function InviteForm({ onDone }: { onDone: () => void }) {
       {error && (
         <div className="bg-destructive/10 border border-destructive/30 text-destructive text-sm rounded-md px-4 py-3">
           {error}
+        </div>
+      )}
+      {notice && (
+        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm rounded-md px-4 py-3">
+          {notice}
         </div>
       )}
       <div className="grid sm:grid-cols-2 gap-4">
@@ -127,16 +138,37 @@ function EditPiloteForm({ pilote, onClose }: { pilote: Pilote; onClose: () => vo
   );
 }
 
-function PiloteRow({ pilote }: { pilote: Pilote }) {
+function PiloteRow({ pilote, onConfirm }: { pilote: Pilote; onConfirm: (a: PendingAction) => void }) {
   const [editing, setEditing] = useState(false);
   const [isActive, setIsActive] = useState(pilote.statut === "actif");
+  const [cascadeMsg, setCascadeMsg] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  function handleToggle() {
+  function runToggle(next: boolean) {
     startTransition(async () => {
-      const result = await togglePiloteActif(pilote.id, !isActive);
-      if (!result.error) setIsActive(!isActive);
+      const result = await togglePiloteActif(pilote.id, next);
+      if (result.error) return;
+      setIsActive(next);
+      const parts: string[] = [];
+      if (result.releasedFlights) parts.push(`${result.releasedFlights} vol${result.releasedFlights > 1 ? "s" : ""} à réassigner`);
+      if (result.unpublishedAnnonces) parts.push(`${result.unpublishedAnnonces} annonce${result.unpublishedAnnonces > 1 ? "s" : ""} retirée${result.unpublishedAnnonces > 1 ? "s" : ""}`);
+      setCascadeMsg(parts.length ? `Pilote désactivé · ${parts.join(", ")}.` : null);
     });
+  }
+
+  function handleToggle() {
+    if (isActive) {
+      // Désactivation : cascade (vols futurs désassignés, annonces retirées) → confirmation.
+      onConfirm({
+        title: `Désactiver ${pilote.nom} ?`,
+        description: "Ses vols futurs non effectués repasseront en demandes à réassigner et ses annonces publiées seront retirées. Réversible en le réactivant.",
+        confirmLabel: "Désactiver",
+        danger: true,
+        run: () => runToggle(false),
+      });
+      return;
+    }
+    runToggle(true);
   }
 
   return (
@@ -174,6 +206,13 @@ function PiloteRow({ pilote }: { pilote: Pilote }) {
           </div>
         </td>
       </tr>
+      {cascadeMsg && (
+        <tr className="border-b border-border">
+          <td colSpan={5} className="px-4 py-2 bg-amber-50 text-xs text-amber-800">
+            {cascadeMsg}
+          </td>
+        </tr>
+      )}
       {editing && (
         <tr className="border-b border-border">
           <EditPiloteForm pilote={pilote} onClose={() => setEditing(false)} />
@@ -187,9 +226,19 @@ function PiloteRow({ pilote }: { pilote: Pilote }) {
 
 export function PilotesClient({ pilotes }: { pilotes: Pilote[] }) {
   const [showInvite, setShowInvite] = useState(false);
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
 
   return (
     <div className="space-y-4">
+      <ConfirmActionDialog
+        action={pendingAction}
+        isPending={false}
+        onCancel={() => setPendingAction(null)}
+        onConfirm={() => {
+          pendingAction?.run();
+          setPendingAction(null);
+        }}
+      />
       <div className="flex justify-end">
         <button
           onClick={() => setShowInvite(v => !v)}
@@ -222,7 +271,7 @@ export function PilotesClient({ pilotes }: { pilotes: Pilote[] }) {
                 </tr>
               </thead>
               <tbody>
-                {pilotes.map((p) => <PiloteRow key={p.id} pilote={p} />)}
+                {pilotes.map((p) => <PiloteRow key={p.id} pilote={p} onConfirm={setPendingAction} />)}
               </tbody>
             </table>
           </div>

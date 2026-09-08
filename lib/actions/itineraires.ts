@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { requireAdminOrActivePilote } from "./auth-guards";
 
 async function checkAdmin() {
   const supabase = await createClient();
@@ -30,7 +31,8 @@ export interface Itineraire {
 }
 
 export async function getItineraires(): Promise<Itineraire[]> {
-  await checkAdmin();
+  // Ouvert au pilote : il trace la route de ses vols assignés depuis /pilote.
+  await requireAdminOrActivePilote();
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("itineraires")
@@ -84,7 +86,7 @@ export async function updateItineraire(id: string, data: {
 }
 
 export async function incrementItineraireUsage(id: string) {
-  await checkAdmin();
+  await requireAdminOrActivePilote();
   const supabase = createAdminClient();
   const { data } = await supabase.from("itineraires").select("utilisations").eq("id", id).single();
   if (data) {

@@ -16,8 +16,8 @@ export default async function PiloteVolsPage() {
         .from("reservations")
         .select("*, clients(*), pilotes(nom), route_proposals(status, created_at)")
         .eq("pilote_id", pilote.id)
-        .eq("type_resa", "annonce_pilote")
-        .order("created_at", { ascending: false })
+        .neq("type_resa", "perso")
+        .order("date_vol", { ascending: true })
     : { data: [] };
 
   return (
@@ -25,7 +25,7 @@ export default async function PiloteVolsPage() {
       <div>
         <h1 className="text-xl sm:text-2xl font-bold text-foreground">Mes vols</h1>
         <p className="text-muted-foreground text-sm mt-0.5">
-          Les demandes de vos annonces : confirmez le créneau, tracez la route, envoyez le lien de paiement.
+          Les vols qui vous sont attribués et les demandes de vos annonces : confirmez le créneau, tracez la route, préparez la masse et centrage.
         </p>
       </div>
 

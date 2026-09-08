@@ -7,6 +7,7 @@ import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservat
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { makeRescheduleToken, parseRescheduleToken } from "@/lib/reschedule-token";
 import { buildBoardingPassAttachment } from "@/lib/pdf/boarding-pass-attachment";
+import { requireAdminOrOwningPilote as checkAdminOrOwningPilote } from "./auth-guards";
 
 async function checkAdmin() {
   const supabase = await createClient();
@@ -14,23 +15,6 @@ async function checkAdmin() {
   if (!user) throw new Error("Non autorisé");
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
   if (profile?.role !== "admin") throw new Error("Non autorisé");
-}
-
-// Autorise l'admin, ou le pilote propriétaire de la réservation (marketplace pilotes —
-// il gère ses propres demandes comme l'admin gère les siennes : confirme, route, paiement).
-async function checkAdminOrOwningPilote(reservationId: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Non autorisé");
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role === "admin") return;
-  if (profile?.role !== "pilote") throw new Error("Non autorisé");
-
-  const admin = createAdminClient();
-  const { data: pilote } = await admin.from("pilotes").select("id").eq("user_id", user.id).single();
-  if (!pilote) throw new Error("Non autorisé");
-  const { data: resa } = await admin.from("reservations").select("pilote_id").eq("id", reservationId).single();
-  if (!resa || resa.pilote_id !== pilote.id) throw new Error("Non autorisé");
 }
 
 const VALID_STATUTS_STD = ["demande_recue", "en_attente", "acompte_recu", "heure_confirmee", "vol_effectue", "annulee", "payment_pending"] as const;
@@ -781,14 +765,31 @@ export async function recordCashPayment(id: string, montant: number) {
 
     // Ne jamais rétrograder une réservation déjà confirmée plus loin (date/heure confirmée,
     // solde) — on préserve son statut actuel et on se contente d'enregistrer le paiement.
-    const { data: curResa } = await supabase.from("reservations").select("statut").eq("id", id).maybeSingle();
-    const ADVANCED_STATUTS = ["date_confirmee", "heure_confirmee", "solde", "vol_effectue"];
-    const nextStatut = curResa && ADVANCED_STATUTS.includes(curResa.statut) ? curResa.statut : "acompte_recu";
-
-    const { error } = await supabase
+    const { data: curResa } = await supabase
       .from("reservations")
-      .update({ paye: montant, payment_status: "paid", statut: nextStatut })
-      .eq("id", id);
+      .select("statut, pre_payment_statut")
+      .eq("id", id)
+      .maybeSingle();
+    const ADVANCED_STATUTS = ["date_confirmee", "heure_confirmee", "solde", "vol_effectue"];
+
+    const updateFields: Record<string, unknown> = { paye: montant, payment_status: "paid" };
+    let nextStatut: string;
+    if (curResa?.statut === "payment_pending" && curResa.pre_payment_statut) {
+      // Résa passée en payment_pending pour ouvrir Stripe (ex. acceptation de route).
+      // Un encaissement manuel doit restaurer le statut d'avant, comme le fait le
+      // webhook Stripe — sinon on retombe sur acompte_recu et l'admin doit reconfirmer
+      // une date/heure déjà actée.
+      nextStatut = curResa.pre_payment_statut;
+      updateFields.pre_payment_statut = null;
+      updateFields.payment_token = null;
+    } else if (curResa && ADVANCED_STATUTS.includes(curResa.statut)) {
+      nextStatut = curResa.statut;
+    } else {
+      nextStatut = "acompte_recu";
+    }
+    updateFields.statut = nextStatut;
+
+    const { error } = await supabase.from("reservations").update(updateFields).eq("id", id);
     if (error) return { error: error.message };
 
     let emailError = false;
@@ -1318,7 +1319,7 @@ export async function generateClientRescheduleToken(reservationId: string) {
 
 export async function proposeSlot(id: string, date: string, heure: string) {
   try {
-    await checkAdminOrOwningPilote(id);
+    const actor = await checkAdminOrOwningPilote(id);
     const supabase = createAdminClient();
 
     const { data: resa } = await supabase
@@ -1356,10 +1357,14 @@ export async function proposeSlot(id: string, date: string, heure: string) {
     if (taken) return { error: "Ce créneau est déjà pris par une autre réservation" };
 
     const token = crypto.randomUUID();
+    // Garde-fou anti-abus (questionnaire) : on compte les changements de créneau
+    // proposés par un pilote — pas ceux de Romain (admin).
+    const isPilote = actor.role === "pilote";
     await supabase.from("reservations").update({
       slot_proposal_token: token,
       slot_proposal_date: date,
       slot_proposal_heure: heure,
+      ...(isPilote ? { slot_change_count: (resa.slot_change_count ?? 0) + 1 } : {}),
     }).eq("id", id);
 
     const rawUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
@@ -1401,8 +1406,8 @@ export async function proposeSlot(id: string, date: string, heure: string) {
       action: "field_changed",
       field: "slot_proposal",
       new_value: `${date} à ${heure}`,
-      author: "admin",
-      note: "Créneau proposé au client",
+      author: isPilote ? `pilote:${actor.piloteNom}` : "admin",
+      note: isPilote ? "Nouveau créneau proposé au client par le pilote" : "Créneau proposé au client",
     });
 
     revalidatePath("/admin/vols");

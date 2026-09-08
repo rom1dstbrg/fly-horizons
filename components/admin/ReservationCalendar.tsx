@@ -198,7 +198,7 @@ export function ReservationCalendar({
           { label: "Paiement att.", className: "bg-orange-100 border-orange-200" },
           { label: "En attente", className: "bg-yellow-100 border-yellow-200" },
           { label: "Date confirmée", className: "bg-blue-100 border-blue-200" },
-          { label: "Heure confirmée", className: "bg-green-100 border-green-200" },
+          { label: "Vol confirmé", className: "bg-green-100 border-green-200" },
           { label: "Vol effectué", className: "bg-purple-100 border-purple-200" },
         ].map(l => (
           <div key={l.label} className="flex items-center gap-1.5">

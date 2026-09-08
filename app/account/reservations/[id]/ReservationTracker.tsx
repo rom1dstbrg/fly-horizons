@@ -39,6 +39,14 @@ export interface ReservationData {
   type_resa: string;
   payment_token: string | null;
   acompte: number | null;
+  // Vol pilote (modèle A) : réglé en direct au pilote, pas de Stripe.
+  pilotePayment?: {
+    piloteNom: string;
+    montant: number | null;
+    paye: boolean;
+    iban: string | null;
+    paylink: string | null;
+  } | null;
   distance_km: number | null;
   created_at: string;
   route?: string | null;
@@ -282,8 +290,9 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
     ? STANDARD_TIMELINE_WITH_PROPOSAL
     : STANDARD_TIMELINE;
 
+  const piloteVol = !!resa.pilotePayment;
   const isPaid = !["payment_pending", "en_attente_perso", "demande_recue"].includes(resa.statut);
-  const hasPaymentLink = resa.payment_token && !isPaid && !isCancelled;
+  const hasPaymentLink = !piloteVol && resa.payment_token && !isPaid && !isCancelled;
 
   const paymentUrl = isPerso
     ? `${siteUrl}/api/vol-sur-mesure/pay/${resa.payment_token}`
@@ -388,6 +397,14 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
                 Payer {resa.acompte != null ? `${resa.acompte} €` : ""}
               </Link>
             </div>
+          )}
+
+          {piloteVol && !isCancelled && resa.pilotePayment && (
+            <PiloteParticipation
+              payment={resa.pilotePayment}
+              qrUrl={`${siteUrl}/api/pay-qr/${resa.id}`}
+              receiptUrl={`/api/invoice/reservation/${resa.id}`}
+            />
           )}
         </div>
 
@@ -773,5 +790,111 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
 
       </div>
     </main>
+  );
+}
+
+// ── Participation aux frais (vol pilote, modèle A) ─────────────────────────
+
+function PiloteParticipation({
+  payment,
+  qrUrl,
+  receiptUrl,
+}: {
+  payment: NonNullable<ReservationData["pilotePayment"]>;
+  qrUrl: string;
+  receiptUrl: string;
+}) {
+  const [copied, setCopied] = useState<"iban" | null>(null);
+
+  function copyIban() {
+    if (!payment.iban) return;
+    navigator.clipboard.writeText(payment.iban.replace(/\s+/g, "")).then(() => {
+      setCopied("iban");
+      setTimeout(() => setCopied(null), 2000);
+    });
+  }
+
+  return (
+    <div className="mt-4 pt-4 border-t border-border">
+      <div className="flex items-center gap-2 mb-2">
+        <CreditCard size={15} className="text-primary shrink-0" />
+        <p className="text-xs font-semibold text-foreground">Participation aux frais</p>
+        {payment.montant != null &&
+          (payment.paye ? (
+            <span className="text-[11px] font-semibold text-green-600 flex items-center gap-1">
+              <CheckCircle size={12} /> Réglée
+            </span>
+          ) : (
+            <span className="text-[11px] font-medium text-amber-600">En attente de votre règlement</span>
+          ))}
+      </div>
+
+      {payment.montant == null ? (
+        <p className="text-xs text-muted-foreground">
+          {payment.piloteNom} vous communiquera le montant et vous contactera pour le règlement.
+        </p>
+      ) : (
+        <>
+          <p className="text-sm text-foreground mb-3">
+            <strong>{payment.montant} €</strong> à régler directement à votre pilote{" "}
+            <strong>{payment.piloteNom}</strong>. Fly Horizons n&apos;encaisse rien sur ce vol.
+          </p>
+
+          {payment.paye && (
+            <a
+              href={receiptUrl}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+            >
+              <Download size={12} />
+              Télécharger le reçu
+            </a>
+          )}
+
+          {!payment.paye && (
+            <div className="flex flex-col sm:flex-row gap-4 sm:items-start">
+              {payment.iban && (
+                // QR SEPA : la plupart des applis bancaires le scannent → virement pré-rempli.
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={qrUrl}
+                  alt="QR code de virement SEPA"
+                  width={132}
+                  height={132}
+                  className="rounded-lg border border-border bg-white shrink-0"
+                />
+              )}
+              <div className="text-xs text-muted-foreground space-y-1.5 min-w-0">
+                {payment.iban && (
+                  <>
+                    <p>Scannez le QR avec votre appli bancaire, ou faites le virement manuellement :</p>
+                    <p className="flex items-center gap-2 flex-wrap">
+                      <span className="font-mono text-foreground">{payment.iban}</span>
+                      <button
+                        type="button"
+                        onClick={copyIban}
+                        className="text-[11px] font-semibold text-primary hover:underline cursor-pointer"
+                      >
+                        {copied === "iban" ? "Copié ✓" : "Copier"}
+                      </button>
+                    </p>
+                    <p>Bénéficiaire : {payment.piloteNom} · Montant : {payment.montant} €</p>
+                  </>
+                )}
+                {payment.paylink && (
+                  <a
+                    href={payment.paylink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block mt-1 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-[11px] font-bold hover:brightness-105 transition-all"
+                  >
+                    Payer via Payconiq / Revolut
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
   );
 }

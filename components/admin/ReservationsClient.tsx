@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { deleteReservationStandard } from "@/lib/actions/delete";
 import { ReservationDrawer } from "@/components/admin/reservation-drawer/ReservationDrawer";
 import type { DrawerReservation, Waypoint } from "@/components/admin/reservation-drawer/types";
 import { AdminBadge, getResaBadge, PageToolbar, FilterChip, EmptyState } from "@/components/admin/ui";
 import { AdminRowActions } from "@/components/admin/ui/AdminRowActions";
-import { CalendarCheck } from "lucide-react";
+import { CalendarCheck, Scale } from "lucide-react";
 
 const FILTERS = ["Tous", "En attente", "Confirmées", "Effectuées", "Annulées"] as const;
 const FILTER_MAP: Record<string, string[] | null> = {
@@ -38,6 +39,7 @@ function ReservationRow({
   onOpen: () => void;
   onDelete: () => Promise<{ error?: string } | void>;
 }) {
+  const router = useRouter();
   const statut = getResaBadge(r);
   const client = r.clients;
   const dateStr = new Date(r.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
@@ -69,6 +71,13 @@ function ReservationRow({
       <td className="px-4 py-3 text-center cursor-pointer whitespace-nowrap" onClick={onOpen}>
         <span className="text-sm text-foreground">{r.duree} min</span>
       </td>
+      <td className="px-4 py-3 cursor-pointer whitespace-nowrap" onClick={onOpen}>
+        {r.pilotes?.nom ? (
+          <span className="text-xs font-medium text-foreground">{r.pilotes.nom}</span>
+        ) : (
+          <span className="text-xs text-muted-foreground">Non attribué</span>
+        )}
+      </td>
       <td className="px-4 py-3 cursor-pointer" onClick={onOpen}>
         <div className="flex flex-col items-start gap-1">
           <AdminBadge variant={statut.variant} label={statut.label} />
@@ -79,7 +88,18 @@ function ReservationRow({
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center justify-end gap-1">
-          <AdminRowActions onView={onOpen} onDelete={onDelete} />
+          <AdminRowActions
+            onView={onOpen}
+            onDelete={onDelete}
+            extra={[
+              {
+                icon: Scale,
+                label: "M&B",
+                title: "Masse & centrage (poids préremplis)",
+                onClick: () => router.push(`/admin/mass-balance?resa=${r.id}`),
+              },
+            ]}
+          />
         </div>
       </td>
     </tr>
@@ -89,8 +109,18 @@ function ReservationRow({
 export function ReservationsClient({ reservations: initial }: { reservations: Reservation[] }) {
   const [reservations, setReservations] = useState<Reservation[]>(initial);
   const [filter, setFilter] = useState<typeof FILTERS[number]>("Tous");
+  const [piloteFilter, setPiloteFilter] = useState<string>("all"); // "all" | "none" | pilote_id
   const [search, setSearch] = useState("");
   const [drawer, setDrawer] = useState<Reservation | null>(null);
+
+  // Liste des pilotes présents sur au moins une réservation, pour le filtre.
+  const piloteOptions = Array.from(
+    new Map(
+      reservations
+        .filter((r) => r.pilote_id && r.pilotes?.nom)
+        .map((r) => [r.pilote_id as string, r.pilotes!.nom]),
+    ),
+  ).sort((a, b) => a[1].localeCompare(b[1]));
 
   function handleStatusChange(id: string, newStatut: string) {
     setReservations(prev => prev.map(r => r.id === id ? { ...r, statut: newStatut } : r));
@@ -111,6 +141,11 @@ export function ReservationsClient({ reservations: initial }: { reservations: Re
   const searchTerm = search.trim().toLowerCase();
   const filtered = reservations
     .filter(r => filter === "Tous" || (FILTER_MAP[filter] ?? []).includes(r.statut))
+    .filter(r =>
+      piloteFilter === "all" ? true :
+      piloteFilter === "none" ? !r.pilote_id :
+      r.pilote_id === piloteFilter
+    )
     .filter(r => {
       if (!searchTerm) return true;
       const name = `${r.clients?.prenom ?? ""} ${r.clients?.nom ?? ""}`.toLowerCase();
@@ -137,7 +172,7 @@ export function ReservationsClient({ reservations: initial }: { reservations: Re
         <PageToolbar
           search={{ value: search, onChange: setSearch, placeholder: "Rechercher par nom ou email…" }}
           filters={
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {FILTERS.map(f => (
                 <FilterChip
                   key={f}
@@ -147,6 +182,19 @@ export function ReservationsClient({ reservations: initial }: { reservations: Re
                   onClick={() => setFilter(f)}
                 />
               ))}
+              {piloteOptions.length > 0 && (
+                <select
+                  value={piloteFilter}
+                  onChange={e => setPiloteFilter(e.target.value)}
+                  className="h-8 px-2 rounded-lg border border-border bg-card text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-navy/30 cursor-pointer"
+                >
+                  <option value="all">Tous les pilotes</option>
+                  <option value="none">Non attribué</option>
+                  {piloteOptions.map(([id, nom]) => (
+                    <option key={id} value={id}>{nom}</option>
+                  ))}
+                </select>
+              )}
             </div>
           }
         />
@@ -167,6 +215,7 @@ export function ReservationsClient({ reservations: initial }: { reservations: Re
                     <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Client</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Route</th>
                     <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Durée</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Pilote</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Statut</th>
                     <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Actions</th>
                   </tr>

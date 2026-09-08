@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { PlaneTakeoff, Plane, ArrowRight, AlertCircle } from "lucide-react";
+import { PlaneTakeoff, Plane, ArrowRight, AlertCircle, Megaphone } from "lucide-react";
+import { piloteLegalStatus } from "@/lib/pilote/legal";
+import { listOpenOffersForPilote } from "@/lib/pilote/offers";
 
 export default async function PiloteDashboard() {
   const supabase = await createClient();
@@ -11,7 +13,12 @@ export default async function PiloteDashboard() {
   const prenom = profile?.full_name?.split(" ")[0] ?? "Pilote";
 
   const admin = createAdminClient();
-  const { data: pilote } = await admin.from("pilotes").select("id").eq("user_id", user!.id).maybeSingle();
+  const { data: pilote } = await admin
+    .from("pilotes")
+    .select("id, licence_numero, licence_expiration, medical_expiration, conditions_accepted_at")
+    .eq("user_id", user!.id)
+    .maybeSingle();
+  const legal = piloteLegalStatus(pilote);
   const { count: demandesEnAttente } = pilote
     ? await admin
         .from("reservations")
@@ -20,12 +27,55 @@ export default async function PiloteDashboard() {
         .eq("statut", "demande_recue")
     : { count: 0 };
 
+  const openOffers = pilote ? (await listOpenOffersForPilote(pilote.id)).length : 0;
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-xl sm:text-2xl font-bold text-foreground">Bonjour {prenom}</h1>
         <p className="text-muted-foreground text-sm mt-0.5">Bienvenue sur votre espace pilote Fly Horizons.</p>
       </div>
+
+      {!legal.ok && (
+        <Link
+          href="/pilote/profil"
+          className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3 hover:border-red-300 transition-colors"
+        >
+          <AlertCircle size={18} className="text-red-600 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-red-800">
+              Profil incomplet, vous ne pouvez pas recevoir de vols
+            </p>
+            <ul className="mt-1 space-y-0.5">
+              {legal.issues
+                .filter((i) => i.severity === "error")
+                .map((i) => (
+                  <li key={i.code} className="text-xs text-red-700">
+                    {i.label}
+                  </li>
+                ))}
+            </ul>
+          </div>
+          <ArrowRight size={16} className="text-red-600 shrink-0 mt-0.5" />
+        </Link>
+      )}
+
+      {legal.ok && legal.issues.length > 0 && (
+        <Link
+          href="/pilote/profil"
+          className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 hover:border-amber-300 transition-colors"
+        >
+          <AlertCircle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            {legal.issues.map((i) => (
+              <p key={i.code} className="text-sm text-amber-800">
+                {i.label}
+              </p>
+            ))}
+          </div>
+          <ArrowRight size={16} className="text-amber-600 shrink-0 mt-0.5" />
+        </Link>
+      )}
 
       {!!demandesEnAttente && demandesEnAttente > 0 && (
         <Link
@@ -37,6 +87,19 @@ export default async function PiloteDashboard() {
             <strong>{demandesEnAttente}</strong> demande{demandesEnAttente > 1 ? "s" : ""} en attente de votre confirmation
           </p>
           <ArrowRight size={16} className="text-amber-600 shrink-0" />
+        </Link>
+      )}
+
+      {openOffers > 0 && (
+        <Link
+          href="/pilote/offres"
+          className="bg-[#f5f8ff] border border-navy/20 rounded-xl p-4 flex items-center gap-3 hover:border-navy/40 transition-colors"
+        >
+          <Megaphone size={18} className="text-navy shrink-0" />
+          <p className="text-sm text-foreground flex-1">
+            <strong>{openOffers}</strong> vol{openOffers > 1 ? "s" : ""} à prendre — premier arrivé, premier servi
+          </p>
+          <ArrowRight size={16} className="text-navy shrink-0" />
         </Link>
       )}
 

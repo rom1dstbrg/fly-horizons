@@ -173,6 +173,7 @@ function TransactionsPDF({ data, logoDataUrl }: { data: TransactionsPDFData; log
               color={soldeGlobal.part_pilote_moyenne_pct != null && soldeGlobal.part_pilote_moyenne_pct < 10 ? RED : GREEN}
             />
             <Kpi label="DÉPENSES AUTRES" value={euros(soldeGlobal.depenses)} color={RED} />
+            <Kpi label="FRAIS STRIPE" value={euros(soldeGlobal.stripe_fees)} color={RED} />
             <Kpi
               label="SOLDE NET"
               value={euros(soldeGlobal.solde_net)}

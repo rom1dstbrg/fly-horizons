@@ -38,6 +38,17 @@ export interface Pilote {
   iban: string | null;
   statut: "actif" | "inactif";
   created_at: string;
+  // Infos légales déclaratives (Bloc A · item 5) — pas d'upload de document en v1.
+  licence_numero: string | null;
+  licence_expiration: string | null;
+  medical_expiration: string | null;
+  ratings: string | null;
+  conditions_accepted_at: string | null;
+  conditions_version: string | null;
+  bio: string | null;
+  photo_url: string | null;
+  // Modèle A (bloc D) — lien de paiement perso optionnel (Payconiq / Revolut).
+  paylink: string | null;
 }
 
 export interface Product {

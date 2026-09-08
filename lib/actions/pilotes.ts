@@ -38,19 +38,31 @@ export async function createPilote(data: {
     const { data: existing } = await supabase.from("pilotes").select("id").eq("email", email).maybeSingle();
     if (existing) return { error: "Un pilote existe déjà avec cet email" };
 
-    const { data: invited, error: inviteErr } = await supabase.auth.admin.inviteUserByEmail(email, {
-      redirectTo: `${siteUrl()}/auth/callback?next=/pilote/mot-de-passe`,
-      data: { full_name: data.nom },
-    });
+    // L'email a-t-il déjà un compte ? Si oui on promeut le compte existant
+    // (inviteUserByEmail échouerait). Sinon on invite un nouveau compte.
+    const { data: existingUserId } = await supabase.rpc("get_auth_user_id_by_email", { email_input: email });
 
-    if (inviteErr || !invited?.user) {
-      return { error: inviteErr?.message?.includes("already registered")
-        ? "Un compte existe déjà avec cet email"
-        : "Erreur lors de l'invitation" };
+    let userId: string;
+    let promoted = false;
+
+    if (existingUserId) {
+      userId = existingUserId as string;
+      promoted = true;
+    } else {
+      const { data: invited, error: inviteErr } = await supabase.auth.admin.inviteUserByEmail(email, {
+        redirectTo: `${siteUrl()}/auth/callback?next=/pilote/mot-de-passe`,
+        data: { full_name: data.nom },
+      });
+      if (inviteErr || !invited?.user) {
+        return { error: inviteErr?.message?.includes("already registered")
+          ? "Un compte existe déjà avec cet email"
+          : "Erreur lors de l'invitation" };
+      }
+      userId = invited.user.id;
     }
 
     const { error: pilError } = await supabase.from("pilotes").insert({
-      user_id: invited.user.id,
+      user_id: userId,
       nom: data.nom.trim(),
       email,
       telephone: data.telephone?.trim() || null,
@@ -59,15 +71,20 @@ export async function createPilote(data: {
     });
 
     if (pilError) {
-      // Rollback du compte auth créé pour éviter un compte orphelin sans fiche pilote
-      await supabase.auth.admin.deleteUser(invited.user.id);
+      // Rollback du compte auth seulement s'il vient d'être créé pour ce pilote.
+      if (!promoted) await supabase.auth.admin.deleteUser(userId);
       return { error: "Erreur création de la fiche pilote" };
     }
 
-    await supabase.from("profiles").update({ role: "pilote", full_name: data.nom.trim() }).eq("id", invited.user.id);
+    // Promotion : on garde le nom existant s'il y en a un, on ne l'écrase pas.
+    const { data: currentProfile } = await supabase.from("profiles").select("full_name").eq("id", userId).maybeSingle();
+    await supabase
+      .from("profiles")
+      .update({ role: "pilote", full_name: currentProfile?.full_name?.trim() || data.nom.trim() })
+      .eq("id", userId);
 
     revalidatePath("/admin/pilotes");
-    return { success: true };
+    return { success: true, promoted };
   } catch {
     return { error: "Erreur serveur" };
   }
@@ -79,8 +96,51 @@ export async function togglePiloteActif(id: string, actif: boolean) {
     const supabase = createAdminClient();
     const { error } = await supabase.from("pilotes").update({ statut: actif ? "actif" : "inactif" }).eq("id", id);
     if (error) return { error: error.message };
+
+    // Cascade de désactivation : un pilote inactif ne doit plus « occuper » de créneau.
+    // Ses vols futurs encore ouverts redeviennent des demandes à réassigner, et ses
+    // annonces publiées sont retirées de la vitrine publique.
+    let releasedFlights = 0;
+    let unpublishedAnnonces = 0;
+    if (!actif) {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data: released } = await supabase
+        .from("reservations")
+        .update({ pilote_id: null, pilote_assigned_at: null })
+        .eq("pilote_id", id)
+        .neq("type_resa", "perso")
+        .neq("statut", "vol_effectue")
+        .neq("statut", "annulee")
+        .gte("date_vol", today)
+        .select("id");
+      releasedFlights = released?.length ?? 0;
+
+      for (const r of released ?? []) {
+        await supabase.from("reservation_history").insert({
+          reservation_id: r.id,
+          action: "unassign_pilote",
+          field: null,
+          old_value: null,
+          new_value: null,
+          author: "admin",
+          note: "Pilote retiré automatiquement (compte désactivé), vol à réassigner",
+        });
+      }
+
+      const { data: unpub } = await supabase
+        .from("annonces_pilote")
+        .update({ statut: "annulee" })
+        .eq("pilote_id", id)
+        .eq("statut", "publiee")
+        .select("id");
+      unpublishedAnnonces = unpub?.length ?? 0;
+    }
+
     revalidatePath("/admin/pilotes");
-    return { success: true };
+    revalidatePath("/admin/vols");
+    revalidatePath("/pilote/vols");
+    revalidatePath("/nos-offres");
+    return { success: true, releasedFlights, unpublishedAnnonces };
   } catch {
     return { error: "Erreur serveur" };
   }

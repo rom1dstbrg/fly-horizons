@@ -31,34 +31,54 @@ export async function GET(
 
   const { data: resa } = await admin
     .from("reservations")
-    .select("id, date_vol, heure_vol, duree, passagers, acompte, statut, type_resa, created_at")
+    .select("id, date_vol, heure_vol, duree, passagers, acompte, statut, type_resa, created_at, pilote_id, montant_pilote, pilote_paye, pilote_paye_at, pilotes(nom, iban)")
     .eq("id", id)
     .eq("client_id", client.id)
     .single();
 
-  if (!resa || !resa.acompte) return new NextResponse("Introuvable", { status: 404 });
+  if (!resa) return new NextResponse("Introuvable", { status: 404 });
+
+  const piloteRow = (Array.isArray(resa.pilotes) ? resa.pilotes[0] : resa.pilotes) as
+    | { nom: string; iban: string | null }
+    | null;
+  const isPiloteVol = !!resa.pilote_id && resa.type_resa === "standard";
+
+  // Vol pilote : le reçu constate le règlement de la participation aux frais au
+  // pilote — pas de reçu tant qu'il n'a pas été marqué payé.
+  const montant = isPiloteVol
+    ? resa.montant_pilote != null ? Number(resa.montant_pilote) : null
+    : resa.acompte;
+  if (!montant) return new NextResponse("Introuvable", { status: 404 });
+  if (isPiloteVol && !resa.pilote_paye) return new NextResponse("Reçu pas encore disponible", { status: 404 });
 
   const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
     weekday: "long", day: "numeric", month: "long", year: "numeric",
   });
 
-  const typeLabel = resa.type_resa === "perso" ? "Vol sur mesure" : "Vol partagé en avion léger";
+  const typeLabel = isPiloteVol
+    ? "Participation aux frais — vol partagé (partage de coûts)"
+    : resa.type_resa === "perso"
+      ? "Vol sur mesure"
+      : "Vol partagé en avion léger";
   const itemTitle = `${typeLabel} — ${formatDur(resa.duree)} · ${dateStr}`;
   const qty = resa.passagers ?? 1;
 
   const data: InvoiceData = {
     orderId: resa.id,
     createdAt: new Date(resa.created_at),
-    paidAt: null,
+    paidAt: isPiloteVol && resa.pilote_paye_at ? new Date(resa.pilote_paye_at) : null,
     customerName: `${client.prenom} ${client.nom}`.trim(),
     customerEmail: client.email,
-    items: [{ title: itemTitle, quantity: qty, unit_price: resa.acompte / qty }],
-    subtotal: resa.acompte,
+    items: [{ title: itemTitle, quantity: qty, unit_price: montant / qty }],
+    subtotal: montant,
     shippingCost: 0,
     discountAmount: 0,
     couponCode: null,
-    total: resa.acompte,
+    total: montant,
     shippingAddress: null,
+    issuer: isPiloteVol && piloteRow
+      ? { name: piloteRow.nom, details: piloteRow.iban ? `IBAN ${piloteRow.iban}` : undefined }
+      : null,
   };
 
   const buffer = await generateInvoicePDFBuffer(data, true);
