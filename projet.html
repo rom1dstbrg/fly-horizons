@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fly Horizons — Pilotage du projet</title>
+<style>
+  :root{
+    --navy:#0b2238; --gold:#F2B705; --bg:#f4f6fa; --card:#fff; --ink:#1e2535;
+    --muted:#5b6b7b; --border:#e0e5ef; --rule:#c9d2db;
+    --green:#0f9d58; --green-bg:#e9f9f0; --green-bd:#bfe9d2;
+    --amber:#b7791f; --amber-bg:#fef6e6; --amber-bd:#f3dfa8;
+    --red:#c53030; --red-bg:#fdecec; --red-bd:#f5c2c2;
+    --blue:#1d5fbf; --blue-bg:#eaf1fd; --blue-bd:#c7dafa;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.6;font-size:15px}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 24px 120px}
+  h1{font-size:25px;color:var(--navy);font-weight:800;line-height:1.2}
+  .sub{color:var(--muted);font-size:13px;margin:4px 0 24px}
+  h2{font-size:18px;color:var(--navy);font-weight:800;margin:34px 0 10px}
+  h3{font-size:14px;color:var(--navy);font-weight:700;margin:20px 0 6px}
+  p{margin:7px 0}
+  code{background:#eef1f7;border:1px solid var(--border);padding:1px 5px;border-radius:5px;
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+  a{color:var(--blue)}
+  ul,ol{margin:8px 0 8px 22px}
+  li{margin:4px 0}
+  .tabs{display:flex;gap:4px;border-bottom:2px solid var(--border);margin-bottom:24px;flex-wrap:wrap}
+  .tab{appearance:none;border:0;background:none;font:inherit;font-weight:700;font-size:14px;
+    color:var(--muted);padding:10px 16px;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
+  .tab:hover{color:var(--navy)}
+  .tab.active{color:var(--navy);border-bottom-color:var(--gold)}
+  .panel{display:none}
+  .panel.active{display:block;animation:fade .15s ease}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;
+    padding:16px 18px;margin:12px 0;box-shadow:0 1px 6px rgba(11,34,56,.05)}
+  .col{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin:12px 0}
+  .col h3{margin-top:0;display:flex;align-items:center;gap:8px}
+  .col ol,.col ul{margin-left:20px}
+  .tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.4px;
+    padding:2px 8px;border-radius:100px;text-transform:uppercase;vertical-align:middle}
+  .t-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)}
+  .t-amber{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-bd)}
+  .t-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)}
+  .t-blue{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bd)}
+  .t-grey{background:#eef1f7;color:var(--muted);border:1px solid var(--border)}
+  .callout{border-left:4px solid var(--gold);background:#fffdf5;padding:12px 16px;border-radius:0 8px 8px 0;margin:14px 0;font-size:13.5px}
+  .callout.red{border-left-color:var(--red);background:var(--red-bg)}
+  .callout.blue{border-left-color:var(--blue);background:var(--blue-bg)}
+  .dec{border:1px solid var(--border);border-radius:12px;background:var(--card);padding:16px 18px;margin:14px 0}
+  .dec .date{font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:1px}
+  .dec h3{margin:2px 0 10px}
+  .dec dl{display:grid;grid-template-columns:150px 1fr;gap:6px 14px;font-size:13.5px}
+  @media(max-width:620px){.dec dl{grid-template-columns:1fr}}
+  .dec dt{font-weight:700;color:var(--navy)}
+  .dec dd{color:var(--ink)}
+  .log{border-left:2px solid var(--rule);margin:10px 0 10px 6px;padding-left:18px}
+  .log h3{margin:16px 0 4px}
+  .log ul{margin-left:18px;font-size:13.5px}
+  .meta{font-size:12px;color:var(--muted);margin-top:6px}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+  th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);
+    padding:7px 9px;border-bottom:2px solid var(--rule);font-weight:700}
+  td{padding:8px 9px;border-bottom:1px solid var(--border);vertical-align:top}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Fly Horizons — Pilotage du projet</h1>
+  <p class="sub">Tout au même endroit : le board, les décisions, le plan actif, le changelog.
+    Maj à chaque session de travail. Détail des gros chantiers dans les autres HTML
+    (<code>plan-attaque-espace-pilote.html</code>, <code>STYLE-STATUS.html</code>, <code>audit-*.html</code>).</p>
+
+  <div class="tabs">
+    <button class="tab active" data-p="board">Board</button>
+    <button class="tab" data-p="decisions">Décisions</button>
+    <button class="tab" data-p="plan">Plan actif</button>
+    <button class="tab" data-p="changelog">Changelog</button>
+  </div>
+
+  <!-- ══════════════════════════ BOARD ══════════════════════════ -->
+  <section id="board" class="panel active">
+    <p class="meta">Une carte = une tâche. On la déplace de colonne en colonne. Max ~8 cartes en « À faire » :
+      si ça déborde, c'est que le backlog fait le travail du board.</p>
+
+    <div class="col">
+      <h3><span class="tag t-red">Bloqué</span> attend une décision / un événement externe</h3>
+      <ul>
+        <li><b>Valider le partage de frais avec un avocat / la DGTA.</b> Question précise : le prix
+          d'une annonce laisse-t-il une part <i>réelle et suffisante</i> à la charge du pilote
+          (NCO.GEN.104) ? Bloque l'ouverture de l'espace pilote à un vrai pilote (au-delà des comptes
+          de test). Cf. <code>plan-attaque-espace-pilote.html</code> § Option 3.</li>
+      </ul>
+    </div>
+
+    <div class="col">
+      <h3><span class="tag t-amber">À faire</span> prêt à démarrer — ordre conseillé</h3>
+      <ol>
+        <li><b>Débloquer <code>next build</code></b> — erreurs ESLint <i>pré-existantes</i>
+          (<code>react-hooks/set-state-in-effect</code>, <code>impure function during render</code>,
+          <code>Cannot access refs during render</code>, <code>no-unescaped-entities</code>).
+          Prérequis à tout déploiement.</li>
+        <li><b>Rapatrier sur <code>main</code> le batch M&amp;B / net-après-Stripe</b> depuis
+          <code>espace-pilote-wip</code>, en commit propre. Indépendant du reste.</li>
+        <li><b>Rapatrier sur <code>main</code> le Bloc A espace pilote</b> (auth-guards, charte,
+          <code>/pilote/profil</code>, M&amp;B pilote, champs légaux). Sain, déployable.</li>
+        <li><b>Retirer de <code>main</code> le câblage B/C/D</b> : onglet « Offres » de la nav pilote,
+          <code>PiloteAssignBlock</code> + <code>PiloteParticipationBlock</code> du drawer, case
+          bloquante <code>accept_data_sharing</code> sur <code>/reservation</code>,
+          <code>/pilote/vols</code> élargi aux vols standard, page <code>/nos-pilotes</code>.</li>
+        <li><b>Déplacer les fichiers dormants B/C/D</b> (<code>flight-offers.ts</code>,
+          <code>pilote-assign.ts</code>, <code>pilote-paiement.ts</code>, <code>/pilote/offre</code>,
+          <code>/pilote/offres</code>, cron <code>flight-offer-deadline</code>) sur une branche
+          <code>espace-pilote-assignation</code>, ou les laisser si aucun import ne les touche.</li>
+      </ol>
+    </div>
+
+    <div class="col">
+      <h3><span class="tag t-blue">En cours</span></h3>
+      <p class="meta">— rien —</p>
+    </div>
+
+    <div class="col">
+      <h3><span class="tag t-green">Fait</span> — septembre 2026</h3>
+      <ul>
+        <li>Audit complet du code espace pilote + plan de reprise → <code>plan-attaque-espace-pilote.html</code></li>
+        <li>Blocs A / B / C / D construits puis <b>gelés</b> → branche <code>espace-pilote-wip</code> (commit <code>449616b</code>)</li>
+        <li><code>main</code> : commit <code>872970d</code> « docs: audit espace pilote + plan de reprise »</li>
+        <li>Migrations exécutées dans Supabase : <code>20260906_mass_balance</code>,
+          <code>20260907_pilote_legal</code>, <code>20260908_reservations_pilote_assign</code>,
+          <code>20260908_flight_offers</code></li>
+        <li>Outil Masse &amp; centrage / perfs DA40 : <code>/admin/mass-balance</code>, <code>/pilote/mass-balance</code></li>
+      </ul>
+    </div>
+
+    <div class="col">
+      <h3><span class="tag t-grey">Backlog</span> plus tard, pas encore ordonnancé</h3>
+      <ul>
+        <li><b>Chantier Option 3 « annonces à fond »</b> (10 items) — détail dans
+          <code>plan-attaque-espace-pilote.html</code> § Option 3 :
+          <ol>
+            <li>trancher le paiement d'une annonce (Stripe Romain + reversement <i>vs</i> pilote encaisse en direct)</li>
+            <li>rendre la règle des 25 % bloquante + recalibrer le seuil selon le nb de places</li>
+            <li>garde-fou <code>legal_ok</code> sur la publication d'annonce</li>
+            <li>CGP « plateforme de mise en relation » + clause confidentialité + phrase de consentement</li>
+            <li><code>PiloteStepsPanel</code> version annonce</li>
+            <li>reçu émis par le pilote pour une annonce</li>
+            <li>fiche pilote publique sur la page annonce (réutiliser <code>/nos-pilotes/[id]</code>)</li>
+            <li>modèle « 1 booking = l'avion » confirmé ou revu (vente à la place ?)</li>
+            <li>garde-fous transverses (verrou 8 h « vol effectué », stats changement de créneau, routage réponses email, impersonation)</li>
+            <li>page « postuler » statique non indexée</li>
+          </ol>
+        </li>
+        <li><b>Refonte complète des ~32 emails</b> — tout dernier chantier de l'espace pilote. Romain
+          a demandé un rappel explicite le moment venu.</li>
+        <li>Migration <code>20260909_pilote_paiement.sql</code> — <b>ne pas exécuter</b> tant que le
+          paiement des annonces n'est pas tranché.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════ DÉCISIONS ══════════════════════════ -->
+  <section id="decisions" class="panel">
+    <p class="meta"><b>Append-only.</b> On n'édite jamais une décision passée : on en ajoute une
+      nouvelle qui la remplace, avec un lien. Chaque entrée : <i>Contexte · Décision · Alternatives
+      écartées · Conséquences</i>. Plus récent en haut.</p>
+
+    <div class="dec">
+      <p class="date">2026-09-08 · Espace pilote</p>
+      <h3>Option 3 — le pilote gère uniquement ses propres annonces</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>En codant le modèle de paiement (bloc D), le blocage légal de fond a émergé. Assigner une
+          réservation payée de Romain à un pilote tiers, où le client couvre le coût direct du vol
+          (avion + carburant + taxes) : le pilote ne porte aucune part réelle → ce n'est plus du
+          partage de frais → transport commercial sans AOC → illégal, et c'est le pilote qui risque
+          sa licence.</dd>
+        <dt>Décision</dt>
+        <dd>Le pilote gère <b>uniquement ses propres annonces</b> (<code>annonces_pilote</code>) : il
+          organise le vol, fixe le prix, partage avec les occupants qu'il amène (le vrai cas
+          NCO.GEN.104). Romain ne refile pas ses bookings à des pilotes.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>(A) assignation manuelle des vols de Romain aux pilotes — illégale ;
+          (B) mise en jeu automatique — même problème ;
+          faire payer le prix affiché plein au client sur un vol pilote — illégal ;
+          faire porter au pilote une vraie part sur les vols de Romain — non viable (Romain
+          lui-même ne porte pas sa part, sa « contribution » = frais annuels type GPS).</dd>
+        <dt>Conséquences</dt>
+        <dd>Blocs B/C/D construits mais gelés (branche <code>espace-pilote-wip</code>). Plan HTML
+          réécrit : sections « Audit &amp; plan de reprise » + « Chantier Option 3 ». Validation
+          avocat/DGTA requise avant d'ouvrir à un vrai pilote.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
+      <p class="date">2026-09-08 · Espace pilote — <span class="tag t-red">annulée le jour même</span></p>
+      <h3>Modèle A — le pilote encaisse en direct</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Trancher qui encaisse sur un vol confié à un pilote : le pilote (modèle A) ou Romain qui
+          reverse ensuite (modèle B).</dd>
+        <dt>Décision (matin)</dt>
+        <dd>Modèle A : QR SEPA + virement/Payconiq directement au pilote, rien par le Stripe de
+          Romain, 0 € dans la P&amp;L, reçu émis par le pilote. Bloc D codé sur cette base.</dd>
+        <dt>Annulation (soir)</dt>
+        <dd>La question « comment afficher le prix quand un pilote vole » a fait remonter le blocage
+          légal plus profond → pivot Option 3 (décision ci-dessus).</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Modèle B (Stripe Romain + reversement IBAN au pilote) — zone grise PSD2 (exemption
+          « agent commercial » douteuse pour un intermédiaire) + compta pass-through jamais vérifiée.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
+      <p class="date">2026-09-07 · Espace pilote</p>
+      <h3>Routage des emails pilote sans adresse dédiée</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Un pilote doit pouvoir échanger avec le client sans casser le branding Fly Horizons ni
+          exposer son email perso.</dd>
+        <dt>Décision</dt>
+        <dd>Pas d'alias par pilote, pas de forwarding. Tout part de
+          <code>Fly Horizons &lt;info@fly-horizons.com&gt;</code>, le nom du pilote dans le corps du
+          message. Le pilote écrit depuis le fil de ticket dans <code>/pilote</code>, l'app envoie à
+          sa place, cousu au même thread email (<code>References</code> / <code>In-Reply-To</code>).
+          Réponses client captées par un webhook <code>/api/inbound-email</code> sur un sous-domaine
+          <code>reply.fly-horizons.com</code>.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Alias Namecheap par pilote (abandonné) ; forwarding classique.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
+      <p class="date">2026-09-06 · Espace pilote</p>
+      <h3>Vérification pilote déclarative mais bloquante</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Quel niveau de contrôle sur les licences / certificats médicaux des pilotes avant qu'ils
+          puissent opérer.</dd>
+        <dt>Décision</dt>
+        <dd>Déclaratif : champs texte + dates (n° de licence, expiration licence, expiration medical,
+          ratings), pas d'upload de PDF en v1 — mais <b>bloquant</b> : tant que non rempli ou périmé,
+          badge rouge et le pilote ne peut rien faire. Charte pilote signée via popup
+          scroll-to-accept, preuve (version + horodatage) conservée.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Upload de documents obligatoire dès la v1 (trop lourd) ; aucun contrôle (trop risqué).</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
+      <p class="date">2026-09-06 · Méthode — <span class="tag t-amber">leçon</span></p>
+      <h3>Le chantier espace pilote avance sans avocat, « sur la confiance »</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Les deux points critiques de l'audit de réouverture (part de coûts du pilote NCO.GEN.104,
+          statut d'intermédiaire de Fly Horizons) n'ont jamais été tranchés avec un juriste ou la
+          DGTA.</dd>
+        <dt>Décision</dt>
+        <dd>Avancer quand même, en connaissance de cause, pour ne pas bloquer le développement.</dd>
+        <dt>Conséquences</dt>
+        <dd>C'est exactement ce point qui a fait capoter les blocs B/C/D le 08/09, après ~1400 lignes
+          de code. <b>À ne plus refaire : valider le légal AVANT de construire, pas après.</b> La
+          question « est-ce légal / faisable » se traite en découverte, le moins cher possible,
+          avant d'écrire le « comment ».</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Attendre un avis d'avocat avant toute ligne de code (jugé trop lent sur le moment —
+          jugement à revoir).</dd>
+      </dl>
+    </div>
+
+    <div class="callout">
+      <b>Décisions antérieures</b> (hébergement Vercel et non Netlify ; pas de BCE/TVA assumé en solo ;
+      arrêt de la vente publique de vouchers ; vol sur mesure masqué le 2026-07-29 ; identité visuelle
+      figée…) : voir les audits <code>audit-legal-reouverture.html</code> /
+      <code>audit-coherence-nouvelle-direction.html</code>, <code>STYLE-STATUS.html</code>, et la
+      mémoire Claude (<code>.claude/…/memory/</code>). À rapatrier ici au fil de l'eau si utile.
+    </div>
+  </section>
+
+  <!-- ══════════════════════════ PLAN ACTIF ══════════════════════════ -->
+  <section id="plan" class="panel">
+    <h2>Où on en est</h2>
+    <div class="card">
+      <p><b>Espace pilote :</b> pivoté vers l'Option 3 (le pilote ne gère que ses propres annonces).
+      Rien n'est en prod. Le code des blocs A→D est sur la branche <code>espace-pilote-wip</code>,
+      <code>main</code> est propre au dernier vrai commit + la doc.</p>
+      <p><b>Le système d'annonces existe déjà</b> (<code>annonces_pilote</code>, <code>/pilote/annonces</code>,
+      page publique <code>/vol/annonce/[id]</code>, contrôle des 25 %, booking) et son modèle de prix
+      est le bon (le client paie <code>prix_total − part_pilote</code>). Il n'est pas « développé à
+      fond ».</p>
+    </div>
+
+    <h2>Prochaines étapes (dans l'ordre)</h2>
+    <ol>
+      <li><b>Nettoyage git</b> — les 5 cartes « À faire » du board : débloquer le build, rapatrier
+        M&amp;B, rapatrier Bloc A, retirer le câblage B/C/D de <code>main</code>, ranger les fichiers
+        dormants.</li>
+      <li><b>Découverte légale</b> (en parallèle, hors code) — l'appel avocat / DGTA sur le partage de
+        frais. <b>Rien ne s'ouvre à un vrai pilote avant.</b></li>
+      <li><b>Chantier Option 3</b> — une fois 1 et 2 faits, dérouler les 10 items du backlog. Le
+        point n°1 (paiement d'une annonce) commande la moitié du reste.</li>
+      <li><b>Refonte des emails</b> — tout à la fin, quand l'espace pilote est stabilisé.</li>
+    </ol>
+
+    <h2>Règle de méthode (suite à la leçon du 06/09)</h2>
+    <div class="callout blue">
+      Avant tout chantier non-trivial : écrire 4 lignes — <i>ce que je veux · pourquoi · l'hypothèse
+      la plus risquée · comment je la teste vite et pas cher</i>. Si le risque n°1 est légal ou une
+      intégration lourde, on le traite <b>en premier</b>, en petit, avant d'écrire le reste.
+    </div>
+
+    <h2>Documents de référence</h2>
+    <table>
+      <tr><th>Fichier</th><th>Contenu</th></tr>
+      <tr><td><code>plan-attaque-espace-pilote.html</code></td><td>Le plan détaillé de l'espace pilote : audit du code, plan de reprise commit-par-commit, backlog Option 3, + l'historique de l'approche abandonnée (sections 0-14).</td></tr>
+      <tr><td><code>questionnaire-espace-pilote-reponses.md</code></td><td>Les 89 réponses de Romain qui ont cadré le chantier (2026-09-06).</td></tr>
+      <tr><td><code>audit-legal-reouverture.html</code></td><td>Audit légal de la réouverture — les points critiques jamais tranchés.</td></tr>
+      <tr><td><code>audit-coherence-nouvelle-direction.html</code></td><td>Audit de cohérence du flow « demande » (FAQ, CTA, code mort), 2026-08-06.</td></tr>
+      <tr><td><code>STYLE-STATUS.html</code></td><td>L'identité visuelle figée : tokens, composants, patterns. À respecter partout.</td></tr>
+      <tr><td><code>AGENTS.md</code> / <code>CLAUDE.md</code></td><td>Instructions pour les sessions de dev (Next.js modifié, lecture de ce fichier).</td></tr>
+    </table>
+  </section>
+
+  <!-- ══════════════════════════ CHANGELOG ══════════════════════════ -->
+  <section id="changelog" class="panel">
+    <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
+      Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-09-08</h3>
+      <ul>
+        <li><b>Pivot espace pilote → Option 3.</b> Abandon de l'assignation des vols de Romain aux
+          pilotes (blocage légal). Blocs B/C/D gelés sur la branche <code>espace-pilote-wip</code>.</li>
+        <li>Audit complet du code espace pilote. Plan HTML réécrit avec sections « Audit &amp; plan de
+          reprise » et « Chantier Option 3 ».</li>
+        <li><code>main</code> ← commit <code>docs: audit espace pilote + plan de reprise</code> (872970d).</li>
+        <li>Création de ce fichier <code>projet.html</code> (board + décisions + plan + changelog).</li>
+      </ul>
+
+      <h3>2026-09-08 (avant le pivot)</h3>
+      <ul>
+        <li><b>Bloc D</b> — modèle A : QR SEPA (<code>lib/pilote/payment.ts</code>,
+          <code>/api/pay-qr/[id]</code>), <code>PiloteParticipationBlock</code>, reçu émetteur = pilote
+          (<code>invoice-pdf.tsx</code>), section « Vols pilotes tiers » dans
+          <code>/admin/transactions</code>, case de consentement Q79 sur <code>/reservation</code>.</li>
+        <li><b>Bloc C</b> — mise en jeu « premier arrivé » : tables <code>flight_offers</code> /
+          <code>flight_offer_refusals</code>, <code>createOffer</code> / <code>claimOffer</code> /
+          <code>refuseOffer</code> / <code>cancelOffer</code>, pages <code>/pilote/offre/[token]</code>
+          et <code>/pilote/offres</code>, onglet nav « Offres », cron
+          <code>flight-offer-deadline</code> (48 h).</li>
+        <li><b>Bloc B (2e passe)</b> — réassignation en 1 popup, <code>releaseAssignedFlight</code>
+          (« je rends ce vol » J-3), colonne + filtre pilote dans <code>/admin/vols</code>,
+          <code>slot_change_count</code>, cascade <code>togglePiloteActif(false)</code>,
+          <code>/nos-pilotes/[id]</code>, <code>PiloteStepsPanel</code>, confirmations anti-missclique.</li>
+      </ul>
+
+      <h3>2026-09-07 – 08</h3>
+      <ul>
+        <li><b>Bloc B (1re passe)</b> — <code>lib/actions/pilote-assign.ts</code>,
+          <code>PiloteAssignBlock</code> dans le drawer, <code>/pilote/vols</code> élargi aux vols
+          standard assignés, emails d'attribution, <code>/pilote/vols</code> en tableau.</li>
+        <li><b>Bloc A</b> — <code>lib/actions/auth-guards.ts</code> (gardes factorisés + check
+          <code>statut='actif'</code>), champs légaux <code>pilotes</code> + <code>legal_ok</code>
+          recalculé, <code>ChartePiloteGate</code>, <code>/pilote/profil</code> +
+          <code>PiloteProfilForm</code>, promotion d'un compte client en pilote, layout
+          <code>/pilote</code> revu + pastilles de nav.</li>
+      </ul>
+
+      <h3>2026-09-06</h3>
+      <ul>
+        <li><b>Outil Masse &amp; centrage / perfs DA40</b> — <code>/admin/mass-balance</code> +
+          <code>/pilote/mass-balance</code>, table <code>mass_balance_sheets</code>, PDF, proxy METAR
+          (<code>/api/admin/metar</code>).</li>
+      </ul>
+
+      <h3>Migrations Supabase</h3>
+      <ul>
+        <li><span class="tag t-green">Exécutées</span> <code>20260906_mass_balance</code> ·
+          <code>20260907_pilote_legal</code> · <code>20260908_reservations_pilote_assign</code> ·
+          <code>20260908_flight_offers</code></li>
+        <li><span class="tag t-red">Non exécutée</span> <code>20260909_pilote_paiement</code>
+          (bloc D — en attente de la décision « paiement des annonces »)</li>
+      </ul>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.addEventListener('click', function(){
+      document.querySelectorAll('.tab').forEach(function(x){ x.classList.remove('active'); });
+      document.querySelectorAll('.panel').forEach(function(x){ x.classList.remove('active'); });
+      t.classList.add('active');
+      document.getElementById(t.dataset.p).classList.add('active');
+      location.hash = t.dataset.p;
+    });
+  });
+  // Ouvre l'onglet depuis le hash (#decisions, #plan, #changelog…)
+  var h = (location.hash || '').replace('#','');
+  if (h && document.getElementById(h)){
+    var tab = document.querySelector('.tab[data-p="'+h+'"]');
+    if (tab) tab.click();
+  }
+</script>
+</body>
+</html>
