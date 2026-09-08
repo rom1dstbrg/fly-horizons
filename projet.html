@@ -90,34 +90,41 @@
     <div class="col">
       <h3><span class="tag t-red">Bloqué</span> attend une décision / un événement externe</h3>
       <ul>
-        <li><b>Valider le partage de frais avec un avocat / la DGTA.</b> Question précise : le prix
-          d'une annonce laisse-t-il une part <i>réelle et suffisante</i> à la charge du pilote
-          (NCO.GEN.104) ? Bloque l'ouverture de l'espace pilote à un vrai pilote (au-delà des comptes
-          de test). Cf. <code>plan-attaque-espace-pilote.html</code> § Option 3.</li>
+        <li class="muted"><i>Rien.</i> La découverte légale (avocat / DGTA) n'aura pas lieu
+          (décision 08/09) — on ne l'attend plus. Le risque « statut d'intermédiaire non tranché »
+          est un risque assumé et documenté, pas un blocage.</li>
       </ul>
     </div>
 
     <div class="col">
       <h3><span class="tag t-amber">À faire</span> prêt à démarrer</h3>
       <ol>
-        <li><b>Vérifier en local que l'app tourne toujours</b> (`npm run dev`) après le nettoyage git —
-          espace admin, drawer réservation, tunnel de réservation public, espace pilote (annonces + M&amp;B).</li>
-        <li><b>Pousser <code>main</code></b> (<code>git push</code>) — 4 commits d'avance, dont le batch
-          M&amp;B, le Bloc A et la doc. Décider si on redéploie.</li>
-        <li><b>Découverte légale</b> — l'appel avocat / DGTA sur le partage de frais (voir « Bloqué »).
-          Aucun code pilote « ouvert public » avant ça.</li>
+        <li><b>Durcir le système d'annonces</b> (déjà en prod) — le rendre défendable sans avocat :
+          <ol>
+            <li>part pilote <b>bloquante</b> (plus un simple warning) + seuil qui s'adapte au nombre
+              de places : minimum = part égale entre tous les occupants, pilote compris
+              (1 pax → 50 %, 2 → 33 %, 3 → 25 %, etc.), pas un 25 % fixe.</li>
+            <li>garde-fou <code>legal_ok</code> sur la publication (part réelle + case « je pars
+              vraiment sur ce vol et je partage mes frais »).</li>
+            <li>reçu émis par le pilote pour une annonce vendue.</li>
+          </ol>
+        </li>
+        <li><b>Vérifier en local que l'app tourne toujours</b> (<code>npm run dev</code>) après le
+          nettoyage git — admin, drawer réservation, tunnel public, espace pilote (annonces + M&amp;B).</li>
+        <li><b>Pousser <code>main</code></b> (<code>git push</code>) — plusieurs commits d'avance
+          (batch M&amp;B, Bloc A, refonte M&amp;B, doc). Sur demande de Romain uniquement.</li>
       </ol>
     </div>
 
     <div class="col">
       <h3><span class="tag t-blue">En cours</span></h3>
       <ul>
-        <li><b>Refonte de l'interface Masse &amp; centrage.</b> 1er jet : structure refaite en flux
-          vertical numéroté 1→4 (Le vol · Chargement · Performances · Verdict &amp; feuille), verdict
-          GO / NO-GO / incomplet combiné (masse+centrage <i>et</i> perfs), grille de perfs
-          9-colonnes remplacée par des cartes lisibles par aérodrome. Calcul inchangé.
-          Commit <code>7943759</code>. <b>À regarder dans le navigateur</b>
-          (<code>npm run dev</code> → <code>/admin/mass-balance</code>) et me dire les ajustements.</li>
+        <li><b>Refonte de l'interface Masse &amp; centrage.</b> 3 passes : flux vertical numéroté 1→4
+          (<code>7943759</code>) → échelle de style unique dans <code>fields.tsx</code> +
+          <code>NumberField</code>/<code>ValueRow</code> partagés (<code>b432a50</code>) → fix du
+          graphe CG surdimensionné, colonnes du § 2 bornées (<code>da73f73</code>). Calcul / PDF /
+          METAR inchangés. <b>Reste : validation visuelle finale de Romain</b>
+          (<code>/admin/mass-balance</code>, avec et sans <code>?resa=</code>).</li>
       </ul>
     </div>
 
@@ -144,20 +151,18 @@
     <div class="col">
       <h3><span class="tag t-grey">Backlog</span> plus tard, pas encore ordonnancé</h3>
       <ul>
-        <li><b>Chantier Option 3 « annonces à fond »</b> (10 items) — détail dans
-          <code>plan-attaque-espace-pilote.html</code> § Option 3 :
-          <ol>
-            <li>trancher le paiement d'une annonce (Stripe Romain + reversement <i>vs</i> pilote encaisse en direct)</li>
-            <li>rendre la règle des 25 % bloquante + recalibrer le seuil selon le nb de places</li>
-            <li>garde-fou <code>legal_ok</code> sur la publication d'annonce</li>
-            <li>CGP « plateforme de mise en relation » + clause confidentialité + phrase de consentement</li>
-            <li><code>PiloteStepsPanel</code> version annonce</li>
-            <li>reçu émis par le pilote pour une annonce</li>
-            <li>fiche pilote publique sur la page annonce (réutiliser <code>/nos-pilotes/[id]</code>)</li>
-            <li>modèle « 1 booking = l'avion » confirmé ou revu (vente à la place ?)</li>
-            <li>garde-fous transverses (verrou 8 h « vol effectué », stats changement de créneau, routage réponses email, impersonation)</li>
-            <li>page « postuler » statique non indexée</li>
-          </ol>
+        <li><b>Chantier Option 3 « annonces à fond »</b> — détail dans
+          <code>plan-attaque-espace-pilote.html</code> § Option 3. Périmètre resserré (décision
+          08/09 : pas de découverte légale, pas d'ouverture publique).
+          <br><i>Dans le périmètre, remonté en « À faire » :</i> part pilote bloquante + seuil
+          adaptatif · garde-fou <code>legal_ok</code> · reçu émis par le pilote.
+          <br><i>Encore backlog :</i> trancher le paiement d'une annonce (Stripe Romain + reversement
+          <i>vs</i> pilote encaisse en direct) · <code>PiloteStepsPanel</code> version annonce ·
+          fiche pilote publique sur la page annonce · modèle « 1 booking = l'avion » confirmé ou
+          revu · garde-fous transverses (verrou 8 h « vol effectué », stats changement de créneau,
+          routage réponses email, impersonation).
+          <br><i>Hors périmètre jusqu'à nouvel ordre :</i> CGP « plateforme de mise en relation » ·
+          page « postuler » · ouverture à des pilotes inconnus.
         </li>
         <li><b>Refonte complète des ~32 emails</b> — tout dernier chantier de l'espace pilote. Romain
           a demandé un rappel explicite le moment venu.</li>
@@ -172,6 +177,35 @@
     <p class="meta"><b>Append-only.</b> On n'édite jamais une décision passée : on en ajoute une
       nouvelle qui la remplace, avec un lien. Chaque entrée : <i>Contexte · Décision · Alternatives
       écartées · Conséquences</i>. Plus récent en haut.</p>
+
+    <div class="dec">
+      <p class="date">2026-09-08 · Méthode / légal</p>
+      <h3>Pas de découverte légale — on ne l'attend plus</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Le plan actif faisait de « l'appel avocat / DGTA sur le partage de frais » un préalable
+          bloquant à tout le chantier Option 3. Romain : « je n'ai pas de nouvelles parce que je ne
+          vais pas contacter d'avocat ou quoi ». La découverte légale n'aura pas lieu.</dd>
+        <dt>Décision</dt>
+        <dd>On arrête d'attendre un feu vert externe. Périmètre resserré en conséquence : on
+          <b>durcit le système d'annonces qui est déjà en prod</b> pour le rendre le plus défendable
+          possible tout seul (part pilote réelle imposée, garde-fou <code>legal_ok</code>, reçu émis
+          par le pilote), et on <b>ne construit pas</b> l'entonnoir de recrutement de pilotes
+          inconnus (page « postuler », ouverture publique). L'espace pilote reste un outil pour
+          Romain et un cercle de pilotes qu'il connaît, sur le cas clair de NCO.GEN.104 (le pilote
+          organise son propre vol et partage les frais avec les gens qu'il embarque).</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Ouvrir quand même l'Option 3 à des pilotes tiers en assumant le risque (c'est
+          exactement la « leçon du 06/09 » qu'on ne veut pas refaire) ; tout geler et ne garder que
+          l'existant sans y toucher (le système d'annonces a des angles morts connus, autant les
+          fermer).</dd>
+        <dt>Conséquences</dt>
+        <dd>Colonne « Bloqué » du board vidée (plus d'attente d'événement externe). Le risque
+          d'intermédiaire non tranché devient un <b>risque debout, assumé et documenté</b>, pas un
+          blocage. Les items Option 3 qui supposent une ouverture publique passent de « backlog » à
+          « hors périmètre jusqu'à nouvel ordre ».</dd>
+      </dl>
+    </div>
 
     <div class="dec">
       <p class="date">2026-09-08 · Interface</p>
@@ -353,15 +387,17 @@
 
     <h2>Prochaines étapes (dans l'ordre)</h2>
     <ol>
-      <li><b>Vérif locale</b> — <code>npm run dev</code>, faire un tour rapide (admin, drawer, tunnel
-        de réservation, espace pilote) pour confirmer que le nettoyage n'a rien cassé.</li>
-      <li><b>Push</b> de <code>main</code> (<code>git push</code>). Décider si on redéploie (le batch
-        M&amp;B et le Bloc A partiraient en prod — c'est OK, ils sont sains).</li>
-      <li><b>Découverte légale</b> (en parallèle, hors code) — l'appel avocat / DGTA sur le partage de
-        frais. <b>Rien ne s'ouvre à un vrai pilote avant.</b></li>
-      <li><b>Refonte de l'interface Masse &amp; centrage</b> — l'UI ne plaît pas, à repenser.</li>
-      <li><b>Chantier Option 3</b> — une fois la découverte légale faite, dérouler les 10 items du
-        backlog. Le point n°1 (paiement d'une annonce) commande la moitié du reste.</li>
+      <li><b>Durcir le système d'annonces</b> (en cours) — part pilote bloquante + seuil adaptatif au
+        nombre de places, garde-fou <code>legal_ok</code> à la publication, reçu émis par le pilote.
+        Rend l'existant défendable sans avocat.</li>
+      <li><b>Vérif locale</b> — <code>npm run dev</code>, tour rapide (admin, drawer, tunnel de
+        réservation, espace pilote) pour confirmer que le nettoyage git n'a rien cassé.</li>
+      <li><b>Push</b> de <code>main</code> (<code>git push</code>) — sur demande de Romain. Décider si
+        on redéploie (batch M&amp;B + Bloc A + refonte M&amp;B partiraient en prod, ils sont sains).</li>
+      <li><b>Validation visuelle M&amp;B</b> — Romain regarde la refonte et donne ses derniers
+        ajustements.</li>
+      <li><b>Suite Option 3</b> (périmètre resserré) — paiement d'une annonce, steps panel version
+        annonce, fiche pilote publique, garde-fous transverses. Pas d'ouverture publique.</li>
       <li><b>Refonte des emails</b> — tout à la fin, quand l'espace pilote est stabilisé.</li>
     </ol>
 
