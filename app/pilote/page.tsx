@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { PlaneTakeoff, Plane, ArrowRight, AlertCircle, Megaphone } from "lucide-react";
+import { PlaneTakeoff, Plane, ArrowRight, AlertCircle } from "lucide-react";
 import { piloteLegalStatus } from "@/lib/pilote/legal";
-import { listOpenOffersForPilote } from "@/lib/pilote/offers";
 
 export default async function PiloteDashboard() {
   const supabase = await createClient();
@@ -26,8 +25,6 @@ export default async function PiloteDashboard() {
         .eq("pilote_id", pilote.id)
         .eq("statut", "demande_recue")
     : { count: 0 };
-
-  const openOffers = pilote ? (await listOpenOffersForPilote(pilote.id)).length : 0;
 
   return (
     <div className="space-y-6">
@@ -87,19 +84,6 @@ export default async function PiloteDashboard() {
             <strong>{demandesEnAttente}</strong> demande{demandesEnAttente > 1 ? "s" : ""} en attente de votre confirmation
           </p>
           <ArrowRight size={16} className="text-amber-600 shrink-0" />
-        </Link>
-      )}
-
-      {openOffers > 0 && (
-        <Link
-          href="/pilote/offres"
-          className="bg-[#f5f8ff] border border-navy/20 rounded-xl p-4 flex items-center gap-3 hover:border-navy/40 transition-colors"
-        >
-          <Megaphone size={18} className="text-navy shrink-0" />
-          <p className="text-sm text-foreground flex-1">
-            <strong>{openOffers}</strong> vol{openOffers > 1 ? "s" : ""} à prendre — premier arrivé, premier servi
-          </p>
-          <ArrowRight size={16} className="text-navy shrink-0" />
         </Link>
       )}
 

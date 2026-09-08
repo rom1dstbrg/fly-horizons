@@ -2,16 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, PlaneTakeoff, Plane, Scale, User, Megaphone } from "lucide-react";
+import { LayoutDashboard, PlaneTakeoff, Plane, Scale, User } from "lucide-react";
 
 const LINKS = [
   { href: "/pilote", label: "Tableau de bord", icon: LayoutDashboard, exact: true },
   { href: "/pilote/annonces", label: "Mes annonces", icon: PlaneTakeoff, exact: false },
   { href: "/pilote/vols", label: "Mes vols", icon: Plane, exact: false },
-  { href: "/pilote/offres", label: "Offres", icon: Megaphone, exact: false },
   { href: "/pilote/mass-balance", label: "Masse & centrage", icon: Scale, exact: false },
   { href: "/pilote/profil", label: "Mon profil", icon: User, exact: false },
 ];
+// « Offres » (Bloc C, mise en jeu) retiré — chantier gelé (pivot 08/09).
 
 export function PiloteNav({ counts = {} }: { counts?: Record<string, number> }) {
   const pathname = usePathname();

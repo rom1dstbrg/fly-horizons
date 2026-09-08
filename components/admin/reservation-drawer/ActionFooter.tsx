@@ -131,7 +131,6 @@ export function ActionFooter({
   onResendPaymentLink,
   onRecordCash,
   onProposeSlot,
-  onReleaseFlight,
   modifier,
 }: {
   reservation: DrawerReservation;
@@ -152,7 +151,6 @@ export function ActionFooter({
   onResendPaymentLink: () => void;
   onRecordCash: (amount: number) => void;
   onProposeSlot: (date: string, heure: string) => void;
-  onReleaseFlight: () => void;
   modifier: { isPending: boolean; save: () => void };
 }) {
   const isStandard = r.type_resa !== "perso";
@@ -160,14 +158,9 @@ export function ActionFooter({
   const isTerminal = TERMINAL_STATUTS.includes(r.statut);
   // Vol pilote (modèle A) : l'argent va en direct au pilote → pas de lien Stripe
   // ni d'encaissement côté Fly Horizons. Le boarding pass reste envoyé normalement.
+  // isPiloteVol renvoie false partout tant que Bloc B (assignation) est gelé —
+  // les gardes `&& !piloteVol` sont donc inertes, gardées pour la reprise éventuelle.
   const piloteVol = isPiloteVol(r);
-
-  // Le pilote peut rendre un vol qui lui est attribué jusqu'à J-3 ; au-delà, il
-  // doit appeler Romain (garde-fou anti-abus).
-  const j3 = new Date();
-  j3.setHours(0, 0, 0, 0);
-  j3.setDate(j3.getDate() + 3);
-  const canRelease = r.date_vol >= j3.toISOString().slice(0, 10);
   const showCash = !isTerminal && isAdmin && !piloteVol && r.acompte != null && (r.paye ?? 0) < r.acompte;
 
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
@@ -374,32 +367,8 @@ export function ActionFooter({
       </div>
 
       {/* Actions toujours disponibles — séparées visuellement des actions du statut.
-          Report et annulation restent la main de l'admin (le pilote demande, il ne décide pas). */}
-      {/* Pilote : rendre un vol qui lui a été attribué par Romain (pas ses propres
-          annonces marketplace). Report / annulation restent à l'admin. */}
-      {!isTerminal && !isAdmin && !!r.pilote_id && r.type_resa !== "annonce_pilote" && (
-        <div className="flex items-center justify-end gap-2 px-5 py-2 border-t border-border/60 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-          {!canRelease && (
-            <span className="text-[11px] text-muted-foreground mr-auto">
-              Moins de 3 jours avant le vol — appelez Romain pour le rendre.
-            </span>
-          )}
-          <button
-            onClick={() => confirm({
-              title: "Rendre ce vol ?",
-              description: "Romain sera prévenu et le vol repassera en demande à réassigner. Vous n'aurez plus ce vol dans votre espace.",
-              confirmLabel: "Rendre le vol",
-              danger: true,
-              run: onReleaseFlight,
-            })}
-            disabled={isPending || !canRelease}
-            className={chipDanger}
-          >
-            {isPending ? <Loader2 size={13} className="animate-spin" /> : <RotateCcw size={13} />}
-            Je rends ce vol
-          </button>
-        </div>
-      )}
+          Report et annulation restent la main de l'admin. */}
+      {/* « Je rends ce vol » (Bloc B) retiré — chantier gelé (pivot 08/09). */}
 
       {!isTerminal && isAdmin && (
         <div className="flex items-center justify-between gap-2 px-5 py-2 border-t border-border/60 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">

@@ -27,10 +27,8 @@ import { HistoriqueTab } from "./HistoriqueTab";
 import { EmailComposer } from "./EmailComposer";
 import { ItinerairesModal } from "./ItinerairesModal";
 import { ActionFooter } from "./ActionFooter";
-import { PiloteAssignBlock } from "./PiloteAssignBlock";
-import { PiloteParticipationBlock, PiloteParticipationInfo } from "./PiloteParticipationBlock";
-import { releaseAssignedFlight } from "@/lib/actions/pilote-assign";
-import { isPiloteVol } from "@/lib/pilote/payment";
+// Blocs B/C/D (assignation / mise en jeu / paiement pilote) GELÉS — pivot 08/09.
+// PiloteAssignBlock, PiloteParticipationBlock, releaseAssignedFlight : plus câblés.
 import { AvionReserveBadge } from "./AvionReserveBadge";
 import { useReservationDraft } from "./hooks/useReservationDraft";
 import { useBilanVol } from "./hooks/useBilanVol";
@@ -210,17 +208,6 @@ export function ReservationDrawer({
     });
   }
 
-  function doReleaseFlight() {
-    if (!reservation) return;
-    startTransition(async () => {
-      const res = await releaseAssignedFlight(reservation.id);
-      if (res.error) { showFeedback("Erreur : " + res.error, false); return; }
-      onFieldsChange?.(reservation.id, { pilote_id: null, pilote_assigned_at: null, pilotes: null });
-      showFeedback(res.emailError ? "Vol rendu · notification à Romain non partie" : "Vol rendu, Romain est prévenu ✓", !res.emailError);
-      onClose();
-    });
-  }
-
   function doProposeSlot(date: string, heure: string) {
     if (!reservation) return;
     startProposeTransition(async () => {
@@ -352,41 +339,6 @@ export function ReservationDrawer({
                 <InfosTab
                   reservation={r}
                   viewerRole={viewerRole}
-                  piloteAssignSlot={
-                    viewerRole === "admin" && !isPerso ? (
-                      <PiloteAssignBlock
-                        key={r.id}
-                        reservationId={r.id}
-                        currentPiloteId={r.pilote_id}
-                        clientPrenom={r.clients?.prenom ?? ""}
-                        dateVol={r.date_vol}
-                        onChanged={(pid, pnom) =>
-                          onFieldsChange?.(r.id, { pilote_id: pid, pilotes: pnom ? { nom: pnom } : null })
-                        }
-                      />
-                    ) : null
-                  }
-                  piloteParticipationSlot={
-                    isPiloteVol(r) ? (
-                      viewerRole === "pilote" ? (
-                        <PiloteParticipationBlock
-                          key={r.id}
-                          reservationId={r.id}
-                          passagers={r.passagers}
-                          montantInit={r.montant_pilote ?? null}
-                          partPctInit={r.part_pilote_pct ?? null}
-                          payeInit={r.pilote_paye ?? false}
-                          onChanged={(fields) => onFieldsChange?.(r.id, fields)}
-                        />
-                      ) : (
-                        <PiloteParticipationInfo
-                          piloteNom={r.pilotes?.nom ?? "le pilote"}
-                          montant={r.montant_pilote ?? null}
-                          paye={r.pilote_paye ?? false}
-                        />
-                      )
-                    ) : null
-                  }
                   avionReserve={avionReserve}
                   isReservePending={isReservePending}
                   onToggleAvion={doToggleAvion}
@@ -471,7 +423,6 @@ export function ReservationDrawer({
                   onResendPaymentLink={doResendPaymentLink}
                   onRecordCash={doRecordCash}
                   onProposeSlot={doProposeSlot}
-                  onReleaseFlight={doReleaseFlight}
                   modifier={{ isPending: draft.isPending, save: draft.save }}
                 />
               )}

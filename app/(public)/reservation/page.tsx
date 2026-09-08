@@ -36,7 +36,6 @@ interface FormState {
   voucher: VoucherInfo | null;
   coupon: CouponInfo | null;
   accept_cgp: boolean;
-  accept_data_sharing: boolean;
   newsletter_opt_in: boolean;
 }
 
@@ -81,7 +80,7 @@ export default function ReservationPage() {
     prenom: "", nom: "", email: "", telephone: "",
     passengers: 0, poids_total: "", commentaire: "", dureeSurPlace: "",
     codeInput: "", voucher: null, coupon: null,
-    accept_cgp: false, accept_data_sharing: false, newsletter_opt_in: false,
+    accept_cgp: false, newsletter_opt_in: false,
   });
 
   const today = new Date();
@@ -342,7 +341,7 @@ export default function ReservationPage() {
   const ctaDisabled =
     step === "datetime" ? !form.date || !form.heure :
     step === "infos"    ? !form.prenom || !form.nom || !form.email || !form.passengers || !form.poids_total || submitting :
-                          !form.accept_cgp || !form.accept_data_sharing || submitting || codeLoading;
+                          !form.accept_cgp || submitting || codeLoading;
 
   async function handleCTA() {
     if (step === "datetime") { setStep("infos"); return; }
@@ -750,7 +749,7 @@ export default function ReservationPage() {
                   </p>
                 </div>
 
-                {/* CGP + Partage coordonnées + Newsletter */}
+                {/* CGP + Newsletter */}
                 <div className="card-premium p-5 space-y-3">
                   <label className="flex items-start gap-3.5 cursor-pointer">
                     <input type="checkbox" checked={form.accept_cgp}
@@ -762,14 +761,6 @@ export default function ReservationPage() {
                         Conditions Générales de Participation
                       </Link>{" "}
                       et j&apos;autorise l&apos;utilisation de mes données personnelles pour le traitement de cette réservation.
-                    </span>
-                  </label>
-                  <label className="flex items-start gap-3.5 cursor-pointer">
-                    <input type="checkbox" checked={form.accept_data_sharing}
-                      onChange={e => setForm(f => ({ ...f, accept_data_sharing: e.target.checked }))}
-                      className="mt-0.5 w-4 h-4 accent-primary shrink-0 cursor-pointer" />
-                    <span className="text-sm text-foreground/60 leading-relaxed">
-                      J&apos;accepte que mes coordonnées (nom, email, téléphone) soient transmises au pilote qui assurera ce vol, afin qu&apos;il puisse me contacter. Sans cet accord, le vol ne peut pas être organisé.
                     </span>
                   </label>
                   <label className="flex items-start gap-3.5 cursor-pointer">

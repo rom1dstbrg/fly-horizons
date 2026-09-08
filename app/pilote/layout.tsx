@@ -8,7 +8,6 @@ import { logout } from "@/lib/actions/auth";
 import { PiloteNav } from "@/components/pilote/PiloteNav";
 import { ChartePiloteGate } from "@/components/pilote/ChartePiloteGate";
 import { piloteLegalStatus } from "@/lib/pilote/legal";
-import { listOpenOffersForPilote } from "@/lib/pilote/offers";
 import { LogOut } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -42,8 +41,8 @@ export default async function PiloteLayout({ children }: { children: React.React
     (i) => i.severity === "error" && i.field !== undefined,
   ).length;
 
-  // Pastille « Mes vols » : nombre de vols assignés encore actifs (ni effectués,
-  // ni annulés) — pour attirer l'attention du pilote sur sa charge en cours.
+  // Pastille « Mes vols » : nombre de vols du pilote encore actifs (ni effectués,
+  // ni annulés) — pour attirer l'attention sur sa charge en cours.
   const { count: volsAlerts } = await admin
     .from("reservations")
     .select("id", { count: "exact", head: true })
@@ -51,9 +50,6 @@ export default async function PiloteLayout({ children }: { children: React.React
     .neq("type_resa", "perso")
     .neq("statut", "vol_effectue")
     .neq("statut", "annulee");
-
-  // Pastille « Offres » : nombre d'offres ouvertes prenables par ce pilote.
-  const offresCount = (await listOpenOffersForPilote(pilote.id)).length;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -94,7 +90,6 @@ export default async function PiloteLayout({ children }: { children: React.React
         counts={{
           "/pilote/profil": profilAlerts,
           "/pilote/vols": volsAlerts ?? 0,
-          "/pilote/offres": offresCount,
         }}
       />
       <main className="flex-1">
