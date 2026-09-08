@@ -338,11 +338,18 @@
       <li><b>Refonte des emails</b> — tout à la fin, quand l'espace pilote est stabilisé.</li>
     </ol>
 
-    <h2>Règle de méthode (suite à la leçon du 06/09)</h2>
+    <h2>Règles du repo</h2>
+    <div class="callout red">
+      <b>Ne jamais <code>git push</code> sur <code>main</code> sans le feu vert explicite de Romain.</b>
+      Vercel <b>auto-déploie <code>main</code></b> → un push met le site en ligne. Commiter sur
+      <code>main</code> : oui, librement. Pousser : seulement sur demande. Toujours signaler quand il
+      y a des commits locaux en attente.
+    </div>
     <div class="callout blue">
-      Avant tout chantier non-trivial : écrire 4 lignes — <i>ce que je veux · pourquoi · l'hypothèse
-      la plus risquée · comment je la teste vite et pas cher</i>. Si le risque n°1 est légal ou une
-      intégration lourde, on le traite <b>en premier</b>, en petit, avant d'écrire le reste.
+      <b>Méthode (leçon du 06/09).</b> Avant tout chantier non-trivial : écrire 4 lignes — <i>ce que
+      je veux · pourquoi · l'hypothèse la plus risquée · comment je la teste vite et pas cher</i>. Si
+      le risque n°1 est légal ou une intégration lourde, on le traite <b>en premier</b>, en petit,
+      avant d'écrire le reste.
     </div>
 
     <h2>Documents de référence</h2>

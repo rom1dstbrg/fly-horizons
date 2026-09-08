@@ -13,3 +13,6 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Toute décision structurante → une nouvelle entrée dans l'onglet Décisions (jamais éditer une entrée passée).
 - Tout changement de code livré → une ligne dans le Changelog.
 - Le détail des gros chantiers reste dans les `plan-*.html` / `audit-*.html` dédiés ; `projet.html` les indexe.
+
+**Ne jamais `git push` sur `main` sans le feu vert explicite de Romain** — Vercel auto-déploie `main`.
+Commiter sur `main` : oui. Pousser : seulement sur demande. Signaler les commits locaux en attente.
