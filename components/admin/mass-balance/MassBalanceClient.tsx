@@ -274,7 +274,7 @@ export function MassBalanceClient({
 
       {/* ═══ 2 · CHARGEMENT ═══ */}
       <Section n="2" title="Chargement" subtitle="masse et centrage">
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-[280px_minmax(260px,320px)_minmax(0,1fr)] xl:items-start">
+        <div className="grid gap-5 md:grid-cols-2 xl:[grid-template-columns:250px_minmax(340px,440px)_minmax(420px,560px)] xl:items-start">
           {/* saisie */}
           <div className="space-y-4">
             <Group label="Carburant">
@@ -369,7 +369,7 @@ export function MassBalanceClient({
           {/* enveloppe — grande, à droite du tableau */}
           <div className="md:col-span-2 xl:col-span-1 space-y-3">
             <p className={MB.groupLabel}>Enveloppe de centrage</p>
-            <div className="mx-auto w-full max-w-[520px] xl:mx-0 xl:max-w-none">
+            <div className="mx-auto w-full max-w-[560px] md:mx-0">
               <CgEnvelopeChart points={computed.points} />
             </div>
             {computed.withinLimits ? (
