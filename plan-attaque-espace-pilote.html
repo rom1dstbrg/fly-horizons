@@ -1,0 +1,998 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Espace pilote & attribution des vols — Plan d'attaque</title>
+<style>
+  :root{
+    --navy:#0b2238; --gold:#F2B705; --bg:#f4f6fa; --card:#fff; --ink:#1e2535;
+    --muted:#5b6b7b; --border:#e0e5ef; --rule:#c9d2db;
+    --green:#0f9d58; --green-bg:#e9f9f0; --green-bd:#bfe9d2;
+    --amber:#b7791f; --amber-bg:#fef6e6; --amber-bd:#f3dfa8;
+    --red:#c53030; --red-bg:#fdecec; --red-bd:#f5c2c2;
+    --blue:#1d5fbf; --blue-bg:#eaf1fd; --blue-bd:#c7dafa;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.6;font-size:15px}
+  .wrap{max-width:980px;margin:0 auto;padding:48px 24px 140px}
+  h1{font-size:27px;color:var(--navy);font-weight:800;margin-bottom:6px;line-height:1.25}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:8px}
+  .meta{color:var(--muted);font-size:12px;margin-bottom:34px}
+  h2{font-size:19px;color:var(--navy);font-weight:800;margin:46px 0 4px;
+    padding-top:26px;border-top:1px solid var(--border)}
+  h2:first-of-type{border-top:0;padding-top:0}
+  h2 .n{color:var(--gold);font-weight:900;margin-right:8px}
+  h3{font-size:15px;color:var(--navy);font-weight:700;margin:22px 0 6px}
+  h4{font-size:13px;color:var(--navy);font-weight:700;margin:16px 0 4px}
+  p{margin:8px 0}
+  ul,ol{margin:8px 0 8px 22px}
+  li{margin:4px 0}
+  code{background:#eef1f7;border:1px solid var(--border);padding:1px 5px;border-radius:5px;
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+  pre{background:#0e2a44;color:#dfe9f4;border-radius:10px;padding:14px 16px;overflow-x:auto;
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:12px;line-height:1.55;margin:10px 0}
+  pre code{background:none;border:0;padding:0;color:inherit}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;
+    padding:18px 20px;margin:14px 0;box-shadow:0 1px 8px rgba(11,34,56,.05)}
+  .tag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.4px;
+    padding:3px 9px;border-radius:100px;text-transform:uppercase;vertical-align:middle}
+  .t-ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)}
+  .t-warn{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-bd)}
+  .t-block{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)}
+  .t-todo{background:#eef1f7;color:var(--muted);border:1px solid var(--border)}
+  .t-info{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bd)}
+  .t-susp{background:#f3e8ff;color:#6b21a8;border:1px solid #e2c8fb}
+  .callout{border-left:4px solid var(--gold);background:#fffdf5;padding:14px 18px;
+    border-radius:0 8px 8px 0;margin:16px 0}
+  .callout.red{border-left-color:var(--red);background:var(--red-bg)}
+  .callout.blue{border-left-color:var(--blue);background:var(--blue-bg)}
+  .callout.green{border-left-color:var(--green);background:var(--green-bg)}
+  .callout.purple{border-left-color:#9333ea;background:#f6effe}
+  .callout b{color:var(--navy)}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+  th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;
+    color:var(--muted);padding:8px 10px;border-bottom:2px solid var(--rule);font-weight:700}
+  td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  .checklist{list-style:none;margin:10px 0}
+  .checklist li{position:relative;padding:6px 0 6px 28px;font-size:13.5px;border-bottom:1px dashed var(--border)}
+  .checklist li:last-child{border-bottom:0}
+  .checklist li::before{content:"☐";position:absolute;left:0;top:6px;color:var(--muted);font-size:14px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:680px){.grid2{grid-template-columns:1fr}}
+  .pill{font-size:11px;color:var(--muted)}
+  .toc{background:var(--navy);color:#fff;border-radius:12px;padding:16px 20px;margin-bottom:8px;columns:2;column-gap:24px}
+  @media(max-width:680px){.toc{columns:1}}
+  .toc a{color:#cdd8e6;text-decoration:none;font-size:13px;display:block;padding:2px 0;break-inside:avoid}
+  .toc a:hover{color:var(--gold)}
+  .toc b{color:var(--gold);font-size:11px;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px;break-after:avoid}
+  .step{counter-reset:s;list-style:none;margin:14px 0}
+  .step li{counter-increment:s;position:relative;padding:8px 0 8px 36px;
+    border-bottom:1px solid var(--border);font-size:13.5px}
+  .step li:last-child{border-bottom:0}
+  .step li::before{content:counter(s);position:absolute;left:0;top:8px;width:24px;height:24px;
+    border-radius:50%;background:var(--navy);color:#fff;font-size:11px;font-weight:700;
+    display:flex;align-items:center;justify-content:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Espace pilote & attribution des vols</h1>
+  <p class="sub">Plan d'attaque — architecture, données, flows. Historique complet du chantier ; la direction a changé le 08/09 (voir encadré).</p>
+  <p class="meta">Rédigé le 06/09/2026 · consolide <code>plan-espace-pilote.html</code>, <code>questionnaire-espace-pilote-reponses.md</code> (89 réponses), <code>plan-espace-pilote-v2.html</code> · <b>maj 07/09</b> : routage email simplifié (§8) · <b>maj 08/09</b> : Blocs A→D construits puis <b>pivot légal</b> — voir l'encadré rouge ci-dessous</p>
+
+  <div class="callout red">
+    <b>PIVOT 08/09/2026 — le cœur du plan change.</b>
+    <p style="margin:8px 0 0">En codant le modèle de paiement (bloc D), le blocage de fond a émergé :
+    <b>assigner une réservation payée de Romain à un pilote tiers</b> (Blocs B « assignation »,
+    C « mise en jeu ») ne tient pas légalement. Si le client paie le prix affiché — qui couvre le coût
+    direct du vol (avion + carburant + taxes) — le pilote ne porte aucune part réelle → ce n'est plus
+    du partage de frais → <b>transport commercial sans AOC → illégal + risque de licence pour le
+    pilote</b>. Faire payer le prix plein n'est pas légal ; faire porter au pilote une vraie part
+    n'est pas viable (Romain non plus ne porte pas sa part sur ses propres vols).</p>
+    <p style="margin:8px 0 0"><b>Décision de Romain (08/09) : Option 3.</b> Le pilote gère uniquement
+    <b>ses propres annonces</b> (<code>annonces_pilote</code> — il organise le vol, fixe le prix,
+    partage avec les occupants qu'il amène : le vrai cas NCO.GEN.104). Romain ne refile pas ses
+    bookings aux pilotes. Le système d'annonces existe déjà mais n'est <b>pas développé à fond</b>.</p>
+    <p style="margin:8px 0 0"><b>État du code.</b> Blocs A/B/C/D construits, <b>non déployés</b>. Bloc A
+    (auth pilote, champs légaux, charte, profil, M&B pilote) reste utile. B/C/D <b>gelés</b> — gardés
+    « au cas où » mais à ne pas surfacer pour de vrais pilotes sans validation avocat / DGTA. Même
+    l'Option 3 n'est pas blindée : la question « le prix laisse-t-il une part réelle au pilote ? » se
+    pose aussi pour les annonces. Voir la mémoire <code>project_marketplace_legal_risk</code>.</p>
+  </div>
+
+  <div class="toc">
+    <div>
+      <b>Actif (post-pivot)</b>
+      <a href="#reprise">★ Audit 08/09 & plan de reprise</a>
+      <a href="#option3">★ Chantier Option 3 — annonces à fond</a>
+      <a href="#avancement">0bis · Avancement (maj 08/09)</a>
+    </div>
+    <div>
+      <b>Historique (approche abandonnée)</b>
+      <a href="#verdict">0 · Verdict</a>
+      <a href="#existant">1 · Ce qui existe déjà</a>
+      <a href="#modele">2 · Le modèle décidé</a>
+      <a href="#suspens">3 · Argent & légal — dépassé</a>
+    </div>
+    <div>
+      <b>Architecture</b>
+      <a href="#data">4 · Modèle de données & migrations</a>
+      <a href="#flows">5 · Flows détaillés</a>
+      <a href="#admin">6 · Écrans admin</a>
+      <a href="#pilote">7 · Écrans espace pilote</a>
+      <a href="#emails">8 · Emails</a>
+      <a href="#textes">9 · Textes légaux</a>
+    </div>
+    <div>
+      <b>Exécution</b>
+      <a href="#gardefous">10 · Garde-fous anti-abus</a>
+      <a href="#ordre">11 · Plan d'attaque par blocs</a>
+      <a href="#faisa">12 · Risque & poids par bloc</a>
+      <a href="#horsperimetre">13 · Hors périmètre v1</a>
+      <a href="#pieges">14 · Pièges déjà identifiés</a>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <h2 id="reprise"><span class="n">★</span>Audit 08/09 &amp; plan de reprise</h2>
+
+  <div class="callout">
+    <b>But de cette section.</b> Après le pivot, rien ne doit rester à l'abandon. Audit complet du code
+    fait le 08/09 — chaque écart entre « ce qui est codé » et « la logique posée » est listé ici avec
+    une action et un statut. Les sections 0 à 14 plus bas décrivent l'approche <b>abandonnée</b>
+    (assignation des vols de Romain aux pilotes), gardées comme référence.
+  </div>
+
+  <h3>A · État du code — ce qui partirait en prod si on déploie l'arbre actuel</h3>
+  <p>Constat : <b>tout est dans un seul lot non commité</b> (batch M&amp;B + Bloc A + Blocs B/C/D), et
+  le câblage B/C/D est <b>actif</b>, pas simplement « présent en fichiers ». « Gelé, non déployé » n'est
+  donc pas vrai en l'état.</p>
+  <table>
+    <tr><th>Élément câblé</th><th>Où</th><th>Action</th><th>Statut</th></tr>
+    <tr><td>Onglet <b>« Offres »</b> dans la nav pilote</td><td><code>PiloteNav.tsx</code> (LINKS)</td><td>Retirer l'entrée (Bloc C inutile sous Option 3)</td><td><span class="tag t-todo">à faire</span></td></tr>
+    <tr><td><code>PiloteAssignBlock</code> dans le drawer admin</td><td><code>ReservationDrawer.tsx</code> (slot <code>piloteAssignSlot</code>)</td><td>Retirer le rendu du slot ; garder le fichier dormant si non importé ailleurs</td><td><span class="tag t-todo">à faire</span></td></tr>
+    <tr><td><code>PiloteParticipationBlock</code> / <code>PiloteParticipationInfo</code> (Bloc D)</td><td><code>ReservationDrawer.tsx</code> (slot <code>piloteParticipationSlot</code>)</td><td>Retirer le rendu ; sort du périmètre tant que l'assignation n'existe pas</td><td><span class="tag t-todo">à faire</span></td></tr>
+    <tr><td><b>Case « je partage mes coordonnées avec le pilote »</b> — <b>bloquante</b> sur le tunnel public</td><td><code>app/(public)/reservation/page.tsx</code> (<code>accept_data_sharing</code>, dans <code>ctaDisabled</code>)</td><td><b>Retirer</b> : ajoute une friction obligatoire pour un flow abandonné. À ne remettre que si Romain assigne un jour ses vols</td><td><span class="tag t-todo">à faire</span></td></tr>
+    <tr><td><code>/pilote/vols</code> élargi aux vols standard assignés</td><td><code>app/pilote/vols/page.tsx</code> (query <code>pilote_id = moi, type_resa != perso</code>)</td><td>Laisser tel quel (renvoie les bookings d'annonces, corrects) ; adapter le <code>PiloteStepsPanel</code> au flow annonce</td><td><span class="tag t-warn">à ajuster</span></td></tr>
+    <tr><td>Page publique <code>/nos-pilotes/[id]</code></td><td>nouveau fichier</td><td>Garder si utile pour les annonces (fiche du pilote de l'annonce), sinon retirer du footer / non lié</td><td><span class="tag t-warn">à trancher</span></td></tr>
+    <tr><td>Fichiers dormants B/C/D : <code>flight-offers.ts</code>, <code>pilote-assign.ts</code>, <code>pilote-paiement.ts</code>, <code>/pilote/offre</code>, <code>/pilote/offres</code>, <code>OffreClaimClient</code>, cron <code>flight-offer-deadline</code></td><td>—</td><td>OK de les laisser <b>tant qu'ils ne sont importés nulle part</b>. Sinon les déplacer sur une branche <code>espace-pilote-assignation</code></td><td><span class="tag t-info">au choix</span></td></tr>
+    <tr><td>Migration <code>20260909_pilote_paiement.sql</code></td><td><code>supabase/migrations/</code></td><td><b>Ne pas exécuter.</b> Colonnes <code>flight_offers</code> / <code>pilote_assigned_at</code> / <code>slot_change_count</code> déjà en base : inoffensives, on les laisse</td><td><span class="tag t-ok">OK</span></td></tr>
+    <tr><td>Bloc A (auth-guards, charte, <code>/pilote/profil</code>, M&amp;B pilote, champs légaux bloquants)</td><td>divers</td><td><b>Garder</b> — base saine de l'Option 3</td><td><span class="tag t-ok">OK</span></td></tr>
+  </table>
+
+  <h3>B · Le système d'annonces (base de l'Option 3) — ce qui marche, ce qui cloche</h3>
+  <table>
+    <tr><th>Point</th><th>Constat</th><th>Action</th><th>Statut</th></tr>
+    <tr><td>Modèle de prix</td><td><span class="tag t-ok">Correct</span> L'annonce porte <code>prix_total</code> + <code>part_pilote</code> ; le client paie <code>prix_total − part_pilote</code>. Vrai partage de frais, part du pilote visible.</td><td>Rien</td><td><span class="tag t-ok">OK</span></td></tr>
+    <tr><td><b>Paiement d'une annonce</b></td><td><span class="tag t-block">Incohérent</span> Passe par le <b>Stripe de Romain</b> (<code>app/api/reservation/pay/[token]/route.ts</code> couvre <code>annonce_pilote</code> ; webhook Stripe idem). Le client paie Romain pour le vol d'un pilote tiers → Romain doit reverser → modèle B / risque PSD2 pass-through, exactement le scénario que le pivot voulait éviter.</td><td><b>Trancher :</b> (a) Romain assume le rôle d'intermédiaire de paiement + cadre légal/compta pass-through, ou (b) bascule « le pilote encaisse en direct » — <b>réutiliser le QR SEPA du Bloc D</b> (<code>lib/pilote/payment.ts</code>, <code>/api/pay-qr/[id]</code>) en étendant <code>isPiloteVol</code> à <code>annonce_pilote</code>.</td><td><span class="tag t-block">à trancher</span></td></tr>
+    <tr><td>Règle des 25 % (NCO.GEN.104)</td><td><span class="tag t-warn">Non bloquante</span> <code>createAnnonce</code> ne bloque que si <code>part_pilote ≤ 0</code> ; &lt; 25 % passe avec un simple <code>warning</code>. Un pilote peut publier une annonce où il porte 5 € sur 300 €. Le seuil 25 % est aussi caduc pour les annonces 1-6 places (part égale ≈ 14 % à 7 occupants).</td><td>Rendre le contrôle <b>bloquant</b> à la création/édition, avec un seuil recalculé selon <code>places</code> (part ≥ 1/(places+1) du total, ou un plancher fixe assumé).</td><td><span class="tag t-todo">à faire</span></td></tr>
+    <tr><td>Vérif licence / assurance pilote avant publication</td><td><span class="tag t-block">Absente</span> N'importe quel compte <code>pilote</code> actif peut publier. Les champs légaux du Bloc A (licence, medical, charte) bloquent l'<i>assignation</i> mais <b>pas</b> la publication d'annonce.</td><td>Câbler le même garde-fou <code>legal_ok</code> (Bloc A) sur <code>createAnnonce</code> / <code>updateAnnonce</code>.</td><td><span class="tag t-todo">à faire</span></td></tr>
+    <tr><td>Bloc D vs annonces</td><td><span class="tag t-info">Code mort</span> <code>isPiloteVol = type_resa === 'standard'</code> → le Bloc D (QR, participation, masquage Stripe, reçu émetteur pilote) ne touche jamais les annonces (<code>annonce_pilote</code>).</td><td>Selon la décision « paiement annonce » : soit étendre <code>isPiloteVol</code> et brancher le QR/reçu sur les annonces, soit archiver le Bloc D.</td><td><span class="tag t-block">dépend de B.paiement</span></td></tr>
+    <tr><td>Reçu d'une annonce</td><td>Le reçu (<code>invoice-pdf.tsx</code> + route) sait afficher un émetteur = pilote (Bloc D), mais n'est déclenché que si <code>isPiloteVol</code> → jamais pour une annonce aujourd'hui.</td><td>Idem — dépend de la décision paiement.</td><td><span class="tag t-block">dépend de B.paiement</span></td></tr>
+    <tr><td>Multi-passagers sur une annonce</td><td>À clarifier : <code>places</code> = capacité, mais le claim (<code>vol-annonce/submit</code>) passe l'annonce entière en <code>reservee</code> au premier client. Donc 1 booking = tout l'avion, pas de vente à la place.</td><td>Décider si on garde « 1 booking = l'avion » (simple) ou si on ouvre la vente place par place (gros changement).</td><td><span class="tag t-warn">à trancher</span></td></tr>
+    <tr><td><code>PiloteStepsPanel</code> (drawer pilote)</td><td>Décrit le flow d'assignation (« renseignez la participation », « le client reçoit les infos pour vous régler »). Pour une annonce, le pilote a déjà fixé son prix à la publication.</td><td>Réécrire les étapes pour le flow annonce (tracer route → confirmer → route au client → paiement).</td><td><span class="tag t-todo">à faire</span></td></tr>
+  </table>
+
+  <h3>C · Textes légaux — pas alignés</h3>
+  <ul class="checklist">
+    <li><b>CGP</b> (<code>app/(public)/cgp/page.tsx</code>) : écrites pour Romain solo. Aucune mention de pilotes tiers / marketplace / « plateforme de mise en relation ». Pour une annonce d'un vrai pilote, ne disent pas qui contracte ni qui est responsable. → Réécrire (ancien Bloc F).</li>
+    <li><b>Politique de confidentialité</b> : « données jamais cédées à des tiers », liste de sous-traitants techniques. <b>Aucune clause</b> sur le partage des coordonnées client avec le pilote de l'annonce (nom / email / téléphone transmis dans <code>vol-annonce/submit</code>). → Ajouter la clause + la phrase de consentement.</li>
+    <li>La case <code>accept_data_sharing</code> que j'ai ajoutée sur <code>/reservation</code> référence ce partage sans que la politique le couvre — cohérence à rétablir (ou retrait de la case, cf. section A).</li>
+    <li><b>Prérequis</b> : validation avocat / DGTA sur le fond (est-ce que le prix d'une annonce laisse une part réelle et suffisante au pilote ?) avant d'ouvrir à un pilote qui n'est pas un compte de test.</li>
+  </ul>
+
+  <h3>D · Code &amp; build</h3>
+  <ul class="checklist">
+    <li><code>tsc --noEmit</code> : <b>clean</b>. Tous les fichiers pilote créés : eslint clean.</li>
+    <li><span class="tag t-block">Bloquant</span> <code>next build</code> est <b>déjà cassé</b> par des erreurs ESLint <b>pré-existantes</b> (pas de ce chantier) : <code>react-hooks/set-state-in-effect</code> (<code>ReservationDrawer.tsx</code>), <code>Cannot call impure function during render</code> (<code>account/reservations/*</code>), <code>Cannot access refs during render</code> (nouveau, remonté par l'upgrade Next 16), <code>react/no-unescaped-entities</code> épars. Pas de <code>eslint.ignoreDuringBuilds</code>. → À corriger avant tout déploiement, indépendamment des pilotes.</li>
+  </ul>
+
+  <h3>E · Reprise du lot non commité — ordre proposé</h3>
+  <ol class="step">
+    <li><b>Débloquer <code>next build</code></b> (erreurs ESLint pré-existantes) — commit isolé, prérequis à tout.</li>
+    <li><b>Commit « batch M&amp;B + net-après-Stripe »</b> seul (il pouvait déjà partir avant, dixit la mémoire).</li>
+    <li><b>Commit « Bloc A — fondations espace pilote »</b> : auth-guards, charte, <code>/pilote/profil</code>, M&amp;B pilote, champs légaux. Sain, déployable.</li>
+    <li><b>Retirer de <code>main</code> le câblage B/C/D</b> (tableau section A) : nav « Offres », slots drawer, case <code>accept_data_sharing</code>, <code>/nos-pilotes</code> si non voulu. Commit « retrait assignation/mise-en-jeu ».</li>
+    <li><b>Déplacer les fichiers dormants B/C/D</b> sur une branche <code>espace-pilote-assignation</code> (ou les garder si vraiment aucun import).</li>
+    <li>Puis attaquer le chantier Option 3 ci-dessous.</li>
+  </ol>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <h2 id="option3"><span class="n">★</span>Chantier Option 3 — annonces « à fond »</h2>
+  <div class="callout green">
+    <b>Nouveau périmètre.</b> Le pilote gère uniquement ses propres annonces. Le travail restant pour
+    que ce soit vraiment utilisable, pas juste « présent ».
+  </div>
+  <table>
+    <tr><th>#</th><th>Chantier</th><th>Détail</th><th>Dépend de</th></tr>
+    <tr><td>1</td><td><b>Trancher le paiement d'une annonce</b></td><td>Stripe Romain + reversement (avec cadre légal), ou pilote encaisse en direct (QR SEPA du Bloc D réutilisé). C'est le point qui débloque tout le reste.</td><td>Romain</td></tr>
+    <tr><td>2</td><td><b>25 % bloquant + seuil correct</b></td><td>Bloquer <code>createAnnonce</code>/<code>updateAnnonce</code> sous le seuil ; recalculer le seuil selon <code>places</code>.</td><td>—</td></tr>
+    <tr><td>3</td><td><b>Garde-fou légal pilote à la publication</b></td><td>Réutiliser <code>legal_ok</code> (Bloc A) : licence + medical + charte à jour requis pour publier.</td><td>Bloc A (fait)</td></tr>
+    <tr><td>4</td><td><b>Textes légaux</b></td><td>CGP « mise en relation, le pilote responsable de son vol » ; clause confidentialité « coordonnées partagées avec le pilote de l'annonce » ; phrase de consentement.</td><td>—</td></tr>
+    <tr><td>5</td><td><b><code>PiloteStepsPanel</code> version annonce</b></td><td>Étapes : tracer la route → confirmer (route au client) → client valide → paiement → vol.</td><td>1</td></tr>
+    <tr><td>6</td><td><b>Reçu émis par le pilote</b> pour une annonce</td><td>Brancher la logique <code>issuer</code> (Bloc D) sur <code>type_resa = 'annonce_pilote'</code>.</td><td>1</td></tr>
+    <tr><td>7</td><td><b>Fiche pilote publique</b> sur la page annonce</td><td>Réutiliser <code>/nos-pilotes/[id]</code> (créé pour B) : photo + bio du pilote de l'annonce, transparence client.</td><td>—</td></tr>
+    <tr><td>8</td><td><b>Modèle « 1 booking = l'avion »</b> confirmé ou revu</td><td>Aujourd'hui le premier client réserve toute l'annonce. Décider si on ouvre la vente à la place (gros).</td><td>Romain</td></tr>
+    <tr><td>9</td><td><b>Garde-fous transverses</b> (issus de l'ancien Bloc E, à réévaluer pour les annonces)</td><td>Verrou 8 h sur « vol effectué » ; stats de fréquence de changement de créneau ; routage des réponses email (fil de ticket) ; impersonation « voir comme un pilote ».</td><td>—</td></tr>
+    <tr><td>10</td><td><b>Page « postuler »</b></td><td>Statique, non indexée, lien footer. Inchangé par rapport à l'ancien Bloc F.</td><td>—</td></tr>
+  </table>
+  <div class="callout red">
+    <b>Rien ne s'ouvre à un vrai pilote</b> (au-delà des comptes de test de Romain) tant que #1 et #4
+    ne sont pas faits <b>et</b> validés avec un avocat / la DGTA. C'est le point critique jamais tranché
+    de l'audit légal (mémoire <code>project_marketplace_legal_risk</code>).
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <h2 id="verdict"><span class="n">0</span>Verdict</h2>
+  <div class="card">
+    <p><span class="tag t-block">Dépassé par le pivot 08/09</span> Cette section reflète l'analyse
+    initiale (technique solide, ~70 % de la plomberie existante, 89 questions tranchées). Elle reste
+    juste sur le plan technique, mais le <b>« quoi faire » a changé</b> : l'assignation des vols de
+    Romain à des pilotes tiers est abandonnée pour raison légale (voir l'encadré rouge en tête).
+    Direction actuelle = Option 3, le pilote ne gère que ses propres annonces.</p>
+    <p><span class="tag t-ok">Faisable techniquement</span> Comptes pilotes, rôle, espace
+    <code>/pilote</code>, drawer partagé, onglet route, claim atomique des annonces : tout existe.</p>
+    <p><span class="tag t-ok">Résolu</span> Le routage des emails "pilote-aware" sans adresse dédiée
+    (arbitrage du 07/09) : <b>pas d'alias par pilote</b>. Tout part en
+    <code>Fly Horizons &lt;info@fly-horizons.com&gt;</code>, le nom du pilote est dans le corps du
+    message, et le pilote écrit toujours depuis le fil du ticket dans <code>/pilote</code> — l'app
+    envoie le mail cousu au même thread. Les réponses client sont captées par webhook, la boîte
+    <code>info@</code> (PrivateEmail) reste le filet humain (détail en §8).</p>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <h2 id="avancement"><span class="n">0bis</span>Avancement du build — maj 08/09/2026</h2>
+
+  <div class="callout green">
+    <b>Journal de construction.</b> Tenu à jour à chaque session. « Prévu » = présent dans ce plan,
+    « Extra » = ajouté en cours de route (souvent après un test de Romain). Détail exploitable aussi
+    dans la mémoire <code>project_espace_pilote_build</code>.
+  </div>
+
+  <h3>Bloc A · Fondations — <span class="tag t-ok">Terminé</span></h3>
+  <h4>Prévu, fait</h4>
+  <ul>
+    <li>Garde d'auth factorisé : <code>lib/actions/auth-guards.ts</code> (<code>requireAdmin</code>,
+      <code>requireAdminOrOwningPilote</code> avec check <code>pilote.statut='actif'</code>,
+      <code>requireAdminOrActivePilote</code>, <code>requireSelfActivePilote</code>). Les 2 copies
+      dupliquées de <code>checkAdminOrOwningPilote</code> pointent dessus.</li>
+    <li>Gating <code>viewerRole</code> sur <code>ActionFooter</code> : encaissement, lien de paiement,
+      boarding pass, reporter, annuler, réactiver, bouton « Sauvegarder » de l'onglet Modifier —
+      tous masqués côté pilote.</li>
+    <li>Bilan financier (<code>useBilanVol</code>) : déjà gaté <code>viewerRole==='admin'</code> dans
+      <code>InfosTab</code>, rien à faire.</li>
+    <li>M&amp;B ouvert au rôle pilote : page <code>/pilote/mass-balance</code>, les 3 routes API
+      (<code>/api/admin/mass-balance/preview</code>, <code>[id]/pdf</code>, <code>/api/admin/metar</code>)
+      acceptent le pilote actif, actions <code>save/update</code> aussi (feuille scopée à ses vols),
+      bouton Supprimer masqué côté pilote.</li>
+    <li>Champs légaux <code>pilotes</code> + <code>legal_ok</code> recalculé à chaque lecture
+      (<code>lib/pilote/legal.ts</code>), bloquant. Page <code>/pilote/profil</code> +
+      <code>PiloteProfilForm</code> + <code>lib/actions/pilote-profil.ts</code>.</li>
+    <li>Popup charte scroll-to-accept au 1er accès : <code>ChartePiloteGate</code> monté dans le
+      layout, texte <code>lib/pilote/charte.ts</code> (<code>CHARTE_VERSION = "2026-09"</code>),
+      preuve = horodatage + version sur la fiche.</li>
+    <li>Promotion d'un compte client existant en pilote : <code>createPilote</code> utilise la fn RPC
+      <code>get_auth_user_id_by_email</code>, pas d'email d'invitation, message vert admin.</li>
+    <li>Migration <code>20260907_pilote_legal.sql</code> (8 colonnes + fn) — exécutée.</li>
+  </ul>
+  <h4>Extra (hors plan initial)</h4>
+  <ul>
+    <li>Refonte layout <code>/pilote</code> : header + nav pleine largeur, onglets collés à gauche,
+      responsive dès le desktop (demande de Romain).</li>
+    <li>Nav : ajout des onglets « Masse &amp; centrage » et « Mon profil ».</li>
+    <li>Pastille de nav avec compteur (prop <code>counts</code> sur <code>PiloteNav</code>) :
+      « Mon profil » = nb d'items légaux manquants, « Mes vols » = nb de vols
+      <code>demande_recue</code>/<code>en_attente</code>.</li>
+    <li>Surlignage rouge/ambre des champs légaux incomplets/bientôt expirés dans le formulaire profil
+      (<code>LegalIssue.field</code>).</li>
+    <li>Scoping des feuilles M&amp;B côté pilote (le plan disait juste « ouvrir »).</li>
+  </ul>
+
+  <h3>Bloc B · Assignation manuelle — <span class="tag t-block">Construit puis GELÉ (pivot 08/09)</span></h3>
+  <p class="pill">Code fonctionnel dans le repo, non déployé, gardé « au cas où ». Ne pas surfacer pour de vrais pilotes : c'est le montage jugé illégal (assignation d'un vol payé de Romain à un pilote tiers). Détail ci-dessous à titre d'historique.</p>
+  <h4>Prévu, fait</h4>
+  <ul>
+    <li><code>lib/actions/pilote-assign.ts</code> : <code>listAssignablePilotes</code> (flag
+      <code>legalOk</code> par pilote), <code>assignPilote</code> (refus si perso / annulé / effectué,
+      refus pilote inactif ou pas <code>legal_ok</code>, <b>check conflit d'agenda</b> même date+heure,
+      pose <code>pilote_id</code> + <code>pilote_assigned_at</code>, log historique, 2 emails),
+      <code>unassignPilote</code>.</li>
+    <li>Bloc « Pilote » dans le drawer admin : <code>PiloteAssignBlock</code> (slot dans
+      <code>InfosTab</code>, admin + hors perso). Sélecteur, Assigner / Retirer, feedback inline.</li>
+    <li><code>/pilote/vols</code> élargi aux vols standard assignés (<code>pilote_id = moi</code>,
+      hors perso).</li>
+    <li>Emails <code>piloteAssignedClientEmail</code> (« un pilote nommé X va vous contacter ») et
+      <code>piloteAssignedPiloteEmail</code> (« un vol vous a été attribué »).</li>
+    <li>Migration <code>alter table reservations add pilote_assigned_at, part_pilote_pct,
+      slot_change_count</code> — exécutée, <b>pas encore dans un fichier de migration versionné</b>.</li>
+  </ul>
+  <h4>Extra (polish après tests de Romain)</h4>
+  <ul>
+    <li><b>Bug</b> corrigé : <code>getItineraires</code> / <code>incrementItineraireUsage</code>
+      ouverts au pilote actif (« Non autorisé » dans le drawer pilote).</li>
+    <li>Onglet <b>Modifier en lecture seule</b> côté pilote (<code>ModifierTab readOnly</code>,
+      blocs paiement/codes masqués). <span class="tag t-info">Change Q33</span> : le questionnaire
+      prévoyait que le pilote modifie passagers/poids avec un popup — Romain a tranché non, lecture
+      seule.</li>
+    <li><code>/pilote/vols</code> passé de cards à un <b>tableau</b> Date · Client · Route · Durée ·
+      Statut · Actions (Voir + M&amp;B), route affichée en entier + badge de statut de route
+      (« Validée ✓ », « Modification demandée ») sur la même ligne.</li>
+    <li>Retour client sur l'itinéraire notifie le <b>pilote assigné</b>
+      (<code>piloteRouteFeedbackEmail</code>, wiring dans <code>submitRouteResponse</code>).</li>
+    <li><b>Bug flow</b> corrigé : <code>recordCashPayment</code> restaure <code>pre_payment_statut</code>
+      quand la résa est en <code>payment_pending</code> (miroir du webhook Stripe) — supprime la double
+      « Confirmer date + heure » sur l'encaissement manuel.</li>
+    <li>Libellés de statut clarifiés (admin + espace pilote + vue client) :
+      <code>heure_confirmee</code> = « Vol confirmé » (avant « Heure confirmée »),
+      <code>payment_pending</code> = « Paiement en attente », <code>en_attente</code> = « À confirmer ».
+      Modifié dans <code>AdminBadge</code>, légende du calendrier admin,
+      <code>/account/reservations</code>, <code>ReservationsSection</code>.</li>
+  </ul>
+  <h4>2e passe (08/09) — reste de B livré</h4>
+  <ul>
+    <li>Migration versionnée <code>supabase/migrations/20260908_reservations_pilote_assign.sql</code>
+      (<code>pilote_assigned_at</code> / <code>part_pilote_pct</code> / <code>slot_change_count</code>,
+      idempotente, déjà appliquée à la main).</li>
+    <li><code>slot_change_count</code> incrémenté dans <code>proposeSlot</code> <b>uniquement quand
+      l'acteur est un pilote</b> (jamais Romain) ; historique <code>author = pilote:&lt;nom&gt;</code>.</li>
+    <li>Cascade <code>togglePiloteActif(id,false)</code> : vols futurs non clôturés →
+      <code>pilote_id=null</code> + log ; annonces <code>publiee</code> → <code>annulee</code> ;
+      retour <code>releasedFlights</code>/<code>unpublishedAnnonces</code>, récap ambre dans
+      <code>PilotesClient</code>.</li>
+    <li><code>releaseAssignedFlight</code> : « Je rends ce vol » si <code>date_vol ≥ J+3</code>, sinon
+      « appelez Romain » ; refuse <code>annonce_pilote</code> ; email
+      <code>piloteReleasedFlightAdminEmail</code> → <code>info@</code>. UI branche pilote de
+      <code>ActionFooter</code>, câblée par <code>doReleaseFlight</code> dans le drawer.</li>
+    <li>Colonne <b>Pilote</b> + <code>&lt;select&gt;</code> filtre (Tous / Non attribué / par pilote)
+      dans <code>ReservationsClient</code>.</li>
+    <li>Email de présentation pilote : bouton dédié dans <code>InfosTab</code> (pilote uniquement),
+      pré-remplit le composer signé du pilote ; <code>viewerName</code> passé
+      <code>page → PiloteVolsClient → ReservationDrawer → InfosTab</code> ; templates météo masqués
+      côté pilote.</li>
+    <li>Réassignation en 1 popup : <code>PiloteAssignBlock</code> garde le <code>&lt;select&gt;</code>
+      toujours visible (pré-sélectionné). « Réassigner » ouvre un <b>panneau inline</b> avec l'email
+      « changement de pilote » pré-rempli et éditable → « Envoyer et réassigner » appelle
+      <code>reassignPilote()</code> qui fait tout d'un coup : fiche + log <code>reassign_pilote</code> +
+      email au nouveau pilote + email client (<code>customEmail</code>). Pas d'email client automatique
+      hors ce popup (§5.4). <code>assignPilote</code> (1re attribution) garde l'email client auto ;
+      « Retirer, sans réassigner » = <code>unassignPilote</code>, 0 email.
+      <span class="pill">Reste ouvert : notifier ou non le pilote sortant.</span></li>
+    <li>Page publique <code>app/(public)/nos-pilotes/[id]/page.tsx</code> (<code>params</code> async
+      Next 16, <code>robots:noindex</code>) : nom + photo/initiales + bio ; lien
+      « Voir la fiche de votre pilote » ajouté à <code>piloteAssignedClientEmail</code>
+      (param <code>piloteUrl</code>).</li>
+    <li><span class="tag t-info">Change Q57</span> <b>Q79</b> : case
+      <code>accept_data_sharing</code> <b>bloquante</b> dans le step paiement de
+      <code>app/(public)/reservation/page.tsx</code> (sous la case CGP), ajoutée à
+      <code>ctaDisabled</code>. Gate client-side (comme <code>accept_cgp</code>), non persistée.</li>
+  </ul>
+  <p class="pill">Non traité (hors items, à faire ailleurs) : phrase de consentement dans la politique
+    de confidentialité (bloc F) ; <code>accept_data_sharing</code> non envoyé à l'API/DB (pas de colonne).</p>
+
+  <h3>Bloc C · Mise en jeu automatique — <span class="tag t-block">Construit puis GELÉ (pivot 08/09)</span></h3>
+  <p class="pill">Même statut que le bloc B : code dans le repo, migration <code>20260908_flight_offers.sql</code> déjà exécutée par Romain, mais rien de surfacé. Historique ci-dessous.</p>
+  <ul>
+    <li>Migration <code>20260908_flight_offers.sql</code> : <code>flight_offers</code>
+      (<code>statut</code> ouverte/pourvue/annulee/expiree, <code>claim_token</code> UNIQUE,
+      <code>sent_to</code>, <code>expires_at</code>, <code>claimed_by</code>) + index partiel unique
+      (1 offre ouverte / réservation) ; <code>flight_offer_refusals</code> (UNIQUE offer_id+pilote_id).
+      RLS <code>using(true)</code>. <b>À coller dans Supabase.</b></li>
+    <li><code>lib/actions/flight-offers.ts</code> : <code>createOffer</code> (admin — offre à tous les
+      pilotes actifs + en règle + sans conflit d'agenda exact ; TTL 48h ; email
+      <code>flightOfferEmail</code> <b>sans coordonnées client</b>), <code>getOpenOffer</code>,
+      <code>cancelOffer</code>, <code>claimOffer</code> (pilote — re-check legal + conflit +
+      <code>UPDATE … WHERE statut='ouverte'</code> atomique → pose <code>pilote_id</code>, emails
+      client + pilote), <code>refuseOffer</code> (upsert refus, idempotent).</li>
+    <li>Pilote : <code>/pilote/offre/[token]</code> (+ <code>OffreClaimClient</code> : « Je le prends »
+      avec confirmation / « Pas pour moi » ; états introuvable / pourvue / annulée / expirée /
+      plus dispo / profil KO / conflit agenda / déjà refusée) ; <code>/pilote/offres</code> (tableau) ;
+      onglet nav « Offres » + pastille ; banner dashboard.</li>
+    <li><code>PiloteAssignBlock</code> : bouton « Proposer à tous les pilotes » (vol non attribué,
+      confirmation) ; offre en cours → carte « N pilotes · expire le … » + « Retirer l'offre » ;
+      <code>assignPilote</code>/<code>reassignPilote</code> ferment toute offre ouverte.</li>
+    <li>Cron <code>flight-offer-deadline</code> (<code>0 */12 * * *</code>) : offres &gt; 48h →
+      <code>expiree</code> + digest email à <code>info@</code>. Le cron <code>demande-deadline</code>
+      exclut désormais les résas avec offre ouverte.</li>
+  </ul>
+  <p class="pill">Choix figés : login pilote requis pour prendre (pas de token signé par pilote) ·
+    email + page liste + pastille · offre indispo si un pilote est déjà assigné · email d'offre
+    anonyme (coordonnées client partagées seulement au preneur, cohérent Q79).</p>
+
+  <h3>Bloc D · Argent & compta pilote — <span class="tag t-block">Construit puis GELÉ (pivot 08/09)</span></h3>
+  <p class="pill">Le débat modèle A/B a fait remonter le blocage légal de fond → pivot Option 3.
+    Migration <code>20260909_pilote_paiement.sql</code> <b>non exécutée</b>. À voir si on la garde.
+    Réutilisable pour les annonces : QR SEPA (<code>lib/pilote/payment.ts</code>, <code>/api/pay-qr/[id]</code>),
+    affichage participation client, champ <code>paylink</code>. Historique du build ci-dessous.</p>
+  <ul>
+    <li><b>Décision initiale (annulée par le pivot) :</b> modèle A — le pilote encaisse en direct
+      (virement / QR SEPA / Payconiq), rien par le Stripe de Romain, 0 € dans la P&L, reçu émis par
+      le pilote.</li>
+    <li>Migration <code>20260909_pilote_paiement.sql</code> : <code>reservations.montant_pilote</code> /
+      <code>pilote_paye</code> / <code>pilote_paye_at</code> ; <code>pilotes.paylink</code>.
+      <b>Non exécutée.</b></li>
+    <li><code>lib/pilote/payment.ts</code> : <code>isPiloteVol</code>, QR SEPA EPC v002
+      (<code>buildEpcPayload</code>), communication de virement. Route
+      <code>/api/pay-qr/[id]</code> → PNG (lib <code>qrcode</code>), IBAN résolu côté serveur.</li>
+    <li>Actions <code>setPiloteMontant</code> / <code>setPilotePaye</code>
+      (<code>lib/actions/pilote-paiement.ts</code>). Fiche pilote : champ <code>paylink</code>.</li>
+    <li>Drawer : <code>PiloteParticipationBlock</code> (pilote — coût total, partage égal ou montant
+      perso, alerte &lt; 25 % NCO.GEN.104, « le client m'a payé ») + <code>PiloteParticipationInfo</code>
+      (admin, lecture seule) remplacent le bloc Stripe. <code>ActionFooter</code> masque lien de
+      paiement / encaisser / relance sur les vols pilote (boarding pass conservé).</li>
+    <li>Page suivi client : bloc « Participation aux frais » (montant + QR + IBAN copiable +
+      communication + bouton paylink + reçu quand payé), lien Stripe masqué.</li>
+    <li>Email de confirmation de créneau : bloc participation (QR + IBAN + montant + paylink + lien
+      tracker) pour les vols pilote.</li>
+    <li>Reçu (<code>/api/invoice/reservation/[id]</code>) : champ <code>issuer</code> → émetteur = le
+      pilote (nom + IBAN), montant = <code>montant_pilote</code>, indispo tant que non payé.</li>
+    <li><code>/admin/transactions</code> : vols pilote exclus des lignes/totaux ; section lecture seule
+      « Vols pilotes tiers » (date · client · pilote · montant · payé).</li>
+  </ul>
+
+  <div class="callout red">
+    <b>À FAIRE EN TOUT DERNIER</b>, quand tout le chantier espace pilote est terminé :
+    <b>refonte complète de tous les emails</b> (Romain ne les aime pas). Romain a demandé qu'on le
+    lui <b>rappelle explicitement</b> à ce moment-là.
+  </div>
+
+  <h3>Dettes / à ne pas oublier</h3>
+  <ul>
+    <li>La migration <code>reservations</code> du Bloc B n'est pas dans un fichier versionné → créer
+      <code>supabase/migrations/2026090x_reservations_pilote_assign.sql</code> pour la trace.</li>
+    <li><code>mass_balance_sheets</code> sans colonne propriétaire : feuille « libre » de Romain visible
+      et éditable par un pilote. Fix = migration <code>pilote_id</code>/<code>author</code>.</li>
+    <li>Erreurs ESLint <b>pré-existantes</b> (non introduites par ce chantier) qui casseront un
+      <code>next build</code> propre : <code>react-hooks/set-state-in-effect</code> dans
+      <code>ReservationDrawer.tsx</code>, <code>Cannot call impure function during render</code> dans
+      <code>account/reservations/page.tsx</code>, <code>ReservationsSection.tsx</code>,
+      <code>ReservationCalendar.tsx</code>. Pas de <code>eslint.ignoreDuringBuilds</code>.</li>
+    <li>Le batch M&amp;B / net-après-Stripe est toujours non commité et mélangé dans
+      <code>git status</code> avec ce chantier.</li>
+  </ul>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <h2 id="existant"><span class="n">1</span>Ce qui existe déjà (à recycler, pas à refaire)</h2>
+  <div class="callout">
+    <b>Sections 1 à 14 = référence historique.</b> Elles décrivent l'architecture de l'approche
+    <b>abandonnée</b> (assignation des vols de Romain aux pilotes). Le plan actif est
+    « Audit &amp; plan de reprise » et « Chantier Option 3 » en haut de page. Ce qui suit reste utile
+    pour comprendre la plomberie et ne pas refaire les mêmes erreurs.
+  </div>
+  <table>
+    <tr><th>Brique</th><th>État</th><th>Où</th></tr>
+    <tr><td>Table <code>pilotes</code> (nom, email, tel, IBAN, statut actif/inactif)</td><td><span class="tag t-ok">OK</span></td><td><code>20260813_pilotes_espace.sql</code></td></tr>
+    <tr><td>Rôle <code>pilote</code> dans <code>profiles</code>, redirection post-login</td><td><span class="tag t-ok">OK</span></td><td><code>middleware.ts</code>, <code>lib/actions/auth.ts</code></td></tr>
+    <tr><td>Invitation par email (Supabase Auth) + choix du mot de passe</td><td><span class="tag t-warn">Partiel</span> — échoue si l'email a déjà un compte client</td><td><code>createPilote()</code>, <code>/pilote/mot-de-passe</code></td></tr>
+    <tr><td>Espace <code>/pilote</code> protégé (dashboard, mes annonces, mes vols)</td><td><span class="tag t-ok">OK</span></td><td><code>app/pilote/*</code></td></tr>
+    <tr><td>Admin <code>/admin/pilotes</code> (créer, activer/désactiver, éditer, supprimer)</td><td><span class="tag t-ok">OK</span> (pas dans la nav, dans « Plus »)</td><td><code>PilotesClient.tsx</code></td></tr>
+    <tr><td><b>Drawer de réservation partagé</b> admin ↔ pilote via <code>viewerRole</code></td><td><span class="tag t-warn">Partiel</span> — fuite d'actions (§14)</td><td><code>ReservationDrawer.tsx</code></td></tr>
+    <tr><td>Onglet Route : carte, tracé, import itinéraires, envoi au client + ForeFlight</td><td><span class="tag t-ok">OK</span> — marche déjà pour un pilote</td><td><code>useRouteProposal.ts</code>, <code>RouteSection.tsx</code>, <code>ItinerairesModal.tsx</code></td></tr>
+    <tr><td>Permission « admin OU pilote propriétaire » scopée par <code>reservations.pilote_id</code></td><td><span class="tag t-ok">OK</span></td><td><code>checkAdminOrOwningPilote()</code> (dupliqué dans 2 fichiers)</td></tr>
+    <tr><td>Colonnes <code>reservations.pilote_id</code> + <code>annonce_id</code></td><td><span class="tag t-ok">OK</span></td><td><code>20260815c_annonces_reservations_link.sql</code></td></tr>
+    <tr><td>Flow annonce pilote (claim atomique du créneau)</td><td><span class="tag t-ok">OK</span></td><td><code>app/api/vol-annonce/submit</code>, <code>/vol/annonce/[id]</code></td></tr>
+    <tr><td>Pattern « premier arrivé » = <code>UPDATE ... WHERE statut='publiee'</code> atomique</td><td><span class="tag t-ok">Réutilisable</span></td><td>submit annonce (claim) + <code>slot_proposal_token</code></td></tr>
+    <tr><td>Jetons signés courts (base64url + exp) pour liens publics</td><td><span class="tag t-ok">Réutilisable</span></td><td><code>lib/reschedule-token.ts</code></td></tr>
+    <tr><td>Fils de contact tokenisés client ↔ admin + email "vous avez reçu une réponse"</td><td><span class="tag t-warn">Partiel</span> — <code>author</code> limité à client/admin, pas lié à une réservation</td><td><code>20260629_contact_threads.sql</code>, <code>contact_messages</code>, <code>/contact/ticket/[token]</code></td></tr>
+    <tr><td>Email libre / templates depuis le drawer</td><td><span class="tag t-ok">OK</span></td><td><code>EmailComposer</code>, <code>sendCustomEmail</code></td></tr>
+    <tr><td>Outil Masse & centrage DA40</td><td><span class="tag t-warn">Admin only</span> — à ouvrir au pilote</td><td><code>/admin/mass-balance</code>, <code>/api/admin/mass-balance/*</code></td></tr>
+    <tr><td>Toute la logique email centralisée sur un seul point d'entrée</td><td><span class="tag t-ok">OK</span></td><td><code>updateStatutReservation</code></td></tr>
+    <tr><td>Crons Vercel existants (réutilisables pour l'expiration des offres)</td><td><span class="tag t-ok">OK</span></td><td><code>vercel.json</code> / <code>app/api/cron/*</code></td></tr>
+  </table>
+  <div class="callout">
+    <b>N'existe pas encore :</b> assignation d'un vol standard à un pilote (le <code>pilote_id</code>
+    n'est posé aujourd'hui que par le flow annonce), la mise en jeu à tous les pilotes, un champ
+    montant/part pilote sur la réservation, l'accès pilote au M&B, et <code>/pilote/vols</code> ne
+    montre que <code>type_resa = 'annonce_pilote'</code> (pas les vols assignés).
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <h2 id="modele"><span class="n">2</span>Le modèle décidé</h2>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>Pilotes & confiance</h3>
+      <ul>
+        <li>3-4 pilotes au lancement, gens de confiance en formation (ATPL / time-building).</li>
+        <li>Vérification déclarative : licence, expiration, medical, ratings en texte/dates — pas
+          d'upload PDF pour l'instant.</li>
+        <li>Champs légaux <b>bloquants</b> : tant qu'incomplets ou expirés, le pilote ne peut pas
+          prendre de vol (badge rouge dans son espace).</li>
+        <li>Charte pilote signée via popup scroll-to-accept à la création du compte, texte rédigé par
+          nous (pas d'avocat prévu), preuve gardée (version + horodatage).</li>
+        <li>Assurance : celle de l'école/club, comme pour Romain aujourd'hui.</li>
+        <li>Romain garde l'admin <b>et</b> a une fiche pilote reliée (l'ancien pilote "Romain
+          Destanberg" d'une vieille migration est réutilisé).</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Attribution des vols</h3>
+      <ul>
+        <li>Assignation manuelle (drawer + liste) dès la demande reçue.</li>
+        <li><b>Et</b> mise en jeu automatique : offre à tous les pilotes actifs et légalement en règle,
+          premier arrivé, fenêtre de 48h.</li>
+        <li>Pas de disponibilités déclarées — jamais, Romain assigne "au feeling".</li>
+        <li>Pilote peut refuser une offre ("pas pour moi") ou rendre un vol pris jusqu'à J-3.</li>
+        <li>Vol sur mesure non concerné (pilotes = vols standard + annonces uniquement en v1).</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Ce que fait le pilote sur son vol</h3>
+      <ul>
+        <li>Trace/importe la route, confirme ou propose un nouveau créneau, envoie un email de
+          présentation (encouragé, pas bloquant).</li>
+        <li>Accès complet au M&B (ses vols + calculateur libre, DA40 only).</li>
+        <li>Modifie passagers/poids/infos client (avec popup d'avertissement).</li>
+        <li>Marque "vol effectué" — verrouillé jusqu'à 8h après l'horaire prévu.</li>
+        <li>Ne peut PAS annuler un vol lui-même (il demande à Romain).</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Légal & UX</h3>
+      <ul>
+        <li>CGP/CGU réécrites : "plateforme de mise en relation", le pilote est responsable de son vol.</li>
+        <li>Politique de confidentialité : coordonnées client partagées avec le pilote assigné, une
+          phrase claire dans la confirmation suffit comme consentement.</li>
+        <li>Si le client refuse ce partage, le vol ne peut pas se faire.</li>
+        <li>Client voit prénom, nom, photo, bio du pilote (transparence).</li>
+        <li>Pas d'avis d'avocat prévu, pas de vérification TVA/BCE — assumé en connaissance de cause.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout green">
+    <b>Périmètre v1 :</b> assignation manuelle + mise en jeu automatique livrées <b>ensemble</b>, pas en
+    deux temps. Romain construit tout le chantier d'un bloc puis déploie en une fois — séparé du batch
+    M&B / net-Stripe qui peut partir avant, indépendamment. La page "postuler" (discrète, non indexée,
+    lien footer) peut sortir dès maintenant ; l'espace pilote peut rester affiché "en construction" tant
+    qu'il n'y a pas de pilote actif.
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <h2 id="suspens"><span class="n">3</span>Qui encaisse l'argent — question dépassée</h2>
+
+  <div class="card">
+    <p><span class="tag t-block">Dépassé par le pivot 08/09</span> Le débat A (le pilote encaisse en
+    direct) vs B (Romain encaisse puis reverse) portait sur des <b>vols de Romain assignés à un
+    pilote</b> — montage abandonné pour raison légale (encadré rouge en tête). Le 08/09 on avait
+    d'abord tranché modèle A et codé le bloc D ; c'est en creusant « comment afficher le prix » que le
+    vrai blocage est apparu : le prix affiché couvre le coût direct du vol, donc il ne reste rien à
+    partager pour le pilote → pas de partage de frais → illégal.</p>
+    <p style="margin:8px 0 0"><b>Nouvelle question, pour l'Option 3 (annonces du pilote) :</b> est-ce
+    que le prix que le pilote fixe sur son annonce laisse une part réelle à sa charge ? C'est le même
+    fond de problème, à trancher avec avocat / DGTA. Le tableau A/B ci-dessous ne sert plus que
+    d'historique.</p>
+  </div>
+
+  <table>
+    <tr><th></th><th>A · Le pilote encaisse en direct</th><th>B · Romain encaisse puis reverse</th></tr>
+    <tr><td><b>Argent</b></td><td>Cash ou virement/Payconiq entre pilote et client, hors app</td><td>Client paie sur le Stripe de Romain, virement IBAN ensuite au pilote</td></tr>
+    <tr><td><b>Risque réglementaire</b></td><td><span class="tag t-ok">Faible</span> — Fly Horizons reste un tableau d'affichage, aucun flux d'argent ne le traverse</td><td><span class="tag t-warn">Zone grise</span> — potentiellement un service de paiement (PSD2). Une exemption "agent commercial" existe mais suppose d'agir au nom d'<b>une seule</b> des deux parties, ce que la position d'intermédiaire de Fly Horizons ne permet pas clairement</td></tr>
+    <tr><td><b>Risque fiscal/comptable</b></td><td>Aucun — rien ne transite par les comptes de Romain</td><td>Les sommes qui transitent sans être du CA doivent être isolées proprement en compta (pass-through) — non vérifié à ce jour (voir Q59)</td></tr>
+    <tr><td><b>Cohérence expérience client</b></td><td><span class="tag t-warn">Moyenne</span> — parfois carte (Romain), parfois cash/virement (pilote tiers)</td><td><span class="tag t-ok">Bonne</span> — paiement carte homogène pour tous les vols</td></tr>
+    <tr><td><b>Email pilote sans branding</b></td><td>Résolu indépendamment (§8) — tout part en <code>info@fly-horizons.com</code>, pilote nommé dans le corps. Plus un argument pour ou contre A/B</td><td>Idem, non impactant</td></tr>
+    <tr><td><b>Impact code</b></td><td>Masquer lien Stripe / boarding pass / reçu Fly Horizons sur les vols pilotes tiers. Toggle "payé oui/non" côté pilote.</td><td>Garder le flow de paiement actuel + écran "à qui je dois virer combien" + suivi des virements + revoir <code>part_pilote</code> pour un pilote sur son propre avion</td></tr>
+  </table>
+
+  <div class="callout purple">
+    <b>Pas une décision à prendre aujourd'hui.</b> Le bloc D (§11) est le seul qui dépend de ce choix —
+    tout le reste du plan d'attaque avance sans lui. Quand Romain tranche (ou obtient un avis
+    d'avocat), on ajuste uniquement le bloc D.
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <h2 id="data"><span class="n">4</span>Modèle de données & migrations</h2>
+  <p>Migrations à coller à la main dans Supabase, comme d'habitude. Écrites pour le modèle A
+  (pilote encaisse) — si Romain tranche pour B, seules les colonnes marquées <span class="tag t-susp">dépend du choix §3</span> changent.</p>
+
+  <h3>4.1 · <code>pilotes</code> — nouveaux champs</h3>
+  <pre><code>ALTER TABLE pilotes
+  ADD COLUMN licence_numero text,
+  ADD COLUMN licence_expiration date,
+  ADD COLUMN medical_expiration date,
+  ADD COLUMN ratings text,
+  ADD COLUMN conditions_accepted_at timestamptz,
+  ADD COLUMN conditions_version text,
+  ADD COLUMN bio text,
+  ADD COLUMN photo_url text;
+-- legal_ok n'est PAS stocké : calculé côté app à chaque lecture
+-- (licence_numero non vide AND licence_expiration > now() AND medical_expiration > now()
+--  AND conditions_accepted_at IS NOT NULL) pour éviter un état stocké qui se désynchronise
+-- silencieusement des dates d'expiration.</code></pre>
+
+  <h3>4.2 · <code>reservations</code> — nouveaux champs</h3>
+  <pre><code>ALTER TABLE reservations
+  ADD COLUMN pilote_assigned_at timestamptz,
+  ADD COLUMN pilote_paye boolean DEFAULT false,        -- <span class="tag t-susp">dépend du choix §3</span>
+  ADD COLUMN montant_pilote numeric,                    -- <span class="tag t-susp">dépend du choix §3</span>
+  ADD COLUMN part_pilote_pct numeric,
+  ADD COLUMN slot_change_count integer DEFAULT 0 NOT NULL;
+-- pilote_id existe déjà, réutilisé pour les vols standard assignés (pas seulement les annonces)</code></pre>
+
+  <h3>4.3 · Nouvelle table <code>flight_offers</code> (mise en jeu)</h3>
+  <pre><code>CREATE TABLE flight_offers (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  reservation_id uuid NOT NULL REFERENCES reservations(id) UNIQUE,
+  created_by uuid REFERENCES profiles(id),
+  statut text NOT NULL DEFAULT 'ouverte'
+    CHECK (statut IN ('ouverte','pourvue','annulee','expiree')),
+  expires_at timestamptz NOT NULL,
+  claimed_by uuid REFERENCES pilotes(id),
+  claimed_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE flight_offers ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "service role only" ON flight_offers FOR ALL USING (true);
+-- même pattern que les autres tables pilote : la protection réelle est 100% applicative
+-- (server actions), pas dans les policies RLS.</code></pre>
+
+  <h3>4.4 · Nouvelle table <code>flight_offer_refusals</code> (traçabilité des refus)</h3>
+  <pre><code>CREATE TABLE flight_offer_refusals (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  offer_id uuid NOT NULL REFERENCES flight_offers(id),
+  pilote_id uuid NOT NULL REFERENCES pilotes(id),
+  refused_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE flight_offer_refusals ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "service role only" ON flight_offer_refusals FOR ALL USING (true);</code></pre>
+
+  <h3>4.5 · Réutilisé tel quel</h3>
+  <ul>
+    <li><code>reservation_history.author</code> — passe de <code>'admin'</code> (hardcodé) à
+      <code>pilote:&lt;nom&gt;</code> quand l'acteur est un pilote.</li>
+    <li>Pattern claim atomique déjà utilisé pour les annonces → réutilisé tel quel pour
+      <code>flight_offers</code> (<code>UPDATE ... WHERE pilote_id IS NULL AND statut='ouverte'</code>).</li>
+    <li><code>lib/reschedule-token.ts</code> → réutilisé pour signer les liens d'offre par pilote.</li>
+  </ul>
+
+  <h3>4.6 · Fils de contact & threading email</h3>
+  <p>Le pilote parle au client via le <b>fil de ticket existant</b>, jamais par un mail autonome
+  (arbitrage du 07/09). Un fil = un thread email unique côté client.</p>
+  <pre><code>ALTER TABLE contact_messages
+  DROP CONSTRAINT contact_messages_author_check,
+  ADD CONSTRAINT contact_messages_author_check CHECK (author IN ('client','admin','pilote')),
+  ADD COLUMN sent_message_id text;      -- Message-ID du mail sortant, pour chaîner References / In-Reply-To
+
+ALTER TABLE contacts
+  ADD COLUMN reservation_id uuid REFERENCES reservations(id),  -- lie un fil à un vol → visible côté pilote
+  ADD COLUMN email_subject text,        -- sujet stable réutilisé sur tous les mails du fil
+  ADD COLUMN root_message_id text;      -- ancre de la chaîne References</code></pre>
+  <p>Chaque envoi (système, Romain, pilote) réutilise <code>email_subject</code> et empile
+  <code>References</code> / <code>In-Reply-To</code> à partir des <code>sent_message_id</code> déjà
+  stockés — le client voit une conversation continue quel que soit l'émetteur réel. Resend accepte
+  les headers custom pour ça.</p>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <h2 id="flows"><span class="n">5</span>Flows détaillés</h2>
+
+  <h3>5.1 · Onboarding d'un pilote</h3>
+  <ol class="step">
+    <li>Romain crée le compte dans <code>/admin/pilotes</code>, ou promeut un compte client existant
+      (nouveau chemin — <code>inviteUserByEmail</code> échoue aujourd'hui sur un email déjà enregistré).</li>
+    <li>Le pilote reçoit l'invitation, choisit son mot de passe.</li>
+    <li>Premier login → popup obligatoire : charte pilote, scroll jusqu'en bas, bouton "Accepter"
+      s'active seulement une fois en bas. Stocke <code>conditions_accepted_at</code> +
+      <code>conditions_version</code>.</li>
+    <li>Dashboard : bandeau rouge tant que <code>legal_ok</code> est faux, invite à compléter les
+      champs légaux.</li>
+    <li>Une fois en règle, le pilote peut recevoir des assignations et des offres.</li>
+  </ol>
+
+  <h3>5.2 · Assignation manuelle (drawer + liste)</h3>
+  <ol class="step">
+    <li>Demande client classique, <code>statut = demande_recue</code>.</li>
+    <li>Dans le drawer <b>et</b> depuis la liste des réservations : sélecteur de pilotes actifs et en
+      règle, bouton Assigner / Retirer.</li>
+    <li>Email auto au pilote ("vol assigné" + lien <code>/pilote/vols</code>).</li>
+    <li>Email auto au client, immédiat : "un pilote nommé X va vous contacter".</li>
+    <li>Le pilote gère route, créneau, présentation, M&B.</li>
+    <li>Le pilote peut rendre le vol jusqu'à J-3 → <code>pilote_id</code> à null, Romain notifié,
+      redevient une demande à réassigner.</li>
+  </ol>
+
+  <h3>5.3 · Mise en jeu automatique (premier arrivé)</h3>
+  <ol class="step">
+    <li>Bouton "Proposer à tous les pilotes" dans le drawer.</li>
+    <li>Création d'une <code>flight_offer</code> + email à chaque pilote actif/en règle
+      <b>sans conflit d'agenda sur ce créneau</b> (annonces + vols déjà assignés vérifiés).</li>
+    <li>Premier "Je le prends" → UPDATE atomique. Les suivants voient "déjà pris".</li>
+    <li>"Pas pour moi" → écrit dans <code>flight_offer_refusals</code>, disparaît de sa liste.</li>
+    <li>48h sans preneur → offre expirée, Romain notifié, gère à la main.</li>
+  </ol>
+
+  <h3>5.4 · Réassignation (changement de pilote)</h3>
+  <ol class="step">
+    <li>Romain change le pilote — pas d'email automatique.</li>
+    <li>Il envoie lui-même un message via un template unique modifiable, avec un paragraphe
+      "votre pilote est maintenant X" supprimable au cas par cas.</li>
+  </ol>
+
+  <h3>5.5 · Marquer "vol effectué"</h3>
+  <p>Pilote ou Romain, mais bouton désactivé tant que la date/heure prévue n'est pas passée depuis
+  plus de 8h (anti-fraude).</p>
+
+  <h3>5.6 · Modification passagers/poids/infos client par le pilote</h3>
+  <p>Autorisé, avec un popup d'avertissement sur l'impact avant validation.</p>
+
+  <h3>5.7 · Désactivation d'un pilote</h3>
+  <p>Vols futurs → non-assignés, redeviennent une demande à réassigner. Annonces dépubliées.</p>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <h2 id="admin"><span class="n">6</span>Écrans admin</h2>
+  <table>
+    <tr><th>Écran</th><th>Contenu</th></tr>
+    <tr><td>Nav principale</td><td>"Pilotes" remonte de "Plus" vers une section "Équipe".</td></tr>
+    <tr><td>Liste des réservations</td><td>Colonne "pilote" + filtre par pilote.</td></tr>
+    <tr><td>Planning multi-pilotes</td><td>Vue calendrier "qui vole quoi cette semaine".</td></tr>
+    <tr><td>Stats par pilote</td><td>Nb vols, annulations dernière minute, <code>slot_change_count</code>, taux de refus.</td></tr>
+    <tr><td>Écran "refus des pilotes"</td><td>Liste (qui/vol/quand), taux par pilote, alerte si seuil dépassé (ex. &gt;70%), filtre par période.</td></tr>
+    <tr><td><code>/admin/transactions</code></td><td>Section séparée "vols pilotes tiers" (date, pilote, montant) — informative, 0€ dans la P&L de Romain.</td></tr>
+    <tr><td>Impersonation</td><td>"Voir comme un pilote" depuis la fiche pilote, pour debug.</td></tr>
+    <tr><td>Fiche pilote</td><td>Statut légal (<code>legal_ok</code>), champs déclarés, historique d'acceptation de la charte.</td></tr>
+  </table>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <h2 id="pilote"><span class="n">7</span>Écrans espace pilote</h2>
+  <table>
+    <tr><th>Écran</th><th>Contenu</th></tr>
+    <tr><td>Nav</td><td>Masse & centrage, Mon profil, Offres à prendre, Mes vols passés.</td></tr>
+    <tr><td>Dashboard</td><td>Vols à venir, demandes en attente, offres ouvertes, vols pas encore payés à surveiller. Bandeau rouge si légal incomplet/expiré.</td></tr>
+    <tr><td>Mon profil</td><td>Bio, photo, tel, IBAN, infos légales — édition libre.</td></tr>
+    <tr><td>Mes vols passés</td><td>Carnet de vols effectués.</td></tr>
+    <tr><td>M&B</td><td>Accès complet : vols assignés + calculateur libre (DA40 only).</td></tr>
+    <tr><td>Drawer (viewerRole=pilote)</td><td>Route, créneau, email libre + templates, "client a payé" (toggle info), passagers/poids (avec avertissement), historique depuis assignation, contexte client visible.</td></tr>
+    <tr><td>Notifications</td><td>Email + badge/compteur.</td></tr>
+  </table>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <h2 id="emails"><span class="n">8</span>Emails — création, adaptation, routage</h2>
+
+  <div class="callout green">
+    <b>Routage — arbitré le 07/09, plus léger que prévu.</b> Pas d'alias par pilote, pas de forwarding
+    Namecheap. Tout part en <code>Fly Horizons &lt;info@fly-horizons.com&gt;</code> ; le nom du pilote
+    vit dans le <b>corps</b> du message. Le pilote ne rédige jamais un mail autonome : il écrit dans le
+    fil du ticket depuis <code>/pilote</code>, l'app envoie à sa place, cousu au même thread email
+    (§4.6). Côté client : une seule conversation continue, qu'elle vienne du système, de Romain ou du
+    pilote.
+  </div>
+
+  <h3>8.1 · Réponses entrantes du client</h3>
+  <ul>
+    <li><b>Déflection</b> — chaque email rattaché à un ticket / une réservation porte un bouton visible
+      « Répondre sur le site » (vers le fil tokenisé <code>/contact/ticket/[token]</code>, sans login)
+      + une mention « adresse non surveillée en continu ». Vaut pour <b>tous</b> les emails clients, pas
+      seulement les emails pilote — le <code>replyTo: info@</code> actuel (<code>lib/resend.ts</code>)
+      fuit déjà partout.</li>
+    <li><b>Capture</b> — <code>Reply-To: &lt;thread_token&gt;@reply.fly-horizons.com</code>
+      (sous-domaine dédié, catch-all, aucun impact sur les MX de <code>fly-horizons.com</code>).
+      Webhook <code>/api/inbound-email</code> : parse la réponse (stripper l'historique cité), retrouve
+      le <code>contacts</code> par token, insère un <code>contact_messages</code>
+      (<code>author='client'</code>), déclenche la notif « nouvelle réponse » existante (+ pilote
+      assigné une fois les fils pilote-aware).</li>
+    <li><b>Filet</b> — <code>info@fly-horizons.com</code> (boîte PrivateEmail Namecheap, déjà
+      existante) : tout entrant non matché (mail neuf, mauvaise adresse) y atterrit comme aujourd'hui,
+      traité à la main.</li>
+    <li><b>À choisir en codant</b> — provider inbound : Resend Inbound (même dashboard que l'envoi) ou
+      Cloudflare Email Workers (gratuit). Les deux conviennent.</li>
+  </ul>
+
+  <h3>8.2 · Emails sortants</h3>
+  <ul>
+    <li><b>Nouveau</b> — vol assigné au pilote (lien <code>/pilote/vols</code>).</li>
+    <li><b>Nouveau</b> — vol assigné : notification client immédiate ("un pilote nommé X va vous contacter").</li>
+    <li><b>Nouveau</b> — email de présentation du pilote au client, template pré-rempli éditable, envoyé depuis le fil.</li>
+    <li><b>Nouveau</b> — offre de mise en jeu à tous les pilotes actifs (lien de claim).</li>
+    <li><b>Nouveau</b> — offre expirée sans preneur → notif Romain.</li>
+    <li><b>Nouveau</b> — template de réassignation (unique, modifiable, paragraphe supprimable).</li>
+    <li><b>Adapté</b> — les ~25 emails signés "Romain, pilote et fondateur" → nom du pilote inséré là
+      où c'est pertinent, bouton « Répondre sur le site », <code>Reply-To</code> = adresse de capture.
+      Pas de réécriture lourde, pas de reply-to par pilote.</li>
+    <li><b>Adapté</b> — tout email rattaché à un fil réutilise <code>email_subject</code> +
+      <code>References</code> / <code>In-Reply-To</code> (§4.6).</li>
+    <li><b>Inchangé</b> — emails d'annulation : partent toujours de Fly Horizons / Romain.</li>
+    <li><b>Inchangé</b> — boarding pass PDF : gardé tel quel pour les vols pilotes.</li>
+  </ul>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <h2 id="textes"><span class="n">9</span>Textes légaux à produire</h2>
+  <ul>
+    <li>Charte pilote (décharge de responsabilité) — rédigée par nous, affichée dans le popup
+      scroll-to-accept. Pas d'avocat prévu.</li>
+    <li>CGP/CGU — "Fly Horizons opère les vols" → "plateforme de mise en relation, le pilote est
+      responsable de son vol".</li>
+    <li>Politique de confidentialité — ajout : "vos coordonnées sont partagées avec le pilote assigné".</li>
+    <li>Phrase de consentement dans la confirmation client (pas de case à cocher séparée).</li>
+    <li>Page "postuler" — texte court, non indexée, renvoi vers le formulaire de contact.</li>
+  </ul>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <h2 id="gardefous"><span class="n">10</span>Garde-fous anti-abus (récap, faciles à oublier)</h2>
+  <ul>
+    <li>Stats de fréquence de changement de créneau par pilote (<code>slot_change_count</code>).</li>
+    <li>"Vol effectué" bloqué &lt; 8h après l'horaire prévu.</li>
+    <li>Écran admin "refus des pilotes" avec alerte de seuil.</li>
+    <li>Annulation d'un vol réservée à Romain, le pilote demande seulement.</li>
+    <li>Popup d'avertissement avant modification passagers/poids par le pilote.</li>
+    <li>Délai J-3 pour rendre un vol, au-delà il faut appeler Romain.</li>
+    <li>Champs légaux bloquants avant de pouvoir prendre un vol.</li>
+  </ul>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <h2 id="ordre"><span class="n">11</span>Plan d'attaque par blocs</h2>
+
+  <div class="callout red">
+    <b>Obsolète depuis le pivot 08/09.</b> Ce découpage A→F visait l'assignation des vols de Romain
+    à des pilotes (abandonnée). Il reste ici comme trace de ce qui a été construit. <b>Le vrai
+    prochain chantier</b> = développer <b>l'Option 3</b> : le système d'annonces
+    (<code>annonces_pilote</code>) pour que le pilote gère ses propres vols de partage de frais.
+    Bloc A est réutilisable tel quel. B/C/D sont gelés. Un nouveau plan « Option 3 » sera rédigé
+    quand Romain aura confirmé la direction et, idéalement, le cadre légal (avocat / DGTA).
+  </div>
+
+  <p>Romain construit tout d'un bloc puis déploie en une fois. Ordre logique à l'intérieur de ce bloc
+  — chaque étape s'appuie sur la précédente, rien ne part en prod avant la fin de F.</p>
+
+  <div class="card">
+    <h4>A · Fondations (sécurité + accès) — <span class="pill">ne dépend de rien</span></h4>
+    <ul class="checklist">
+      <li>Gating <code>viewerRole</code> sur <code>ActionFooter</code> (fuite d'actions admin corrigée).</li>
+      <li>Masquer le bilan financier (<code>useBilanVol</code>) côté pilote.</li>
+      <li>M&B ouvert au rôle pilote (page + 3 routes API), scopé à ses vols + calculateur libre.</li>
+      <li>Factoriser <code>checkAdminOrOwningPilote</code>, ajouter le check <code>pilote.statut='actif'</code> partout.</li>
+      <li>Migration 4.1 : champs légaux <code>pilotes</code> + calcul <code>legal_ok</code> + blocage si faux.</li>
+      <li>Popup charte pilote scroll-to-accept au premier login.</li>
+      <li>Chemin "promouvoir un compte client existant en pilote".</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h4>B · Assignation manuelle — <span class="pill">dépend de A</span></h4>
+    <ul class="checklist">
+      <li><code>/pilote/vols</code> élargi aux vols standard assignés.</li>
+      <li>Migration 4.2 (colonnes <code>reservations</code>, sauf celles marquées §3).</li>
+      <li>Bloc "Pilote" dans le drawer + colonne/filtre dans la liste des réservations.</li>
+      <li>Server action <code>assignPilote</code> + email pilote + email client immédiat.</li>
+      <li>Nom du pilote affiché côté client pour un vol standard assigné.</li>
+      <li>Email de présentation pilote (template + bouton dans le drawer pilote).</li>
+      <li>Bouton "je rends ce vol" côté pilote (jusqu'à J-3).</li>
+      <li>Template + flow de réassignation (5.4).</li>
+      <li>Log <code>reservation_history.author = pilote:&lt;nom&gt;</code>.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h4>C · Mise en jeu automatique — <span class="pill">dépend de B</span></h4>
+    <ul class="checklist">
+      <li>Migrations 4.3 + 4.4 (<code>flight_offers</code>, <code>flight_offer_refusals</code>).</li>
+      <li>Server actions <code>createOffer</code> / <code>claimOffer</code> / <code>refuseOffer</code> / <code>cancelOffer</code>.</li>
+      <li>Check de conflit d'agenda avant l'envoi (annonces + vols assignés).</li>
+      <li>Email offre + page de claim <code>/pilote/offre/&lt;jeton&gt;</code> + bouton "pas pour moi".</li>
+      <li>Expiration 48h (cron existant réutilisable) + notif Romain si personne ne prend.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h4>D · Argent & compta pilote — <span class="tag t-susp">bloqué par §3</span></h4>
+    <ul class="checklist">
+      <li><b>Préalable : Romain tranche le modèle A/B (§3).</b></li>
+      <li>Modèle A : masquer lien Stripe/encaissement sur vol pilote, toggle <code>pilote_paye</code>,
+        champs <code>montant_pilote</code>/<code>part_pilote_pct</code> côté pilote, reçu neutre
+        "participation aux frais", section "vols pilotes tiers" dans <code>/admin/transactions</code>.</li>
+      <li>Modèle B : garder le flow Stripe actuel + écran "à qui je dois virer combien" + suivi
+        virements + revoir <code>part_pilote</code> pour un pilote sur son propre avion.</li>
+      <li>Règle NCO.GEN.104 dynamique + alerte si &lt; 25% (indépendant du choix A/B).</li>
+    </ul>
+    <p class="pill">Pistes concrètes déjà esquissées pour « comment le pilote encaisse » (modèle A) :
+      (1) toggle « cash / virement » + champ montant, aucune intégration de paiement ;
+      (2) le pilote colle son propre lien (Payconiq, Revolut…) dans un champ libre, visible du client ;
+      (3) juste un champ « montant convenu » + « payé oui/non », toute la logistique hors app.
+      Reco de départ : option 3, la plus fidèle à « l'app est un tableau d'affichage ». À valider avec
+      Romain avant de coder D.</p>
+  </div>
+
+  <div class="card">
+    <h4>E · Emails pilote-aware + garde-fous restants — <span class="pill">dépend de B</span>, indépendant de D</h4>
+    <ul class="checklist">
+      <li>Migration §4.6 : <code>contact_messages.author += 'pilote'</code> + <code>sent_message_id</code> ;
+        <code>contacts.reservation_id</code> / <code>email_subject</code> / <code>root_message_id</code>.</li>
+      <li>Fil de ticket lié à une réservation, visible et répondable depuis <code>/pilote</code>.</li>
+      <li>Threading sortant : réutilisation du sujet + chaîne <code>References</code> / <code>In-Reply-To</code>.</li>
+      <li>Sous-domaine <code>reply.fly-horizons.com</code> + webhook <code>/api/inbound-email</code>
+        (parse, match token, insert <code>contact_messages</code>, notif) + fallback <code>info@</code>.</li>
+      <li>Bouton « Répondre sur le site » + mention « non surveillé » sur tous les emails rattachés à un fil.</li>
+      <li>Passe sur les ~25 templates : nom du pilote inséré, <code>Reply-To</code> = adresse de capture. Pas d'alias par pilote.</li>
+      <li><code>slot_change_count</code> + stats admin correspondantes.</li>
+      <li>Verrou 8h sur "vol effectué".</li>
+      <li>Popup d'avertissement sur modification passagers/poids par le pilote.</li>
+      <li>Écran admin "refus des pilotes" (liste, taux, alerte, période).</li>
+      <li>Planning multi-pilotes + stats par pilote côté admin.</li>
+      <li>Impersonation "voir comme un pilote".</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h4>F · Légal & page postuler — <span class="pill">indépendant, en parallèle</span></h4>
+    <ul class="checklist">
+      <li>Textes légaux (§9) rédigés et intégrés (charte, CGU, confidentialité, phrase de consentement).</li>
+      <li>Page "postuler" statique, non indexée, lien footer.</li>
+    </ul>
+  </div>
+
+  <div class="callout">
+    <b>Déploiement.</b> Une fois A→F terminés et testés manuellement (pas de tests automatisés dans
+    ce repo — prévoir un script de test manuel par bloc), un seul déploiement pour tout le chantier
+    pilotes, séparé du batch M&B / net-Stripe qui peut partir avant, indépendamment.
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <h2 id="faisa"><span class="n">12</span>Risque & poids par bloc</h2>
+  <table>
+    <tr><th>Bloc</th><th>Risque</th><th>Poids</th><th>Dépend de</th></tr>
+    <tr><td>A · Fondations</td><td><span class="tag t-ok">Faible</span></td><td>Moyen</td><td>—</td></tr>
+    <tr><td>B · Assignation manuelle</td><td><span class="tag t-warn">Moyen</span> (emails, RLS)</td><td>Moyen</td><td>A</td></tr>
+    <tr><td>C · Mise en jeu</td><td><span class="tag t-warn">Moyen</span> (états, races)</td><td>Moyen</td><td>B</td></tr>
+    <tr><td>D · Argent & compta</td><td><span class="tag t-block">Élevé</span> (légal/fisc, en suspens)</td><td>Moyen→Gros</td><td>Décision §3</td></tr>
+    <tr><td>E · Emails & garde-fous</td><td><span class="tag t-warn">Moyen</span> (parsing des réponses email entrantes)</td><td>Moyen→Gros</td><td>B</td></tr>
+    <tr><td>F · Légal & page postuler</td><td><span class="tag t-warn">Moyen</span> (textes à valider)</td><td>Petit</td><td>—</td></tr>
+  </table>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <h2 id="horsperimetre"><span class="n">13</span>Hors périmètre v1</h2>
+  <ul>
+    <li>Vol sur mesure (<code>type_resa = perso</code>) — non concerné par l'attribution.</li>
+    <li>Disponibilités déclarées par les pilotes — jamais.</li>
+    <li>M&B multi-types — reste DA40-only, les autres avions école se débrouillent hors app.</li>
+    <li>Upload de documents PDF (licence/medical) — déclaratif texte seulement.</li>
+    <li>Avis d'avocat en droit aérien / vérification comptable-TVA — assumé, pas bloquant.</li>
+    <li>Case à cocher de consentement séparée — une phrase claire suffit.</li>
+    <li>Case "je préfère un pilote en particulier" à la demande — géré à la main via commentaire.</li>
+    <li>Stripe Connect / multi-comptes — écarté quel que soit l'arbitrage §3 (B garde un seul Stripe,
+      A n'en a pas besoin).</li>
+  </ul>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <h2 id="pieges"><span class="n">14</span>Pièges déjà identifiés (à ne pas re-découvrir en codant)</h2>
+  <ul>
+    <li><b><code>ActionFooter</code> ne connaît pas <code>viewerRole</code></b> → un pilote voit et
+      peut cliquer des actions admin (encaisser, boarding pass, proposer un créneau). À gater côté UI
+      <b>et</b> côté server action.</li>
+    <li><b><code>checkAdminOrOwningPilote</code> ne vérifie pas <code>pilote.statut</code></b> — un
+      pilote désactivé garde l'accès à ses vols.</li>
+    <li><b>Helper dupliqué</b> dans <code>reservations.ts</code> et <code>reservation-edit.ts</code> →
+      à factoriser.</li>
+    <li><b>Sécurité 100% applicative</b> — les tables pilote ont des policies <code>using(true)</code>,
+      toute la protection est dans les server actions. Checklist de revue à chaque nouvelle action.</li>
+    <li><b>Invitation d'un pilote déjà client</b> — <code>inviteUserByEmail</code> échoue sur un email
+      déjà enregistré. Beaucoup des 3-4 pilotes de confiance ont sûrement déjà réservé comme client.</li>
+    <li><b>Conflit d'agenda multi-pilotes</b> — le flow annonce a déjà un check scopé au pilote ;
+      l'assignation manuelle n'en a pas encore (dernier qui écrit gagne).</li>
+    <li><b>Migrations manuelles</b> — chaque nouvelle table = une étape "coller le SQL dans Supabase" à
+      ne pas oublier.</li>
+    <li><b>Pas de tests automatisés</b> — flow multi-acteurs (Romain + N pilotes + client) = script de
+      test manuel à écrire par bloc.</li>
+    <li><b>Cache / <code>revalidatePath</code></b> — une assignation doit rafraîchir
+      <code>/admin/vols</code>, <code>/pilote/vols</code> et le badge dashboard pilote.</li>
+    <li><b>Parsing des réponses email entrantes</b> — stripper proprement l'historique cité / la
+      signature (heuristique top-post : couper à la 1ʳᵉ ligne <code>Le … a écrit :</code> /
+      <code>-----Message d'origine-----</code> / bloc <code>&gt;</code>). Fiabilité « suffisante », pas parfaite.</li>
+    <li><b>MX du sous-domaine <code>reply.fly-horizons.com</code></b> — à poser sans toucher aux MX
+      racine (PrivateEmail garde <code>info@</code>). Vérifier au moment de brancher le provider inbound.</li>
+    <li><b>Cas limites de la mise en jeu / du claim (bloc C)</b> — repris de l'ancienne analyse :
+      pilote pas connecté qui clique le lien (login puis reprise du claim) · offre déjà expirée ·
+      offre annulée entre-temps par Romain · pilote désactivé qui clique un vieux lien · double-clic /
+      double-soumission. Le claim doit être un <code>UPDATE ... WHERE pilote_id IS NULL AND
+      statut='ouverte'</code> atomique, tout le reste renvoie un message clair.</li>
+  </ul>
+
+  <div class="callout blue">
+    <b>Prochaine étape concrète.</b> Démarrer le bloc A — il ne dépend de rien, ni de l'arbitrage §3,
+    ni d'aucune autre décision en attente. Le bloc D (argent) attend l'arbitrage de Romain, tout le
+    reste peut avancer sans lui.
+  </div>
+
+</div>
+</body>
+</html>
