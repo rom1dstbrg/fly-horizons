@@ -407,6 +407,10 @@
           <code>NumberField</code> + <code>ValueRow</code> partagés) — fini les <code>text-[10/11px]</code>
           et <code>width={62..92}</code> au hasard. § 2 en 3 colonnes
           [saisie] [tableau contenu] [enveloppe agrandie à droite].</li>
+        <li><code>da73f73</code> : fix du graphe CG monstrueux (screenshot Romain) — la colonne
+          <code>minmax(0,1fr)</code> étirait le SVG (viewBox 560×400) à ~1300px sur grand écran,
+          facteur ~2.4 qui faisait exploser les polices. Les 3 colonnes du § 2 sont maintenant
+          bornées et le graphe plafonné à 560px (son échelle native).</li>
         <li><b>Calcul, PDF, METAR inchangés.</b> <code>next build</code> + <code>tsc</code> OK.
           À valider par Romain dans le navigateur.</li>
       </ul>
