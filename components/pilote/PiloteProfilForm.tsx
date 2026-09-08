@@ -37,7 +37,6 @@ export function PiloteProfilForm({ pilote }: { pilote: Pilote }) {
     photo_url: pilote.photo_url ?? "",
     telephone: pilote.telephone ?? "",
     iban: pilote.iban ?? "",
-    paylink: pilote.paylink ?? "",
     licence_numero: pilote.licence_numero ?? "",
     licence_expiration: pilote.licence_expiration ?? "",
     medical_expiration: pilote.medical_expiration ?? "",
@@ -148,11 +147,6 @@ export function PiloteProfilForm({ pilote }: { pilote: Pilote }) {
             <label className={labelCls}>IBAN (participation aux frais)</label>
             <input className={field} value={form.iban} onChange={set("iban")} placeholder="BE.. .... .... ...." />
             <p className="text-[11px] text-muted-foreground">Le client vous règle directement dessus. Un QR de virement est généré pour lui.</p>
-          </div>
-          <div className="space-y-1.5">
-            <label className={labelCls}>Lien de paiement (optionnel)</label>
-            <input className={field} value={form.paylink} onChange={set("paylink")} placeholder="https://payconiq.com/... ou revolut.me/..." />
-            <p className="text-[11px] text-muted-foreground">Payconiq, Revolut… Si rempli, un bouton apparaît pour le client à côté du virement.</p>
           </div>
           <div className="space-y-1.5 sm:col-span-2">
             <label className={labelCls}>Photo (URL)</label>

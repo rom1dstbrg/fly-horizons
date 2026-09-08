@@ -33,7 +33,7 @@ export async function getTransactionsData(): Promise<{
     supabase.from("avion_tarifs").select("prix_heure, actif_depuis"),
     supabase
       .from("reservations")
-      .select("id, date_vol, type_resa, acompte, paye, remboursement, duree, duree_reelle, passagers, voucher_code, statut, cash_payment, stripe_fee, pilote_id, montant_pilote, pilote_paye, clients(prenom, nom), pilotes(nom)")
+      .select("id, date_vol, type_resa, acompte, paye, remboursement, duree, duree_reelle, passagers, voucher_code, statut, cash_payment, stripe_fee, pilote_id, clients(prenom, nom), pilotes(nom)")
       .neq("statut", "annulee")
       .order("date_vol", { ascending: false }),
     supabase
@@ -61,8 +61,10 @@ export async function getTransactionsData(): Promise<{
   const partPiloteType = (crmSettings?.find(s => s.key === "part_pilote_type")?.value ?? "pourcentage") as "pourcentage" | "montant";
   const partPiloteValeur = parseFloat(crmSettings?.find(s => s.key === "part_pilote_valeur")?.value ?? "25");
 
-  // Vols confiés à un pilote tiers (modèle A) : l'argent va en direct au pilote,
-  // 0 € pour Fly Horizons → exclus des lignes/totaux, listés à part (info).
+  // Vols confiés à un pilote tiers : chantier gelé (pivot 08/09). `isPiloteVol`
+  // renvoie false partout tant que l'assignation (Bloc B) est gelée → `piloteResas`
+  // est toujours vide et `montant_pilote` / `pilote_paye` n'existent pas en base
+  // (migration 20260909 non exécutée). Section conservée inerte pour la reprise.
   const ownResas = (resas ?? []).filter(r => !isPiloteVol(r));
   const piloteResas = (resas ?? []).filter(r => isPiloteVol(r));
 
@@ -76,8 +78,8 @@ export async function getTransactionsData(): Promise<{
       date: r.date_vol,
       client: c ? `${c.prenom} ${c.nom}` : "—",
       pilote: p?.nom ?? "—",
-      montant: r.montant_pilote != null ? Number(r.montant_pilote) : null,
-      paye: !!r.pilote_paye,
+      montant: null,
+      paye: false,
     };
   });
 

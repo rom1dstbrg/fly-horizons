@@ -12,7 +12,6 @@ export type PiloteProfilInput = {
   photo_url?: string | null;
   telephone?: string | null;
   iban?: string | null;
-  paylink?: string | null;
   licence_numero?: string | null;
   licence_expiration?: string | null; // 'YYYY-MM-DD' ou ''
   medical_expiration?: string | null;
@@ -44,7 +43,6 @@ export async function updateMyPiloteProfile(input: PiloteProfilInput) {
         photo_url: clean(input.photo_url),
         telephone: clean(input.telephone),
         iban: clean(input.iban),
-        paylink: clean(input.paylink),
         licence_numero: clean(input.licence_numero),
         licence_expiration: cleanDate(input.licence_expiration),
         medical_expiration: cleanDate(input.medical_expiration),

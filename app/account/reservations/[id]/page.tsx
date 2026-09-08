@@ -25,7 +25,7 @@ export default async function ReservationTrackerPage({ params }: PageProps) {
   // Fetch reservation
   const { data: resa } = await adminSupabase
     .from("reservations")
-    .select("id, date_vol, heure_vol, duree, passagers, statut, type_resa, payment_token, acompte, distance_km, created_at, client_id, route, route_status, route_token, route_feedback, waypoints, pilote_id, montant_pilote, pilote_paye, pilotes(nom, iban, paylink)")
+    .select("id, date_vol, heure_vol, duree, passagers, statut, type_resa, payment_token, acompte, distance_km, created_at, client_id, route, route_status, route_token, route_feedback, waypoints")
     .eq("id", id)
     .single();
 
@@ -68,10 +68,6 @@ export default async function ReservationTrackerPage({ params }: PageProps) {
       ? process.env.NEXT_PUBLIC_SITE_URL
       : "https://fly-horizons.com";
 
-  const piloteRaw = Array.isArray(resa.pilotes) ? resa.pilotes[0] : resa.pilotes;
-  const pilote = (piloteRaw as { nom: string; iban: string | null; paylink: string | null } | null) ?? null;
-  const isPiloteVol = !!resa.pilote_id && resa.type_resa === "standard";
-
   return (
     <ReservationTracker
       reservation={{
@@ -84,15 +80,6 @@ export default async function ReservationTrackerPage({ params }: PageProps) {
         type_resa: resa.type_resa,
         payment_token: resa.payment_token,
         acompte: resa.acompte,
-        pilotePayment: isPiloteVol
-          ? {
-              piloteNom: pilote?.nom ?? "votre pilote",
-              montant: typeof resa.montant_pilote === "number" ? resa.montant_pilote : resa.montant_pilote != null ? Number(resa.montant_pilote) : null,
-              paye: !!resa.pilote_paye,
-              iban: pilote?.iban ?? null,
-              paylink: pilote?.paylink ?? null,
-            }
-          : null,
         distance_km: resa.distance_km,
         created_at: resa.created_at,
         route: resa.route ?? null,
