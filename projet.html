@@ -184,6 +184,48 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-09-08 · Espace pilote — paiement</p>
+      <h3>Annonces = modèle A : le client paie le pilote en direct</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Il n'y a qu'un compte Stripe (celui de Romain). En l'état, le lien de paiement d'une
+          annonce encaisse sur ce Stripe <b>quel que soit le pilote</b> qui l'a publiée. Pour
+          l'annonce d'un pilote tiers, ça fait de Romain un intermédiaire de paiement (zone grise
+          PSD2) et ça pollue sa compta avec de l'argent qui n'est pas son chiffre d'affaires.
+          C'était le point n°1 jamais tranché du backlog Option 3.</dd>
+        <dt>Décision</dt>
+        <dd>Pour <b>toutes les annonces</b> (celles de Romain comprises, une seule règle) : le
+          client règle <b>directement le pilote</b> — virement / QR SEPA vers l'IBAN du pilote,
+          aucun passage par Stripe ni par la compta Fly Horizons. Le client paie
+          <code>prix_total − part_pilote</code> ; le pilote porte <code>part_pilote</code>
+          (≥ part égale, imposé depuis le durcissement du 08/09). Fly Horizons n'encaisse rien et
+          n'est pas intermédiaire de paiement. Le pilote marque « le client m'a payé » et émet le
+          reçu.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd><b>Modèle B</b> (Stripe Romain + reversement manuel au pilote) : marche tout de suite et
+          garde le paiement par carte, mais c'est exactement l'intermédiation qu'on veut éviter —
+          déjà écarté le matin du 08/09. <b>Stripe Connect par pilote</b> : propre mais lourd, et
+          fait de Fly Horizons une plateforme de paiement (plus de compliance, toujours
+          intermédiaire). <b>Annonces réservées à Romain</b> : sûr mais bloque l'ouverture aux
+          autres pilotes, que Romain veut garder possible.</dd>
+        <dt>Conséquences</dt>
+        <dd>Réactive une version nettoyée du Bloc D (QR SEPA, « client m'a payé », reçu émis par le
+          pilote) mais câblée sur <code>type_resa = 'annonce_pilote'</code>, pas sur l'assignation
+          gelée. <code>respondToRouteProposal</code> n'ouvre plus de session Stripe pour une annonce.
+          <code>/api/reservation/pay</code> + webhook Stripe cessent de couvrir
+          <code>annonce_pilote</code>. Les annonces sortent de la P&amp;L
+          (<code>lib/transactions.ts</code>). <b>Migration à exécuter</b> : sous-ensemble de
+          <code>20260909_pilote_paiement</code> — <code>reservations.pilote_paye</code> +
+          <code>pilote_paye_at</code> uniquement (pas <code>montant_pilote</code> : l'
+          <code>acompte</code> porte déjà le montant client). IBAN pilote à remplir dans
+          <code>/pilote/profil</code>. Modèle A + part pilote imposée = la posture cost-sharing
+          (NCO.GEN.104) la plus défendable sans avocat. Reste entier : la question « est-ce que
+          Fly Horizons peut faire de la mise en relation payante » (mais plus d'intermédiation
+          financière au moins).</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-09-08 · Méthode / légal</p>
       <h3>Pas de découverte légale — on ne l'attend plus</h3>
       <dl>
