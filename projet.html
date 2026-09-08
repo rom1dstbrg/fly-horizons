@@ -111,7 +111,14 @@
 
     <div class="col">
       <h3><span class="tag t-blue">En cours</span></h3>
-      <p class="meta">— rien —</p>
+      <ul>
+        <li><b>Refonte de l'interface Masse &amp; centrage.</b> 1er jet : structure refaite en flux
+          vertical numéroté 1→4 (Le vol · Chargement · Performances · Verdict &amp; feuille), verdict
+          GO / NO-GO / incomplet combiné (masse+centrage <i>et</i> perfs), grille de perfs
+          9-colonnes remplacée par des cartes lisibles par aérodrome. Calcul inchangé.
+          Commit <code>7943759</code>. <b>À regarder dans le navigateur</b>
+          (<code>npm run dev</code> → <code>/admin/mass-balance</code>) et me dire les ajustements.</li>
+      </ul>
     </div>
 
     <div class="col">
@@ -130,16 +137,13 @@
           <code>20260907_pilote_legal</code>, <code>20260908_reservations_pilote_assign</code>,
           <code>20260908_flight_offers</code></li>
         <li>Outil Masse &amp; centrage / perfs DA40 : <code>/admin/mass-balance</code>, <code>/pilote/mass-balance</code>
-          <span class="tag t-red">interface à refaire</span></li>
+          (calcul + PDF + METAR OK ; interface refaite le 08/09, cf. « En cours »)</li>
       </ul>
     </div>
 
     <div class="col">
       <h3><span class="tag t-grey">Backlog</span> plus tard, pas encore ordonnancé</h3>
       <ul>
-        <li><b>Refonte de l'interface Masse &amp; centrage.</b> L'outil fonctionne (calculs DA40,
-          enveloppe, perfs, PDF, METAR) mais l'UI ne plaît pas du tout à Romain — à repenser
-          sérieusement. <code>components/admin/mass-balance/*</code>.</li>
         <li><b>Chantier Option 3 « annonces à fond »</b> (10 items) — détail dans
           <code>plan-attaque-espace-pilote.html</code> § Option 3 :
           <ol>
@@ -168,6 +172,29 @@
     <p class="meta"><b>Append-only.</b> On n'édite jamais une décision passée : on en ajoute une
       nouvelle qui la remplace, avec un lien. Chaque entrée : <i>Contexte · Décision · Alternatives
       écartées · Conséquences</i>. Plus récent en haut.</p>
+
+    <div class="dec">
+      <p class="date">2026-09-08 · Interface</p>
+      <h3>Masse &amp; centrage : flux vertical numéroté, tous les champs gardés</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>La page M&amp;B « n'a aucune structure » (Romain) : la carte « Chargement » mélangeait
+          avion+date, les poids et les boutons enregistrer/PDF ; les perfs étaient un îlot en bas ;
+          aucun verdict unique (1 centrage + 3 perfs éparpillés).</dd>
+        <dt>Décision</dt>
+        <dd>Flux vertical en 4 sections numérotées, dans l'ordre du travail : 1 Le vol (avion, date) ·
+          2 Chargement (saisie à gauche, tableau + graphe CG + verdict centrage à droite) ·
+          3 Performances · 4 Verdict &amp; feuille (GO/NO-GO combiné + libellé + boutons). Tous les
+          champs actuels conservés, seule la mise en page change. Calcul / PDF / METAR intacts.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Saisie gauche / résultats collants à droite (« config + aperçu ») ; onglets
+          Chargement / Perfs / Verdict — les deux jugés moins lisibles qu'un flux linéaire pour ce
+          type de feuille.</dd>
+        <dt>Conséquences</dt>
+        <dd>1er jet livré (<code>7943759</code>), à valider dans le navigateur ; ajustements fins
+          attendus.</dd>
+      </dl>
+    </div>
 
     <div class="dec">
       <p class="date">2026-09-08 · Git / méthode</p>
@@ -370,6 +397,21 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-08 — refonte interface Masse &amp; centrage</h3>
+      <ul>
+        <li><code>7943759</code> : <code>MassBalanceClient</code> + <code>PerfSection</code> réécrits.
+          Page en flux vertical numéroté 1→4 ; boutons d'action au § 4 ; verdict GO/NO-GO/incomplet
+          combiné ; grille de perfs remise en cartes par aérodrome. <b>Calcul, PDF, METAR inchangés.</b>
+          <code>next build</code> + <code>tsc</code> OK. À valider par Romain.</li>
+      </ul>
+
+      <h3>2026-09-08 — règle « ne pas push »</h3>
+      <ul>
+        <li><code>0c0566c</code> : <code>projet.html</code> (§ Règles du repo) + <code>AGENTS.md</code> —
+          ne jamais <code>git push</code> sur <code>main</code> sans le feu vert de Romain (Vercel
+          auto-déploie).</li>
+      </ul>
+
       <h3>2026-09-08 — nettoyage git</h3>
       <ul>
         <li><code>main</code> ← <code>44ba252</code> : merge du lot non commité (batch M&amp;B + Bloc A +
