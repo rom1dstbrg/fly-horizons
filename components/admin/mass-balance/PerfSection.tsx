@@ -16,34 +16,39 @@ export interface RunwayPick {
   lda: number | null;
 }
 
-const GRID =
-  "grid grid-cols-[56px_62px_minmax(150px,1fr)_56px_58px_62px_54px_52px_56px] gap-x-1.5 gap-y-1 items-center";
+const inputCls =
+  "h-8 px-1.5 rounded-md border border-input bg-background text-sm font-mono tabular-nums text-right focus:outline-none focus:ring-2 focus:ring-ring [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
 
-const cellCls =
-  "w-full h-8 px-1 rounded-md border border-input bg-background text-sm font-mono tabular-nums text-right focus:outline-none focus:ring-2 focus:ring-ring [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
-
-function NumCell({
+function Field({
+  label,
   value,
   onChange,
   min,
   max,
+  width = 72,
 }: {
+  label: string;
   value: number | null;
   onChange: (n: number | null) => void;
   min?: number;
   max?: number;
+  width?: number;
 }) {
   return (
-    <input
-      type="number"
-      inputMode="decimal"
-      value={value ?? ""}
-      min={min}
-      max={max}
-      placeholder="—"
-      onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
-      className={cellCls}
-    />
+    <label className="flex flex-col gap-0.5">
+      <span className="text-[10px] font-medium text-muted-foreground whitespace-nowrap">{label}</span>
+      <input
+        type="number"
+        inputMode="decimal"
+        value={value ?? ""}
+        min={min}
+        max={max}
+        placeholder="—"
+        onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
+        style={{ width }}
+        className={inputCls}
+      />
+    </label>
   );
 }
 
@@ -53,33 +58,6 @@ function Kv({ label, value, bad }: { label: string; value: string; bad?: boolean
       <span className="text-[10px] text-muted-foreground">{label}: </span>
       <span className={`font-mono text-xs font-semibold ${bad ? "text-red-600" : "text-foreground"}`}>{value}</span>
     </div>
-  );
-}
-
-function MiniNum({
-  label,
-  value,
-  onChange,
-  width = 96,
-}: {
-  label: string;
-  value: number | null;
-  onChange: (n: number | null) => void;
-  width?: number;
-}) {
-  return (
-    <label className="flex flex-col gap-0.5">
-      <span className="text-[10px] text-muted-foreground whitespace-nowrap">{label}</span>
-      <input
-        type="number"
-        inputMode="decimal"
-        value={value ?? ""}
-        placeholder="—"
-        onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
-        style={{ width }}
-        className={cellCls}
-      />
-    </label>
   );
 }
 
@@ -171,41 +149,41 @@ function AeroRow({
   }
 
   return (
-    <div className="px-3 py-2">
-      <div className={GRID}>
-        <span className="text-xs font-bold text-navy uppercase">{label}</span>
-
+    <div className="rounded-lg border border-border bg-white p-3">
+      {/* Ligne 1 : identité + actions */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-bold uppercase tracking-wide text-navy w-16 shrink-0">{label}</span>
         <input
           type="text"
           value={ad.icao}
           maxLength={4}
           placeholder="ICAO"
           onChange={(e) => setIcao(e.target.value)}
-          className="w-full h-8 px-1.5 rounded-md border border-input bg-background text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-[68px] h-8 px-1.5 rounded-md border border-input bg-background text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-ring"
         />
-
-        <div className="flex flex-wrap items-center gap-1.5">
+        <button
+          type="button"
+          onClick={fetchMetar}
+          disabled={loading}
+          className="inline-flex items-center gap-1 h-8 px-2 rounded-md border border-navy text-navy text-[11px] font-semibold hover:bg-navy hover:text-white transition-colors disabled:opacity-50 cursor-pointer"
+        >
+          {loading ? <Loader2 size={11} className="animate-spin" /> : <Cloud size={11} />}
+          METAR
+        </button>
+        {canCopyDep && (
           <button
             type="button"
-            onClick={fetchMetar}
-            disabled={loading}
-            className="inline-flex items-center gap-1 h-8 px-2 rounded-md border border-navy text-navy text-[11px] font-semibold hover:bg-navy hover:text-white transition-colors disabled:opacity-50 cursor-pointer"
+            onClick={onCopyDep}
+            title="Reprendre l'aérodrome de départ"
+            className="inline-flex items-center gap-1 h-8 px-2 rounded-md border border-navy/40 text-navy text-[11px] font-semibold hover:bg-navy/10 transition-colors cursor-pointer"
           >
-            {loading ? <Loader2 size={11} className="animate-spin" /> : <Cloud size={11} />}
-            METAR
+            <CornerDownLeft size={11} />= Départ
           </button>
-          {canCopyDep && (
-            <button
-              type="button"
-              onClick={onCopyDep}
-              title="Reprendre l'aérodrome de départ"
-              className="inline-flex items-center gap-1 h-8 px-2 rounded-md border border-navy/40 text-navy text-[11px] font-semibold hover:bg-navy/10 transition-colors cursor-pointer"
-            >
-              <CornerDownLeft size={11} />= Départ
-            </button>
-          )}
-          {rec &&
-            rec.runways.map((r) => (
+        )}
+        {rec && (
+          <span className="inline-flex items-center gap-1">
+            <span className="text-[11px] text-muted-foreground">Pistes</span>
+            {rec.runways.map((r) => (
               <button
                 key={r.ident}
                 type="button"
@@ -224,36 +202,42 @@ function AeroRow({
                 {r.ident}
               </button>
             ))}
-          {rec && <span className="text-[11px] text-muted-foreground">{rec.elevation} ft</span>}
-          <button
-            type="button"
-            onClick={() => setShowPaste((s) => !s)}
-            className="text-[11px] text-muted-foreground underline underline-offset-2 cursor-pointer"
-          >
-            brut
-          </button>
-        </div>
+            <span className="text-[11px] text-muted-foreground">· {rec.elevation} ft</span>
+          </span>
+        )}
+        <button
+          type="button"
+          onClick={() => setShowPaste((s) => !s)}
+          className="text-[11px] text-muted-foreground underline underline-offset-2 cursor-pointer"
+        >
+          METAR brut
+        </button>
+      </div>
 
-        {narrow ? <span /> : <NumCell value={ad.rwy} onChange={(v) => onChange({ rwy: v })} min={0} max={360} />}
-        {narrow ? <span /> : <NumCell value={ad.elev} onChange={(v) => onChange({ elev: v })} />}
-        <NumCell value={ad.qnh} onChange={(v) => onChange({ qnh: v })} />
-        <NumCell value={ad.oat} onChange={(v) => onChange({ oat: v })} />
-        <NumCell value={ad.wdir} onChange={(v) => onChange({ wdir: v })} min={0} max={360} />
-        <NumCell value={ad.wspd} onChange={(v) => onChange({ wspd: v })} min={0} />
+      {/* Ligne 2 : valeurs */}
+      <div className="mt-2 flex flex-wrap items-end gap-x-3 gap-y-1.5">
+        {!narrow && <Field label="RWY °" value={ad.rwy} onChange={(v) => onChange({ rwy: v })} min={0} max={360} width={62} />}
+        {!narrow && <Field label="Élévation ft" value={ad.elev} onChange={(v) => onChange({ elev: v })} width={74} />}
+        <Field label="QNH hPa" value={ad.qnh} onChange={(v) => onChange({ qnh: v })} width={74} />
+        <Field label="OAT °C" value={ad.oat} onChange={(v) => onChange({ oat: v })} width={62} />
+        <Field label="Vent °" value={ad.wdir} onChange={(v) => onChange({ wdir: v })} min={0} max={360} width={62} />
+        <Field label="Vent kt" value={ad.wspd} onChange={(v) => onChange({ wspd: v })} min={0} width={62} />
       </div>
 
       {status.msg && (
         <p
-          className={`mt-1 text-[11px] ${
+          className={`mt-1.5 text-[11px] ${
             status.tone === "ok" ? "text-green-600" : status.tone === "ko" ? "text-red-600" : "text-muted-foreground"
           }`}
         >
           {status.msg}
         </p>
       )}
-      {ad.rawMetar ? <p className="mt-0.5 font-mono text-[10px] text-muted-foreground break-all">{ad.rawMetar}</p> : null}
+      {ad.rawMetar ? (
+        <p className="mt-1 font-mono text-[10px] text-muted-foreground break-all">{ad.rawMetar}</p>
+      ) : null}
       {showPaste && (
-        <div className="mt-1.5 flex items-start gap-2">
+        <div className="mt-2 flex items-start gap-2">
           <textarea
             rows={2}
             value={rawPaste}
@@ -317,61 +301,51 @@ export function PerfSection({
   const depHasIcao = !!perf.dep.icao?.trim();
 
   return (
-    <div className="space-y-3">
-      <div className="overflow-x-auto rounded-lg border border-border">
-        <div className="min-w-[720px]">
-          <div className={`${GRID} bg-secondary px-3 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide`}>
-            <span>Phase</span>
-            <span>ICAO</span>
-            <span>METAR · pistes</span>
-            <span className="text-right">RWY°</span>
-            <span className="text-right">Élév</span>
-            <span className="text-right">QNH</span>
-            <span className="text-right">OAT</span>
-            <span className="text-right">Vnt°</span>
-            <span className="text-right">Vnt&nbsp;kt</span>
-          </div>
-          <div className="divide-y divide-border">
-            <AeroRow
-              label="Départ"
-              ad={perf.dep}
-              onChange={(p) => onChangeAero("dep", p)}
-              onRunway={(rw) => handleRunway("dep", rw)}
-            />
-            <AeroRow
-              label="Dest."
-              ad={perf.dest}
-              canCopyDep={depHasIcao}
-              onCopyDep={() => copyFromDep("dest")}
-              onChange={(p) => onChangeAero("dest", p)}
-              onRunway={(rw) => handleRunway("dest", rw)}
-            />
-            <AeroRow
-              label="Alt."
-              ad={perf.alt}
-              narrow
-              canCopyDep={depHasIcao}
-              onCopyDep={() => copyFromDep("alt")}
-              onChange={(p) => onChangeAero("alt", p)}
-              onRunway={(rw) => handleRunway("alt", rw)}
-            />
-          </div>
-        </div>
+    <div className="space-y-4">
+      {/* Conditions par aérodrome */}
+      <div className="space-y-2">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          Conditions &amp; pistes
+        </p>
+        <AeroRow
+          label="Départ"
+          ad={perf.dep}
+          onChange={(p) => onChangeAero("dep", p)}
+          onRunway={(rw) => handleRunway("dep", rw)}
+        />
+        <AeroRow
+          label="Destination"
+          ad={perf.dest}
+          canCopyDep={depHasIcao}
+          onCopyDep={() => copyFromDep("dest")}
+          onChange={(p) => onChangeAero("dest", p)}
+          onRunway={(rw) => handleRunway("dest", rw)}
+        />
+        <AeroRow
+          label="Alternate"
+          ad={perf.alt}
+          narrow
+          canCopyDep={depHasIcao}
+          onCopyDep={() => copyFromDep("alt")}
+          onChange={(p) => onChangeAero("alt", p)}
+          onRunway={(rw) => handleRunway("alt", rw)}
+        />
       </div>
 
+      {/* Résultats */}
       <div className="grid gap-3 lg:grid-cols-2">
         {/* Décollage */}
         <div className="rounded-lg border border-border bg-white px-3 py-2.5 space-y-2">
-          <div className="flex items-end justify-between gap-2">
+          <div className="flex flex-wrap items-end justify-between gap-2">
             <h3 className="text-xs font-bold text-navy uppercase tracking-wide">Décollage — TODR</h3>
-            <MiniNum label="TODA m" value={perf.toda} onChange={(v) => onChange({ toda: v })} width={100} />
+            <Field label="TODA m (départ)" value={perf.toda} onChange={(v) => onChange({ toda: v })} width={92} />
           </div>
           <div className="flex flex-wrap gap-1.5">
             <Kv label="X-wind" value={d.xwind != null ? `${d.xwind} kt` : "—"} bad={d.xwind != null && d.xwind > 20} />
             <Kv label="PA" value={d.pa != null ? `${d.pa} ft` : "—"} />
             <Kv label="DA" value={d.da != null ? `${d.da} ft` : "—"} />
             <Kv label="TODR" value={d.error ?? (d.todr != null ? `${d.todr} m` : "—")} />
-            <Kv label="×1.25" value={d.todr125 != null ? `${d.todr125} m` : "—"} />
+            <Kv label="× 1.25" value={d.todr125 != null ? `${d.todr125} m` : "—"} />
           </div>
           <VerdictBox status={d.verdict.status} message={d.verdict.message} className="!py-1.5 !text-[11px]" />
         </div>
@@ -381,8 +355,8 @@ export function PerfSection({
           <div className="flex flex-wrap items-end justify-between gap-2">
             <h3 className="text-xs font-bold text-navy uppercase tracking-wide">Atterrissage — LDR</h3>
             <div className="flex gap-2">
-              <MiniNum label="LDA dest." value={perf.ldaDest} onChange={(v) => onChange({ ldaDest: v })} width={90} />
-              <MiniNum label="LDA alt." value={perf.ldaAlt} onChange={(v) => onChange({ ldaAlt: v })} width={90} />
+              <Field label="LDA dest. m" value={perf.ldaDest} onChange={(v) => onChange({ ldaDest: v })} width={84} />
+              <Field label="LDA alt. m" value={perf.ldaAlt} onChange={(v) => onChange({ ldaAlt: v })} width={84} />
             </div>
           </div>
           <div className="flex flex-wrap gap-1.5">
