@@ -191,10 +191,10 @@
           08/09 : pas de découverte légale, pas d'ouverture publique).
           <br><i>Fait :</i> part pilote bloquante + seuil adaptatif · garde-fou <code>legal_ok</code> ·
           paiement virement + page client · steps pilote · reçu émis par le pilote · fiche pilote
-          publique sur la page annonce · 2 modes de vente (avion / place).
-          <br><i>Encore backlog :</i> garde-fous transverses (verrou 8 h « vol effectué », stats
-          changement de créneau, routage réponses email = chantier messagerie, impersonation
-          « voir comme un pilote »).
+          publique sur la page annonce · 2 modes de vente (avion / place) · verrou 8 h « vol
+          effectué » + compteur de changements de créneau (10/09).
+          <br><i>Encore backlog :</i> routage des réponses email (= chantier messagerie) ·
+          impersonation admin « voir comme un pilote » (reportée).
           <br><i>Hors périmètre jusqu'à nouvel ordre :</i> CGP « plateforme de mise en relation » ·
           page « postuler » · ouverture à des pilotes inconnus.
         </li>
@@ -669,8 +669,10 @@
         on redéploie.</li>
       <li><b>Validation visuelle M&amp;B</b> — Romain regarde la refonte et donne ses derniers
         ajustements.</li>
-      <li><b>Garde-fous transverses</b> (verrou 8 h « vol effectué », stats changement de créneau,
-        impersonation) + <b>messagerie pilote ↔ client</b> (inclut le routage des réponses email).</li>
+      <li><s>Garde-fous transverses</s> — verrou 8 h + compteur créneaux <b>faits (10/09)</b> ;
+        impersonation reportée (outil de support, pas un garde-fou).</li>
+      <li><b>Messagerie pilote ↔ client</b> (fil de ticket) — gros chantier, décision 08/09, pas
+        commencé. Inclut le routage des réponses email. Mérite son propre plan.</li>
       <li><b>Refonte des emails</b> — tout à la fin, quand l'espace pilote est stabilisé.</li>
     </ol>
 
@@ -706,6 +708,23 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-10 — garde-fous transverses (verrou 8 h « vol effectué » + compteur créneaux)</h3>
+      <ul>
+        <li><b>Verrou 8 h.</b> <code>marquerVolEffectue</code> refuse si &lt; 8 h après l'heure
+          prévue du décollage quand l'acteur est un pilote (l'admin garde la main). Même verrou
+          dans l'UI (<code>AnnoncePiloteActions</code>, props <code>dateVol</code> /
+          <code>heureVol</code> / <code>viewerRole</code>).</li>
+        <li><b>Compteur de changements de créneau.</b> <code>InfosTab</code> (admin) : bandeau
+          « Créneau changé N× par le pilote », ambre dès 2, rouge dès 3
+          (<code>slot_change_count</code> était déjà incrémenté dans <code>proposeSlot</code>,
+          affiché nulle part).</li>
+        <li>Bouton « Marquer vol effectué » fantôme de l'<code>ActionFooter</code> masqué côté
+          pilote (il appelait <code>updateStatutReservation</code> → <code>checkAdmin</code> →
+          échouait). Commit <code>ba88978</code>.</li>
+        <li><b>Reporté :</b> impersonation admin « voir comme un pilote » — outil de support, pas
+          un garde-fou ; à faire quand l'espace s'ouvre à des pilotes externes.</li>
+      </ul>
+
       <h3>2026-09-10 — paiement des annonces : virement + QR SEPA + page client, modes de vente, garde-fous</h3>
       <ul>
         <li><b>Migration <code>20260910_annonces_paiement.sql</code></b> (<span class="tag t-red">à
