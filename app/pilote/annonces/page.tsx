@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PiloteAnnoncesClient } from "@/components/pilote/PiloteAnnoncesClient";
+import { PiloteHeader } from "@/components/pilote/ui";
 import { piloteLegalStatus } from "@/lib/pilote/legal";
 
 export const metadata = { title: "Mes annonces — Espace pilote" };
@@ -48,13 +49,10 @@ export default async function PiloteAnnoncesPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Mes annonces</h1>
-        <p className="text-muted-foreground text-sm mt-0.5">
-          Publiez vos offres de vol : durée, prix, photos — le client choisit sa date.
-        </p>
-      </div>
-
+      <PiloteHeader
+        title="Mes annonces"
+        subtitle="Publiez vos offres de vol : durée, prix, photos. Le client choisit sa date."
+      />
       <PiloteAnnoncesClient annonces={annonces ?? []} publishGate={publishGate} />
     </div>
   );

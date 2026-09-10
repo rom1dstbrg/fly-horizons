@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { AnnonceForm } from "./AnnonceForm";
 import { AnnoncesList, type AnnonceRow } from "./AnnoncesList";
 import { EmptyState } from "@/components/admin/ui";
-import { Plane, PlaneTakeoff, ShieldAlert } from "lucide-react";
+import { PiloteAlert } from "./ui";
+import { Plane, PlaneTakeoff } from "lucide-react";
 
 export function PiloteAnnoncesClient({
   annonces,
@@ -37,15 +38,12 @@ export function PiloteAnnoncesClient({
   return (
     <div className="space-y-4">
       {publishGate && (
-        <div className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          <ShieldAlert size={16} className="shrink-0 mt-0.5" />
-          <p>
-            {publishGate}{" "}
-            <a href="/pilote/profil" className="font-semibold underline underline-offset-2">
-              Ouvrir mon profil
-            </a>
-          </p>
-        </div>
+        <PiloteAlert tone="warn">
+          {publishGate}{" "}
+          <a href="/pilote/profil" className="font-semibold underline underline-offset-2">
+            Ouvrir mon profil
+          </a>
+        </PiloteAlert>
       )}
 
       <div className="flex justify-end">

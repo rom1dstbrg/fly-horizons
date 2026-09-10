@@ -36,7 +36,7 @@ function AnnonceCard({ annonce, onEdit }: { annonce: AnnonceRow; onEdit: (a: Ann
   };
 
   return (
-    <div className={`bg-card rounded-xl border border-border p-4 flex flex-wrap items-center gap-4 ${annonce.statut !== "publiee" ? "opacity-60" : ""}`}>
+    <div className={`card-premium p-4 flex flex-wrap items-center gap-4 ${annonce.statut !== "publiee" ? "opacity-60" : ""}`}>
       {coverUrl && (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={coverUrl} alt="" className="w-14 h-14 rounded-lg object-cover shrink-0" />

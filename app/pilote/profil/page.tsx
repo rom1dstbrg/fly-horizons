@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PiloteProfilForm } from "@/components/pilote/PiloteProfilForm";
+import { PiloteHeader } from "@/components/pilote/ui";
 import type { Pilote } from "@/types/database";
 
 export const metadata = { title: "Mon profil — Espace pilote" };
@@ -16,12 +17,10 @@ export default async function PiloteProfilPage() {
 
   return (
     <div className="space-y-6 max-w-3xl">
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Mon profil</h1>
-        <p className="text-muted-foreground text-sm mt-0.5">
-          Vous gérez ces informations vous-même. Elles conditionnent votre éligibilité aux vols.
-        </p>
-      </div>
+      <PiloteHeader
+        title="Mon profil"
+        subtitle="Vous gérez ces informations vous-même. Elles conditionnent votre éligibilité aux vols."
+      />
 
       {pilote ? (
         <PiloteProfilForm pilote={pilote as Pilote} />

@@ -106,7 +106,7 @@ export function AnnonceForm({ onDone, editing }: { onDone: () => void; editing?:
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-card rounded-xl border border-border p-5 space-y-5">
+    <form onSubmit={handleSubmit} className="card-premium p-5 space-y-5">
       {error && (
         <div className="bg-destructive/10 border border-destructive/30 text-destructive text-sm rounded-md px-4 py-3">
           {error}

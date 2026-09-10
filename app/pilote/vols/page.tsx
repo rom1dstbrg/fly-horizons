@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PiloteVolsClient } from "@/components/pilote/PiloteVolsClient";
+import { PiloteHeader } from "@/components/pilote/ui";
 
 export const metadata = { title: "Mes vols — Espace pilote" };
 
@@ -22,13 +23,10 @@ export default async function PiloteVolsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Mes vols</h1>
-        <p className="text-muted-foreground text-sm mt-0.5">
-          Les vols qui vous sont attribués et les demandes de vos annonces : confirmez le créneau, tracez la route, préparez la masse et centrage.
-        </p>
-      </div>
-
+      <PiloteHeader
+        title="Mes vols"
+        subtitle="Les demandes de vos annonces et les vols qui vous sont attribués : confirmez le créneau, tracez la route, préparez la masse et centrage."
+      />
       <PiloteVolsClient reservations={(reservations ?? []) as never} />
     </div>
   );
