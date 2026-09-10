@@ -1332,6 +1332,84 @@ export function contactReplyEmail({ nom, sujet, reponse, threadUrl }: ContactRep
   return emailBase(body, `Réponse de Fly Horizons · ${sujet}`);
 }
 
+// ── 13b. Messagerie pilote ↔ client (fil rattaché à la réservation) ──────────
+
+export interface ReservationMessageProps {
+  prenom: string;
+  expediteurNom: string; // nom du pilote, ou "l'équipe Fly Horizons" côté admin
+  dateStr: string;
+  message: string;
+  signature: string;
+  threadUrl: string;
+}
+
+export function reservationMessageEmail({
+  prenom,
+  expediteurNom,
+  dateStr,
+  message,
+  signature,
+  threadUrl,
+}: ReservationMessageProps): string {
+  const body = `
+    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Fly Horizons</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Vous avez un message</h1>
+    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">Concernant votre vol du <strong style="color:#0b2238;text-transform:capitalize;">${esc(dateStr)}</strong></p>
+
+    ${separator()}
+
+    <p class="em-body" style="margin:0 0 16px;font-size:14px;color:#334155;">Bonjour <strong style="color:#0b2238;">${esc(prenom)}</strong>,</p>
+    <p class="em-body" style="margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;">${esc(expediteurNom)} vous a écrit&nbsp;:</p>
+
+    <p class="em-body" style="margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;white-space:pre-wrap;border-left:3px solid #F2B705;padding:2px 0 2px 16px;">${esc(message)}</p>
+
+    <p class="em-body" style="margin:0 0 28px;font-size:13px;color:#334155;line-height:1.6;white-space:pre-wrap;">${esc(signature)}</p>
+
+    ${ctaButton(threadUrl, "Répondre")}
+
+    <p class="em-muted" style="margin:20px 0 0;font-size:12px;color:#64748b;text-align:center;">
+      Ce lien vous donne accès à toute la conversation avec votre pilote.
+    </p>
+
+    ${separator()}
+    <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
+      Fly Horizons met en relation les pilotes et les passagers. Les échanges sur votre vol se
+      font directement avec votre pilote.
+    </p>`;
+
+  return emailBase(body, `Message · votre vol du ${dateStr}`);
+}
+
+export interface ReservationMessageClientReplyProps {
+  clientNom: string;
+  dateStr: string;
+  message: string;
+  adminUrl: string;
+}
+
+export function reservationMessageClientReplyEmail({
+  clientNom,
+  dateStr,
+  message,
+  adminUrl,
+}: ReservationMessageClientReplyProps): string {
+  const body = `
+    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Message client</p>
+    <h1 class="em-dark" style="margin:0 0 28px;font-size:22px;font-weight:800;color:#0b2238;">${esc(clientNom)} a répondu</h1>
+
+    ${separator()}
+    ${label("Vol")}
+    <p class="em-body" style="margin:0 0 20px;font-size:14px;color:#334155;font-weight:600;text-transform:capitalize;">${esc(dateStr)}</p>
+
+    ${label("Message")}
+    <p class="em-body" style="margin:0 0 28px;font-size:13px;color:#334155;line-height:1.7;white-space:pre-wrap;border-left:3px solid #F2B705;padding:2px 0 2px 16px;">${esc(message)}</p>
+
+    ${ctaButton(adminUrl, "Ouvrir dans l'espace pilote")}
+    `;
+
+  return emailBase(body, `${clientNom} a répondu · vol du ${dateStr}`);
+}
+
 // ── 14. Invitation au paiement (réservation admin) ────────────────────────────
 
 export interface ReservationPaymentInvitationProps {
