@@ -99,37 +99,40 @@
     <div class="col">
       <h3><span class="tag t-amber">À faire</span> prêt à démarrer</h3>
       <ol>
-        <li><b>Exécuter les migrations en attente</b> dans Supabase :
-          <code>20260910_annonces_paiement.sql</code> (fait) et
-          <code>20260911_reservation_messages.sql</code> (<code>reservation_messages</code> +
-          <code>reservations.messages_token</code> + <code>pilotes.signature</code>).
-          <b>Bloquant</b> pour tester — sinon <code>SELECT</code> cassés (cf. incident 08/09).</li>
-        <li><b>Vérif locale de bout en bout</b> (<code>npm run dev</code>) : parcours annonce
-          (2 modes) → paiement virement → reçu → vol effectué ; <b>onglet Messages</b> du drawer
-          (pilote + admin) → email au client → page <code>/reservation/messages/[token]</code> →
-          réponse → notif pilote ; signature dans <code>/pilote/profil</code>.</li>
-        <li><b>Renseigner un IBAN + le légal</b> sur les comptes pilote de test (sinon publication
-          bloquée — garde-fou volontaire).</li>
-        <li><b>Audit 11/09 — P0/P1 corrigés</b> (<code>audit-espace-pilote-coherence.html</code>) :
-          cascade désactivation pilote · <code>setPilotePaye</code> · dashboard pilote · carnet
-          vols passés · case de consentement Q79. <i>Restent</i> : P2 (cash, nav « Équipe »,
-          Modifier éditable pour annonces, email « paiement confirmé », secret inbound) + les
-          emails pilote-aware, fondus dans la refonte des ~32 emails.</li>
-        <li><b>Pousser <code>main</code></b> (<code>git push</code>) — ~45 commits d'avance
-          (paiement annonces + garde-fous + messagerie + audit + correctifs). Sur demande de
-          Romain uniquement.</li>
+        <li><b>Prochaine session — vérif locale de bout en bout</b> (<code>npm run dev</code>) :
+          parcours annonce (2 modes) → confirmation créneau → route acceptée → email virement →
+          page <code>/vol/annonce/paiement/[token]</code> → « payé » → reçu → vol effectué ;
+          <b>onglet Messages</b> du drawer (pilote + admin) → email client → page
+          <code>/reservation/messages/[token]</code> → réponse → notif pilote ; signature dans
+          <code>/pilote/profil</code> ; désactivation d'un pilote qui a une annonce
+          <code>reservee</code>. Migrations <code>20260910</code> + <code>20260911</code> exécutées
+          par Romain. Le back-end a été vérifié statiquement + fonctions pures testées (11/09) —
+          reste le clic.</li>
+        <li><b>Reprendre la page Masse &amp; centrage.</b> Romain la trouve « pas logique, pas
+          claire ». 3 tentatives le 11/09 (flux « saisie | résultat » 2 colonnes · verdict
+          persistant · saisie mise en avant + résumé collant) <b>toutes rejetées</b> — revert à
+          l'état 08/09 (4 sections numérotées). Pas de direction validée. « Style Fly Horizons à
+          garder », le vrai problème = manque de cohérence entre blocs ajoutés au fil de l'eau.</li>
+        <li><b>P2 de l'audit</b> (<code>audit-espace-pilote-coherence.html</code>) : option cash ·
+          nav admin « Équipe » · onglet Modifier éditable pour une annonce · email « paiement
+          confirmé » · secret <code>INBOUND_EMAIL_SECRET</code> obligatoire avant de brancher
+          l'inbound.</li>
+        <li><b>Refonte des ~32 emails</b> — <span class="tag t-grey">plus tard</span>, tout dernier
+          chantier. Absorbe le P1 « emails du parcours annonce non pilote-aware » (voix de Romain
+          sur un vol d'un autre pilote). Nouveau template déjà là : <code>annoncePaiementVirementEmail</code>,
+          <code>reservationMessageEmail</code>.</li>
+        <li><b>Pousser <code>main</code></b> (<code>git push</code>) — ~48 commits d'avance. Sur
+          demande de Romain uniquement (Vercel auto-déploie).</li>
       </ol>
     </div>
 
     <div class="col">
       <h3><span class="tag t-blue">En cours</span></h3>
       <ul>
-        <li><b>Refonte de l'interface Masse &amp; centrage.</b> 3 passes : flux vertical numéroté 1→4
-          (<code>7943759</code>) → échelle de style unique dans <code>fields.tsx</code> +
-          <code>NumberField</code>/<code>ValueRow</code> partagés (<code>b432a50</code>) → fix du
-          graphe CG surdimensionné, colonnes du § 2 bornées (<code>da73f73</code>). Calcul / PDF /
-          METAR inchangés. <b>Reste : validation visuelle finale de Romain</b>
-          (<code>/admin/mass-balance</code>, avec et sans <code>?resa=</code>).</li>
+        <li><b>Page Masse &amp; centrage — à reprendre.</b> Refonte 08/09 (4 sections numérotées,
+          <code>7943759</code>/<code>b432a50</code>/<code>da73f73</code>) jugée « pas logique, pas
+          claire » par Romain. 3 tentatives le 11/09, toutes rejetées, revert à l'état 08/09.
+          Cf. l'entrée « À faire » — aucune direction validée à ce jour.</li>
       </ul>
     </div>
 
@@ -717,6 +720,28 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-11 (fin de session) — cohérence visuelle espace pilote · M&amp;B rejetée · vérif back-end</h3>
+      <ul>
+        <li><b>Passe de cohérence de l'espace pilote</b> (<code>ba61f31</code>) : les blocs
+          avaient été ajoutés au fil de l'eau (rayons, paddings, ombres, en-têtes, encarts
+          d'alerte tous différents). <code>components/pilote/ui.tsx</code> : <code>PiloteHeader</code>,
+          <code>PiloteAlert</code>, toutes les cartes → <code>card-premium</code> (identité FH).
+          5 pages au même moule. Fond, palette, contenu inchangés.</li>
+        <li><b>Refonte page Masse &amp; centrage : 3 tentatives, toutes rejetées, revert.</b>
+          Testé : flux « saisie | résultat » 2 colonnes + verdict persistant · disposition
+          plein écran · saisie mise en avant + résumé collant. Romain : « pas fan », « style
+          Fly Horizons à garder ». <code>git reset</code> à <code>ba61f31</code> — la page est
+          revenue à l'état 08/09 (4 sections numérotées). À reprendre sans direction validée.</li>
+        <li><b>Vérification back-end</b> (demandée par Romain) : <code>tsc</code> + <code>next
+          build</code> OK ; <code>eslint</code> 0 erreur sur les 13 fichiers back-end de la
+          session ; <b>fonctions pures testées en exécution</b> (<code>evaluerPartPilote</code>,
+          <code>isPiloteVol</code>, <code>buildEpcPayload</code>, <code>isProbablyIban</code>…) —
+          tout passe ; schéma vs code OK ; gardes d'autorisation OK (le pilote peut piloter son
+          propre parcours d'annonce) ; select imbriqué <code>respondToRouteProposal</code>
+          confirmé (même schéma que le M&amp;B en prod). Reste le test à la main (prochaine
+          session).</li>
+      </ul>
+
       <h3>2026-09-11 — audit espace pilote + correctifs P0/P1</h3>
       <ul>
         <li><b>Audit</b> <code>audit-espace-pilote-coherence.html</code> : conformité aux 89
