@@ -14,10 +14,18 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { annonce_id, prenom, nom, email, telephone, passagers, date_vol, heure_vol, commentaire } = body;
+    const { annonce_id, prenom, nom, email, telephone, passagers, date_vol, heure_vol, commentaire, accept_data_sharing } = body;
 
     if (!annonce_id || !prenom || !nom || !email || !passagers || !date_vol || !heure_vol) {
       return NextResponse.json({ error: "Champs obligatoires manquants" }, { status: 400 });
+    }
+    // Q79 — le vol ne peut pas se faire sans accord explicite au partage des
+    // coordonnées avec le pilote de l'annonce.
+    if (accept_data_sharing !== true) {
+      return NextResponse.json(
+        { error: "Vous devez accepter le partage de vos coordonnées avec le pilote pour envoyer la demande." },
+        { status: 400 },
+      );
     }
 
     const passagersCount = parseInt(passagers, 10);
@@ -149,7 +157,12 @@ export async function POST(request: NextRequest) {
 
     if (!claimed) {
       return NextResponse.json(
-        { error: "Ce vol vient d'être réservé par quelqu'un d'autre." },
+        {
+          error:
+            modeVente === "place"
+              ? "Les places viennent de changer, actualisez la page et réessayez."
+              : "Ce vol vient d'être réservé par quelqu'un d'autre.",
+        },
         { status: 409 },
       );
     }

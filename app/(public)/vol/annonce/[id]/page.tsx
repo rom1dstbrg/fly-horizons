@@ -177,6 +177,7 @@ export default async function AnnonceDetailPage({ params }: { params: Promise<{ 
                   <AnnonceBookingForm
                     annonceId={annonce.id}
                     places={modeVente === "place" ? placesLibres : annonce.places}
+                    piloteName={pilote.nom}
                   />
                 )}
 

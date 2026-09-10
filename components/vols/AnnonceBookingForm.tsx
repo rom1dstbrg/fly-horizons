@@ -4,8 +4,17 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, ArrowRight } from "lucide-react";
 
-export function AnnonceBookingForm({ annonceId, places }: { annonceId: string; places: number }) {
+export function AnnonceBookingForm({
+  annonceId,
+  places,
+  piloteName,
+}: {
+  annonceId: string;
+  places: number;
+  piloteName: string;
+}) {
   const router = useRouter();
+  const [consent, setConsent] = useState(false);
   const [prenom, setPrenom] = useState("");
   const [nom, setNom] = useState("");
   const [email, setEmail] = useState("");
@@ -26,7 +35,7 @@ export function AnnonceBookingForm({ annonceId, places }: { annonceId: string; p
       const r = await fetch("/api/vol-annonce/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ annonce_id: annonceId, prenom, nom, email, telephone, passagers, date_vol: dateVol, heure_vol: heureVol, commentaire }),
+        body: JSON.stringify({ annonce_id: annonceId, prenom, nom, email, telephone, passagers, date_vol: dateVol, heure_vol: heureVol, commentaire, accept_data_sharing: consent }),
       });
       const data = await r.json();
       if (!r.ok) {
@@ -106,10 +115,24 @@ export function AnnonceBookingForm({ annonceId, places }: { annonceId: string; p
         rows={2} maxLength={500} placeholder="Un message pour le pilote ? (optionnel)"
         className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-navy/20"
       />
+      <label className="flex items-start gap-2.5 text-xs text-foreground/70 leading-relaxed cursor-pointer">
+        <input
+          type="checkbox"
+          required
+          checked={consent}
+          onChange={e => setConsent(e.target.checked)}
+          className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#F2B705]"
+        />
+        <span>
+          J&apos;accepte que mon nom, mon email et mon téléphone soient transmis à{" "}
+          <strong className="text-foreground">{piloteName}</strong>, qui organise ce vol, pour
+          qu&apos;il puisse me contacter et préparer le vol avec moi.
+        </span>
+      </label>
       <button
         type="submit"
-        disabled={loading}
-        className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#F2B705] text-[#0b2238] rounded-lg text-sm font-black hover:bg-[#e6a800] transition-colors disabled:opacity-60 cursor-pointer"
+        disabled={loading || !consent}
+        className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#F2B705] text-[#0b2238] rounded-lg text-sm font-black hover:bg-[#e6a800] transition-colors disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
       >
         {loading ? <Loader2 size={16} className="animate-spin" /> : <>Faire une demande <ArrowRight size={15} /></>}
       </button>
