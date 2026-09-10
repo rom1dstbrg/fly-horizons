@@ -24,6 +24,7 @@ import { InfosTab } from "./InfosTab";
 import { RouteSection } from "./RouteSection";
 import { ModifierTab } from "./ModifierTab";
 import { HistoriqueTab } from "./HistoriqueTab";
+import { MessagesTab } from "./MessagesTab";
 import { EmailComposer } from "./EmailComposer";
 import { ItinerairesModal } from "./ItinerairesModal";
 import { ActionFooter } from "./ActionFooter";
@@ -36,6 +37,7 @@ import { useReservationDraft } from "./hooks/useReservationDraft";
 import { useBilanVol } from "./hooks/useBilanVol";
 import { useRouteProposal } from "./hooks/useRouteProposal";
 import { useReservationHistory } from "./hooks/useReservationHistory";
+import { useReservationMessages } from "./hooks/useReservationMessages";
 import { useItineraires } from "./hooks/useItineraires";
 
 const AdminRouteEditorDynamic = dynamic(
@@ -87,6 +89,7 @@ export function ReservationDrawer({
   const bilan = useBilanVol(reservation, showFeedback);
   const route = useRouteProposal(reservation, showFeedback, onFieldsChange);
   const history = useReservationHistory(reservation, activeTab);
+  const messages = useReservationMessages(reservation, activeTab);
   const itineraires = useItineraires(route.setRouteDraft);
 
   useEffect(() => {
@@ -100,6 +103,7 @@ export function ReservationDrawer({
     bilan.reset(reservation);
     route.reset(reservation);
     history.reset();
+    messages.reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reservation?.id]);
 
@@ -323,7 +327,7 @@ export function ReservationDrawer({
 
               {!emailOpen && (
                 <div className="flex border-b border-border shrink-0">
-                  {(["infos", "route", "modifier", "historique"] as const).map(tab => (
+                  {(["infos", "route", "messages", "modifier", "historique"] as const).map(tab => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
@@ -331,7 +335,7 @@ export function ReservationDrawer({
                         activeTab === tab ? "text-navy border-b-2 border-navy -mb-px" : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
-                      {tab === "infos" ? "Infos" : tab === "route" ? "Route" : tab === "modifier" ? "Modifier" : "Historique"}
+                      {tab === "infos" ? "Infos" : tab === "route" ? "Route" : tab === "messages" ? "Messages" : tab === "modifier" ? "Modifier" : "Historique"}
                     </button>
                   ))}
                 </div>
@@ -392,6 +396,17 @@ export function ReservationDrawer({
                     onFullscreen={() => setMapFullscreen(true)}
                   />
                 </div>
+              )}
+
+              {!emailOpen && activeTab === "messages" && (
+                <MessagesTab
+                  reservation={r}
+                  messages={messages.messages}
+                  loading={messages.loading}
+                  onOptimisticAdd={messages.append}
+                  onOptimisticRemove={messages.removeById}
+                  onSent={messages.reset}
+                />
               )}
 
               {!emailOpen && activeTab === "modifier" && (

@@ -30,6 +30,8 @@ export interface DrawerReservation {
   slot_proposal_heure?: string | null;
   // Garde-fou anti-abus : nb de fois que le pilote a proposé un nouveau créneau.
   slot_change_count?: number | null;
+  // Fil de messages pilote ↔ client (jeton public /reservation/messages/[token]).
+  messages_token?: string | null;
 
   // Route — ancien système texte (standard uniquement)
   route?: string | null;
@@ -74,7 +76,7 @@ export interface DrawerReservation {
   products?: { route_waypoints: Waypoint[] | null } | null;
 }
 
-export type Tab = "infos" | "route" | "modifier" | "historique";
+export type Tab = "infos" | "route" | "messages" | "modifier" | "historique";
 
 export type HistoryItem = {
   id: string;

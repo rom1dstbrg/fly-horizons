@@ -491,10 +491,10 @@ export function InfosTab({
       </div>
       )}
 
-      {/* Free email */}
-      <div>
-        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-2">Email libre</p>
-        {viewerRole === "admin" && (
+      {/* Free email — admin uniquement. Le pilote passe par l'onglet Messages. */}
+      {viewerRole === "admin" && (
+        <div>
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-2">Email libre</p>
           <div className="mb-2">
             <p className="text-[10px] text-muted-foreground flex items-center gap-1 mb-1.5">
               <Sparkles size={9} />
@@ -513,15 +513,15 @@ export function InfosTab({
               ))}
             </div>
           </div>
-        )}
-        <button
-          onClick={onOpenEmailComposer}
-          className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
-        >
-          <Send size={14} />
-          Composer un email…
-        </button>
-      </div>
+          <button
+            onClick={onOpenEmailComposer}
+            className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
+          >
+            <Send size={14} />
+            Composer un email…
+          </button>
+        </div>
+      )}
     </div>
   );
 }
