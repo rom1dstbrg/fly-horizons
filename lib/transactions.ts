@@ -33,7 +33,7 @@ export async function getTransactionsData(): Promise<{
     supabase.from("avion_tarifs").select("prix_heure, actif_depuis"),
     supabase
       .from("reservations")
-      .select("id, date_vol, type_resa, acompte, paye, remboursement, duree, duree_reelle, passagers, voucher_code, statut, cash_payment, stripe_fee, pilote_id, clients(prenom, nom), pilotes(nom)")
+      .select("id, date_vol, type_resa, acompte, paye, remboursement, duree, duree_reelle, passagers, voucher_code, statut, cash_payment, stripe_fee, pilote_id, pilote_paye, clients(prenom, nom), pilotes(nom)")
       .neq("statut", "annulee")
       .order("date_vol", { ascending: false }),
     supabase
@@ -61,10 +61,11 @@ export async function getTransactionsData(): Promise<{
   const partPiloteType = (crmSettings?.find(s => s.key === "part_pilote_type")?.value ?? "pourcentage") as "pourcentage" | "montant";
   const partPiloteValeur = parseFloat(crmSettings?.find(s => s.key === "part_pilote_valeur")?.value ?? "25");
 
-  // Vols confiés à un pilote tiers : chantier gelé (pivot 08/09). `isPiloteVol`
-  // renvoie false partout tant que l'assignation (Bloc B) est gelée → `piloteResas`
-  // est toujours vide et `montant_pilote` / `pilote_paye` n'existent pas en base
-  // (migration 20260909 non exécutée). Section conservée inerte pour la reprise.
+  // Vols gérés par un pilote en direct (aujourd'hui : ses propres annonces,
+  // `type_resa = 'annonce_pilote'`). Le client règle le pilote par virement, rien
+  // ne transite par le Stripe / la compta de Fly Horizons → ces vols sont sortis
+  // du CA (`vols`) et listés à part, à titre informatif. L'assignation Bloc B
+  // reste gelée (pivot 08/09).
   const ownResas = (resas ?? []).filter(r => !isPiloteVol(r));
   const piloteResas = (resas ?? []).filter(r => isPiloteVol(r));
 
@@ -78,8 +79,10 @@ export async function getTransactionsData(): Promise<{
       date: r.date_vol,
       client: c ? `${c.prenom} ${c.nom}` : "—",
       pilote: p?.nom ?? "—",
-      montant: null,
-      paye: false,
+      // Montant réglé en direct au pilote = prix client de l'annonce (stocké dans
+      // `acompte` par /api/vol-annonce/submit).
+      montant: r.acompte ?? null,
+      paye: r.pilote_paye === true,
     };
   });
 

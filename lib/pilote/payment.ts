@@ -2,7 +2,11 @@
 // Helpers partagés : détection d'un vol « pilote », construction du QR SEPA (EPC).
 
 export function isPiloteVol(r: { pilote_id?: string | null; type_resa?: string | null }): boolean {
-  return !!r.pilote_id && r.type_resa === "standard";
+  // Vol géré par un pilote en direct : soit une annonce du pilote (type
+  // `annonce_pilote`), soit un vol standard qui lui a été assigné (assignation
+  // Bloc B, gelée depuis le pivot 08/09 — en pratique seul `annonce_pilote`
+  // matche aujourd'hui).
+  return !!r.pilote_id && (r.type_resa === "annonce_pilote" || r.type_resa === "standard");
 }
 
 /** Communication de virement (max ~140 car., on reste court). */
