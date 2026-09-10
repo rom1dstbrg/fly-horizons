@@ -49,12 +49,17 @@ export async function setPilotePaye(reservationId: string, paye: boolean) {
     if (!resa) return { error: "Réservation introuvable" };
     if (!isPiloteVol(resa)) return { error: "Ce vol n'est pas géré par un pilote" };
 
-    // Quand on marque « payé », on sort la résa de l'état « en attente de
-    // virement » (payment_pending) en restaurant le statut d'avant.
-    const restored =
-      paye && resa.statut === "payment_pending"
-        ? resa.pre_payment_statut || "heure_confirmee"
-        : resa.statut;
+    // Quand on marque « payé », la résa doit avancer : on la sort de
+    // « payment_pending » et de tout statut de début (demande_recue / en_attente).
+    // On restaure `pre_payment_statut` seulement s'il est déjà « avancé », sinon
+    // on force `heure_confirmee` — sans ça une résa payée pouvait rester affichée
+    // « demande reçue » (pilote ayant envoyé la route sans confirmer le créneau).
+    const EARLY = ["payment_pending", "demande_recue", "en_attente", ""];
+    let restored = resa.statut;
+    if (paye && EARLY.includes(resa.statut)) {
+      const pre = resa.pre_payment_statut ?? "";
+      restored = EARLY.includes(pre) ? "heure_confirmee" : pre;
+    }
 
     const { error } = await db
       .from("reservations")
@@ -80,7 +85,7 @@ export async function setPilotePaye(reservationId: string, paye: boolean) {
     revalidatePath("/admin/vols");
     revalidatePath("/admin/transactions");
     revalidatePath("/pilote/vols");
-    return { success: true };
+    return { success: true, statut: restored };
   } catch {
     return { error: "Erreur serveur" };
   }

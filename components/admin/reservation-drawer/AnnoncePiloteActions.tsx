@@ -56,12 +56,16 @@ export function AnnoncePiloteActions({
     setTimeout(() => setMsg(null), 3500);
   }
 
-  function run(fn: () => Promise<{ error?: string; success?: boolean; emailError?: boolean }>, okText: string, after?: () => void) {
+  function run(
+    fn: () => Promise<{ error?: string; success?: boolean; emailError?: boolean; statut?: string }>,
+    okText: string,
+    after?: (r: { statut?: string }) => void,
+  ) {
     startTransition(async () => {
       const r = await fn();
       if (r?.error) { flash("Erreur : " + r.error, false); return; }
       flash(r?.emailError ? okText + " · email non envoyé" : okText, !r?.emailError);
-      after?.();
+      after?.(r ?? {});
     });
   }
 
@@ -102,9 +106,9 @@ export function AnnoncePiloteActions({
               run(
                 () => setPilotePaye(reservationId, !piloteePaye),
                 piloteePaye ? "Paiement remis en attente" : "Paiement confirmé ✓",
-                () => {
+                (r) => {
                   onFieldsChange?.(reservationId, { pilote_paye: !piloteePaye });
-                  if (!piloteePaye) onStatusChange?.(reservationId, "heure_confirmee");
+                  if (!piloteePaye && r.statut) onStatusChange?.(reservationId, r.statut);
                 },
               )
             }
