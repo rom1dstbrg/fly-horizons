@@ -26,10 +26,14 @@ function routeStatus(r: Reservation): string | null {
   return r.route_status ?? null;
 }
 
+const TODAY = new Date().toISOString().slice(0, 10);
+const isPast = (r: Reservation) => r.statut === "vol_effectue" || r.statut === "annulee" || r.date_vol < TODAY;
+
 export function PiloteVolsClient({ reservations: initial }: { reservations: Reservation[] }) {
   const router = useRouter();
   const [reservations, setReservations] = useState<Reservation[]>(initial);
   const [drawer, setDrawer] = useState<Reservation | null>(null);
+  const [view, setView] = useState<"avenir" | "passes">("avenir");
 
   function handleStatusChange(id: string, newStatut: string) {
     setReservations((prev) => prev.map((r) => (r.id === id ? { ...r, statut: newStatut } : r)));
@@ -52,9 +56,37 @@ export function PiloteVolsClient({ reservations: initial }: { reservations: Rese
   }
 
   const th = "text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide";
+  const aVenir = reservations.filter((r) => !isPast(r));
+  const passes = reservations.filter(isPast).reverse();
+  const rows = view === "avenir" ? aVenir : passes;
+
+  const tabBtn = (id: "avenir" | "passes", label: string, n: number) => (
+    <button
+      key={id}
+      type="button"
+      onClick={() => setView(id)}
+      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+        view === id ? "bg-navy text-white" : "text-muted-foreground hover:text-foreground"
+      }`}
+    >
+      {label} <span className="tabular-nums opacity-70">{n}</span>
+    </button>
+  );
 
   return (
     <>
+      <div className="flex items-center gap-1 mb-3">
+        {tabBtn("avenir", "À venir", aVenir.length)}
+        {tabBtn("passes", "Passés", passes.length)}
+      </div>
+
+      {rows.length === 0 ? (
+        <EmptyState
+          icon={Plane}
+          title={view === "avenir" ? "Aucun vol à venir" : "Aucun vol passé"}
+          description={view === "avenir" ? "Vos prochains vols apparaîtront ici." : "Votre carnet de vols effectués se remplira ici."}
+        />
+      ) : (
       <div className="card-premium overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -69,7 +101,7 @@ export function PiloteVolsClient({ reservations: initial }: { reservations: Rese
               </tr>
             </thead>
             <tbody>
-              {reservations.map((r) => {
+              {rows.map((r) => {
                 const statut = getResaBadge(r);
                 const client = r.clients;
                 const dateStr = new Date(r.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
@@ -138,6 +170,7 @@ export function PiloteVolsClient({ reservations: initial }: { reservations: Rese
           </table>
         </div>
       </div>
+      )}
 
       <ReservationDrawer
         reservation={drawer}
