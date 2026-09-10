@@ -57,6 +57,18 @@
     n'a <b>pas</b> été retranché par le pivot 08/09 (Blocs B/C/D gelés, pas de découverte légale,
     pas d'ouverture publique).</p>
 
+  <div class="callout">
+    <b>Correctifs appliqués le 11/09</b> (commits <code>4663508</code>→<code>77ad5da</code>) :
+    <b>P0</b> cascade de désactivation pilote (plus de réservations d'annonce orphelines,
+    client prévenu, vols déjà réglés signalés à l'admin). <b>P1</b> <code>setPilotePaye</code>
+    fait toujours avancer la résa · dashboard pilote (compteurs « vols à venir » / « pas encore
+    réglés ») · <code>/pilote/vols</code> onglets « À venir / Passés » (carnet) · <b>Q79 : case
+    de consentement bloquante</b> au partage des coordonnées (choix de Romain) + refus serveur.
+    <br><b>Restent :</b> exécuter <code>20260910</code> + <code>20260911</code> en prod (Romain) ·
+    emails pilote-aware (→ refonte des 32 emails) · P2 (option cash, nav admin « Équipe »,
+    Modifier éditable pour annonces, email « paiement confirmé », secret inbound obligatoire).
+  </div>
+
   <div class="callout green">
     <b>Verdict.</b> Les parcours cœur fonctionnent (publier une annonce → demande → route →
     paiement virement → reçu → vol effectué → messagerie). L'intégration drawer admin ↔ pilote
@@ -132,33 +144,30 @@
         avec la refonte des ~32 emails.</b></td>
     </tr>
     <tr>
-      <td class="p"><span class="tag t-amber">P1</span></td>
+      <td class="p"><span class="tag t-green">Fait</span></td>
       <td class="p">Q62</td>
-      <td><b>Dashboard pilote incomplet.</b> Il n'a que l'alerte légale + « demandes en
-        attente ». Manquent : <i>vols à venir</i> (compteur), <i>vols pas encore payés à
-        surveiller</i> (pertinent maintenant avec <code>pilote_paye</code>).</td>
-      <td>Ajouter 2 compteurs dans <code>app/pilote/page.tsx</code>.</td>
+      <td><b>Dashboard pilote incomplet.</b> N'avait que l'alerte légale + « demandes en attente ».</td>
+      <td>✅ 2 compteurs ajoutés dans <code>app/pilote/page.tsx</code> : « vols à venir »,
+        « vols pas encore réglés à surveiller » (ambre si &gt; 0). Commit <code>7fb4198</code>.</td>
     </tr>
     <tr>
-      <td class="p"><span class="tag t-amber">P1</span></td>
+      <td class="p"><span class="tag t-green">Fait</span></td>
       <td class="p">Q34 · Q32 · Q60</td>
-      <td><b>Pas de carnet « mes vols passés ».</b> <code>/pilote/vols</code> liste tout dans un
-        tableau trié par date, sans séparation à venir / passés. Q60 avait « Mes vols passés »
-        en entrée de nav.</td>
-      <td>Séparer à venir / passés dans <code>PiloteVolsClient</code> (onglet ou filtre). Léger.</td>
+      <td><b>Pas de carnet « mes vols passés ».</b> <code>/pilote/vols</code> listait tout dans un
+        seul tableau.</td>
+      <td>✅ Onglets « À venir » / « Passés » dans <code>PiloteVolsClient</code> (passés =
+        <code>vol_effectue</code> / <code>annulee</code> / date &lt; aujourd'hui). Commit
+        <code>4add275</code>.</td>
     </tr>
     <tr>
-      <td class="p"><span class="tag t-red">P1</span></td>
+      <td class="p"><span class="tag t-green">Fait</span></td>
       <td class="p">Q79 · Q56 · Q57</td>
       <td><b>Aucun consentement au partage des coordonnées client avec le pilote.</b> La case
-        <code>accept_data_sharing</code> a été retirée au nettoyage 08/09 ; la découverte légale
-        est abandonnée mais Q79 = « le vol ne peut pas se faire » sans accord. Aujourd'hui la
-        demande d'annonce transmet nom/email/tél du client à un pilote tiers <b>sans phrase de
-        consentement</b>.</td>
-      <td>Au minimum : phrase claire dans le formulaire <code>/vol/annonce/[id]</code> + l'email
-        de demande (« vos coordonnées sont transmises à {pilote} qui organise ce vol »).
-        <b>Décision de Romain requise</b> : case bloquante vs simple phrase. Cf.
-        <code>project_marketplace_legal_risk</code>.</td>
+        <code>accept_data_sharing</code> avait été retirée au nettoyage 08/09.</td>
+      <td>✅ <b>Décision Romain : case à cocher bloquante.</b> Case obligatoire dans
+        <code>AnnonceBookingForm</code> (« j'accepte que mon nom/email/téléphone soient transmis
+        à {pilote} qui organise ce vol ») + refus serveur (<code>accept_data_sharing !== true</code>)
+        dans <code>/api/vol-annonce/submit</code>. Commit <code>77ad5da</code>.</td>
     </tr>
     <tr>
       <td class="p"><span class="tag t-grey">P2</span></td>
@@ -209,23 +218,21 @@
         <b>à exécuter en prod</b> aussi.</td>
     </tr>
     <tr>
-      <td class="p"><span class="tag t-red">P0</span></td>
+      <td class="p"><span class="tag t-green">Corrigé</span></td>
       <td class="p">Q11 · désactivation pilote</td>
-      <td><code>togglePiloteActif(false)</code> ne dépublie que les annonces
-        <code>statut='publiee'</code>. Une annonce <b><code>reservee</code></b> (client avec
-        réservation <code>demande_recue</code> / <code>payment_pending</code> en cours) reste
-        liée à un pilote inactif → <b>réservation orpheline</b> : le pilote inactif est refusé
-        par <code>requireAdminOrOwningPilote</code>, l'admin peut agir mais rien ne le lui
-        signale, et le client n'est pas prévenu.</td>
+      <td>✅ <code>4663508</code> — <code>togglePiloteActif(false)</code> ne touchait
+        <code>pilote_id</code> que via <code>.neq("type_resa","perso")</code>, donc <b>nullait
+        aussi les annonces</b>. Désormais : vols standard désassignés (scope <code>'standard'</code>),
+        résas d'annonce en cours non réglées → annulées + annonce annulée + email client, résas
+        déjà réglées → laissées et <b>signalées à l'admin</b> (<code>paidOrphans</code> dans le
+        récap).</td>
     </tr>
     <tr>
-      <td class="p"><span class="tag t-amber">P1</span></td>
+      <td class="p"><span class="tag t-green">Corrigé</span></td>
       <td class="p"><code>setPilotePaye</code></td>
-      <td>Restauration : <code>restored = pre_payment_statut || "heure_confirmee"</code>. Si le
-        pilote a envoyé la route <b>sans passer par « Confirmer le créneau »</b>,
-        <code>pre_payment_statut</code> peut valoir <code>demande_recue</code> → une réservation
-        <b>payée</b> reste affichée <code>demande_recue</code>. Fix : forcer un statut avancé au
-        moment de cocher « payé ».</td>
+      <td>✅ <code>9c5e0bf</code> — tout statut de début (<code>payment_pending</code> /
+        <code>demande_recue</code> / <code>en_attente</code>) passe à <code>heure_confirmee</code>
+        au minimum quand on coche « payé ». L'action renvoie le nouveau statut.</td>
     </tr>
     <tr>
       <td class="p"><span class="tag t-amber">P1</span></td>
@@ -236,11 +243,10 @@
         ne résout pas le chemin → <code>piloteNom</code> vide dans l'email virement, ou 400.</td>
     </tr>
     <tr>
-      <td class="p"><span class="tag t-amber">P1</span></td>
+      <td class="p"><span class="tag t-green">Corrigé</span></td>
       <td class="p"><code>AnnoncePiloteActions</code> optimiste</td>
-      <td>Sur « le client m'a payé », l'UI appelle <code>onStatusChange(id, "heure_confirmee")</code>
-        en dur — peut différer du statut réellement restauré. Cosmétique tant que le drawer se
-        recharge, mais le badge de la liste peut mentir jusqu'au reload.</td>
+      <td>✅ <code>9c5e0bf</code> — l'UI utilise le statut renvoyé par <code>setPilotePaye</code>
+        au lieu de le deviner.</td>
     </tr>
     <tr>
       <td class="p"><span class="tag t-grey">P2</span></td>
@@ -249,12 +255,10 @@
         faible, mais un lien fuité expose l'IBAN à qui décode le QR.</td>
     </tr>
     <tr>
-      <td class="p"><span class="tag t-grey">P2</span></td>
+      <td class="p"><span class="tag t-green">Corrigé</span></td>
       <td class="p">Mode « place » — CAS</td>
-      <td><code>/api/vol-annonce/submit</code> fait un compare-and-swap
-        <code>.eq("places_reservees", prev)</code>. Si un décrément a lieu entre le fetch et
-        l'update, le CAS échoue et renvoie « ce vol vient d'être réservé par quelqu'un d'autre »
-        — message trompeur. Fix : « réessayez », ou relire + retenter une fois.</td>
+      <td>✅ <code>77ad5da</code> — message d'erreur spécifique en mode place (« les places
+        viennent de changer, actualisez et réessayez »). Pas de retry auto (rare).</td>
     </tr>
     <tr>
       <td class="p"><span class="tag t-grey">P2</span></td>

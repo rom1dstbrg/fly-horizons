@@ -110,13 +110,14 @@
           réponse → notif pilote ; signature dans <code>/pilote/profil</code>.</li>
         <li><b>Renseigner un IBAN + le légal</b> sur les comptes pilote de test (sinon publication
           bloquée — garde-fou volontaire).</li>
-        <li><b>Correctifs de l'audit 11/09</b> (<code>audit-espace-pilote-coherence.html</code>) :
-          <b>P0</b> cascade désactivation pilote (annonces <code>reservee</code> orphelines) ·
-          <b>P1</b> dashboard pilote (2 compteurs) · carnet « vols passés » · fix
-          <code>setPilotePaye</code> · consentement partage de données (<b>décision Romain</b>).
-          Les emails pilote-aware sont fondus dans la refonte des ~32 emails.</li>
-        <li><b>Pousser <code>main</code></b> (<code>git push</code>) — ~40 commits d'avance
-          (paiement annonces + garde-fous + messagerie + audit). Sur demande de Romain uniquement.</li>
+        <li><b>Audit 11/09 — P0/P1 corrigés</b> (<code>audit-espace-pilote-coherence.html</code>) :
+          cascade désactivation pilote · <code>setPilotePaye</code> · dashboard pilote · carnet
+          vols passés · case de consentement Q79. <i>Restent</i> : P2 (cash, nav « Équipe »,
+          Modifier éditable pour annonces, email « paiement confirmé », secret inbound) + les
+          emails pilote-aware, fondus dans la refonte des ~32 emails.</li>
+        <li><b>Pousser <code>main</code></b> (<code>git push</code>) — ~45 commits d'avance
+          (paiement annonces + garde-fous + messagerie + audit + correctifs). Sur demande de
+          Romain uniquement.</li>
       </ol>
     </div>
 
@@ -716,6 +717,32 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-11 — audit espace pilote + correctifs P0/P1</h3>
+      <ul>
+        <li><b>Audit</b> <code>audit-espace-pilote-coherence.html</code> : conformité aux 89
+          réponses (hors ce qui a été retranché par le pivot), intégration admin ↔ pilote (saine),
+          bugs P0/P1/P2. Commit <code>da06c9e</code>.</li>
+        <li><b>P0 · cascade désactivation pilote</b> (<code>4663508</code>) :
+          <code>togglePiloteActif(false)</code> nullait <code>pilote_id</code> sur les résas
+          <code>annonce_pilote</code> aussi → orphelines. Désormais : standard désassignés, résas
+          d'annonce non réglées annulées + email client, résas déjà réglées signalées à l'admin
+          (<code>paidOrphans</code>).</li>
+        <li><b>P1 · <code>setPilotePaye</code></b> (<code>9c5e0bf</code>) : cocher « payé » fait
+          toujours avancer la résa (plus de résa payée bloquée en <code>demande_recue</code>) ;
+          l'action renvoie le nouveau statut, l'UI ne devine plus.</li>
+        <li><b>P1 · dashboard pilote</b> (<code>7fb4198</code>) : compteurs « vols à venir » +
+          « vols pas encore réglés à surveiller ».</li>
+        <li><b>P1 · <code>/pilote/vols</code></b> (<code>4add275</code>) : onglets « À venir » /
+          « Passés » (carnet, Q34).</li>
+        <li><b>P1 · Q79</b> (<code>77ad5da</code>) : <b>case de consentement bloquante</b> au
+          partage des coordonnées client avec le pilote de l'annonce (décision Romain) + refus
+          serveur ; message d'erreur CAS mode place corrigé.</li>
+        <li>Restent : exécuter <code>20260910</code> + <code>20260911</code> en prod ; emails
+          pilote-aware (→ refonte des 32 emails) ; P2 (cash, nav « Équipe », Modifier éditable
+          pour annonces, email « paiement confirmé », secret inbound obligatoire).
+          <code>next build</code> + <code>tsc</code> OK.</li>
+      </ul>
+
       <h3>2026-09-11 — messagerie pilote ↔ client (fil de ticket) · Phase 1</h3>
       <ul>
         <li><b>Migration <code>20260911_reservation_messages.sql</code></b> (<span class="tag t-red">à
