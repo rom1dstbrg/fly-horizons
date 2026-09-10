@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
+import { reservationAutoAnnuleeEmail } from "@/lib/email-templates";
 
 async function checkAdmin() {
   const supabase = await createClient();
@@ -98,17 +100,24 @@ export async function togglePiloteActif(id: string, actif: boolean) {
     if (error) return { error: error.message };
 
     // Cascade de désactivation : un pilote inactif ne doit plus « occuper » de créneau.
-    // Ses vols futurs encore ouverts redeviennent des demandes à réassigner, et ses
-    // annonces publiées sont retirées de la vitrine publique.
+    //  · vols STANDARD assignés (Bloc B) → désassignés, redeviennent des demandes ;
+    //  · vols d'ANNONCE en cours et non réglés → annulés + client prévenu (on ne les
+    //    réassigne pas : c'est le vol du pilote, pas celui de Romain) ;
+    //  · vols d'annonce DÉJÀ réglés → laissés tels quels, signalés à l'admin ;
+    //  · annonces publiées / réservées (sans résa payée) → dépubliées.
     let releasedFlights = 0;
     let unpublishedAnnonces = 0;
+    let cancelledAnnonceResas = 0;
+    let paidOrphans = 0;
     if (!actif) {
       const today = new Date().toISOString().slice(0, 10);
+
+      // 1. Vols standard assignés → désassignés (jamais les annonces).
       const { data: released } = await supabase
         .from("reservations")
         .update({ pilote_id: null, pilote_assigned_at: null })
         .eq("pilote_id", id)
-        .neq("type_resa", "perso")
+        .eq("type_resa", "standard")
         .neq("statut", "vol_effectue")
         .neq("statut", "annulee")
         .gte("date_vol", today)
@@ -119,14 +128,71 @@ export async function togglePiloteActif(id: string, actif: boolean) {
         await supabase.from("reservation_history").insert({
           reservation_id: r.id,
           action: "unassign_pilote",
-          field: null,
-          old_value: null,
-          new_value: null,
           author: "admin",
           note: "Pilote retiré automatiquement (compte désactivé), vol à réassigner",
         });
       }
 
+      // 2. Réservations d'annonce en cours de ce pilote.
+      const { data: annonceResas } = await supabase
+        .from("reservations")
+        .select("id, annonce_id, date_vol, heure_vol, duree, pilote_paye, statut, clients(prenom, nom, email)")
+        .eq("pilote_id", id)
+        .eq("type_resa", "annonce_pilote")
+        .not("statut", "in", "(vol_effectue,annulee)")
+        .gte("date_vol", today);
+
+      for (const r of annonceResas ?? []) {
+        if (r.pilote_paye === true) {
+          paidOrphans++;
+          await supabase.from("reservation_history").insert({
+            reservation_id: r.id,
+            action: "field_changed",
+            author: "admin",
+            note: "Pilote désactivé — vol déjà réglé, à traiter manuellement (remboursement / report).",
+          });
+          continue;
+        }
+        // Non réglé → on annule et on prévient le client.
+        await supabase.from("reservations").update({ statut: "annulee", payment_token: null }).eq("id", r.id);
+        if (r.annonce_id) {
+          await supabase.from("annonces_pilote").update({ statut: "annulee" }).eq("id", r.annonce_id);
+        }
+        cancelledAnnonceResas++;
+        await supabase.from("reservation_history").insert({
+          reservation_id: r.id,
+          action: "field_changed",
+          field: "statut",
+          new_value: "annulee",
+          author: "admin",
+          note: "Vol annulé automatiquement : le pilote de l'annonce a été désactivé.",
+        });
+        const c = Array.isArray(r.clients) ? r.clients[0] : r.clients;
+        if (c?.email) {
+          const dateStr = new Date(r.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
+            weekday: "long", day: "numeric", month: "long", year: "numeric",
+          });
+          await resend.emails
+            .send({
+              from: EMAIL_FROM,
+              to: [c.email],
+              replyTo: EMAIL_REPLY_TO,
+              subject: `Fly Horizons · Vol annulé · ${dateStr}`,
+              html: reservationAutoAnnuleeEmail({
+                prenom: c.prenom,
+                nom: c.nom,
+                dateStr,
+                heure: (r.heure_vol ?? "-").slice(0, 5),
+                duree: r.duree,
+                bookingUrl: `${siteUrl()}/nos-offres`,
+                source: "admin",
+              }),
+            })
+            .catch(() => {});
+        }
+      }
+
+      // 3. Annonces encore en vitrine (aucune résa active) → dépubliées.
       const { data: unpub } = await supabase
         .from("annonces_pilote")
         .update({ statut: "annulee" })
@@ -140,7 +206,7 @@ export async function togglePiloteActif(id: string, actif: boolean) {
     revalidatePath("/admin/vols");
     revalidatePath("/pilote/vols");
     revalidatePath("/nos-offres");
-    return { success: true, releasedFlights, unpublishedAnnonces };
+    return { success: true, releasedFlights, unpublishedAnnonces, cancelledAnnonceResas, paidOrphans };
   } catch {
     return { error: "Erreur serveur" };
   }

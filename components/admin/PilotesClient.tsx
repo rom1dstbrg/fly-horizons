@@ -152,6 +152,8 @@ function PiloteRow({ pilote, onConfirm }: { pilote: Pilote; onConfirm: (a: Pendi
       const parts: string[] = [];
       if (result.releasedFlights) parts.push(`${result.releasedFlights} vol${result.releasedFlights > 1 ? "s" : ""} à réassigner`);
       if (result.unpublishedAnnonces) parts.push(`${result.unpublishedAnnonces} annonce${result.unpublishedAnnonces > 1 ? "s" : ""} retirée${result.unpublishedAnnonces > 1 ? "s" : ""}`);
+      if (result.cancelledAnnonceResas) parts.push(`${result.cancelledAnnonceResas} vol${result.cancelledAnnonceResas > 1 ? "s" : ""} d'annonce annulé${result.cancelledAnnonceResas > 1 ? "s" : ""} (client prévenu)`);
+      if (result.paidOrphans) parts.push(`⚠ ${result.paidOrphans} vol${result.paidOrphans > 1 ? "s" : ""} déjà réglé${result.paidOrphans > 1 ? "s" : ""} à traiter à la main`);
       setCascadeMsg(parts.length ? `Pilote désactivé · ${parts.join(", ")}.` : null);
     });
   }
@@ -161,7 +163,7 @@ function PiloteRow({ pilote, onConfirm }: { pilote: Pilote; onConfirm: (a: Pendi
       // Désactivation : cascade (vols futurs désassignés, annonces retirées) → confirmation.
       onConfirm({
         title: `Désactiver ${pilote.nom} ?`,
-        description: "Ses vols futurs non effectués repasseront en demandes à réassigner et ses annonces publiées seront retirées. Réversible en le réactivant.",
+        description: "Ses vols standard assignés repasseront en demandes à réassigner ; ses annonces et leurs demandes non réglées seront annulées (clients prévenus) ; les vols déjà réglés vous seront signalés. Réversible en le réactivant.",
         confirmLabel: "Désactiver",
         danger: true,
         run: () => runToggle(false),
