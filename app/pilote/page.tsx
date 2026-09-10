@@ -18,13 +18,34 @@ export default async function PiloteDashboard() {
     .eq("user_id", user!.id)
     .maybeSingle();
   const legal = piloteLegalStatus(pilote);
-  const { count: demandesEnAttente } = pilote
-    ? await admin
-        .from("reservations")
-        .select("id", { count: "exact", head: true })
-        .eq("pilote_id", pilote.id)
-        .eq("statut", "demande_recue")
-    : { count: 0 };
+  const today = new Date().toISOString().slice(0, 10);
+  const [
+    { count: demandesEnAttente },
+    { count: volsAVenir },
+    { count: volsNonPayes },
+  ] = pilote
+    ? await Promise.all([
+        admin
+          .from("reservations")
+          .select("id", { count: "exact", head: true })
+          .eq("pilote_id", pilote.id)
+          .eq("statut", "demande_recue"),
+        admin
+          .from("reservations")
+          .select("id", { count: "exact", head: true })
+          .eq("pilote_id", pilote.id)
+          .neq("type_resa", "perso")
+          .gte("date_vol", today)
+          .not("statut", "in", "(vol_effectue,annulee)"),
+        admin
+          .from("reservations")
+          .select("id", { count: "exact", head: true })
+          .eq("pilote_id", pilote.id)
+          .eq("type_resa", "annonce_pilote")
+          .neq("pilote_paye", true)
+          .not("statut", "in", "(vol_effectue,annulee,demande_recue)"),
+      ])
+    : [{ count: 0 }, { count: 0 }, { count: 0 }];
 
   return (
     <div className="space-y-6">
@@ -86,6 +107,28 @@ export default async function PiloteDashboard() {
           <ArrowRight size={16} className="text-amber-600 shrink-0" />
         </Link>
       )}
+
+      <div className="grid grid-cols-2 gap-4">
+        <Link href="/pilote/vols" className="bg-card rounded-xl border border-border p-4 hover:border-primary/40 transition-colors">
+          <p className="text-2xl font-bold text-foreground tabular-nums">{volsAVenir ?? 0}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">vol{(volsAVenir ?? 0) > 1 ? "s" : ""} à venir</p>
+        </Link>
+        <Link
+          href="/pilote/vols"
+          className={`rounded-xl border p-4 transition-colors ${
+            (volsNonPayes ?? 0) > 0
+              ? "bg-amber-50 border-amber-200 hover:border-amber-300"
+              : "bg-card border-border hover:border-primary/40"
+          }`}
+        >
+          <p className={`text-2xl font-bold tabular-nums ${(volsNonPayes ?? 0) > 0 ? "text-amber-700" : "text-foreground"}`}>
+            {volsNonPayes ?? 0}
+          </p>
+          <p className={`text-xs mt-0.5 ${(volsNonPayes ?? 0) > 0 ? "text-amber-800" : "text-muted-foreground"}`}>
+            vol{(volsNonPayes ?? 0) > 1 ? "s" : ""} pas encore réglé{(volsNonPayes ?? 0) > 1 ? "s" : ""} à surveiller
+          </p>
+        </Link>
+      </div>
 
       <div className="grid sm:grid-cols-2 gap-4">
         <Link
