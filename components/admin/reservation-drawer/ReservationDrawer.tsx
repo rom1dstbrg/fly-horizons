@@ -346,12 +346,19 @@ export function ReservationDrawer({
                         aria-label={label}
                         aria-current={active ? "page" : undefined}
                         title={label}
-                        className={`flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-semibold transition-colors cursor-pointer ${
-                          active ? "text-navy border-b-2 border-navy -mb-px" : "text-muted-foreground hover:text-foreground"
+                        className={`relative flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-semibold transition-colors cursor-pointer ${
+                          active ? "text-navy" : "text-muted-foreground hover:text-foreground"
                         }`}
                       >
                         <Icon size={14} className="shrink-0" />
                         {active && <span className="truncate">{label}</span>}
+                        {active && (
+                          <motion.span
+                            layoutId="drawer-tab-underline"
+                            className="absolute left-0 right-0 -bottom-px h-[2px] bg-navy"
+                            transition={{ type: "spring", stiffness: 500, damping: 38 }}
+                          />
+                        )}
                       </button>
                     );
                   })}
