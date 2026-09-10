@@ -11,6 +11,7 @@ export type PiloteProfilInput = {
   bio?: string | null;
   photo_url?: string | null;
   telephone?: string | null;
+  signature?: string | null;
   iban?: string | null;
   licence_numero?: string | null;
   licence_expiration?: string | null; // 'YYYY-MM-DD' ou ''
@@ -42,6 +43,7 @@ export async function updateMyPiloteProfile(input: PiloteProfilInput) {
         bio: clean(input.bio),
         photo_url: clean(input.photo_url),
         telephone: clean(input.telephone),
+        signature: clean(input.signature),
         iban: clean(input.iban),
         licence_numero: clean(input.licence_numero),
         licence_expiration: cleanDate(input.licence_expiration),

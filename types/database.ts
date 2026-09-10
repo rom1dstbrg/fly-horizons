@@ -47,6 +47,8 @@ export interface Pilote {
   conditions_version: string | null;
   bio: string | null;
   photo_url: string | null;
+  // Signature libre ajoutée en bas des messages du pilote au client. Vide = défaut.
+  signature: string | null;
   // Modèle A (bloc D) — lien de paiement perso optionnel (Payconiq / Revolut).
   paylink: string | null;
 }

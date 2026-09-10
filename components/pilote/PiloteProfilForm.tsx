@@ -36,6 +36,7 @@ export function PiloteProfilForm({ pilote }: { pilote: Pilote }) {
     bio: pilote.bio ?? "",
     photo_url: pilote.photo_url ?? "",
     telephone: pilote.telephone ?? "",
+    signature: pilote.signature ?? "",
     iban: pilote.iban ?? "",
     licence_numero: pilote.licence_numero ?? "",
     licence_expiration: pilote.licence_expiration ?? "",
@@ -161,6 +162,19 @@ export function PiloteProfilForm({ pilote }: { pilote: Pilote }) {
               onChange={set("bio")}
               placeholder="Pilote en formation ATPL, basé à Charleroi..."
             />
+          </div>
+          <div className="space-y-1.5 sm:col-span-2">
+            <label className={labelCls}>Signature (emails aux clients)</label>
+            <textarea
+              className={`${field} h-auto py-2 min-h-[60px] resize-y`}
+              value={form.signature}
+              onChange={set("signature")}
+              placeholder={`${pilote.nom} · Pilote${form.telephone ? ` · ${form.telephone}` : ""}`}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Ajoutée en bas de vos messages au client. Laissez vide pour la signature par défaut
+              (nom · Pilote · téléphone).
+            </p>
           </div>
         </div>
       </div>
