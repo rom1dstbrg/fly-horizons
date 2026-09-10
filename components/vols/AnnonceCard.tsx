@@ -9,6 +9,7 @@ export interface AnnonceCardData {
   prix_client: number;
   pilote_nom: string;
   cover_image: string | null;
+  mode_vente?: "avion" | "place";
 }
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -55,7 +56,12 @@ export function AnnonceCard({ annonce }: { annonce: AnnonceCardData }) {
             Jusqu&apos;à {annonce.places} passager{annonce.places > 1 ? "s" : ""}
           </h3>
           <div className="flex items-center justify-between gap-2">
-            <span className="text-white font-black text-[24px] leading-none">{annonce.prix_client} €</span>
+            <span className="text-white font-black text-[24px] leading-none">
+              {annonce.prix_client} €
+              <span className="text-[12px] font-semibold text-white/60">
+                {annonce.mode_vente === "place" ? " / pers." : " / avion"}
+              </span>
+            </span>
             <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold
               bg-white/12 text-white border border-white/18
               px-3 py-2 rounded-lg backdrop-blur-sm shrink-0

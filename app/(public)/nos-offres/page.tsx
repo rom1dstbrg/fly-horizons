@@ -47,18 +47,23 @@ export default async function NosOffresPage() {
   const adminSupabase = createAdminClient();
   const { data: rawAnnonces } = await adminSupabase
     .from("annonces_pilote")
-    .select("id, duree, places, prix_total, part_pilote, images, pilotes(nom)")
+    .select("id, duree, places, prix_total, part_pilote, mode_vente, images, pilotes(nom)")
     .eq("statut", "publiee")
     .order("created_at", { ascending: false });
 
-  const annonces = (rawAnnonces ?? []).map(a => ({
-    id: a.id,
-    duree: a.duree,
-    places: a.places,
-    prix_client: Math.round((a.prix_total - a.part_pilote) * 100) / 100,
-    pilote_nom: (a.pilotes as unknown as { nom: string } | null)?.nom ?? "un pilote",
-    cover_image: a.images?.[0] ?? null,
-  }));
+  const annonces = (rawAnnonces ?? []).map(a => {
+    const remainder = Math.round((a.prix_total - a.part_pilote) * 100) / 100;
+    const aMode: "avion" | "place" = a.mode_vente === "place" ? "place" : "avion";
+    return {
+      id: a.id,
+      duree: a.duree,
+      places: a.places,
+      prix_client: aMode === "place" ? Math.round((remainder / a.places) * 100) / 100 : remainder,
+      pilote_nom: (a.pilotes as unknown as { nom: string } | null)?.nom ?? "un pilote",
+      cover_image: a.images?.[0] ?? null,
+      mode_vente: aMode,
+    };
+  });
 
   return (
     <main className="bg-gradient-navy">

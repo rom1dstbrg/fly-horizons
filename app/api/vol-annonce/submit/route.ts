@@ -67,19 +67,39 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Pilote introuvable pour cette annonce." }, { status: 500 });
     }
 
-    const prixClient = Math.round((annonce.prix_total - annonce.part_pilote) * 100) / 100;
+    // Mode « avion » : le premier client prend toute l'annonce (prix = total − part
+    // pilote). Mode « place » : chacun paie sa quote-part (prix par place ×
+    // passagers), l'annonce reste ouverte jusqu'à ce que toutes les places soient
+    // prises.
+    const modeVente = annonce.mode_vente === "place" ? "place" : "avion";
+    const remainder = Math.round((annonce.prix_total - annonce.part_pilote) * 100) / 100;
+    const prixPlace = Math.round((remainder / annonce.places) * 100) / 100;
+    const prixClient =
+      modeVente === "place"
+        ? Math.round(prixPlace * passagersCount * 100) / 100
+        : remainder;
     if (prixClient <= 0) {
       return NextResponse.json({ error: "Montant invalide pour ce vol." }, { status: 400 });
+    }
+    if (modeVente === "place" && passagersCount > annonce.places - (annonce.places_reservees ?? 0)) {
+      return NextResponse.json(
+        { error: `Il ne reste que ${annonce.places - (annonce.places_reservees ?? 0)} place(s) sur ce vol.` },
+        { status: 409 },
+      );
     }
 
     // Conflit d'horaire — scopé au pilote de cette annonce (deux pilotes différents
     // peuvent voler au même moment, contrairement au flow standard mono-pilote).
-    const { data: conflicts } = await supabase
+    // En mode « place », les autres demandes sur la MÊME annonce partagent le vol :
+    // on les exclut (sinon le 2ᵉ acheteur de place serait bloqué par le 1ᵉʳ).
+    let conflictQuery = supabase
       .from("reservations")
       .select("id, heure_vol, duree")
       .eq("pilote_id", pilote.id)
       .eq("date_vol", date_vol)
       .neq("statut", "annulee");
+    if (modeVente === "place") conflictQuery = conflictQuery.neq("annonce_id", annonce_id);
+    const { data: conflicts } = await conflictQuery;
 
     const [newH, newM] = (heure_vol as string).split(":").map(Number);
     const newStart = newH * 60 + newM;
@@ -97,19 +117,59 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Ce pilote a déjà un vol prévu sur ce créneau. Choisissez une autre date ou heure." }, { status: 409 });
     }
 
-    // Réclamation atomique — dès la demande (pas au paiement, qui vient plus tard une
-    // fois le pilote confirmé) : empêche deux clients de demander la même annonce.
-    const { data: claimed } = await supabase
-      .from("annonces_pilote")
-      .update({ statut: "reservee" })
-      .eq("id", annonce_id)
-      .eq("statut", "publiee")
-      .select("id")
-      .maybeSingle();
+    // Réclamation atomique — dès la demande (pas au paiement, qui vient plus tard
+    // une fois le pilote confirmé).
+    //  · mode avion : publiee → reservee (un seul gagnant).
+    //  · mode place : compare-and-swap sur places_reservees ; l'annonce ne se
+    //    ferme (reservee) que quand toutes les places sont prises.
+    let claimed: { id: string } | null = null;
+    if (modeVente === "place") {
+      const prev = annonce.places_reservees ?? 0;
+      const next = prev + passagersCount;
+      const full = next >= annonce.places;
+      const { data } = await supabase
+        .from("annonces_pilote")
+        .update({ places_reservees: next, statut: full ? "reservee" : "publiee" })
+        .eq("id", annonce_id)
+        .eq("statut", "publiee")
+        .eq("places_reservees", prev)
+        .select("id")
+        .maybeSingle();
+      claimed = data ?? null;
+    } else {
+      const { data } = await supabase
+        .from("annonces_pilote")
+        .update({ statut: "reservee" })
+        .eq("id", annonce_id)
+        .eq("statut", "publiee")
+        .select("id")
+        .maybeSingle();
+      claimed = data ?? null;
+    }
 
     if (!claimed) {
-      return NextResponse.json({ error: "Ce vol vient d'être réservé par quelqu'un d'autre." }, { status: 409 });
+      return NextResponse.json(
+        { error: "Ce vol vient d'être réservé par quelqu'un d'autre." },
+        { status: 409 },
+      );
     }
+
+    // Rollback de la réclamation ci-dessus si la suite échoue.
+    const releaseClaim = async () => {
+      if (modeVente === "place") {
+        const prev = annonce.places_reservees ?? 0;
+        await supabase
+          .from("annonces_pilote")
+          .update({ places_reservees: prev, statut: "publiee" })
+          .eq("id", annonce_id);
+      } else {
+        await supabase
+          .from("annonces_pilote")
+          .update({ statut: "publiee" })
+          .eq("id", annonce_id)
+          .eq("statut", "reservee");
+      }
+    };
 
     // Find or create client by email
     const { data: existingClients } = await supabase
@@ -125,7 +185,7 @@ export async function POST(request: NextRequest) {
     } else {
       const { data: newId } = await supabase.rpc("next_client_id");
       if (!newId) {
-        await supabase.from("annonces_pilote").update({ statut: "publiee" }).eq("id", annonce_id).eq("statut", "reservee");
+        await releaseClaim();
         return NextResponse.json({ error: "Erreur génération ID client" }, { status: 500 });
       }
       clientId = newId;
@@ -154,7 +214,7 @@ export async function POST(request: NextRequest) {
 
     if (resaErr) {
       // Libérer l'annonce si la création de la réservation échoue
-      await supabase.from("annonces_pilote").update({ statut: "publiee" }).eq("id", annonce_id).eq("statut", "reservee");
+      await releaseClaim();
       return NextResponse.json({ error: "Erreur création réservation" }, { status: 500 });
     }
 

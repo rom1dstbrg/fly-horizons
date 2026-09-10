@@ -11,6 +11,8 @@ export interface AnnonceRow {
   places: number;
   prix_total: number;
   part_pilote: number;
+  mode_vente?: "avion" | "place";
+  places_reservees?: number;
   description: string | null;
   images: string[];
   statut: "publiee" | "reservee" | "annulee";
@@ -53,10 +55,23 @@ function AnnonceCard({ annonce, onEdit }: { annonce: AnnonceRow; onEdit: (a: Ann
             <span className="text-xs text-muted-foreground truncate max-w-[220px]">{annonce.description}</span>
           )}
         </div>
-        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
           <span className="flex items-center gap-1"><Clock size={11} /> {annonce.duree} min</span>
-          <span className="flex items-center gap-1"><Users size={11} /> {annonce.places} place{annonce.places > 1 ? "s" : ""}</span>
-          <span>Prix total {annonce.prix_total.toFixed(2)} € · Votre part {annonce.part_pilote.toFixed(2)} € ({check.pct}%) · Prix client {prixClient.toFixed(2)} €</span>
+          <span className="flex items-center gap-1">
+            <Users size={11} />
+            {annonce.mode_vente === "place"
+              ? `${annonce.places - (annonce.places_reservees ?? 0)}/${annonce.places} place${annonce.places > 1 ? "s" : ""} dispo`
+              : `${annonce.places} place${annonce.places > 1 ? "s" : ""}`}
+          </span>
+          <span className="text-[10px] font-bold uppercase tracking-wide bg-secondary px-1.5 py-0.5 rounded">
+            {annonce.mode_vente === "place" ? "À la place" : "Avion entier"}
+          </span>
+          <span>
+            Prix total {annonce.prix_total.toFixed(2)} € · Votre part {annonce.part_pilote.toFixed(2)} € ({check.pct}%) ·{" "}
+            {annonce.mode_vente === "place"
+              ? `Place ${(prixClient / Math.max(1, annonce.places)).toFixed(2)} €`
+              : `Prix client ${prixClient.toFixed(2)} €`}
+          </span>
         </div>
       </div>
       <div className="flex items-center gap-1 shrink-0">

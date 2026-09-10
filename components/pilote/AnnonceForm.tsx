@@ -16,6 +16,7 @@ type ImageItem = { path: string; url: string };
 export function AnnonceForm({ onDone, editing }: { onDone: () => void; editing?: AnnonceRow }) {
   const [duree, setDuree] = useState(editing ? String(editing.duree) : "60");
   const [places, setPlaces] = useState(editing ? String(editing.places) : "3");
+  const [modeVente, setModeVente] = useState<"avion" | "place">(editing?.mode_vente === "place" ? "place" : "avion");
   const [prixTotal, setPrixTotal] = useState(editing ? String(editing.prix_total) : "");
   const [partMode, setPartMode] = useState<"pct" | "eur">("eur");
   const [partValue, setPartValue] = useState(editing ? String(editing.part_pilote) : "");
@@ -35,6 +36,8 @@ export function AnnonceForm({ onDone, editing }: { onDone: () => void; editing?:
     : partMode === "pct" ? Math.round(prixTotalNum * (partValueNum / 100) * 100) / 100
     : partValueNum;
   const prixClient = Math.max(0, prixTotalNum - Math.max(0, partPiloteEuros));
+  const placesNum = Math.max(1, Number(places) || 1);
+  const prixParPlace = Math.round((prixClient / placesNum) * 100) / 100;
 
   const check = useMemo(
     () => evaluerPartPilote(prixTotalNum, partPiloteEuros, Number(places)),
@@ -89,6 +92,7 @@ export function AnnonceForm({ onDone, editing }: { onDone: () => void; editing?:
         places: Number(places),
         prix_total: prixTotalNum,
         part_pilote: Math.max(0, partPiloteEuros),
+        mode_vente: modeVente,
         description: description.trim() || undefined,
         images: images.map(i => i.path),
         legal_ok: legalOk,
@@ -158,10 +162,40 @@ export function AnnonceForm({ onDone, editing }: { onDone: () => void; editing?:
         </div>
       </div>
 
+      <div className="space-y-1.5">
+        <Label className="text-sm text-muted-foreground">Mode de vente *</Label>
+        <div className="grid grid-cols-2 gap-2">
+          {([
+            ["avion", "Tout l'avion", "Un seul client réserve et règle le vol entier."],
+            ["place", "Vente à la place", "Plusieurs clients, chacun règle sa place."],
+          ] as const).map(([val, title, desc]) => (
+            <button
+              key={val}
+              type="button"
+              onClick={() => setModeVente(val)}
+              className={`text-left rounded-lg border px-3 py-2.5 transition-colors cursor-pointer ${
+                modeVente === val
+                  ? "border-primary bg-primary/5"
+                  : "border-border bg-input hover:border-foreground/30"
+              }`}
+            >
+              <span className="block text-sm font-semibold text-foreground">{title}</span>
+              <span className="block text-[11px] text-muted-foreground mt-0.5">{desc}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {prixTotal !== "" && partValue !== "" && (
         <div className="bg-secondary/40 border border-border rounded-lg px-4 py-3 flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">Prix affiché au client</span>
-          <span className="text-lg font-black text-foreground">{prixClient.toFixed(2)} €</span>
+          <span className="text-sm text-muted-foreground">
+            {modeVente === "place" ? "Prix par place" : "Prix affiché au client"}
+          </span>
+          <span className="text-lg font-black text-foreground">
+            {modeVente === "place"
+              ? `${prixParPlace.toFixed(2)} € × ${placesNum} = ${prixClient.toFixed(2)} €`
+              : `${prixClient.toFixed(2)} €`}
+          </span>
         </div>
       )}
 

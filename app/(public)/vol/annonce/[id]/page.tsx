@@ -67,10 +67,10 @@ export default async function AnnonceDetailPage({ params }: { params: Promise<{ 
   const supabase = createAdminClient();
 
   const [{ data: annonce }, { data: autresRaw }] = await Promise.all([
-    supabase.from("annonces_pilote").select("*, pilotes(nom)").eq("id", id).single(),
+    supabase.from("annonces_pilote").select("*, pilotes(id, nom, photo_url, bio)").eq("id", id).single(),
     supabase
       .from("annonces_pilote")
-      .select("id, duree, places, prix_total, part_pilote, images, pilotes(nom)")
+      .select("id, duree, places, prix_total, part_pilote, mode_vente, images, pilotes(nom)")
       .eq("statut", "publiee")
       .neq("id", id)
       .order("created_at", { ascending: false })
@@ -79,18 +79,27 @@ export default async function AnnonceDetailPage({ params }: { params: Promise<{ 
 
   if (!annonce || annonce.statut !== "publiee") notFound();
 
-  const pilote = annonce.pilotes as unknown as { nom: string };
-  const prixClient = Math.round((annonce.prix_total - annonce.part_pilote) * 100) / 100;
+  const pilote = annonce.pilotes as unknown as { id: string; nom: string; photo_url: string | null; bio: string | null };
+  const modeVente: "avion" | "place" = annonce.mode_vente === "place" ? "place" : "avion";
+  const placesLibres = Math.max(0, annonce.places - (annonce.places_reservees ?? 0));
+  const prixAvion = Math.round((annonce.prix_total - annonce.part_pilote) * 100) / 100;
+  const prixParPlace = Math.round((prixAvion / annonce.places) * 100) / 100;
+  const prixClient = modeVente === "place" ? prixParPlace : prixAvion;
   const galleryImages = (annonce.images ?? []).map((path: string, i: number) => ({ url: toPublicUrl(path), position: i }));
 
-  const autres = (autresRaw ?? []).map(a => ({
-    id: a.id,
-    duree: a.duree,
-    places: a.places,
-    prix_client: Math.round((a.prix_total - a.part_pilote) * 100) / 100,
-    pilote_nom: (a.pilotes as unknown as { nom: string } | null)?.nom ?? "un pilote",
-    cover_image: a.images?.[0] ?? null,
-  }));
+  const autres = (autresRaw ?? []).map(a => {
+    const remainder = Math.round((a.prix_total - a.part_pilote) * 100) / 100;
+    const aMode: "avion" | "place" = a.mode_vente === "place" ? "place" : "avion";
+    return {
+      id: a.id,
+      duree: a.duree,
+      places: a.places,
+      prix_client: aMode === "place" ? Math.round((remainder / a.places) * 100) / 100 : remainder,
+      pilote_nom: (a.pilotes as unknown as { nom: string } | null)?.nom ?? "un pilote",
+      cover_image: a.images?.[0] ?? null,
+      mode_vente: aMode,
+    };
+  });
 
   const productSchema = {
     "@context": "https://schema.org",
@@ -148,11 +157,28 @@ export default async function AnnonceDetailPage({ params }: { params: Promise<{ 
                   <p className="text-[10px] font-bold text-primary uppercase tracking-[2px] mb-2">Participation aux frais</p>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-[44px] font-black text-foreground leading-none">{prixClient}&nbsp;€</span>
-                    <span className="text-muted-foreground text-sm">/ avion</span>
+                    <span className="text-muted-foreground text-sm">
+                      {modeVente === "place" ? "/ personne" : "/ avion"}
+                    </span>
                   </div>
+                  {modeVente === "place" && (
+                    <p className="text-xs text-foreground/60 mt-2">
+                      Vente à la place · {placesLibres} place{placesLibres > 1 ? "s" : ""} encore
+                      disponible{placesLibres > 1 ? "s" : ""} sur {annonce.places}
+                    </p>
+                  )}
                 </div>
 
-                <AnnonceBookingForm annonceId={annonce.id} places={annonce.places} />
+                {modeVente === "place" && placesLibres === 0 ? (
+                  <p className="rounded-lg border border-border bg-secondary/40 px-4 py-3 text-sm text-foreground/70">
+                    Toutes les places de ce vol sont réservées.
+                  </p>
+                ) : (
+                  <AnnonceBookingForm
+                    annonceId={annonce.id}
+                    places={modeVente === "place" ? placesLibres : annonce.places}
+                  />
+                )}
 
                 <div className="space-y-1.5">
                   <p className="text-xs text-foreground/70 flex items-start gap-1.5 leading-relaxed">
@@ -175,6 +201,34 @@ export default async function AnnonceDetailPage({ params }: { params: Promise<{ 
                   <p className="text-xs text-muted-foreground leading-relaxed">
                     Fly Horizons n&apos;est pas un service de transport aérien commercial. {pilote.nom} partage un vol qu&apos;il organise déjà : votre participation couvre une quote-part des frais réels (avion, carburant, taxes d&apos;aérodrome), sans marge commerciale.
                   </p>
+                </div>
+
+                <div className="flex items-start gap-3 pt-4 border-t border-border">
+                  {pilote.photo_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={pilote.photo_url}
+                      alt={pilote.nom}
+                      className="w-14 h-14 rounded-full object-cover border border-border shrink-0"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 rounded-full bg-foreground/5 flex items-center justify-center shrink-0">
+                      <PlaneTakeoff size={18} className="text-foreground/40" />
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold text-primary uppercase tracking-[2px]">Votre pilote</p>
+                    <p className="text-sm font-black text-foreground">{pilote.nom}</p>
+                    {pilote.bio && (
+                      <p className="text-xs text-foreground/55 leading-relaxed mt-1 line-clamp-3">{pilote.bio}</p>
+                    )}
+                    <a
+                      href={`/nos-pilotes/${pilote.id}`}
+                      className="inline-block text-xs font-semibold text-primary hover:underline mt-1.5"
+                    >
+                      Voir son profil
+                    </a>
+                  </div>
                 </div>
               </div>
 
@@ -227,7 +281,11 @@ export default async function AnnonceDetailPage({ params }: { params: Promise<{ 
         </div>
       )}
 
-      <AnnonceStickyBar piloteName={pilote.nom} prix={prixClient} />
+      <AnnonceStickyBar
+        piloteName={pilote.nom}
+        prix={prixClient}
+        unit={modeVente === "place" ? "/ personne" : "/ avion"}
+      />
     </main>
   );
 }

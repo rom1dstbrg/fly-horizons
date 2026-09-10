@@ -6,7 +6,15 @@ import { CalendarCheck } from "lucide-react";
 // Même mécanique que VolStickyBar (components/shop/), mais le CTA fait défiler
 // jusqu'au formulaire de demande sur la même page (pas de navigation externe :
 // la demande se fait ici, pas sur une page /reservation séparée).
-export function AnnonceStickyBar({ piloteName, prix }: { piloteName: string; prix: number }) {
+export function AnnonceStickyBar({
+  piloteName,
+  prix,
+  unit = "/ avion",
+}: {
+  piloteName: string;
+  prix: number;
+  unit?: string;
+}) {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -32,7 +40,7 @@ export function AnnonceStickyBar({ piloteName, prix }: { piloteName: string; pri
             </div>
             <div className="flex items-baseline gap-1 shrink-0">
               <span className="text-2xl font-black text-[#0b2238] leading-none">{prix}&nbsp;€</span>
-              <span className="text-xs text-[#0b2238]/50">/ avion</span>
+              <span className="text-xs text-[#0b2238]/50">{unit}</span>
             </div>
           </div>
 
