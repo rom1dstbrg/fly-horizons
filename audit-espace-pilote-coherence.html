@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Audit espace pilote — cohérence & bugs (2026-09-11)</title>
+<style>
+  :root{
+    --navy:#0b2238; --gold:#F2B705; --bg:#f4f6fa; --card:#fff; --ink:#1e2535;
+    --muted:#5b6b7b; --border:#e0e5ef; --rule:#c9d2db;
+    --green:#0f9d58; --green-bg:#e9f9f0; --green-bd:#bfe9d2;
+    --amber:#b7791f; --amber-bg:#fef6e6; --amber-bd:#f3dfa8;
+    --red:#c53030; --red-bg:#fdecec; --red-bd:#f5c2c2;
+    --blue:#1d5fbf; --blue-bg:#eaf1fd; --blue-bd:#c7dafa;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.6;font-size:15px}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 24px 120px}
+  h1{font-size:25px;color:var(--navy);font-weight:800;line-height:1.2}
+  .sub{color:var(--muted);font-size:13px;margin:4px 0 24px}
+  h2{font-size:18px;color:var(--navy);font-weight:800;margin:34px 0 10px}
+  h3{font-size:14px;color:var(--navy);font-weight:700;margin:20px 0 6px}
+  p{margin:7px 0}
+  code{background:#eef1f7;border:1px solid var(--border);padding:1px 5px;border-radius:5px;
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+  a{color:var(--blue)}
+  ul,ol{margin:8px 0 8px 22px}
+  li{margin:5px 0}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;
+    padding:16px 18px;margin:12px 0;box-shadow:0 1px 6px rgba(11,34,56,.05)}
+  .tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.4px;
+    padding:2px 8px;border-radius:100px;text-transform:uppercase;vertical-align:middle}
+  .t-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)}
+  .t-amber{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-bd)}
+  .t-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)}
+  .t-blue{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bd)}
+  .t-grey{background:#eef1f7;color:var(--muted);border:1px solid var(--border)}
+  .callout{border-left:4px solid var(--gold);background:#fffdf5;padding:12px 16px;border-radius:0 8px 8px 0;margin:14px 0;font-size:13.5px}
+  .callout.red{border-left-color:var(--red);background:var(--red-bg)}
+  .callout.green{border-left-color:var(--green);background:var(--green-bg)}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+  th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);
+    padding:7px 9px;border-bottom:2px solid var(--rule);font-weight:700}
+  td{padding:8px 9px;border-bottom:1px solid var(--border);vertical-align:top}
+  td.p{white-space:nowrap;font-weight:700}
+  .pill{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Audit espace pilote — cohérence &amp; bugs</h1>
+  <p class="sub">2026-09-11 · après les chantiers paiement des annonces, garde-fous transverses
+    et messagerie. Référence : <code>questionnaire-espace-pilote-reponses.md</code> (89Q, 06/09),
+    <code>plan-attaque-espace-pilote.html</code>, <code>projet.html</code>. Périmètre : ce qui
+    n'a <b>pas</b> été retranché par le pivot 08/09 (Blocs B/C/D gelés, pas de découverte légale,
+    pas d'ouverture publique).</p>
+
+  <div class="callout green">
+    <b>Verdict.</b> Les parcours cœur fonctionnent (publier une annonce → demande → route →
+    paiement virement → reçu → vol effectué → messagerie). L'intégration drawer admin ↔ pilote
+    via <code>viewerRole</code> est saine : guards <code>requireAdminOrOwningPilote</code>
+    partout, Q64 respecté (le pilote ne voit jamais les autres), aucun IDOR trouvé.
+    <br><b>Restent 3 lots :</b> <b>A.</b> emails du parcours annonce non « pilote-aware » (voix
+    de Romain) · <b>B.</b> écarts questionnaire encore dans le périmètre (dashboard, carnet,
+    consentement, cash, nav admin) · <b>C.</b> bugs potentiels — surtout la migration
+    <code>20260911</code> non exécutée et le pilote désactivé qui laisse des réservations
+    orphelines.
+  </div>
+
+  <!-- ───────────────────────────────────────────── -->
+  <h2>1 · Conforme au questionnaire — rien à faire</h2>
+  <table>
+    <tr><th>Q</th><th>Sujet</th><th>État</th></tr>
+    <tr><td class="p">Q3 / Q81 / Q82</td><td>Infos légales déclaratives, bloquantes</td><td><span class="tag t-green">OK</span> <code>piloteLegalStatus</code> ; bloque le dashboard <b>et</b> (10/09) la publication d'annonce</td></tr>
+    <tr><td class="p">Q7 / Q83 / Q84</td><td>Charte scroll-to-accept + preuve</td><td><span class="tag t-green">OK</span> <code>ChartePiloteGate</code>, <code>conditions_accepted_at</code> + <code>conditions_version</code></td></tr>
+    <tr><td class="p">Q10</td><td>Pilote = client, compte unique promu</td><td><span class="tag t-green">OK</span> <code>createPilote</code> (RPC)</td></tr>
+    <tr><td class="p">Q25</td><td>Vol sur mesure non concerné</td><td><span class="tag t-green">OK</span> <code>.neq("type_resa", "perso")</code> partout</td></tr>
+    <tr><td class="p">Q26 / Q76</td><td>Conflit d'agenda à la demande d'annonce</td><td><span class="tag t-green">OK</span> <code>/api/vol-annonce/submit</code> (scopé pilote ; exclut la même annonce en mode place)</td></tr>
+    <tr><td class="p">Q28</td><td>Garde-fou changements de créneau</td><td><span class="tag t-green">OK</span> <code>slot_change_count</code> + bandeau drawer admin (ambre 2, rouge 3) — 10/09</td></tr>
+    <tr><td class="p">Q30</td><td>Le pilote trace et envoie la route</td><td><span class="tag t-green">OK</span> onglet Route du drawer (viewerRole pilote)</td></tr>
+    <tr><td class="p">Q31</td><td>Verrou 8 h « vol effectué »</td><td><span class="tag t-green">OK</span> <code>marquerVolEffectue</code> + UI (10/09) ; l'admin garde la main</td></tr>
+    <tr><td class="p">Q35</td><td>M&amp;B complet côté pilote + scope <code>?resa=</code></td><td><span class="tag t-green">OK</span> <code>myResaIds.includes(resaId)</code> — pas d'IDOR</td></tr>
+    <tr><td class="p">Q37 / Q39-41</td><td>Paiement direct pilote, prix fixé par lui, trace, 0 € Romain</td><td><span class="tag t-green">OK</span> virement + QR ; hors P&amp;L (<code>isPiloteVol</code> → <code>piloteResas</code>)</td></tr>
+    <tr><td class="p">Q42</td><td>Pas de voucher sur vol pilote</td><td><span class="tag t-green">OK</span> <code>/api/vol-annonce/submit</code> ne gère aucun voucher</td></tr>
+    <tr><td class="p">Q44</td><td>Règle 25 % dynamique</td><td><span class="tag t-green">OK</span> <code>evaluerPartPilote</code> — rendu <b>bloquant</b> (plus strict que « alerte », choix 08/09)</td></tr>
+    <tr><td class="p">Q45 / Q46</td><td>Reçu « participation » + section transactions séparée</td><td><span class="tag t-green">OK</span> <code>invoice</code> <code>issuer</code> = pilote ; <code>TransactionsClient</code> « Vols pilotes tiers »</td></tr>
+    <tr><td class="p">Q53</td><td>Client voit prénom/nom/photo/bio du pilote</td><td><span class="tag t-green">OK</span> bloc « Votre pilote » sur <code>/vol/annonce/[id]</code> + <code>/nos-pilotes/[id]</code></td></tr>
+    <tr><td class="p">Q61</td><td>Le pilote édite bio/photo/tél/IBAN (+ signature)</td><td><span class="tag t-green">OK</span> <code>PiloteProfilForm</code></td></tr>
+    <tr><td class="p">Q64</td><td>Le pilote ne voit jamais les autres</td><td><span class="tag t-green">OK</span> toutes les queries filtrent <code>pilote_id</code> ; reads gardés</td></tr>
+    <tr><td class="p">Q78</td><td>Log <code>author = pilote:Nom</code></td><td><span class="tag t-green">OK</span> dans toutes les actions pilote</td></tr>
+  </table>
+
+  <!-- ───────────────────────────────────────────── -->
+  <h2>2 · Écarts assumés — retranchés par le pivot / décisions post-08/09</h2>
+  <p class="pill">Ne pas corriger : ce sont des choix documentés, pas des oublis.</p>
+  <ul>
+    <li><b>Q12-Q15</b> page « postuler » — hors périmètre jusqu'à nouvel ordre.</li>
+    <li><b>Q16-Q24, Q49-Q50, Q65, Q69, Q85, Q86</b> — assignation manuelle, mise en jeu
+      « premier arrivé », écran des refus, réassignation, planning multi-pilotes, impersonation
+      (reportée 10/09), email de présentation pilote : <b>Blocs B/C gelés</b>.</li>
+    <li><b>Q55 / Q56 / Q57</b> — réécriture CGP « plateforme de mise en relation », politique
+      de confidentialité, phrase de consentement : liés à la découverte légale <b>abandonnée</b>
+      (Q58). <span class="tag t-amber">Conséquence non neutre</span> — voir §3, ligne Q79.</li>
+    <li><b>Q60 / Q62</b> — nav « Offres à prendre » / dashboard « Offres ouvertes » : Bloc C
+      gelé, onglet retiré. (Le reste de Q60/Q62 est un vrai écart, §3.)</li>
+    <li><b>Q33</b> — onglet Modifier <b>passé en lecture seule côté pilote</b> (décision
+      « change Q33 », Bloc B 2e passe). Le popup de mise en garde devient sans objet.
+      <i>À revisiter pour les annonces</i> (§3, P2).</li>
+    <li><b>Q87</b> — M&amp;B DA40-only : respecté.</li>
+  </ul>
+
+  <!-- ───────────────────────────────────────────── -->
+  <h2>3 · Écarts vs questionnaire — encore dans le périmètre</h2>
+  <table>
+    <tr><th>P</th><th>Q</th><th>Écart</th><th>Correctif</th></tr>
+    <tr>
+      <td class="p"><span class="tag t-amber">P1</span></td>
+      <td class="p">Q47 · Q49 · Q54</td>
+      <td><b>Emails du parcours annonce non pilote-aware.</b> <code>reservationConfirmationFreeEmail</code>
+        (demande), <code>reservationHeureConfirmeeEmail</code> (créneau),
+        <code>flightReminderEmail</code> (cron J-2), <code>postVolEmail</code> (merci) parlent
+        à la 1ʳᵉ personne pour Romain (« je vous accueillerai », signés « Romain, pilote et
+        fondateur ») et partent tels quels pour un <code>annonce_pilote</code>.
+        <code>routeProposalEmail</code> à vérifier. Seuls <code>annoncePaiementVirementEmail</code>
+        + les 2 templates messagerie sont corrects.</td>
+      <td>Variante pilote-aware : passer <code>piloteNom</code> + signature, remplacer « Romain »
+        par le pilote quand <code>type_resa = 'annonce_pilote'</code>. Points d'entrée :
+        <code>updateStatutReservation</code> (select élargi <code>pilotes(nom, signature)</code>),
+        <code>/api/vol-annonce/submit</code>, <code>/api/cron/flight-reminder</code>. <b>À faire
+        avec la refonte des ~32 emails.</b></td>
+    </tr>
+    <tr>
+      <td class="p"><span class="tag t-amber">P1</span></td>
+      <td class="p">Q62</td>
+      <td><b>Dashboard pilote incomplet.</b> Il n'a que l'alerte légale + « demandes en
+        attente ». Manquent : <i>vols à venir</i> (compteur), <i>vols pas encore payés à
+        surveiller</i> (pertinent maintenant avec <code>pilote_paye</code>).</td>
+      <td>Ajouter 2 compteurs dans <code>app/pilote/page.tsx</code>.</td>
+    </tr>
+    <tr>
+      <td class="p"><span class="tag t-amber">P1</span></td>
+      <td class="p">Q34 · Q32 · Q60</td>
+      <td><b>Pas de carnet « mes vols passés ».</b> <code>/pilote/vols</code> liste tout dans un
+        tableau trié par date, sans séparation à venir / passés. Q60 avait « Mes vols passés »
+        en entrée de nav.</td>
+      <td>Séparer à venir / passés dans <code>PiloteVolsClient</code> (onglet ou filtre). Léger.</td>
+    </tr>
+    <tr>
+      <td class="p"><span class="tag t-red">P1</span></td>
+      <td class="p">Q79 · Q56 · Q57</td>
+      <td><b>Aucun consentement au partage des coordonnées client avec le pilote.</b> La case
+        <code>accept_data_sharing</code> a été retirée au nettoyage 08/09 ; la découverte légale
+        est abandonnée mais Q79 = « le vol ne peut pas se faire » sans accord. Aujourd'hui la
+        demande d'annonce transmet nom/email/tél du client à un pilote tiers <b>sans phrase de
+        consentement</b>.</td>
+      <td>Au minimum : phrase claire dans le formulaire <code>/vol/annonce/[id]</code> + l'email
+        de demande (« vos coordonnées sont transmises à {pilote} qui organise ce vol »).
+        <b>Décision de Romain requise</b> : case bloquante vs simple phrase. Cf.
+        <code>project_marketplace_legal_risk</code>.</td>
+    </tr>
+    <tr>
+      <td class="p"><span class="tag t-grey">P2</span></td>
+      <td class="p">Q38</td>
+      <td><b>Pas d'option cash.</b> Q38 = « cash <b>ou</b> virement ». Seul le virement/QR existe
+        pour les annonces.</td>
+      <td>Bouton « le client m'a payé en espèces » dans <code>AnnoncePiloteActions</code> (même
+        effet que <code>setPilotePaye</code>, note différente).</td>
+    </tr>
+    <tr>
+      <td class="p"><span class="tag t-grey">P2</span></td>
+      <td class="p">Q68</td>
+      <td><b>Nav admin sans section « Équipe ».</b> « Pilotes » n'est que dans la
+        <code>CommandPalette</code> (groupe « Plus »), pas dans la nav principale.</td>
+      <td>Ajouter l'entrée dans la nav admin. Cosmétique.</td>
+    </tr>
+    <tr>
+      <td class="p"><span class="tag t-grey">P2</span></td>
+      <td class="p">Q33</td>
+      <td><b>Le pilote ne peut pas éditer passagers/poids de sa propre annonce</b> (onglet
+        Modifier read-only, message « contactez Romain »). Cohérent pour un vol assigné, bancal
+        pour une annonce que le pilote organise.</td>
+      <td>Autoriser l'édition quand <code>type_resa = 'annonce_pilote'</code> +
+        <code>viewerRole = 'pilote'</code>, avec le popup de mise en garde de Q33.</td>
+    </tr>
+    <tr>
+      <td class="p"><span class="tag t-grey">P2</span></td>
+      <td class="p">Q63</td>
+      <td><b>Pas d'email de confirmation de paiement</b> pour l'annonce. Le flux standard envoie
+        <code>reservationPaymentConfirmationEmail</code> sur <code>acompte_recu</code> ;
+        <code>setPilotePaye(true)</code> n'envoie rien au client.</td>
+      <td>Email « paiement confirmé » optionnel quand le pilote coche « payé ».</td>
+    </tr>
+  </table>
+
+  <!-- ───────────────────────────────────────────── -->
+  <h2>4 · Bugs potentiels</h2>
+  <table>
+    <tr><th>P</th><th>Zone</th><th>Risque</th></tr>
+    <tr>
+      <td class="p"><span class="tag t-red">P0</span></td>
+      <td class="p">Déploiement</td>
+      <td><b>Migration <code>20260911_reservation_messages.sql</code> non exécutée.</b> Selects
+        explicites sur <code>reservations.messages_token</code>, <code>pilotes.signature</code>
+        et la table <code>reservation_messages</code> → PostgREST 400 → <b>onglet Messages, page
+        <code>/reservation/messages/[token]</code>, champ signature, <code>/pilote/profil</code>
+        cassés</b>. Même classe que l'incident 08/09. <code>20260910</code> : exécutée en local,
+        <b>à exécuter en prod</b> aussi.</td>
+    </tr>
+    <tr>
+      <td class="p"><span class="tag t-red">P0</span></td>
+      <td class="p">Q11 · désactivation pilote</td>
+      <td><code>togglePiloteActif(false)</code> ne dépublie que les annonces
+        <code>statut='publiee'</code>. Une annonce <b><code>reservee</code></b> (client avec
+        réservation <code>demande_recue</code> / <code>payment_pending</code> en cours) reste
+        liée à un pilote inactif → <b>réservation orpheline</b> : le pilote inactif est refusé
+        par <code>requireAdminOrOwningPilote</code>, l'admin peut agir mais rien ne le lui
+        signale, et le client n'est pas prévenu.</td>
+    </tr>
+    <tr>
+      <td class="p"><span class="tag t-amber">P1</span></td>
+      <td class="p"><code>setPilotePaye</code></td>
+      <td>Restauration : <code>restored = pre_payment_statut || "heure_confirmee"</code>. Si le
+        pilote a envoyé la route <b>sans passer par « Confirmer le créneau »</b>,
+        <code>pre_payment_statut</code> peut valoir <code>demande_recue</code> → une réservation
+        <b>payée</b> reste affichée <code>demande_recue</code>. Fix : forcer un statut avancé au
+        moment de cocher « payé ».</td>
+    </tr>
+    <tr>
+      <td class="p"><span class="tag t-amber">P1</span></td>
+      <td class="p"><code>respondToRouteProposal</code> (annonce)</td>
+      <td>Le select imbriqué <code>route_proposals → reservations → pilotes(nom)</code> (commit
+        <code>1637da5</code>) repose sur la FK <code>reservations.pilote_id → pilotes</code>.
+        <code>tsc</code> + <code>build</code> OK mais <b>à vérifier en runtime</b> : si PostgREST
+        ne résout pas le chemin → <code>piloteNom</code> vide dans l'email virement, ou 400.</td>
+    </tr>
+    <tr>
+      <td class="p"><span class="tag t-amber">P1</span></td>
+      <td class="p"><code>AnnoncePiloteActions</code> optimiste</td>
+      <td>Sur « le client m'a payé », l'UI appelle <code>onStatusChange(id, "heure_confirmee")</code>
+        en dur — peut différer du statut réellement restauré. Cosmétique tant que le drawer se
+        recharge, mais le badge de la liste peut mentir jusqu'au reload.</td>
+    </tr>
+    <tr>
+      <td class="p"><span class="tag t-grey">P2</span></td>
+      <td class="p"><code>/api/pay-qr/[id]</code></td>
+      <td>Public, pas de rate-limit ; le QR encode l'IBAN du pilote. UUID non devinable → risque
+        faible, mais un lien fuité expose l'IBAN à qui décode le QR.</td>
+    </tr>
+    <tr>
+      <td class="p"><span class="tag t-grey">P2</span></td>
+      <td class="p">Mode « place » — CAS</td>
+      <td><code>/api/vol-annonce/submit</code> fait un compare-and-swap
+        <code>.eq("places_reservees", prev)</code>. Si un décrément a lieu entre le fetch et
+        l'update, le CAS échoue et renvoie « ce vol vient d'être réservé par quelqu'un d'autre »
+        — message trompeur. Fix : « réessayez », ou relire + retenter une fois.</td>
+    </tr>
+    <tr>
+      <td class="p"><span class="tag t-grey">P2</span></td>
+      <td class="p"><code>isPiloteVol</code> élargi</td>
+      <td>Désormais <b>toute</b> résa <code>type_resa='standard'</code> avec <code>pilote_id</code>
+        sort du CA (<code>lib/transactions.ts</code>). Bloc B gelé → aucune résa standard n'a de
+        <code>pilote_id</code> aujourd'hui, donc inerte ; mais une donnée de test qui traîne
+        disparaîtrait silencieusement des totaux. Vérifier en base :
+        <code>select pilote_id, type_resa from reservations where pilote_id is not null</code>.</td>
+    </tr>
+    <tr>
+      <td class="p"><span class="tag t-grey">P2</span></td>
+      <td class="p"><code>/api/inbound-email</code></td>
+      <td>Codé, route publique, répond 200 à tout — inerte tant qu'il n'est pas branché. Si
+        branché <b>sans</b> <code>INBOUND_EMAIL_SECRET</code>, n'importe qui peut injecter un
+        message dans un fil en connaissant un <code>messages_token</code>. Fix : rendre le
+        secret <b>obligatoire</b> (400 si absent) avant de brancher.</td>
+    </tr>
+  </table>
+
+  <!-- ───────────────────────────────────────────── -->
+  <h2>5 · Intégration admin ↔ pilote</h2>
+  <div class="card">
+    <p><b>Saine dans l'ensemble.</b> Le <code>ReservationDrawer</code> unique piloté par
+      <code>viewerRole</code> :</p>
+    <ul>
+      <li><code>ActionFooter</code> masque encaissement / lien Stripe / relance / NewCAG /
+        « vol effectué » générique côté pilote ; <code>ModifierTab</code> read-only ;
+        <code>MessagesTab</code> et <code>AnnoncePiloteActions</code> ouverts aux deux rôles
+        avec guard serveur <code>requireAdminOrOwningPilote</code>.</li>
+      <li><code>/admin/vols</code> et <code>/pilote/vols</code> chargent tous les deux
+        <code>select("*")</code> → mêmes données ; <code>messages_token</code> /
+        <code>pilote_paye</code> / <code>mode_vente</code> remontent sans select explicite (pas
+        de risque 400 côté liste).</li>
+      <li>L'admin peut agir sur une annonce (marquer payé, vol effectué sans verrou 8 h,
+        répondre dans le fil) — cohérent avec Q88 (admin = contrôle total).</li>
+      <li><code>/admin/transactions</code> : annonces exclues de la P&amp;L, section séparée —
+        conforme Q45/Q46.</li>
+    </ul>
+    <p><b>Points de friction :</b></p>
+    <ul>
+      <li>Le compteur de changements de créneau n'existe que dans le drawer, pas d'écran « stats
+        par pilote » agrégé (Q67) — hors périmètre Bloc B, mais Q67 le voulait.</li>
+      <li>Aucun signalement admin quand une annonce/réservation devient orpheline (§4, P0 Q11).</li>
+      <li><code>/admin/pilotes</code> : la désactivation affiche le récap <code>releasedFlights</code>
+        / <code>unpublishedAnnonces</code> mais ne compte pas les réservations d'annonce actives.</li>
+    </ul>
+  </div>
+
+  <!-- ───────────────────────────────────────────── -->
+  <h2>Suite proposée</h2>
+  <ol>
+    <li><b>P0 tout de suite</b> : exécuter <code>20260910</code> + <code>20260911</code> en prod
+      (Romain) · étendre la cascade <code>togglePiloteActif(false)</code> aux réservations
+      d'annonce actives (annuler + email client + compter).</li>
+    <li><b>P1 par lots</b> : dashboard pilote (2 compteurs) · carnet « vols passés » ·
+      consentement partage de données (<b>décision Romain d'abord</b>) · fix
+      <code>setPilotePaye</code> · vérif runtime <code>respondToRouteProposal</code>.</li>
+    <li><b>Emails pilote-aware</b> : fondu dans la <b>refonte des ~32 emails</b> (backlog), pas
+      un chantier séparé.</li>
+    <li><b>P2</b> en finition : option cash · nav admin « Équipe » · Modifier éditable pour les
+      annonces · email « paiement confirmé » · message d'erreur CAS · secret inbound obligatoire.</li>
+  </ol>
+
+</div>
+</body>
+</html>

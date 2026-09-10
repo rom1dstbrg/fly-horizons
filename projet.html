@@ -110,8 +110,13 @@
           réponse → notif pilote ; signature dans <code>/pilote/profil</code>.</li>
         <li><b>Renseigner un IBAN + le légal</b> sur les comptes pilote de test (sinon publication
           bloquée — garde-fou volontaire).</li>
-        <li><b>Pousser <code>main</code></b> (<code>git push</code>) — ~35 commits d'avance
-          (paiement annonces + garde-fous + messagerie). Sur demande de Romain uniquement.</li>
+        <li><b>Correctifs de l'audit 11/09</b> (<code>audit-espace-pilote-coherence.html</code>) :
+          <b>P0</b> cascade désactivation pilote (annonces <code>reservee</code> orphelines) ·
+          <b>P1</b> dashboard pilote (2 compteurs) · carnet « vols passés » · fix
+          <code>setPilotePaye</code> · consentement partage de données (<b>décision Romain</b>).
+          Les emails pilote-aware sont fondus dans la refonte des ~32 emails.</li>
+        <li><b>Pousser <code>main</code></b> (<code>git push</code>) — ~40 commits d'avance
+          (paiement annonces + garde-fous + messagerie + audit). Sur demande de Romain uniquement.</li>
       </ol>
     </div>
 
@@ -696,6 +701,7 @@
     <table>
       <tr><th>Fichier</th><th>Contenu</th></tr>
       <tr><td><code>plan-attaque-espace-pilote.html</code></td><td>Le plan détaillé de l'espace pilote : audit du code, plan de reprise commit-par-commit, backlog Option 3, + l'historique de l'approche abandonnée (sections 0-14).</td></tr>
+      <tr><td><code>audit-espace-pilote-coherence.html</code></td><td>Audit 11/09 : conformité aux 89 réponses (hors ce qui a été retranché), intégration admin ↔ pilote, bugs potentiels P0/P1/P2. Base des correctifs à venir.</td></tr>
       <tr><td><code>questionnaire-espace-pilote-reponses.md</code></td><td>Les 89 réponses de Romain qui ont cadré le chantier (2026-09-06).</td></tr>
       <tr><td><code>audit-legal-reouverture.html</code></td><td>Audit légal de la réouverture — les points critiques jamais tranchés.</td></tr>
       <tr><td><code>audit-coherence-nouvelle-direction.html</code></td><td>Audit de cohérence du flow « demande » (FAQ, CTA, code mort), 2026-08-06.</td></tr>
