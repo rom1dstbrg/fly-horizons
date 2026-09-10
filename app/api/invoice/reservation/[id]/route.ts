@@ -31,18 +31,32 @@ export async function GET(
 
   const { data: resa } = await admin
     .from("reservations")
-    .select("id, date_vol, heure_vol, duree, passagers, acompte, statut, type_resa, created_at")
+    .select("id, date_vol, heure_vol, duree, passagers, acompte, statut, type_resa, created_at, pilote_paye, pilotes(nom, iban)")
     .eq("id", id)
     .eq("client_id", client.id)
     .single();
 
   if (!resa || !resa.acompte) return new NextResponse("Introuvable", { status: 404 });
 
+  // Annonce pilote : le reçu est émis par le pilote (pas par Fly Horizons), et
+  // seulement une fois qu'il a confirmé avoir été payé par virement.
+  const isAnnonce = resa.type_resa === "annonce_pilote";
+  if (isAnnonce && resa.pilote_paye !== true) {
+    return new NextResponse("Reçu disponible une fois le virement confirmé par le pilote", { status: 409 });
+  }
+  const pilote = (Array.isArray(resa.pilotes) ? resa.pilotes[0] : resa.pilotes) as
+    | { nom: string; iban: string | null }
+    | null;
+
   const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
     weekday: "long", day: "numeric", month: "long", year: "numeric",
   });
 
-  const typeLabel = resa.type_resa === "perso" ? "Vol sur mesure" : "Vol partagé en avion léger";
+  const typeLabel = resa.type_resa === "perso"
+    ? "Vol sur mesure"
+    : isAnnonce
+    ? "Vol partagé en partage de coûts (NCO.GEN.104)"
+    : "Vol partagé en avion léger";
   const itemTitle = `${typeLabel} — ${formatDur(resa.duree)} · ${dateStr}`;
   const qty = resa.passagers ?? 1;
 
@@ -59,6 +73,9 @@ export async function GET(
     couponCode: null,
     total: resa.acompte,
     shippingAddress: null,
+    issuer: isAnnonce && pilote
+      ? { name: pilote.nom, details: pilote.iban ? `IBAN ${pilote.iban}` : undefined }
+      : null,
   };
 
   const buffer = await generateInvoicePDFBuffer(data, true);

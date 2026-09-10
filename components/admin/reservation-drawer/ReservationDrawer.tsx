@@ -27,8 +27,10 @@ import { HistoriqueTab } from "./HistoriqueTab";
 import { EmailComposer } from "./EmailComposer";
 import { ItinerairesModal } from "./ItinerairesModal";
 import { ActionFooter } from "./ActionFooter";
-// Blocs B/C/D (assignation / mise en jeu / paiement pilote) GELÉS — pivot 08/09.
-// PiloteAssignBlock, PiloteParticipationBlock, releaseAssignedFlight : plus câblés.
+// Blocs B/C (assignation / mise en jeu) GELÉS — pivot 08/09.
+// Bloc D réactivé pour les annonces pilote (règlement par virement direct) via
+// AnnoncePiloteActions — voir décision 08/09 soir.
+import { AnnoncePiloteActions } from "./AnnoncePiloteActions";
 import { AvionReserveBadge } from "./AvionReserveBadge";
 import { useReservationDraft } from "./hooks/useReservationDraft";
 import { useBilanVol } from "./hooks/useBilanVol";
@@ -351,6 +353,18 @@ export function ReservationDrawer({
                   cashPayment={cashPayment}
                   isCashPaymentPending={isCashPaymentPending}
                   onToggleCashPayment={doToggleCashPayment}
+                  piloteParticipationSlot={
+                    r.type_resa === "annonce_pilote" ? (
+                      <AnnoncePiloteActions
+                        reservationId={r.id}
+                        statut={r.statut}
+                        piloteePaye={r.pilote_paye === true}
+                        montant={r.acompte ?? null}
+                        onStatusChange={onStatusChange}
+                        onFieldsChange={onFieldsChange}
+                      />
+                    ) : undefined
+                  }
                 />
               )}
 

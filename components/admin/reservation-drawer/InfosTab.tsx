@@ -34,9 +34,20 @@ function piloteNextSteps(statut: string): { title: string; steps: string[] } {
       title: "Vos étapes",
       steps: [
         "Tracez l'itinéraire dans l'onglet Route.",
-        "Renseignez la participation aux frais dans le bloc plus bas.",
         "Cliquez « Confirmer date + heure » : la route part au client dans le même geste.",
         "Si le client demande une modification, ajustez le tracé et renvoyez-le.",
+        "Quand il accepte la route, il reçoit un lien pour vous régler par virement.",
+        "Préparez la masse & centrage (bouton M&B).",
+      ],
+    };
+  }
+  if (statut === "payment_pending") {
+    return {
+      title: "Vos étapes",
+      steps: [
+        "Le client a reçu le lien de paiement (virement direct sur votre IBAN).",
+        "À réception du virement, cliquez « Le client m'a payé » dans le bloc plus bas.",
+        "Besoin de relancer ? « Renvoyer le lien ». Client injoignable ? « Annuler la demande ».",
         "Préparez la masse & centrage (bouton M&B).",
       ],
     };
@@ -47,7 +58,7 @@ function piloteNextSteps(statut: string): { title: string; steps: string[] } {
     steps: [
       "Préparez la masse & centrage (bouton M&B).",
       "Le jour du vol, accueillez le client 15 min avant le décollage.",
-      "Après le vol (au moins 8 h plus tard), marquez-le « effectué » en bas.",
+      "Après le vol (au moins 8 h plus tard), marquez-le « effectué » dans le bloc règlement.",
     ],
   };
 }
