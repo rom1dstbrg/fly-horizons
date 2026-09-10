@@ -4,10 +4,18 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { evaluerPartPilote } from "@/lib/annonces-pilote";
+import { piloteLegalStatus } from "@/lib/pilote/legal";
 import sharp from "sharp";
 
 const MAX_IMAGES = 6;
 const MAX_PHOTO_SIZE = 12 * 1024 * 1024; // 12 Mo avant compression
+
+/** IBAN plausible : 2 lettres pays + 2 chiffres + 11 à 30 alphanum. */
+function isProbablyIban(v: string | null | undefined): boolean {
+  if (!v) return false;
+  const s = v.replace(/\s+/g, "").toUpperCase();
+  return /^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(s);
+}
 
 async function checkPilote() {
   const supabase = await createClient();
@@ -17,10 +25,31 @@ async function checkPilote() {
   if (profile?.role !== "pilote") throw new Error("Non autorisé");
 
   const admin = createAdminClient();
-  const { data: pilote } = await admin.from("pilotes").select("id, statut").eq("user_id", user.id).single();
+  const { data: pilote } = await admin
+    .from("pilotes")
+    .select(
+      "id, statut, iban, licence_numero, licence_expiration, medical_expiration, conditions_accepted_at",
+    )
+    .eq("user_id", user.id)
+    .single();
   if (!pilote) throw new Error("Fiche pilote introuvable");
   if (pilote.statut !== "actif") throw new Error("Compte pilote désactivé");
   return pilote;
+}
+
+/**
+ * Garde-fous communs à la publication / modification d'une annonce :
+ * informations légales à jour (décision 2026-09-06 « déclaratif mais bloquant »)
+ * + IBAN valide (le règlement se fait par virement direct au pilote).
+ */
+function checkPublicationGates(pilote: Awaited<ReturnType<typeof checkPilote>>): string | null {
+  if (!piloteLegalStatus(pilote).ok) {
+    return "Complétez vos informations légales (numéro de licence, expirations licence et médical, charte pilote) dans votre profil avant de publier une annonce.";
+  }
+  if (!isProbablyIban(pilote.iban)) {
+    return "Ajoutez un IBAN valide dans votre profil avant de publier une annonce : c'est là que le client vous règlera par virement.";
+  }
+  return null;
 }
 
 export async function createAnnonce(data: {
@@ -28,6 +57,7 @@ export async function createAnnonce(data: {
   places: number;
   prix_total: number;
   part_pilote: number;
+  mode_vente?: "avion" | "place";
   description?: string;
   images?: string[];
   legal_ok?: boolean;
@@ -40,6 +70,9 @@ export async function createAnnonce(data: {
     if (!data.legal_ok) {
       return { error: "Vous devez confirmer que vous réalisez ce vol et partagez vos frais pour publier." };
     }
+    const gate = checkPublicationGates(pilote);
+    if (gate) return { error: gate };
+    const modeVente = data.mode_vente === "place" ? "place" : "avion";
     const images = (data.images ?? []).slice(0, MAX_IMAGES);
 
     const check = evaluerPartPilote(data.prix_total, data.part_pilote, data.places);
@@ -52,6 +85,7 @@ export async function createAnnonce(data: {
       places: data.places,
       prix_total: data.prix_total,
       part_pilote: data.part_pilote,
+      mode_vente: modeVente,
       description: data.description?.trim() || null,
       images,
       legal_ok: true,
@@ -72,6 +106,7 @@ export async function updateAnnonce(id: string, data: {
   places: number;
   prix_total: number;
   part_pilote: number;
+  mode_vente?: "avion" | "place";
   description?: string;
   images?: string[];
   legal_ok?: boolean;
@@ -84,6 +119,9 @@ export async function updateAnnonce(id: string, data: {
     if (!data.legal_ok) {
       return { error: "Vous devez confirmer que vous réalisez ce vol et partagez vos frais pour publier." };
     }
+    const gate = checkPublicationGates(pilote);
+    if (gate) return { error: gate };
+    const modeVente = data.mode_vente === "place" ? "place" : "avion";
     const images = (data.images ?? []).slice(0, MAX_IMAGES);
 
     const check = evaluerPartPilote(data.prix_total, data.part_pilote, data.places);
@@ -97,6 +135,7 @@ export async function updateAnnonce(id: string, data: {
         places: data.places,
         prix_total: data.prix_total,
         part_pilote: data.part_pilote,
+        mode_vente: modeVente,
         description: data.description?.trim() || null,
         images,
         legal_ok: true,
@@ -121,11 +160,13 @@ export async function updateAnnonce(id: string, data: {
 export async function republishAnnonce(id: string) {
   try {
     const pilote = await checkPilote();
+    const gate = checkPublicationGates(pilote);
+    if (gate) return { error: gate };
     const admin = createAdminClient();
 
     const { data: source } = await admin
       .from("annonces_pilote")
-      .select("duree, places, prix_total, part_pilote, description, images, legal_ok, legal_ok_at")
+      .select("duree, places, prix_total, part_pilote, mode_vente, description, images, legal_ok, legal_ok_at")
       .eq("id", id)
       .eq("pilote_id", pilote.id)
       .single();
@@ -138,6 +179,7 @@ export async function republishAnnonce(id: string) {
       places: source.places,
       prix_total: source.prix_total,
       part_pilote: source.part_pilote,
+      mode_vente: source.mode_vente ?? "avion",
       description: source.description,
       images: source.images,
       // On reporte l'attestation de la source. Si elle n'était pas attestée
