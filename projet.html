@@ -99,25 +99,18 @@
     <div class="col">
       <h3><span class="tag t-amber">À faire</span> prêt à démarrer</h3>
       <ol>
-        <li><b>Durcir le système d'annonces</b> (déjà en prod) — le rendre défendable sans avocat :
-          <ol>
-            <li>part pilote <b>bloquante</b> (plus un simple warning) + seuil qui s'adapte au nombre
-              de places : minimum = part égale entre tous les occupants, pilote compris
-              (1 pax → 50 %, 2 → 33 %, 3 → 25 %, etc.), pas un 25 % fixe.</li>
-            <li>garde-fou <code>legal_ok</code> sur la publication (part réelle + case « je pars
-              vraiment sur ce vol et je partage mes frais »).</li>
-            <li>reçu émis par le pilote pour une annonce vendue.</li>
-          </ol>
-        </li>
-        <li><b>Bouton « renvoyer le lien de paiement » pour le pilote</b> — sur une résa
-          <code>annonce_pilote</code> en <code>demande_recue</code> / <code>payment_pending</code>,
-          le pilote doit pouvoir relancer le lien Stripe lui-même (aujourd'hui réservé à l'admin).</li>
-        <li><b>Vérifier en local que l'app tourne toujours</b> (<code>npm run dev</code>) après le
-          nettoyage git — admin, drawer réservation, tunnel public, espace pilote (annonces + M&amp;B).
-          Le fix « colonnes Bloc D » du 08/09 montre que la neutralisation initiale avait laissé des
-          <code>SELECT</code> cassés : re-tester le parcours annonce de bout en bout.</li>
-        <li><b>Pousser <code>main</code></b> (<code>git push</code>) — plusieurs commits d'avance
-          (batch M&amp;B, Bloc A, refonte M&amp;B, doc). Sur demande de Romain uniquement.</li>
+        <li><b>Exécuter la migration <code>20260910_annonces_paiement.sql</code></b> dans Supabase
+          (<code>mode_vente</code> + <code>places_reservees</code> + <code>pilote_paye</code> +
+          <code>pilote_paye_at</code> + <code>duree_reelle</code>). <b>Bloquant</b> pour tester le
+          parcours annonce — sinon <code>SELECT</code> cassés (cf. incident 08/09).</li>
+        <li><b>Vérif locale du parcours annonce de bout en bout</b> (<code>npm run dev</code>) :
+          publier une annonce (les deux modes), demande client, pilote confirme la route, client
+          accepte → email virement, page <code>/vol/annonce/paiement/[token]</code>, pilote coche
+          « payé », reçu, « vol effectué ». + tour rapide admin / drawer / M&amp;B.</li>
+        <li><b>Renseigner un IBAN + le légal</b> sur les comptes pilote de test (sinon publication
+          bloquée — garde-fou volontaire).</li>
+        <li><b>Pousser <code>main</code></b> (<code>git push</code>) — 21 commits d'avance + le
+          chantier paiement annonces. Sur demande de Romain uniquement.</li>
       </ol>
     </div>
 
@@ -136,6 +129,14 @@
     <div class="col">
       <h3><span class="tag t-green">Fait</span> — septembre 2026</h3>
       <ul>
+        <li><b>Paiement des annonces = virement + QR SEPA + page client (10/09).</b> Sortie du
+          circuit Stripe pour <code>annonce_pilote</code> ; page
+          <code>/vol/annonce/paiement/[token]</code> ; steps + actions pilote (payé / renvoyer /
+          annuler / vol effectué) ; reçu émis par le pilote ; garde-fous publication (IBAN +
+          légal bloquants) ; <b>2 modes de vente</b> (avion entier / à la place). Détail dans le
+          Changelog. <code>next build</code> + <code>tsc</code> OK, pas commité.</li>
+        <li><b>Durcissement annonces (08/09) :</b> part pilote bloquante + seuil adaptatif +
+          garde-fou <code>legal_ok</code> (<code>6c80bed</code>).</li>
         <li><b>Nettoyage git (08/09) :</b> <code>main</code> a récupéré le batch M&amp;B + le Bloc A +
           les fichiers B/C/D (commit <code>44ba252</code>), puis le <b>câblage B/C/D a été neutralisé</b>
           (commit <code>94e1a4a</code>) : plus d'onglet « Offres », plus de <code>PiloteAssignBlock</code> /
@@ -156,51 +157,12 @@
     <div class="col">
       <h3><span class="tag t-grey">Backlog</span> plus tard, pas encore ordonnancé</h3>
       <ul>
-        <li><b>Annonces — modèle A (le client paie le pilote en direct)</b> — décision prise 08/09,
-          <b>pas encore codé</b> (Romain : « on ne le fait pas maintenant »). À construire :
-          <ol>
-            <li><b>Paiement = virement + QR SEPA</b> (décision 08/09 soir, cf. onglet Décisions ;
-              annule Mollie Connect) : à l'acceptation de la route, le client reçoit un lien vers
-              une <b>page de paiement soignée</b> — identité + photo du pilote, montant, IBAN
-              copiable, communication structurée, QR EPC scannable, statut « en attente / reçu » en
-              direct, reçu téléchargeable une fois confirmé. Aucun PSP, 0 € de frais. Le code du QR
-              EPC existe déjà (Bloc D, <code>lib/pilote/payment.ts</code>, <code>/api/pay-qr</code>) ;
-              la page client dédiée est à construire (plus soignée que le bloc actuel de
-              <code>ReservationTracker</code>).</li>
-            <li><b>Le pilote marque « payé »</b> dans l'espace pilote : case à cocher ou montant
-              reçu à saisir. Fait avancer le dossier.</li>
-            <li><b>Bilan de vol par le pilote</b> : minutes réellement volées (<code>duree_reelle</code>)
-              + éventuel commentaire, au moment de marquer le vol effectué.</li>
-            <li><b>Satisfaction</b> : l'enquête part quand le vol est marqué « effectué » — vérifier
-              que ça se déclenche aussi depuis l'action pilote sur une annonce, pas seulement le
-              flux standard de Romain.</li>
-            <li><b>Reçu émis par le pilote</b> (nom + IBAN) une fois « payé » coché.</li>
-            <li><b>Filet si le client ne paie jamais</b> : pas de webhook = pas de deadline auto.
-              Le pilote doit pouvoir annuler une demande non payée (sinon l'annonce reste bloquée
-              en <code>reservee</code>). Relance auto optionnelle (cron léger).</li>
-            <li><b>IBAN pilote obligatoire</b> avant de publier une annonce (champ simple dans
-              <code>/pilote/profil</code>, aucun onboarding) — sinon la page de paiement est cassée.
-              À brancher sur le gating profil / <code>legal_ok</code>.</li>
-            <li><b>Modèle de statuts</b> à définir : demande_recue → route confirmée → payé (coché
-              par le pilote) → effectué. « Payé » = vrai statut ou simple booléen ?</li>
-            <li><b>Annulation après paiement</b> = strictement pilote ↔ client (Fly Horizons ne
-              touche pas au remboursement). Prévoir un chemin « le client a annulé » côté pilote +
-              le dire clairement.</li>
-            <li><b>Plomberie Stripe</b> : <code>/api/reservation/pay</code> + webhook cessent de
-              couvrir <code>annonce_pilote</code> ; <code>respondToRouteProposal</code> n'ouvre plus
-              de session Stripe pour une annonce. Annonces sorties de la P&amp;L
-              (<code>lib/transactions.ts</code>).</li>
-            <li><b>Clarté client</b> : page publique de l'annonce + email de confirmation de demande
-              disent « vous réglerez le pilote directement par virement, pas de paiement par carte
-              ici ».</li>
-            <li><b>« 1 booking = tout l'avion »</b> à verrouiller : le modèle A ne marche
-              proprement qu'avec un seul client qui règle le pilote (pas de vente à la place).</li>
-            <li><b>Migration</b> : sous-ensemble de <code>20260909_pilote_paiement</code> —
-              <code>reservations.pilote_paye</code> + <code>pilote_paye_at</code> seulement. Pas de
-              <code>montant_pilote</code> (l'<code>acompte</code> porte déjà le montant client), pas
-              de <code>paylink</code>, pas de compte connecté.</li>
-          </ol>
-        </li>
+        <li><b>Annonces — paiement modèle A</b> : <span class="tag t-green">codé 10/09</span>
+          (virement + QR + page client + steps pilote + reçu + filet impayé + 2 modes de vente,
+          cf. Changelog). <i>Reste :</i> exécuter la migration <code>20260910</code>, vérif locale
+          bout-en-bout, puis commit/push. <i>Plus tard, optionnel :</i> relance auto impayé (cron
+          léger) ; chemin explicite « le client a annulé après paiement » côté pilote (aujourd'hui :
+          le pilote décoche « payé » + échange direct avec le client).</li>
         <li><b>Messagerie pilote ↔ client (fil de ticket)</b> — décision 08/09, pas commencé.
           <ol>
             <li>Onglet « Messages » dans le drawer de réservation (fil rattaché à la résa).</li>
@@ -227,22 +189,19 @@
         <li><b>Chantier Option 3 « annonces à fond »</b> — détail dans
           <code>plan-attaque-espace-pilote.html</code> § Option 3. Périmètre resserré (décision
           08/09 : pas de découverte légale, pas d'ouverture publique).
-          <br><i>Dans le périmètre, remonté en « À faire » :</i> part pilote bloquante + seuil
-          adaptatif · garde-fou <code>legal_ok</code> · reçu émis par le pilote.
-          <br><i>Encore backlog :</i> trancher le paiement d'une annonce (Stripe Romain + reversement
-          <i>vs</i> pilote encaisse en direct) · <code>PiloteStepsPanel</code> version annonce ·
-          fiche pilote publique sur la page annonce · modèle « 1 booking = l'avion » confirmé ou
-          revu · garde-fous transverses (verrou 8 h « vol effectué », stats changement de créneau,
-          routage réponses email, impersonation).
+          <br><i>Fait :</i> part pilote bloquante + seuil adaptatif · garde-fou <code>legal_ok</code> ·
+          paiement virement + page client · steps pilote · reçu émis par le pilote · fiche pilote
+          publique sur la page annonce · 2 modes de vente (avion / place).
+          <br><i>Encore backlog :</i> garde-fous transverses (verrou 8 h « vol effectué », stats
+          changement de créneau, routage réponses email = chantier messagerie, impersonation
+          « voir comme un pilote »).
           <br><i>Hors périmètre jusqu'à nouvel ordre :</i> CGP « plateforme de mise en relation » ·
           page « postuler » · ouverture à des pilotes inconnus.
         </li>
         <li><b>Refonte complète des ~32 emails</b> — tout dernier chantier de l'espace pilote. Romain
-          a demandé un rappel explicite le moment venu.</li>
-        <li>Migration <code>20260909_pilote_paiement.sql</code> — <b>ne pas exécuter telle quelle</b>
-          (câblée sur l'assignation gelée). Le modèle A des annonces (décision 08/09) n'en a besoin
-          que de <code>reservations.pilote_paye</code> + <code>pilote_paye_at</code> : un fichier SQL
-          réduit sera préparé au moment du chantier.</li>
+          a demandé un rappel explicite le moment venu. (Nouveau ce mois : <code>annoncePaiementVirementEmail</code>.)</li>
+        <li>Migration <code>20260909_pilote_paiement.sql</code> — <b>abandonnée</b>, remplacée par
+          <code>20260910_annonces_paiement.sql</code>.</li>
       </ul>
     </div>
   </section>
@@ -252,6 +211,41 @@
     <p class="meta"><b>Append-only.</b> On n'édite jamais une décision passée : on en ajoute une
       nouvelle qui la remplace, avec un lien. Chaque entrée : <i>Contexte · Décision · Alternatives
       écartées · Conséquences</i>. Plus récent en haut.</p>
+
+    <div class="dec">
+      <p class="date">2026-09-10 · Espace pilote — annonces</p>
+      <h3>Mode de vente choisi par annonce (avion entier / à la place) + publication durcie</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>En codant le paiement des annonces (virement, décision 08/09 soir), deux points
+          restaient ouverts : le modèle « 1 booking = tout l'avion » (item #8 du plan Option 3) et
+          le niveau de gating à la publication. Le plan penchait pour « avion entier uniquement »
+          (le virement direct marche le plus proprement avec un seul payeur).</dd>
+        <dt>Décision</dt>
+        <dd><b>(1) Le pilote choisit le mode à chaque annonce</b> : <i>avion entier</i> (un seul
+          client règle <code>prix_total − part_pilote</code>) ou <i>vente à la place</i> (plusieurs
+          clients, chacun règle <code>(prix_total − part_pilote) / places</code> × ses passagers,
+          l'annonce reste ouverte jusqu'à ce que toutes les places soient prises). Même mécanique
+          <code>pilote_paye</code> par réservation dans les deux cas ; compteur
+          <code>places_reservees</code> atomique (compare-and-swap) pour le mode place.
+          <b>(2) Publier une annonce exige désormais</b> un IBAN valide <b>et</b> les infos légales
+          à jour (<code>piloteLegalStatus</code> : licence, médical, charte — cohérent avec la
+          décision 2026-09-06 « déclaratif mais bloquant », qui ne bloquait jusqu'ici que
+          l'assignation, pas la publication d'annonce).</dd>
+        <dt>Alternatives écartées</dt>
+        <dd><b>Avion entier seulement</b> (recommandation du plan) : plus simple mais Romain veut
+          garder la vente à la place possible. <b>Vente à la place seulement</b> : casse le cas
+          « je pars avec des amis, je prends tout ». <b>Gating publication minimal</b> (IBAN +
+          case légale, sans contrôle licence/médical) : laisse un pilote périmé publier — refusé.</dd>
+        <dt>Conséquences</dt>
+        <dd>Migration <code>20260910_annonces_paiement.sql</code> (<code>mode_vente</code> +
+          <code>places_reservees</code> + <code>pilote_paye</code>/<code>_at</code> +
+          <code>duree_reelle</code>). Le mode place partage un créneau : la vérif de conflit
+          d'horaire exclut les autres demandes de la même annonce. Prix « / personne » sur la page
+          publique, les cards et <code>/nos-offres</code>. Voir
+          <code>[[project_espace_pilote_build]]</code>.</dd>
+      </dl>
+    </div>
 
     <div class="dec">
       <p class="date">2026-09-08 (soir) · Espace pilote — paiement</p>
@@ -653,31 +647,30 @@
   <section id="plan" class="panel">
     <h2>Où on en est</h2>
     <div class="card">
-      <p><b>Espace pilote :</b> pivoté vers l'Option 3 (le pilote ne gère que ses propres annonces).
-      Nettoyage git fait le 08/09 : <code>main</code> contient le batch M&amp;B + le Bloc A (actifs) +
-      les fichiers B/C/D (présents mais <b>inertes</b>, câblage retiré). <code>next build</code> +
-      <code>tsc</code> OK. <code>main</code> a 4 commits d'avance sur <code>origin</code>, pas encore
-      poussé.</p>
-      <p><b>Le système d'annonces existe déjà</b> (<code>annonces_pilote</code>, <code>/pilote/annonces</code>,
-      page publique <code>/vol/annonce/[id]</code>, contrôle des 25 %, booking) et son modèle de prix
-      est le bon (le client paie <code>prix_total − part_pilote</code>). Il n'est pas « développé à
-      fond ».</p>
+      <p><b>Espace pilote :</b> Option 3 (le pilote ne gère que ses propres annonces). Le
+      <b>chantier paiement des annonces est codé</b> (10/09) : sortie du circuit Stripe, page de
+      paiement client par virement + QR SEPA, steps + actions pilote (payé / renvoyer lien /
+      annuler / vol effectué), reçu émis par le pilote, garde-fous publication (IBAN + légal),
+      2 modes de vente (avion entier / à la place). <code>next build</code> + <code>tsc</code> OK.</p>
+      <p><b>Pas encore commité ni poussé.</b> <code>main</code> a 21 commits d'avance sur
+      <code>origin</code> (batch M&amp;B, Bloc A, refonte M&amp;B, doc) + ce chantier par-dessus.
+      La migration <code>20260910_annonces_paiement.sql</code> <b>doit être exécutée dans Supabase</b>
+      avant de tester (sinon <code>SELECT</code> cassés).</p>
     </div>
 
     <h2>Prochaines étapes (dans l'ordre)</h2>
     <ol>
-      <li><b>Durcir le système d'annonces</b> (en cours) — part pilote bloquante + seuil adaptatif au
-        nombre de places, garde-fou <code>legal_ok</code> à la publication, reçu émis par le pilote.
-        Rend l'existant défendable sans avocat.</li>
-      <li><b>Vérif locale</b> — <code>npm run dev</code>, tour rapide (admin, drawer, tunnel de
-        réservation, espace pilote) pour confirmer que le nettoyage git n'a rien cassé.</li>
+      <li><b>Exécuter <code>20260910_annonces_paiement.sql</code></b> dans Supabase.</li>
+      <li><b>Vérif locale</b> — <code>npm run dev</code> : parcours annonce de bout en bout (2 modes),
+        + tour rapide admin / drawer / M&amp;B.</li>
+      <li><b>Commit</b> du chantier (suggéré : migration+helpers+QR / page+email+anti-Stripe /
+        steps+actions+reçu / gating+filet / fiche pilote / mode place — cf. plan).</li>
       <li><b>Push</b> de <code>main</code> (<code>git push</code>) — sur demande de Romain. Décider si
-        on redéploie (batch M&amp;B + Bloc A + refonte M&amp;B partiraient en prod, ils sont sains).</li>
+        on redéploie.</li>
       <li><b>Validation visuelle M&amp;B</b> — Romain regarde la refonte et donne ses derniers
         ajustements.</li>
-      <li><b>Suite Option 3</b> (périmètre resserré) — paiement d'une annonce (<b>virement + QR SEPA
-        + page client soignée</b>, cf. Décisions), steps panel version annonce, fiche pilote
-        publique, garde-fous transverses. Pas d'ouverture publique.</li>
+      <li><b>Garde-fous transverses</b> (verrou 8 h « vol effectué », stats changement de créneau,
+        impersonation) + <b>messagerie pilote ↔ client</b> (inclut le routage des réponses email).</li>
       <li><b>Refonte des emails</b> — tout à la fin, quand l'espace pilote est stabilisé.</li>
     </ol>
 
@@ -713,6 +706,49 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-10 — paiement des annonces : virement + QR SEPA + page client, modes de vente, garde-fous</h3>
+      <ul>
+        <li><b>Migration <code>20260910_annonces_paiement.sql</code></b> (<span class="tag t-red">à
+          exécuter à la main</span>) : <code>annonces_pilote.mode_vente</code>
+          (<code>avion</code>/<code>place</code>) + <code>places_reservees</code> ;
+          <code>reservations.pilote_paye</code> + <code>pilote_paye_at</code> +
+          <code>duree_reelle</code>. Sous-ensemble volontaire de <code>20260909</code> (pas de
+          <code>montant_pilote</code>, pas de <code>pilotes.paylink</code>).</li>
+        <li><b>Page de paiement client soignée</b> <code>/vol/annonce/paiement/[token]</code>
+          (<code>page.tsx</code> + <code>PaiementStatus.tsx</code>) : identité + photo pilote,
+          montant, QR EPC, IBAN + communication copiables, statut « en attente / confirmé » avec
+          poll doux (20 s), bouton reçu une fois payé. <code>/api/pay-qr/[id]</code> réparé
+          (montant = <code>reservations.acompte</code>).</li>
+        <li><b>Sortie du circuit Stripe pour <code>annonce_pilote</code></b> :
+          <code>respondToRouteProposal</code> envoie l'email « réglez par virement »
+          (<code>annoncePaiementVirementEmail</code>) au lieu du lien Stripe ;
+          <code>/api/reservation/pay/[token]</code> redirige vers la page virement ; garde
+          défensive dans le webhook Stripe ; <code>isPiloteVol</code> élargi à
+          <code>annonce_pilote</code> → ces vols sortent du CA
+          (<code>lib/transactions.ts</code>), listés à part.</li>
+        <li><b>Steps pilote + actions</b> (<code>AnnoncePiloteActions</code> dans le
+          <code>ReservationDrawer</code>) : « le client m'a payé », « renvoyer le lien »,
+          « annuler la demande » (filet impayé, remet l'annonce en vente), « marquer le vol
+          effectué » (+ minutes réelles → enquête satisfaction). Actions dans
+          <code>lib/actions/pilote-paiement.ts</code> (retaillé : <code>setPiloteMontant</code>
+          retiré). <code>PiloteParticipationBlock.tsx</code> (Bloc D gelé) supprimé.</li>
+        <li><b>Reçu émis par le pilote</b> : <code>/api/invoice/reservation/[id]</code> pose
+          <code>issuer = { pilote, IBAN }</code> pour <code>annonce_pilote</code>, refusé tant que
+          <code>pilote_paye = false</code>.</li>
+        <li><b>Garde-fous publication</b> (<code>lib/actions/annonces.ts</code> +
+          <code>/pilote/annonces</code>) : IBAN valide <b>et</b> légal à jour
+          (<code>piloteLegalStatus</code>) requis pour publier — bandeau + bouton désactivé sinon.</li>
+        <li><b>Mode « vente à la place »</b> : toggle dans <code>AnnonceForm</code>, compteur
+          atomique <code>places_reservees</code> (compare-and-swap) dans
+          <code>/api/vol-annonce/submit</code>, prix par place = <code>(prix_total − part_pilote)
+          / places</code>, « X places restantes » + prix « / personne » sur la page publique,
+          <code>AnnonceCard</code> / <code>AnnonceStickyBar</code> / <code>/nos-offres</code>.</li>
+        <li><b>Fiche pilote publique</b> sur <code>/vol/annonce/[id]</code> : photo + bio + lien
+          vers <code>/nos-pilotes/[id]</code>. Résumé compact + lien vers la page de paiement dans
+          <code>ReservationTracker</code> (plus de gros bloc inline).</li>
+        <li><code>next build</code> + <code>tsc</code> OK. Pas encore commité / poussé.</li>
+      </ul>
+
       <h3>2026-09-08 — fix : acceptation de route cassée (colonnes Bloc D absentes)</h3>
       <ul>
         <li><b>Symptôme</b> (test annonce de Romain) : le client accepte l'itinéraire, aucun lien
@@ -846,9 +882,12 @@
           <code>20260907_pilote_legal</code> · <code>20260908_reservations_pilote_assign</code> ·
           <code>20260908_flight_offers</code></li>
         <li><span class="tag t-red">Non exécutée</span> <code>20260909_pilote_paiement</code>
-          (bloc D — <b>à remplacer</b> par un fichier réduit : <code>reservations.pilote_paye</code>
-          + <code>pilote_paye_at</code> seulement. Décision paiement des annonces tranchée 08/09
-          soir : virement + QR SEPA, aucun PSP.)</li>
+          (bloc D — <b>remplacée</b> par <code>20260910</code> ci-dessous, ne pas l'exécuter).</li>
+        <li><span class="tag t-red">Non exécutée</span> <code>20260910_annonces_paiement</code>
+          — <code>annonces_pilote.mode_vente</code> + <code>places_reservees</code> ;
+          <code>reservations.pilote_paye</code> + <code>pilote_paye_at</code> +
+          <code>duree_reelle</code>. <b>À exécuter avant de tester le parcours annonce</b> (sinon
+          <code>SELECT</code> cassés, cf. incident 08/09).</li>
       </ul>
     </div>
   </section>
