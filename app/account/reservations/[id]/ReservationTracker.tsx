@@ -39,13 +39,13 @@ export interface ReservationData {
   type_resa: string;
   payment_token: string | null;
   acompte: number | null;
-  // Vol pilote (modèle A) : réglé en direct au pilote, pas de Stripe.
+  // Vol pilote (annonce) : réglé en direct au pilote par virement, pas de Stripe.
+  // Le détail (QR, IBAN, reçu) vit sur /vol/annonce/paiement/[token] ; ici on
+  // n'affiche qu'un résumé + le lien.
   pilotePayment?: {
     piloteNom: string;
     montant: number | null;
     paye: boolean;
-    iban: string | null;
-    paylink: string | null;
   } | null;
   distance_km: number | null;
   created_at: string;
@@ -402,7 +402,7 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
           {piloteVol && !isCancelled && resa.pilotePayment && (
             <PiloteParticipation
               payment={resa.pilotePayment}
-              qrUrl={`${siteUrl}/api/pay-qr/${resa.id}`}
+              paymentPageUrl={resa.payment_token ? `/vol/annonce/paiement/${resa.payment_token}` : null}
               receiptUrl={`/api/invoice/reservation/${resa.id}`}
             />
           )}
@@ -793,107 +793,56 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
   );
 }
 
-// ── Participation aux frais (vol pilote, modèle A) ─────────────────────────
+// ── Participation aux frais (vol pilote / annonce) ────────────────────────
+// Résumé compact. Le détail (QR SEPA, IBAN copiable, reçu) vit sur la page
+// dédiée /vol/annonce/paiement/[token].
 
 function PiloteParticipation({
   payment,
-  qrUrl,
+  paymentPageUrl,
   receiptUrl,
 }: {
   payment: NonNullable<ReservationData["pilotePayment"]>;
-  qrUrl: string;
+  paymentPageUrl: string | null;
   receiptUrl: string;
 }) {
-  const [copied, setCopied] = useState<"iban" | null>(null);
-
-  function copyIban() {
-    if (!payment.iban) return;
-    navigator.clipboard.writeText(payment.iban.replace(/\s+/g, "")).then(() => {
-      setCopied("iban");
-      setTimeout(() => setCopied(null), 2000);
-    });
-  }
-
   return (
     <div className="mt-4 pt-4 border-t border-border">
       <div className="flex items-center gap-2 mb-2">
         <CreditCard size={15} className="text-primary shrink-0" />
         <p className="text-xs font-semibold text-foreground">Participation aux frais</p>
-        {payment.montant != null &&
-          (payment.paye ? (
-            <span className="text-[11px] font-semibold text-green-600 flex items-center gap-1">
-              <CheckCircle size={12} /> Réglée
-            </span>
-          ) : (
-            <span className="text-[11px] font-medium text-amber-600">En attente de votre règlement</span>
-          ))}
+        {payment.paye ? (
+          <span className="text-[11px] font-semibold text-green-600 flex items-center gap-1">
+            <CheckCircle size={12} /> Réglée
+          </span>
+        ) : (
+          <span className="text-[11px] font-medium text-amber-600">En attente de votre virement</span>
+        )}
       </div>
 
-      {payment.montant == null ? (
-        <p className="text-xs text-muted-foreground">
-          {payment.piloteNom} vous communiquera le montant et vous contactera pour le règlement.
-        </p>
+      <p className="text-sm text-foreground mb-3">
+        {payment.montant != null ? <strong>{payment.montant} €</strong> : "Montant"} à régler
+        directement à votre pilote <strong>{payment.piloteNom}</strong> par virement.
+        Fly Horizons n&apos;encaisse rien sur ce vol.
+      </p>
+
+      {payment.paye ? (
+        <a
+          href={receiptUrl}
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+        >
+          <Download size={12} />
+          Télécharger le reçu
+        </a>
       ) : (
-        <>
-          <p className="text-sm text-foreground mb-3">
-            <strong>{payment.montant} €</strong> à régler directement à votre pilote{" "}
-            <strong>{payment.piloteNom}</strong>. Fly Horizons n&apos;encaisse rien sur ce vol.
-          </p>
-
-          {payment.paye && (
-            <a
-              href={receiptUrl}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
-            >
-              <Download size={12} />
-              Télécharger le reçu
-            </a>
-          )}
-
-          {!payment.paye && (
-            <div className="flex flex-col sm:flex-row gap-4 sm:items-start">
-              {payment.iban && (
-                // QR SEPA : la plupart des applis bancaires le scannent → virement pré-rempli.
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={qrUrl}
-                  alt="QR code de virement SEPA"
-                  width={132}
-                  height={132}
-                  className="rounded-lg border border-border bg-white shrink-0"
-                />
-              )}
-              <div className="text-xs text-muted-foreground space-y-1.5 min-w-0">
-                {payment.iban && (
-                  <>
-                    <p>Scannez le QR avec votre appli bancaire, ou faites le virement manuellement :</p>
-                    <p className="flex items-center gap-2 flex-wrap">
-                      <span className="font-mono text-foreground">{payment.iban}</span>
-                      <button
-                        type="button"
-                        onClick={copyIban}
-                        className="text-[11px] font-semibold text-primary hover:underline cursor-pointer"
-                      >
-                        {copied === "iban" ? "Copié ✓" : "Copier"}
-                      </button>
-                    </p>
-                    <p>Bénéficiaire : {payment.piloteNom} · Montant : {payment.montant} €</p>
-                  </>
-                )}
-                {payment.paylink && (
-                  <a
-                    href={payment.paylink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block mt-1 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-[11px] font-bold hover:brightness-105 transition-all"
-                  >
-                    Payer via Payconiq / Revolut
-                  </a>
-                )}
-              </div>
-            </div>
-          )}
-        </>
+        paymentPageUrl && (
+          <Link
+            href={paymentPageUrl}
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-xs font-bold hover:brightness-105 transition-all"
+          >
+            Ouvrir la page de paiement
+          </Link>
+        )
       )}
     </div>
   );

@@ -181,12 +181,22 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Réservation standard ──────────────────────────────────
-    // Couvre aussi les réservations "annonce_pilote" : le lien de paiement partagé
-    // (/api/reservation/pay/[token]) leur attribue déjà metadata.type="reservation",
-    // et cette branche ne filtre jamais par type_resa — rien à ajouter ici.
     if (session.metadata?.type === "reservation") {
       const { reservationId, voucherId, voucherCode, couponCode } = session.metadata;
       if (reservationId) {
+        // Annonce pilote : réglée par virement direct au pilote, jamais par
+        // Stripe (décision 08/09). Aucune session ne devrait être créée pour ce
+        // type — garde défensive au cas où un ancien lien serait utilisé : on
+        // n'inscrit rien dans la compta Fly Horizons.
+        const { data: typeResaRow } = await adminSupabase
+          .from("reservations")
+          .select("type_resa")
+          .eq("id", reservationId)
+          .maybeSingle();
+        if (typeResaRow?.type_resa === "annonce_pilote") {
+          return NextResponse.json({ received: true, ignored: "annonce_pilote" });
+        }
+
         const montantPayeStd = session.amount_total ? session.amount_total / 100 : 0;
         const stripeFeeStd = await getStripeFee(session.payment_intent as string | null);
 

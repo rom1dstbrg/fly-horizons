@@ -25,7 +25,7 @@ export default async function ReservationTrackerPage({ params }: PageProps) {
   // Fetch reservation
   const { data: resa } = await adminSupabase
     .from("reservations")
-    .select("id, date_vol, heure_vol, duree, passagers, statut, type_resa, payment_token, acompte, distance_km, created_at, client_id, route, route_status, route_token, route_feedback, waypoints")
+    .select("id, date_vol, heure_vol, duree, passagers, statut, type_resa, payment_token, acompte, distance_km, created_at, client_id, route, route_status, route_token, route_feedback, waypoints, pilote_id, pilote_paye")
     .eq("id", id)
     .single();
 
@@ -51,6 +51,21 @@ export default async function ReservationTrackerPage({ params }: PageProps) {
       .eq("voucher_duration_minutes", resa.duree)
       .maybeSingle();
     packTitle = product?.title ?? null;
+  }
+
+  // Vol issu d'une annonce pilote : réglé en direct au pilote par virement.
+  let pilotePayment: { piloteNom: string; montant: number | null; paye: boolean } | null = null;
+  if (resa.type_resa === "annonce_pilote" && resa.pilote_id) {
+    const { data: pilote } = await adminSupabase
+      .from("pilotes")
+      .select("nom")
+      .eq("id", resa.pilote_id)
+      .maybeSingle();
+    pilotePayment = {
+      piloteNom: pilote?.nom ?? "votre pilote",
+      montant: resa.acompte ?? null,
+      paye: resa.pilote_paye === true,
+    };
   }
 
   // Fetch latest route proposal for this reservation (with waypoints)
@@ -87,6 +102,7 @@ export default async function ReservationTrackerPage({ params }: PageProps) {
         route_token: resa.route_token ?? null,
         route_feedback: resa.route_feedback ?? null,
         waypoints: resa.waypoints ?? null,
+        pilotePayment,
         latestProposalToken: latestProposal?.token ?? null,
         latestProposalStatus: latestProposal?.status ?? null,
         latestProposalWaypoints: latestProposal?.waypoints

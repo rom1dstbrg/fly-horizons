@@ -34,6 +34,14 @@ export async function GET(
   if (resa.statut === "annulee") {
     return NextResponse.redirect(new URL("/reservation?error=reservation_annulee", siteUrl));
   }
+
+  // Annonce pilote : le règlement se fait par virement direct au pilote, jamais
+  // par carte / Stripe (décision 08/09). On renvoie vers la page de paiement
+  // dédiée — défense si un ancien lien Stripe traîne quelque part.
+  if (resa.type_resa === "annonce_pilote") {
+    return NextResponse.redirect(new URL(`/vol/annonce/paiement/${token}`, siteUrl));
+  }
+
   if (resa.statut !== "payment_pending") {
     return NextResponse.redirect(new URL("/reservation/success", siteUrl));
   }

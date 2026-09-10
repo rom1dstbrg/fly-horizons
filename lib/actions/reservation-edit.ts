@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { toForeFlight, buildForeFlightRoute } from "@/lib/foreflight";
-import { routeProposalEmail, paymentLinkEmail, routeFeedbackAdminEmail, reservationPaymentInvitationEmail } from "@/lib/email-templates";
+import { routeProposalEmail, paymentLinkEmail, routeFeedbackAdminEmail, reservationPaymentInvitationEmail, annoncePaiementVirementEmail } from "@/lib/email-templates";
 import { requireAdminOrOwningPilote as checkAdminOrOwningPilote } from "./auth-guards";
 
 async function logHistory(params: {
@@ -294,7 +294,7 @@ export async function respondToRouteProposal(
 
     const { data: proposal } = await supabase
       .from("route_proposals")
-      .select("*, reservations(id, acompte, payment_token, duree, date_vol, heure_vol, type_resa, statut, payment_status, cash_payment, clients(prenom, nom, email))")
+      .select("*, reservations(id, acompte, payment_token, duree, date_vol, heure_vol, type_resa, statut, payment_status, cash_payment, clients(prenom, nom, email), pilotes(nom))")
       .eq("token", token)
       .single();
 
@@ -328,6 +328,7 @@ export async function respondToRouteProposal(
       payment_status: string | null;
       cash_payment: boolean | null;
       clients: { prenom: string; nom: string; email: string } | null;
+      pilotes: { nom: string } | { nom: string }[] | null;
     } | null;
 
     // Valeurs capturées au moment de l'envoi de la proposition (reflètent la route proposée)
@@ -347,6 +348,12 @@ export async function respondToRouteProposal(
 
     const client = resa?.clients;
     const isPerso = resa?.type_resa === "perso";
+    // Annonce pilote : le client règle le pilote par virement (page dédiée),
+    // jamais par carte / Stripe (décision 08/09).
+    const isAnnonce = resa?.type_resa === "annonce_pilote";
+    const piloteNom = Array.isArray(resa?.pilotes)
+      ? resa?.pilotes[0]?.nom ?? ""
+      : resa?.pilotes?.nom ?? "";
 
     // Relecture fraîche juste avant la logique de paiement — réduit la fenêtre de race condition
     // au cas où le webhook Stripe aurait mis à jour entre le fetch initial et maintenant
@@ -431,6 +438,25 @@ export async function respondToRouteProposal(
             duree: proposalDuree,
             acompte: proposalAcompte,
             paymentUrl,
+          }),
+        });
+      } else if (isAnnonce) {
+        // Règlement par virement direct au pilote — page de paiement dédiée.
+        const paiementUrl = `${siteUrl}/vol/annonce/paiement/${paymentToken}`;
+        await resend.emails.send({
+          from: EMAIL_FROM,
+          to: [client.email],
+          replyTo: EMAIL_REPLY_TO,
+          subject: "Réglez votre vol partagé · Fly Horizons",
+          html: annoncePaiementVirementEmail({
+            prenom: client.prenom,
+            nom: client.nom,
+            dateStr,
+            heure: resa?.heure_vol ?? "",
+            duree: proposalDuree,
+            montant: proposalAcompte,
+            piloteNom,
+            paiementUrl,
           }),
         });
       } else {

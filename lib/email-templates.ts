@@ -1395,6 +1395,70 @@ export function reservationPaymentInvitationEmail(p: ReservationPaymentInvitatio
 }
 
 
+// ── 14b. Règlement d'une annonce pilote par virement (aucun PSP) ─────────────
+// Envoyé au client quand le pilote a confirmé la route de son annonce. Le
+// règlement se fait par virement direct au pilote via la page de paiement
+// dédiée — jamais par carte / Stripe (décision 08/09).
+
+export interface AnnoncePaiementVirementProps {
+  prenom: string;
+  nom: string;
+  dateStr: string;
+  heure: string;
+  duree: number;
+  montant: number;
+  piloteNom: string;
+  paiementUrl: string;
+}
+
+export function annoncePaiementVirementEmail(p: AnnoncePaiementVirementProps): string {
+  const rows: Array<[string, string]> = [
+    ["Date", `<span style="text-transform:capitalize;">${esc(p.dateStr)}</span>`],
+    ["Heure de départ", esc(p.heure)],
+    ["Durée du vol", fmtDuration(p.duree)],
+    ["Départ / retour", "Charleroi EBCI"],
+    ["Pilote", esc(p.piloteNom)],
+  ];
+
+  const body = `
+    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Vol partag&eacute;</p>
+    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Itin&eacute;raire valid&eacute; &#10003;</h1>
+    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">Bonjour <strong style="color:#0b2238;">${esc(p.prenom)} ${esc(p.nom)}</strong>, votre pilote a confirm&eacute; l&rsquo;itin&eacute;raire. Il ne reste qu&rsquo;&agrave; r&eacute;gler votre participation aux frais <strong style="color:#0b2238;">directement &agrave; ${esc(p.piloteNom)} par virement</strong>.</p>
+
+    ${separator()}
+    ${label("D&eacute;tails du vol")}
+    ${infoRows(rows)}
+
+    ${separator()}
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      <tr>
+        <td style="border:2px solid #F2B705;border-radius:12px;padding:28px 24px;text-align:center;">
+          <p class="em-muted" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.1em;">Participation &agrave; r&eacute;gler au pilote</p>
+          <p class="em-dark" style="margin:0 0 20px;font-size:42px;font-weight:800;color:#0b2238;line-height:1;">${fmt(p.montant)}</p>
+          <a href="${esc(p.paiementUrl)}" class="em-btn"
+            style="display:inline-block;background-color:#F2B705;color:#0b2238;font-size:14px;font-weight:800;padding:14px 36px;border-radius:10px;text-decoration:none;">
+            Voir la page de paiement
+          </a>
+          <p class="em-muted" style="margin:14px 0 0;font-size:11px;color:#94a3b8;">Virement SEPA (IBAN + QR code) &mdash; aucun paiement par carte, Fly Horizons n&rsquo;encaisse rien</p>
+        </td>
+      </tr>
+    </table>
+
+    <p class="em-body" style="margin:0 0 20px;font-size:13px;color:#334155;line-height:1.7;">
+      Le pilote confirmera la r&eacute;ception de votre virement dans votre espace, et votre re&ccedil;u sera alors disponible au t&eacute;l&eacute;chargement sur cette m&ecirc;me page.
+    </p>
+
+    ${separator()}
+    <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;text-align:center;">
+      Une question ? R&eacute;pondez directement &agrave; cet email ou visitez notre
+      <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
+    </p>`;
+
+  return emailBase(body, `Réglez votre vol partagé · ${p.dateStr}`);
+}
+
+
 // ── 14c. Rappel de paiement — T-72h (deadline T-48h) ─────────────────────────
 
 export interface ReservationPaymentReminderEmailProps {
