@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check, Minimize2, Save, Copy, Loader2 } from "lucide-react";
+import { X, Check, Minimize2, Save, Copy, Loader2, Info, Map, MessageSquare, Pencil, History } from "lucide-react";
 import {
   updateStatutReservation,
   updateStatutReservationPerso,
@@ -44,6 +44,16 @@ const AdminRouteEditorDynamic = dynamic(
   () => import("@/components/admin/AdminRouteEditor").then(m => ({ default: m.AdminRouteEditor })),
   { ssr: false, loading: () => <div className="h-[280px] rounded-lg bg-secondary animate-pulse" /> }
 );
+
+// Onglets du drawer. Compact : seul l'onglet actif affiche son libellé, les
+// autres se réduisent à leur icône (le drawer reste étroit même à 5 onglets).
+const DRAWER_TABS: { id: Tab; label: string; Icon: typeof Info }[] = [
+  { id: "infos", label: "Infos", Icon: Info },
+  { id: "route", label: "Route", Icon: Map },
+  { id: "messages", label: "Messages", Icon: MessageSquare },
+  { id: "modifier", label: "Modifier", Icon: Pencil },
+  { id: "historique", label: "Historique", Icon: History },
+];
 
 export function ReservationDrawer({
   reservation,
@@ -327,17 +337,24 @@ export function ReservationDrawer({
 
               {!emailOpen && (
                 <div className="flex border-b border-border shrink-0">
-                  {(["infos", "route", "messages", "modifier", "historique"] as const).map(tab => (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
-                      className={`flex-1 py-2.5 text-xs font-semibold transition-colors cursor-pointer ${
-                        activeTab === tab ? "text-navy border-b-2 border-navy -mb-px" : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {tab === "infos" ? "Infos" : tab === "route" ? "Route" : tab === "messages" ? "Messages" : tab === "modifier" ? "Modifier" : "Historique"}
-                    </button>
-                  ))}
+                  {DRAWER_TABS.map(({ id, label, Icon }) => {
+                    const active = activeTab === id;
+                    return (
+                      <button
+                        key={id}
+                        onClick={() => setActiveTab(id)}
+                        aria-label={label}
+                        aria-current={active ? "page" : undefined}
+                        title={label}
+                        className={`flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-semibold transition-colors cursor-pointer ${
+                          active ? "text-navy border-b-2 border-navy -mb-px" : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <Icon size={14} className="shrink-0" />
+                        {active && <span className="truncate">{label}</span>}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
 
