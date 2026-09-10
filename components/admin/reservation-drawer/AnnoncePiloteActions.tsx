@@ -8,6 +8,9 @@ import {
   marquerVolEffectue,
   cancelAnnonceDemande,
 } from "@/lib/actions/pilote-paiement";
+import { brusselsTimestamp } from "@/lib/utils";
+
+const VOL_EFFECTUE_DELAI_MS = 8 * 60 * 60 * 1000;
 
 // Actions du pilote (ou de l'admin) sur une réservation issue d'une annonce
 // pilote : le règlement se fait par virement direct, l'app ne fait que suivre
@@ -18,6 +21,9 @@ interface Props {
   statut: string;
   piloteePaye: boolean;
   montant: number | null;
+  dateVol: string;
+  heureVol: string | null;
+  viewerRole?: "admin" | "pilote";
   onStatusChange?: (id: string, statut: string) => void;
   onFieldsChange?: (id: string, fields: { pilote_paye?: boolean }) => void;
 }
@@ -27,6 +33,9 @@ export function AnnoncePiloteActions({
   statut,
   piloteePaye,
   montant,
+  dateVol,
+  heureVol,
+  viewerRole = "pilote",
   onStatusChange,
   onFieldsChange,
 }: Props) {
@@ -37,6 +46,10 @@ export function AnnoncePiloteActions({
 
   const done = statut === "vol_effectue";
   const cancelled = statut === "annulee";
+  // Verrou 8 h : le pilote ne peut clôturer qu'après le vol (l'admin garde la main).
+  const effectueBloque =
+    viewerRole === "pilote" &&
+    Date.now() < brusselsTimestamp(dateVol, heureVol) + VOL_EFFECTUE_DELAI_MS;
 
   function flash(text: string, ok = true) {
     setMsg({ text, ok });
@@ -132,7 +145,11 @@ export function AnnoncePiloteActions({
 
       {piloteePaye && !done && !cancelled && (
         <div className="space-y-2">
-          {!showEffectue ? (
+          {effectueBloque ? (
+            <p className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Clock size={12} /> « Vol effectué » disponible 8 h après l&apos;heure du décollage.
+            </p>
+          ) : !showEffectue ? (
             <button
               type="button"
               onClick={() => setShowEffectue(true)}

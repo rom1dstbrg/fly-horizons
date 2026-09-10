@@ -28,6 +28,8 @@ export interface DrawerReservation {
   slot_proposal_token?: string | null;
   slot_proposal_date?: string | null;
   slot_proposal_heure?: string | null;
+  // Garde-fou anti-abus : nb de fois que le pilote a proposé un nouveau créneau.
+  slot_change_count?: number | null;
 
   // Route — ancien système texte (standard uniquement)
   route?: string | null;

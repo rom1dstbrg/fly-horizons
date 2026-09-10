@@ -312,19 +312,23 @@ export function ActionFooter({
 
         {r.statut === "heure_confirmee" && (
           <>
-            <button
-              onClick={() => confirm({
-                title: "Marquer le vol comme effectué ?",
-                description: "Le client recevra un email de remerciement avec une demande d'avis de satisfaction.",
-                confirmLabel: "Marquer effectué et envoyer",
-                run: () => onChangeStatut("vol_effectue"),
-              })}
-              disabled={isPending}
-              className={primaryBtn}
-            >
-              {isPending ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
-              Marquer vol effectué
-            </button>
+            {/* Vol pilote (annonce) : le pilote marque « effectué » depuis le bloc
+                règlement (verrou 8 h). Ici, réservé à l'admin. */}
+            {(isAdmin || !piloteVol) && (
+              <button
+                onClick={() => confirm({
+                  title: "Marquer le vol comme effectué ?",
+                  description: "Le client recevra un email de remerciement avec une demande d'avis de satisfaction.",
+                  confirmLabel: "Marquer effectué et envoyer",
+                  run: () => onChangeStatut("vol_effectue"),
+                })}
+                disabled={isPending}
+                className={primaryBtn}
+              >
+                {isPending ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+                Marquer vol effectué
+              </button>
+            )}
             {hasRoute && isAdmin && (
               <button
                 onClick={() => confirm({

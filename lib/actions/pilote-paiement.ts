@@ -6,6 +6,12 @@ import { requireAdminOrOwningPilote } from "./auth-guards";
 import { isPiloteVol } from "@/lib/pilote/payment";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { annoncePaiementVirementEmail, postVolEmail } from "@/lib/email-templates";
+import { brusselsTimestamp } from "@/lib/utils";
+
+// Garde-fou anti-abus : un pilote ne peut marquer un vol « effectué » qu'au
+// moins 8 h après l'heure prévue du décollage (empêche de clôturer un vol qui
+// n'a pas eu lieu pour déclencher l'enquête / débloquer le reçu).
+const VOL_EFFECTUE_DELAI_MS = 8 * 60 * 60 * 1000;
 
 // Annonces pilote · paiement = virement direct au pilote (décision 08/09).
 // Le montant dû par le client vit dans `reservations.acompte` (posé par
@@ -166,6 +172,17 @@ export async function marquerVolEffectue(
     if (!isPiloteVol(resa)) return { error: "Ce vol n'est pas géré par un pilote" };
     if (resa.statut === "vol_effectue") return { error: "Ce vol est déjà marqué effectué" };
     if (resa.statut === "annulee") return { error: "Ce vol est annulé" };
+
+    // Verrou 8 h — sauf pour l'admin (Romain), qui garde la main.
+    if (actor.role === "pilote") {
+      const debut = brusselsTimestamp(resa.date_vol, resa.heure_vol);
+      if (Date.now() < debut + VOL_EFFECTUE_DELAI_MS) {
+        return {
+          error:
+            "Vous pourrez marquer ce vol effectué au plus tôt 8 h après l'heure prévue du décollage.",
+        };
+      }
+    }
 
     const dr =
       typeof dureeReelle === "number" && dureeReelle > 0 && dureeReelle <= 600

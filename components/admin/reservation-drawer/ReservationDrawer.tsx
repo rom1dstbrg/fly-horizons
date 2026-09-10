@@ -360,6 +360,9 @@ export function ReservationDrawer({
                         statut={r.statut}
                         piloteePaye={r.pilote_paye === true}
                         montant={r.acompte ?? null}
+                        dateVol={r.date_vol}
+                        heureVol={r.heure_vol}
+                        viewerRole={viewerRole}
                         onStatusChange={onStatusChange}
                         onFieldsChange={onFieldsChange}
                       />

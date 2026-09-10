@@ -187,6 +187,24 @@ export function InfosTab({
         </div>
       )}
 
+      {viewerRole === "admin" && (r.slot_change_count ?? 0) > 0 && (
+        <div
+          className={`rounded-xl p-3 flex items-center gap-2.5 text-xs border ${
+            (r.slot_change_count ?? 0) >= 3
+              ? "bg-red-50 border-red-200 text-red-700"
+              : (r.slot_change_count ?? 0) >= 2
+              ? "bg-amber-50 border-amber-200 text-amber-700"
+              : "bg-secondary/40 border-border text-muted-foreground"
+          }`}
+        >
+          <RotateCcw size={13} className="shrink-0" />
+          <span>
+            Créneau changé <strong>{r.slot_change_count}×</strong> par le pilote
+            {(r.slot_change_count ?? 0) >= 2 ? " — surveiller" : ""}
+          </span>
+        </div>
+      )}
+
       {piloteAssignSlot}
 
       {r.statut === "payment_pending" && r.payment_token && (
