@@ -137,10 +137,12 @@
       créer cette notion de zéro.</li>
     <li><b>Aucune UI/action de création côté pilote</b> — ni réservation standard, ni vol sur mesure.
       À construire, pas à réactiver.</li>
-    <li><b>Fuite déjà documentée :</b> <code>ActionFooter</code> (le pied du tiroir réservation) ne
-      connaît pas <code>viewerRole</code> — un pilote peut voir/cliquer des actions admin-only
-      (encaisser, boarding pass, proposer un créneau) si elles ne sont pas filtrées une par une.
-      Étendre les pouvoirs des pilotes sans corriger ça rouvre ce trou.</li>
+    <li><span class="tag t-green">Corrigé — info périmée</span> <code>plan-attaque-espace-pilote.html</code>
+      décrivait <code>ActionFooter</code> comme ne connaissant pas <code>viewerRole</code>. Relu le
+      fichier réel le 14/09 : c'est déjà corrigé (chaque action admin-only — encaisser, lien de
+      paiement, proposer un créneau, boarding pass, réactiver, reporter, annuler — est bien gardée
+      par <code>isAdmin = viewerRole === "admin"</code>). Doc source obsolète sur ce point, aucune
+      action à faire.</li>
     <li><b>Sécurité 100% applicative, pas de RLS réelle</b> — les tables pilote/réservation ont des
       policies <code>using(true)</code>. Chaque nouvelle capacité doit être vérifiée à la main dans
       le code serveur, sans filet ; un oubli est une vraie fuite de données, pas juste un bug d'UX.</li>
@@ -160,67 +162,79 @@
       (virement/QR), même si la création de la réservation se fait depuis l'espace pilote.</li>
   </ul>
 
-  <h2>Plan proposé, par phases</h2>
+  <h2>Plan proposé, par phases — mis à jour après décision de Romain (14/09)</h2>
 
-  <div class="phase">
-    <h4>Phase 1 — Résoudre ton propre confort (un compte, deux casquettes)</h4>
-    <p>Aligner le <i>routing</i> sur ce que la couche action fait déjà : accès à <code>/pilote/*</code>
-      basé sur « a une ligne <code>pilotes</code> active », <b>indépendamment</b> de
-      <code>profiles.role</code> — plutôt que sur une bascule complète vers un système de rôles
-      multiples (plus gros chantier, pas nécessaire pour ce problème précis). Concrètement : tu
-      pourrais fusionner tes deux comptes (ta ligne <code>pilotes</code> pointe vers ton compte admin)
-      et accéder aux deux espaces avec un seul login. C'est isolé, sans effet sur les autres pilotes.</p>
+  <div class="phase" style="border-left-color:var(--green);">
+    <h4>Phase 1 — Un compte, deux casquettes <span class="tag t-green">fait 14/09</span></h4>
+    <p>Décidé : fusion réelle plutôt que simple ouverture de routing. La fiche <code>pilotes</code>
+      de Romain est repointée sur son <code>user_id</code> admin ; l'ancien compte
+      <code>romainpilot2003@gmail.com</code> peut être supprimé (Romain s'en charge). 4 endroits
+      corrigés pour que <code>/pilote/*</code> accepte aussi un compte admin. Détail : Changelog
+      <code>projet.html</code>.</p>
+  </div>
+
+  <div class="phase" style="border-left-color:var(--muted);">
+    <h4>Phase 2 — Niveaux de capacité par pilote <span class="tag t-grey">volontairement pas fait</span></h4>
+    <p>Décidé : <b>pas construit</b>. Romain a tranché « pour le moment admin seulement » — ajouter
+      une colonne <code>peut_creer_reservations</code> sans aucun autre pilote pour la consommer
+      aurait été de la complexité prématurée. À reprendre le jour où un pilote autre que Romain doit
+      créer une réservation.</p>
+  </div>
+
+  <div class="phase" style="border-left-color:var(--green);">
+    <h4>Phase 3 — Création côté pilote (réservation standard + hors-site) <span class="tag t-green">fait 14/09</span></h4>
+    <p>Pas de nouvelle capacité — pure relocalisation. <code>/admin/reservations/new</code> et
+      <code>/admin/reservations/new-horsite</code> déménagés vers
+      <code>/pilote/reservations/new</code> et <code>new-horsite</code>, guards inchangés
+      (<code>checkAdmin()</code>, toujours strict). Points d'entrée sur <code>/pilote/vols</code>
+      (nouveau composant <code>PiloteVolsActions</code>).</p>
+  </div>
+
+  <div class="phase" style="border-left-color:var(--green);">
+    <h4>Phase 4 — Vol sur mesure côté pilote <span class="tag t-green">fait 14/09</span></h4>
+    <p>Décidé : réservé à Romain seul, définitivement — « le vol sur mesure n'est pas concerné par
+      les [autres] pilotes ». <code>/admin/reservations/new-mesure</code> déménagé vers
+      <code>/pilote/reservations/new-mesure</code>, toujours <code>checkAdmin()</code>.</p>
   </div>
 
   <div class="phase">
-    <h4>Phase 2 — Niveaux de capacité par pilote</h4>
-    <p>Nouvelle colonne sur <code>pilotes</code> (ex. <code>peut_creer_reservations boolean</code>,
-      défaut <code>false</code>) + bascule dans <code>/admin/pilotes</code> (déjà existant). Roster
-      géré à la main, cohérent avec la décision « pas d'auto-élévation ».</p>
+    <h4>Phase 5 — Admin redevient site-administration <span class="tag t-amber">pas tranché</span></h4>
+    <p><code>/admin/reservations</code> (le tiroir de gestion) et <code>/admin/vols</code> (vue
+      flotte) sont restés côté admin — création déplacée, mais supervision/édition des réservations
+      existantes toujours là. À décider : est-ce que c'est de la « gestion » légitimement admin
+      (probable), ou est-ce que ça doit aussi migrer un jour vers l'espace pilote ? Rien n'urge,
+      aucun blocage identifié.</p>
   </div>
 
-  <div class="phase">
-    <h4>Phase 3 — Création côté pilote (réservation standard)</h4>
-    <p>Nouvelle action serveur (variante de <code>createAdminReservation</code>) gardée par
-      « admin OU pilote avec <code>peut_creer_reservations=true</code> », nouvelle page sous
-      <code>/pilote/*</code>. Réutilise le pattern <code>auth-guards.ts</code> déjà en place côté
-      édition.</p>
-  </div>
 
-  <div class="phase">
-    <h4>Phase 4 — Vol sur mesure côté pilote</h4>
-    <p>Chantier neuf (voir plus haut). Probablement à réserver aux pilotes avec le niveau de capacité
-      le plus élevé au départ (toi en premier), vu la complexité (itinéraire, devis, escales).</p>
-  </div>
-
-  <div class="phase">
-    <h4>Phase 5 — Admin redevient site-administration</h4>
-    <p>Une fois 3 et 4 en place et utilisés : <code>/admin/reservations/new*</code> peut être retiré
-      ou gardé en secours. <code>/admin/reservations</code> (le tiroir) et <code>/admin/vols</code>
-      (vue flotte) restent probablement utiles comme vue de supervision transverse — à décider si
-      c'est de la « gestion » (reste admin) ou si ça doit aussi migrer.</p>
-  </div>
-
-  <div class="phase" style="border-left-color:var(--red);">
-    <h4>En parallèle, avant d'étendre les pouvoirs pilote</h4>
-    <p>Corriger la fuite <code>ActionFooter</code>/<code>viewerRole</code> — sinon chaque nouvelle
-      capacité pilote agrandit une fenêtre déjà ouverte.</p>
-  </div>
-
-  <h2>Décisions à prendre avant de coder</h2>
+  <h2>Décisions prises le 14/09 (pour mémoire)</h2>
   <ol>
-    <li>Phase 1 : fusionner tes deux comptes en un seul avec double casquette, ou juste changer le
-      routing pour qu'un compte <code>pilote</code> actif accède aussi à <code>/admin</code> s'il est
-      admin (et vice-versa) sans toucher aux comptes existants ? (Techniquement plus simple : la
-      deuxième option, aucune migration de données utilisateur.)</li>
-    <li>Qui d'autre que toi aura un jour <code>peut_creer_reservations=true</code> ? Pas besoin de
-      trancher aujourd'hui, mais ça cadre si la colonne doit être un simple booléen ou prévoir plus
-      de nuance dès le départ.</li>
-    <li>Vol sur mesure côté pilote : réservé à toi seul pour commencer, ou ouvert à tout pilote avec
-      le niveau de capacité le plus élevé dès la Phase 4 ?</li>
-    <li>Ordre réel de priorité : la Phase 1 (ton confort perso) peut se faire seule, indépendamment
-      du reste, si tu veux un gain rapide avant d'attaquer les phases 2-4 qui sont plus lourdes.</li>
+    <li>Phase 1 : fusion réelle des comptes (pas juste un routing partagé) — <code>info@fly-horizons.com</code>
+      sert désormais pour l'admin et le pilote.</li>
+    <li>Qui d'autre que Romain aura <code>peut_creer_reservations=true</code> un jour ? Personne pour
+      l'instant — décision explicite de ne rien construire tant que le besoin n'existe pas.</li>
+    <li>Vol sur mesure côté pilote : réservé à Romain seul, pas aux autres pilotes de la
+      marketplace, définitivement.</li>
+    <li>« Build proprement, pas à la va vite » : pas de système de capacité construit sans
+      consommateur réel (Phase 2 explicitement laissée de côté), guards de sécurité inchangés,
+      <code>tsc</code>/<code>next build</code> vérifiés propres à chaque étape, toutes les
+      références aux anciennes routes cherchées et mises à jour avant de considérer le déplacement
+      terminé.</li>
   </ol>
+
+  <h2>Ce qu'il reste vraiment à faire</h2>
+  <ul>
+    <li><span class="tag t-amber">Bloqué sur Romain</span> Tester en conditions réelles
+      (<code>info@fly-horizons.com</code>, connexion, création d'une réservation depuis
+      <code>/pilote/vols</code>) — pas encore eu l'occasion.</li>
+    <li><span class="tag t-grey">Pas tranché</span> Phase 5 : <code>/admin/reservations</code> et
+      <code>/admin/vols</code> restent-ils de la supervision admin, ou migrent-ils aussi un jour ?</li>
+    <li><span class="tag t-grey">Mineur</span> <code>AdminVolMesureFlow</code> redirige vers
+      <code>/pilote/vols</code> sans filtre ; l'ancien <code>?tab=sur-mesure</code> n'a pas
+      d'équivalent côté pilote.</li>
+    <li>Suppression de <code>romainpilot2003@gmail.com</code> — plus aucune dépendance en base,
+      Romain peut le faire quand il veut.</li>
+  </ul>
 
 </div>
 </body>

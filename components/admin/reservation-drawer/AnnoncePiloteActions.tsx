@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { CheckCircle2, Clock, Send, PlaneLanding, XCircle, Loader2, Download } from "lucide-react";
+import { CheckCircle2, Clock, Send, PlaneLanding, XCircle, Loader2, Download, Banknote } from "lucide-react";
 import {
   setPilotePaye,
   renvoyerLienVirement,
@@ -69,11 +69,22 @@ export function AnnoncePiloteActions({
     });
   }
 
+  function marquerPaye(mode: "virement" | "especes") {
+    run(
+      () => setPilotePaye(reservationId, true, mode),
+      mode === "especes" ? "Paiement en espèces confirmé ✓" : "Paiement confirmé ✓",
+      (r) => {
+        onFieldsChange?.(reservationId, { pilote_paye: true });
+        if (r.statut) onStatusChange?.(reservationId, r.statut);
+      },
+    );
+  }
+
   return (
     <div className="mt-3 pt-3 border-t border-border space-y-3">
       <div className="flex items-center gap-2">
         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px]">
-          Règlement par virement
+          Règlement
         </p>
         {piloteePaye ? (
           <span className="text-[11px] font-semibold text-emerald-600 flex items-center gap-1">
@@ -87,8 +98,14 @@ export function AnnoncePiloteActions({
       </div>
 
       <p className="text-xs text-muted-foreground">
-        {montant != null ? <strong className="text-foreground">{montant} €</strong> : "Montant"} à
-        régler par le client directement sur votre IBAN. Fly Horizons n&apos;encaisse rien.
+        {montant != null ? (
+          <>
+            <strong className="text-foreground">{montant} €</strong> à régler par le client
+            directement sur votre IBAN. Fly Horizons n&apos;encaisse rien.
+          </>
+        ) : (
+          "Prix pas encore fixé — le groupe de cette annonce (vente à la place) n'est pas encore complet. Clôturez-le depuis « Mes annonces » pour figer le prix définitif de chaque passager."
+        )}
       </p>
 
       {msg && (
@@ -99,35 +116,57 @@ export function AnnoncePiloteActions({
 
       {!cancelled && !done && (
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            disabled={isPending}
-            onClick={() =>
-              run(
-                () => setPilotePaye(reservationId, !piloteePaye),
-                piloteePaye ? "Paiement remis en attente" : "Paiement confirmé ✓",
-                (r) => {
-                  onFieldsChange?.(reservationId, { pilote_paye: !piloteePaye });
-                  if (!piloteePaye && r.statut) onStatusChange?.(reservationId, r.statut);
-                },
-              )
-            }
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-navy text-white text-xs font-semibold hover:brightness-90 transition-colors disabled:opacity-50 cursor-pointer"
-          >
-            {isPending ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
-            {piloteePaye ? "Annuler « payé »" : "Le client m'a payé"}
-          </button>
-
-          {!piloteePaye && (
+          {montant != null && (piloteePaye ? (
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() =>
+                run(
+                  () => setPilotePaye(reservationId, false),
+                  "Paiement remis en attente",
+                  () => onFieldsChange?.(reservationId, { pilote_paye: false }),
+                )
+              }
+              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-navy text-white text-xs font-semibold hover:brightness-90 transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              {isPending ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
+              Annuler « payé »
+            </button>
+          ) : (
             <>
               <button
                 type="button"
                 disabled={isPending}
-                onClick={() => run(() => renvoyerLienVirement(reservationId), "Lien de paiement renvoyé ✓")}
+                onClick={() => marquerPaye("virement")}
+                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-navy text-white text-xs font-semibold hover:brightness-90 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {isPending ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
+                Le client m&apos;a payé
+              </button>
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={() => marquerPaye("especes")}
                 className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border text-xs font-medium hover:bg-secondary transition-colors disabled:opacity-50 cursor-pointer"
               >
-                <Send size={12} /> Renvoyer le lien
+                <Banknote size={12} /> Payé en espèces
               </button>
+            </>
+          ))}
+
+          {!piloteePaye && montant != null && (
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() => run(() => renvoyerLienVirement(reservationId), "Lien de paiement renvoyé ✓")}
+              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border text-xs font-medium hover:bg-secondary transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              <Send size={12} /> Renvoyer le lien
+            </button>
+          )}
+
+          {!piloteePaye && (
+            <>
               <button
                 type="button"
                 disabled={isPending}

@@ -151,7 +151,7 @@ export function ActionFooter({
   onResendPaymentLink: () => void;
   onRecordCash: (amount: number) => void;
   onProposeSlot: (date: string, heure: string) => void;
-  modifier: { isPending: boolean; save: () => void };
+  modifier: { isPending: boolean; save: () => void; savePassagersPoids: () => void };
 }) {
   const isStandard = r.type_resa !== "perso";
   const isAdmin = viewerRole === "admin";
@@ -181,7 +181,35 @@ export function ActionFooter({
   );
 
   if (activeTab === "modifier") {
-    if (!isAdmin) return null; // pilote : onglet en lecture seule, pas de sauvegarde
+    // Le pilote, sur sa propre annonce, ne peut sauvegarder que passagers/poids
+    // (Q33) — popup de mise en garde avant confirmation, le reste de l'onglet
+    // reste en lecture seule.
+    if (!isAdmin) {
+      if (r.type_resa !== "annonce_pilote") return null;
+      return (
+        <>
+          <div className="px-5 pt-3 border-t border-border shrink-0 flex justify-end pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+            <button
+              onClick={() =>
+                confirm({
+                  title: "Modifier passagers / poids",
+                  description:
+                    "Ce changement peut modifier le prix par personne (mode « à la place ») et le centrage du vol. Confirmez-vous ?",
+                  confirmLabel: "Confirmer",
+                  run: modifier.savePassagersPoids,
+                })
+              }
+              disabled={modifier.isPending}
+              className={primaryBtn}
+            >
+              {modifier.isPending ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+              Sauvegarder passagers / poids
+            </button>
+          </div>
+          {dialog}
+        </>
+      );
+    }
     return (
       <div className="px-5 pt-3 border-t border-border shrink-0 flex justify-end pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
         <button onClick={modifier.save} disabled={modifier.isPending} className={primaryBtn}>

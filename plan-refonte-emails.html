@@ -74,23 +74,21 @@
     de page).
   </div>
 
-  <div class="mailcard" style="border-color:var(--gold);">
-    <h4>Reprise du 14/09 — emails admin séparés des emails publics</h4>
-    <p><b>Nouveau, pas couvert par les rounds précédents</b> : les emails <i>admin</i> (destinataire
-      = Romain / <code>info@fly-horizons.com</code>) sortent du gabarit <code>emailBase()</code>
-      grand public. Ils n'ont pas besoin du même soin visuel qu'un email client (logo, doré,
-      storytelling) — juste les informations importantes, lisibles vite, avec le lien d'action
-      direct qui existe déjà (ex. « Voir dans l'admin »). Ce sont les 5 templates suivants
-      (identifiés via <code>email-preview.html</code>, onglet Admin) :</p>
+  <div class="mailcard" style="border-color:var(--green);">
+    <h4>Emails admin séparés des emails publics <span class="tag t-green">fait le 14/09</span></h4>
+    <p>Les 5 emails <i>admin</i> (destinataire = Romain / <code>info@fly-horizons.com</code>) ont
+      leur propre gabarit minimal, <code>adminEmailBase()</code> — pas de logo, pas de carte, pas de
+      doré. Juste le texte, les infos importantes en gras, un lien vers l'outil concerné. Direction
+      donnée par Romain le 14/09 : « du simple texte, avec les infos importantes et un lien vers
+      l'admin ou l'espace pilote ». Les 5 templates :</p>
     <div class="txt">contactNotificationEmail (nouveau message contact)
 routeFeedbackAdminEmail (retour client sur un itinéraire)
 satisfactionResultEmail (résultat enquête satisfaction)
 flightOfferExpiredAdminEmail (vols sans preneur après 48h)
 piloteReleasedFlightAdminEmail (un pilote rend un vol)</div>
-    <p class="pill">Direction visuelle pas encore choisie. Vu l'historique (round 4/5 : inventer une
-      direction abstraite ne marche pas, cf. rounds rejetés ci-dessus), on part d'un exemple concret
-      que Romain valide plutôt que d'une nouvelle proposition à l'aveugle — voir le message de
-      réponse pour la question posée.</p>
+    <p class="pill">Pas encore commité (en attente avec le reste du chantier emails). Newsletter :
+      exception H1 laissée telle quelle, Romain n'utilise jamais cette fonctionnalité — pas la peine
+      d'y retoucher.</p>
   </div>
 
   <div class="mailcard" style="border-color:var(--gold);">
@@ -222,18 +220,27 @@ piloteReleasedFlightAdminEmail (un pilote rend un vol)</div>
 
   <h2>Ce que l'audit du code a trouvé (à corriger pendant la refonte)</h2>
   <ul>
-    <li><b>Contradiction statut/objet confirmée en code</b> : <code>reservationConfirmationFreeEmail</code>
-      (<code>lib/email-templates.ts:768</code>) — contenu « pas encore confirmé », mais l'objet
-      Resend réel envoyé est « Réservation confirmée · Fly Horizons ».</li>
-    <li><b>Signature hardcodée</b> <code>"Romain, pilote et fondateur de Fly Horizons"</code> dans
-      <b>19 emplacements</b> de <code>lib/email-templates.ts</code> (lignes 719, 789, 852, 924,
-      1036, 1114, 1169, 1208, 1285, 1325, 1465, 1602, 1671, 1725, 1760, 1947, 1986, 2028, 2149,
-      2211). Un seul template récent (<code>reservationMessageEmail</code>, via
-      <code>pilotes.signature</code>) est déjà dynamique — c'est le pattern à généraliser.</li>
-    <li><b>Aucune fonction centralisée</b> pour décider « répondez à cet email » vs
-      WhatsApp/contact — condition à écrire une fois (table <code>reservation_messages</code>,
-      migration <code>20260911</code>), pas dupliquée dans ~20 templates.</li>
-    <li><b>Statut migrations incertain</b> : à confirmer que <code>reservation_messages</code> et
+    <li><span class="tag t-green">Résolu 14/09</span> <b>Contradiction statut/objet confirmée en
+      code</b> : <code>reservationConfirmationFreeEmail</code> — vérifié, l'objet Resend réel est
+      déjà correct (« Votre réservation/vol sur mesure est enregistré(e) »), le corps aussi
+      (« votre demande de vol a bien été enregistrée »). Seul le <code>&lt;title&gt;</code> HTML
+      interne (invisible au client) dit encore « confirmée » — cosmétique, sans impact réel.</li>
+    <li><span class="tag t-green">Résolu 14/09</span> <b>Signature hardcodée</b>
+      <code>"Romain, pilote et fondateur de Fly Horizons"</code> — 0 occurrence restante dans
+      <code>lib/email-templates.ts</code> (vérifié). Généralisé via le nouveau helper
+      <code>signOff(pilote)</code> pendant la refonte de l'architecture des 36 emails publics.
+      <i>Nuance :</i> aucun appelant ne passe encore le vrai pilote assigné — tout part en voix
+      « nous »/Fly Horizons par défaut (pas « Romain » non plus). Brancher l'attribution réelle
+      reste à faire, voir plus bas.</li>
+    <li><span class="tag t-amber">Toujours ouvert</span> <b>Aucune fonction centralisée</b> pour
+      décider « répondez à cet email » vs WhatsApp/contact — la ligne de contact est restée une
+      phrase statique identique partout pendant la refonte du 14/09 (règle 3, une ligne, appliquée),
+      mais la <b>condition</b> de la règle 4 (n'afficher « répondez à cet email » que si un fil
+      <code>reservation_messages</code> existe déjà) n'a pas été codée — c'est une logique
+      applicative (dans <code>updateStatutReservation</code>), pas juste du texte, hors périmètre
+      de la passe de sobriété visuelle.</li>
+    <li><span class="tag t-amber">Toujours ouvert, jamais vérifié</span> <b>Statut migrations
+      incertain</b> : à confirmer que <code>reservation_messages</code> et
       <code>pilotes.signature</code> sont bien exécutées en prod avant de brancher la logique de
       contact dessus.</li>
     <li><code>replyTo</code> uniforme sur <code>info@fly-horizons.com</code>
@@ -242,14 +249,26 @@ piloteReleasedFlightAdminEmail (un pilote rend un vol)</div>
   </ul>
 
   <h2>À faire quand on reprend</h2>
+  <p class="callout" style="border-left-color:var(--green);background:var(--green-bg);">
+    Fait le 14/09 : règles 1-2-3 appliquées, contradiction <code>reservationConfirmationFreeEmail</code>
+    corrigée, propagation aux 36 emails publics + gabarit minimal pour les 5 emails admin. Reste
+    ouvert :
+  </p>
   <ol>
-    <li>Confirmer le statut prod des migrations <code>20260910</code>/<code>20260911</code>.</li>
-    <li>Appliquer les règles 1-2-3 du round 3 (en-tête, signature dynamique, footer une ligne) aux
-      emails de référence ci-dessous, sans toucher au reste de la mise en page.</li>
-    <li>Corriger la contradiction <code>reservationConfirmationFreeEmail</code> (objet vs contenu).</li>
-    <li>Propager aux ~32 templates de <code>lib/email-templates.ts</code>, y compris les emails du
-      parcours annonce non « pilote-aware » (voix de Romain à neutraliser — absorbe le P1 de
-      <code>audit-espace-pilote-coherence.html</code>).</li>
+    <li><span class="tag t-green">Vérifié 14/09</span> Migrations <code>20260910</code>/<code>20260911</code>
+      confirmées exécutées en prod (colonnes vérifiées directement en base).</li>
+    <li><span class="tag t-green">Fait 14/09</span> Vrai pilote assigné branché dans le paramètre
+      <code>pilote</code>, sur les 18 points d'appel (8 fichiers) qui en avaient besoin — dérivé de
+      <code>pilotes.nom</code> (pas de <code>prenom</code> séparé en base). Là où aucun pilote n'est
+      encore connu au moment de l'envoi (ex. toute première confirmation d'une réservation), la voix
+      « nous » reste correctement le comportement par défaut.</li>
+    <li><span class="tag t-amber">Pas fait, ambigu</span> Centraliser la condition « répondez à cet
+      email » vs WhatsApp (règle 4) — reste ouvert : le webhook inbound n'étant pas branché, une
+      réponse email atterrit toujours comme un email brut chez Romain, qu'un fil existe déjà ou non,
+      donc l'utilité concrète de cette condition aujourd'hui est floue. À trancher avec Romain plutôt
+      qu'à deviner.</li>
+    <li><span class="tag t-grey">Pas encore commité</span> — les 41 templates redessinés + le
+      branchement du pilote attendent avec le reste du chantier email dans l'arbre de travail.</li>
   </ol>
 
   <h2>Annexe — contenu de référence (révision de fond, validée)</h2>

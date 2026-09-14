@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 
 export interface AnnonceCardData {
   id: string;
+  titre?: string | null;
   duree: number;
   places: number;
   prix_client: number;
@@ -19,13 +20,18 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 // place du dégradé de secours, et le nom du pilote à la place du titre produit.
 // Pointe vers /vol/annonce/[id], pas un slug texte (une annonce reste un
 // vol ponctuel à usage unique, pas une offre catalogue réutilisable).
-export function AnnonceCard({ annonce }: { annonce: AnnonceCardData }) {
+export function AnnonceCard({ annonce, newTab = false }: { annonce: AnnonceCardData; newTab?: boolean }) {
   const image = annonce.cover_image
     ? `${SUPABASE_URL}/storage/v1/object/public/annonces/${annonce.cover_image}`
     : null;
 
   return (
-    <Link href={`/vol/annonce/${annonce.id}`} className="group block focus-visible:outline-none">
+    <Link
+      href={`/vol/annonce/${annonce.id}`}
+      target={newTab ? "_blank" : undefined}
+      rel={newTab ? "noopener noreferrer" : undefined}
+      className="group block focus-visible:outline-none"
+    >
       <article className="relative overflow-hidden rounded-lg aspect-[4/3] sm:aspect-[3/4]">
         {image ? (
           <Image
@@ -53,7 +59,7 @@ export function AnnonceCard({ annonce }: { annonce: AnnonceCardData }) {
             Vol partagé · {annonce.pilote_nom}
           </p>
           <h3 className="text-white font-bold text-[19px] sm:text-[21px] leading-tight mb-1.5">
-            Jusqu&apos;à {annonce.places} passager{annonce.places > 1 ? "s" : ""}
+            {annonce.titre?.trim() || `Jusqu'à ${annonce.places} passager${annonce.places > 1 ? "s" : ""}`}
           </h3>
           <div className="flex items-center justify-between gap-2">
             <span className="text-white font-black text-[24px] leading-none">

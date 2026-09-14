@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
   const { data: reservations, error } = await supabase
     .from("reservations")
-    .select("id, date_vol, heure_vol, duree, type_resa, clients(prenom, email)")
+    .select("id, date_vol, heure_vol, duree, type_resa, clients(prenom, email), pilotes(nom)")
     .eq("statut", "heure_confirmee")
     .not("heure_vol", "is", null);
 
@@ -57,6 +57,9 @@ export async function POST(request: NextRequest) {
 
     if (!c?.email) continue;
 
+    const rawPilote = resa.pilotes;
+    const pilote = (Array.isArray(rawPilote) ? rawPilote[0] : rawPilote) as { nom: string } | null;
+
     const heure = (resa.heure_vol ?? "00:00").slice(0, 5);
     const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
       weekday: "long", day: "numeric", month: "long", year: "numeric",
@@ -72,6 +75,7 @@ export async function POST(request: NextRequest) {
         type_resa: resa.type_resa === "perso" ? "perso" : "standard",
         accountUrl: `${siteUrl}/account/reservations/${resa.id}`,
         dateISO: resa.date_vol,
+        pilote: pilote?.nom ? { prenom: pilote.nom.split(" ")[0] } : null,
       });
       sent++;
       console.log(`[cron/flight-reminder] Rappel envoyé : ${resa.id} (vol dans ${hoursUntil.toFixed(1)}h)`);

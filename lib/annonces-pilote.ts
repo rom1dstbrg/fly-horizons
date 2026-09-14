@@ -3,7 +3,11 @@
 // être partagé, mais le pilote doit porter *au moins* sa part égale — une part
 // pour chaque personne à bord, lui compris. Le minimum dépend donc du nombre de
 // passagers : 1 pax → 50 %, 2 → 33 %, 3 → 25 %, 4 → 20 %, 5 → 16,7 %, 6 → 14,3 %.
-// En dessous de ce minimum, ce n'est plus du partage de frais → publication bloquée.
+// En dessous de ce minimum, ce n'est plus du partage de frais au sens strict —
+// mais la publication n'est PAS bloquée (décision 2026-09-13) : le pilote reste
+// seul responsable de sa part réelle, l'app se contente d'avertir clairement.
+// `level: "block"` garde son nom pour le badge « À confirmer » du dashboard
+// pilote, mais ne bloque plus rien côté serveur.
 export type PartPiloteLevel = "block" | "warn" | "ok";
 
 export interface PartPiloteCheck {
@@ -39,7 +43,10 @@ export function evaluerPartPilote(
       pct,
       minPct,
       level: "block",
-      message: "Vous devez indiquer une part réelle à votre charge pour publier ce vol légalement.",
+      message:
+        "Vous n'indiquez aucune part à votre charge : ce n'est plus du partage de frais " +
+        "(NCO.GEN.104) mais du transport payant, ce qui n'est pas autorisé sans certificat de " +
+        "transporteur aérien. Vous restez seul responsable de ce choix.",
     };
   }
 
@@ -51,9 +58,10 @@ export function evaluerPartPilote(
       minPct,
       level: "block",
       message:
-        `Votre part (${pct} %) est sous le minimum légal de ${minPct} % pour ${n} passager` +
-        `${n > 1 ? "s" : ""} : les frais se partagent à parts égales, vous compris. ` +
-        `Augmentez votre part pour pouvoir publier.`,
+        `Votre part (${pct} %) est sous le minimum recommandé de ${minPct} % pour ${n} passager` +
+        `${n > 1 ? "s" : ""} : les frais se partagent normalement à parts égales, vous compris. ` +
+        `Vous pouvez publier quand même, mais vous restez seul responsable du respect du ` +
+        `partage de frais réel (NCO.GEN.104).`,
     };
   }
 

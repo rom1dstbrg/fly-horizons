@@ -9,7 +9,7 @@ import {
   Menu, X, ExternalLink, Search,
   CalendarCheck, Clock, Navigation,
   Package, Receipt,
-  LayoutGrid, Scale,
+  LayoutGrid, Scale, UserCog,
 } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 
@@ -57,7 +57,7 @@ const DEFAULT_TABS: Record<string, string> = {
   "/admin/boutique": "produits",
 };
 
-// Pages peu utilisées (dashboard, sur mesure, pilotes, vouchers, coupons, satisfaction,
+// Pages peu utilisées (dashboard, sur mesure, vouchers, coupons, satisfaction,
 // newsletter, assistant, analytiques, galerie, emails) regroupées dans /admin/plus —
 // voir PLUS_PAGES ci-dessous, gardé synchronisé avec cette liste.
 const NAVIGATION: NavEntry[] = [
@@ -71,6 +71,7 @@ const NAVIGATION: NavEntry[] = [
   { type: "section", label: "CRM" },
   { type: "link", id: "clients",  icon: Users,         label: "Clients",  href: "/admin/clients"  },
   { type: "link", id: "contacts", icon: MessageSquare, label: "Contacts", href: "/admin/contacts", badgeKey: "contacts" },
+  { type: "link", id: "pilotes",  icon: UserCog,       label: "Équipe",   href: "/admin/pilotes"  },
 
   { type: "section", label: "" },
   { type: "link", id: "transactions", icon: Receipt,  label: "Transactions", href: "/admin/transactions" },

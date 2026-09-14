@@ -1,19 +1,45 @@
 "use client";
 
-import { useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import dynamic from "next/dynamic";
 import { createAnnonce, updateAnnonce, uploadAnnonceImage, deleteAnnonceImageFile } from "@/lib/actions/annonces";
 import { evaluerPartPilote } from "@/lib/annonces-pilote";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AlertTriangle, ShieldAlert, ShieldCheck, PlaneTakeoff, ImagePlus, X, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import {
+  AlertTriangle, ShieldAlert, ShieldCheck, PlaneTakeoff, ImagePlus, X,
+  ChevronLeft, ChevronRight, Loader2, Route,
+} from "lucide-react";
 import type { AnnonceRow } from "./AnnoncesList";
+import type { WaypointDraft } from "@/components/admin/AdminRouteEditor";
 
 const MAX_IMAGES = 6;
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
+const AdminRouteEditorDynamic = dynamic(
+  () => import("@/components/admin/AdminRouteEditor").then(m => ({ default: m.AdminRouteEditor })),
+  { ssr: false, loading: () => <div className="h-[300px] rounded-lg bg-secondary/40 animate-pulse" /> }
+);
+
 type ImageItem = { path: string; url: string };
 
-export function AnnonceForm({ onDone, editing }: { onDone: () => void; editing?: AnnonceRow }) {
+export function AnnonceForm({
+  onDone,
+  onCancel,
+  editing,
+  initialHasRoute = false,
+}: {
+  onDone: () => void;
+  onCancel: () => void;
+  editing?: AnnonceRow;
+  /** Pré-sélectionne le mode itinéraire pour une nouvelle annonce (choix fait dans le popup précédent). */
+  initialHasRoute?: boolean;
+}) {
+  const [titre, setTitre] = useState(editing?.titre ?? "");
+  const [hasRoute, setHasRoute] = useState(!!editing?.route_waypoints?.length || initialHasRoute);
+  const [routeDraft, setRouteDraft] = useState<WaypointDraft[]>(
+    () => (editing?.route_waypoints ?? []).map(w => ({ lat: String(w.lat), lng: String(w.lng), nom: w.nom ?? "" }))
+  );
   const [duree, setDuree] = useState(editing ? String(editing.duree) : "60");
   const [places, setPlaces] = useState(editing ? String(editing.places) : "3");
   const [modeVente, setModeVente] = useState<"avion" | "place">(editing?.mode_vente === "place" ? "place" : "avion");
@@ -29,6 +55,14 @@ export function AnnonceForm({ onDone, editing }: { onDone: () => void; editing?:
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
+
+  // Le popup est scrollable et le message d'erreur s'affiche tout en haut du
+  // formulaire — sans ça, une erreur en soumettant depuis le bas du popup
+  // (bouton Publier) passe totalement inaperçue, on dirait que rien ne se passe.
+  useEffect(() => {
+    if (error) errorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [error]);
 
   const prixTotalNum = parseFloat(prixTotal) || 0;
   const partValueNum = partValue === "" ? -1 : parseFloat(partValue) || 0;
@@ -88,6 +122,7 @@ export function AnnonceForm({ onDone, editing }: { onDone: () => void; editing?:
 
     startTransition(async () => {
       const payload = {
+        titre: titre.trim() || undefined,
         duree: Number(duree),
         places: Number(places),
         prix_total: prixTotalNum,
@@ -96,6 +131,11 @@ export function AnnonceForm({ onDone, editing }: { onDone: () => void; editing?:
         description: description.trim() || undefined,
         images: images.map(i => i.path),
         legal_ok: legalOk,
+        route_waypoints: hasRoute
+          ? routeDraft
+              .filter(w => w.lat.trim() && w.lng.trim())
+              .map(w => ({ lat: Number(w.lat), lng: Number(w.lng), nom: w.nom || undefined }))
+          : [],
       };
       const result = editing
         ? await updateAnnonce(editing.id, payload)
@@ -106,12 +146,24 @@ export function AnnonceForm({ onDone, editing }: { onDone: () => void; editing?:
   }
 
   return (
-    <form onSubmit={handleSubmit} className="card-premium p-5 space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-5">
       {error && (
-        <div className="bg-destructive/10 border border-destructive/30 text-destructive text-sm rounded-md px-4 py-3">
+        <div ref={errorRef} className="bg-destructive/10 border border-destructive/30 text-destructive text-sm rounded-md px-4 py-3">
           {error}
         </div>
       )}
+
+      <div className="space-y-1.5">
+        <Label className="text-sm text-muted-foreground">Titre de l&apos;annonce</Label>
+        <Input
+          type="text" maxLength={80} placeholder="Ex. Coucher de soleil sur la Wallonie"
+          value={titre} onChange={e => setTitre(e.target.value)}
+          className="bg-input border-border"
+        />
+        <p className="text-[11px] text-muted-foreground">
+          Facultatif — sans titre, l&apos;annonce affiche votre nom par défaut.
+        </p>
+      </div>
 
       <div className="grid sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
@@ -123,22 +175,54 @@ export function AnnonceForm({ onDone, editing }: { onDone: () => void; editing?:
           />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-sm text-muted-foreground">Places passagers *</Label>
+          <Label className="text-sm text-muted-foreground">Places passagers maximum *</Label>
           <select value={places} onChange={e => setPlaces(e.target.value)} required
             className="w-full h-10 bg-input border border-border text-foreground rounded-md px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring">
             {[1, 2, 3, 4, 5, 6].map(p => <option key={p} value={p}>{p} place{p > 1 ? "s" : ""}</option>)}
           </select>
+          <p className="text-[11px] text-muted-foreground">
+            Le nombre maximum de passagers acceptés — pas forcément le nombre final.
+          </p>
         </div>
+      </div>
+
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between gap-2">
+          <Label className="text-sm text-muted-foreground">Itinéraire</Label>
+          <button
+            type="button"
+            onClick={() => setHasRoute(v => !v)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors cursor-pointer ${
+              hasRoute ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"
+            }`}
+          >
+            <Route size={12} />
+            {hasRoute ? "Itinéraire tracé" : "Durée seule"}
+          </button>
+        </div>
+        {hasRoute && (
+          <>
+            <AdminRouteEditorDynamic waypoints={routeDraft} onChange={setRouteDraft} height="280px" />
+            <p className="text-[11px] text-muted-foreground">
+              Ce tracé est indicatif : affiché au client sur la page de l&apos;annonce, il ne change
+              rien à la durée ni au prix — toujours saisis ci-dessus/ci-dessous.
+            </p>
+          </>
+        )}
       </div>
 
       <div className="grid sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label className="text-sm text-muted-foreground">Prix de l&apos;avion — coût total du vol (€) *</Label>
+          <Label className="text-sm text-muted-foreground">Coût total du vol (€) *</Label>
           <Input
             type="number" min="0" step="0.01" required placeholder="300"
             value={prixTotal} onChange={e => setPrixTotal(e.target.value)}
             className="bg-input border-border"
           />
+          <p className="text-[11px] text-muted-foreground">
+            Le coût réel de ce vol : location de l&apos;avion, carburant, taxes d&apos;aérodrome. C&apos;est
+            ce total qui se partage entre vous et vos passagers.
+          </p>
         </div>
         <div className="space-y-1.5">
           <Label className="text-sm text-muted-foreground">Votre part *</Label>
@@ -159,6 +243,11 @@ export function AnnonceForm({ onDone, editing }: { onDone: () => void; editing?:
               </button>
             </div>
           </div>
+          <p className="text-[11px] text-muted-foreground">
+            Ce que vous payez vous-même sur ce total, fixé par vous — indépendant du nombre de
+            passagers qui réservent. C'est seulement le <em>reste</em> qui se répartit entre eux
+            (à parts égales, calculé à la clôture en mode « à la place »).
+          </p>
         </div>
       </div>
 
@@ -186,16 +275,25 @@ export function AnnonceForm({ onDone, editing }: { onDone: () => void; editing?:
         </div>
       </div>
 
-      {prixTotal !== "" && partValue !== "" && (
+      {prixTotal !== "" && partValue !== "" && modeVente === "avion" && (
         <div className="bg-secondary/40 border border-border rounded-lg px-4 py-3 flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">
-            {modeVente === "place" ? "Prix par place" : "Prix affiché au client"}
-          </span>
-          <span className="text-lg font-black text-foreground">
-            {modeVente === "place"
-              ? `${prixParPlace.toFixed(2)} € × ${placesNum} = ${prixClient.toFixed(2)} €`
-              : `${prixClient.toFixed(2)} €`}
-          </span>
+          <span className="text-sm text-muted-foreground">Prix affiché au client</span>
+          <span className="text-lg font-black text-foreground">{prixClient.toFixed(2)} €</span>
+        </div>
+      )}
+
+      {prixTotal !== "" && partValue !== "" && modeVente === "place" && (
+        <div className="bg-secondary/40 border border-border rounded-lg px-4 py-3 space-y-1">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Solde à partager entre les passagers</span>
+            <span className="text-lg font-black text-foreground">{prixClient.toFixed(2)} €</span>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Le prix par passager n&apos;est pas fixé ici : il se calcule à la clôture du groupe, à
+            parts égales entre les occupants réels — ex. {prixParPlace.toFixed(2)} € chacun si les
+            {" "}{placesNum} places se remplissent, mais plus si le groupe se clôture avant d&apos;être
+            complet.
+          </p>
         </div>
       )}
 
@@ -211,11 +309,18 @@ export function AnnonceForm({ onDone, editing }: { onDone: () => void; editing?:
           <div>
             <p className="font-semibold">
               {check.level === "ok"
-                ? `Votre part : ${check.pct}% (minimum ${check.minPct}% pour ${places} passager${Number(places) > 1 ? "s" : ""})`
+                ? `Votre part : ${check.pct}% (minimum recommandé ${check.minPct}% pour ${places} passager${Number(places) > 1 ? "s" : ""})`
                 : (check.message ?? "")}
             </p>
             {check.level !== "ok" && partValue !== "" && (
-              <p className="text-xs opacity-80 mt-0.5">Part actuelle : {check.pct}% · minimum {check.minPct}%</p>
+              <p className="text-xs opacity-80 mt-0.5">Part actuelle : {check.pct}% · minimum recommandé {check.minPct}%</p>
+            )}
+            {modeVente === "place" && (
+              <p className="text-xs opacity-80 mt-0.5">
+                Calculé sur {places} passager{Number(places) > 1 ? "s" : ""} (si l&apos;avion se
+                remplit entièrement) — le minimum réel sera recalculé sur le nombre de passagers
+                réellement inscrits à la clôture du groupe, pas sur ce maximum.
+              </p>
             )}
           </div>
         </div>
@@ -285,16 +390,25 @@ export function AnnonceForm({ onDone, editing }: { onDone: () => void; editing?:
         </span>
       </label>
 
-      <button
-        type="submit"
-        disabled={isPending || uploading || check.level === "block" || !legalOk}
-        className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-[#e6a800] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-      >
-        <PlaneTakeoff size={14} />
-        {isPending
-          ? (editing ? "Enregistrement..." : "Publication...")
-          : (editing ? "Enregistrer les modifications" : "Publier ce vol")}
-      </button>
+      <div className="flex items-center justify-end gap-2">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-4 py-2.5 rounded-lg bg-secondary text-muted-foreground text-sm font-semibold hover:bg-secondary/70 transition-colors cursor-pointer"
+        >
+          Annuler
+        </button>
+        <button
+          type="submit"
+          disabled={isPending || uploading || !legalOk}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-[#e6a800] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+        >
+          <PlaneTakeoff size={14} />
+          {isPending
+            ? (editing ? "Enregistrement..." : "Publication...")
+            : (editing ? "Enregistrer les modifications" : "Publier ce vol")}
+        </button>
+      </div>
     </form>
   );
 }

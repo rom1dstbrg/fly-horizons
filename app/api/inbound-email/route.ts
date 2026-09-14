@@ -47,12 +47,16 @@ function extractToken(to: unknown): string | null {
 }
 
 export async function POST(req: NextRequest) {
-  // Garde optionnelle : si un secret est configuré, on l'exige.
+  // Secret obligatoire : sans lui, n'importe qui connaissant un messages_token
+  // pourrait injecter un message dans un fil. Tant que INBOUND_EMAIL_SECRET
+  // n'est pas configuré (webhook pas encore branché côté Resend), la route
+  // refuse tout.
   const secret = process.env.INBOUND_EMAIL_SECRET;
-  if (secret) {
-    const provided = req.headers.get("x-webhook-secret") ?? req.nextUrl.searchParams.get("secret");
-    if (provided !== secret) return NextResponse.json({ ok: true }); // silencieux
+  if (!secret) {
+    return NextResponse.json({ error: "INBOUND_EMAIL_SECRET non configuré" }, { status: 400 });
   }
+  const provided = req.headers.get("x-webhook-secret") ?? req.nextUrl.searchParams.get("secret");
+  if (provided !== secret) return NextResponse.json({ ok: true }); // silencieux
 
   let payload: Record<string, unknown>;
   try {

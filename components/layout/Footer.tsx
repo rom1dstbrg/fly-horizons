@@ -30,7 +30,7 @@ const SOCIALS = [
 ];
 
 const INFOS = [
-  { href: "/nos-offres", label: "Nos offres" },
+  { href: "/nos-offres", label: "Nos vols" },
   { href: "/about",      label: "À propos" },
   { href: "/faq",        label: "FAQ" },
   { href: "/galerie",    label: "Galerie" },

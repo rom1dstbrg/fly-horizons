@@ -6,6 +6,7 @@ import { AnnonceCard } from "@/components/vols/AnnonceCard";
 import { AnnonceStickyBar } from "@/components/vols/AnnonceStickyBar";
 import { BackLink } from "@/components/shop/BackLink";
 import { VolImageGallery } from "@/components/shop/VolImageGallery";
+import { VolItineraryCard } from "@/components/shop/VolItineraryCard";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -132,7 +133,7 @@ export default async function AnnonceDetailPage({ params }: { params: Promise<{ 
 
             {/* ── Gauche : galerie ── */}
             <div>
-              <VolImageGallery images={galleryImages} title={`Vol partagé avec ${pilote.nom}`} duree={annonce.duree} />
+              <VolImageGallery images={galleryImages} title={annonce.titre?.trim() || `Vol partagé avec ${pilote.nom}`} duree={annonce.duree} />
             </div>
 
             {/* ── Droite : info + CTA (sticky) ── */}
@@ -143,14 +144,21 @@ export default async function AnnonceDetailPage({ params }: { params: Promise<{ 
                   {annonce.duree} min · Vol en avion léger
                 </p>
                 <h1 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight">
-                  Vol partagé avec {pilote.nom}
+                  {annonce.titre?.trim() || `Vol partagé avec ${pilote.nom}`}
                 </h1>
+                {annonce.titre?.trim() && (
+                  <p className="text-xs text-muted-foreground mt-1.5">Avec {pilote.nom}</p>
+                )}
                 {annonce.description && (
                   <p className="text-foreground/55 text-sm leading-relaxed mt-3">
                     {annonce.description}
                   </p>
                 )}
               </div>
+
+              {annonce.route_waypoints && annonce.route_waypoints.length > 0 && (
+                <VolItineraryCard waypoints={annonce.route_waypoints} />
+              )}
 
               <div id="vol-cta" className="space-y-5">
                 <div className="pb-5 border-b border-border">

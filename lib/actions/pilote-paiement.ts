@@ -5,7 +5,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdminOrOwningPilote } from "./auth-guards";
 import { isPiloteVol } from "@/lib/pilote/payment";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
-import { annoncePaiementVirementEmail, postVolEmail } from "@/lib/email-templates";
+import {
+  annoncePaiementVirementEmail,
+  annoncePaiementConfirmeEmail,
+  postVolEmail,
+} from "@/lib/email-templates";
 import { brusselsTimestamp } from "@/lib/utils";
 
 // Garde-fou anti-abus : un pilote ne peut marquer un vol « effectué » qu'au
@@ -41,8 +45,12 @@ function pick<T>(v: T | T[] | null | undefined): T | null {
   return Array.isArray(v) ? v[0] ?? null : v ?? null;
 }
 
-/** Le pilote (ou l'admin) confirme / infirme que le client a réglé le virement. */
-export async function setPilotePaye(reservationId: string, paye: boolean) {
+/** Le pilote (ou l'admin) confirme / infirme que le client a réglé (virement ou espèces). */
+export async function setPilotePaye(
+  reservationId: string,
+  paye: boolean,
+  mode: "virement" | "especes" = "virement",
+) {
   try {
     const actor = await requireAdminOrOwningPilote(reservationId);
     const { db, resa } = await loadPiloteVol(reservationId);
@@ -79,13 +87,51 @@ export async function setPilotePaye(reservationId: string, paye: boolean) {
       old_value: resa.pilote_paye ? "payé" : "non payé",
       new_value: paye ? "payé" : "non payé",
       author: actor.role === "pilote" ? `pilote:${actor.piloteNom}` : "admin",
-      note: paye ? "Le client a réglé le pilote par virement" : "Paiement pilote remis en attente",
+      note: paye
+        ? mode === "especes"
+          ? "Le client a payé le pilote en espèces"
+          : "Le client a réglé le pilote par virement"
+        : "Paiement pilote remis en attente",
     });
 
     revalidatePath("/admin/vols");
     revalidatePath("/admin/transactions");
     revalidatePath("/pilote/vols");
-    return { success: true, statut: restored };
+
+    // Email « paiement confirmé » au client — optionnel, on n'échoue pas la
+    // confirmation si l'envoi rate (même logique que marquerVolEffectue).
+    let emailError = false;
+    if (paye) {
+      const client = pick<{ prenom: string; nom: string; email: string }>(resa.clients);
+      const pilote = pick<{ nom: string }>(resa.pilotes);
+      if (client?.email && typeof resa.acompte === "number" && resa.acompte > 0) {
+        const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
+          weekday: "long", day: "numeric", month: "long", year: "numeric",
+        });
+        try {
+          await resend.emails.send({
+            from: EMAIL_FROM,
+            to: [client.email],
+            replyTo: EMAIL_REPLY_TO,
+            subject: "Paiement confirmé · Fly Horizons",
+            html: annoncePaiementConfirmeEmail({
+              prenom: client.prenom,
+              nom: client.nom,
+              dateStr,
+              heure: (resa.heure_vol ?? "").slice(0, 5),
+              duree: resa.duree,
+              piloteNom: pilote?.nom ?? "votre pilote",
+              montant: resa.acompte,
+              receiptUrl: `${siteUrl()}/api/invoice/reservation/${reservationId}`,
+            }),
+          });
+        } catch {
+          emailError = true;
+        }
+      }
+    }
+
+    return { success: true, statut: restored, emailError };
   } catch {
     return { error: "Erreur serveur" };
   }
@@ -307,6 +353,56 @@ export async function cancelAnnonceDemande(reservationId: string) {
 
     revalidatePath("/pilote/vols");
     revalidatePath("/pilote/annonces");
+    return { success: true };
+  } catch {
+    return { error: "Erreur serveur" };
+  }
+}
+
+/**
+ * Le pilote ajuste passagers / poids total de sa propre annonce (onglet
+ * Modifier du drawer, readonly pour le reste — Q33). Cohérent pour une annonce
+ * que le pilote organise lui-même, contrairement à un vol assigné.
+ */
+export async function updateAnnoncePassagersPoids(
+  reservationId: string,
+  passagers: number,
+  poidsTotal: number | null,
+) {
+  try {
+    const actor = await requireAdminOrOwningPilote(reservationId);
+    const db = createAdminClient();
+    const { data: resa } = await db
+      .from("reservations")
+      .select("id, type_resa, passagers, poids_total")
+      .eq("id", reservationId)
+      .single();
+    if (!resa) return { error: "Réservation introuvable" };
+    if (resa.type_resa !== "annonce_pilote") {
+      return { error: "Ce vol n'est pas une annonce pilote" };
+    }
+    if (!(Number.isFinite(passagers) && passagers >= 1)) {
+      return { error: "Nombre de passagers invalide" };
+    }
+
+    const { error } = await db
+      .from("reservations")
+      .update({ passagers, poids_total: poidsTotal })
+      .eq("id", reservationId);
+    if (error) return { error: error.message };
+
+    await db.from("reservation_history").insert({
+      reservation_id: reservationId,
+      action: "field_changed",
+      field: "passagers/poids_total",
+      old_value: `${resa.passagers} pax · ${resa.poids_total ?? "—"} kg`,
+      new_value: `${passagers} pax · ${poidsTotal ?? "—"} kg`,
+      author: actor.role === "pilote" ? `pilote:${actor.piloteNom}` : "admin",
+      note: "Passagers / poids modifiés par le pilote",
+    });
+
+    revalidatePath("/pilote/vols");
+    revalidatePath("/admin/vols");
     return { success: true };
   } catch {
     return { error: "Erreur serveur" };

@@ -7,7 +7,9 @@ import { LayoutDashboard, PlaneTakeoff, Plane, Scale, User } from "lucide-react"
 const LINKS = [
   { href: "/pilote", label: "Tableau de bord", icon: LayoutDashboard, exact: true },
   { href: "/pilote/annonces", label: "Mes annonces", icon: PlaneTakeoff, exact: false },
-  { href: "/pilote/vols", label: "Mes vols", icon: Plane, exact: false },
+  // activePrefixes : /pilote/reservations/new* (création) sont des sous-actions de « Mes
+  // vols », pas des sections à part — l'onglet doit rester surligné là aussi.
+  { href: "/pilote/vols", label: "Mes vols", icon: Plane, exact: false, activePrefixes: ["/pilote/vols", "/pilote/reservations"] },
   { href: "/pilote/mass-balance", label: "Masse & centrage", icon: Scale, exact: false },
   { href: "/pilote/profil", label: "Mon profil", icon: User, exact: false },
 ];
@@ -19,8 +21,10 @@ export function PiloteNav({ counts = {} }: { counts?: Record<string, number> }) 
   return (
     <nav className="border-b border-border bg-card">
       <div className="w-full px-4 sm:px-6 lg:px-8 flex items-center gap-1 overflow-x-auto">
-        {LINKS.map(({ href, label, icon: Icon, exact }) => {
-          const active = exact ? pathname === href : pathname.startsWith(href);
+        {LINKS.map(({ href, label, icon: Icon, exact, activePrefixes }) => {
+          const active = exact
+            ? pathname === href
+            : (activePrefixes ?? [href]).some((p) => pathname.startsWith(p));
           const count = counts[href] ?? 0;
           return (
             <Link

@@ -144,9 +144,11 @@ export async function POST(request: NextRequest) {
             });
           }
         }
-        const { data: resa } = await adminSupabase.from("reservations").select("*, clients(*)").eq("id", reservationId).single();
+        const { data: resa } = await adminSupabase.from("reservations").select("*, clients(*), pilotes(nom)").eq("id", reservationId).single();
         if (resa?.clients) {
           const c = resa.clients as { prenom: string; nom: string; email: string };
+          const rawPilote = resa.pilotes as { nom: string } | { nom: string }[] | null;
+          const pilote = Array.isArray(rawPilote) ? rawPilote[0] : rawPilote;
           const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
           const montantPaye = session.amount_total ? session.amount_total / 100 : 0;
           // Statut déjà "heure_confirmee" avant ce paiement (préservé plus haut) : date,
@@ -167,6 +169,7 @@ export async function POST(request: NextRequest) {
               montantPaye,
               reservationId: reservationId,
               dateISO: resa.date_vol,
+              pilote: pilote?.nom ? { prenom: pilote.nom.split(" ")[0] } : null,
             }),
             ...(boardingPass ? { attachments: [boardingPass] } : {}),
           });

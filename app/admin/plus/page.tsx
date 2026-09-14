@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {
-  LayoutDashboard, Route, UserCog, Ticket, Tag,
+  LayoutDashboard, Route, Ticket, Tag,
   Star, Mails, Bot, BarChart2, Images, Mail,
 } from "lucide-react";
 import { PageHeader } from "@/components/admin/PageHeader";
@@ -10,7 +10,6 @@ export const metadata = { title: "Plus — Admin" };
 const PLUS_PAGES = [
   { href: "/admin",                       icon: LayoutDashboard, label: "Vue globale",     description: "Statistiques et activité récente" },
   { href: "/admin/vols?tab=sur-mesure",   icon: Route,           label: "Vol sur mesure",  description: "Escales, itinéraires libres, demandes perso" },
-  { href: "/admin/pilotes",               icon: UserCog,         label: "Pilotes",         description: "Équipe et marketplace pilotes" },
   { href: "/admin/boutique?tab=vouchers", icon: Ticket,          label: "Vouchers",        description: "Codes cadeaux vendus et disponibles" },
   { href: "/admin/boutique?tab=coupons",  icon: Tag,             label: "Coupons",         description: "Codes promo" },
   { href: "/admin/satisfaction",          icon: Star,            label: "Satisfaction",    description: "Retours clients après vol" },

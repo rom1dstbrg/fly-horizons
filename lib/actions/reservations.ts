@@ -17,6 +17,14 @@ async function checkAdmin() {
   if (profile?.role !== "admin") throw new Error("Non autorisé");
 }
 
+// Voix des emails ("je"/prénom vs "nous"/Fly Horizons) : la fiche pilotes n'a qu'un
+// champ `nom` (nom complet) — on en tire le prénom pour le paramètre `pilote` des
+// templates. Ne jamais faire échouer un envoi d'email si la jointure est vide.
+function pilotePropFrom(resa: { pilotes?: { nom: string }[] | { nom: string } | null } | null | undefined): { prenom: string } | null {
+  const p = resa?.pilotes ? (Array.isArray(resa.pilotes) ? resa.pilotes[0] : resa.pilotes) : null;
+  return p?.nom ? { prenom: p.nom.split(" ")[0] } : null;
+}
+
 const VALID_STATUTS_STD = ["demande_recue", "en_attente", "acompte_recu", "heure_confirmee", "vol_effectue", "annulee", "payment_pending"] as const;
 const VALID_STATUTS_PERSO = ["en_attente", "acompte_recu", "date_confirmee", "heure_confirmee", "solde", "vol_effectue", "annulee", "payment_pending"] as const;
 
@@ -89,11 +97,12 @@ export async function updateStatutReservation(
     if (["acompte_recu", "heure_confirmee", "vol_effectue", "annulee"].includes(statut)) {
       const { data: resa } = await supabase
         .from("reservations")
-        .select("*, clients(*)")
+        .select("*, clients(*), pilotes(nom)")
         .eq("id", id)
         .single();
       if (resa) {
         const client = resa.clients as unknown as { prenom: string; nom: string; email: string };
+        const pilote = pilotePropFrom(resa);
         const rawUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
         const siteUrl = rawUrl.startsWith("http://localhost") || rawUrl.startsWith("http://127")
           ? rawUrl
@@ -121,6 +130,7 @@ export async function updateStatutReservation(
                 montantPaye: resa.paye ?? resa.acompte ?? 0,
                 reservationId: id,
                 dateISO: resa.date_vol,
+                pilote,
               }),
             });
           } else if (statut === "heure_confirmee" && resa.reschedule_pending) {
@@ -133,7 +143,7 @@ export async function updateStatutReservation(
               to: [client.email],
               replyTo: EMAIL_REPLY_TO,
               subject: "Fly Horizons · Votre nouvelle date de vol est confirmée",
-              html: reservationReportConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, dateISO: resa.date_vol }),
+              html: reservationReportConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, dateISO: resa.date_vol, pilote }),
               ...(boardingPass ? { attachments: [boardingPass] } : {}),
             });
             await supabase.from("reservations").update({ reschedule_pending: false }).eq("id", id);
@@ -190,7 +200,7 @@ export async function updateStatutReservation(
               to: [client.email],
               replyTo: EMAIL_REPLY_TO,
               subject: "Fly Horizons · Votre créneau horaire est confirmé",
-              html: reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, route: resa.route, routeUrl, dateISO: resa.date_vol }),
+              html: reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, route: resa.route, routeUrl, dateISO: resa.date_vol, pilote }),
               ...(boardingPass ? { attachments: [boardingPass] } : {}),
             });
           } else if (statut === "vol_effectue") {
@@ -275,11 +285,12 @@ export async function updateStatutReservationPerso(id: string, statut: string) {
     if (["acompte_recu", "date_confirmee", "heure_confirmee", "vol_effectue", "annulee"].includes(statut)) {
       const { data: resa } = await supabase
         .from("reservations")
-        .select("*, clients(*)")
+        .select("*, clients(*), pilotes(nom)")
         .eq("id", id)
         .single();
       if (resa) {
         const client = resa.clients as unknown as { prenom: string; nom: string; email: string };
+        const pilote = pilotePropFrom(resa);
         const rawUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
         const siteUrl = rawUrl.startsWith("http://localhost") || rawUrl.startsWith("http://127")
           ? rawUrl
@@ -305,6 +316,7 @@ export async function updateStatutReservationPerso(id: string, statut: string) {
                 montantPaye: resa.paye ?? resa.acompte ?? 0,
                 reservationId: id,
                 dateISO: resa.date_vol,
+                pilote,
               }),
             });
           } else if ((statut === "date_confirmee" || statut === "heure_confirmee") && resa.reschedule_pending) {
@@ -329,7 +341,7 @@ export async function updateStatutReservationPerso(id: string, statut: string) {
               to: [client.email],
               replyTo: EMAIL_REPLY_TO,
               subject: "Fly Horizons · Votre date de vol est confirmée",
-              html: reservationDateConfirmeeEmail({ prenom: client.prenom, dateStr, duree: resa.duree }),
+              html: reservationDateConfirmeeEmail({ prenom: client.prenom, dateStr, duree: resa.duree, pilote }),
             });
           } else if (statut === "heure_confirmee") {
             const boardingPass = await buildBoardingPassAttachment(supabase, id, resa.date_vol, resa.heure_vol, resa.duree);
@@ -338,7 +350,7 @@ export async function updateStatutReservationPerso(id: string, statut: string) {
               to: [client.email],
               replyTo: EMAIL_REPLY_TO,
               subject: "Fly Horizons · Votre créneau horaire est confirmé",
-              html: reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, dateISO: resa.date_vol }),
+              html: reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, dateISO: resa.date_vol, pilote }),
               ...(boardingPass ? { attachments: [boardingPass] } : {}),
             });
           } else if (statut === "vol_effectue") {
@@ -795,11 +807,12 @@ export async function recordCashPayment(id: string, montant: number) {
     let emailError = false;
     const { data: resa } = await supabase
       .from("reservations")
-      .select("*, clients(*)")
+      .select("*, clients(*), pilotes(nom)")
       .eq("id", id)
       .single();
     if (resa) {
       const client = resa.clients as unknown as { prenom: string; nom: string; email: string };
+      const pilote = pilotePropFrom(resa);
       const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
         weekday: "long", day: "numeric", month: "long", year: "numeric",
       });
@@ -825,6 +838,7 @@ export async function recordCashPayment(id: string, montant: number) {
               montantPaye: montant,
               reservationId: id,
               dateISO: resa.date_vol,
+              pilote,
             }),
             ...(boardingPass ? { attachments: [boardingPass] } : {}),
           });
@@ -1057,7 +1071,7 @@ export async function sendRescheduleInvite(id: string) {
 
     const { data: resa } = await supabase
       .from("reservations")
-      .select("*, clients(*)")
+      .select("*, clients(*), pilotes(nom)")
       .eq("id", id)
       .single();
 
@@ -1065,6 +1079,7 @@ export async function sendRescheduleInvite(id: string) {
     if (["annulee", "vol_effectue"].includes(resa.statut)) {
       return { error: "Impossible de reporter ce vol" };
     }
+    const pilote = pilotePropFrom(resa);
 
     const client = resa.clients as { prenom: string; nom: string; email: string } | null;
     if (!client?.email) return { error: "Email client introuvable" };
@@ -1093,6 +1108,7 @@ export async function sendRescheduleInvite(id: string) {
           prenom: client.prenom,
           dateStr,
           duree: resa.duree,
+          pilote,
           rescheduleUrl: `${siteUrl}/reservation/reporter/${makeRescheduleToken(uuid)}`,
         }),
       });
@@ -1165,7 +1181,7 @@ export async function rescheduleReservation(token: string, newDate: string, newH
 
     const { data: resa } = await supabase
       .from("reservations")
-      .select("*, clients(*)")
+      .select("*, clients(*), pilotes(nom)")
       .eq("reschedule_token", parsed.t)
       .single();
 
@@ -1244,6 +1260,7 @@ export async function rescheduleReservation(token: string, newDate: string, newH
         newDateStr: newDateTimeStr,
         duree: resa.duree,
         accountUrl: `${siteUrl}/account#reservations`,
+        pilote: pilotePropFrom(resa),
       }),
     });
 
@@ -1394,6 +1411,7 @@ export async function proposeSlot(id: string, date: string, heure: string) {
           proposedHeure: heure,
           duree: resa.duree,
           respondUrl: `${siteUrl}/reservation/creneau-propose/${token}`,
+          pilote: actor.role === "pilote" ? { prenom: actor.piloteNom.split(" ")[0] } : null,
         }),
       });
     } catch (e) {

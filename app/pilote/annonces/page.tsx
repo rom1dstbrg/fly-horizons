@@ -19,7 +19,7 @@ export default async function PiloteAnnoncesPage() {
   const { data: pilote } = await admin
     .from("pilotes")
     .select(
-      "id, iban, licence_numero, licence_expiration, medical_expiration, conditions_accepted_at",
+      "id, nom, iban, licence_numero, licence_expiration, medical_expiration, conditions_accepted_at",
     )
     .eq("user_id", user!.id)
     .single();
@@ -28,11 +28,32 @@ export default async function PiloteAnnoncesPage() {
     ? await admin
         .from("annonces_pilote")
         .select(
-          "id, duree, places, prix_total, part_pilote, mode_vente, places_reservees, description, images, statut, legal_ok",
+          "id, titre, duree, places, prix_total, part_pilote, mode_vente, places_reservees, description, images, statut, legal_ok, route_waypoints",
         )
         .eq("pilote_id", pilote.id)
         .order("created_at", { ascending: false })
     : { data: [] };
+
+  // Stats de consultation (vues + visiteurs uniques) — réutilise le tracking
+  // analytique déjà en place (page_views), pas de colonne/compteur dédié.
+  const stats: Record<string, { vues: number; visiteurs: number }> = {};
+  const ids = (annonces ?? []).map(a => a.id);
+  if (ids.length > 0) {
+    const paths = ids.map(id => `/vol/annonce/${id}`);
+    const { data: views } = await admin
+      .from("page_views")
+      .select("pathname, visitor_id")
+      .in("pathname", paths);
+    const uniques: Record<string, Set<string>> = {};
+    for (const v of views ?? []) {
+      const id = v.pathname.split("/").pop();
+      if (!id) continue;
+      stats[id] ??= { vues: 0, visiteurs: 0 };
+      stats[id].vues += 1;
+      if (v.visitor_id) (uniques[id] ??= new Set()).add(v.visitor_id);
+    }
+    for (const id of Object.keys(stats)) stats[id].visiteurs = uniques[id]?.size ?? 0;
+  }
 
   // Garde-fous publication : légal à jour (décision 2026-09-06) + IBAN valide
   // (règlement par virement direct au pilote).
@@ -53,7 +74,12 @@ export default async function PiloteAnnoncesPage() {
         title="Mes annonces"
         subtitle="Publiez vos offres de vol : durée, prix, photos. Le client choisit sa date."
       />
-      <PiloteAnnoncesClient annonces={annonces ?? []} publishGate={publishGate} />
+      <PiloteAnnoncesClient
+        annonces={annonces ?? []}
+        piloteNom={pilote?.nom ?? ""}
+        stats={stats}
+        publishGate={publishGate}
+      />
     </div>
   );
 }

@@ -99,6 +99,22 @@
     <div class="col">
       <h3><span class="tag t-amber">À faire</span> prêt à démarrer</h3>
       <ol>
+        <li><b>Audit de cohérence des docs (14/09)</b> — lecture complète des 7 HTML racine.
+          Bonne nouvelle : les migrations <code>20260910_annonces_paiement</code>,
+          <code>20260911_reservation_messages</code>, <code>20260913_annonces_titre</code> et
+          <code>20260913_annonces_itineraire</code> sont <b>toutes vérifiées exécutées en prod</b>
+          (colonnes confirmées en base) — l'incertitude documentée depuis des semaines est levée.
+          2 vrais trous trouvés, jamais documentés avant : <b>1.</b> <span class="tag t-green">corrigé
+          14/09</span> <code>mass_balance_sheets</code> n'a aucune colonne propriétaire — un pilote
+          pouvait modifier la fiche masse &amp; centrage d'un autre pilote en devinant son id UUID
+          (la liste, elle, était déjà bien filtrée). Pas besoin de migration : la portée passe déjà
+          par <code>reservation_id → reservations.pilote_id</code>, il manquait juste la
+          vérification côté <code>updateMassBalanceSheet</code> — ajoutée
+          (<code>lib/actions/mass-balance.ts</code>). <b>2.</b> <span class="tag t-amber">pas fait</span>
+          La page <code>/cgp</code> parle encore uniquement de « l'avion de Fly Horizons » (DA40 Air
+          Academy), jamais adaptée au modèle multi-pilotes — lié au blocage légal jamais levé
+          (assumé, cf. Décisions 08/09) ; texte légal, pas retouché sans une demande explicite de
+          Romain.</li>
         <li><b>Catalogue public → tout par l'espace pilote</b> (décision 13/09, onglet Décisions).
           <code>/nos-offres</code> est déjà codé pour les deux : <b>1.</b> Romain republie son
           catalogue réel (vols durée fixe + itinéraire) via <code>/pilote/annonces</code> ;

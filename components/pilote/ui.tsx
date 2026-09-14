@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, X } from "lucide-react";
 
 // ── Chrome partagé de l'espace pilote ────────────────────────────────────────
 // Un seul vocabulaire visuel, aligné sur l'identité Fly Horizons (STYLE-STATUS) :
@@ -74,5 +74,44 @@ export function PiloteAlert({
     </Link>
   ) : (
     inner
+  );
+}
+
+/**
+ * Popup modale, pensée mobile-first (feuille qui monte du bas en plein écran
+ * sur téléphone, carte centrée au-delà) — même logique visuelle que l'espace
+ * pilote, à réutiliser pour toute future action modale de l'app pilote.
+ */
+export function PiloteModal({
+  title,
+  onClose,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-[200] bg-black/50 flex items-end sm:items-center justify-center"
+      onClick={onClose}
+    >
+      <div
+        className="w-full sm:max-w-lg sm:mx-4 bg-card rounded-t-2xl sm:rounded-2xl shadow-xl max-h-[92vh] sm:max-h-[85vh] flex flex-col"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-border shrink-0">
+          <p className="text-sm font-bold text-foreground">{title}</p>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+            aria-label="Fermer"
+          >
+            <X size={16} />
+          </button>
+        </div>
+        <div className="overflow-y-auto p-5">{children}</div>
+      </div>
+    </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { updateReservationAllFields } from "@/lib/actions/reservation-edit";
+import { updateAnnoncePassagersPoids } from "@/lib/actions/pilote-paiement";
 import type { DrawerReservation } from "../types";
 
 export function useReservationDraft(
@@ -117,10 +118,25 @@ export function useReservationDraft(
     });
   }
 
+  // Version restreinte pour le pilote sur sa propre annonce (Q33) : seuls
+  // passagers/poids sont modifiables, le reste de l'onglet reste en lecture seule.
+  function savePassagersPoids() {
+    if (!reservation) return;
+    startTransition(async () => {
+      const p = parseInt(passagers) || reservation.passagers;
+      const w = poids ? parseFloat(poids) : null;
+      const r = await updateAnnoncePassagersPoids(reservation.id, p, w);
+      if (r.error) { showFeedback("Erreur : " + r.error, false); return; }
+      showFeedback("Passagers / poids mis à jour ✓");
+      onSaved?.({ passagers: p, poids_total: w });
+    });
+  }
+
   return {
     isPending,
     fields: { prenom, nom, email, telephone, date, heure, duree, passagers, poids, acompte, paye, remboursement, voucherCode, couponCode, commentaire, styleVol },
     setters: { setPrenom, setNom, setEmail, setTelephone, setDate, setHeure, setDuree, setPassagers, setPoids, setAcompte, setPaye, setRemboursement, setVoucherCode, setCouponCode, setCommentaire, setStyleVol },
     save,
+    savePassagersPoids,
   };
 }

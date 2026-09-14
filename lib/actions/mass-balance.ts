@@ -31,6 +31,31 @@ async function scopedReservationId(actor: ReservationActor, reservationId: strin
   return resa?.pilote_id === actor.piloteId ? id : null;
 }
 
+// mass_balance_sheets n'a pas de colonne propriétaire : la portée d'un pilote passe
+// entièrement par reservation_id → reservations.pilote_id (comme la liste affichée sur
+// /pilote/mass-balance). saveMassBalanceSheet ne pose pas de problème (scopedReservationId
+// borne déjà ce qu'un pilote peut lier), mais avant ce correctif, updateMassBalanceSheet ne
+// vérifiait jamais à QUI appartenait la feuille visée par `id` — un pilote qui devinerait
+// l'id UUID d'une feuille liée au vol d'un autre pilote pouvait l'écraser. Vérifie la
+// feuille EXISTANTE (pas seulement le nouveau reservationId demandé) avant d'autoriser.
+async function assertCanAccessSheet(actor: ReservationActor, sheetId: string): Promise<string | null> {
+  if (actor.role === "admin") return null;
+  const db = createAdminClient();
+  const { data: existing } = await db
+    .from("mass_balance_sheets")
+    .select("reservation_id")
+    .eq("id", sheetId)
+    .maybeSingle();
+  if (!existing) return "Feuille introuvable";
+  if (!existing.reservation_id) return null; // calcul libre, partagé entre pilotes
+  const { data: resa } = await db
+    .from("reservations")
+    .select("pilote_id")
+    .eq("id", existing.reservation_id)
+    .maybeSingle();
+  return resa?.pilote_id === actor.piloteId ? null : "Non autorisé";
+}
+
 export interface SaveSheetPayload {
   inputs: MassBalanceInputs;
   reservationId?: string | null;
@@ -72,6 +97,9 @@ export async function updateMassBalanceSheet(id: string, payload: SaveSheetPaylo
     const { inputs } = payload;
     if (!id) return { error: "Feuille inconnue" };
     if (!inputs?.aircraftReg) return { error: "Avion manquant" };
+
+    const accessError = await assertCanAccessSheet(actor, id);
+    if (accessError) return { error: accessError };
 
     const computed = computeMassBalance(inputs);
     const db = createAdminClient();

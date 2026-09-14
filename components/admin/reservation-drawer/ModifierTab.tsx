@@ -19,13 +19,17 @@ const roInput = "w-full h-8 px-2 rounded-lg border border-border bg-secondary te
 // cet onglet ne gère que la saisie des champs.
 // readOnly (pilote) : les infos sont affichées mais non modifiables, et les champs
 // paiement / codes sont masqués (hors périmètre pilote).
+// pilotAnnonceEditable (Q33) : sur sa propre annonce, le pilote reste en lecture
+// seule partout SAUF passagers/poids — cohérent pour un vol qu'il organise lui-même.
 export function ModifierTab({
   reservation: r,
   fields, setters,
   readOnly = false,
+  pilotAnnonceEditable = false,
 }: {
   reservation: DrawerReservation;
   readOnly?: boolean;
+  pilotAnnonceEditable?: boolean;
   fields: {
     prenom: string; nom: string; email: string; telephone: string;
     date: string; heure: string; duree: string; passagers: string; poids: string;
@@ -52,7 +56,9 @@ export function ModifierTab({
       {readOnly && (
         <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground bg-secondary rounded-lg px-3 py-2">
           <Lock size={11} className="shrink-0" />
-          Informations en lecture seule. Pour un changement, contactez Romain.
+          {pilotAnnonceEditable
+            ? "Seuls les passagers et le poids total sont modifiables sur votre annonce. Pour le reste, contactez Romain."
+            : "Informations en lecture seule. Pour un changement, contactez Romain."}
         </p>
       )}
 
@@ -89,10 +95,10 @@ export function ModifierTab({
             <input type="number" value={fields.duree} onChange={e => setters.setDuree(e.target.value)} disabled={ro} min={1} className={inputCls} />
           </InputField>
           <InputField label="Passagers">
-            <input type="number" value={fields.passagers} onChange={e => setters.setPassagers(e.target.value)} disabled={ro} min={1} className={inputCls} />
+            <input type="number" value={fields.passagers} onChange={e => setters.setPassagers(e.target.value)} disabled={ro && !pilotAnnonceEditable} min={1} className={ro && !pilotAnnonceEditable ? roInput : baseInput} />
           </InputField>
           <InputField label="Poids total (kg)">
-            <input type="number" value={fields.poids} onChange={e => setters.setPoids(e.target.value)} disabled={ro} min={0} placeholder="—" className={inputCls} />
+            <input type="number" value={fields.poids} onChange={e => setters.setPoids(e.target.value)} disabled={ro && !pilotAnnonceEditable} min={0} placeholder="—" className={ro && !pilotAnnonceEditable ? roInput : baseInput} />
           </InputField>
           {!ro && (
             <>

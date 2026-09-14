@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { rateLimit, getIp } from "@/lib/rate-limit";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
-import { reservationConfirmationFreeEmail } from "@/lib/email-templates";
-import { evaluerPartPilote } from "@/lib/annonces-pilote";
+import { reservationConfirmationFreeEmail, annonceInscriptionPlaceEmail } from "@/lib/email-templates";
+import { finalizeAnnonceGroupPricing } from "@/lib/annonces-pilote-server";
 import { escapeHtml } from "@/lib/utils";
 
 export async function POST(request: NextRequest) {
@@ -61,11 +61,6 @@ export async function POST(request: NextRequest) {
     if (!annonce || annonce.statut !== "publiee") {
       return NextResponse.json({ error: "Ce vol n'est plus disponible." }, { status: 410 });
     }
-    // Garde-fou partage de frais : une annonce dont la part pilote est sous le
-    // minimum légal (part égale, pilote compris) ne peut pas être réservée.
-    if (evaluerPartPilote(annonce.prix_total, annonce.part_pilote, annonce.places).level === "block") {
-      return NextResponse.json({ error: "Ce vol n'est pas réservable pour le moment." }, { status: 409 });
-    }
     if (passagersCount > annonce.places) {
       return NextResponse.json({ error: `Ce vol n'a que ${annonce.places} place(s) disponible(s).` }, { status: 400 });
     }
@@ -75,18 +70,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Pilote introuvable pour cette annonce." }, { status: 500 });
     }
 
-    // Mode « avion » : le premier client prend toute l'annonce (prix = total − part
-    // pilote). Mode « place » : chacun paie sa quote-part (prix par place ×
-    // passagers), l'annonce reste ouverte jusqu'à ce que toutes les places soient
-    // prises.
+    // Mode « avion » : le premier client prend toute l'annonce, prix connu
+    // immédiatement (= total − part pilote). Mode « place » : le prix définitif
+    // n'est PAS fixé à la demande — il dépend du nombre réel de passagers une
+    // fois le groupe complet (part égale entre occupants réels, décision
+    // 2026-09-13) ; il est calculé par finalizeAnnonceGroupPricing() à la
+    // clôture (ici si le groupe se remplit, ou par le pilote via
+    // cloturerGroupeAnnonce()). L'annonce reste ouverte jusqu'à ce que toutes
+    // les places soient prises.
     const modeVente = annonce.mode_vente === "place" ? "place" : "avion";
     const remainder = Math.round((annonce.prix_total - annonce.part_pilote) * 100) / 100;
-    const prixPlace = Math.round((remainder / annonce.places) * 100) / 100;
-    const prixClient =
-      modeVente === "place"
-        ? Math.round(prixPlace * passagersCount * 100) / 100
-        : remainder;
-    if (prixClient <= 0) {
+    const prixClient = modeVente === "avion" ? remainder : null;
+    if (remainder <= 0) {
       return NextResponse.json({ error: "Montant invalide pour ce vol." }, { status: 400 });
     }
     if (modeVente === "place" && passagersCount > annonce.places - (annonce.places_reservees ?? 0)) {
@@ -131,10 +126,12 @@ export async function POST(request: NextRequest) {
     //  · mode place : compare-and-swap sur places_reservees ; l'annonce ne se
     //    ferme (reservee) que quand toutes les places sont prises.
     let claimed: { id: string } | null = null;
+    let groupeComplet = false;
     if (modeVente === "place") {
       const prev = annonce.places_reservees ?? 0;
       const next = prev + passagersCount;
-      const full = next >= annonce.places;
+      groupeComplet = next >= annonce.places;
+      const full = groupeComplet;
       const { data } = await supabase
         .from("annonces_pilote")
         .update({ places_reservees: next, statut: full ? "reservee" : "publiee" })
@@ -231,24 +228,49 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Erreur création réservation" }, { status: 500 });
     }
 
+    // Mode « place » : dès que le groupe est complet, on fige le prix réel de
+    // chaque réservation (part égale entre occupants réels) — jusque-là,
+    // acompte reste NULL pour toutes.
+    let montantFinal = prixClient;
+    if (modeVente === "place" && groupeComplet) {
+      await finalizeAnnonceGroupPricing(supabase, annonce.id, annonce.prix_total, annonce.part_pilote);
+      const { data: finalized } = await supabase
+        .from("reservations")
+        .select("acompte")
+        .eq("id", resa.id)
+        .single();
+      montantFinal = finalized?.acompte ?? null;
+    }
+
     const dateStr = new Date(date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
       weekday: "long", day: "numeric", month: "long", year: "numeric",
     });
 
-    // Email de confirmation de la demande au client — même template que le flow standard.
+    // Email de confirmation — prix connu (avion, ou place une fois le groupe
+    // complet) vs. inscription en attente (place, groupe pas encore complet).
+    const groupeEnAttente = modeVente === "place" && !groupeComplet;
     await resend.emails.send({
       from: EMAIL_FROM,
       to: [email],
       replyTo: EMAIL_REPLY_TO,
-      subject: "Demande de vol reçue · Fly Horizons",
-      html: reservationConfirmationFreeEmail({
-        prenom, nom, dateStr,
-        heure: heure_vol,
-        duree: annonce.duree,
-        passengers: passagersCount,
-        reservationId: resa.id,
-        montant: prixClient,
-      }),
+      subject: groupeEnAttente ? "Votre place est réservée · Fly Horizons" : "Demande de vol reçue · Fly Horizons",
+      html: groupeEnAttente
+        ? annonceInscriptionPlaceEmail({
+            prenom, nom, dateStr,
+            heure: heure_vol,
+            duree: annonce.duree,
+            piloteNom: pilote.nom,
+            passagers: passagersCount,
+          })
+        : reservationConfirmationFreeEmail({
+            prenom, nom, dateStr,
+            heure: heure_vol,
+            duree: annonce.duree,
+            passengers: passagersCount,
+            reservationId: resa.id,
+            montant: montantFinal,
+            pilote: { prenom: pilote.nom.split(" ")[0] },
+          }),
     });
 
     // Notification au pilote (pas seulement à l'admin) — c'est lui qui doit traiter la demande.
@@ -256,11 +278,14 @@ export async function POST(request: NextRequest) {
     const eNom = escapeHtml(nom);
     const eEmail = escapeHtml(email);
     const notifyTo = pilote.email ? [pilote.email, EMAIL_REPLY_TO] : [EMAIL_REPLY_TO];
+    const montantLigne = groupeEnAttente
+      ? "à définir à la clôture du groupe"
+      : `<strong>${montantFinal} €</strong>`;
     resend.emails.send({
       from: EMAIL_FROM,
       to: notifyTo,
       subject: `[Nouvelle demande] ${ePrenom} ${eNom} · ${date_vol} à ${(heure_vol as string).slice(0, 5)}`,
-      html: `<p><strong>✈️ Nouvelle demande sur votre annonce — ${prixClient} €</strong></p>
+      html: `<p><strong>✈️ Nouvelle demande sur votre annonce${groupeEnAttente ? "" : ` — ${montantFinal} €`}</strong></p>
 <table style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;">
   <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Client</td><td><strong>${ePrenom} ${eNom}</strong> (${clientId})</td></tr>
   <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Email</td><td><a href="mailto:${eEmail}">${eEmail}</a></td></tr>
@@ -268,9 +293,11 @@ export async function POST(request: NextRequest) {
   <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Heure</td><td><strong>${(heure_vol as string).slice(0, 5)}</strong></td></tr>
   <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Durée</td><td>${annonce.duree} min</td></tr>
   <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Passagers</td><td>${passagersCount}</td></tr>
-  <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Montant</td><td><strong>${prixClient} €</strong></td></tr>
+  <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Montant</td><td>${montantLigne}</td></tr>
 </table>
-<p>Connectez-vous à votre espace pilote (Mes vols) pour confirmer le créneau, tracer la route et envoyer le lien de paiement.</p>`,
+${groupeEnAttente
+  ? `<p>Le groupe n&rsquo;est pas encore complet : le prix se fixera automatiquement dès qu&rsquo;il le sera, ou cliquez « Clôturer le groupe » dans votre espace pour le fixer maintenant avec les passagers déjà inscrits.</p>`
+  : `<p>Connectez-vous à votre espace pilote (Mes vols) pour confirmer le créneau, tracer la route et envoyer le lien de paiement.</p>`}`,
     }).catch(() => {});
 
     return NextResponse.json({ success: true, reservationId: resa.id });

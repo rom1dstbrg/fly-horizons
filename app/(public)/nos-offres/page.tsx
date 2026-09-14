@@ -7,9 +7,9 @@ import {
   Clock, Route, Zap, PlaneTakeoff, ArrowRight, MousePointerClick,
   EuroIcon, Users,
 } from "lucide-react";
-import { FaWhatsapp } from "react-icons/fa6";
 import { PackCard } from "@/components/shop/PackCard";
 import { AnnonceCard } from "@/components/vols/AnnonceCard";
+import { NoFlightsNotice } from "@/components/shop/NoFlightsNotice";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
 
@@ -30,6 +30,18 @@ export const metadata = {
 export default async function NosOffresPage() {
   const supabase = await createClient();
 
+  // Chantier "tout passe par l'espace pilote" (2026-09-13, à terme) : décision de
+  // dérivage prévue derrière ce flag, le temps que Romain republie son catalogue
+  // réel en annonces avant qu'on bascule l'affichage public. Tant que la clé est
+  // absente/≠ "annonces" en base, rien ne change (comportement products/Stripe
+  // actuel). Voir projet.html § Décisions.
+  const { data: sourceSetting } = await supabase
+    .from("crm_settings")
+    .select("value")
+    .eq("key", "catalogue_source")
+    .maybeSingle();
+  const catalogueSource = sourceSetting?.value === "annonces" ? "annonces" : "products";
+
   const { data: packs } = await supabase
     .from("products")
     .select("*, images:product_images(*)")
@@ -47,7 +59,7 @@ export default async function NosOffresPage() {
   const adminSupabase = createAdminClient();
   const { data: rawAnnonces } = await adminSupabase
     .from("annonces_pilote")
-    .select("id, duree, places, prix_total, part_pilote, mode_vente, images, pilotes(nom)")
+    .select("id, titre, duree, places, prix_total, part_pilote, mode_vente, images, route_waypoints, pilotes(nom)")
     .eq("statut", "publiee")
     .order("created_at", { ascending: false });
 
@@ -56,14 +68,18 @@ export default async function NosOffresPage() {
     const aMode: "avion" | "place" = a.mode_vente === "place" ? "place" : "avion";
     return {
       id: a.id,
+      titre: a.titre,
       duree: a.duree,
       places: a.places,
       prix_client: aMode === "place" ? Math.round((remainder / a.places) * 100) / 100 : remainder,
       pilote_nom: (a.pilotes as unknown as { nom: string } | null)?.nom ?? "un pilote",
       cover_image: a.images?.[0] ?? null,
       mode_vente: aMode,
+      has_route: !!a.route_waypoints?.length,
     };
   });
+  const annoncesFixes = annonces.filter(a => !a.has_route);
+  const annoncesItineraire = annonces.filter(a => a.has_route);
 
   return (
     <main className="bg-gradient-navy">
@@ -75,73 +91,95 @@ export default async function NosOffresPage() {
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-2 sm:pt-12 pb-10">
 
           {/* En-tête */}
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 mb-4">
-              <Clock size={13} className="text-[#F2B705]" />
-              <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px]">Au départ de Charleroi (EBCI)</p>
-            </div>
-            <h1 className="text-5xl sm:text-6xl font-black text-foreground leading-none tracking-tight mb-4">
-              Choisissez votre durée.<br />
-              <span className="text-[#0b2238]">On s&apos;occupe du reste.</span>
+          <div className="text-center mb-8">
+            <h1 className="text-3xl sm:text-4xl font-black text-foreground leading-none tracking-tight">
+              Nos vols
             </h1>
-            <div className="w-10 h-0.5 bg-[#F2B705] mx-auto mt-5 mb-4 rounded-full" />
-            <p className="text-muted-foreground text-sm max-w-lg mx-auto leading-relaxed">
-              30, 60, 90 ou 120 minutes de vol depuis Charleroi. Prix fixe, réservation en quelques clics, jusqu&apos;à 3 passagers.
-            </p>
-            <p className="text-xs text-foreground/50 max-w-lg mx-auto mt-2.5 leading-relaxed">
-              Créneau souhaité, pas garanti : le vol étant partagé, une autre date ou heure peut vous être proposée.
-            </p>
           </div>
 
-          {/* Grille packs — durée fixe */}
-          {(!packs || packs.length === 0) ? (
-            <div className="text-center py-16 text-muted-foreground text-sm">
-              Aucun vol disponible pour le moment.
-            </div>
+          {catalogueSource === "annonces" ? (
+            <>
+              {/* Vols à durée fixe — annonces pilote sans itinéraire tracé */}
+              {annoncesFixes.length === 0 && annoncesItineraire.length === 0 ? (
+                <NoFlightsNotice />
+              ) : annoncesFixes.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+                  {annoncesFixes.map((a) => (
+                    <AnnonceCard key={a.id} annonce={a} />
+                  ))}
+                </div>
+              )}
+
+              {/* Itinéraires — annonces pilote avec un tracé */}
+              {annoncesItineraire.length > 0 && (
+                <div className="mt-14">
+                  <div className="text-center mb-8">
+                    <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">
+                      Routes préparées par votre pilote
+                    </p>
+                    <h2 className="text-2xl sm:text-3xl font-black text-foreground leading-tight">
+                      Itinéraires sélectionnés
+                    </h2>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+                    {annoncesItineraire.map((a) => (
+                      <AnnonceCard key={a.id} annonce={a} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-              {packsFixes.map((pack) => (
-                <PackCard key={pack.id} pack={pack} />
-              ))}
-            </div>
-          )}
+            <>
+              {/* Grille packs — durée fixe */}
+              {packsFixes.length === 0 && packsItineraire.length === 0 && annonces.length === 0 ? (
+                <NoFlightsNotice />
+              ) : packsFixes.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+                  {packsFixes.map((pack) => (
+                    <PackCard key={pack.id} pack={pack} />
+                  ))}
+                </div>
+              )}
 
-          {/* Itinéraires sélectionnés — route fixée à l'avance */}
-          {packsItineraire.length > 0 && (
-            <div className="mt-14">
-              <div className="text-center mb-8">
-                <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">
-                  Routes préparées par votre pilote
-                </p>
-                <h2 className="text-2xl sm:text-3xl font-black text-foreground leading-tight">
-                  Itinéraires sélectionnés
-                </h2>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-                {packsItineraire.map((pack) => (
-                  <PackCard key={pack.id} pack={pack} />
-                ))}
-              </div>
-            </div>
-          )}
+              {/* Itinéraires sélectionnés — route fixée à l'avance */}
+              {packsItineraire.length > 0 && (
+                <div className="mt-14">
+                  <div className="text-center mb-8">
+                    <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">
+                      Routes préparées par votre pilote
+                    </p>
+                    <h2 className="text-2xl sm:text-3xl font-black text-foreground leading-tight">
+                      Itinéraires sélectionnés
+                    </h2>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+                    {packsItineraire.map((pack) => (
+                      <PackCard key={pack.id} pack={pack} />
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          {/* Vols publiés par les pilotes — n'apparaît que s'il y en a au moins un */}
-          {annonces.length > 0 && (
-            <div className="mt-14">
-              <div className="text-center mb-8">
-                <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">
-                  Places disponibles
-                </p>
-                <h2 className="text-2xl sm:text-3xl font-black text-foreground leading-tight">
-                  Vols proposés par nos pilotes
-                </h2>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-                {annonces.map((a) => (
-                  <AnnonceCard key={a.id} annonce={a} />
-                ))}
-              </div>
-            </div>
+              {/* Vols publiés par les pilotes — n'apparaît que s'il y en a au moins un */}
+              {annonces.length > 0 && (
+                <div className="mt-14">
+                  <div className="text-center mb-8">
+                    <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">
+                      Places disponibles
+                    </p>
+                    <h2 className="text-2xl sm:text-3xl font-black text-foreground leading-tight">
+                      Vols proposés par nos pilotes
+                    </h2>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+                    {annonces.map((a) => (
+                      <AnnonceCard key={a.id} annonce={a} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {/* Masqué 29/07/2026 en attendant confirmation légale — voir audit-legal-fly-horizons.html
@@ -302,56 +340,6 @@ export default async function NosOffresPage() {
         </div>
       </div>
       )}
-
-      {/* ══════════════════════════════════════════
-          Occasion particulière
-      ══════════════════════════════════════════ */}
-      <div className="bg-[#f5f5f7] py-16 sm:py-20">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-10">
-
-            <div className="text-center lg:text-left max-w-xl">
-              <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-4">
-                Occasion particulière
-              </p>
-              <h2 className="text-3xl sm:text-4xl font-black text-foreground leading-tight tracking-tight mb-4">
-                Une occasion à célébrer ?
-              </h2>
-              <p className="text-muted-foreground text-sm leading-relaxed mb-6">
-                Anniversaire, demande en mariage, cadeau original : nos vols de 30 à 120 minutes
-                conviennent à toutes ces occasions. Une question avant de réserver ? Contactez-nous.
-              </p>
-              <div className="flex flex-wrap justify-center lg:justify-start gap-2">
-                {["Anniversaire", "Demande en mariage", "Cadeau original"].map((tag) => (
-                  <span key={tag} className="px-3.5 py-1.5 bg-white border border-border rounded-full text-[12px] font-medium text-foreground/70">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0">
-              <a
-                href="https://wa.me/32472324135"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-1.5 px-5 py-3.5 text-sm font-bold bg-[#25D366] text-white rounded-lg hover:bg-[#1ebe5d] transition-colors"
-              >
-                <FaWhatsapp size={15} />
-                WhatsApp
-              </a>
-              <Link
-                href="/contact"
-                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-[#F2B705] text-[#0b2238] font-black text-sm rounded-lg hover:bg-[#e6a800] transition-colors shadow-gold-sm"
-              >
-                Nous contacter
-                <ArrowRight size={15} />
-              </Link>
-            </div>
-
-          </div>
-        </div>
-      </div>
 
       <ChatWidget />
     </main>

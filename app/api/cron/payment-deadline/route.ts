@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   // ── Récupération des réservations en attente de paiement ─────────────────
   const { data: reservations, error } = await supabase
     .from("reservations")
-    .select("id, date_vol, heure_vol, duree, acompte, payment_token, voucher_code, coupon_code, product_id, clients(prenom, nom, email)")
+    .select("id, date_vol, heure_vol, duree, acompte, payment_token, voucher_code, coupon_code, product_id, clients(prenom, nom, email), pilotes(nom)")
     .eq("statut", "payment_pending")
     .in("type_resa", ["standard", "perso"])
     .not("payment_token", "is", null);
@@ -128,6 +128,9 @@ export async function POST(request: NextRequest) {
       const c = Array.isArray(raw) ? (raw[0] as { prenom: string; nom: string; email: string } | undefined) ?? null : (raw as { prenom: string; nom: string; email: string } | null);
       if (!c || !resa.payment_token) continue;
 
+      const rawPilote = resa.pilotes;
+      const pilote = (Array.isArray(rawPilote) ? rawPilote[0] : rawPilote) as { nom: string } | null;
+
       try {
         const heure = (resa.heure_vol ?? "00:00").slice(0, 5);
         const paymentUrl = `${siteUrl}/api/reservation/pay/${resa.payment_token}`;
@@ -158,6 +161,7 @@ export async function POST(request: NextRequest) {
             montant: resa.acompte ?? 0,
             paymentUrl,
             deadlineStr,
+            pilote: pilote?.nom ? { prenom: pilote.nom.split(" ")[0] } : null,
           }),
         });
 

@@ -15,6 +15,7 @@ create table if not exists reservation_messages (
 create index if not exists reservation_messages_resa_idx
   on reservation_messages(reservation_id, created_at);
 alter table reservation_messages enable row level security;
+drop policy if exists "service_role reservation_messages" on reservation_messages;
 create policy "service_role reservation_messages" on reservation_messages for all using (true);
 
 -- Jeton stable pour l'URL publique du fil (survit a tout le parcours).

@@ -439,6 +439,7 @@ export function ReservationDrawer({
                   fields={draft.fields}
                   setters={draft.setters}
                   readOnly={viewerRole === "pilote"}
+                  pilotAnnonceEditable={viewerRole === "pilote" && r.type_resa === "annonce_pilote"}
                 />
               )}
 
@@ -479,7 +480,7 @@ export function ReservationDrawer({
                   onResendPaymentLink={doResendPaymentLink}
                   onRecordCash={doRecordCash}
                   onProposeSlot={doProposeSlot}
-                  modifier={{ isPending: draft.isPending, save: draft.save }}
+                  modifier={{ isPending: draft.isPending, save: draft.save, savePassagersPoids: draft.savePassagersPoids }}
                 />
               )}
             </motion.aside>

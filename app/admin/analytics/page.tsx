@@ -24,7 +24,7 @@ function brusselsDateKey(d: Date): string {
 
 const PATH_LABELS: Record<string, string> = {
   "/":                                   "Accueil",
-  "/nos-offres":                         "Nos offres",
+  "/nos-offres":                         "Nos vols",
   "/about":                              "À propos",
   "/contact":                            "Contact",
   "/galerie":                            "Galerie",

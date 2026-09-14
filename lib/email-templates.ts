@@ -155,6 +155,40 @@ function emailBase(bodyContent: string, title: string, footerExtra?: string): st
 </html>`;
 }
 
+// ── Base admin ────────────────────────────────────────────────────────────────
+// Gabarit des 5 emails internes (à info@fly-horizons.com uniquement — voir la liste en
+// tête de fichier). Décision 2026-09-14 : pas le même soin visuel que les emails
+// publics ci-dessus — juste du texte simple, les infos importantes, un lien vers
+// l'outil concerné (admin ou espace pilote). Pas de logo, pas de carte, pas de doré.
+
+function adminEmailBase(bodyContent: string, title: string): string {
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>${esc(title)}</title>
+</head>
+<body style="margin:0;padding:24px 16px;background-color:#ffffff;font-family:-apple-system,'Segoe UI',Arial,sans-serif;color:#1e2535;">
+  <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+    <table width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;">
+      <tr><td style="font-size:14px;line-height:1.6;">
+        ${bodyContent}
+      </td></tr>
+    </table>
+  </td></tr></table>
+</body>
+</html>`;
+}
+
+function adminLine(fieldLabel: string, value: string): string {
+  return `<p style="margin:0 0 6px;font-size:13px;color:#1e2535;"><strong>${esc(fieldLabel)}&nbsp;:</strong> ${value}</p>`;
+}
+
+function adminLink(href: string, text: string): string {
+  return `<p style="margin:20px 0 0;"><a href="${esc(href)}" style="color:#1d5fbf;font-weight:600;">${esc(text)} &rarr;</a></p>`;
+}
+
 function label(text: string): string {
   return `<p class="em-muted" style="margin:0 0 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.12em;">${text}</p>`;
 }
@@ -1129,23 +1163,14 @@ export interface ContactNotificationProps {
 
 export function contactNotificationEmail({ nom, email, sujet, message }: ContactNotificationProps): string {
   const body = `
-    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Nouveau message</p>
-    <h1 class="em-dark" style="margin:0 0 28px;font-size:22px;font-weight:800;color:#0b2238;">Message de contact</h1>
+    <p style="margin:0 0 16px;font-size:16px;font-weight:700;">Nouveau message de contact</p>
+    ${adminLine("Nom", esc(nom))}
+    ${adminLine("Email", `<a href="mailto:${esc(email)}" style="color:#1d5fbf;">${esc(email)}</a>`)}
+    ${adminLine("Sujet", esc(sujet))}
+    <p style="margin:16px 0;white-space:pre-wrap;">${esc(message)}</p>
+    ${adminLink(`${SITE_URL}/admin/contacts`, "Voir dans l'admin")}`;
 
-    ${separator()}
-    ${infoRows([
-      ["Nom", esc(nom)],
-      ["Email", `<a href="mailto:${esc(email)}" style="color:#F2B705;font-weight:600;text-decoration:none;">${esc(email)}</a>`],
-      ["Sujet", esc(sujet)],
-    ])}
-
-    ${label("Message")}
-    <p class="em-body" style="margin:0 0 28px;font-size:13px;color:#334155;line-height:1.7;white-space:pre-wrap;border-left:3px solid #F2B705;padding:2px 0 2px 16px;">${esc(message)}</p>
-
-    ${ctaButton(`${SITE_URL}/admin/contacts`, "Voir dans l'admin")}
-    `;
-
-  return emailBase(body, `Nouveau message : ${sujet} · ${nom}`);
+  return adminEmailBase(body, `Nouveau message : ${sujet} · ${nom}`);
 }
 
 // ── 12. Contact — accusé de réception client ─────────────────────────────────
@@ -1705,8 +1730,7 @@ interface SatisfactionResultEmailProps {
 }
 
 export function satisfactionResultEmail(p: SatisfactionResultEmailProps): string {
-  const stars = (n: number) =>
-    `<span style="color:#F2B705;font-size:16px;">${"★".repeat(n)}</span><span style="color:#e2e8f0;font-size:16px;">${"☆".repeat(5 - n)}</span> <span style="font-size:13px;color:#64748b;">(${n}/5)</span>`;
+  const stars = (n: number) => `${"★".repeat(n)}${"☆".repeat(5 - n)} (${n}/5)`;
 
   const recoLabels: Record<string, string> = {
     oui_sans_hesiter: "Oui, sans hésiter",
@@ -1723,46 +1747,22 @@ export function satisfactionResultEmail(p: SatisfactionResultEmailProps): string
   };
   const recoTxt = recoLabels[p.recommandation] ?? p.recommandation;
   const sourceTxt = sourceLabels[p.sourceDecouverte] ?? p.sourceDecouverte;
-  const recoColor = p.recommandation === "non" ? "#dc2626" : p.recommandation === "pas_sur" ? "#d97706" : "#0b2238";
-
-  const noteRow = (name: string, n: number, last = false) => `
-      <tr>
-        <td class="em-muted" style="padding:11px 0;${last ? "" : "border-bottom:1px solid #f1f5f9;"}font-size:13px;color:#64748b;">${name}</td>
-        <td style="padding:11px 0;${last ? "" : "border-bottom:1px solid #f1f5f9;"}text-align:right;">${stars(n)}</td>
-      </tr>`;
 
   const body = `
-    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Nouvel avis re&ccedil;u</p>
-    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Enqu&ecirc;te de satisfaction</h1>
-    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">
-      <strong style="color:#0b2238;">${esc(p.prenom)} ${esc(p.nom)}</strong>, vol du ${p.dateStr} (${fmtDuration(p.duree)})
-    </p>
-    ${separator()}
-    ${label("Notes")}
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
-      ${noteRow("Pr&eacute;paration de la venue", p.notePreparation)}
-      ${noteRow("Le pilote en vol", p.notePilote)}
-      ${noteRow("Le vol en lui-m&ecirc;me", p.noteVol)}
-      ${noteRow("Rapport qualit&eacute; / prix", p.noteQualitePrix, true)}
-    </table>
-    ${separator()}
-    ${label("Recommandation &amp; d&eacute;couverte")}
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
-      <tr>
-        <td class="em-muted" style="padding:11px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;">Recommanderait Fly Horizons</td>
-        <td style="padding:11px 0;border-bottom:1px solid #f1f5f9;text-align:right;font-size:13px;font-weight:700;color:${recoColor};">${esc(recoTxt)}</td>
-      </tr>
-      <tr>
-        <td class="em-muted" style="padding:11px 0;font-size:13px;color:#64748b;">Nous a connus par</td>
-        <td style="padding:11px 0;text-align:right;font-size:13px;font-weight:600;color:#0b2238;">${esc(sourceTxt)}</td>
-      </tr>
-    </table>
-    ${p.commentaire ? `${separator()}${label("Un mot du client")}${callout(esc(p.commentaire))}` : ""}
-    ${p.nbPhotos ? `${separator()}${label("Photos")}<p style="margin:0;font-size:13px;color:#64748b;">${p.nbPhotos} photo${p.nbPhotos > 1 ? "s" : ""} partag&eacute;e${p.nbPhotos > 1 ? "s" : ""} par le client, consultable${p.nbPhotos > 1 ? "s" : ""} dans l&rsquo;admin.</p>` : ""}
-    ${separator()}
-    ${ctaButton(`${SITE_URL}/admin/satisfaction`, "Voir dans l'admin")}`;
+    <p style="margin:0 0 16px;font-size:16px;font-weight:700;">Nouvel avis reçu</p>
+    ${adminLine("Client", `${esc(p.prenom)} ${esc(p.nom)}`)}
+    ${adminLine("Vol", `${esc(p.dateStr)} (${fmtDuration(p.duree)})`)}
+    ${adminLine("Préparation de la venue", stars(p.notePreparation))}
+    ${adminLine("Le pilote en vol", stars(p.notePilote))}
+    ${adminLine("Le vol en lui-même", stars(p.noteVol))}
+    ${adminLine("Qualité / prix", stars(p.noteQualitePrix))}
+    ${adminLine("Recommanderait Fly Horizons", esc(recoTxt))}
+    ${adminLine("Nous a connus par", esc(sourceTxt))}
+    ${p.commentaire ? `<p style="margin:16px 0;font-style:italic;">&laquo;&nbsp;${esc(p.commentaire)}&nbsp;&raquo;</p>` : ""}
+    ${p.nbPhotos ? adminLine("Photos", `${p.nbPhotos} partagée${p.nbPhotos > 1 ? "s" : ""}, consultable${p.nbPhotos > 1 ? "s" : ""} dans l'admin`) : ""}
+    ${adminLink(`${SITE_URL}/admin/satisfaction`, "Voir dans l'admin")}`;
 
-  return emailBase(body, `Satisfaction · ${p.prenom} ${p.nom}`);
+  return adminEmailBase(body, `Satisfaction · ${p.prenom} ${p.nom}`);
 }
 
 // ── 19. Email libre stylisé ───────────────────────────────────────────────────
@@ -1812,29 +1812,15 @@ export interface RouteFeedbackAdminEmailProps {
 export function routeFeedbackAdminEmail(p: RouteFeedbackAdminEmailProps): string {
   const isValidated = p.type === "validated";
   const body = `
-    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Retour itin&eacute;raire</p>
-    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">
-      ${isValidated ? "Itin&eacute;raire valid&eacute; &#10003;" : "Modification demand&eacute;e"}
-    </h1>
-    <p class="em-muted" style="margin:0 0 28px;font-size:14px;color:#64748b;">
-      <strong style="color:#0b2238;">${esc(p.clientPrenom)} ${esc(p.clientNom)}</strong> a r&eacute;pondu &agrave; l&rsquo;itin&eacute;raire de vol du ${esc(p.dateStr)}.
-    </p>
+    <p style="margin:0 0 16px;font-size:16px;font-weight:700;">${isValidated ? "Itinéraire validé" : "Modification d'itinéraire demandée"}</p>
+    ${adminLine("Client", `${esc(p.clientPrenom)} ${esc(p.clientNom)}`)}
+    ${adminLine("Email", `<a href="mailto:${esc(p.clientEmail)}" style="color:#1d5fbf;">${esc(p.clientEmail)}</a>`)}
+    ${adminLine("Date du vol", esc(p.dateStr))}
+    ${adminLine("Réponse", isValidated ? "Validé" : "Modification souhaitée")}
+    ${!isValidated && p.feedback ? `<p style="margin:16px 0;white-space:pre-wrap;">${esc(p.feedback)}</p>` : ""}
+    ${adminLink(p.adminUrl, "Voir dans l'admin")}`;
 
-    ${separator()}
-    ${infoRows([
-      ["Client", `${esc(p.clientPrenom)} ${esc(p.clientNom)}`],
-      ["Email", `<a href="mailto:${esc(p.clientEmail)}" style="color:#F2B705;font-weight:600;text-decoration:none;">${esc(p.clientEmail)}</a>`],
-      ["Date du vol", `<span style="text-transform:capitalize;">${esc(p.dateStr)}</span>`],
-      ["Réponse", isValidated
-        ? `<span style="color:#16a34a;font-weight:700;">&#10003; Valid&eacute;</span>`
-        : `<span style="color:#dc2626;font-weight:700;">Modification souhait&eacute;e</span>`],
-    ])}
-
-    ${!isValidated && p.feedback ? `${separator()}${label("Message du client")}<p class="em-body" style="margin:0 0 28px;font-size:13px;color:#334155;line-height:1.7;white-space:pre-wrap;border-left:3px solid #F2B705;padding:2px 0 2px 16px;">${esc(p.feedback)}</p>` : ""}
-
-    ${ctaButton(p.adminUrl, "Voir dans l'admin")}`;
-
-  return emailBase(body, `Itinéraire ${isValidated ? "validé" : "modification demandée"} · ${p.clientPrenom} ${p.clientNom}`);
+  return adminEmailBase(body, `Itinéraire ${isValidated ? "validé" : "modification demandée"} · ${p.clientPrenom} ${p.clientNom}`);
 }
 
 // ── 19. Invitation à reporter un vol ─────────────────────────────────────────
@@ -2358,25 +2344,15 @@ export function flightOfferExpiredAdminEmail(p: {
   volsUrl: string;
 }): string {
   const rows = p.offers
-    .map(
-      (o) =>
-        `<li style="margin:4px 0;font-size:13px;color:#334155;"><span style="text-transform:capitalize;">${esc(o.dateStr)}</span>${o.heure ? ` &agrave; ${esc(o.heure)}` : ""}</li>`,
-    )
+    .map((o) => `<p style="margin:0 0 6px;font-size:13px;">${esc(o.dateStr)}${o.heure ? ` à ${esc(o.heure)}` : ""}</p>`)
     .join("");
   const body = `
-    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Fly Horizons</p>
-    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">${p.offers.length > 1 ? `${p.offers.length} vols sans preneur` : "Un vol sans preneur"}</h1>
-    ${separator()}
-    <p class="em-body" style="margin:0 0 12px;font-size:14px;color:#334155;line-height:1.7;">
-      Aucun pilote n&rsquo;a pris ${p.offers.length > 1 ? "ces vols" : "ce vol"} dans les 48&nbsp;h. À g&eacute;rer à la main.
-    </p>
-    <ul style="margin:0 0 20px;padding-left:18px;">${rows}</ul>
-    ${ctaButton(p.volsUrl, "Ouvrir les vols")}
-    <p class="em-body" style="margin:20px 0 12px;font-size:14px;color:#334155;line-height:1.7;">
-      &mdash; Fly Horizons
-    </p>`;
+    <p style="margin:0 0 16px;font-size:16px;font-weight:700;">${p.offers.length > 1 ? `${p.offers.length} vols sans preneur` : "Un vol sans preneur"}</p>
+    <p style="margin:0 0 12px;">Aucun pilote n'a pris ${p.offers.length > 1 ? "ces vols" : "ce vol"} dans les 48&nbsp;h. À gérer à la main.</p>
+    ${rows}
+    ${adminLink(p.volsUrl, "Ouvrir les vols")}`;
 
-  return emailBase(body, "Vol sans preneur · Fly Horizons");
+  return adminEmailBase(body, "Vol sans preneur · Fly Horizons");
 }
 
 // ── Un pilote rend un vol attribué → notification à Romain (Bloc B) ──────────
@@ -2389,20 +2365,11 @@ export function piloteReleasedFlightAdminEmail(p: {
   volsUrl: string;
 }): string {
   const body = `
-    <p class="em-gold" style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F2B705;text-transform:uppercase;letter-spacing:0.15em;">Fly Horizons</p>
-    <h1 class="em-dark" style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0b2238;">Un pilote a rendu un vol</h1>
-    ${separator()}
-    <p class="em-body" style="margin:0 0 16px;font-size:14px;color:#334155;line-height:1.7;">
-      <strong style="color:#0b2238;">${esc(p.piloteNom)}</strong> a rendu ce vol. Il n&rsquo;est plus attribu&eacute; &agrave; personne, il faut le r&eacute;assigner.
-    </p>
-    ${infoRows([
-      ["Client", esc(p.clientNom)],
-      ["Date", `<span style="text-transform:capitalize;">${esc(p.dateStr)}</span>${p.heure ? ` &agrave; ${esc(p.heure)}` : ""}`],
-    ])}
-    ${ctaButton(p.volsUrl, "Ouvrir les vols")}
-    <p class="em-body" style="margin:20px 0 12px;font-size:14px;color:#334155;line-height:1.7;">
-      &mdash; Fly Horizons
-    </p>`;
+    <p style="margin:0 0 16px;font-size:16px;font-weight:700;">Un pilote a rendu un vol</p>
+    <p style="margin:0 0 12px;">${esc(p.piloteNom)} a rendu ce vol. Il n'est plus attribué à personne, il faut le réassigner.</p>
+    ${adminLine("Client", esc(p.clientNom))}
+    ${adminLine("Date", `${esc(p.dateStr)}${p.heure ? ` à ${esc(p.heure)}` : ""}`)}
+    ${adminLink(p.volsUrl, "Ouvrir les vols")}`;
 
-  return emailBase(body, "Un pilote a rendu un vol · Fly Horizons");
+  return adminEmailBase(body, "Un pilote a rendu un vol · Fly Horizons");
 }

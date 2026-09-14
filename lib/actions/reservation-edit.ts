@@ -198,7 +198,7 @@ export async function sendRouteProposalToClient(
   adminComment: string
 ) {
   try {
-    await checkAdminOrOwningPilote(reservationId);
+    const actor = await checkAdminOrOwningPilote(reservationId);
     const supabase = createAdminClient();
 
     const { data: resa } = await supabase
@@ -208,6 +208,25 @@ export async function sendRouteProposalToClient(
       .single();
 
     if (!resa) return { error: "Réservation introuvable" };
+
+    // Mode « à la place » : le prix (resa.acompte) n'est figé qu'à la clôture
+    // du groupe — envoyer la route avant fige une snapshot à null/erronée dans
+    // route_proposals (décision 2026-09-13). Le pilote doit clôturer le groupe
+    // (ou attendre qu'il se remplisse) avant de pouvoir tracer/envoyer la route.
+    if (resa.type_resa === "annonce_pilote" && resa.annonce_id) {
+      const { data: annonceCheck } = await supabase
+        .from("annonces_pilote")
+        .select("mode_vente, statut")
+        .eq("id", resa.annonce_id)
+        .maybeSingle();
+      if (annonceCheck?.mode_vente === "place" && annonceCheck.statut === "publiee") {
+        return {
+          error:
+            "Le groupe de cette annonce n'est pas encore complet : clôturez-le depuis « Mes annonces » " +
+            "(ou attendez qu'il se remplisse) avant d'envoyer un itinéraire — le prix de chaque passager n'est pas encore définitif.",
+        };
+      }
+    }
 
     const client = resa.clients as { prenom: string; nom: string; email: string } | null;
     if (!client?.email) return { error: "Email client introuvable" };
@@ -258,6 +277,7 @@ export async function sendRouteProposalToClient(
           waypoints,
           adminComment,
           responseUrl,
+          pilote: actor.role === "pilote" ? { prenom: actor.piloteNom.split(" ")[0] } : null,
           totalAcompte,
           alreadyPaid,
         }),
@@ -438,6 +458,7 @@ export async function respondToRouteProposal(
             duree: proposalDuree,
             acompte: proposalAcompte,
             paymentUrl,
+            pilote: piloteNom ? { prenom: piloteNom.split(" ")[0] } : null,
           }),
         });
       } else if (isAnnonce) {
