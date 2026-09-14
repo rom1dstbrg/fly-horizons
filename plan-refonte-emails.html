@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Refonte des emails — état &amp; contenu de référence (2026-09-11)</title>
+<style>
+  :root{
+    --navy:#0b2238; --gold:#F2B705; --bg:#f4f6fa; --card:#fff; --ink:#1e2535;
+    --muted:#5b6b7b; --border:#e0e5ef; --rule:#c9d2db;
+    --green:#0f9d58; --green-bg:#e9f9f0; --green-bd:#bfe9d2;
+    --amber:#b7791f; --amber-bg:#fef6e6; --amber-bd:#f3dfa8;
+    --red:#c53030; --red-bg:#fdecec; --red-bd:#f5c2c2;
+    --blue:#1d5fbf; --blue-bg:#eaf1fd; --blue-bd:#c7dafa;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.6;font-size:15px}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 24px 120px}
+  h1{font-size:25px;color:var(--navy);font-weight:800;line-height:1.2}
+  .sub{color:var(--muted);font-size:13px;margin:4px 0 24px}
+  h2{font-size:18px;color:var(--navy);font-weight:800;margin:34px 0 10px}
+  h3{font-size:14px;color:var(--navy);font-weight:700;margin:20px 0 6px}
+  p{margin:7px 0}
+  code{background:#eef1f7;border:1px solid var(--border);padding:1px 5px;border-radius:5px;
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+  a{color:var(--blue)}
+  ul,ol{margin:8px 0 8px 22px}
+  li{margin:5px 0}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;
+    padding:16px 18px;margin:12px 0;box-shadow:0 1px 6px rgba(11,34,56,.05)}
+  .tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.4px;
+    padding:2px 8px;border-radius:100px;text-transform:uppercase;vertical-align:middle}
+  .t-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)}
+  .t-amber{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-bd)}
+  .t-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)}
+  .t-blue{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bd)}
+  .t-grey{background:#eef1f7;color:var(--muted);border:1px solid var(--border)}
+  .callout{border-left:4px solid var(--gold);background:#fffdf5;padding:12px 16px;border-radius:0 8px 8px 0;margin:14px 0;font-size:13.5px}
+  .callout.red{border-left-color:var(--red);background:var(--red-bg)}
+  .callout.green{border-left-color:var(--green);background:var(--green-bg)}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+  th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);
+    padding:7px 9px;border-bottom:2px solid var(--rule);font-weight:700}
+  td{padding:8px 9px;border-bottom:1px solid var(--border);vertical-align:top}
+  td.p{white-space:nowrap;font-weight:700}
+  .pill{font-size:12px;color:var(--muted)}
+  .mailcard{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin:10px 0}
+  .mailcard h4{font-size:13.5px;color:var(--navy);font-weight:800;margin-bottom:4px}
+  .mailcard .meta{font-size:11.5px;color:var(--muted);margin-bottom:8px}
+  .mailcard .meta code{font-size:11px}
+  .mailcard .txt{font-size:12.5px;color:#334155;white-space:pre-wrap;background:#f8f9fb;border:1px solid var(--border);border-radius:7px;padding:9px 11px;margin:6px 0}
+  .mailcard .btn{display:inline-block;font-size:11.5px;font-weight:700;color:var(--navy);background:#fff7de;border:1px solid var(--amber-bd);border-radius:6px;padding:3px 9px;margin:4px 0}
+  details.appendix{margin-top:10px}
+  details.appendix > summary{cursor:pointer;font-weight:700;color:var(--navy);padding:8px 0}
+  .toc{font-size:13px}
+  .toc a{display:block;padding:3px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Refonte des emails — état &amp; contenu de référence</h1>
+  <p class="sub">2026-09-11 · Fusionne <code>emails-review.md</code> (révision de fond, contenu déjà
+    validé) et les trois passes de direction visuelle testées dans l'artifact de revue. Remplace ces
+    fichiers, qui sont supprimés. Indexé depuis <code>projet.html</code> (chantier « Refonte des ~32
+    emails »).</p>
+
+  <div class="callout">
+    <b>Statut : chantier repris le 14/09</b>, en avance sur le calendrier initial (Romain est reparti
+    du nouvel outil <code>email-preview.html</code>, catégorisé admin/public, pour trancher
+    concrètement). Toujours pas de code : on construit le plan d'abord. Voir « Reprise du 14/09 »
+    ci-dessous, qui prolonge la « Décision finale » du 11/09 (round 3, périmètre texte/en-tête/pied
+    de page).
+  </div>
+
+  <div class="mailcard" style="border-color:var(--gold);">
+    <h4>Reprise du 14/09 — emails admin séparés des emails publics</h4>
+    <p><b>Nouveau, pas couvert par les rounds précédents</b> : les emails <i>admin</i> (destinataire
+      = Romain / <code>info@fly-horizons.com</code>) sortent du gabarit <code>emailBase()</code>
+      grand public. Ils n'ont pas besoin du même soin visuel qu'un email client (logo, doré,
+      storytelling) — juste les informations importantes, lisibles vite, avec le lien d'action
+      direct qui existe déjà (ex. « Voir dans l'admin »). Ce sont les 5 templates suivants
+      (identifiés via <code>email-preview.html</code>, onglet Admin) :</p>
+    <div class="txt">contactNotificationEmail (nouveau message contact)
+routeFeedbackAdminEmail (retour client sur un itinéraire)
+satisfactionResultEmail (résultat enquête satisfaction)
+flightOfferExpiredAdminEmail (vols sans preneur après 48h)
+piloteReleasedFlightAdminEmail (un pilote rend un vol)</div>
+    <p class="pill">Direction visuelle pas encore choisie. Vu l'historique (round 4/5 : inventer une
+      direction abstraite ne marche pas, cf. rounds rejetés ci-dessus), on part d'un exemple concret
+      que Romain valide plutôt que d'une nouvelle proposition à l'aveugle — voir le message de
+      réponse pour la question posée.</p>
+  </div>
+
+  <div class="mailcard" style="border-color:var(--gold);">
+    <h4>Reprise du 14/09 — architecture des emails publics <span class="tag t-green">codé sur 4 emails pilotes</span></h4>
+    <p><b>Décidé et appliqué</b> (voir aussi Décisions, <code>projet.html</code>) :</p>
+    <ul>
+      <li><b>Plus de surtitre doré ni de H1.</b> Concrétise la règle 1 (« en-tête = logo seul »). La
+        1ère phrase du corps fait le salut + l'annonce, poids normal (règle 7).</li>
+      <li><b><code>&lt;hr&gt;</code> limité à un seul par email</b>, juste avant la signature de
+        clôture. Entre les sections de contenu, l'espacement seul sépare — plus de filet entre
+        chaque bloc.</li>
+      <li><b>Montant mis en avant → carte autonome</b> (nouveau helper <code>amountCard()</code>),
+        plus de texte centré entre deux <code>&lt;hr&gt;</code>.</li>
+      <li><b>« Informations pratiques » repensé</b> : plus de bloc à puces titré et recopié partout
+        — l'info utile à ce stade précis devient 1 phrase fondue dans le texte (règle 5, déjà actée
+        le 11/09, enfin appliquée). Le <b>CTA « Plan d'accès »</b> quitte les emails de confirmation
+        précoces et rejoint le rappel J-2 (<code>flightReminderEmail</code>), là où il sert
+        vraiment — exemple qui avait motivé la règle 5.</li>
+      <li><b>« Ajouter à l'agenda » → une ligne de texte</b> (3 liens), plus un bloc de 3 gros
+        boutons encadrés (helper <code>addToCalendarBlock()</code> réécrit).</li>
+      <li><b>Voix « je »/« nous » selon pilote assigné</b> (nouveau, demande du 14/09) : nouveau
+        helper <code>signOff()</code> + champ optionnel <code>pilote?: {'{'} prenom {'}'} | null</code>
+        sur les props concernées. Pas de pilote connu &rarr; signature et formulations au nom de
+        « Fly Horizons » (nous) ; pilote connu &rarr; signature courte au prénom, formulations au
+        « je ». <i>Pas fait aujourd'hui :</i> câbler les appelants pour passer le vrai pilote
+        assigné (aujourd'hui `undefined` partout &rarr; voix « nous » par défaut, ce qui est le
+        choix s&ucirc;r tant que l'attribution n'est pas branchée) — même chantier que la signature
+        hardcod&eacute;e dans les 19 emplacements plus haut.</li>
+    </ul>
+    <p class="pill">Appliqué en profondeur sur 4 emails, à valider par Romain avant propagation aux
+      32 autres emails publics : <code>reservationPaymentConfirmationEmail</code> (#5),
+      <code>reservationDateConfirmeeEmail</code> (#7), <code>reservationAutoAnnuleeEmail</code>
+      (#22), <code>flightReminderEmail</code> (#23, récupère « Plan d'accès »). Revoir dans
+      <code>email-preview.html</code>. <code>tsc --noEmit</code> OK.</p>
+  </div>
+
+  <div class="mailcard" style="border-color:var(--gold);">
+    <h4>Correction du 14/09 — sobriété &ne; illisibilité, un principe à garder</h4>
+    <p>Romain a repéré le vrai risque de cette refonte : « les emails actuels ne sont pas bien
+      pour moi, je trouve très bien [visuellement] mais à la place du client ça m'ennuierait de
+      pas trouver les infos qui me sont utiles ». Diagnostic partagé : <b>deux catégories bien
+      distinctes</b>, qui ne doivent pas être traitées pareil.</p>
+    <ul>
+      <li><b>Décoration/redite</b> (surtitre doré, H1 qui répète l'objet, label
+        « INFORMATIONS PRATIQUES », <code>&lt;hr&gt;</code> en trop) — à couper, ça n'aide pas à
+        trouver l'info.</li>
+      <li><b>Faits distincts que le client scanne</b> (date, heure, montant, adresse, ce qu'il doit
+        faire) — <b>ne jamais les fondre dans une même phrase</b>. Erreur commise sur
+        <code>flightReminderEmail</code> (#23) : adresse + heure de pr&eacute;sentation +
+        v&ecirc;tements + documents fusionn&eacute;s en un seul paragraphe dense, plus scannable
+        d'un coup d'&oelig;il. Corrig&eacute; : chaque fait garde sa propre ligne (simple
+        <code>&lt;br&gt;</code>, sans label ni <code>&lt;hr&gt;</code> ni puce — la sobri&eacute;t&eacute;
+        reste sur la d&eacute;coration, pas sur la structure de l'info).</li>
+    </ul>
+    <p class="pill">Règle à appliquer pour la suite du chantier (32 emails restants) : le tableau
+      <code>infoRows()</code> et la carte <code>amountCard()</code> restent la référence pour les
+      faits identifiants (déjà scannables, ne pas y toucher) ; tout texte libre qui contiendrait
+      plus d'un fait distinct doit être découpé en lignes séparées, jamais en une seule phrase qui
+      les énumère.</p>
+  </div>
+
+  <div class="mailcard" style="border-color:var(--gold);">
+    <h4>Squelette des emails publics — la référence, écrite dans le code</h4>
+    <p>Copié tel quel en commentaire en tête de <code>lib/email-templates.ts</code> (section
+      « Base »), c'est la version faisant foi — ce document en garde une copie pour mémoire.
+      Chaque email public choisit lesquels de ces emplacements il utilise, <b>toujours dans cet
+      ordre</b>, jamais un ordre improvisé.</p>
+    <ol>
+      <li>Logo — fixe, jamais touché.</li>
+      <li><b>Obligatoire.</b> Phrase d'ouverture : salut + fait principal, poids normal. Jamais de
+        surtitre doré ni de H1.</li>
+      <li>Hero, si l'email en a un : <code>amountCard()</code>, carte code/voucher, carte de
+        statut.</li>
+      <li>Tableau des faits identifiants : <code>infoRows()</code> + <code>label()</code> — seul
+        endroit où un label reste légitime.</li>
+      <li>Contexte additionnel, un seul bloc : <code>callout()</code> / <code>nextStep()</code> /
+        itinéraire / détail de prix.</li>
+      <li>Fait(s) pratique(s) du moment, seulement si utile à ce stade : une ligne par fait
+        (<code>&lt;br&gt;</code>), jamais fondus en une phrase, jamais de label/puce/<code>&lt;hr&gt;</code>.</li>
+      <li>CTA : un seul bouton par défaut ; deux seulement si les deux servent au même instant
+        (seul cas connu : le rappel J-2).</li>
+      <li><b>Séparateur unique</b> — la seule coupure de tout l'email, ici.</li>
+      <li>Signature : <code>signOff()</code>, prénom pilote si connu sinon « Fly Horizons ».</li>
+      <li>Ligne de contact, une seule phrase.</li>
+      <li>Ligne complémentaire discrète si besoin (report, calendrier) — texte simple, pas de
+        nouveau bloc.</li>
+    </ol>
+    <p class="pill">Hors périmètre : les 5 emails admin, gabarit dédié pas encore défini.</p>
+  </div>
+
+  <h2>Ce qui a été testé, et pourquoi ça s'arrête là</h2>
+
+  <div class="mailcard">
+    <h4>Round 3 — 7 règles <span class="tag t-green">gardé</span></h4>
+    <div class="meta">En-tête logo seul · signature courte (rôle au 1ᵉʳ email, prénom ensuite) ·
+      pied de page une ligne · « répondez à cet email » conditionné à l'existence d'un fil de
+      messages · informations pratiques déplacées au bon moment du parcours · doré réservé à une
+      échéance/action réelle · un seul système typographique.</div>
+    <p>C'est la direction validée. Elle reste la base de tout le chantier.</p>
+  </div>
+
+  <div class="mailcard">
+    <h4>Round 4 — « Premium Editorial » <span class="tag t-red">rejeté</span></h4>
+    <div class="meta">Ajoutait : tag de statut visuel, module « Flight Details » avec chiffres en
+      mono-espace, 9 règles, grammaire des statuts, 3 familles d'emails, aperçu mobile.</div>
+    <p>Direction plus ambitieuse tentée à la demande de Romain (« Premium Editorial Transactional
+      Email Design »). Verdict après visualisation : trop éloigné du style Fly Horizons existant.</p>
+  </div>
+
+  <div class="mailcard">
+    <h4>Round 5 — « Premium Editorial Aviation », visuel d'abord <span class="tag t-red">rejeté</span></h4>
+    <div class="meta">Suppression des bordures, date en deux lignes façon fiche de voyage, statut et
+      CTA explicitement découplés, previewer réordonné pour ouvrir directement sur le nouveau design.</div>
+    <p>Poussée plus loin dans la même direction éditoriale, sur demande explicite. Verdict de
+      Romain : <i>« j'aime vraiment pas, on dirait qu'on s'éloigne de plus en plus »</i>.</p>
+  </div>
+
+  <div class="mailcard" style="border-color:var(--gold);">
+    <h4>Décision finale (11/09)</h4>
+    <p><b>On garde le style actuel (round 3)</b>, sans le module Flight Details ni les tags de
+      statut des rounds 4/5. La refonte à venir se limite à trois surfaces : <b>textes</b> (voir
+      contenu de référence en annexe), <b>en-tête</b> et <b>pied de page</b> — les règles 1, 2, 3
+      du round 3, pas plus. Pas de calendrier fixé ; à reprendre quand l'espace pilote sera
+      stabilisé (cf. <code>projet.html</code>).</p>
+    <p class="pill">L'artifact de revue reste accessible en interne (lien dans l'historique de
+      conversation Claude) : il contient l'état round 3 restauré, plus un 8ᵉ email ajouté
+      (« Report météo confirmé ») qui manquait à la liste initiale de sept.</p>
+  </div>
+
+  <h2>Ce que l'audit du code a trouvé (à corriger pendant la refonte)</h2>
+  <ul>
+    <li><b>Contradiction statut/objet confirmée en code</b> : <code>reservationConfirmationFreeEmail</code>
+      (<code>lib/email-templates.ts:768</code>) — contenu « pas encore confirmé », mais l'objet
+      Resend réel envoyé est « Réservation confirmée · Fly Horizons ».</li>
+    <li><b>Signature hardcodée</b> <code>"Romain, pilote et fondateur de Fly Horizons"</code> dans
+      <b>19 emplacements</b> de <code>lib/email-templates.ts</code> (lignes 719, 789, 852, 924,
+      1036, 1114, 1169, 1208, 1285, 1325, 1465, 1602, 1671, 1725, 1760, 1947, 1986, 2028, 2149,
+      2211). Un seul template récent (<code>reservationMessageEmail</code>, via
+      <code>pilotes.signature</code>) est déjà dynamique — c'est le pattern à généraliser.</li>
+    <li><b>Aucune fonction centralisée</b> pour décider « répondez à cet email » vs
+      WhatsApp/contact — condition à écrire une fois (table <code>reservation_messages</code>,
+      migration <code>20260911</code>), pas dupliquée dans ~20 templates.</li>
+    <li><b>Statut migrations incertain</b> : à confirmer que <code>reservation_messages</code> et
+      <code>pilotes.signature</code> sont bien exécutées en prod avant de brancher la logique de
+      contact dessus.</li>
+    <li><code>replyTo</code> uniforme sur <code>info@fly-horizons.com</code>
+      (<code>lib/resend.ts:6</code>) — cohérent avec la règle « pas de promesse de contact direct
+      avec un pilote tiers ».</li>
+  </ul>
+
+  <h2>À faire quand on reprend</h2>
+  <ol>
+    <li>Confirmer le statut prod des migrations <code>20260910</code>/<code>20260911</code>.</li>
+    <li>Appliquer les règles 1-2-3 du round 3 (en-tête, signature dynamique, footer une ligne) aux
+      emails de référence ci-dessous, sans toucher au reste de la mise en page.</li>
+    <li>Corriger la contradiction <code>reservationConfirmationFreeEmail</code> (objet vs contenu).</li>
+    <li>Propager aux ~32 templates de <code>lib/email-templates.ts</code>, y compris les emails du
+      parcours annonce non « pilote-aware » (voix de Romain à neutraliser — absorbe le P1 de
+      <code>audit-espace-pilote-coherence.html</code>).</li>
+  </ol>
+
+  <h2>Annexe — contenu de référence (révision de fond, validée)</h2>
+  <p class="sub">Reprise intégrale de l'ancien <code>emails-review.md</code>. Variables entre
+    accolades <code>{comme_ceci}</code> = dynamiques, à ne pas modifier. Lignes précédées de
+    <code>&gt;</code> = callout à bordure dorée. <code>[Bouton]</code> = CTA doré.</p>
+
+  <details class="appendix">
+    <summary>Sommaire (15 emails)</summary>
+    <div class="toc">
+      <a href="#e1">1. Confirmation de commande (boutique)</a>
+      <a href="#e2">2. Commande en préparation</a>
+      <a href="#e3">3. Commande expédiée</a>
+      <a href="#e4">4. Vouchers de vol (achat boutique)</a>
+      <a href="#e5">5. Vol sur mesure — devis + lien de paiement</a>
+      <a href="#e6">6. Réservation standard — couverte par voucher</a>
+      <a href="#e7">7. Réservation standard — paiement reçu</a>
+      <a href="#e8">8. Vol sur mesure — acompte reçu</a>
+      <a href="#e9">9. Date de vol confirmée (admin)</a>
+      <a href="#e10">10. Créneau horaire confirmé (admin)</a>
+      <a href="#e11">11. Contact — notification interne</a>
+      <a href="#e12">12. Contact — accusé de réception</a>
+      <a href="#e13">13. Contact — réponse admin</a>
+      <a href="#e14">14. Invitation au paiement (réservation admin)</a>
+      <a href="#e15">15. Post-vol — remerciement + enquête</a>
+      <a href="#e17">17. Itinéraire de vol proposé au client</a>
+      <a href="#footer">Pied de page commun</a>
+    </div>
+  </details>
+
+  <div class="mailcard" id="e1">
+    <h4>1 — Confirmation de commande (boutique)</h4>
+    <div class="meta">Destinataire : client · Déclencheur : paiement Stripe confirmé (achat
+      boutique) · Objet : <code>Confirmation de commande #{orderRef} — Fly Horizons</code></div>
+    <div class="txt">Réf. #{orderRef}                          ← surtitre (petit texte doré)
+Commande confirmée !                      ← titre
+Merci {customerName}, nous avons bien reçu votre commande.  ← sous-titre</div>
+    <p class="pill">(Corps : détail des articles + récapitulatif de prix + adresse de livraison +
+      facture — entièrement dynamique.)</p>
+    <span class="btn">Bouton : « Voir mes commandes »</span>
+  </div>
+
+  <div class="mailcard" id="e2">
+    <h4>2 — Commande en préparation (boutique)</h4>
+    <div class="meta">Destinataire : client · Déclencheur : admin marque « en préparation » ·
+      Objet : <code>Votre commande #{orderRef} est en préparation — Fly Horizons</code></div>
+    <div class="txt">Réf. #{orderRef}
+Commande en préparation
+Bonjour {customerName}, votre commande est en cours de traitement.</div>
+    <div class="txt">&gt; Nous préparons votre commande avec soin. Vous recevrez un email dès qu'elle est déposée à la poste.</div>
+    <span class="btn">Bouton : « Suivre mes commandes »</span>
+  </div>
+
+  <div class="mailcard" id="e3">
+    <h4>3 — Commande expédiée (boutique)</h4>
+    <div class="meta">Destinataire : client · Déclencheur : admin marque « expédiée » · Objet :
+      <code>Votre commande #{orderRef} est expédiée ! — Fly Horizons</code></div>
+    <div class="txt">Réf. #{orderRef}
+Votre colis est en route !
+Bonjour {customerName}, votre commande a été déposée au bureau de poste.</div>
+    <div class="txt">&gt; Votre colis est désormais en chemin. La livraison prend généralement 2–5 jours ouvrables selon votre pays.</div>
+    <span class="btn">Bouton : « Voir mes commandes »</span>
+  </div>
+
+  <div class="mailcard" id="e4">
+    <h4>4 — Vouchers de vol (achat boutique)</h4>
+    <div class="meta">Destinataire : client · Déclencheur : achat d'un ou plusieurs vouchers vol ·
+      Objet : <code>Vos vouchers Fly Horizons — #{orderRef}</code></div>
+    <div class="txt">Réf. #{orderRef}
+Vos vouchers sont prêts !     (ou « Votre voucher est prêt ! » si 1 seul)
+Merci {customerName}, merci pour votre achat.</div>
+    <p class="pill">(Carte voucher : code, durée — dynamique)</p>
+    <div class="txt">Valable 12 mois à compter de la date d'achat</div>
+    <span class="btn">Bouton (dans la carte) : « Réserver mon vol avec ce code »</span>
+    <p class="pill">Instructions d'utilisation :</p>
+    <div class="txt">1. Cliquez sur le bouton ci-dessus — votre code sera automatiquement pré-rempli
+2. Choisissez votre date et créneau horaire
+3. Finalisez votre réservation — le vol est couvert par votre bon</div>
+    <p class="pill">Note de bas de section :</p>
+    <div class="txt">Conservez cet email — votre code vous sera demandé lors de la réservation.</div>
+  </div>
+
+  <div class="mailcard" id="e5">
+    <h4>5 — Vol sur mesure — devis + lien de paiement</h4>
+    <div class="meta">Destinataire : client · Déclencheur : admin envoie le devis pour un vol sur
+      mesure · Objet : <code>Votre vol sur mesure — {dateStr}</code></div>
+    <div class="txt">Vol sur mesure
+Votre vol sur mesure
+Bonjour {prenom}, voici le récapitulatif de votre demande.</div>
+    <p class="pill">(Tableau itinéraire + détail du prix — dynamique)</p>
+    <p class="pill"><b>Si paiement requis</b> (bloc encadré doré) :</p>
+    <div class="txt">Acompte à régler
+{montant} €
+Payez votre acompte pour confirmer votre réservation.
+Le solde sera réglé après votre vol selon la durée réelle.</div>
+    <span class="btn">Bouton (dans le bloc) : « Payer mon acompte — {montant} € »</span>
+    <div class="txt">Paiement sécurisé par Stripe — carte bancaire</div>
+    <p class="pill"><b>Si couvert par voucher</b> (callout) :</p>
+    <div class="txt">&gt; Votre vol est entièrement couvert par votre voucher — aucun paiement requis. Nous vous recontacterons sous 24 h.</div>
+    <p class="pill">Sign-off :</p>
+    <div class="txt">Des questions ? Répondez à cet email ou écrivez-nous à info@fly-horizons.com.
+À très bientôt à bord — L'équipe Fly Horizons</div>
+  </div>
+
+  <div class="mailcard" id="e6">
+    <h4>6 — Réservation standard — couverte par voucher</h4>
+    <div class="meta">Destinataire : client · Déclencheur : réservation créée avec un voucher
+      (aucun paiement requis) · Objet : <code>Réservation confirmée — Fly Horizons</code></div>
+    <div class="txt">Réservation
+Réservation confirmée
+Bonjour {prenom}, votre vol est confirmé.</div>
+    <p class="pill">(Tableau détails du vol — dynamique)</p>
+    <div class="txt">&gt; Votre vol est entièrement couvert par votre voucher — aucun paiement supplémentaire requis. Nous vous contacterons rapidement pour confirmer tous les détails.</div>
+    <p class="pill">Informations pratiques :</p>
+    <div class="txt">Aéroport de Charleroi (EBCI), Belgique
+Présentez-vous 15 minutes avant l'heure du vol
+Questions — info@fly-horizons.com · FAQ</div>
+    <p class="pill">Sign-off :</p>
+    <div class="txt">À très bientôt à bord — L'équipe Fly Horizons</div>
+  </div>
+
+  <div class="mailcard" id="e7">
+    <h4>7 — Réservation standard — paiement reçu</h4>
+    <div class="meta">Destinataire : client · Déclencheur : paiement réservation standard confirmé
+      via Stripe · Objet : <code>Paiement confirmé — Fly Horizons</code></div>
+    <div class="txt">Paiement reçu
+Réservation confirmée
+Bonjour {prenom}, votre paiement a bien été reçu.</div>
+    <p class="pill">(Montant payé en grand + tableau détails du vol — dynamique)</p>
+    <p class="pill">Informations pratiques :</p>
+    <div class="txt">Aéroport de Charleroi (EBCI), Belgique
+Présentez-vous 15 minutes avant l'heure du vol
+Casques audio fournis — aucun équipement nécessaire
+Questions — info@fly-horizons.com · FAQ</div>
+    <p class="pill">Sign-off :</p>
+    <div class="txt">Nous vous contacterons pour confirmer tous les détails. À très bientôt à bord — L'équipe Fly Horizons</div>
+    <span class="btn">Bouton : « Plan d'accès → »</span>
+  </div>
+
+  <div class="mailcard" id="e8">
+    <h4>8 — Vol sur mesure — acompte reçu</h4>
+    <div class="meta">Destinataire : client · Déclencheur : paiement de l'acompte vol sur mesure
+      confirmé · Objet : <code>Acompte reçu — Vol sur mesure Fly Horizons</code></div>
+    <div class="txt">Acompte reçu
+Votre réservation est confirmée
+Bonjour {prenom}, votre acompte a bien été reçu.</div>
+    <p class="pill">(Montant payé en grand + tableau détails vol sur mesure — dynamique)</p>
+    <div class="txt">&gt; Nous vous recontacterons sous 24 h pour affiner votre itinéraire et confirmer la date exacte. Le solde sera réglé après votre vol selon la durée réelle.</div>
+    <p class="pill">Sign-off :</p>
+    <div class="txt">Des questions ? Répondez à cet email ou écrivez-nous à info@fly-horizons.com.
+À très bientôt à bord — L'équipe Fly Horizons</div>
+    <span class="btn">Bouton : « Plan d'accès → »</span>
+  </div>
+
+  <div class="mailcard" id="e9">
+    <h4>9 — Date de vol confirmée (admin)</h4>
+    <div class="meta">Destinataire : client · Déclencheur : admin clique « Confirmer la date »
+      dans le drawer · Objet : <code>Votre date de vol est confirmée — Fly Horizons</code></div>
+    <div class="txt">Fly Horizons
+Date de vol confirmée
+Bonjour {prenom}, votre date est réservée.</div>
+    <p class="pill">(Tableau : date confirmée, durée estimée, lieu — dynamique)</p>
+    <div class="txt">&gt; Votre date est confirmée. Nous vous recontacterons très prochainement pour vous communiquer votre créneau horaire exact.</div>
+    <p class="pill">(Si une route a été enregistrée : bloc itinéraire + bouton de validation route)</p>
+    <p class="pill">Sign-off :</p>
+    <div class="txt">Questions ? Répondez directement à cet email — L'équipe Fly Horizons</div>
+    <span class="btn">Bouton si pas de route : « Plan d'accès → »</span>
+  </div>
+
+  <div class="mailcard" id="e10">
+    <h4>10 — Créneau horaire confirmé (admin)</h4>
+    <div class="meta">Destinataire : client · Déclencheur : admin clique « Confirmer l'heure »
+      dans le drawer · Objet : <code>Votre créneau horaire est confirmé — Fly Horizons</code></div>
+    <div class="txt">Fly Horizons
+C'est confirmé — à bientôt !
+Bonjour {prenom}, votre vol est planifié.</div>
+    <p class="pill">(Tableau : date, heure de départ en grand, durée, départ/retour — dynamique ;
+      si route enregistrée : bloc itinéraire + bouton de validation)</p>
+    <p class="pill">Informations pratiques :</p>
+    <div class="txt">Aéroport de Charleroi (EBCI), Belgique
+Présentez-vous 15 minutes avant l'heure du vol
+Casques audio fournis — aucun équipement nécessaire
+Questions — info@fly-horizons.com</div>
+    <p class="pill">Sign-off :</p>
+    <div class="txt">Beau temps et bon vol ! Rendez-vous à l'aéroport — L'équipe Fly Horizons</div>
+    <span class="btn">Bouton : « Plan d'accès → »</span>
+  </div>
+
+  <div class="mailcard" id="e11">
+    <h4>11 — Contact — notification interne</h4>
+    <div class="meta">Destinataire : admin (info@fly-horizons.com) · Déclencheur : formulaire de
+      contact soumis · Objet : <code>Nouveau message : {sujet} — {nom}</code></div>
+    <div class="txt">Nouveau message
+Message de contact</div>
+    <p class="pill">(Tableau : nom, email, sujet + corps du message — entièrement dynamique)</p>
+    <span class="btn">Bouton : « Voir dans l'admin »</span>
+  </div>
+
+  <div class="mailcard" id="e12">
+    <h4>12 — Contact — accusé de réception</h4>
+    <div class="meta">Destinataire : client · Déclencheur : formulaire de contact soumis (réponse
+      automatique) · Objet : <code>Votre message a été reçu — Fly Horizons</code></div>
+    <div class="txt">Contact
+Message bien reçu
+Nous vous répondrons sous 48 h ouvrables.</div>
+    <div class="txt">Bonjour {nom},
+Merci pour votre message concernant {sujet}. Nous l'avons bien reçu et vous répondrons dans les meilleurs délais.</div>
+    <p class="pill">(Rappel du message envoyé — dynamique)</p>
+    <p class="pill">Sign-off :</p>
+    <div class="txt">L'équipe Fly Horizons</div>
+  </div>
+
+  <div class="mailcard" id="e13">
+    <h4>13 — Contact — réponse admin</h4>
+    <div class="meta">Destinataire : client · Déclencheur : admin répond depuis
+      <code>/admin/contacts</code> · Objet : <code>Réponse de Fly Horizons — {sujet}</code></div>
+    <div class="txt">Fly Horizons
+Réponse à votre message
+Concernant : {sujet}</div>
+    <div class="txt">Bonjour {nom},
+Voici notre réponse à votre demande :
+{réponse de l'admin}</div>
+    <span class="btn">Bouton : « Nous recontacter »</span>
+    <p class="pill">Sign-off :</p>
+    <div class="txt">L'équipe Fly Horizons</div>
+  </div>
+
+  <div class="mailcard" id="e14">
+    <h4>14 — Invitation au paiement (réservation admin)</h4>
+    <div class="meta">Destinataire : client · Déclencheur : admin envoie un lien de paiement
+      depuis le drawer · Objet : <code>Votre réservation — {dateStr}</code></div>
+    <div class="txt">Réservation de vol
+Votre réservation
+Bonjour {prenom} {nom}, voici le récapitulatif de votre réservation.</div>
+    <p class="pill">(Tableau détails du vol — dynamique)</p>
+    <p class="pill">Bloc paiement encadré :</p>
+    <div class="txt">Montant à régler
+{montant} €</div>
+    <span class="btn">Bouton : « Payer ma réservation — {montant} € »</span>
+    <div class="txt">Paiement sécurisé par Stripe — carte bancaire</div>
+    <p class="pill">Sign-off :</p>
+    <div class="txt">Des questions ? Répondez à cet email ou écrivez-nous à info@fly-horizons.com.
+À très bientôt à bord — L'équipe Fly Horizons</div>
+  </div>
+
+  <div class="mailcard" id="e15">
+    <h4>15 — Post-vol — remerciement + enquête</h4>
+    <div class="meta">Destinataire : client · Déclencheur : admin marque « Vol effectué » ·
+      Objet : <code>Merci pour votre vol — Fly Horizons</code></div>
+    <div class="txt">Fly Horizons
+Merci pour votre vol !</div>
+    <div class="txt">Bonjour {prenom},
+
+Merci d'avoir choisi Fly Horizons. Votre vol du {date} ({durée}) est maintenant terminé — nous espérons que vous avez passé un moment inoubliable !</div>
+    <div class="txt">Votre avis nous aide à améliorer constamment la qualité de nos vols.
+L'enquête prend moins d'une minute — merci d'avance !</div>
+    <span class="btn">Bouton : « Donner mon avis »</span>
+    <p class="pill">Sign-off :</p>
+    <div class="txt">À bientôt à bord — L'équipe Fly Horizons</div>
+  </div>
+
+  <div class="mailcard" id="e17">
+    <h4>17 — Itinéraire de vol proposé au client</h4>
+    <div class="meta">Destinataire : client · Déclencheur : admin confirme date/heure avec route
+      enregistrée (envoi auto) ou clique « Renvoyer la route » · Objet :
+      <code>Votre itinéraire de vol — Fly Horizons</code></div>
+    <div class="txt">Itinéraire
+Votre itinéraire de vol
+Bonjour {prenom}, voici l'itinéraire prévu pour votre vol.</div>
+    <p class="pill">(Tableau date/durée estimée + bloc itinéraire — dynamique)</p>
+    <span class="btn">Bouton : « Valider ou modifier l'itinéraire → »</span>
+    <div class="txt">Ce lien est valable jusqu'à 48 h avant votre vol.</div>
+    <p class="pill">Sign-off :</p>
+    <div class="txt">Questions ? Répondez directement à cet email — L'équipe Fly Horizons</div>
+  </div>
+
+  <div class="mailcard" id="footer">
+    <h4>Pied de page commun à tous les emails (ancienne version)</h4>
+    <div class="meta">Apparaît sous chaque email, fond marine — remplacé par la règle 3 du round 3
+      (une seule ligne, cf. plus haut).</div>
+    <div class="txt">Fly Horizons — fly-horizons.com
+Une question ? Répondez directement à cet email — info@fly-horizons.com</div>
+  </div>
+
+</div>
+</body>
+</html>

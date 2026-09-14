@@ -99,29 +99,25 @@
     <div class="col">
       <h3><span class="tag t-amber">À faire</span> prêt à démarrer</h3>
       <ol>
-        <li><b>Prochaine session — vérif locale de bout en bout</b> (<code>npm run dev</code>) :
-          parcours annonce (2 modes) → confirmation créneau → route acceptée → email virement →
-          page <code>/vol/annonce/paiement/[token]</code> → « payé » → reçu → vol effectué ;
-          <b>onglet Messages</b> du drawer (pilote + admin) → email client → page
-          <code>/reservation/messages/[token]</code> → réponse → notif pilote ; signature dans
-          <code>/pilote/profil</code> ; désactivation d'un pilote qui a une annonce
-          <code>reservee</code>. Migrations <code>20260910</code> + <code>20260911</code> exécutées
-          par Romain. Le back-end a été vérifié statiquement + fonctions pures testées (11/09) —
-          reste le clic.</li>
+        <li><b>Catalogue public → tout par l'espace pilote</b> (décision 13/09, onglet Décisions).
+          <code>/nos-offres</code> est déjà codé pour les deux : <b>1.</b> Romain republie son
+          catalogue réel (vols durée fixe + itinéraire) via <code>/pilote/annonces</code> ;
+          <b>2.</b> basculer <code>crm_settings.catalogue_source = 'annonces'</code> ; <b>3.</b>
+          traiter la page d'accueil pareil (pas encore fait, même flag à brancher) ; <b>4.</b>
+          plus tard : sort de <code>/admin/boutique</code>, des vouchers/coupons, du reporting
+          Stripe pour ces vols — pas tranché.</li>
         <li><b>Reprendre la page Masse &amp; centrage.</b> Romain la trouve « pas logique, pas
           claire ». 3 tentatives le 11/09 (flux « saisie | résultat » 2 colonnes · verdict
           persistant · saisie mise en avant + résumé collant) <b>toutes rejetées</b> — revert à
           l'état 08/09 (4 sections numérotées). Pas de direction validée. « Style Fly Horizons à
           garder », le vrai problème = manque de cohérence entre blocs ajoutés au fil de l'eau.</li>
-        <li><b>P2 de l'audit</b> (<code>audit-espace-pilote-coherence.html</code>) : option cash ·
-          nav admin « Équipe » · onglet Modifier éditable pour une annonce · email « paiement
-          confirmé » · secret <code>INBOUND_EMAIL_SECRET</code> obligatoire avant de brancher
-          l'inbound.</li>
-        <li><b>Refonte des ~32 emails</b> — <span class="tag t-grey">plus tard</span>, tout dernier
-          chantier. Absorbe le P1 « emails du parcours annonce non pilote-aware » (voix de Romain
-          sur un vol d'un autre pilote). Nouveau template déjà là : <code>annoncePaiementVirementEmail</code>,
-          <code>reservationMessageEmail</code>.</li>
-        <li><b>Pousser <code>main</code></b> (<code>git push</code>) — ~48 commits d'avance. Sur
+        <li><b>Refonte des ~41 emails</b> — <span class="tag t-blue">repris 14/09</span>, en avance
+          sur le calendrier initial. Décidé : emails admin (5) séparés des emails publics (36),
+          gabarit propre ; surtitre doré supprimé en tête des emails publics (règle 1, round 3).
+          Reste à trancher : H1 en gras (proposé, pas confirmé) + direction concrète du gabarit
+          admin. Absorbe le P1 « emails du parcours annonce non pilote-aware ». Détail :
+          <code>plan-refonte-emails.html</code>, décision 2026-09-14.</li>
+        <li><b>Pousser <code>main</code></b> (<code>git push</code>) — commits d'avance. Sur
           demande de Romain uniquement (Vercel auto-déploie).</li>
       </ol>
     </div>
@@ -139,6 +135,20 @@
     <div class="col">
       <h3><span class="tag t-green">Fait</span> — septembre 2026</h3>
       <ul>
+        <li><b>Session du 13/09 (test réel + corrections).</b> P2 complet (cash, nav « Équipe »,
+          édition passagers/poids pilote, email paiement confirmé, secret inbound obligatoire) ·
+          refonte <code>/pilote/annonces</code> (aperçu carte publique, stats vues, popup, suppression
+          définitive) · annonces : titre, itinéraire tracé (carte réutilisée de l'admin), seuil légal
+          non bloquant (juste un avertissement) · mode « à la place » recalculé à la clôture du
+          groupe (part égale sur occupants réels, plus sur la capacité max) · <b>migration
+          <code>20260908_annonces_legal_ok</code> enfin exécutée en prod</b> (documentée faite depuis
+          le 08/09, ne l'était jamais — bloquait toute publication d'annonce, trouvé en testant pour
+          de vrai) · nav publique « Nos vols » (ex « Nos offres ») · pages publiques nettoyées
+          (message clair si aucun vol, eyebrow retiré, section « Occasion particulière » supprimée,
+          jugée trop proche d'un cadrage commercial) · <code>/nos-offres</code> prêt (flag
+          <code>catalogue_source</code>) pour le jour où tous les vols passeront par l'espace pilote.
+          Détail complet : Changelog + Décisions ci-dessous. <code>tsc</code> + <code>next build</code>
+          OK à chaque étape. Pas commité.</li>
         <li><b>Messagerie pilote ↔ client Phase 1 (11/09).</b> Onglet « Messages » dans le drawer,
           envoi depuis <code>info@</code> au nom du pilote + signature éditable, page publique
           <code>/reservation/messages/[token]</code>, table <code>reservation_messages</code>.
@@ -209,8 +219,6 @@
           <br><i>Hors périmètre jusqu'à nouvel ordre :</i> CGP « plateforme de mise en relation » ·
           page « postuler » · ouverture à des pilotes inconnus.
         </li>
-        <li><b>Refonte complète des ~32 emails</b> — tout dernier chantier de l'espace pilote. Romain
-          a demandé un rappel explicite le moment venu. (Nouveau ce mois : <code>annoncePaiementVirementEmail</code>.)</li>
         <li>Migration <code>20260909_pilote_paiement.sql</code> — <b>abandonnée</b>, remplacée par
           <code>20260910_annonces_paiement.sql</code>.</li>
       </ul>
@@ -222,6 +230,224 @@
     <p class="meta"><b>Append-only.</b> On n'édite jamais une décision passée : on en ajoute une
       nouvelle qui la remplace, avec un lien. Chaque entrée : <i>Contexte · Décision · Alternatives
       écartées · Conséquences</i>. Plus récent en haut.</p>
+
+    <div class="dec">
+      <p class="date">2026-09-14 · Refonte emails — reprise du chantier</p>
+      <h3>Emails admin séparés des emails publics ; suppression du surtitre doré en tête des emails publics</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Chantier mis en pause le 11/09 (priorité espace pilote), reprise prévue « en dernier ».
+          Romain est reparti plus tôt que prévu du nouvel outil <code>email-preview.html</code>
+          (aperçu des 41 templates, catégorisé admin/public/par flow) pour trancher concrètement,
+          en commençant par l'en-tête des emails publics. Détail complet et historique des rounds :
+          <code>plan-refonte-emails.html</code>.</dd>
+        <dt>Décision</dt>
+        <dd><b>1.</b> Les 5 emails admin (<code>contactNotificationEmail</code>,
+          <code>routeFeedbackAdminEmail</code>, <code>satisfactionResultEmail</code>,
+          <code>flightOfferExpiredAdminEmail</code>, <code>piloteReleasedFlightAdminEmail</code> —
+          tous vers <code>info@fly-horizons.com</code>) sortiront du gabarit <code>emailBase()</code>
+          grand public : un gabarit distinct, plus simple, orienté info utile immédiate, sans le
+          même soin visuel qu'un email client. Direction concrète pas encore choisie.
+          <b>2.</b> Sur les 36 emails publics, le surtitre doré en tête de chaque email (ex.
+          <code>Réf. #{orderRef}</code>, <code>Réservation</code>) est supprimé — concrétise la
+          règle 1 du round 3 (11/09, « en-tête = logo seul »).</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Un seul gabarit pour admin et public : écarté par Romain (« pas besoin du même style que
+          l'interface publique » pour l'admin) — les emails admin n'ont pas besoin de la mise en
+          scène client, juste d'être lisibles vite.</dd>
+        <dt>Conséquences</dt>
+        <dd>Pas encore codé (« on établit le plan d'abord »). Reste à trancher avant d'implémenter :
+          suppression ou non du H1 en gras qui suit le surtitre (proposé, pas confirmé — voir
+          <code>plan-refonte-emails.html</code>) ; direction concrète du gabarit admin (méthode
+          retenue : partir d'un exemple concret que Romain valide, pas d'une direction inventée —
+          cf. le round 4/5 rejeté).</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
+      <p class="date">2026-09-13 (3) · Catalogue public — direction de fond</p>
+      <h3>À terme, tous les vols (durée fixe + itinéraire) passeront par l'espace pilote, plus par l'admin</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Aujourd'hui deux systèmes parallèles vendent le même type de vol à frais partagés :
+          <code>products</code> (catalogue admin, Stripe, vouchers — vols de Romain uniquement) et
+          <code>annonces_pilote</code> (bank transfer/QR, n'importe quel pilote y compris Romain,
+          garde-fou légal NCO.GEN.104 intégré). Romain veut arrêter de gérer ses vols via
+          <code>/admin/boutique</code> et tout faire passer par <code>/pilote/annonces</code> (qu'il
+          utiliserait alors comme un pilote parmi d'autres). Sur <code>/nos-offres</code>, il veut
+          seulement <b>deux sections : vols à durée fixe et vols avec itinéraire</b>, plus de
+          distinction « catalogue admin » vs « annonces pilotes ». Le parcours de réservation reste
+          celui qui existe déjà pour les annonces (demande → espace pilote → le pilote gère →
+          virement) — rien de nouveau à construire là-dessus.</dd>
+        <dt>Décision</dt>
+        <dd><b>Risque identifié avant de coder</b> : basculer l'affichage tout de suite viderait le
+          catalogue public réel (tous les vols actuels de Romain sont dans <code>products</code>,
+          aucun dans <code>annonces_pilote</code>) et changerait le moyen de paiement de Stripe vers
+          virement pour ces vols. Décision : <b>construire la nouvelle page maintenant, derrière un
+          flag</b> (<code>crm_settings.catalogue_source = 'annonces'</code>, défaut absent =
+          <code>'products'</code> = comportement actuel inchangé). <code>/nos-offres</code> lit ce
+          flag ; si <code>'annonces'</code>, affiche deux sections (durée fixe / itinéraire) sourcées
+          uniquement depuis <code>annonces_pilote</code> (split sur la présence de
+          <code>route_waypoints</code>), sinon rend exactement l'ancien code (packs + annonces
+          pilotes en 3e section). Romain republie d'abord son catalogue réel via
+          <code>/pilote/annonces</code>, puis bascule le flag quand il est prêt.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd><b>Affichage fusionné</b> (products + annonces_pilote dans les 2 mêmes sections pendant la
+          transition) : migration plus douce, zéro rupture visuelle, mais complexité de fusion de
+          deux sources hétérogènes (cartes différentes, flows de paiement différents par carte) pour
+          un gain jugé pas nécessaire — Romain préfère republier son catalogue une bonne fois plutôt
+          que maintenir un état hybride. <b>Basculer tout de suite</b> : écarté, viderait le site
+          public de son vrai catalogue.</dd>
+        <dt>Conséquences</dt>
+        <dd>Pas encore fait : (1) Romain republie son catalogue réel en annonces (durée fixe +
+          itinéraire) via <code>/pilote/annonces</code> ; (2) basculer le flag —
+          <code>insert into crm_settings (key, value) values ('catalogue_source','annonces') on
+          conflict (key) do update set value = excluded.value;</code> ; (3) la page d'accueil a les
+          mêmes sections sourcées <code>products</code>, pas encore traitée par ce flag — à faire au
+          même moment ou juste après ; (4) sort du périmètre de cette décision et à trancher plus
+          tard : sort de <code>/admin/boutique</code> (retirer l'écran, ou le garder pour un usage
+          futur), sort des vouchers/coupons (aujourd'hui liés aux <code>products</code>), et
+          éventuellement du reporting Stripe/transactions pour ces vols.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
+      <p class="date">2026-09-13 (2) · Espace pilote — annonces, mode « à la place »</p>
+      <h3>Prix figé à la clôture du groupe (part égale entre occupants réels), plus à la publication (capacité max)</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>En mode « à la place », le prix par place était calculé à la publication comme
+          <code>(prix_total − part_pilote) / places max déclarées</code>. Si l'annonce ne se remplit
+          jamais complètement, les passagers qui ont réservé paient une part bien inférieure à une
+          vraie part égale entre les occupants réels du vol (ex. 6 places déclarées, 1 seul passager
+          réel : il paierait 1/6 du solde au lieu de la moitié, pilote compris) — Romain a repéré que
+          ça s'éloigne de l'esprit NCO.GEN.104 (partage à parts égales entre occupants réels, pas sur
+          une capacité théorique).</dd>
+        <dt>Décision</dt>
+        <dd>Le prix n'est plus fixé à la demande : la réservation est créée avec <code>acompte =
+          NULL</code> (« inscription enregistrée, prix à confirmer »). Dès que le groupe est complet
+          (toutes les places prises) <b>ou</b> que le pilote clique « Clôturer le groupe maintenant »
+          (<code>cloturerGroupeAnnonce</code>), <code>finalizeAnnonceGroupPricing</code> recalcule :
+          part égale = <code>(prix_total − part_pilote) / nombre réel de passagers inscrits</code>
+          (réservations annulées exclues), puis fige l'<code>acompte</code> de chaque réservation au
+          prorata de son nombre de passagers. Envoyer un itinéraire (donc déclencher le paiement) est
+          désormais <b>refusé</b> tant que le groupe n'est pas clôturé
+          (<code>sendRouteProposalToClient</code>) — le montant snapshotté dans
+          <code>route_proposals.acompte</code> serait sinon figé trop tôt. Nouveau mail
+          <code>annonceInscriptionPlaceEmail</code> pour l'inscription en attente (pas de montant
+          affiché).</dd>
+        <dt>Alternatives écartées</dt>
+        <dd><b>Durcir seulement le seuil minimum</b> (calculer le minimum légal sur le pire cas, 1
+          passager, plutôt que sur la capacité max) : plus simple, zéro changement de flow de
+          paiement, mais n'aurait fait que relever la barre sans changer le fait que le prix par
+          place reste décorrélé du remplissage réel. Romain a préféré la version qui recalcule
+          vraiment sur le remplissage réel, malgré le coût de dev plus élevé.</dd>
+        <dt>Conséquences</dt>
+        <dd>Pas de nouvelle migration — réutilise <code>reservations.acompte</code> (déjà nullable)
+          et <code>annonces_pilote.places_reservees</code>/<code>statut</code> existants. Nouveaux
+          fichiers : <code>lib/annonces-pilote-server.ts</code> (le calcul tire le client admin —
+          volontairement séparé de <code>lib/annonces-pilote.ts</code>, importé par un composant
+          client, pour ne jamais faire fuiter la clé service_role dans son bundle). Mode « avion
+          entier » inchangé (un seul payeur, prix connu immédiatement). Reste backlog : clôture
+          automatique par délai (ex. J-3 avant le vol) si le groupe n'est ni complet ni clôturé
+          manuellement — pas fait aujourd'hui, nécessiterait un cron.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
+      <p class="date">2026-09-13 · Espace pilote — annonces — <span class="tag t-amber">revient sur le 08/09</span></p>
+      <h3>Le seuil légal de part pilote n'est plus bloquant à la publication — juste un avertissement</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Le durcissement du 08/09 avait rendu <code>evaluerPartPilote</code> bloquant : sous le
+          minimum légal adaptatif (part égale, pilote compris — 25 % pour 3 passagers, etc.), la
+          publication d'une annonce était refusée. En testant la création d'une annonce (13/09),
+          Romain juge ce blocage mal placé : <i>« c'est le pilote qui est responsable, à lui de
+          mettre ce qu'il veut »</i>.</dd>
+        <dt>Décision</dt>
+        <dd>La vérification reste affichée (bandeau rouge/ambre dans le formulaire, badge
+          « À confirmer » sur le dashboard pilote) mais <b>ne bloque plus ni la publication ni la
+          réservation client</b>. Seul garde-fou conservé : le pilote doit indiquer une part
+          strictement positive à sa charge (<code>part_pilote &gt; 0</code>) — en dessous, c'est du
+          transport payant pur, pas du partage de frais, et ça reste refusé. Messages reformulés en
+          conséquence (« minimum recommandé » au lieu de « minimum légal… pour pouvoir publier »).</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Garder le blocage strict (posture du 08/09) : la plus défendable juridiquement, mais
+          jugée trop rigide par Romain pour un cas où c'est lui-même qui décide, en connaissance de
+          cause, du niveau de risque qu'il accepte de prendre en tant que pilote.</dd>
+        <dt>Conséquences</dt>
+        <dd>Le risque de requalification en transport commercial sans AOC en dessous du seuil
+          recommandé devient <b>un risque assumé par le pilote qui publie</b>, plus une règle
+          imposée par l'app. <code>app/api/vol-annonce/submit</code> ne bloque plus la réservation
+          client sur ce critère non plus (cohérence : bloquer l'un sans l'autre n'aurait pas de
+          sens). <code>lib/annonces-pilote.ts</code>, <code>lib/actions/annonces.ts</code>,
+          <code>AnnonceForm.tsx</code>.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
+      <p class="date">2026-09-13 · Espace pilote — annonces</p>
+      <h3>Assignation admin d'un client à une annonce « avion entier » : pas de nouveau flux, on envoie le lien public</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Testé en local (13/09) : aucun moyen d'assigner un vol <i>standard</i> de Romain à un
+          pilote (Bloc B, gelé depuis le 08/09 — confirmé, pas un bug). Question restée ouverte côté
+          annonces : si un client <b>appelle directement Romain</b> pour réserver une annonce pilote
+          en mode « avion entier » (offre à durée fixe, un seul client prend tout l'avion, par
+          opposition au mode « à la place »), comment Romain crée-t-il cette réservation depuis
+          l'admin sans repasser par <code>/vol/annonce/[id]</code> ?</dd>
+        <dt>Décision</dt>
+        <dd><b>Aucun nouveau flux construit.</b> Romain communique au client l'URL publique de
+          l'annonce (<code>/vol/annonce/[id]</code>) par téléphone/email ; le client remplit le
+          formulaire lui-même, y compris la case de consentement Q79 au partage de ses coordonnées
+          avec le pilote. C'est déjà possible aujourd'hui, zéro ligne de code.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd><b>Lien pré-rempli</b> (bouton admin générant <code>/vol/annonce/[id]?prenom=…&amp;email=…</code>) :
+          plus confortable pour le client, mais ajoute une fonctionnalité pour un cas d'usage pas
+          encore avéré — à reconsidérer si la demande se manifeste en pratique. <b>Formulaire admin
+          dédié</b> (<code>/admin/reservations/new-annonce</code>, Romain coche le consentement à la
+          place du client) : écarté — Romain redeviendrait auteur actif de la réservation au lieu
+          d'un simple porteur de lien, et le consentement Q79 perdrait son caractère direct (coché
+          par le client lui-même), ce qui fragilise la posture légale déjà tendue de l'espace
+          pilote.</dd>
+        <dt>Conséquences</dt>
+        <dd>Aucun changement de code. Si ce cas d'usage devient fréquent, rouvrir cette décision avec
+          l'option « lien pré-rempli » en tête de liste (query params préremplissant le formulaire
+          public, consentement toujours coché par le client).</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
+      <p class="date">2026-09-11 · Refonte des emails</p>
+      <h3>Périmètre resserré : textes / en-tête / pied de page seulement, style actuel gardé</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Trois directions visuelles testées dans un artifact de revue pour le chantier « refonte
+          des ~32 emails » (jusqu'ici non indexé dans <code>projet.html</code>, seulement en
+          mémoire). Round 3 : 7 règles (en-tête logo seul, signature courte, footer une ligne,
+          contact conditionné). Round 4 « Premium Editorial » : tag de statut, module Flight
+          Details, grammaire des statuts, 3 familles. Round 5 : même direction poussée plus loin
+          (zéro bordure, statut/CTA découplés, previewer réordonné pour ouvrir sur le nouveau
+          design).</dd>
+        <dt>Décision</dt>
+        <dd>Rounds 4 et 5 rejetés par Romain (« on dirait qu'on s'éloigne de plus en plus »). On
+          garde le style round 3 tel quel ; la refonte à venir se limite aux <b>textes</b>, à
+          l'<b>en-tête</b> et au <b>pied de page</b> (règles 1-2-3 du round 3), pas de refonte
+          visuelle complète. Chantier remis en pause, à reprendre après stabilisation de l'espace
+          pilote. Consolidation documentaire faite le même jour : l'ancien
+          <code>emails-review.md</code> (contenu de la révision de fond) et l'historique des trois
+          rounds sont fusionnés dans <code>plan-refonte-emails.html</code> ; <code>emails-review.md</code>
+          supprimé.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Poursuivre la direction « Premium Editorial » (rounds 4/5) — explicitement rejetée sur
+          preuve visuelle, pas sur principe.</dd>
+        <dt>Conséquences</dt>
+        <dd>Quand le chantier reprendra : appliquer uniquement les règles 1-2-3 aux emails de
+          référence, corriger l'incohérence <code>reservationConfirmationFreeEmail</code> (objet vs
+          contenu, trouvée par audit de code), puis propager. Détail complet :
+          <code>plan-refonte-emails.html</code>.</dd>
+      </dl>
+    </div>
 
     <div class="dec">
       <p class="date">2026-09-10 · Espace pilote — annonces</p>
@@ -658,33 +884,43 @@
   <section id="plan" class="panel">
     <h2>Où on en est</h2>
     <div class="card">
-      <p><b>Espace pilote :</b> Option 3 (le pilote ne gère que ses propres annonces). Codé et
-      commité (pas poussé) sur <code>main</code> :
-      <b>paiement des annonces</b> (10/09 — virement + QR SEPA + page client, steps/actions
-      pilote, reçu pilote, garde-fous publication, 2 modes de vente) ·
-      <b>garde-fous transverses</b> (10/09 — verrou 8 h « vol effectué », compteur créneaux) ·
-      <b>messagerie pilote ↔ client Phase 1</b> (11/09 — onglet Messages, envoi au nom du pilote
-      + signature, page publique de fil). <code>next build</code> + <code>tsc</code> OK.</p>
-      <p><b>~35 commits d'avance sur <code>origin</code>, pas poussé.</b> Migrations à exécuter
-      dans Supabase avant de tester : <code>20260910_annonces_paiement.sql</code> (fait) et
-      <code>20260911_reservation_messages.sql</code>.</p>
+      <p><b>Espace pilote : testé pour de vrai le 13/09, ça marche.</b> Romain a publié une vraie
+      annonce depuis <code>/pilote/annonces</code> de bout en bout (bloqué un moment par une
+      migration jamais réellement exécutée malgré la doc — <code>20260908_annonces_legal_ok</code>,
+      corrigé). Annonces : titre, mode « durée fixe » ou « itinéraire » (carte de tracé), seuil
+      légal en avertissement seulement (plus bloquant), mode « à la place » qui recalcule le prix
+      à la clôture du groupe sur les occupants réels. Page <code>/pilote/annonces</code> refaite
+      (aperçu carte publique + stats + popup). P2 de l'audit entièrement traité.</p>
+      <p><b>Nouvelle direction de fond (13/09, pas encore active) :</b> à terme tous les vols
+      (durée fixe + itinéraire) passeront par l'espace pilote, plus par <code>/admin/boutique</code>.
+      <code>/nos-offres</code> est prêt derrière un flag (<code>crm_settings.catalogue_source</code>)
+      — voir « Prochaines étapes ». Nav publique renommée « Nos vols », page nettoyée d'un cadrage
+      trop commercial (section « Occasion particulière » retirée).</p>
+      <p><b>Commits d'avance sur <code>origin</code>, pas poussé.</b> Migrations à exécuter dans
+      Supabase avant de tester la suite : <code>20260913_annonces_titre.sql</code> et
+      <code>20260913_annonces_itineraire.sql</code> (<code>20260908_annonces_legal_ok</code> et
+      <code>20260911_reservation_messages</code> sont, elles, confirmées exécutées le 13/09).</p>
     </div>
 
     <h2>Prochaines étapes (dans l'ordre)</h2>
     <ol>
-      <li><b>Exécuter <code>20260911_reservation_messages.sql</code></b> dans Supabase.</li>
-      <li><b>Vérif locale</b> — <code>npm run dev</code> : parcours annonce (2 modes) + onglet
-        Messages (pilote/admin → email client → page publique → réponse) + signature profil.</li>
-      <li><b>Push</b> de <code>main</code> (<code>git push</code>) — sur demande de Romain. Décider si
-        on redéploie.</li>
-      <li><b>Validation visuelle M&amp;B</b> — Romain regarde la refonte et donne ses derniers
-        ajustements.</li>
-      <li><s>Garde-fous transverses</s> — verrou 8 h + compteur créneaux <b>faits (10/09)</b> ;
-        impersonation reportée (outil de support, pas un garde-fou).</li>
-      <li><s>Messagerie pilote ↔ client</s> — <b>Phase 1 faite (11/09)</b>. Reste : brancher
-        l'email entrant (<code>/api/inbound-email</code> + MX <code>reply.fly-horizons.com</code>
-        + Resend Inbound côté Romain).</li>
-      <li><b>Refonte des emails</b> — tout à la fin, quand l'espace pilote est stabilisé.</li>
+      <li><b>Exécuter <code>20260913_annonces_titre.sql</code> et
+        <code>20260913_annonces_itineraire.sql</code></b> dans Supabase, si pas déjà fait.</li>
+      <li><b>Romain republie son catalogue réel</b> (vols durée fixe + itinéraire) via
+        <code>/pilote/annonces</code>, puis bascule <code>crm_settings.catalogue_source =
+        'annonces'</code> — voir la commande SQL dans l'onglet Décisions (13/09, « Catalogue public »).
+        Brancher la page d'accueil sur le même flag au même moment (pas encore fait).</li>
+      <li><b>Vérif locale complète</b> — <code>npm run dev</code> : parcours annonce durée fixe +
+        itinéraire + mode place (clôture du groupe) ; onglet Messages ; désactivation pilote avec
+        annonce active.</li>
+      <li><b>Push</b> de <code>main</code> (<code>git push</code>) — sur demande de Romain
+        uniquement. Décider si on redéploie.</li>
+      <li><b>Reprendre Masse &amp; centrage</b> — toujours aucune direction validée (cf. Board).</li>
+      <li><b>Refonte des emails</b> — tout à la fin, quand l'espace pilote est stabilisé. Périmètre
+        resserré le 11/09 : textes + en-tête + pied de page uniquement (style actuel gardé) —
+        <code>plan-refonte-emails.html</code>.</li>
+      <li><b>Plus tard, pas tranché :</b> sort de <code>/admin/boutique</code>, des vouchers/coupons,
+        du reporting Stripe pour les vols qui basculent en annonces.</li>
     </ol>
 
     <h2>Règles du repo</h2>
@@ -720,6 +956,112 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-14 — refonte emails : nouvelle architecture appliquée sur 4 templates pilotes</h3>
+      <ul>
+        <li><b>Nouveaux helpers</b> dans <code>lib/email-templates.ts</code> : <code>amountCard()</code>
+          (montant mis en avant, carte autonome), <code>signOff()</code> (signature « je »/prénom
+          pilote ou « nous »/Fly Horizons selon qu'un pilote est identifié). <code>addToCalendarBlock()</code>
+          réécrit en une ligne de texte (3 liens) au lieu d'un bloc à 3 boutons. <code>separator()</code>
+          documenté comme réservé à une seule coupure par email (avant la signature).</li>
+        <li><b>4 emails retravaillés de bout en bout</b> selon la nouvelle architecture :
+          <code>reservationPaymentConfirmationEmail</code>, <code>reservationDateConfirmeeEmail</code>,
+          <code>reservationAutoAnnuleeEmail</code>, <code>flightReminderEmail</code> (qui récupère le
+          CTA « Plan d'accès » retiré des 3 autres). Détail complet dans
+          <code>plan-refonte-emails.html</code>.</li>
+        <li>Ajout d'un champ optionnel <code>pilote?: {prenom} | null</code> sur les props de ces 4
+          emails — aucun appelant ne le passe encore (voix « nous » par défaut), câblage réel du
+          pilote assigné laissé pour plus tard.</li>
+        <li><code>tsc --noEmit</code> OK · <code>email-preview.html</code> régénéré (41/41). Pas
+          commité. Reste : valider ces 4 exemples avec Romain, puis propager aux 32 autres emails
+          publics ; direction visuelle des 5 emails admin toujours en attente d'une référence.</li>
+      </ul>
+
+      <h3>2026-09-13 (fin de session) — migration legal_ok en prod · nav « Nos vols » · catalogue public flaggé</h3>
+      <ul>
+        <li><b>Migration <code>20260908_annonces_legal_ok.sql</code> exécutée en prod</b> — documentée
+          « exécutée » depuis le 08/09 mais ne l'était en réalité jamais (colonnes <code>legal_ok</code>
+          / <code>legal_ok_at</code> absentes). C'est ce qui bloquait toute publication/modification
+          d'annonce (<code>Erreur création de l'annonce</code>). Trouvé en reproduisant l'insert avec
+          la clé service_role. <code>titre</code> et <code>route_waypoints</code> (migrations du
+          13/09) étaient eux bien passés.</li>
+        <li><b>Nav publique renommée</b> « Nos offres » → <b>« Nos vols »</b> (header desktop/mobile,
+          footer, FAQ, libellé analytics) — l'URL <code>/nos-offres</code> ne change pas.</li>
+        <li><b>Hero simplifié</b> sur la page d'accueil et <code>/nos-offres</code> : eyebrow + titre
+          court, plus de paragraphe descriptif ni de mention « créneau pas garanti » (déjà répétée
+          sur les pages réservation/annonce, où elle compte).</li>
+        <li><b><code>NoFlightsNotice</code></b> à la place d'une section vide sans explication
+          (accueil + <code>/nos-offres</code>), avec WhatsApp + Contact.</li>
+        <li><b>Décision de fond :</b> à terme, tous les vols passent par l'espace pilote, plus par
+          <code>/admin/boutique</code> — détail dans l'onglet Décisions. <code>/nos-offres</code> codé
+          derrière un flag <code>crm_settings.catalogue_source</code> (<code>'products'</code> par
+          défaut = inchangé, <code>'annonces'</code> = deux sections durée fixe/itinéraire sourcées
+          uniquement depuis <code>annonces_pilote</code>). Pas encore basculé — Romain doit d'abord
+          republier son catalogue réel en annonces. Page d'accueil pas encore traitée par ce flag.</li>
+        <li><code>tsc</code> + <code>next build</code> OK. Pas commité.</li>
+        <li><b>Nettoyage marketing (potentiellement légal) sur <code>/nos-offres</code> :</b> eyebrow
+          « Au départ de Charleroi (EBCI) » retiré (accueil + <code>/nos-offres</code>) ; section
+          « Occasion particulière » (« anniversaire, demande en mariage, cadeau original ») supprimée
+          — cadrage produit-cadeau/expérience commerciale jugé pas cohérent avec la posture partage
+          de frais (NCO.GEN.104), même logique que l'arrêt de la vente publique de vouchers.</li>
+      </ul>
+
+      <h3>2026-09-13 (suite) — annonces : titre, itinéraire pilote, prix « à la place » recalculé à la clôture</h3>
+      <ul>
+        <li><b>Formulaire d'annonce :</b> champ <b>titre</b> (migration
+          <code>20260913_annonces_titre.sql</code>, <span class="tag t-red">à exécuter</span>) ;
+          libellés clarifiés (« Places passagers maximum », aide sous coût total / part pilote).</li>
+        <li><b>Popup en deux temps</b> : choix du type de vol (« durée fixe » / « itinéraire ») avant
+          le formulaire, qui s'adapte en conséquence.</li>
+        <li><b>Vol avec itinéraire</b> (migration <code>20260913_annonces_itineraire.sql</code>,
+          <span class="tag t-red">à exécuter</span>) : le pilote trace une route indicative
+          (réutilise <code>AdminRouteEditor</code> de l'admin), affichée au client sur
+          <code>/vol/annonce/[id]</code> (réutilise <code>VolItineraryCard</code>, déjà existant côté
+          boutique) — durée et prix restent saisis à la main dans les deux modes, pas de calcul
+          automatique par distance.</li>
+        <li><b>Mode « à la place » : prix recalculé à la clôture du groupe, pas à la publication</b>
+          — détail complet dans l'onglet Décisions. <code>reservations.acompte</code> reste
+          <code>NULL</code> tant que le groupe n'est pas complet ; nouvelle action
+          <code>cloturerGroupeAnnonce</code> (bouton pilote) + auto-clôture quand les places se
+          remplissent ; <code>lib/annonces-pilote-server.ts</code> (nouveau, calcul côté serveur
+          uniquement) ; <code>sendRouteProposalToClient</code> refuse d'envoyer un itinéraire avant
+          clôture (évite de figer un montant snapshotté trop tôt dans
+          <code>route_proposals</code>) ; nouveau mail <code>annonceInscriptionPlaceEmail</code>.</li>
+        <li><code>tsc</code> + <code>next build</code> OK. Pas commité.</li>
+      </ul>
+
+      <h3>2026-09-13 — P2 annonces · refonte page Mes annonces · déblocage seuil légal · nettoyage no-flights public</h3>
+      <ul>
+        <li><b>P2 de l'audit espace pilote :</b> option cash dans <code>AnnoncePiloteActions</code>
+          (« Payé en espèces » à côté de « Le client m'a payé », même effet, note différente) ·
+          nav admin « Équipe » (<code>/admin/pilotes</code> sort de « Plus », rejoint la sidebar CRM) ·
+          email « paiement confirmé » (<code>annoncePaiementConfirmeEmail</code>, envoyé quand le
+          pilote coche payé) · <code>INBOUND_EMAIL_SECRET</code> désormais obligatoire (400 si
+          absent) avant de brancher l'inbound · le pilote peut éditer passagers/poids sur sa propre
+          annonce (<code>updateAnnoncePassagersPoids</code>, popup de mise en garde), le reste de
+          l'onglet Modifier reste verrouillé.</li>
+        <li><b>Refonte de <code>/pilote/annonces</code> :</b> chaque annonce affiche un vrai aperçu
+          de la card publique (clic → page publique, nouvel onglet) + stats de consultation (vues ·
+          visiteurs uniques, réutilise <code>page_views</code> existant, pas de nouvelle colonne) ;
+          <b>suppression définitive</b> (<code>deleteAnnonce</code>, refusée si des réservations
+          existent) en plus d'Annuler/Republier ; le formulaire s'ouvre désormais dans une
+          <b>popup</b> (<code>PiloteModal</code>, nouveau composant réutilisable, pensée mobile —
+          feuille plein écran sur téléphone) au lieu d'un bloc inline ; boutons Annuler (gris) /
+          Publier alignés à droite du formulaire.</li>
+        <li><b>Formulaire d'annonce clarifié :</b> nouveau champ <b>titre</b> (facultatif — migration
+          <code>20260913_annonces_titre.sql</code>, <span class="tag t-red">à exécuter</span>),
+          affiché en priorité sur la card publique et la page annonce ; libellé « Places passagers
+          <b>maximum</b> » ; aide contextuelle sous « Coût total du vol » et « Votre part ».</li>
+        <li><b>Seuil légal de part pilote : plus bloquant, juste un avertissement</b> — revient sur
+          le durcissement du 08/09, décision détaillée dans l'onglet Décisions. Seul garde-fou
+          gardé : la part doit être strictement positive.</li>
+        <li><b>Pages publiques « aucun vol » :</b> nouveau <code>NoFlightsNotice</code> (message
+          clair + WhatsApp + Contact) à la place d'une section qui disparaissait silencieusement
+          quand Romain désactive tous les produits — page d'accueil et <code>/nos-offres</code>
+          (qui corrige au passage une incohérence : le message s'affichait même quand des
+          itinéraires ou annonces pilotes restaient disponibles).</li>
+        <li><code>tsc</code> + <code>next build</code> OK. Pas commité.</li>
+      </ul>
+
       <h3>2026-09-11 (fin de session) — cohérence visuelle espace pilote · M&amp;B rejetée · vérif back-end</h3>
       <ul>
         <li><b>Passe de cohérence de l'espace pilote</b> (<code>ba61f31</code>) : les blocs
@@ -740,6 +1082,12 @@
           propre parcours d'annonce) ; select imbriqué <code>respondToRouteProposal</code>
           confirmé (même schéma que le M&amp;B en prod). Reste le test à la main (prochaine
           session).</li>
+        <li><b>Refonte des emails : 3 directions visuelles testées dans un artifact, 2 rejetées.</b>
+          Round 3 (7 règles) gardé comme base ; rounds 4/5 « Premium Editorial » rejetés par
+          Romain. Décision : périmètre resserré à textes/en-tête/pied de page, chantier remis en
+          pause. Consolidation documentaire : <code>emails-review.md</code> supprimé, fusionné
+          avec l'historique des rounds dans le nouveau <code>plan-refonte-emails.html</code>.
+          Rien touché dans <code>lib/email-templates.ts</code>.</li>
       </ul>
 
       <h3>2026-09-11 — audit espace pilote + correctifs P0/P1</h3>
@@ -989,14 +1337,32 @@
       <ul>
         <li><span class="tag t-green">Exécutées</span> <code>20260906_mass_balance</code> ·
           <code>20260907_pilote_legal</code> · <code>20260908_reservations_pilote_assign</code> ·
-          <code>20260908_flight_offers</code> · <code>20260908_annonces_legal_ok</code> ·
-          <code>20260910_annonces_paiement</code></li>
+          <code>20260908_flight_offers</code> · <code>20260910_annonces_paiement</code> ·
+          <code>20260911_reservation_messages</code> (13/09, après un premier essai qui avait buté
+          sur une policy déjà existante — fichier corrigé pour être ré-exécutable,
+          <code>drop policy if exists</code> ajouté) · <code>20260913_annonces_titre</code> ·
+          <code>20260913_annonces_itineraire</code> (les deux confirmées exécutées le 13/09 via
+          l'API OpenAPI de PostgREST, pendant le diagnostic ci-dessous) ·
+          <code>20260908_annonces_legal_ok</code> (<b>13/09</b> — <span class="tag t-red">documentée
+          « exécutée » depuis le 08/09 mais ne l'était en réalité jamais</span>, voir callout
+          ci-dessous).</li>
         <li><span class="tag t-red">Non exécutée</span> <code>20260909_pilote_paiement</code>
           (bloc D — <b>abandonnée</b>, remplacée par <code>20260910</code>, ne pas l'exécuter).</li>
-        <li><span class="tag t-red">Non exécutée</span> <code>20260911_reservation_messages</code>
-          — table <code>reservation_messages</code> + <code>reservations.messages_token</code> +
-          <code>pilotes.signature</code>. <b>À exécuter avant de tester la messagerie.</b></li>
       </ul>
+      <div class="callout red">
+        <b>13/09 — décalage doc/réalité trouvé sur une migration « exécutée ».</b> Publier une
+        annonce échouait avec <code>Erreur création de l'annonce</code>. Diagnostic (script Node
+        ponctuel avec la clé service_role, testé puis supprimé) : <code>annonces_pilote.legal_ok</code>
+        et <code>legal_ok_at</code> n'existaient pas en base (erreur Postgres <code>42703</code>,
+        pas un souci de cache PostgREST comme il semblait au premier abord) — la migration
+        <code>20260908_annonces_legal_ok.sql</code>, documentée comme exécutée depuis le 08/09,
+        ne l'avait en réalité jamais été sur ce projet. Comme la création/modification d'annonce
+        n'avait jamais été testée manuellement de bout en bout avant aujourd'hui, ça n'avait jamais
+        été détecté. Exécutée et confirmée le 13/09. <b>Leçon</b> : le statut « exécutée » d'une
+        migration dans ce document reflète ce qui a été <i>dit</i>, pas forcément vérifié en base —
+        en cas de doute (erreur <code>PGRST204</code>/<code>42703</code>), vérifier directement
+        plutôt que de faire confiance à la doc.
+      </div>
     </div>
   </section>
 
