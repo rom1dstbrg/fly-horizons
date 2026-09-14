@@ -1,10 +1,10 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CreateReservationForm } from "@/components/admin/CreateReservationForm";
-import { PageHeader } from "@/components/admin/PageHeader";
+import { PiloteHeader } from "@/components/pilote/ui";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
-export const metadata = { title: "Nouvelle réservation — Admin" };
+export const metadata = { title: "Nouvelle réservation — Espace pilote" };
 
 export default async function NewReservationPage() {
   const supabase = createAdminClient();
@@ -22,13 +22,12 @@ export default async function NewReservationPage() {
     <div className="space-y-6">
       <div>
         <Link
-          href="/admin/vols"
+          href="/pilote/vols"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-2"
         >
-          <ChevronLeft size={15} /> Retour aux réservations
+          <ChevronLeft size={15} /> Retour à mes vols
         </Link>
-        <PageHeader
-          domain="vols"
+        <PiloteHeader
           title="Nouvelle réservation"
           subtitle="Créez une réservation pour un client qui vous a contacté par téléphone ou email."
         />

@@ -4,7 +4,7 @@ import { AdminVolMesureFlow } from "@/components/admin/AdminVolMesureFlow";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
-export const metadata = { title: "Nouveau vol sur mesure — Admin" };
+export const metadata = { title: "Nouveau vol sur mesure — Espace pilote" };
 
 export default async function NewVolMesurePage() {
   const supabase = createAdminClient();
@@ -23,7 +23,7 @@ export default async function NewVolMesurePage() {
     <div>
       <div className="flex items-center gap-3 mb-4">
         <Link
-          href="/admin/vols?tab=sur-mesure"
+          href="/pilote/vols"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ChevronLeft size={15} /> Retour

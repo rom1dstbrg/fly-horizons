@@ -128,7 +128,9 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    if (!isPilote) {
+    // isAdmin passe aussi : un compte admin peut avoir sa propre fiche pilote
+    // (cas de Romain, admin + pilote sur le même compte depuis le 14/09).
+    if (!isAdmin && !isPilote) {
       const url = request.nextUrl.clone();
       url.pathname = "/";
       return NextResponse.redirect(url);

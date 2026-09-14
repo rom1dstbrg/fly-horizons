@@ -274,7 +274,7 @@ export function AdminVolMesureFlow({ clients, stopovers: availableStops, prixHeu
       });
 
       if (result.error) { setError(result.error); setShowModal(false); return; }
-      router.push("/admin/vols?tab=sur-mesure");
+      router.push("/pilote/vols");
     } catch {
       setError("Erreur réseau.");
       setShowModal(false);

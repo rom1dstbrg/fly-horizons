@@ -20,7 +20,9 @@ export default async function PiloteLayout({ children }: { children: React.React
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase.from("profiles").select("role, full_name").eq("id", user.id).single();
-  if (profile?.role !== "pilote") redirect("/");
+  // isAdmin passe aussi : un compte admin peut avoir sa propre fiche pilote
+  // (cas de Romain, admin + pilote sur le même compte depuis le 14/09).
+  if (profile?.role !== "pilote" && profile?.role !== "admin") redirect("/");
 
   // Un pilote désactivé (statut != 'actif') perd l'accès à l'espace, même si son
   // rôle profil reste "pilote" (la désactivation ne touche que la fiche pilotes).

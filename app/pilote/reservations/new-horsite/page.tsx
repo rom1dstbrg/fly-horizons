@@ -1,10 +1,10 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CreateHorSiteForm } from "@/components/admin/CreateHorSiteForm";
-import { PageHeader } from "@/components/admin/PageHeader";
+import { PiloteHeader } from "@/components/pilote/ui";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
-export const metadata = { title: "Vol hors-site — Admin" };
+export const metadata = { title: "Vol hors-site — Espace pilote" };
 
 export default async function NewHorSitePage() {
   const supabase = createAdminClient();
@@ -22,13 +22,12 @@ export default async function NewHorSitePage() {
     <div className="space-y-6">
       <div>
         <Link
-          href="/admin/vols"
+          href="/pilote/vols"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-2"
         >
-          <ChevronLeft size={15} /> Retour aux réservations
+          <ChevronLeft size={15} /> Retour à mes vols
         </Link>
-        <PageHeader
-          domain="vols"
+        <PiloteHeader
           title="Vol hors-site"
           subtitle="Enregistrez un vol effectué en dehors du site (Messenger, téléphone, sur place…) pour garder votre historique et votre CA à jour."
         />

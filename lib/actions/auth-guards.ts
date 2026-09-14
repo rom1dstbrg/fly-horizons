@@ -21,15 +21,18 @@ export async function requireAdmin(): Promise<void> {
 }
 
 /**
- * Autorise uniquement le pilote **actif** courant, agissant sur sa propre fiche
- * (profil, acceptation de la charte). L'admin passe par /admin/pilotes.
+ * Autorise le pilote **actif** courant, agissant sur sa propre fiche (profil,
+ * acceptation de la charte). Un admin qui a lui-même une fiche pilote active
+ * passe aussi (cas de Romain, admin + pilote sur le même compte depuis le
+ * 14/09) — pour gérer la fiche d'un *autre* pilote, l'admin passe par
+ * /admin/pilotes, pas par ici.
  */
 export async function requireSelfActivePilote(): Promise<{ piloteId: string }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Non autorisé");
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "pilote") throw new Error("Non autorisé");
+  if (profile?.role !== "pilote" && profile?.role !== "admin") throw new Error("Non autorisé");
 
   const { data: pilote } = await createAdminClient()
     .from("pilotes")

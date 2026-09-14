@@ -5,9 +5,9 @@ import Link from "next/link";
 import { Plus, Route, WifiOff, X } from "lucide-react";
 
 const OPTIONS = [
-  { href: "/admin/reservations/new",         icon: Plus,    label: "Nouvelle réservation", desc: "Vol standard payé en ligne" },
-  { href: "/admin/reservations/new-mesure",  icon: Route,   label: "Vol sur mesure",        desc: "Itinéraire personnalisé" },
-  { href: "/admin/reservations/new-horsite", icon: WifiOff, label: "Hors site",             desc: "Vol déjà effectué, enregistrement rétroactif" },
+  { href: "/pilote/reservations/new",         icon: Plus,    label: "Nouvelle réservation", desc: "Vol standard payé en ligne" },
+  { href: "/pilote/reservations/new-mesure",  icon: Route,   label: "Vol sur mesure",        desc: "Itinéraire personnalisé" },
+  { href: "/pilote/reservations/new-horsite", icon: WifiOff, label: "Hors site",             desc: "Vol déjà effectué, enregistrement rétroactif" },
 ] as const;
 
 export function VolsPageActions({ activeTab }: { activeTab: string }) {
@@ -18,7 +18,7 @@ export function VolsPageActions({ activeTab }: { activeTab: string }) {
       {/* Desktop / tablette : les 3 boutons, comme avant */}
       <div className="hidden sm:flex items-center gap-2">
         <Link
-          href="/admin/reservations/new"
+          href="/pilote/reservations/new"
           className={`inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
             activeTab === "reservations"
               ? "bg-primary text-primary-foreground hover:bg-primary/90"
@@ -29,7 +29,7 @@ export function VolsPageActions({ activeTab }: { activeTab: string }) {
           Nouvelle réservation
         </Link>
         <Link
-          href="/admin/reservations/new-mesure"
+          href="/pilote/reservations/new-mesure"
           className={`inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
             activeTab === "sur-mesure"
               ? "bg-primary text-primary-foreground hover:bg-primary/90"
@@ -40,7 +40,7 @@ export function VolsPageActions({ activeTab }: { activeTab: string }) {
           Nouveau vol sur mesure
         </Link>
         <Link
-          href="/admin/reservations/new-horsite"
+          href="/pilote/reservations/new-horsite"
           className="inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold border border-border text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
         >
           <WifiOff size={15} />

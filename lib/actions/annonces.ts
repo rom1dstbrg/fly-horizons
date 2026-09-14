@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { evaluerPartPilote } from "@/lib/annonces-pilote";
+import { finalizeAnnonceGroupPricing } from "@/lib/annonces-pilote-server";
 import { piloteLegalStatus } from "@/lib/pilote/legal";
 import sharp from "sharp";
 
@@ -22,7 +23,9 @@ async function checkPilote() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Non autorisé");
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "pilote") throw new Error("Non autorisé");
+  // isAdmin passe aussi : un compte admin peut avoir sa propre fiche pilote
+  // (cas de Romain, admin + pilote sur le même compte depuis le 14/09).
+  if (profile?.role !== "pilote" && profile?.role !== "admin") throw new Error("Non autorisé");
 
   const admin = createAdminClient();
   const { data: pilote } = await admin
@@ -52,7 +55,10 @@ function checkPublicationGates(pilote: Awaited<ReturnType<typeof checkPilote>>):
   return null;
 }
 
+type RouteWaypoint = { lat: number; lng: number; nom?: string };
+
 export async function createAnnonce(data: {
+  titre?: string;
   duree: number;
   places: number;
   prix_total: number;
@@ -61,12 +67,16 @@ export async function createAnnonce(data: {
   description?: string;
   images?: string[];
   legal_ok?: boolean;
+  route_waypoints?: RouteWaypoint[];
 }) {
   try {
     const pilote = await checkPilote();
 
     if (!(data.duree >= 10 && data.duree <= 240)) return { error: "Durée invalide (10 à 240 minutes)" };
     if (!(data.places >= 1 && data.places <= 6)) return { error: "Nombre de places invalide (1 à 6)" };
+    if (!(data.prix_total > 0) || !(data.part_pilote >= 0)) {
+      return { error: "Indiquez un prix total et votre part." };
+    }
     if (!data.legal_ok) {
       return { error: "Vous devez confirmer que vous réalisez ce vol et partagez vos frais pour publier." };
     }
@@ -75,12 +85,16 @@ export async function createAnnonce(data: {
     const modeVente = data.mode_vente === "place" ? "place" : "avion";
     const images = (data.images ?? []).slice(0, MAX_IMAGES);
 
+    // Le minimum légal (part égale, pilote compris) n'est plus bloquant à la
+    // publication — le pilote reste seul responsable de sa part réelle
+    // (NCO.GEN.104). On calcule quand même le niveau pour l'avertissement
+    // affiché dans le formulaire et le badge « À confirmer » du dashboard.
     const check = evaluerPartPilote(data.prix_total, data.part_pilote, data.places);
-    if (check.level === "block") return { error: check.message };
 
     const admin = createAdminClient();
     const { error } = await admin.from("annonces_pilote").insert({
       pilote_id: pilote.id,
+      titre: data.titre?.trim() || null,
       duree: data.duree,
       places: data.places,
       prix_total: data.prix_total,
@@ -90,18 +104,20 @@ export async function createAnnonce(data: {
       images,
       legal_ok: true,
       legal_ok_at: new Date().toISOString(),
+      route_waypoints: data.route_waypoints?.length ? data.route_waypoints : null,
     });
 
     if (error) return { error: "Erreur création de l'annonce" };
 
     revalidatePath("/pilote/annonces");
-    return { success: true, warning: check.level === "warn" ? check.message : null };
+    return { success: true, warning: check.level !== "ok" ? check.message : null };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Erreur serveur" };
   }
 }
 
 export async function updateAnnonce(id: string, data: {
+  titre?: string;
   duree: number;
   places: number;
   prix_total: number;
@@ -110,12 +126,16 @@ export async function updateAnnonce(id: string, data: {
   description?: string;
   images?: string[];
   legal_ok?: boolean;
+  route_waypoints?: RouteWaypoint[];
 }) {
   try {
     const pilote = await checkPilote();
 
     if (!(data.duree >= 10 && data.duree <= 240)) return { error: "Durée invalide (10 à 240 minutes)" };
     if (!(data.places >= 1 && data.places <= 6)) return { error: "Nombre de places invalide (1 à 6)" };
+    if (!(data.prix_total > 0) || !(data.part_pilote >= 0)) {
+      return { error: "Indiquez un prix total et votre part." };
+    }
     if (!data.legal_ok) {
       return { error: "Vous devez confirmer que vous réalisez ce vol et partagez vos frais pour publier." };
     }
@@ -125,12 +145,12 @@ export async function updateAnnonce(id: string, data: {
     const images = (data.images ?? []).slice(0, MAX_IMAGES);
 
     const check = evaluerPartPilote(data.prix_total, data.part_pilote, data.places);
-    if (check.level === "block") return { error: check.message };
 
     const admin = createAdminClient();
     const { data: updated, error } = await admin
       .from("annonces_pilote")
       .update({
+        titre: data.titre?.trim() || null,
         duree: data.duree,
         places: data.places,
         prix_total: data.prix_total,
@@ -140,6 +160,7 @@ export async function updateAnnonce(id: string, data: {
         images,
         legal_ok: true,
         legal_ok_at: new Date().toISOString(),
+        route_waypoints: data.route_waypoints?.length ? data.route_waypoints : null,
       })
       .eq("id", id)
       .eq("pilote_id", pilote.id)
@@ -149,7 +170,7 @@ export async function updateAnnonce(id: string, data: {
     if (error || !updated) return { error: "Erreur mise à jour de l'annonce" };
 
     revalidatePath("/pilote/annonces");
-    return { success: true, warning: check.level === "warn" ? check.message : null };
+    return { success: true, warning: check.level !== "ok" ? check.message : null };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Erreur serveur" };
   }
@@ -166,7 +187,7 @@ export async function republishAnnonce(id: string) {
 
     const { data: source } = await admin
       .from("annonces_pilote")
-      .select("duree, places, prix_total, part_pilote, mode_vente, description, images, legal_ok, legal_ok_at")
+      .select("titre, duree, places, prix_total, part_pilote, mode_vente, description, images, legal_ok, legal_ok_at, route_waypoints")
       .eq("id", id)
       .eq("pilote_id", pilote.id)
       .single();
@@ -175,6 +196,7 @@ export async function republishAnnonce(id: string) {
 
     const { error } = await admin.from("annonces_pilote").insert({
       pilote_id: pilote.id,
+      titre: source.titre,
       duree: source.duree,
       places: source.places,
       prix_total: source.prix_total,
@@ -182,6 +204,7 @@ export async function republishAnnonce(id: string) {
       mode_vente: source.mode_vente ?? "avion",
       description: source.description,
       images: source.images,
+      route_waypoints: source.route_waypoints,
       // On reporte l'attestation de la source. Si elle n'était pas attestée
       // (annonce d'avant le garde-fou), la copie reste « à confirmer » : le
       // pilote devra l'éditer, ce qui repasse par la case à cocher.
@@ -192,6 +215,89 @@ export async function republishAnnonce(id: string) {
     if (error) return { error: "Erreur republication de l'annonce" };
 
     revalidatePath("/pilote/annonces");
+    return { success: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Erreur serveur" };
+  }
+}
+
+/**
+ * Suppression définitive — seulement si aucune réservation n'a jamais été
+ * faite sur cette annonce (même annulée, pour garder l'historique). Sinon,
+ * redirige vers « Annuler » qui conserve la ligne.
+ */
+export async function deleteAnnonce(id: string) {
+  try {
+    const pilote = await checkPilote();
+    const admin = createAdminClient();
+
+    const { count } = await admin
+      .from("reservations")
+      .select("id", { count: "exact", head: true })
+      .eq("annonce_id", id);
+    if ((count ?? 0) > 0) {
+      return { error: "Des réservations existent sur cette annonce : utilisez « Annuler » plutôt que « Supprimer »." };
+    }
+
+    const { data: annonce } = await admin
+      .from("annonces_pilote")
+      .select("images")
+      .eq("id", id)
+      .eq("pilote_id", pilote.id)
+      .maybeSingle();
+    if (!annonce) return { error: "Annonce introuvable" };
+
+    if (annonce.images?.length) {
+      await admin.storage.from("annonces").remove(annonce.images);
+    }
+
+    const { error } = await admin
+      .from("annonces_pilote")
+      .delete()
+      .eq("id", id)
+      .eq("pilote_id", pilote.id);
+    if (error) return { error: error.message };
+
+    revalidatePath("/pilote/annonces");
+    return { success: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Erreur serveur" };
+  }
+}
+
+/**
+ * Mode « à la place » uniquement : le pilote clôture le groupe avant qu'il
+ * soit complet (sinon ça se fait automatiquement). Fige le prix définitif de
+ * chaque réservation déjà inscrite, à parts égales entre les occupants réels
+ * (décision 2026-09-13 — pas sur la capacité max déclarée à la publication).
+ */
+export async function cloturerGroupeAnnonce(id: string) {
+  try {
+    const pilote = await checkPilote();
+    const admin = createAdminClient();
+
+    const { data: annonce } = await admin
+      .from("annonces_pilote")
+      .select("id, statut, mode_vente, places_reservees, prix_total, part_pilote")
+      .eq("id", id)
+      .eq("pilote_id", pilote.id)
+      .maybeSingle();
+    if (!annonce) return { error: "Annonce introuvable" };
+    if (annonce.mode_vente !== "place") return { error: "Cette annonce n'est pas en mode « à la place »" };
+    if (annonce.statut !== "publiee") return { error: "Cette annonce n'est plus ouverte" };
+    if (!annonce.places_reservees) return { error: "Aucune réservation sur cette annonce pour l'instant" };
+
+    const { error } = await admin
+      .from("annonces_pilote")
+      .update({ statut: "reservee" })
+      .eq("id", id)
+      .eq("statut", "publiee");
+    if (error) return { error: error.message };
+
+    await finalizeAnnonceGroupPricing(admin, id, annonce.prix_total, annonce.part_pilote);
+
+    revalidatePath("/pilote/annonces");
+    revalidatePath("/pilote/vols");
     return { success: true };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Erreur serveur" };

@@ -115,7 +115,7 @@ export function CreateReservationForm({ clients, prixHeure }: Props) {
       } else {
         setSuccess("Réservation créée et marquée comme confirmée ✓");
       }
-      setTimeout(() => router.push("/admin/vols"), 1500);
+      setTimeout(() => router.push("/pilote/vols"), 1500);
     });
   }
 
@@ -374,7 +374,7 @@ export function CreateReservationForm({ clients, prixHeure }: Props) {
       <FormFooter
         pending={isPending}
         submitLabel={envoyerPaiement ? "Créer et envoyer le lien de paiement" : "Créer la réservation"}
-        onCancel={() => router.push("/admin/vols")}
+        onCancel={() => router.push("/pilote/vols")}
       />
     </form>
   );

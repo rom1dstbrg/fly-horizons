@@ -106,21 +106,21 @@ export default async function AdminDashboardPage() {
         action={
           <div className="hidden sm:flex items-center gap-2">
             <Link
-              href="/admin/reservations/new"
+              href="/pilote/reservations/new"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
             >
               <Plus size={15} />
               Nouvelle réservation
             </Link>
             <Link
-              href="/admin/reservations/new-mesure"
+              href="/pilote/reservations/new-mesure"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
             >
               <Route size={15} />
               Nouveau vol sur mesure
             </Link>
             <Link
-              href="/admin/reservations/new-horsite"
+              href="/pilote/reservations/new-horsite"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
             >
               <WifiOff size={15} />

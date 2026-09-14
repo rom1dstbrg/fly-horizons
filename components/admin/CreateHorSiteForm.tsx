@@ -112,7 +112,7 @@ export function CreateHorSiteForm({ clients, prixHeure }: Props) {
       }
 
       setSuccess(true);
-      setTimeout(() => router.push("/admin/vols"), 1500);
+      setTimeout(() => router.push("/pilote/vols"), 1500);
     });
   }
 
@@ -388,7 +388,7 @@ export function CreateHorSiteForm({ clients, prixHeure }: Props) {
       <FormFooter
         pending={isPending}
         submitLabel="Enregistrer le vol"
-        onCancel={() => router.push("/admin/vols")}
+        onCancel={() => router.push("/pilote/vols")}
       />
     </form>
   );

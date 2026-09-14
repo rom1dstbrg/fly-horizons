@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Audit admin ↔ pilote — vers « tout passe par l'espace pilote » (2026-09-14)</title>
+<style>
+  :root{
+    --navy:#0b2238; --gold:#F2B705; --bg:#f4f6fa; --card:#fff; --ink:#1e2535;
+    --muted:#5b6b7b; --border:#e0e5ef; --rule:#c9d2db;
+    --green:#0f9d58; --green-bg:#e9f9f0; --green-bd:#bfe9d2;
+    --amber:#b7791f; --amber-bg:#fef6e6; --amber-bd:#f3dfa8;
+    --red:#c53030; --red-bg:#fdecec; --red-bd:#f5c2c2;
+    --blue:#1d5fbf; --blue-bg:#eaf1fd; --blue-bd:#c7dafa;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.6;font-size:15px}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 24px 120px}
+  h1{font-size:25px;color:var(--navy);font-weight:800;line-height:1.2}
+  .sub{color:var(--muted);font-size:13px;margin:4px 0 24px}
+  h2{font-size:18px;color:var(--navy);font-weight:800;margin:34px 0 10px}
+  h3{font-size:14px;color:var(--navy);font-weight:700;margin:20px 0 6px}
+  p{margin:7px 0}
+  code{background:#eef1f7;border:1px solid var(--border);padding:1px 5px;border-radius:5px;
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+  a{color:var(--blue)}
+  ul,ol{margin:8px 0 8px 22px}
+  li{margin:5px 0}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;
+    padding:16px 18px;margin:12px 0;box-shadow:0 1px 6px rgba(11,34,56,.05)}
+  .tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.4px;
+    padding:2px 8px;border-radius:100px;text-transform:uppercase;vertical-align:middle}
+  .t-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)}
+  .t-amber{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-bd)}
+  .t-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)}
+  .t-blue{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bd)}
+  .t-grey{background:#eef1f7;color:var(--muted);border:1px solid var(--border)}
+  .callout{border-left:4px solid var(--gold);background:#fffdf5;padding:12px 16px;border-radius:0 8px 8px 0;margin:14px 0;font-size:13.5px}
+  .callout.red{border-left-color:var(--red);background:var(--red-bg)}
+  .callout.green{border-left-color:var(--green);background:var(--green-bg)}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+  th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);
+    padding:7px 9px;border-bottom:2px solid var(--rule);font-weight:700}
+  td{padding:8px 9px;border-bottom:1px solid var(--border);vertical-align:top}
+  .pill{font-size:12px;color:var(--muted)}
+  .toc{font-size:13px}
+  .toc a{display:block;padding:3px 0}
+  .phase{background:var(--card);border:1px solid var(--border);border-left:4px solid var(--blue);
+    border-radius:0 10px 10px 0;padding:14px 16px;margin:10px 0}
+  .phase h4{font-size:13.5px;color:var(--navy);font-weight:800;margin-bottom:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Audit admin ↔ pilote — vers « tout passe par l'espace pilote »</h1>
+  <p class="sub">2026-09-14 · Point de départ : Romain veut qu'à terme <code>/admin</code> ne serve plus
+    qu'à administrer le site, et que toute création de réservation (standard + vol sur mesure) passe
+    par l'espace pilote, avec des capacités différentes selon le pilote. Lui-même, admin et pilote,
+    doit pouvoir tout faire. Ce document répond à « est-ce possible ? » avec l'état réel du code —
+    aucune ligne de code écrite à ce stade, on prépare le plan. Indexé depuis <code>projet.html</code>.</p>
+
+  <div class="callout">
+    <b>Verdict court : oui, c'est possible, et le périmètre réel est plus petit qu'il n'y paraît.</b>
+    Sur les 18 sections de <code>/admin</code>, une seule (<code>reservations/*</code>, création +
+    gestion) est vraiment concernée par la bascule — le reste (boutique, clients, transactions,
+    réglages, analytics, roster des pilotes...) est déjà légitimement de l'administration pure et n'a
+    aucune raison de bouger. Le vrai blocage n'est pas fonctionnel, il est dans le modèle de rôle.
+  </div>
+
+  <h2>Ce qu'on a trouvé de plus important</h2>
+
+  <div class="card" style="border-color:var(--red);">
+    <h3><span class="tag t-red">Confirmé en base</span> Romain a deux comptes séparés aujourd'hui</h3>
+    <table>
+      <tr><th>Compte</th><th>Email</th><th><code>profiles.role</code></th><th>Accès</th></tr>
+      <tr><td>Admin</td><td><code>info@fly-horizons.com</code></td><td><code>admin</code></td><td><code>/admin/*</code> uniquement</td></tr>
+      <tr><td>Pilote</td><td><code>romainpilot2003@gmail.com</code></td><td><code>pilote</code></td><td><code>/pilote/*</code> uniquement (a une ligne <code>pilotes</code> active)</td></tr>
+    </table>
+    <p>Vérifié directement en base (service role) le 14/09 — ce n'est pas une supposition. C'est
+      probablement <i>déjà</i> ce qui t'ennuie au quotidien : deux logins pour une seule personne.
+      La décision du 13/09 (« Romain republie son catalogue via <code>/pilote/annonces</code> »)
+      supposait implicitement ce jonglage entre comptes, sans le dire explicitement.</p>
+  </div>
+
+  <div class="card">
+    <h3>Le modèle de rôle est un enum unique, pas un ensemble de permissions</h3>
+    <p><code>profiles.role</code> vaut <code>'customer'</code>, <code>'admin'</code> ou
+      <code>'pilote'</code> — un seul à la fois. <code>middleware.ts</code> et les deux
+      <code>layout.tsx</code> (admin/pilote) vérifient une égalité stricte : <code>role==='admin'</code>
+      pour <code>/admin</code>, <code>role==='pilote'</code> <b>+ une ligne <code>pilotes</code> avec
+      <code>statut='actif'</code></b> pour <code>/pilote</code>. Un compte ne peut physiquement pas
+      être redirigé vers les deux — même si en dessous, la couche des <i>server actions</i> est déjà
+      plus permissive (voir plus bas).</p>
+  </div>
+
+  <div class="card">
+    <h3>Bonne nouvelle : la couche autorisation est déjà à moitié prête</h3>
+    <p><code>lib/actions/auth-guards.ts</code> expose déjà <code>requireAdminOrActivePilote()</code>
+      et <code>requireAdminOrOwningPilote(reservationId)</code>, utilisés dans ~8 fichiers d'actions
+      (édition de réservation, messagerie, attribution pilote, paiement, itinéraires, masse &amp;
+      centrage, mise en jeu de vols). Le principe « admin OU pilote actif peut agir » existe déjà
+      pour <b>gérer</b> une réservation existante. Il n'existe simplement pas encore pour la
+      <b>création</b>.</p>
+  </div>
+
+  <h2>Carte des flux de création aujourd'hui</h2>
+  <table>
+    <tr><th>Flux</th><th>Route</th><th>Guard</th><th>Écrit dans</th></tr>
+    <tr><td>Réservation standard</td><td><code>/admin/reservations/new</code></td><td><code>checkAdmin()</code> — admin seul</td><td><code>reservations</code></td></tr>
+    <tr><td>Réservation « hors site »</td><td><code>/admin/reservations/new-horsite</code></td><td><code>checkAdmin()</code> — admin seul</td><td><code>reservations</code></td></tr>
+    <tr><td>Vol sur mesure (itinéraire)</td><td><code>/admin/reservations/new-mesure</code></td><td><code>checkAdmin()</code> — admin seul</td><td><code>reservations</code> (<code>type_resa='perso'</code>)</td></tr>
+    <tr><td>Annonce pilote (vol partagé)</td><td><code>/pilote/annonces</code></td><td><code>checkPilote()</code> — pilote seul, pas de fallback admin</td><td><code>annonces_pilote</code></td></tr>
+    <tr><td>Réservation client (self-service)</td><td><code>/reservation</code> (public)</td><td>public</td><td><code>reservations</code></td></tr>
+  </table>
+  <p class="pill"><b>Le vrai trou :</b> aucune des 3 créations admin (réservation, hors-site, vol sur
+    mesure) n'utilise le guard combiné <code>requireAdminOrActivePilote</code> — elles sont toutes en
+    <code>checkAdmin()</code> strict. Et « annonce pilote » écrit dans une table différente
+    (<code>annonces_pilote</code>), ce n'est pas un mécanisme générique de « pilote crée une
+    réservation », c'est un système à part.</p>
+
+  <div class="callout">
+    <b>Vol sur mesure : hors périmètre historique.</b> <code>plan-attaque-espace-pilote.html</code>
+    (projet Bloc A/B/C/D, attribution de pilote) le dit noir sur blanc : « vol sur mesure
+    (<code>type_resa=perso</code>) — non concerné par l'attribution [v1] ». Construire une création
+    de vol sur mesure côté pilote n'est pas la reprise d'un chantier existant, c'est un vrai chantier
+    neuf.
+  </div>
+
+  <h2>Ce qui bloquerait une bascule complète</h2>
+  <ol>
+    <li><b>Le rôle unique</b> — voir plus haut, c'est le blocage racine.</li>
+    <li><b>Aucun niveau de capacité entre pilotes</b> — la table <code>pilotes</code> n'a aucune
+      colonne du genre « peut créer une réservation ». Tous les pilotes actifs ont exactement les
+      mêmes droits aujourd'hui. Ta demande (« selon le rôle, ils peuvent ou non ajouter ») veut dire
+      créer cette notion de zéro.</li>
+    <li><b>Aucune UI/action de création côté pilote</b> — ni réservation standard, ni vol sur mesure.
+      À construire, pas à réactiver.</li>
+    <li><b>Fuite déjà documentée :</b> <code>ActionFooter</code> (le pied du tiroir réservation) ne
+      connaît pas <code>viewerRole</code> — un pilote peut voir/cliquer des actions admin-only
+      (encaisser, boarding pass, proposer un créneau) si elles ne sont pas filtrées une par une.
+      Étendre les pouvoirs des pilotes sans corriger ça rouvre ce trou.</li>
+    <li><b>Sécurité 100% applicative, pas de RLS réelle</b> — les tables pilote/réservation ont des
+      policies <code>using(true)</code>. Chaque nouvelle capacité doit être vérifiée à la main dans
+      le code serveur, sans filet ; un oubli est une vraie fuite de données, pas juste un bug d'UX.</li>
+    <li><b>Dette annexe sans rapport direct</b> mais qui alourdit toute modif : <code>checkAdmin()</code>
+      est copié-collé dans 18 fichiers au lieu d'être un helper partagé.</li>
+  </ol>
+
+  <h2>Cadre légal / périmètre à respecter (déjà tranché, ne pas rouvrir)</h2>
+  <ul>
+    <li>Le cadre NCO.GEN.104 (partage de frais) reste la base légale de tout l'espace pilote — un
+      pilote qui crée une réservation doit rester « il organise son propre vol », pas « Fly Horizons
+      lui envoie du travail ».</li>
+    <li>Pas de recrutement, pas de page « postuler », pas d'ouverture à des pilotes inconnus — décision
+      déjà actée. Un système de capacité par pilote doit rester une bascule manuelle par toi sur un
+      roster que tu connais, pas un système d'auto-élévation.</li>
+    <li>Pas de Stripe Connect / paiement centralisé — chaque pilote continue à encaisser lui-même
+      (virement/QR), même si la création de la réservation se fait depuis l'espace pilote.</li>
+  </ul>
+
+  <h2>Plan proposé, par phases</h2>
+
+  <div class="phase">
+    <h4>Phase 1 — Résoudre ton propre confort (un compte, deux casquettes)</h4>
+    <p>Aligner le <i>routing</i> sur ce que la couche action fait déjà : accès à <code>/pilote/*</code>
+      basé sur « a une ligne <code>pilotes</code> active », <b>indépendamment</b> de
+      <code>profiles.role</code> — plutôt que sur une bascule complète vers un système de rôles
+      multiples (plus gros chantier, pas nécessaire pour ce problème précis). Concrètement : tu
+      pourrais fusionner tes deux comptes (ta ligne <code>pilotes</code> pointe vers ton compte admin)
+      et accéder aux deux espaces avec un seul login. C'est isolé, sans effet sur les autres pilotes.</p>
+  </div>
+
+  <div class="phase">
+    <h4>Phase 2 — Niveaux de capacité par pilote</h4>
+    <p>Nouvelle colonne sur <code>pilotes</code> (ex. <code>peut_creer_reservations boolean</code>,
+      défaut <code>false</code>) + bascule dans <code>/admin/pilotes</code> (déjà existant). Roster
+      géré à la main, cohérent avec la décision « pas d'auto-élévation ».</p>
+  </div>
+
+  <div class="phase">
+    <h4>Phase 3 — Création côté pilote (réservation standard)</h4>
+    <p>Nouvelle action serveur (variante de <code>createAdminReservation</code>) gardée par
+      « admin OU pilote avec <code>peut_creer_reservations=true</code> », nouvelle page sous
+      <code>/pilote/*</code>. Réutilise le pattern <code>auth-guards.ts</code> déjà en place côté
+      édition.</p>
+  </div>
+
+  <div class="phase">
+    <h4>Phase 4 — Vol sur mesure côté pilote</h4>
+    <p>Chantier neuf (voir plus haut). Probablement à réserver aux pilotes avec le niveau de capacité
+      le plus élevé au départ (toi en premier), vu la complexité (itinéraire, devis, escales).</p>
+  </div>
+
+  <div class="phase">
+    <h4>Phase 5 — Admin redevient site-administration</h4>
+    <p>Une fois 3 et 4 en place et utilisés : <code>/admin/reservations/new*</code> peut être retiré
+      ou gardé en secours. <code>/admin/reservations</code> (le tiroir) et <code>/admin/vols</code>
+      (vue flotte) restent probablement utiles comme vue de supervision transverse — à décider si
+      c'est de la « gestion » (reste admin) ou si ça doit aussi migrer.</p>
+  </div>
+
+  <div class="phase" style="border-left-color:var(--red);">
+    <h4>En parallèle, avant d'étendre les pouvoirs pilote</h4>
+    <p>Corriger la fuite <code>ActionFooter</code>/<code>viewerRole</code> — sinon chaque nouvelle
+      capacité pilote agrandit une fenêtre déjà ouverte.</p>
+  </div>
+
+  <h2>Décisions à prendre avant de coder</h2>
+  <ol>
+    <li>Phase 1 : fusionner tes deux comptes en un seul avec double casquette, ou juste changer le
+      routing pour qu'un compte <code>pilote</code> actif accède aussi à <code>/admin</code> s'il est
+      admin (et vice-versa) sans toucher aux comptes existants ? (Techniquement plus simple : la
+      deuxième option, aucune migration de données utilisateur.)</li>
+    <li>Qui d'autre que toi aura un jour <code>peut_creer_reservations=true</code> ? Pas besoin de
+      trancher aujourd'hui, mais ça cadre si la colonne doit être un simple booléen ou prévoir plus
+      de nuance dès le départ.</li>
+    <li>Vol sur mesure côté pilote : réservé à toi seul pour commencer, ou ouvert à tout pilote avec
+      le niveau de capacité le plus élevé dès la Phase 4 ?</li>
+    <li>Ordre réel de priorité : la Phase 1 (ton confort perso) peut se faire seule, indépendamment
+      du reste, si tu veux un gain rapide avant d'attaquer les phases 2-4 qui sont plus lourdes.</li>
+  </ol>
+
+</div>
+</body>
+</html>
