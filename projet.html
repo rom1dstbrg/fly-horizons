@@ -99,22 +99,28 @@
     <div class="col">
       <h3><span class="tag t-amber">À faire</span> prêt à démarrer</h3>
       <ol>
-        <li><b>Audit de cohérence des docs (14/09)</b> — lecture complète des 7 HTML racine.
-          Bonne nouvelle : les migrations <code>20260910_annonces_paiement</code>,
-          <code>20260911_reservation_messages</code>, <code>20260913_annonces_titre</code> et
-          <code>20260913_annonces_itineraire</code> sont <b>toutes vérifiées exécutées en prod</b>
-          (colonnes confirmées en base) — l'incertitude documentée depuis des semaines est levée.
-          2 vrais trous trouvés, jamais documentés avant : <b>1.</b> <span class="tag t-green">corrigé
-          14/09</span> <code>mass_balance_sheets</code> n'a aucune colonne propriétaire — un pilote
-          pouvait modifier la fiche masse &amp; centrage d'un autre pilote en devinant son id UUID
-          (la liste, elle, était déjà bien filtrée). Pas besoin de migration : la portée passe déjà
-          par <code>reservation_id → reservations.pilote_id</code>, il manquait juste la
-          vérification côté <code>updateMassBalanceSheet</code> — ajoutée
-          (<code>lib/actions/mass-balance.ts</code>). <b>2.</b> <span class="tag t-amber">pas fait</span>
-          La page <code>/cgp</code> parle encore uniquement de « l'avion de Fly Horizons » (DA40 Air
-          Academy), jamais adaptée au modèle multi-pilotes — lié au blocage légal jamais levé
-          (assumé, cf. Décisions 08/09) ; texte légal, pas retouché sans une demande explicite de
-          Romain.</li>
+        <li><b>Tester en conditions réelles la fusion admin/pilote</b> — Romain n'a pas encore eu
+          l'occasion. Se connecter avec <code>info@fly-horizons.com</code>, vérifier
+          <code>/pilote</code>, <code>/pilote/annonces</code>, <code>/pilote/profil</code>, et créer
+          une réservation test depuis <code>/pilote/vols</code>. Rien ne devrait bloquer (charte déjà
+          acceptée, infos légales déjà à jour pour la fiche de Romain), mais c'est la seule chose que
+          je n'ai pas pu vérifier moi-même (pas ses identifiants). Une fois confirmé, Romain peut
+          supprimer l'ancien compte <code>romainpilot2003@gmail.com</code> — plus aucune dépendance
+          en base.</li>
+        <li><b>Décider la Phase 5</b> (<code>audit-admin-vs-pilote.html</code>) : <code>/admin/reservations</code>
+          (tiroir de gestion) et <code>/admin/vols</code> (vue flotte) restent-ils de la supervision
+          admin, ou migrent-ils aussi un jour vers l'espace pilote ? Rien n'urge.</li>
+        <li><b>Réécrire la page <code>/cgp</code></b> pour le modèle multi-pilotes — elle parle
+          encore uniquement de « l'avion de Fly Horizons » (DA40 Air Academy). Texte légal : ne pas
+          y toucher sans demande explicite de Romain.</li>
+        <li><b>Centraliser « répondez à cet email » vs WhatsApp</b> (règle 4 du round 3 email,
+          jamais codée) — ambigu tant que le webhook email entrant n'est pas branché (une réponse
+          atterrit de toute façon comme un email brut chez Romain). À trancher avec lui plutôt qu'à
+          deviner — voir <code>plan-refonte-emails.html</code>.</li>
+        <li><b>Direction visuelle des 5 emails admin</b> — <span class="tag t-green">tranché et
+          codé le 14/09</span> : texte simple, infos importantes en gras, un lien vers l'outil
+          concerné (<code>adminEmailBase()</code>). Rien à faire ici — gardé pour mémoire, sera
+          retiré la prochaine fois que cette liste est nettoyée.</li>
         <li><b>Catalogue public → tout par l'espace pilote</b> (décision 13/09, onglet Décisions).
           <code>/nos-offres</code> est déjà codé pour les deux : <b>1.</b> Romain republie son
           catalogue réel (vols durée fixe + itinéraire) via <code>/pilote/annonces</code> ;
@@ -127,30 +133,9 @@
           persistant · saisie mise en avant + résumé collant) <b>toutes rejetées</b> — revert à
           l'état 08/09 (4 sections numérotées). Pas de direction validée. « Style Fly Horizons à
           garder », le vrai problème = manque de cohérence entre blocs ajoutés au fil de l'eau.</li>
-        <li><b>Refonte des 41 emails</b> — <span class="tag t-green">36 publics faits et commités
-          14/09</span> (<code>6bf1848</code>). Squelette en 11 points documenté dans
-          <code>lib/email-templates.ts</code> (section « Base ») : plus de surtitre/H1, un seul
-          <code>&lt;hr&gt;</code>, carte englobante retirée, voix « je »/pilote ou « nous »/Fly
-          Horizons selon attribution. <i>Reste :</i> gabarit des 5 emails admin (direction pas
-          choisie, en attente d'une référence de Romain) ; brancher le vrai pilote assigné dans le
-          paramètre <code>pilote</code> (tout part en « nous » par défaut aujourd'hui). Détail :
-          <code>plan-refonte-emails.html</code>.</li>
-        <li><b>Admin → site-administration only, réservations → espace pilote</b> — audit fait
-          14/09, <span class="tag t-green">phases 1+3 codées le 14/09</span>. Décidé : comptes
-          fusionnés (un seul login <code>info@fly-horizons.com</code>, admin + pilote — l'ancien
-          <code>romainpilot2003@gmail.com</code> peut être supprimé, la fiche pilote a été repointée
-          en base) ; création de réservation reste admin seulement pour l'instant (pas de système de
-          capacité par pilote construit — sciemment hors périmètre tant que personne d'autre n'en a
-          besoin) ; vol sur mesure restera toujours réservé à Romain. Codé : accès admin→
-          <code>/pilote/*</code> (4 fichiers), et les 3 flux de création (réservation, hors-site, vol
-          sur mesure) déménagés de <code>/admin/reservations/new*</code> vers
-          <code>/pilote/reservations/new*</code>, avec points d'entrée sur <code>/pilote/vols</code>.
-          Guards de sécurité inchangés (toujours <code>checkAdmin()</code>). <code>tsc</code> +
-          <code>next build</code> OK, pas commité. <i>Reste :</i> test réel par Romain (login,
-          suppression de l'ancien compte pilote) avant de commiter. Détail :
-          <code>audit-admin-vs-pilote.html</code>.</li>
-        <li><b>Pousser <code>main</code></b> (<code>git push</code>) — commits d'avance. Sur
-          demande de Romain uniquement (Vercel auto-déploie).</li>
+        <li><b>Pousser <code>main</code></b> (<code>git push</code>) — tout est commité jusqu'au
+          14/09 inclus (<code>58370d3</code>), rien en attente de commit. Push sur demande de Romain
+          uniquement (Vercel auto-déploie).</li>
       </ol>
     </div>
 
@@ -167,6 +152,16 @@
     <div class="col">
       <h3><span class="tag t-green">Fait</span> — septembre 2026</h3>
       <ul>
+        <li><b>Session du 14/09 (emails + fusion admin/pilote + sécurité).</b> Commits
+          <code>6bf1848</code> → <code>7b71401</code> → <code>58370d3</code>. Résumé complet dans le
+          Changelog ci-dessous ; en bref : 36 emails publics + 5 emails admin redessinés (squelette
+          documenté dans <code>lib/email-templates.ts</code>), voix pilote branchée sur 18 points
+          d'appel, comptes admin/pilote de Romain fusionnés
+          (<code>info@fly-horizons.com</code> fait les deux), création de réservation déplacée vers
+          <code>/pilote/reservations/new*</code>, faille <code>mass_balance_sheets</code> fermée,
+          4 migrations vérifiées exécutées en prod. Détail : <code>plan-refonte-emails.html</code>,
+          <code>audit-admin-vs-pilote.html</code>. <code>tsc</code> + <code>next build</code> OK à
+          chaque étape. <b>Tout commité, rien poussé.</b></li>
         <li><b>Session du 13/09 (test réel + corrections).</b> P2 complet (cash, nav « Équipe »,
           édition passagers/poids pilote, email paiement confirmé, secret inbound obligatoire) ·
           refonte <code>/pilote/annonces</code> (aperçu carte publique, stats vues, popup, suppression
@@ -180,7 +175,8 @@
           jugée trop proche d'un cadrage commercial) · <code>/nos-offres</code> prêt (flag
           <code>catalogue_source</code>) pour le jour où tous les vols passeront par l'espace pilote.
           Détail complet : Changelog + Décisions ci-dessous. <code>tsc</code> + <code>next build</code>
-          OK à chaque étape. Pas commité.</li>
+          OK à chaque étape. <span class="tag t-green">Commité le 14/09</span> (<code>58370d3</code>,
+          resté en attente 1 jour avant d'être groupé avec le reste).</li>
         <li><b>Messagerie pilote ↔ client Phase 1 (11/09).</b> Onglet « Messages » dans le drawer,
           envoi depuis <code>info@</code> au nom du pilote + signature éditable, page publique
           <code>/reservation/messages/[token]</code>, table <code>reservation_messages</code>.
@@ -216,12 +212,12 @@
     <div class="col">
       <h3><span class="tag t-grey">Backlog</span> plus tard, pas encore ordonnancé</h3>
       <ul>
-        <li><b>Annonces — paiement modèle A</b> : <span class="tag t-green">codé 10/09</span>
-          (virement + QR + page client + steps pilote + reçu + filet impayé + 2 modes de vente,
-          cf. Changelog). <i>Reste :</i> exécuter la migration <code>20260910</code>, vérif locale
-          bout-en-bout, puis commit/push. <i>Plus tard, optionnel :</i> relance auto impayé (cron
-          léger) ; chemin explicite « le client a annulé après paiement » côté pilote (aujourd'hui :
-          le pilote décoche « payé » + échange direct avec le client).</li>
+        <li><b>Annonces — paiement modèle A</b> : <span class="tag t-green">codé 10/09, migration
+          20260910 vérifiée exécutée et tout commité le 14/09</span> (virement + QR + page client +
+          steps pilote + reçu + filet impayé + 2 modes de vente, cf. Changelog). <i>Plus tard,
+          optionnel :</i> relance auto impayé (cron léger) ; chemin explicite « le client a annulé
+          après paiement » côté pilote (aujourd'hui : le pilote décoche « payé » + échange direct
+          avec le client).</li>
         <li><b>Messagerie pilote ↔ client (fil de ticket)</b> — <span class="tag t-green">Phase 1
           codée 11/09</span> : onglet « Messages » dans le drawer, envoi depuis
           <code>info@fly-horizons.com</code> au nom du pilote + signature éditable
@@ -986,6 +982,51 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-09-14 (fin de session) — bilan complet : emails, fusion admin/pilote, sécurité</h3>
+      <p class="pill">Cette entrée résume toute la session du 14/09 pour une reprise à froid — les
+        entrées ci-dessous détaillent chaque étape dans l'ordre chronologique où elle a eu lieu.
+        3 commits sur <code>main</code>, <b>rien poussé</b> (Vercel déploie sur push, jamais fait
+        sans accord explicite de Romain).</p>
+      <ul>
+        <li><code>6bf1848</code> — squelette en 11 points pour les emails publics (documenté en
+          commentaire en tête de <code>lib/email-templates.ts</code>, section « Base ») : plus de
+          surtitre doré ni de H1, un seul <code>&lt;hr&gt;</code> par email, carte englobante
+          retirée, montant mis en avant dans une carte autonome, CTA unique par défaut, voix
+          « je »/pilote ou « nous »/Fly Horizons selon attribution. Appliqué aux 36 emails publics.
+          Nouvel outil <code>email-preview.html</code> (racine, double-clic) +
+          <code>scripts/generate-email-preview.ts</code> pour visualiser les 41 templates, séparés
+          admin/public/par catégorie, dans l'ordre du flow.</li>
+        <li><code>7b71401</code> — comptes admin et pilote de Romain fusionnés : la fiche
+          <code>pilotes</code> repointée sur son <code>user_id</code> admin en base (historique,
+          licence, IBAN, signature conservés) ; 4 endroits corrigés pour que <code>/pilote/*</code>
+          accepte aussi un compte admin. Les 3 flux de création (réservation, hors-site, vol sur
+          mesure) déménagés de <code>/admin/reservations/new*</code> vers
+          <code>/pilote/reservations/new*</code>, guards de sécurité inchangés
+          (<code>checkAdmin()</code> toujours strict — décidé : admin seulement pour l'instant, vol
+          sur mesure = Romain seul, définitivement). Audit complet et plan en 5 phases :
+          <code>audit-admin-vs-pilote.html</code>.</li>
+        <li><code>58370d3</code> — 5 emails admin redessinés en texte simple + infos + lien
+          (nouveau gabarit <code>adminEmailBase()</code>, séparé du gabarit public) ; voix pilote
+          branchée sur le vrai pilote assigné (18 points d'appel, 8 fichiers, dérivé de
+          <code>pilotes.nom</code>) au lieu de rester en « nous » par défaut ; faille fermée sur
+          <code>mass_balance_sheets</code> (un pilote pouvait modifier la fiche d'un autre en
+          devinant son id — corrigé en code, pas de migration nécessaire) ; 4 migrations
+          (<code>20260910</code>, <code>20260911</code>, 2×<code>20260913</code>) vérifiées
+          exécutées en prod après des semaines d'incertitude documentée ; regroupe aussi tout le
+          travail des sessions précédentes resté non commité (annonces : titre, itinéraire tracé,
+          consentement Q79, cohérence visuelle pilote).</li>
+        <li><b>Reste ouvert, pour la prochaine session</b> : test réel de la fusion admin/pilote par
+          Romain (bloquant pour supprimer l'ancien compte <code>romainpilot2003@gmail.com</code>) ;
+          décision Phase 5 (sort de <code>/admin/reservations</code> et <code>/admin/vols</code>) ;
+          réécriture de <code>/cgp</code> pour le multi-pilotes (texte légal, attend une demande
+          explicite) ; condition « répondez à cet email » vs WhatsApp (ambiguë tant que l'inbound
+          email n'est pas branché) ; confirmation que <code>piloteParticipationSlot</code> dans
+          <code>ReservationDrawer.tsx</code> est un choix assumé et non un oubli du nettoyage 08/09.
+          Détail de chaque point : Board ci-dessus.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-09-14 — refonte emails : nouvelle architecture appliquée sur 4 templates pilotes</h3>
