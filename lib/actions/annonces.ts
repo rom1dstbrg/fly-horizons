@@ -92,7 +92,7 @@ export async function createAnnonce(data: {
     const check = evaluerPartPilote(data.prix_total, data.part_pilote, data.places);
 
     const admin = createAdminClient();
-    const { error } = await admin.from("annonces_pilote").insert({
+    const { data: inserted, error } = await admin.from("annonces_pilote").insert({
       pilote_id: pilote.id,
       titre: data.titre?.trim() || null,
       duree: data.duree,
@@ -105,12 +105,12 @@ export async function createAnnonce(data: {
       legal_ok: true,
       legal_ok_at: new Date().toISOString(),
       route_waypoints: data.route_waypoints?.length ? data.route_waypoints : null,
-    });
+    }).select("id").single();
 
-    if (error) return { error: "Erreur création de l'annonce" };
+    if (error || !inserted) return { error: "Erreur création de l'annonce" };
 
     revalidatePath("/pilote/annonces");
-    return { success: true, warning: check.level !== "ok" ? check.message : null };
+    return { success: true, id: inserted.id as string, warning: check.level !== "ok" ? check.message : null };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Erreur serveur" };
   }
@@ -294,7 +294,7 @@ export async function cloturerGroupeAnnonce(id: string) {
       .eq("statut", "publiee");
     if (error) return { error: error.message };
 
-    await finalizeAnnonceGroupPricing(admin, id, annonce.prix_total, annonce.part_pilote);
+    await finalizeAnnonceGroupPricing(admin, id, annonce.prix_total);
 
     revalidatePath("/pilote/annonces");
     revalidatePath("/pilote/vols");

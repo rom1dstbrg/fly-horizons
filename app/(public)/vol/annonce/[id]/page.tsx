@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { CalendarCheck, Map, Headphones, PlaneTakeoff, AlertCircle, Lock } from "lucide-react";
-import { AnnonceBookingForm } from "@/components/vols/AnnonceBookingForm";
+import { CalendarCheck, Map, Headphones, PlaneTakeoff, AlertCircle, Lock, ArrowRight } from "lucide-react";
 import { AnnonceCard } from "@/components/vols/AnnonceCard";
 import { AnnonceStickyBar } from "@/components/vols/AnnonceStickyBar";
 import { BackLink } from "@/components/shop/BackLink";
@@ -182,11 +182,12 @@ export default async function AnnonceDetailPage({ params }: { params: Promise<{ 
                     Toutes les places de ce vol sont réservées.
                   </p>
                 ) : (
-                  <AnnonceBookingForm
-                    annonceId={annonce.id}
-                    places={modeVente === "place" ? placesLibres : annonce.places}
-                    piloteName={pilote.nom}
-                  />
+                  <Link
+                    href={`/vol/annonce/${annonce.id}/reserver`}
+                    className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#F2B705] text-[#0b2238] rounded-lg text-sm font-black hover:bg-[#e6a800] transition-colors cursor-pointer"
+                  >
+                    Réserver <ArrowRight size={15} />
+                  </Link>
                 )}
 
                 <div className="space-y-1.5">

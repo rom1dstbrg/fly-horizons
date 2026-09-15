@@ -86,19 +86,20 @@ export function PiloteModal({
   title,
   onClose,
   children,
+  wide = false,
 }: {
   title: string;
   onClose: () => void;
   children: ReactNode;
+  /** Popup plus large — formulaires avec plusieurs colonnes / carte embarquée. */
+  wide?: boolean;
 }) {
   return (
     <div
       className="fixed inset-0 z-[200] bg-black/50 flex items-end sm:items-center justify-center"
-      onClick={onClose}
     >
       <div
-        className="w-full sm:max-w-lg sm:mx-4 bg-card rounded-t-2xl sm:rounded-2xl shadow-xl max-h-[92vh] sm:max-h-[85vh] flex flex-col"
-        onClick={e => e.stopPropagation()}
+        className={`w-full ${wide ? "sm:max-w-3xl" : "sm:max-w-lg"} sm:mx-4 bg-card rounded-t-2xl sm:rounded-2xl shadow-xl max-h-[92vh] sm:max-h-[85vh] flex flex-col`}
       >
         <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-border shrink-0">
           <p className="text-sm font-bold text-foreground">{title}</p>

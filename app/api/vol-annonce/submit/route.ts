@@ -5,6 +5,45 @@ import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { reservationConfirmationFreeEmail, annonceInscriptionPlaceEmail } from "@/lib/email-templates";
 import { finalizeAnnonceGroupPricing } from "@/lib/annonces-pilote-server";
 import { escapeHtml } from "@/lib/utils";
+import { computeEffectiveDay } from "@/lib/dispo-utils";
+
+const DEFAULT_HEURE_DEBUT = "06:00";
+const DEFAULT_HEURE_FIN = "21:00";
+
+/** Le créneau demandé tombe-t-il dans une fenêtre ouverte déclarée par le pilote ?
+ * Aucune dispo configurée du tout = pas de contrainte (comportement historique). */
+async function isSlotDansDispos(
+  supabase: ReturnType<typeof createAdminClient>,
+  piloteId: string,
+  dateVol: string,
+  heureVol: string,
+  dureeMin: number,
+) {
+  const [{ data: jourIndiv }, { data: dispos }, { count: plageTotal }, { count: joursTotal }] = await Promise.all([
+    supabase.from("pilote_disponibilites_jours").select("*").eq("pilote_id", piloteId).eq("date", dateVol).maybeSingle(),
+    supabase.from("pilote_disponibilites").select("*").eq("pilote_id", piloteId)
+      .lte("date_debut", dateVol).gte("date_fin", dateVol).eq("actif", true),
+    supabase.from("pilote_disponibilites").select("id", { count: "exact", head: true }).eq("pilote_id", piloteId).eq("actif", true),
+    supabase.from("pilote_disponibilites_jours").select("id", { count: "exact", head: true }).eq("pilote_id", piloteId),
+  ]);
+  const hasAnyDispo = (plageTotal ?? 0) > 0 || (joursTotal ?? 0) > 0;
+
+  const [h, m] = heureVol.split(":").map(Number);
+  const start = h * 60 + m;
+  const end = start + dureeMin;
+  const within = (hd: string, hf: string) => {
+    const [hdH, hdM] = hd.split(":").map(Number);
+    const [hfH, hfM] = hf.split(":").map(Number);
+    return start >= hdH * 60 + hdM && end <= hfH * 60 + hfM;
+  };
+
+  if (!hasAnyDispo) return within(DEFAULT_HEURE_DEBUT, DEFAULT_HEURE_FIN);
+
+  const effective = computeEffectiveDay(dateVol, dispos ?? [], jourIndiv ? [jourIndiv] : []);
+  if (effective.type === "override") return !effective.ferme && within(effective.heure_debut, effective.heure_fin);
+  if (effective.type === "plage") return effective.windows.some((w) => within(w.heure_debut, w.heure_fin));
+  return false;
+}
 
 export async function POST(request: NextRequest) {
   const { allowed } = await rateLimit(`vol-annonce-submit:${getIp(request)}`, 5, 60_000);
@@ -63,6 +102,9 @@ export async function POST(request: NextRequest) {
     }
     if (passagersCount > annonce.places) {
       return NextResponse.json({ error: `Ce vol n'a que ${annonce.places} place(s) disponible(s).` }, { status: 400 });
+    }
+    if (!(await isSlotDansDispos(supabase, annonce.pilote_id, date_vol, heure_vol, annonce.duree))) {
+      return NextResponse.json({ error: "Ce créneau n'est pas disponible pour ce pilote." }, { status: 400 });
     }
 
     const pilote = annonce.pilotes as { id: string; nom: string; email: string } | null;
@@ -212,6 +254,11 @@ export async function POST(request: NextRequest) {
         annonce_id: annonce.id,
         date_vol,
         heure_vol,
+        // Annonce « itinéraire » : la route a déjà été montrée et acceptée par
+        // le client sur la page publique avant sa demande — on la reporte
+        // directement sur la réservation, pas besoin que le pilote la retrace
+        // ni ne la renvoie pour validation (elle est déjà actée).
+        final_waypoints: annonce.route_waypoints ?? null,
         duree: annonce.duree,
         passagers: passagersCount,
         statut: "demande_recue",
@@ -233,7 +280,7 @@ export async function POST(request: NextRequest) {
     // acompte reste NULL pour toutes.
     let montantFinal = prixClient;
     if (modeVente === "place" && groupeComplet) {
-      await finalizeAnnonceGroupPricing(supabase, annonce.id, annonce.prix_total, annonce.part_pilote);
+      await finalizeAnnonceGroupPricing(supabase, annonce.id, annonce.prix_total);
       const { data: finalized } = await supabase
         .from("reservations")
         .select("acompte")

@@ -81,17 +81,25 @@ export function AdminRouteEditor({ waypoints, onChange, clientWaypoints = [], st
       "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
       { attribution: "Tiles © Esri", maxZoom: 19 }
     );
-    const layerCarte = L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-      { attribution: "© OpenStreetMap © CARTO", maxZoom: 19 }
-    );
     const layerLabels = L.tileLayer(
       "https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png",
       { attribution: "", maxZoom: 19, pane: "overlayPane" }
     );
+    // Carte aéronautique (VFR) — repères utiles à un pilote (zones, aérodromes,
+    // fréquences) plutôt qu'un fond satellite. Tuiles gratuites OpenAIP, sans clé.
+    const layerAero = L.tileLayer(
+      "https://{s}.tile.maps.openaip.net/geowebcache/service/tms/1.0.0/openaip_basemap@EPSG%3A900913@png/{z}/{x}/{-y}.png",
+      { attribution: "© OpenAIP", maxZoom: 14, subdomains: "12", tms: true }
+    );
 
     layerSat.addTo(map);
     layerLabels.addTo(map);
+
+    L.control.layers(
+      { "Satellite": layerSat, "Aéronautique (OpenAIP)": layerAero },
+      undefined,
+      { position: "topright", collapsed: true }
+    ).addTo(map);
 
     L.marker([EBCI.lat, EBCI.lng], { icon: makeEBCIIcon(), interactive: false })
       .addTo(map)
