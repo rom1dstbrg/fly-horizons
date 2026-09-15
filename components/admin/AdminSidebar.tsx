@@ -9,7 +9,7 @@ import {
   Menu, X, ExternalLink, Search,
   CalendarCheck, Clock, Navigation,
   Package, Receipt,
-  LayoutGrid, Scale, UserCog,
+  LayoutGrid, Scale, UserCog, ArrowLeftRight,
 } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 
@@ -77,6 +77,7 @@ const NAVIGATION: NavEntry[] = [
   { type: "link", id: "transactions", icon: Receipt,  label: "Transactions", href: "/admin/transactions" },
   { type: "link", id: "settings",     icon: Settings, label: "Paramètres",   href: "/admin/settings"     },
   { type: "link", id: "plus",         icon: LayoutGrid, label: "Plus",       href: "/admin/plus" },
+  { type: "link", id: "espace-pilote", icon: ArrowLeftRight, label: "Espace pilote", href: "/pilote" },
 ];
 
 function isLinkActive(item: NavLink, pathname: string, currentTab: string | null): boolean {

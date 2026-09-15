@@ -7,8 +7,9 @@ import { EmptyState } from "@/components/admin/ui";
 import { ConfirmActionDialog, type PendingAction } from "@/components/admin/reservation-drawer/ConfirmActionDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlus, Loader2, Check, Plane } from "lucide-react";
+import { UserPlus, Loader2, Check, Plane, Gauge, TriangleAlert } from "lucide-react";
 import type { Pilote } from "@/types/database";
+import { emptyReliabilityStats, type PiloteReliabilityStats } from "@/lib/pilote-stats";
 
 // ── Formulaire d'invitation ─────────────────────────────────────────────
 
@@ -83,6 +84,90 @@ function InviteForm({ onDone }: { onDone: () => void }) {
   );
 }
 
+// ── Panneau de fiabilité ─────────────────────────────────────────────────
+
+function pct(rate: number | null): string | undefined {
+  return rate != null ? `${Math.round(rate * 100)}%` : undefined;
+}
+
+function ReliabilityPanel({ stats }: { stats: PiloteReliabilityStats }) {
+  const items: { label: string; value: number; pctBadge?: string; warn?: boolean; sub?: string }[] = [
+    { label: "Vols effectués", value: stats.volsEffectues },
+    {
+      label: "Vols rendus / retirés",
+      value: stats.volsRendus,
+      pctBadge: pct(stats.tauxVolsRendus),
+      warn: stats.volsRendusProchesDuVol > 0,
+      sub: stats.volsRendusProchesDuVol > 0
+        ? `dont ${stats.volsRendusProchesDuVol} à moins de 3 j du vol`
+        : stats.tauxVolsRendus != null ? "des vols attribués" : undefined,
+    },
+    {
+      label: "Demandes d'annonce annulées",
+      value: stats.demandesAnnonceAnnulees,
+      pctBadge: pct(stats.tauxAnnonceAnnulees),
+      warn: stats.demandesAnnonceAnnuleesProchesDuVol > 0,
+      sub: stats.demandesAnnonceAnnuleesProchesDuVol > 0
+        ? `dont ${stats.demandesAnnonceAnnuleesProchesDuVol} à moins de 3 j du vol`
+        : stats.tauxAnnonceAnnulees != null ? "des demandes reçues" : undefined,
+    },
+    { label: "Créneaux renégociés", value: stats.creneauxRenegocies },
+    {
+      label: "Annonces publiées",
+      value: stats.annoncesPubliees,
+      sub: stats.annoncesPubliees > 0 ? `${stats.vuesAnnonces} vue${stats.vuesAnnonces > 1 ? "s" : ""} cumulées` : undefined,
+    },
+    {
+      label: "Messages clients en attente",
+      value: stats.messagesEnAttente,
+      pctBadge: pct(stats.tauxMessagesEnAttente),
+      warn: stats.messagesEnAttente > 0,
+      sub: stats.plusVieuxMessageEnAttenteJours != null
+        ? `le plus ancien depuis ${Math.floor(stats.plusVieuxMessageEnAttenteJours)} j`
+        : stats.tauxMessagesEnAttente != null ? "des vols en cours" : undefined,
+    },
+  ];
+
+  return (
+    <td colSpan={5} className="px-4 py-4 bg-secondary/20">
+      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-2.5">
+        Fiabilité
+      </p>
+
+      {stats.isAtRisk && (
+        <div className="mb-3 rounded-lg border border-red-300 bg-red-50 px-3 py-2.5">
+          <p className="flex items-center gap-1.5 text-xs font-bold text-red-700">
+            <TriangleAlert size={13} /> Pilote à surveiller
+          </p>
+          <ul className="mt-1 space-y-0.5 text-xs text-red-700 list-disc list-inside">
+            {stats.alertes.map((a) => <li key={a}>{a}</li>)}
+          </ul>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+        {items.map((it) => (
+          <div
+            key={it.label}
+            className={`rounded-lg border p-3 ${it.warn ? "border-amber-300 bg-amber-50" : "border-border bg-card"}`}
+          >
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">{it.label}</p>
+            <div className="flex items-baseline gap-1.5">
+              <p className={`text-xl font-bold ${it.warn ? "text-amber-700" : "text-foreground"}`}>{it.value}</p>
+              {it.pctBadge && (
+                <span className={`text-xs font-semibold ${it.warn ? "text-amber-700" : "text-muted-foreground"}`}>
+                  ({it.pctBadge})
+                </span>
+              )}
+            </div>
+            {it.sub && <p className="text-[11px] text-muted-foreground mt-0.5">{it.sub}</p>}
+          </div>
+        ))}
+      </div>
+    </td>
+  );
+}
+
 // ── Ligne éditable ────────────────────────────────────────────────────────
 
 function EditPiloteForm({ pilote, onClose }: { pilote: Pilote; onClose: () => void }) {
@@ -138,8 +223,17 @@ function EditPiloteForm({ pilote, onClose }: { pilote: Pilote; onClose: () => vo
   );
 }
 
-function PiloteRow({ pilote, onConfirm }: { pilote: Pilote; onConfirm: (a: PendingAction) => void }) {
+function PiloteRow({
+  pilote,
+  stats,
+  onConfirm,
+}: {
+  pilote: Pilote;
+  stats: PiloteReliabilityStats;
+  onConfirm: (a: PendingAction) => void;
+}) {
   const [editing, setEditing] = useState(false);
+  const [showStats, setShowStats] = useState(false);
   const [isActive, setIsActive] = useState(pilote.statut === "actif");
   const [cascadeMsg, setCascadeMsg] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -177,7 +271,17 @@ function PiloteRow({ pilote, onConfirm }: { pilote: Pilote; onConfirm: (a: Pendi
     <>
       <tr className="border-b border-border last:border-0 hover:bg-secondary/20 transition-colors">
         <td className="px-4 py-3">
-          <span className="text-sm font-semibold text-foreground">{pilote.nom}</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm font-semibold text-foreground">{pilote.nom}</span>
+            {stats.isAtRisk && (
+              <span
+                title={stats.alertes.join(" · ")}
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-red-50 text-red-700 text-[10px] font-bold cursor-help"
+              >
+                <TriangleAlert size={10} /> À surveiller
+              </span>
+            )}
+          </div>
           <div className="text-xs text-muted-foreground">{pilote.email}</div>
         </td>
         <td className="px-4 py-3 hidden sm:table-cell">
@@ -204,6 +308,12 @@ function PiloteRow({ pilote, onConfirm }: { pilote: Pilote; onConfirm: (a: Pendi
             <AdminRowActions
               onEdit={() => setEditing(e => !e)}
               onDelete={() => deletePilote(pilote.id)}
+              extra={[{
+                icon: Gauge,
+                label: "Fiabilité",
+                onClick: () => setShowStats(v => !v),
+                title: "Vols rendus, annonces annulées, messages en attente…",
+              }]}
             />
           </div>
         </td>
@@ -220,13 +330,24 @@ function PiloteRow({ pilote, onConfirm }: { pilote: Pilote; onConfirm: (a: Pendi
           <EditPiloteForm pilote={pilote} onClose={() => setEditing(false)} />
         </tr>
       )}
+      {showStats && (
+        <tr className="border-b border-border">
+          <ReliabilityPanel stats={stats} />
+        </tr>
+      )}
     </>
   );
 }
 
 // ── Composant principal ─────────────────────────────────────────────────
 
-export function PilotesClient({ pilotes }: { pilotes: Pilote[] }) {
+export function PilotesClient({
+  pilotes,
+  reliability,
+}: {
+  pilotes: Pilote[];
+  reliability: Record<string, PiloteReliabilityStats>;
+}) {
   const [showInvite, setShowInvite] = useState(false);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
 
@@ -273,7 +394,14 @@ export function PilotesClient({ pilotes }: { pilotes: Pilote[] }) {
                 </tr>
               </thead>
               <tbody>
-                {pilotes.map((p) => <PiloteRow key={p.id} pilote={p} onConfirm={setPendingAction} />)}
+                {pilotes.map((p) => (
+                  <PiloteRow
+                    key={p.id}
+                    pilote={p}
+                    stats={reliability[p.id] ?? emptyReliabilityStats()}
+                    onConfirm={setPendingAction}
+                  />
+                ))}
               </tbody>
             </table>
           </div>

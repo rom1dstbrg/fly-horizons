@@ -2,6 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { PilotesClient } from "@/components/admin/PilotesClient";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { StatCard, StatGrid } from "@/components/admin/ui";
+import { getPilotesReliabilityStats } from "@/lib/pilote-stats";
 
 export const metadata = { title: "Pilotes — Admin" };
 
@@ -15,6 +16,8 @@ export default async function PilotesPage() {
 
   const all = pilotes ?? [];
   const actifs = all.filter(p => p.statut === "actif").length;
+  const reliability = await getPilotesReliabilityStats(all.map(p => ({ id: p.id, nom: p.nom })));
+  const aSurveiller = Object.values(reliability).filter(s => s.isAtRisk).length;
 
   return (
     <div className="space-y-6">
@@ -23,12 +26,13 @@ export default async function PilotesPage() {
         subtitle="Gérez les comptes pilotes et leur accès à l'espace pilote"
       />
 
-      <StatGrid cols={2}>
-        <StatCard label="Pilotes total" value={all.length} variant="primary" />
-        <StatCard label="Actifs"        value={actifs}     variant="info" />
+      <StatGrid cols={3}>
+        <StatCard label="Pilotes total"  value={all.length}   variant="primary" />
+        <StatCard label="Actifs"         value={actifs}       variant="info" />
+        <StatCard label="À surveiller"   value={aSurveiller}  variant={aSurveiller > 0 ? "danger" : "neutral"} />
       </StatGrid>
 
-      <PilotesClient pilotes={all} />
+      <PilotesClient pilotes={all} reliability={reliability} />
     </div>
   );
 }
