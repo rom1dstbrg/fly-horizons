@@ -33,7 +33,11 @@ export function AnnonceCard({ annonce, newTab = false }: { annonce: AnnonceCardD
       className="group block focus-visible:outline-none"
     >
       <article className="relative overflow-hidden rounded-lg aspect-[4/3] sm:aspect-[3/4]">
-        {image ? (
+        {/* Fond de secours toujours rendu en dessous : si la photo est cassée
+            (fichier supprimé du storage, référence orpheline...) ou manquante,
+            le dégradé reste visible au lieu d'une zone vide/grise. */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0b2238] via-[#0e3060] to-[#1a4a8a]" />
+        {image && (
           <Image
             src={image}
             alt={`Vol partagé avec ${annonce.pilote_nom}`}
@@ -41,8 +45,6 @@ export function AnnonceCard({ annonce, newTab = false }: { annonce: AnnonceCardD
             className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
             sizes="(max-width:640px) 100vw, (max-width:1280px) 50vw, 25vw"
           />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0b2238] via-[#0e3060] to-[#1a4a8a]" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/92 via-black/20 to-transparent" />
 

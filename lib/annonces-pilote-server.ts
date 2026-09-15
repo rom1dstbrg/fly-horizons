@@ -7,16 +7,17 @@ import { createAdminClient } from "@/lib/supabase/admin";
 /**
  * Mode « à la place » : fige le prix de chaque réservation active sur
  * l'annonce en fonction du nombre RÉEL d'occupants (pas de la capacité max
- * déclarée à la publication) — part égale entre tous les passagers
- * effectivement inscrits à ce moment. Appelé à la clôture du groupe (complet
- * ou clôturé manuellement par le pilote). Les réservations annulées ne
- * comptent pas dans le partage.
+ * déclarée à la publication) — part égale entre le pilote (1 part) et chaque
+ * passager effectivement inscrit à ce moment. Ex. 256 € annoncés, un seul
+ * client au final : 256 / 2 = 128 € chacun (pas un montant pilote figé à la
+ * publication, sinon le seul client paierait le solde en entier). Appelé à
+ * la clôture du groupe (complet ou clôturé manuellement par le pilote). Les
+ * réservations annulées ne comptent pas dans le partage.
  */
 export async function finalizeAnnonceGroupPricing(
   db: ReturnType<typeof createAdminClient>,
   annonceId: string,
   prixTotal: number,
-  partPilote: number,
 ) {
   const { data: resas } = await db
     .from("reservations")
@@ -27,7 +28,7 @@ export async function finalizeAnnonceGroupPricing(
   const totalPax = (resas ?? []).reduce((sum, r) => sum + (r.passagers ?? 1), 0);
   if (totalPax <= 0) return;
 
-  const sharePerPerson = Math.round(((prixTotal - partPilote) / totalPax) * 100) / 100;
+  const sharePerPerson = Math.round((prixTotal / (totalPax + 1)) * 100) / 100;
   for (const r of resas ?? []) {
     const acompte = Math.round(sharePerPerson * (r.passagers ?? 1) * 100) / 100;
     await db.from("reservations").update({ acompte }).eq("id", r.id);

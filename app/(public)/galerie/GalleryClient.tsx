@@ -92,8 +92,8 @@ export default function GalleryClient({ images }: { images: GalleryImage[] }) {
                 <Image
                   src={img.src}
                   alt={img.alt}
-                  width={0}
-                  height={0}
+                  width={img.width || 1600}
+                  height={img.height || 1000}
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   className="w-full h-auto transition-transform duration-500 group-hover:scale-105"
                 />
@@ -160,8 +160,8 @@ export default function GalleryClient({ images }: { images: GalleryImage[] }) {
             <Image
               src={images[lightboxIndex].src}
               alt={images[lightboxIndex].alt}
-              width={0}
-              height={0}
+              width={images[lightboxIndex].width || 1600}
+              height={images[lightboxIndex].height || 1000}
               sizes="100vw"
               className="max-w-full max-h-[88vh] w-auto h-auto mx-auto"
               priority
