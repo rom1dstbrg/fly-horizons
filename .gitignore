@@ -45,3 +45,6 @@ next-env.d.ts
 
 .vercel
 .env*
+
+# raccourci bureau (app locale, pas le site)
+/.desktop-shortcut

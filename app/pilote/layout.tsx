@@ -1,14 +1,10 @@
 import type { Metadata } from "next";
-import Image from "next/image";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { logout } from "@/lib/actions/auth";
-import { PiloteNav } from "@/components/pilote/PiloteNav";
+import { PiloteSidebar } from "@/components/pilote/PiloteSidebar";
 import { ChartePiloteGate } from "@/components/pilote/ChartePiloteGate";
 import { piloteLegalStatus } from "@/lib/pilote/legal";
-import { LogOut } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Fly Horizons · Espace pilote",
@@ -54,48 +50,15 @@ export default async function PiloteLayout({ children }: { children: React.React
     .neq("statut", "annulee");
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b border-border bg-card">
-        <div className="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/pilote" className="flex items-center gap-2">
-            <Image
-              src="/fly-horizons-logo-admin.svg"
-              alt="Fly Horizons"
-              width={130}
-              height={32}
-              className="h-7 w-auto object-contain"
-              style={{ width: "auto" }}
-              priority
-              unoptimized
-            />
-            <span className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground/60 border-l border-border pl-2 ml-1">
-              Pilote
-            </span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-foreground hidden sm:inline">
-              {profile?.full_name ?? user.email}
-            </span>
-            <form action={logout}>
-              <button
-                type="submit"
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all cursor-pointer"
-              >
-                <LogOut size={14} />
-                <span className="hidden sm:inline">Déconnexion</span>
-              </button>
-            </form>
-          </div>
-        </div>
-      </header>
-      <PiloteNav
+    <div className="min-h-screen bg-background flex">
+      <PiloteSidebar
         counts={{
           "/pilote/profil": profilAlerts,
           "/pilote/vols": volsAlerts ?? 0,
         }}
       />
-      <main className="flex-1">
-        <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 min-w-0 lg:ml-64 min-h-screen">
+        <div className="px-4 pt-16 pb-[calc(76px+env(safe-area-inset-bottom))] sm:px-6 sm:pt-16 lg:p-8 lg:pt-8 lg:pb-8">
           {children}
         </div>
       </main>
