@@ -294,9 +294,10 @@ export function ActionFooter({
                 Lien de paiement
               </button>
             )}
-            {/* Proposer un autre créneau : réservé à l'admin. Le pilote se plie à
-                la date choisie par le client ; s'il ne peut pas, il rend le vol. */}
-            {r.statut === "demande_recue" && isAdmin && (
+            {/* Proposer un autre créneau : le pilote peut le faire sur ses propres
+                vols (annonce ou attribué), au même titre que l'admin — décision
+                Romain du 15/09 (le flow complet doit vivre dans l'espace pilote). */}
+            {r.statut === "demande_recue" && (
               r.slot_proposal_token
                 ? (
                   <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border bg-secondary text-xs font-semibold text-muted-foreground">
@@ -399,10 +400,13 @@ export function ActionFooter({
       </div>
 
       {/* Actions toujours disponibles — séparées visuellement des actions du statut.
-          Report et annulation restent la main de l'admin. */}
+          Reporter (météo, imprévu…) : ouvert au pilote depuis le 15/09, même
+          logique que « Proposer un créneau » ci-dessus. Annuler reste la main
+          de l'admin — décision plus lourde (irréversible côté communication
+          client), le pilote peut « rendre » le vol via la messagerie sinon. */}
       {/* « Je rends ce vol » (Bloc B) retiré — chantier gelé (pivot 08/09). */}
 
-      {!isTerminal && isAdmin && (
+      {!isTerminal && (
         <div className="flex items-center justify-between gap-2 px-5 py-2 border-t border-border/60 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
           <button
             onClick={() => confirm({
@@ -417,20 +421,22 @@ export function ActionFooter({
             {isPending ? <Loader2 size={13} className="animate-spin" /> : <RotateCcw size={13} />}
             Reporter
           </button>
-          <button
-            onClick={() => confirm({
-              title: "Annuler cette réservation ?",
-              description: "Le client recevra un email l'informant de l'annulation de son vol. Cette action est irréversible côté communication client.",
-              confirmLabel: "Annuler la réservation",
-              danger: true,
-              run: () => onChangeStatut("annulee"),
-            })}
-            disabled={isPending}
-            className={chipDanger}
-          >
-            <XCircle size={13} />
-            Annuler
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => confirm({
+                title: "Annuler cette réservation ?",
+                description: "Le client recevra un email l'informant de l'annulation de son vol. Cette action est irréversible côté communication client.",
+                confirmLabel: "Annuler la réservation",
+                danger: true,
+                run: () => onChangeStatut("annulee"),
+              })}
+              disabled={isPending}
+              className={chipDanger}
+            >
+              <XCircle size={13} />
+              Annuler
+            </button>
+          )}
         </div>
       )}
 

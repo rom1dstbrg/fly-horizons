@@ -1118,6 +1118,7 @@ export async function sendRescheduleInvite(id: string) {
     }
 
     revalidatePath("/admin/vols");
+    revalidatePath("/pilote/vols");
     return { success: true, emailError };
   } catch (e) {
     console.error("sendRescheduleInvite error:", e);
@@ -1429,6 +1430,7 @@ export async function proposeSlot(id: string, date: string, heure: string) {
     });
 
     revalidatePath("/admin/vols");
+    revalidatePath("/pilote/vols");
     return { success: true, emailError, token };
   } catch (e) {
     console.error("proposeSlot error:", e);

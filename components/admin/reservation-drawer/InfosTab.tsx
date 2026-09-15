@@ -33,7 +33,8 @@ function piloteNextSteps(statut: string): { title: string; steps: string[] } {
     return {
       title: "Vos étapes",
       steps: [
-        "Tracez l'itinéraire dans l'onglet Route.",
+        "La date ne vous convient pas ? « Proposer un créneau » (bloc plus bas) pour en suggérer un autre au client.",
+        "Sinon, tracez l'itinéraire dans l'onglet Route.",
         "Cliquez « Confirmer date + heure » : la route part au client dans le même geste.",
         "Si le client demande une modification, ajustez le tracé et renvoyez-le.",
         "Quand il accepte la route, il reçoit un lien pour vous régler par virement.",
