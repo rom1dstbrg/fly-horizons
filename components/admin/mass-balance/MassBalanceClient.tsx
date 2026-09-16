@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Loader2, Download, RotateCcw, Save, Users } from "lucide-react";
+import { Check, Loader2, Download, RotateCcw, Save, Users, Pencil, CheckCircle2, AlertTriangle } from "lucide-react";
 import {
   computeMassBalance,
   defaultInputs,
@@ -11,12 +11,12 @@ import {
   type AerodromeInput,
   type PerfInputs,
 } from "@/lib/mass-balance/da40-calc";
-import { AIRCRAFT, FUEL_MAX_GAL } from "@/lib/mass-balance/da40-data";
 import { saveMassBalanceSheet, updateMassBalanceSheet } from "@/lib/actions/mass-balance";
 import { CgEnvelopeChart } from "./CgEnvelopeChart";
-import { PerfSection } from "./PerfSection";
+import { PerfResultBlocks } from "./PerfResultBlocks";
+import { MbEditModal } from "./MbEditModal";
 import { SheetsList, type MbSheetRow } from "./SheetsList";
-import { MB, ValueRow } from "./fields";
+import { MB } from "./fields";
 
 export interface ResaContext {
   id: string;
@@ -31,36 +31,31 @@ function fr(v: number | null | undefined, d = 1): string {
   return v.toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d });
 }
 
-function Section({
-  n,
-  title,
-  subtitle,
-  children,
-}: {
-  n: string;
-  title: string;
-  subtitle?: string;
-  children: React.ReactNode;
-}) {
+function NumBadge({ n }: { n: string }) {
   return (
-    <section className="card-premium p-4 sm:p-5">
-      <div className="mb-4 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-        <span className="flex h-6 w-6 shrink-0 translate-y-0.5 items-center justify-center rounded-full bg-navy text-[11px] font-bold text-white">
-          {n}
-        </span>
-        <h2 className="text-base font-semibold text-foreground">{title}</h2>
-        {subtitle && <span className={MB.help}>{subtitle}</span>}
-      </div>
-      {children}
-    </section>
+    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-navy text-[10px] font-bold text-white">
+      {n}
+    </span>
   );
 }
 
-function Group({ label, children }: { label: string; children: React.ReactNode }) {
+function SectionHeader({ n, title, onEdit }: { n: string; title: string; onEdit?: () => void }) {
   return (
-    <div className="space-y-1.5">
-      <p className={MB.groupLabel}>{label}</p>
-      {children}
+    <div className="mb-3 flex items-center justify-between gap-2">
+      <div className="flex items-center gap-2">
+        <NumBadge n={n} />
+        <h2 className="text-[11px] font-bold text-foreground uppercase tracking-[1.4px]">{title}</h2>
+      </div>
+      {onEdit && (
+        <button
+          type="button"
+          onClick={onEdit}
+          className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md border border-border text-[11px] font-semibold text-foreground hover:bg-secondary transition-colors cursor-pointer"
+        >
+          <Pencil size={11} />
+          Modifier
+        </button>
+      )}
     </div>
   );
 }
@@ -103,6 +98,7 @@ export function MassBalanceClient({
   const [error, setError] = useState("");
   const [previewing, setPreviewing] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [modalTab, setModalTab] = useState<"chargement" | "performances" | null>(null);
 
   const computed = useMemo(() => computeMassBalance(inputs), [inputs]);
 
@@ -122,6 +118,7 @@ export function MassBalanceClient({
       rpax2: split.rpax2,
       flightDate: resa.date_vol ?? inputs.flightDate,
     });
+    setModalTab("chargement");
   }
 
   function save(asNew = false) {
@@ -190,8 +187,6 @@ export function MassBalanceClient({
     setError("");
   }
 
-  const [reg, bem, bemArm] = AIRCRAFT.find((a) => a[0] === inputs.aircraftReg) ?? AIRCRAFT[0];
-
   // ── Verdict combiné : masse + centrage + performances ────────────────────
   const perfVerdicts = [
     computed.perf.dep.verdict,
@@ -207,6 +202,27 @@ export function MassBalanceClient({
       : perfPending
         ? "incomplet"
         : "go";
+
+  const depMargin =
+    computed.perf.dep.todr125 != null && computed.perf.dep.toda != null
+      ? computed.perf.dep.toda - computed.perf.dep.todr125
+      : null;
+  const ldgMargin = (() => {
+    const l = computed.perf.ldg;
+    const margins = [
+      l.ldr != null && l.ldaDest != null ? l.ldaDest - l.ldr : null,
+      l.ldr != null && l.ldaAlt != null ? l.ldaAlt - l.ldr : null,
+    ].filter((m): m is number => m != null);
+    return margins.length ? Math.min(...margins) : null;
+  })();
+
+  const banner =
+    overall === "go"
+      ? { tone: "border-green-200 bg-green-50", dot: "bg-green-600", icon: CheckCircle2, iconCls: "text-white", title: "GO — vol autorisé", titleCls: "text-green-700", sub: `Masse, centrage et performances dans les limites — catégorie ${computed.category}.`, subCls: "text-green-800/70" }
+      : overall === "incomplet"
+        ? { tone: "border-amber-200 bg-amber-50", dot: "bg-amber-500", icon: AlertTriangle, iconCls: "text-white", title: "Incomplet — performances à renseigner", titleCls: "text-amber-800", sub: "Masse et centrage OK. Renseignez les conditions et TODA / LDA au § 3 pour conclure.", subCls: "text-amber-800/70" }
+        : { tone: "border-red-200 bg-red-50", dot: "bg-red-600", icon: AlertTriangle, iconCls: "text-white", title: "NO-GO — vol non autorisé en l'état", titleCls: "text-red-700", sub: [...(!computed.withinLimits ? computed.issues : []), ...perfKo.map((v) => v.message)].join(" · ") || "Vérifiez la masse, le centrage et les performances.", subCls: "text-red-800/70" };
+  const BannerIcon = banner.icon;
 
   return (
     <div className="space-y-4">
@@ -238,252 +254,192 @@ export function MassBalanceClient({
         </div>
       )}
 
-      {/* ═══ 1 · LE VOL ═══ */}
-      <Section n="1" title="Le vol">
-        <div className="flex flex-wrap items-end gap-4">
-          <label className="space-y-1">
-            <span className={`block ${MB.label}`}>Avion</span>
-            <select
-              value={inputs.aircraftReg}
-              onChange={(e) => patch({ aircraftReg: e.target.value })}
-              className={`${MB.input} px-2.5 cursor-pointer`}
-            >
-              {AIRCRAFT.map(([r]) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="space-y-1">
-            <span className={`block ${MB.label}`}>Date du vol</span>
-            <input
-              type="date"
-              value={inputs.flightDate}
-              onChange={(e) => patch({ flightDate: e.target.value })}
-              className={`${MB.input} px-2.5`}
-            />
-          </label>
-          <p className={`${MB.help} pb-2.5`}>
-            {reg} — masse à vide <span className="font-mono">{fr(bem)}</span> kg · bras{" "}
-            <span className="font-mono">{fr(bemArm, 3)}</span> m
-          </p>
+      {/* ═══ GO / NO-GO ═══ */}
+      <div className={`rounded-xl border ${banner.tone} px-4 sm:px-5 py-4 flex flex-wrap items-center gap-4`}>
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${banner.dot}`}>
+          <BannerIcon size={20} className={banner.iconCls} />
         </div>
-        <p className={`mt-2 ${MB.help}`}>Aérodromes et météo (départ, destination, alternate) : au § 3.</p>
-      </Section>
+        <div className="min-w-[220px] flex-1">
+          <p className={`text-lg font-extrabold tracking-tight ${banner.titleCls}`}>{banner.title}</p>
+          <p className={`text-xs mt-0.5 ${banner.subCls}`}>{banner.sub}</p>
+        </div>
+        <div className="flex flex-wrap gap-x-6 gap-y-2 sm:pl-5 sm:border-l sm:border-black/10">
+          <div>
+            <span className="block text-[9px] font-bold uppercase tracking-wide text-muted-foreground/70">Masse totale</span>
+            <span className="font-mono text-sm font-bold text-foreground">
+              {fr(computed.tom, 1)} <span className="text-[10px] font-semibold text-muted-foreground">/ 1150 kg</span>
+            </span>
+          </div>
+          <div>
+            <span className="block text-[9px] font-bold uppercase tracking-wide text-muted-foreground/70">Centrage</span>
+            <span className="font-mono text-sm font-bold text-foreground">{fr(computed.cgTom, 3)} m</span>
+          </div>
+          <div>
+            <span className="block text-[9px] font-bold uppercase tracking-wide text-muted-foreground/70">Marge décollage</span>
+            <span className="font-mono text-sm font-bold text-foreground">
+              {depMargin != null ? `${depMargin >= 0 ? "+" : ""}${depMargin} m` : "—"}
+            </span>
+          </div>
+          <div>
+            <span className="block text-[9px] font-bold uppercase tracking-wide text-muted-foreground/70">Marge atterrissage</span>
+            <span className="font-mono text-sm font-bold text-foreground">
+              {ldgMargin != null ? `${ldgMargin >= 0 ? "+" : ""}${ldgMargin} m` : "—"}
+            </span>
+          </div>
+        </div>
+      </div>
 
-      {/* ═══ 2 · CHARGEMENT ═══ */}
-      <Section n="2" title="Chargement" subtitle="masse et centrage">
-        <div className="grid gap-5 md:grid-cols-2 xl:[grid-template-columns:250px_minmax(340px,440px)_minmax(420px,560px)] xl:items-start">
-          {/* saisie */}
-          <div className="space-y-4">
-            <Group label="Carburant">
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                <ValueRow
-                  label="Plein"
-                  sub="gal"
-                  value={inputs.fuelGal}
-                  onChange={(v) => patch({ fuelGal: v })}
-                  step={0.5}
-                  bad={inputs.fuelGal > FUEL_MAX_GAL}
-                />
-                <ValueRow
-                  label="Trajet"
-                  sub="gal"
-                  value={inputs.tripGal}
-                  onChange={(v) => patch({ tripGal: v })}
-                  step={0.5}
-                  bad={inputs.tripGal > inputs.fuelGal}
-                />
+      <div className="space-y-5">
+
+        {/* ═══ 1 · CHARGEMENT ═══ */}
+        <div>
+          <SectionHeader n="1" title="Chargement" onEdit={() => setModalTab("chargement")} />
+          <div className="card-premium p-4 sm:p-5 max-w-[900px] space-y-4">
+            {/* Résumé — une seule info, pas reprise ailleurs (le carburant est déjà dans le tableau) */}
+            <p className="text-sm font-semibold text-foreground pb-3 border-b border-border">
+              {1 + [inputs.fpax, inputs.rpax1, inputs.rpax2].filter((v) => v > 0).length} occupant
+              {inputs.fpax + inputs.rpax1 + inputs.rpax2 > 0 ? "s" : ""}
+              {inputs.bag > 0 ? " + bagages" : ""}
+            </p>
+
+            {/* Tableau et enveloppe — même poids visuel, même hauteur, une seule paire */}
+            <div className="flex flex-col lg:flex-row lg:items-start gap-6">
+              <div className="lg:w-[400px] shrink-0 min-w-0 overflow-x-auto">
+                <table className="w-full border-collapse text-xs">
+                  <thead>
+                    <tr>
+                      {["Poste", "Masse", "Bras", "Moment"].map((h, i) => (
+                        <th
+                          key={h}
+                          className={`border border-border bg-secondary px-1.5 py-1 font-semibold ${
+                            i === 0 ? "text-left" : "text-right"
+                          }`}
+                        >
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="font-mono tabular-nums">
+                    {computed.rows.map((row, i) => (
+                      <tr key={i} className={row.total ? "bg-secondary font-semibold" : ""}>
+                        <td
+                          className={`border border-border px-1.5 py-1 text-left font-sans ${
+                            row.out ? "text-red-600 font-semibold" : ""
+                          }`}
+                        >
+                          {row.poste}
+                          {row.sub && (
+                            <span className={`block ${MB.help} font-normal`}>{row.sub}</span>
+                          )}
+                        </td>
+                        <td className={`border border-border px-1.5 py-1 text-right ${row.out ? "text-red-600" : ""}`}>
+                          {fr(row.masse, 1)}
+                        </td>
+                        <td className="border border-border px-1.5 py-1 text-right">
+                          {row.bras == null ? "—" : fr(row.bras, row.total ? 3 : row.bras < 3 ? 2 : 3)}
+                        </td>
+                        <td className={`border border-border px-1.5 py-1 text-right ${row.out ? "text-red-600" : ""}`}>
+                          {fr(row.moment, 2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              <p className={MB.help}>
-                Plein max {FUEL_MAX_GAL} gal · embarqué {fr(computed.fuelL, 0)} l / {fr(computed.fuelKg, 1)} kg ·
-                roulage − 1,5 kg.
-              </p>
-            </Group>
 
-            <div className="border-t border-border pt-3">
-              <Group label="Occupants & bagages">
-                <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                  <ValueRow label="Pilote" sub="2,30 m" value={inputs.pilot} onChange={(v) => patch({ pilot: v })} />
-                  <ValueRow label="Pax avant" sub="2,30 m" value={inputs.fpax} onChange={(v) => patch({ fpax: v })} />
-                  <ValueRow label="Pax arrière 1" sub="3,25 m" value={inputs.rpax1} onChange={(v) => patch({ rpax1: v })} />
-                  <ValueRow label="Pax arrière 2" sub="3,25 m" value={inputs.rpax2} onChange={(v) => patch({ rpax2: v })} />
-                  <ValueRow
-                    label="Bagages"
-                    sub="≤ 30 · 3,65 m"
-                    value={inputs.bag}
-                    onChange={(v) => patch({ bag: v })}
-                    bad={inputs.bag > 30}
-                  />
+              <div className="lg:w-[420px] shrink-0 min-w-0">
+                <div className="flex items-center justify-between mb-2">
+                  <p className={MB.groupLabel}>Enveloppe de centrage</p>
+                  {computed.withinLimits ? (
+                    <span className="text-xs font-semibold text-green-700">Catégorie {computed.category}</span>
+                  ) : (
+                    <span className="text-xs font-semibold text-red-700">Hors limites</span>
+                  )}
                 </div>
-              </Group>
-            </div>
-          </div>
-
-          {/* tableau — largeur contenue */}
-          <div className="min-w-0 overflow-x-auto">
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr>
-                  {["Poste", "Masse (kg)", "Bras (m)", "Moment (kgm)"].map((h, i) => (
-                    <th
-                      key={h}
-                      className={`border border-border bg-secondary px-2 py-1.5 font-semibold ${
-                        i === 0 ? "text-left" : "text-right"
-                      }`}
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="font-mono tabular-nums">
-                {computed.rows.map((row, i) => (
-                  <tr key={i} className={row.total ? "bg-secondary font-semibold" : ""}>
-                    <td
-                      className={`border border-border px-2 py-1.5 text-left font-sans ${
-                        row.out ? "text-red-600 font-semibold" : ""
-                      }`}
-                    >
-                      {row.poste}
-                      {row.sub && (
-                        <span className={`block ${MB.help} font-normal`}>{row.sub}</span>
-                      )}
-                    </td>
-                    <td className={`border border-border px-2 py-1.5 text-right ${row.out ? "text-red-600" : ""}`}>
-                      {fr(row.masse, 1)}
-                    </td>
-                    <td className="border border-border px-2 py-1.5 text-right">
-                      {row.bras == null ? "—" : fr(row.bras, row.total ? 3 : row.bras < 3 ? 2 : 3)}
-                    </td>
-                    <td className={`border border-border px-2 py-1.5 text-right ${row.out ? "text-red-600" : ""}`}>
-                      {fr(row.moment, 2)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* enveloppe — grande, à droite du tableau */}
-          <div className="md:col-span-2 xl:col-span-1 space-y-3">
-            <p className={MB.groupLabel}>Enveloppe de centrage</p>
-            <div className="mx-auto w-full max-w-[560px] md:mx-0">
-              <CgEnvelopeChart points={computed.points} />
-            </div>
-            {computed.withinLimits ? (
-              <p className="rounded-lg border border-green-300 bg-green-50 px-3 py-2 text-sm font-semibold text-green-700">
-                Dans l&apos;enveloppe — catégorie {computed.category}
-              </p>
-            ) : (
-              <div className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
-                Hors limites
-                <ul className="mt-1.5 ml-4 list-disc text-xs font-normal">
-                  {computed.issues.map((it, i) => (
-                    <li key={i}>{it}</li>
-                  ))}
-                </ul>
+                <CgEnvelopeChart points={computed.points} />
               </div>
+            </div>
+
+            {/* Note de référence — partagée, une seule fois, sous la paire */}
+            {!computed.withinLimits && (
+              <ul className="ml-4 list-disc text-xs text-red-700">
+                {computed.issues.map((it, i) => (
+                  <li key={i}>{it}</li>
+                ))}
+              </ul>
             )}
             <p className={MB.help}>
-              Limites : avant 2,40 m (jusqu&apos;à 980 kg) → 2,46 m à 1150 kg ; arrière 2,59 m ; Utility ≤ 980 kg ;
-              mini 780 kg. Réf. NewCAG rév. 4.1 — vérifier l&apos;AFM.
+              Limites : avant 2,40 m (jusqu&apos;à 980 kg) → 2,46 m à 1150 kg ; arrière 2,59 m ; Utility ≤ 980 kg ; mini
+              780 kg. Réf. NewCAG rév. 4.1 — vérifier l&apos;AFM.
             </p>
           </div>
         </div>
-      </Section>
 
-      {/* ═══ 3 · PERFORMANCES ═══ */}
-      <Section
-        n="3"
-        title="Performances"
-        subtitle="TODR / LDR — ICAO connu (EBCI, EBNM, LFAT, EHMZ) → METAR, pistes, cap, élévation, TODA / LDA"
-      >
-        <PerfSection perf={inputs.perf} computed={computed.perf} onChangeAero={patchAero} onChange={patchPerf} />
-      </Section>
+        {/* ═══ 2 · PERFORMANCES ═══ */}
+        <div className="space-y-3">
+          <SectionHeader n="2" title="Performances" onEdit={() => setModalTab("performances")} />
+          <PerfResultBlocks perf={inputs.perf} computed={computed.perf} />
 
-      {/* ═══ 4 · VERDICT ═══ */}
-      <Section n="4" title="Verdict & feuille">
-        {overall === "go" && (
-          <p className="rounded-lg border border-green-300 bg-green-50 px-4 py-3 text-base font-bold text-green-700">
-            GO — masse, centrage et performances dans les limites.
-          </p>
-        )}
-        {overall === "incomplet" && (
-          <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
-            Masse et centrage OK. Performances incomplètes — renseignez TODA / LDA (et METAR) au § 3 pour conclure.
-          </div>
-        )}
-        {overall === "nogo" && (
-          <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-            <p className="text-base font-bold">NO-GO — vol non autorisé en l&apos;état.</p>
-            <ul className="mt-1.5 ml-4 list-disc text-xs font-normal">
-              {!computed.withinLimits && computed.issues.map((it, i) => <li key={`c${i}`}>{it}</li>)}
-              {perfKo.map((v, i) => (
-                <li key={`p${i}`}>{v.message}</li>
-              ))}
-            </ul>
-          </div>
-        )}
+          {/* Enregistrement */}
+          <div className="card-premium p-4 sm:p-5 space-y-3">
+            <label className="block space-y-1 max-w-sm">
+              <span className="text-xs font-medium text-foreground">Libellé de la feuille (optionnel)</span>
+              <input
+                type="text"
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
+                placeholder="ex. Baptême Dupont"
+                className={`w-full ${MB.input} px-2.5`}
+              />
+            </label>
 
-        <div className="mt-4 space-y-3 border-t border-border pt-4">
-          <label className="block space-y-1 max-w-sm">
-            <span className="text-xs font-medium text-foreground">Libellé de la feuille (optionnel)</span>
-            <input
-              type="text"
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-              placeholder="ex. Baptême Dupont"
-              className={`w-full ${MB.input} px-2.5`}
-            />
-          </label>
-
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => save(false)}
-              disabled={isPending}
-              className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-navy text-white text-sm font-semibold hover:bg-navy/90 transition-colors disabled:opacity-50 cursor-pointer"
-            >
-              {isPending ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-              {currentId ? "Mettre à jour" : "Enregistrer"}
-            </button>
-            {currentId && (
+            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={() => save(true)}
+                onClick={() => save(false)}
                 disabled={isPending}
-                className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-navy text-navy text-sm font-semibold hover:bg-navy hover:text-white transition-colors disabled:opacity-50 cursor-pointer"
+                className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-navy text-white text-sm font-semibold hover:bg-navy/90 transition-colors disabled:opacity-50 cursor-pointer"
               >
-                Enregistrer comme nouvelle
+                {isPending ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                {currentId ? "Mettre à jour" : "Enregistrer"}
               </button>
+              {currentId && (
+                <button
+                  type="button"
+                  onClick={() => save(true)}
+                  disabled={isPending}
+                  className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-navy text-navy text-sm font-semibold hover:bg-navy hover:text-white transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  Enregistrer comme nouvelle
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={previewPdf}
+                disabled={previewing}
+                className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-border text-sm font-semibold hover:bg-secondary transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {previewing ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+                Aperçu PDF
+              </button>
+              <button
+                type="button"
+                onClick={reset}
+                className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-border text-sm font-medium hover:bg-secondary transition-colors cursor-pointer"
+              >
+                <RotateCcw size={14} /> Réinitialiser
+              </button>
+            </div>
+            {saved && (
+              <p className="inline-flex items-center gap-1 text-xs font-medium text-green-600">
+                <Check size={13} /> Enregistré
+              </p>
             )}
-            <button
-              type="button"
-              onClick={previewPdf}
-              disabled={previewing}
-              className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-border text-sm font-semibold hover:bg-secondary transition-colors disabled:opacity-50 cursor-pointer"
-            >
-              {previewing ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
-              Aperçu PDF
-            </button>
-            <button
-              type="button"
-              onClick={reset}
-              className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-border text-sm font-medium hover:bg-secondary transition-colors cursor-pointer"
-            >
-              <RotateCcw size={14} /> Réinitialiser
-            </button>
+            {error && <p className="text-xs text-red-600">{error}</p>}
           </div>
-          {saved && (
-            <p className="inline-flex items-center gap-1 text-xs font-medium text-green-600">
-              <Check size={13} /> Enregistré
-            </p>
-          )}
-          {error && <p className="text-xs text-red-600">{error}</p>}
         </div>
-      </Section>
+      </div>
 
       {/* ═══ Historique ═══ */}
       <div className="space-y-3">
@@ -496,6 +452,20 @@ export function MassBalanceClient({
           viewerRole={viewerRole}
         />
       </div>
+
+      {modalTab && (
+        <MbEditModal
+          inputs={inputs}
+          computedFuelL={computed.fuelL}
+          computedFuelKg={computed.fuelKg}
+          tab={modalTab}
+          onTabChange={setModalTab}
+          onClose={() => setModalTab(null)}
+          patch={patch}
+          patchAero={patchAero}
+          patchPerf={patchPerf}
+        />
+      )}
     </div>
   );
 }

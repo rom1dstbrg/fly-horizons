@@ -73,26 +73,24 @@ function AnnonceManageCard({
   }
 
   return (
-    <div className="card-premium overflow-hidden flex flex-col">
+    <div className="bg-card border border-navy/15 rounded-[10px] overflow-hidden flex flex-col">
       <div className={`p-3 pb-0 ${annonce.statut !== "publiee" ? "opacity-60" : ""}`}>
-        <div className="max-w-[240px] mx-auto sm:max-w-none sm:mx-0">
-          <PublicAnnonceCard
-            newTab
-            annonce={{
-              id: annonce.id,
-              titre: annonce.titre,
-              duree: annonce.duree,
-              places: annonce.places,
-              prix_client:
-                annonce.mode_vente === "place"
-                  ? Math.round((prixClient / Math.max(1, annonce.places)) * 100) / 100
-                  : prixClient,
-              pilote_nom: piloteNom,
-              cover_image: annonce.images[0] ?? null,
-              mode_vente: annonce.mode_vente,
-            }}
-          />
-        </div>
+        <PublicAnnonceCard
+          newTab
+          annonce={{
+            id: annonce.id,
+            titre: annonce.titre,
+            duree: annonce.duree,
+            places: annonce.places,
+            prix_client:
+              annonce.mode_vente === "place"
+                ? Math.round((prixClient / Math.max(1, annonce.places)) * 100) / 100
+                : prixClient,
+            pilote_nom: piloteNom,
+            cover_image: annonce.images[0] ?? null,
+            mode_vente: annonce.mode_vente,
+          }}
+        />
       </div>
 
       <div className="p-4 pt-3 space-y-3 flex-1 flex flex-col">
@@ -205,7 +203,7 @@ export function AnnoncesList({
 }) {
   if (annonces.length === 0) return null;
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(260px, 300px))" }}>
       {annonces.map(a => (
         <AnnonceManageCard key={a.id} annonce={a} piloteNom={piloteNom} stats={stats?.[a.id]} onEdit={onEdit} />
       ))}

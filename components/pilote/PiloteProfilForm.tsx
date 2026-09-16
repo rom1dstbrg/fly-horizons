@@ -86,8 +86,8 @@ export function PiloteProfilForm({ pilote }: { pilote: Pilote }) {
     <form onSubmit={submit} className="space-y-6">
       {/* Statut légal */}
       <div
-        className={`card-premium border-l-4 p-4 ${
-          legal.ok ? "border-l-emerald-400 bg-emerald-50/60" : "border-l-red-500 bg-red-50/60"
+        className={`rounded-[10px] border border-navy/15 p-4 ${
+          legal.ok ? "bg-emerald-50/60" : "bg-red-50/60"
         }`}
       >
         <p className={`text-sm font-semibold ${legal.ok ? "text-emerald-900" : "text-red-900"}`}>
@@ -111,7 +111,7 @@ export function PiloteProfilForm({ pilote }: { pilote: Pilote }) {
       </div>
 
       {/* Informations légales */}
-      <div className="card-premium p-5 space-y-4">
+      <div className="rounded-[10px] border border-navy/15 bg-card p-5 space-y-4">
         <h2 className="text-sm font-bold text-foreground">Informations légales</h2>
         <p className="text-xs text-muted-foreground -mt-2">
           Déclaratif. Ces champs doivent être remplis et à jour pour recevoir des vols.
@@ -137,7 +137,7 @@ export function PiloteProfilForm({ pilote }: { pilote: Pilote }) {
       </div>
 
       {/* Coordonnées & présentation */}
-      <div className="card-premium p-5 space-y-4">
+      <div className="rounded-[10px] border border-navy/15 bg-card p-5 space-y-4">
         <h2 className="text-sm font-bold text-foreground">Coordonnées &amp; présentation</h2>
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">

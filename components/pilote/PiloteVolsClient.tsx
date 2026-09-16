@@ -55,7 +55,7 @@ export function PiloteVolsClient({ reservations: initial }: { reservations: Rese
     );
   }
 
-  const th = "text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide";
+  const th = "text-left px-4 py-2 text-[9px] font-bold text-muted-foreground/70 uppercase tracking-[1px]";
   const aVenir = reservations.filter((r) => !isPast(r));
   const passes = reservations.filter(isPast).reverse();
   const rows = view === "avenir" ? aVenir : passes;
@@ -65,8 +65,10 @@ export function PiloteVolsClient({ reservations: initial }: { reservations: Rese
       key={id}
       type="button"
       onClick={() => setView(id)}
-      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-        view === id ? "bg-navy text-white" : "text-muted-foreground hover:text-foreground"
+      className={`px-1 pb-2 border-b-2 text-sm transition-colors cursor-pointer ${
+        view === id
+          ? "border-navy text-navy font-semibold"
+          : "border-transparent text-muted-foreground font-medium hover:text-foreground"
       }`}
     >
       {label} <span className="tabular-nums opacity-70">{n}</span>
@@ -75,7 +77,7 @@ export function PiloteVolsClient({ reservations: initial }: { reservations: Rese
 
   return (
     <>
-      <div className="flex items-center gap-1 mb-3">
+      <div className="flex items-center gap-5 mb-4 border-b border-border">
         {tabBtn("avenir", "À venir", aVenir.length)}
         {tabBtn("passes", "Passés", passes.length)}
       </div>
@@ -87,11 +89,11 @@ export function PiloteVolsClient({ reservations: initial }: { reservations: Rese
           description={view === "avenir" ? "Vos prochains vols apparaîtront ici." : "Votre carnet de vols effectués se remplira ici."}
         />
       ) : (
-      <div className="card-premium overflow-hidden">
+      <div className="bg-card border border-navy/15 rounded-[10px] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-border">
+              <tr className="bg-secondary/60 border-b border-border">
                 <th className={th}>Date</th>
                 <th className={th}>Client</th>
                 <th className={th}>Route</th>
@@ -132,7 +134,7 @@ export function PiloteVolsClient({ reservations: initial }: { reservations: Rese
                           <span className="text-xs text-muted-foreground">—</span>
                         )}
                         {rConf && (
-                          <span className={`inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] font-semibold border ${rConf.color}`}>
+                          <span className={`inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-md text-[10px] font-semibold border ${rConf.color}`}>
                             {rConf.label}
                           </span>
                         )}
@@ -149,7 +151,7 @@ export function PiloteVolsClient({ reservations: initial }: { reservations: Rese
                         <button
                           type="button"
                           onClick={() => setDrawer(r)}
-                          className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-border text-xs font-medium hover:bg-secondary transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-navy/15 text-xs font-medium hover:bg-secondary transition-colors cursor-pointer"
                         >
                           <Eye size={13} /> Voir
                         </button>
@@ -157,7 +159,7 @@ export function PiloteVolsClient({ reservations: initial }: { reservations: Rese
                           type="button"
                           onClick={() => router.push(`/pilote/mass-balance?resa=${r.id}`)}
                           title="Masse & centrage (poids préremplis)"
-                          className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-border text-xs font-medium hover:bg-secondary transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-navy/15 text-xs font-medium hover:bg-secondary transition-colors cursor-pointer"
                         >
                           <Scale size={13} /> M&amp;B
                         </button>

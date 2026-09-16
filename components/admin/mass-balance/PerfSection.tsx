@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { Cloud, Loader2, CornerDownLeft } from "lucide-react";
-import type { AerodromeInput, PerfInputs, PerfComputed } from "@/lib/mass-balance/da40-calc";
+import type { AerodromeInput, PerfInputs } from "@/lib/mass-balance/da40-calc";
 import { extractFromRawMetar } from "@/lib/mass-balance/da40-calc";
 import { findAerodrome } from "@/lib/mass-balance/aerodromes";
-import { MB, NumberField, VerdictBox } from "./fields";
+import { MB, NumberField } from "./fields";
 
 type Which = "dep" | "dest" | "alt";
 
@@ -16,20 +16,12 @@ export interface RunwayPick {
   lda: number | null;
 }
 
-function Kv({ label, value, bad }: { label: string; value: string; bad?: boolean }) {
-  return (
-    <div className="rounded-md border border-border bg-secondary px-2 py-1">
-      <span className="text-[10px] text-muted-foreground">{label}: </span>
-      <span className={`font-mono text-xs font-semibold ${bad ? "text-red-600" : "text-foreground"}`}>{value}</span>
-    </div>
-  );
-}
-
 function AeroRow({
   label,
   ad,
   narrow,
   canCopyDep,
+  extra,
   onChange,
   onRunway,
   onCopyDep,
@@ -38,6 +30,8 @@ function AeroRow({
   ad: AerodromeInput;
   narrow?: boolean;
   canCopyDep?: boolean;
+  /** Champ additionnel rattaché à cet aérodrome (TODA au départ, LDA à destination/alternate). */
+  extra?: React.ReactNode;
   onChange: (patch: Partial<AerodromeInput>) => void;
   onRunway: (rw: RunwayPick) => void;
   onCopyDep?: () => void;
@@ -186,6 +180,7 @@ function AeroRow({
         <NumberField label="OAT °C" value={ad.oat} onChange={(v) => onChange({ oat: v })} size="sm" />
         <NumberField label="Vent °" value={ad.wdir} onChange={(v) => onChange({ wdir: v })} min={0} max={360} size="sm" />
         <NumberField label="Vent kt" value={ad.wspd} onChange={(v) => onChange({ wspd: v })} min={0} size="sm" />
+        {extra}
       </div>
 
       {status.msg && (
@@ -222,20 +217,21 @@ function AeroRow({
   );
 }
 
-export function PerfSection({
+/**
+ * Saisie des conditions & pistes — Départ / Destination / Alternate — utilisée
+ * dans l'onglet « Performances » de la popup de saisie. Les résultats calculés
+ * (TODR/LDR, verdicts) sont affichés en lecture seule sur la page principale
+ * (PerfResultBlocks dans MassBalanceClient), pas ici.
+ */
+export function PerfInputsSection({
   perf,
-  computed,
   onChangeAero,
   onChange,
 }: {
   perf: PerfInputs;
-  computed: PerfComputed;
   onChangeAero: (which: Which, patch: Partial<AerodromeInput>) => void;
   onChange: (patch: Partial<Pick<PerfInputs, "toda" | "ldaDest" | "ldaAlt">>) => void;
 }) {
-  const d = computed.dep;
-  const l = computed.ldg;
-
   function handleRunway(which: Which, rw: RunwayPick) {
     if (which === "dep") onChange({ toda: rw.toda });
     else if (which === "dest") onChange({ ldaDest: rw.lda });
@@ -265,72 +261,34 @@ export function PerfSection({
   const depHasIcao = !!perf.dep.icao?.trim();
 
   return (
-    <div className="space-y-4">
-      {/* Conditions par aérodrome */}
-      <div className="space-y-2">
-        <p className={MB.groupLabel}>Conditions &amp; pistes</p>
-        <AeroRow
-          label="Départ"
-          ad={perf.dep}
-          onChange={(p) => onChangeAero("dep", p)}
-          onRunway={(rw) => handleRunway("dep", rw)}
-        />
-        <AeroRow
-          label="Destination"
-          ad={perf.dest}
-          canCopyDep={depHasIcao}
-          onCopyDep={() => copyFromDep("dest")}
-          onChange={(p) => onChangeAero("dest", p)}
-          onRunway={(rw) => handleRunway("dest", rw)}
-        />
-        <AeroRow
-          label="Alternate"
-          ad={perf.alt}
-          narrow
-          canCopyDep={depHasIcao}
-          onCopyDep={() => copyFromDep("alt")}
-          onChange={(p) => onChangeAero("alt", p)}
-          onRunway={(rw) => handleRunway("alt", rw)}
-        />
-      </div>
-
-      {/* Résultats */}
-      <div className="grid gap-3 lg:grid-cols-2">
-        {/* Décollage */}
-        <div className="rounded-lg border border-border bg-white px-3 py-2.5 space-y-2">
-          <div className="flex flex-wrap items-end justify-between gap-2">
-            <h3 className="text-xs font-bold text-navy uppercase tracking-wide">Décollage — TODR</h3>
-            <NumberField label="TODA m (départ)" value={perf.toda} onChange={(v) => onChange({ toda: v })} size="md" />
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            <Kv label="X-wind" value={d.xwind != null ? `${d.xwind} kt` : "—"} bad={d.xwind != null && d.xwind > 20} />
-            <Kv label="PA" value={d.pa != null ? `${d.pa} ft` : "—"} />
-            <Kv label="DA" value={d.da != null ? `${d.da} ft` : "—"} />
-            <Kv label="TODR" value={d.error ?? (d.todr != null ? `${d.todr} m` : "—")} />
-            <Kv label="× 1.25" value={d.todr125 != null ? `${d.todr125} m` : "—"} />
-          </div>
-          <VerdictBox status={d.verdict.status} message={d.verdict.message} className="!py-1.5 !text-[11px]" />
-        </div>
-
-        {/* Atterrissage */}
-        <div className="rounded-lg border border-border bg-white px-3 py-2.5 space-y-2">
-          <div className="flex flex-wrap items-end justify-between gap-2">
-            <h3 className="text-xs font-bold text-navy uppercase tracking-wide">Atterrissage — LDR</h3>
-            <div className="flex gap-2">
-              <NumberField label="LDA dest. m" value={perf.ldaDest} onChange={(v) => onChange({ ldaDest: v })} size="md" />
-              <NumberField label="LDA alt. m" value={perf.ldaAlt} onChange={(v) => onChange({ ldaAlt: v })} size="md" />
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            <Kv label="X-wind" value={l.xwind != null ? `${l.xwind} kt` : "—"} bad={l.xwind != null && l.xwind > 20} />
-            <Kv label="PA" value={l.pa != null ? `${l.pa} ft` : "—"} />
-            <Kv label="DA" value={l.da != null ? `${l.da} ft` : "—"} />
-            <Kv label="LDR" value={l.error ?? (l.ldr != null ? `${l.ldr} m` : "—")} />
-          </div>
-          <VerdictBox status={l.verdictDest.status} message={l.verdictDest.message} className="!py-1.5 !text-[11px]" />
-          <VerdictBox status={l.verdictAlt.status} message={l.verdictAlt.message} className="!py-1.5 !text-[11px]" />
-        </div>
-      </div>
+    <div className="space-y-2">
+      <p className={MB.groupLabel}>Conditions &amp; pistes</p>
+      <AeroRow
+        label="Départ"
+        ad={perf.dep}
+        onChange={(p) => onChangeAero("dep", p)}
+        onRunway={(rw) => handleRunway("dep", rw)}
+        extra={<NumberField label="TODA m" value={perf.toda} onChange={(v) => onChange({ toda: v })} size="md" />}
+      />
+      <AeroRow
+        label="Destination"
+        ad={perf.dest}
+        canCopyDep={depHasIcao}
+        onCopyDep={() => copyFromDep("dest")}
+        onChange={(p) => onChangeAero("dest", p)}
+        onRunway={(rw) => handleRunway("dest", rw)}
+        extra={<NumberField label="LDA m" value={perf.ldaDest} onChange={(v) => onChange({ ldaDest: v })} size="md" />}
+      />
+      <AeroRow
+        label="Alternate"
+        ad={perf.alt}
+        narrow
+        canCopyDep={depHasIcao}
+        onCopyDep={() => copyFromDep("alt")}
+        onChange={(p) => onChangeAero("alt", p)}
+        onRunway={(rw) => handleRunway("alt", rw)}
+        extra={<NumberField label="LDA m" value={perf.ldaAlt} onChange={(v) => onChange({ ldaAlt: v })} size="md" />}
+      />
     </div>
   );
 }

@@ -70,7 +70,7 @@ export function OffreClaimClient({ token, dateStr }: { token: string; dateStr: s
           type="button"
           onClick={doRefuse}
           disabled={isPending}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-50 cursor-pointer"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-navy/15 text-sm font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-50 cursor-pointer"
         >
           <X size={14} />
           Pas pour moi

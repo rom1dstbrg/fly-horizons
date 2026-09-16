@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AlertTriangle, AlertCircle, CheckCircle2, ArrowRight, PlaneTakeoff, Plane, Clock } from "lucide-react";
 import { piloteLegalStatus } from "@/lib/pilote/legal";
-import { FormSection, AdminBadge, getResaBadge } from "@/components/admin/ui";
+import { AdminBadge, getResaBadge } from "@/components/admin/ui";
 import { MetarWidget } from "@/components/admin/MetarWidget";
 
 export default async function PiloteDashboard() {
@@ -91,52 +91,34 @@ export default async function PiloteDashboard() {
       ) : (
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <h2 className="text-[11px] font-bold text-muted-foreground uppercase tracking-[1.8px]">À traiter</h2>
-            <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold text-white ${isUrgent ? "bg-red-500" : "bg-amber-500"}`}>
+            <span className="flex h-[19px] w-[19px] shrink-0 items-center justify-center rounded-full bg-navy text-[10px] font-bold text-white">1</span>
+            <h2 className="text-[11px] font-bold text-foreground uppercase tracking-[1.4px]">À traiter</h2>
+            <span className={`inline-flex items-center justify-center w-[17px] h-[17px] rounded-full text-[9.5px] font-bold text-white ${isUrgent ? "bg-red-500" : "bg-amber-500"}`}>
               {allActionItems.length}
             </span>
           </div>
-          <div className="bg-card rounded-xl border border-border overflow-hidden">
-            {urgentItems.length > 0 && (
-              <>
-                <div className="px-4 py-1.5 bg-red-50 border-b border-red-100/80">
-                  <span className="text-[9px] font-bold text-red-400 uppercase tracking-[1.5px]">Urgent</span>
-                </div>
-                {urgentItems.map((item, i) => {
-                  const Icon = item.icon;
-                  return (
-                    <Link key={`u${i}`} href={item.href}
-                      className="flex items-center gap-3 px-4 py-3 bg-red-50/40 hover:bg-red-50/80 transition-colors group border-b border-red-100/60"
-                    >
-                      <Icon size={12} className="text-red-500 shrink-0" />
-                      <span className="text-xs font-medium text-red-800 flex-1 leading-snug">{item.label}</span>
-                      <ArrowRight size={10} className="text-red-300 group-hover:text-red-400 transition-colors shrink-0" />
-                    </Link>
-                  );
-                })}
-              </>
-            )}
-            {todayItems.length > 0 && (
-              <>
-                {urgentItems.length > 0 && (
-                  <div className="px-4 py-1.5 bg-amber-50/60 border-b border-amber-100/80">
-                    <span className="text-[9px] font-bold text-amber-400 uppercase tracking-[1.5px]">Aussi</span>
-                  </div>
-                )}
-                {todayItems.map((item, i) => {
-                  const Icon = item.icon;
-                  return (
-                    <Link key={`t${i}`} href={item.href}
-                      className={`flex items-center gap-3 px-4 py-3 hover:bg-secondary transition-colors group ${i < todayItems.length - 1 ? "border-b border-border" : ""}`}
-                    >
-                      <Icon size={12} className="text-amber-500 shrink-0" />
-                      <span className="text-xs text-foreground flex-1 leading-snug">{item.label}</span>
-                      <ArrowRight size={10} className="text-muted-foreground/30 group-hover:text-muted-foreground transition-colors shrink-0" />
-                    </Link>
-                  );
-                })}
-              </>
-            )}
+          <div className="bg-card rounded-xl border border-navy/15 overflow-hidden">
+            {allActionItems.map((item, i) => {
+              const Icon = item.icon;
+              const urgent = i < urgentItems.length;
+              return (
+                <Link key={i} href={item.href}
+                  className={`flex items-center gap-3 px-4 py-2.5 border-l-[3px] transition-colors group ${
+                    i < allActionItems.length - 1 ? "border-b border-border" : ""
+                  } ${
+                    urgent
+                      ? "border-l-red-500 bg-red-50/70 hover:bg-red-50"
+                      : "border-l-amber-400 bg-amber-50/50 hover:bg-amber-50"
+                  }`}
+                >
+                  <Icon size={13} className={urgent ? "text-red-500 shrink-0" : "text-amber-500 shrink-0"} />
+                  <span className={`text-xs font-medium flex-1 leading-snug ${urgent ? "text-red-900" : "text-amber-900"}`}>
+                    {item.label}
+                  </span>
+                  <ArrowRight size={10} className={`shrink-0 transition-colors ${urgent ? "text-red-300 group-hover:text-red-400" : "text-amber-300 group-hover:text-amber-400"}`} />
+                </Link>
+              );
+            })}
           </div>
         </div>
       )}
@@ -146,18 +128,26 @@ export default async function PiloteDashboard() {
 
         <div>
           <div className="flex items-center justify-between mb-3">
-            <FormSection title="Prochains vols" />
+            <div className="flex items-center gap-2">
+              <span className="flex h-[19px] w-[19px] shrink-0 items-center justify-center rounded-full bg-navy text-[10px] font-bold text-white">2</span>
+              <h2 className="text-[11px] font-bold text-foreground uppercase tracking-[1.4px]">Prochains vols</h2>
+            </div>
             <Link href="/pilote/vols" className="text-xs text-muted-foreground hover:text-navy transition-colors flex items-center gap-1">
               Voir tout <ArrowRight size={11} />
             </Link>
           </div>
           {vols.length === 0 ? (
-            <div className="bg-card rounded-xl border border-border px-4 py-6 flex flex-col items-center justify-center gap-2 text-center">
+            <div className="bg-card rounded-xl border border-navy/15 px-4 py-6 flex flex-col items-center justify-center gap-2 text-center">
               <Plane size={18} className="text-muted-foreground/40" />
               <p className="text-sm text-muted-foreground">Aucun vol à venir pour l&apos;instant.</p>
             </div>
           ) : (
-            <div className="bg-card rounded-xl border border-border overflow-hidden">
+            <div className="bg-card rounded-xl border border-navy/15 overflow-hidden">
+              <div className="grid grid-cols-[64px_1fr_auto] gap-2 px-4 py-1.5 bg-secondary/60 border-b border-border">
+                <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-[1px]">Date</span>
+                <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-[1px]">Client</span>
+                <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-[1px]">Statut</span>
+              </div>
               {vols.map((r, i) => {
                 const client = r.clients as unknown as { prenom: string; nom: string } | null;
                 const name = client ? `${client.prenom} ${client.nom}`.trim() : "—";
@@ -165,17 +155,16 @@ export default async function PiloteDashboard() {
                 const statut = getResaBadge(r);
                 return (
                   <Link key={r.id} href="/pilote/vols"
-                    className={`flex items-center gap-3 px-4 py-3 hover:bg-secondary transition-colors group ${i < vols.length - 1 ? "border-b border-border" : ""}`}
+                    className={`grid grid-cols-[64px_1fr_auto] items-center gap-2 px-4 py-2.5 hover:bg-secondary transition-colors group ${i < vols.length - 1 ? "border-b border-border" : ""}`}
                   >
-                    {r.type_resa === "annonce_pilote"
-                      ? <PlaneTakeoff size={13} className="text-navy shrink-0" />
-                      : <Plane size={13} className="text-navy shrink-0" />}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {date}{r.heure_vol ? ` · ${r.heure_vol.slice(0, 5)}` : " · heure à confirmer"}
-                      </p>
-                    </div>
+                    <span className="font-mono text-xs font-semibold text-foreground">
+                      {date}
+                      <span className="block font-normal text-muted-foreground">{r.heure_vol ? r.heure_vol.slice(0, 5) : "à confirmer"}</span>
+                    </span>
+                    <span className="text-sm font-medium text-foreground truncate">
+                      {name}
+                      {r.type_resa === "annonce_pilote" && <span className="ml-1.5 text-[10px] font-normal text-muted-foreground">(annonce)</span>}
+                    </span>
                     <AdminBadge variant={statut.variant} label={statut.label} />
                   </Link>
                 );
@@ -185,9 +174,12 @@ export default async function PiloteDashboard() {
         </div>
 
         <div>
-          <FormSection title="Météo · EBCI" />
+          <div className="flex items-center gap-2 mb-3">
+            <span className="flex h-[19px] w-[19px] shrink-0 items-center justify-center rounded-full bg-navy text-[10px] font-bold text-white">3</span>
+            <h2 className="text-[11px] font-bold text-foreground uppercase tracking-[1.4px]">Météo</h2>
+          </div>
           <Suspense fallback={
-            <div className="bg-card rounded-xl border border-border px-4 py-3 flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="bg-card rounded-xl border border-navy/15 px-4 py-3 flex items-center gap-2 text-xs text-muted-foreground">
               <Clock size={12} className="animate-pulse" /> Chargement météo...
             </div>
           }>

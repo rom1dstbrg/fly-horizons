@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { PiloteSidebar } from "@/components/pilote/PiloteSidebar";
+import { PiloteSidebar, type PilotIdInfo } from "@/components/pilote/PiloteSidebar";
 import { ChartePiloteGate } from "@/components/pilote/ChartePiloteGate";
 import { piloteLegalStatus } from "@/lib/pilote/legal";
 
@@ -39,6 +39,16 @@ export default async function PiloteLayout({ children }: { children: React.React
     (i) => i.severity === "error" && i.field !== undefined,
   ).length;
 
+  // Plaque pilote (sidebar) : identité + licence/medical + pastille de statut.
+  const pilotIdInfo: PilotIdInfo = {
+    nom: profile?.full_name || "Pilote",
+    licenceNumero: pilote.licence_numero,
+    licenceExpiration: pilote.licence_expiration,
+    medicalExpiration: pilote.medical_expiration,
+    legalOk: legal.ok,
+    legalWarn: legal.issues.some((i) => i.severity === "warn"),
+  };
+
   // Pastille « Mes vols » : nombre de vols du pilote encore actifs (ni effectués,
   // ni annulés) — pour attirer l'attention sur sa charge en cours.
   const { count: volsAlerts } = await admin
@@ -56,6 +66,8 @@ export default async function PiloteLayout({ children }: { children: React.React
           "/pilote/profil": profilAlerts,
           "/pilote/vols": volsAlerts ?? 0,
         }}
+        pilot={pilotIdInfo}
+        isAdmin={profile?.role === "admin"}
       />
       <main className="flex-1 min-w-0 lg:ml-64 min-h-screen">
         <div className="px-4 pt-16 pb-[calc(76px+env(safe-area-inset-bottom))] sm:px-6 sm:pt-16 lg:p-8 lg:pt-8 lg:pb-8">

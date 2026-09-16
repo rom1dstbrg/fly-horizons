@@ -224,7 +224,7 @@ export function AnnonceForm({
                 type="button"
                 onClick={() => { setHasRoute(val); goNext(); }}
                 className={`w-full flex items-center gap-3.5 text-left rounded-lg border p-4 transition-colors cursor-pointer group ${
-                  hasRoute === val ? "border-primary bg-primary/5" : "border-border hover:border-primary/50 hover:bg-primary/5"
+                  hasRoute === val ? "border-primary bg-primary/5" : "border-navy/15 hover:border-primary/50 hover:bg-primary/5"
                 }`}
               >
                 <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
@@ -250,7 +250,7 @@ export function AnnonceForm({
               <Input
                 type="text" maxLength={80} placeholder="Ex. Coucher de soleil sur la Wallonie"
                 value={titre} onChange={e => setTitre(e.target.value)}
-                className="bg-input border-border"
+                className="bg-card border-navy/15"
               />
               <p className="text-[11px] text-muted-foreground">
                 Facultatif — sans titre, l&apos;annonce affiche votre nom par défaut.
@@ -263,13 +263,13 @@ export function AnnonceForm({
                 <Input
                   type="number" min={10} max={240} required placeholder="60"
                   value={duree} onChange={e => setDuree(e.target.value)}
-                  className="bg-input border-border"
+                  className="bg-card border-navy/15"
                 />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-sm text-muted-foreground">Places passagers maximum *</Label>
                 <select value={places} onChange={e => setPlaces(e.target.value)} required
-                  className="w-full h-10 bg-input border border-border text-foreground rounded-md px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring">
+                  className="w-full h-10 bg-card border border-navy/15 text-foreground rounded-md px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring">
                   {[1, 2, 3, 4, 5, 6].map(p => <option key={p} value={p}>{p} place{p > 1 ? "s" : ""}</option>)}
                 </select>
                 <p className="text-[11px] text-muted-foreground">
@@ -307,7 +307,7 @@ export function AnnonceForm({
                     type="button"
                     onClick={() => setModeVente(val)}
                     className={`text-left rounded-lg border px-3 py-2.5 transition-colors cursor-pointer ${
-                      modeVente === val ? "border-primary bg-primary/5" : "border-border bg-input hover:border-foreground/30"
+                      modeVente === val ? "border-primary bg-primary/5" : "border-navy/15 bg-card hover:border-foreground/30"
                     }`}
                   >
                     <span className="block text-sm font-semibold text-foreground">{title}</span>
@@ -322,7 +322,7 @@ export function AnnonceForm({
               <Input
                 type="number" min="0" step="0.01" required placeholder="300"
                 value={prixTotal} onChange={e => setPrixTotal(e.target.value)}
-                className="bg-input border-border"
+                className="bg-card border-navy/15"
               />
               <p className="text-[11px] text-muted-foreground">
                 Location de l&apos;avion, carburant, taxes d&apos;aérodrome. C&apos;est ce total qui se
@@ -337,15 +337,15 @@ export function AnnonceForm({
                   <Input
                     type="number" min="0" step="0.01" required placeholder={partMode === "pct" ? "25" : "75"}
                     value={partValue} onChange={e => setPartValue(e.target.value)}
-                    className="bg-input border-border"
+                    className="bg-card border-navy/15"
                   />
-                  <div className="flex rounded-md border border-border overflow-hidden shrink-0">
+                  <div className="flex rounded-md border border-navy/15 overflow-hidden shrink-0">
                     <button type="button" onClick={() => setPartMode("pct")}
-                      className={`px-3 h-10 text-sm font-semibold cursor-pointer transition-colors ${partMode === "pct" ? "bg-primary text-primary-foreground" : "bg-input text-muted-foreground hover:text-foreground"}`}>
+                      className={`px-3 h-10 text-sm font-semibold cursor-pointer transition-colors ${partMode === "pct" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}>
                       %
                     </button>
                     <button type="button" onClick={() => setPartMode("eur")}
-                      className={`px-3 h-10 text-sm font-semibold cursor-pointer transition-colors border-l border-border ${partMode === "eur" ? "bg-primary text-primary-foreground" : "bg-input text-muted-foreground hover:text-foreground"}`}>
+                      className={`px-3 h-10 text-sm font-semibold cursor-pointer transition-colors border-l border-border ${partMode === "eur" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}>
                       €
                     </button>
                   </div>
@@ -356,7 +356,7 @@ export function AnnonceForm({
               </div>
             ) : (
               prixTotal !== "" && (
-                <div className="bg-secondary/40 border border-border rounded-lg px-4 py-3 space-y-1">
+                <div className="bg-secondary/40 border border-navy/15 rounded-lg px-4 py-3 space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Votre part (calculée automatiquement)</span>
                     <span className="text-lg font-black text-foreground">{partPiloteAuto.toFixed(2)} €</span>
@@ -370,14 +370,14 @@ export function AnnonceForm({
             )}
 
             {prixTotal !== "" && (modeVente === "place" || partValue !== "") && modeVente === "avion" && (
-              <div className="bg-secondary/40 border border-border rounded-lg px-4 py-3 flex items-center justify-between">
+              <div className="bg-secondary/40 border border-navy/15 rounded-lg px-4 py-3 flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Prix affiché au client</span>
                 <span className="text-lg font-black text-foreground">{prixClient.toFixed(2)} €</span>
               </div>
             )}
 
             {prixTotal !== "" && modeVente === "place" && (
-              <div className="bg-secondary/40 border border-border rounded-lg px-4 py-3 space-y-1">
+              <div className="bg-secondary/40 border border-navy/15 rounded-lg px-4 py-3 space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Solde à partager entre les passagers</span>
                   <span className="text-lg font-black text-foreground">{prixClient.toFixed(2)} €</span>
@@ -420,7 +420,7 @@ export function AnnonceForm({
               <textarea
                 value={description} onChange={e => setDescription(e.target.value)}
                 rows={5} placeholder="Décrivez le vol, l'itinéraire envisagé, l'ambiance..."
-                className="w-full px-3 py-2 rounded-md border border-border bg-input text-foreground text-sm resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+                className="w-full px-3 py-2 rounded-md border border-navy/15 bg-card text-foreground text-sm resize-none focus:outline-none focus:ring-1 focus:ring-ring"
               />
             </div>
 
@@ -428,7 +428,7 @@ export function AnnonceForm({
               <Label className="text-sm text-muted-foreground">Photos (jusqu&apos;à {MAX_IMAGES}) — la 1ère est la couverture</Label>
               <div className="flex flex-wrap gap-3">
                 {images.map((img, i) => (
-                  <div key={img.path} className="relative w-24 h-24 rounded-lg overflow-hidden border border-border group">
+                  <div key={img.path} className="relative w-24 h-24 rounded-lg overflow-hidden border border-navy/15 group">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={img.url} alt="" className="w-full h-full object-cover" />
                     {i === 0 && (
@@ -454,7 +454,7 @@ export function AnnonceForm({
                 ))}
                 {images.length < MAX_IMAGES && (
                   <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}
-                    className="w-24 h-24 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors cursor-pointer disabled:opacity-50">
+                    className="w-24 h-24 rounded-lg border-2 border-dashed border-navy/20 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors cursor-pointer disabled:opacity-50">
                     {uploading ? <Loader2 size={18} className="animate-spin" /> : <ImagePlus size={18} />}
                     <span className="text-[10px]">Ajouter</span>
                   </button>
@@ -471,7 +471,7 @@ export function AnnonceForm({
         {/* ── Étape : Publication ──────────────────────────────────── */}
         {step === "legal" && (
           <div className="space-y-4">
-            <label className="flex items-start gap-2.5 rounded-lg border border-border bg-secondary/30 px-4 py-3 cursor-pointer">
+            <label className="flex items-start gap-2.5 rounded-lg border border-navy/15 bg-secondary/30 px-4 py-3 cursor-pointer">
               <input
                 type="checkbox"
                 checked={legalOk}

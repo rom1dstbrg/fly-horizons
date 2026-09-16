@@ -76,7 +76,7 @@ export function PiloteDisponibilitesClient({
         <div className="bg-destructive/10 border border-destructive/30 text-destructive text-sm rounded-md px-4 py-3">{error}</div>
       )}
 
-      <div className="card-premium p-5 space-y-3">
+      <div className="bg-card border border-navy/15 rounded-[10px] p-5 space-y-3">
         <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
           <CalendarRange size={14} /> Période récurrente
         </p>
@@ -86,11 +86,11 @@ export function PiloteDisponibilitesClient({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-[11px] text-muted-foreground mb-1">Du</label>
-            <Input type="date" value={plageDebut} onChange={e => setPlageDebut(e.target.value)} className="bg-input border-border h-10" />
+            <Input type="date" value={plageDebut} onChange={e => setPlageDebut(e.target.value)} className="bg-card border-navy/15 h-10" />
           </div>
           <div>
             <label className="block text-[11px] text-muted-foreground mb-1">Au</label>
-            <Input type="date" value={plageFin} min={plageDebut || undefined} onChange={e => setPlageFin(e.target.value)} className="bg-input border-border h-10" />
+            <Input type="date" value={plageFin} min={plageDebut || undefined} onChange={e => setPlageFin(e.target.value)} className="bg-card border-navy/15 h-10" />
           </div>
         </div>
         {plageDebut && plageFin && (
@@ -98,11 +98,11 @@ export function PiloteDisponibilitesClient({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-[11px] text-muted-foreground mb-1">Disponible à partir de</label>
-                <Input type="time" value={plageHeureDebut} onChange={e => setPlageHeureDebut(e.target.value)} className="bg-input border-border h-10" />
+                <Input type="time" value={plageHeureDebut} onChange={e => setPlageHeureDebut(e.target.value)} className="bg-card border-navy/15 h-10" />
               </div>
               <div>
                 <label className="block text-[11px] text-muted-foreground mb-1">Jusqu&apos;à</label>
-                <Input type="time" value={plageHeureFin} onChange={e => setPlageHeureFin(e.target.value)} className="bg-input border-border h-10" />
+                <Input type="time" value={plageHeureFin} onChange={e => setPlageHeureFin(e.target.value)} className="bg-card border-navy/15 h-10" />
               </div>
             </div>
             <div>
@@ -112,8 +112,8 @@ export function PiloteDisponibilitesClient({
               <div className="flex flex-wrap gap-1.5">
                 {JOURS_LABELS.map((label, j) => (
                   <button key={j} type="button" onClick={() => toggleJour(j)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
-                      plageJours.includes(j) ? "bg-primary text-primary-foreground" : "bg-input text-muted-foreground border border-border hover:text-foreground"
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer border ${
+                      plageJours.includes(j) ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-navy/15 hover:text-foreground"
                     }`}
                   >{label}</button>
                 ))}
@@ -123,7 +123,7 @@ export function PiloteDisponibilitesClient({
         )}
       </div>
 
-      <div className="card-premium p-5 space-y-3">
+      <div className="bg-card border border-navy/15 rounded-[10px] p-5 space-y-3">
         <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
           <Ban size={14} /> Exceptions ponctuelles
         </p>
@@ -133,33 +133,33 @@ export function PiloteDisponibilitesClient({
         <div className="flex flex-wrap items-end gap-2">
           <div>
             <label className="block text-[11px] text-muted-foreground mb-1">Date</label>
-            <Input type="date" value={excDate} onChange={e => setExcDate(e.target.value)} className="bg-input border-border h-10 w-40" />
+            <Input type="date" value={excDate} onChange={e => setExcDate(e.target.value)} className="bg-card border-navy/15 h-10 w-40" />
           </div>
-          <div className="flex rounded-md border border-border overflow-hidden h-10">
+          <div className="flex rounded-md border border-navy/15 overflow-hidden h-10">
             <button type="button" onClick={() => setExcFerme(true)}
-              className={`px-3 text-xs font-semibold cursor-pointer transition-colors ${excFerme ? "bg-red-500 text-white" : "bg-input text-muted-foreground"}`}>
+              className={`px-3 text-xs font-semibold cursor-pointer transition-colors ${excFerme ? "bg-red-500 text-white" : "bg-card text-muted-foreground hover:text-foreground"}`}>
               Fermé
             </button>
             <button type="button" onClick={() => setExcFerme(false)}
-              className={`px-3 text-xs font-semibold cursor-pointer transition-colors border-l border-border ${!excFerme ? "bg-primary text-primary-foreground" : "bg-input text-muted-foreground"}`}>
+              className={`px-3 text-xs font-semibold cursor-pointer transition-colors border-l border-border ${!excFerme ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}>
               Ouvert
             </button>
           </div>
           {!excFerme && (
             <>
-              <Input type="time" value={excHeureDebut} onChange={e => setExcHeureDebut(e.target.value)} className="bg-input border-border h-10 w-28" />
-              <Input type="time" value={excHeureFin} onChange={e => setExcHeureFin(e.target.value)} className="bg-input border-border h-10 w-28" />
+              <Input type="time" value={excHeureDebut} onChange={e => setExcHeureDebut(e.target.value)} className="bg-card border-navy/15 h-10 w-28" />
+              <Input type="time" value={excHeureFin} onChange={e => setExcHeureFin(e.target.value)} className="bg-card border-navy/15 h-10 w-28" />
             </>
           )}
           <button type="button" onClick={addException} disabled={!excDate}
-            className="flex items-center gap-1 h-10 px-3.5 rounded-lg border border-border text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-40 cursor-pointer">
+            className="flex items-center gap-1 h-10 px-3.5 rounded-lg border border-navy/15 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-40 cursor-pointer">
             <Plus size={14} /> Ajouter
           </button>
         </div>
         {exceptions.length > 0 && (
           <div className="flex flex-wrap gap-1.5 pt-1">
             {exceptions.map(e => (
-              <span key={e.date} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${e.ferme ? "bg-red-50 text-red-700" : "bg-primary/10 text-primary"}`}>
+              <span key={e.date} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold ${e.ferme ? "bg-red-50 text-red-700" : "bg-primary/10 text-primary"}`}>
                 {new Date(e.date + "T12:00:00Z").toLocaleDateString("fr-BE", { day: "numeric", month: "short", year: "numeric" })}
                 {e.ferme ? " · fermé" : ` · ${e.heure_debut}-${e.heure_fin}`}
                 <button type="button" onClick={() => removeException(e.date)} className="cursor-pointer hover:opacity-70">

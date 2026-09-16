@@ -46,7 +46,7 @@ export default function PiloteSetPasswordPage() {
             placeholder="••••••••"
             required
             autoComplete="new-password"
-            className="bg-input border-border text-foreground placeholder:text-muted-foreground/40"
+            className="bg-card border-navy/15 text-foreground placeholder:text-muted-foreground/40"
           />
         </div>
 
@@ -59,7 +59,7 @@ export default function PiloteSetPasswordPage() {
             placeholder="••••••••"
             required
             autoComplete="new-password"
-            className="bg-input border-border text-foreground placeholder:text-muted-foreground/40"
+            className="bg-card border-navy/15 text-foreground placeholder:text-muted-foreground/40"
           />
         </div>
 

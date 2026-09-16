@@ -15,6 +15,21 @@ import { logout } from "@/lib/actions/auth";
 // desktop, top bar + bottom nav mobile) — un seul vocabulaire de nav pour les
 // deux espaces, pas une variante maison plus légère.
 
+export interface PilotIdInfo {
+  nom: string;
+  licenceNumero: string | null;
+  licenceExpiration: string | null;
+  medicalExpiration: string | null;
+  legalOk: boolean;
+  legalWarn: boolean;
+}
+
+function frDate(iso: string | null): string {
+  if (!iso) return "—";
+  const [y, m, d] = iso.split("-");
+  return d && m && y ? `${d}/${m}/${y}` : iso;
+}
+
 type NavSection = { type: "section"; label: string };
 type NavLink = {
   type: "link";
@@ -46,27 +61,34 @@ function isLinkActive(item: NavLink, pathname: string): boolean {
   return pathname.startsWith(item.href);
 }
 
-function NavContent({ counts, onClose }: { counts: Record<string, number>; onClose?: () => void }) {
+function NavContent({
+  counts,
+  pilot,
+  isAdmin,
+  onClose,
+}: {
+  counts: Record<string, number>;
+  pilot?: PilotIdInfo | null;
+  isAdmin?: boolean;
+  onClose?: () => void;
+}) {
   const pathname = usePathname();
 
   return (
     <div className="flex flex-col h-full bg-card border-r border-border">
       {/* Logo + close */}
       <div className="flex items-center justify-between h-14 lg:h-16 px-5 border-b border-border shrink-0">
-        <Link href="/pilote" className="flex items-center gap-2" onClick={onClose}>
+        <Link href="/pilote" className="flex items-center" onClick={onClose}>
           <Image
-            src="/fly-horizons-logo-admin.svg"
+            src="/fly-horizons-logo-navy.svg"
             alt="Fly Horizons"
             width={130}
             height={32}
-            className="h-7 w-auto object-contain"
+            className="h-6 w-auto object-contain"
             style={{ width: "auto" }}
             priority
             unoptimized
           />
-          <span className="text-[9px] font-bold uppercase tracking-[2px] text-muted-foreground/50 border-l border-border pl-2 ml-0.5">
-            Pilote
-          </span>
         </Link>
         {onClose && (
           <button
@@ -79,13 +101,31 @@ function NavContent({ counts, onClose }: { counts: Record<string, number>; onClo
         )}
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto py-1 px-2.5 space-y-0.5">
+      {/* Plaque pilote — identité, licence, medical. Fond plat, pas de bloc navy :
+          la hiérarchie vient de la bordure et du poids du texte, pas d'une ombre. */}
+      {pilot && (
+        <div className="px-4 pt-3.5 pb-3 border-b border-border shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="text-[13px] font-semibold text-foreground truncate">{pilot.nom}</span>
+            <span
+              className={`h-1.5 w-1.5 rounded-full shrink-0 ${
+                !pilot.legalOk ? "bg-red-500" : pilot.legalWarn ? "bg-amber-500" : "bg-emerald-500"
+              }`}
+            />
+          </div>
+          <p className="mt-1 font-mono text-[10px] text-muted-foreground/70">
+            {pilot.licenceNumero || "—"} · lic. {frDate(pilot.licenceExpiration)} · med. {frDate(pilot.medicalExpiration)}
+          </p>
+        </div>
+      )}
+
+      {/* Nav — hiérarchie par bordure + ton de gris, pas de bloc plein ni d'ombre */}
+      <nav className="flex-1 overflow-y-auto py-2 px-2.5 space-y-px">
         {NAVIGATION.map((entry, i) => {
           if (entry.type === "section") {
             return (
-              <div key={`section-${i}`} className="pt-3 pb-1 px-3">
-                <p className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-[1.5px]">
+              <div key={`section-${i}`} className="pt-3.5 pb-1 px-3">
+                <p className="text-[9px] font-semibold text-muted-foreground/45 uppercase tracking-[1px]">
                   {entry.label}
                 </p>
               </div>
@@ -100,17 +140,17 @@ function NavContent({ counts, onClose }: { counts: Record<string, number>; onClo
               key={entry.id}
               href={entry.href}
               onClick={onClose}
-              className={`flex items-center gap-2.5 px-3 py-2.5 lg:py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`flex items-center gap-2.5 pl-2.5 pr-3 py-2 lg:py-1.5 border-l-2 text-sm transition-colors ${
                 isActive
-                  ? "bg-navy text-white shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  ? "border-navy bg-secondary/60 text-navy font-semibold"
+                  : "border-transparent text-muted-foreground font-medium hover:text-foreground hover:bg-secondary/40"
               }`}
             >
               <Icon size={15} className="shrink-0" />
               <span className="flex-1">{entry.label}</span>
               {badgeCount > 0 && (
                 <span className={`shrink-0 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center ${
-                  isActive ? "bg-primary text-[#0b2238]" : "bg-primary/15 text-primary"
+                  isActive ? "bg-primary/20 text-navy" : "bg-primary/15 text-primary"
                 }`}>
                   {badgeCount > 99 ? "99+" : badgeCount}
                 </span>
@@ -120,16 +160,18 @@ function NavContent({ counts, onClose }: { counts: Record<string, number>; onClo
         })}
       </nav>
 
-      {/* Vue admin + déconnexion */}
+      {/* Vue admin (si double rôle) + déconnexion */}
       <div className="px-2.5 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-border shrink-0 space-y-0.5">
-        <Link
-          href="/admin"
-          onClick={onClose}
-          className="flex items-center gap-2.5 px-3 py-2.5 lg:py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
-        >
-          <ArrowLeftRight size={15} className="shrink-0" />
-          Vue admin
-        </Link>
+        {isAdmin && (
+          <Link
+            href="/admin"
+            onClick={onClose}
+            className="flex items-center gap-2.5 px-3 py-2.5 lg:py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
+          >
+            <ArrowLeftRight size={15} className="shrink-0" />
+            Vue admin
+          </Link>
+        )}
         <form action={logout}>
           <button
             type="submit"
@@ -188,31 +230,36 @@ function BottomNavInner({ onMenuOpen }: { onMenuOpen: () => void }) {
   );
 }
 
-export function PiloteSidebar({ counts = {} }: { counts?: Record<string, number> }) {
+export function PiloteSidebar({
+  counts = {},
+  pilot,
+  isAdmin = false,
+}: {
+  counts?: Record<string, number>;
+  pilot?: PilotIdInfo | null;
+  isAdmin?: boolean;
+}) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <>
       {/* Desktop sidebar */}
       <aside className="hidden lg:block fixed left-0 top-0 bottom-0 w-64 z-40">
-        <NavContent counts={counts} />
+        <NavContent counts={counts} pilot={pilot} isAdmin={isAdmin} />
       </aside>
 
       {/* Mobile top bar */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 h-14 bg-card border-b border-border flex items-center justify-between px-4">
-        <Link href="/pilote" className="flex items-center gap-2">
+        <Link href="/pilote" className="flex items-center">
           <Image
-            src="/fly-horizons-logo-admin.svg"
+            src="/fly-horizons-logo-navy.svg"
             alt="Fly Horizons"
             width={110}
             height={28}
-            className="h-7 w-auto object-contain"
+            className="h-6 w-auto object-contain"
             style={{ width: "auto" }}
             unoptimized
           />
-          <span className="text-[9px] font-bold uppercase tracking-[2px] text-muted-foreground/50 border-l border-border pl-2 ml-0.5">
-            Pilote
-          </span>
         </Link>
       </div>
 
@@ -236,7 +283,7 @@ export function PiloteSidebar({ counts = {} }: { counts?: Record<string, number>
             mobileOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >
-          <NavContent counts={counts} onClose={() => setMobileOpen(false)} />
+          <NavContent counts={counts} pilot={pilot} isAdmin={isAdmin} onClose={() => setMobileOpen(false)} />
         </aside>
       </div>
     </>

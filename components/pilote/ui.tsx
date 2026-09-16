@@ -7,8 +7,8 @@ import { AlertCircle, X } from "lucide-react";
 // carte blanche + ombre premium + rayon --r-sm, titres, libellés de section,
 // encarts d'alerte. Toutes les pages pilote passent par ici.
 
-/** Carte standard : .card-premium (card blanche, bordure --border, ombre --sh-sm, rayon --r-sm). */
-export const piloteCard = "card-premium p-5";
+/** Carte standard — plate, sans ombre : bordure fine, pas de card-premium (réservé au site public). */
+export const piloteCard = "bg-card border border-navy/15 rounded-[10px] p-5";
 
 /** En-tête de page : titre + sous-titre + filet de séparation. */
 export function PiloteHeader({
@@ -54,22 +54,22 @@ export function PiloteAlert({
 }) {
   const toneCls =
     tone === "danger"
-      ? "border-l-red-500 bg-red-50/60 text-red-900"
+      ? "border-border bg-red-50/60 text-red-900"
       : tone === "info"
-      ? "border-l-navy bg-secondary/60 text-foreground"
-      : "border-l-amber-400 bg-amber-50/70 text-amber-900";
+      ? "border-border bg-secondary/60 text-foreground"
+      : "border-border bg-amber-50/70 text-amber-900";
   const iconCls =
     tone === "danger" ? "text-red-600" : tone === "info" ? "text-navy" : "text-amber-600";
 
   const inner = (
-    <div className={`card-premium border-l-4 ${toneCls} p-4 flex items-start gap-3`}>
+    <div className={`rounded-[10px] border ${toneCls} p-4 flex items-start gap-3 transition-colors`}>
       <AlertCircle size={17} className={`shrink-0 mt-0.5 ${iconCls}`} />
       <div className="min-w-0 flex-1 text-sm leading-relaxed">{children}</div>
     </div>
   );
 
   return href ? (
-    <Link href={href} className="block [&>div]:hover:shadow-[0_8px_32px_rgba(11,34,56,0.11)]">
+    <Link href={href} className="block [&>div]:hover:border-navy/30">
       {inner}
     </Link>
   ) : (
