@@ -8,6 +8,7 @@ import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { makeRescheduleToken, parseRescheduleToken } from "@/lib/reschedule-token";
 import { buildBoardingPassAttachment } from "@/lib/pdf/boarding-pass-attachment";
 import { requireAdminOrOwningPilote as checkAdminOrOwningPilote } from "./auth-guards";
+import { releaseAnnoncePilote } from "@/lib/annonces-pilote-server";
 
 async function checkAdmin() {
   const supabase = await createClient();
@@ -91,30 +92,9 @@ export async function updateStatutReservation(
       // demande (avant même confirmation ou paiement, cf. /api/vol-annonce/submit),
       // donc annuler cette demande sans rien libérer la laisse coincée pour
       // toujours — invisible au public et au pilote, seul recours manuel :
-      // republier un doublon (perd vues/historique). CAS (compare-and-swap) pour
-      // ne jamais réouvrir une annonce que le pilote a annulée lui-même entretemps.
+      // republier un doublon (perd vues/historique).
       if (resaData?.annonce_id) {
-        const { data: annonce } = await supabase
-          .from("annonces_pilote")
-          .select("statut, mode_vente, places_reservees")
-          .eq("id", resaData.annonce_id)
-          .single();
-        if (annonce?.mode_vente === "place") {
-          const prev = annonce.places_reservees ?? 0;
-          const next = Math.max(0, prev - (resaData.passagers ?? 1));
-          await supabase
-            .from("annonces_pilote")
-            .update({ places_reservees: next, statut: "publiee" })
-            .eq("id", resaData.annonce_id)
-            .eq("places_reservees", prev)
-            .in("statut", ["publiee", "reservee"]);
-        } else if (annonce?.statut === "reservee") {
-          await supabase
-            .from("annonces_pilote")
-            .update({ statut: "publiee" })
-            .eq("id", resaData.annonce_id)
-            .eq("statut", "reservee");
-        }
+        await releaseAnnoncePilote(supabase, resaData.annonce_id, resaData.passagers);
       }
     }
 

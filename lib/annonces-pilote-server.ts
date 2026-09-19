@@ -46,3 +46,42 @@ export async function finalizeAnnonceGroupPricing(
   // réel dès que le groupe se clôturait avec moins d'occupants que prévu.
   await db.from("annonces_pilote").update({ part_pilote: sharePerPerson }).eq("id", annonceId);
 }
+
+/**
+ * Libère une annonce pilote quand une réservation qui la tenait (annonce_id)
+ * est annulée — quel que soit le code qui l'annule. Extrait le 19/09 de
+ * updateStatutReservation() car le cron demande-deadline annule aussi des
+ * demandes reçues (72h sans réponse de Romain) par un update direct qui
+ * contournait cette fonction : une annonce prise par une demande jamais
+ * confirmée restait coincée à "reservee" pour toujours après l'auto-annulation,
+ * invisible au public et au pilote (cf. audit edge cases du 19/09). CAS
+ * (compare-and-swap) pour ne jamais réouvrir une annonce que le pilote a
+ * annulée ou republiée lui-même entretemps.
+ */
+export async function releaseAnnoncePilote(
+  db: ReturnType<typeof createAdminClient>,
+  annonceId: string,
+  passagers: number | null | undefined,
+) {
+  const { data: annonce } = await db
+    .from("annonces_pilote")
+    .select("statut, mode_vente, places_reservees")
+    .eq("id", annonceId)
+    .single();
+  if (annonce?.mode_vente === "place") {
+    const prev = annonce.places_reservees ?? 0;
+    const next = Math.max(0, prev - (passagers ?? 1));
+    await db
+      .from("annonces_pilote")
+      .update({ places_reservees: next, statut: "publiee" })
+      .eq("id", annonceId)
+      .eq("places_reservees", prev)
+      .in("statut", ["publiee", "reservee"]);
+  } else if (annonce?.statut === "reservee") {
+    await db
+      .from("annonces_pilote")
+      .update({ statut: "publiee" })
+      .eq("id", annonceId)
+      .eq("statut", "reservee");
+  }
+}

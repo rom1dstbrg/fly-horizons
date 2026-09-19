@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { reservationAutoAnnuleeEmail } from "@/lib/email-templates";
+import { releaseAnnoncePilote } from "@/lib/annonces-pilote-server";
 
 /**
  * POST /api/cron/demande-deadline
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
 
   const { data: reservations, error } = await supabase
     .from("reservations")
-    .select("id, date_vol, heure_vol, duree, voucher_code, clients(prenom, nom, email)")
+    .select("id, date_vol, heure_vol, duree, voucher_code, annonce_id, passagers, clients(prenom, nom, email)")
     .eq("statut", "demande_recue")
     .is("slot_proposal_token", null) // Romain a déjà proposé un créneau : la balle est dans le camp du client, ne pas annuler sous lui
     .lt("created_at", deadline);
@@ -66,6 +67,13 @@ export async function POST(request: NextRequest) {
         .update({ status: "unused" })
         .eq("code", resa.voucher_code)
         .eq("status", "reserved");
+    }
+
+    // Une demande via annonce pilote (/api/vol-annonce/submit) passe aussi par
+    // "demande_recue" — sans ce release, l'annonce restait coincée à "reservee"
+    // pour toujours si le pilote ne répondait pas dans les 72h (bug trouvé le 19/09).
+    if (resa.annonce_id) {
+      await releaseAnnoncePilote(supabase, resa.annonce_id, resa.passagers);
     }
 
     const raw = resa.clients;

@@ -984,6 +984,37 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-19 (21) — fix : annonce coincée si le pilote ignore une demande 72h</h3>
+      <p class="pill">Suite à la demande de Romain d'auditer les situations non testées pour
+        garantir que le pilote ne se retrouve jamais bloqué : le cron
+        <code>demande-deadline</code> (auto-annule les demandes sans réponse après 72h) annule
+        directement en base sans passer par <code>updateStatutReservation()</code> — la fonction
+        où j'avais ajouté plus tôt dans la session la libération de l'annonce pilote à
+        l'annulation. Une demande via annonce (<code>type_resa: "annonce_pilote"</code>) passe
+        aussi par le statut <code>demande_recue</code> ; si le pilote ne répond pas dans les 72h,
+        elle était auto-annulée par ce cron SANS libérer l'annonce, qui restait coincée à
+        "reservee" pour toujours — invisible au public et au pilote, sans qu'il ait rien annulé
+        lui-même.</p>
+      <ul>
+        <li><code>lib/annonces-pilote-server.ts</code> : logique de libération extraite en
+          <code>releaseAnnoncePilote()</code> partagée (évite de la dupliquer entre le cron et
+          <code>updateStatutReservation</code>).</li>
+        <li><code>lib/actions/reservations.ts</code> : <code>updateStatutReservation()</code>
+          appelle désormais ce helper au lieu de porter la logique inline.</li>
+        <li><code>app/api/cron/demande-deadline/route.ts</code> : sélectionne
+          <code>annonce_id, passagers</code> et appelle <code>releaseAnnoncePilote()</code> après
+          chaque auto-annulation.</li>
+        <li>Vérifié en passant : <code>payment-deadline</code> filtre déjà
+          <code>type_resa in (standard, perso)</code> (annonce_pilote jamais concerné) ;
+          <code>flight-offer-deadline</code> ne touche que <code>flight_offers.statut</code>, pas
+          les réservations. Aucun fix nécessaire sur ces deux-là. IBAN manquant : déjà bloqué en
+          amont, un pilote ne peut pas publier sans IBAN valide (<code>lib/actions/annonces.ts</code>).</li>
+        <li><code>tsc</code> + <code>eslint</code> propres. Pas de changement visuel — pas de
+          vérification à l'écran nécessaire.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-19 (20) — sidebar : "Vue admin" redescendu, plaque pilote refaite</h3>
       <p class="pill">Deux demandes : (1) le bouton "Vue admin" doit être en bas, pas dans
         l'en-tête ; (2) la plaque pilote (nom/licence) doit être refaite, le texte étant quasi
