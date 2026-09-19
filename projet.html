@@ -1020,6 +1020,38 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-19 (27) — homepage : suite du chantier "tout par l'espace pilote"</h3>
+      <p class="pill">Suite directe de la décision du 13/09 : le flag <code>catalogue_source</code>
+        est déjà à <code>'annonces'</code> et les 6 <code>products</code> sont déjà tous
+        <code>active=false</code> (Romain a republié son catalogue réel en annonces avant de
+        demander ce chantier), mais la home n'avait jamais été traitée par ce flag — elle
+        restait sourcée uniquement sur <code>products</code>, donc affichait "aucun vol
+        disponible" au lieu des 4 annonces réelles. Demande de Romain : "les vols depuis l'admin
+        ne doivent plus être affichés, à terme l'admin ne sert plus à publier des vols" —
+        exactement le point 3 laissé en suspens dans la décision du 13/09.</p>
+      <ul>
+        <li><code>app/(public)/page.tsx</code> : sections "Nos vols" et "Itinéraires
+          sélectionnés" refaites pour suivre le même flag et la même logique que
+          <code>/nos-offres</code> (déjà à jour depuis le 13/09) — lecture de
+          <code>annonces_pilote</code> via le client admin (RLS verrouillée, IBAN/email
+          pilote), split durée fixe / itinéraire sur la présence de
+          <code>route_waypoints</code>, <code>AnnonceCard</code> à la place de
+          <code>PackCard</code> quand <code>catalogue_source = 'annonces'</code>. La branche
+          <code>products</code> reste en fallback (comme sur nos-offres) si le flag repasse un
+          jour à <code>'products'</code>.</li>
+        <li><code>/vols/[slug]</code> (fiche produit admin) et le flow
+          <code>/reservation</code>/<code>/checkout</code> associé : plus aucun lien ne pointe
+          vers eux tant que le flag est sur <code>'annonces'</code> (seul <code>PackCard</code>
+          les référence, jamais rendu dans cette branche) — laissés en l'état, hors périmètre de
+          cette demande (comme déjà noté dans la décision du 13/09 pour le sort de
+          <code>/admin/boutique</code>).</li>
+        <li>Vérifié à l'écran sur Chrome : la home affiche désormais les 4 vraies annonces
+          (Immersion/Exploration/Ultime/Découverte, "Vol partagé · Romain Destanebrg") au lieu
+          du message "aucun vol". <code>tsc</code> + <code>eslint</code> propres.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-19 (26) — "Devenir pilote" : mise en page recalée pleine largeur</h3>
       <p class="pill">Suite du (25) : une fois le formulaire déplacé sur sa propre page, les
         cards restaient coincées à gauche (<code>max-w-3xl</code> hérité de l'ancienne mise en

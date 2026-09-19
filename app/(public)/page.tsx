@@ -5,8 +5,10 @@ import { ChevronDown, Route, Lock, Users, Clock, PlaneTakeoff, Zap, ArrowRight, 
 import { HeroContent } from "@/components/HeroContent";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import { PackCard } from "@/components/shop/PackCard";
+import { AnnonceCard } from "@/components/vols/AnnonceCard";
 import { NoFlightsNotice } from "@/components/shop/NoFlightsNotice";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { jsonLd } from "@/lib/json-ld";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
@@ -63,24 +65,61 @@ export const revalidate = 300;
 export default async function HomePage() {
   const supabase = await createClient();
 
+  // Chantier "tout passe par l'espace pilote" (2026-09-13, à terme) : même flag
+  // et même logique que /nos-offres (voir projet.html § Décisions) — la home
+  // n'était pas encore traitée par ce flag, elle restait sourcée sur products
+  // même une fois le catalogue admin désactivé, d'où un "aucun vol" au lieu des
+  // annonces réelles. Refaite le 19/09 pour suivre le même flag.
   const [
+    { data: sourceSetting },
     { data: packs },
+    { data: rawAnnonces },
     { data: galleryRows },
   ] = await Promise.all([
+    supabase.from("crm_settings").select("value").eq("key", "catalogue_source").maybeSingle(),
     supabase.from("products")
       .select("*, images:product_images(*)")
       .eq("active", true).eq("product_type", "voucher")
       .or("quantity_available.is.null,quantity_available.gt.0")
       .order("voucher_duration_minutes", { ascending: true }),
+    // annonces_pilote/pilotes verrouillées service_role (IBAN, email pilote) —
+    // lecture via le client admin, filtrée statut='publiee' uniquement.
+    createAdminClient()
+      .from("annonces_pilote")
+      .select("id, titre, duree, places, prix_total, part_pilote, mode_vente, images, route_waypoints, pilotes(nom)")
+      .eq("statut", "publiee")
+      .order("created_at", { ascending: false }),
     supabase.from("gallery_images")
       .select("storage_path, alt")
       .order("display_order", { ascending: true })
       .limit(5),
   ]);
+  const catalogueSource = sourceSetting?.value === "annonces" ? "annonces" : "products";
 
   const packsFixes = (packs ?? []).filter(p => !p.route_waypoints?.length);
   const packsItineraire = (packs ?? []).filter(p => !!p.route_waypoints?.length);
-  const noFlights = packsFixes.length === 0 && packsItineraire.length === 0;
+
+  const annonces = (rawAnnonces ?? []).map(a => {
+    const remainder = Math.round((a.prix_total - a.part_pilote) * 100) / 100;
+    const aMode: "avion" | "place" = a.mode_vente === "place" ? "place" : "avion";
+    return {
+      id: a.id,
+      titre: a.titre,
+      duree: a.duree,
+      places: a.places,
+      prix_client: aMode === "place" ? Math.round((remainder / a.places) * 100) / 100 : remainder,
+      pilote_nom: (a.pilotes as unknown as { nom: string } | null)?.nom ?? "un pilote",
+      cover_image: a.images?.[0] ?? null,
+      mode_vente: aMode,
+      has_route: !!a.route_waypoints?.length,
+    };
+  });
+  const annoncesFixes = annonces.filter(a => !a.has_route);
+  const annoncesItineraire = annonces.filter(a => a.has_route);
+
+  const volsFixes = catalogueSource === "annonces" ? annoncesFixes : packsFixes;
+  const volsItineraire = catalogueSource === "annonces" ? annoncesItineraire : packsItineraire;
+  const noFlights = volsFixes.length === 0 && volsItineraire.length === 0;
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const galleryPreview = (galleryRows ?? []).map(row => ({
@@ -142,7 +181,7 @@ export default async function HomePage() {
       </section>
 
       {/* ═══ NOS VOLS — durée fixe, itinéraire libre ═══ */}
-      {(packsFixes.length > 0 || noFlights) && (
+      {(volsFixes.length > 0 || noFlights) && (
         <section id="nos-vols" className="py-20 sm:py-28 bg-gradient-navy">
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
@@ -152,11 +191,11 @@ export default async function HomePage() {
               </h2>
             </div>
 
-            {packsFixes.length > 0 ? (
+            {volsFixes.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                {packsFixes.map((pack) => (
-                  <PackCard key={pack.id} pack={pack} />
-                ))}
+                {catalogueSource === "annonces"
+                  ? annoncesFixes.map((a) => <AnnonceCard key={a.id} annonce={a} />)
+                  : packsFixes.map((pack) => <PackCard key={pack.id} pack={pack} />)}
               </div>
             ) : (
               <NoFlightsNotice />
@@ -178,7 +217,7 @@ export default async function HomePage() {
       )}
 
       {/* ═══ ITINÉRAIRES SÉLECTIONNÉS — route fixée à l'avance ═══ */}
-      {packsItineraire.length > 0 && (
+      {volsItineraire.length > 0 && (
         <section id="itineraires" className="py-20 sm:py-28 bg-[#f5f5f7]">
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
@@ -192,9 +231,9 @@ export default async function HomePage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              {packsItineraire.map((pack) => (
-                <PackCard key={pack.id} pack={pack} />
-              ))}
+              {catalogueSource === "annonces"
+                ? annoncesItineraire.map((a) => <AnnonceCard key={a.id} annonce={a} />)
+                : packsItineraire.map((pack) => <PackCard key={pack.id} pack={pack} />)}
             </div>
 
           </div>
