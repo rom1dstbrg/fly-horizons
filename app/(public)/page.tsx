@@ -7,6 +7,7 @@ import { ChatWidget } from "@/components/chat/ChatWidget";
 import { PackCard } from "@/components/shop/PackCard";
 import { NoFlightsNotice } from "@/components/shop/NoFlightsNotice";
 import { createClient } from "@/lib/supabase/server";
+import { jsonLd } from "@/lib/json-ld";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
 
@@ -91,7 +92,7 @@ export default async function HomePage() {
     <main className="bg-gradient-navy">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(localBusinessSchema) }}
       />
 
       {/* ═══ HERO ═══ */}

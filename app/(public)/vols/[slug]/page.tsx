@@ -9,6 +9,7 @@ import { VolItineraryCard } from "@/components/shop/VolItineraryCard";
 import { PackCard } from "@/components/shop/PackCard";
 import { BackLink } from "@/components/shop/BackLink";
 import { VolStickyBar } from "@/components/shop/VolStickyBar";
+import { jsonLd } from "@/lib/json-ld";
 
 function shuffle<T>(arr: T[]): T[] {
   const result = [...arr];
@@ -134,7 +135,7 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
     <main className="bg-gradient-navy">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(productSchema) }}
       />
 
       {/* ══════ SPLIT — galerie gauche / info droite ══════ */}

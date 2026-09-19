@@ -4,6 +4,7 @@ import { SplashScreen } from "@/components/SplashScreen";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { AnalyticsTracker } from "@/components/analytics/AnalyticsTracker";
 import "./globals.css";
+import { jsonLd } from "@/lib/json-ld";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -95,7 +96,7 @@ export default function RootLayout({
         {children}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+          dangerouslySetInnerHTML={{ __html: jsonLd(organizationSchema) }}
         />
       </body>
     </html>

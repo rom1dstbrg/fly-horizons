@@ -8,6 +8,7 @@ import {
   CalendarCheck, CreditCard, Gift, CloudRain, PlaneTakeoff, Users,
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa6";
+import { jsonLd } from "@/lib/json-ld";
 
 // ── Recherche intelligente ──────────────────────────────────────────────────
 
@@ -391,7 +392,7 @@ export default function FaqPage() {
     <main className="min-h-screen bg-[#f5f5f7]">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_SCHEMA) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(FAQ_SCHEMA) }}
       />
 
       <section className="pt-[98px] pb-20">

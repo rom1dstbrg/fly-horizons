@@ -7,6 +7,7 @@ import { AnnonceStickyBar } from "@/components/vols/AnnonceStickyBar";
 import { BackLink } from "@/components/shop/BackLink";
 import { VolImageGallery } from "@/components/shop/VolImageGallery";
 import { VolItineraryCard } from "@/components/shop/VolItineraryCard";
+import { jsonLd } from "@/lib/json-ld";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -121,7 +122,7 @@ export default async function AnnonceDetailPage({ params }: { params: Promise<{ 
 
   return (
     <main className="bg-gradient-navy">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(productSchema) }} />
 
       {/* ══════ SPLIT — galerie gauche / info droite ══════ */}
       <div className="pt-[98px] bg-gradient-navy">

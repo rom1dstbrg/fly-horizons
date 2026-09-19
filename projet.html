@@ -984,6 +984,51 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-19 (23) — audit backend/sécurité : script-breakout JSON-LD corrigé</h3>
+      <p class="pill">Demande de Romain : auditer le backend et la sécurité avant d'ouvrir une
+        page publique pilote. Passage systématique : les 44 routes <code>app/api</code>
+        (garde admin, rate limiting), le webhook Stripe, le webhook email entrant, la gestion
+        des secrets, et un test empirique RLS avec la clé anon en direct sur la base.</p>
+      <ul>
+        <li><b>Corrigé</b> — 5 pages injectent un schéma JSON-LD via
+          <code>dangerouslySetInnerHTML={{ __html: JSON.stringify(...) }}</code> sans échapper
+          <code>&lt; &gt; &amp;</code> : un champ texte contenant <code>&lt;/script&gt;</code>
+          fermerait la balise et permettrait d'injecter du HTML/JS après. Le cas concret :
+          <code>annonce.description</code> (page <code>/vol/annonce/[id]</code>) est un champ
+          texte pilote — aujourd'hui seul Romain publie des annonces (risque quasi nul), mais
+          la page pilote publique qu'on va construire élargit justement la surface éditable par
+          des tiers. Nouveau helper <code>lib/json-ld.ts</code> (échappe en <code><</code>
+          etc., pattern standard Next.js) appliqué aux 5 endroits :
+          <code>app/layout.tsx</code>, <code>(public)/page.tsx</code>,
+          <code>(public)/faq/page.tsx</code>, <code>(public)/vols/[slug]/page.tsx</code>,
+          <code>(public)/vol/annonce/[id]/page.tsx</code>.</li>
+        <li><b>Vérifié, rien à corriger</b> — RLS testé en direct avec la clé anon (publique,
+          embarquée dans chaque page) contre <code>reservations, clients, pilotes,
+          annonces_pilote, voucher_codes, orders, profiles, contact_messages,
+          reservation_messages</code> : 0 ligne renvoyée sur chacune malgré des données réelles
+          (vérifié en parallèle avec la clé service_role : 8, 14, 1, 4, 0, 2, 6 lignes) — la clé
+          publique ne peut rien lire directement sur ces tables, tout passe par le serveur.
+          <code>crm_settings</code> (réglages non sensibles) est lisible, normal et voulu.</li>
+        <li><b>Vérifié</b> — les 44 routes API : toutes celles sous <code>/admin</code> et
+          <code>/cron</code> ont une garde (<code>requireAdmin*</code>, vérif de rôle, ou
+          <code>CRON_SECRET</code>) ; les routes publiques abusables (chat, soumission de
+          réservation/annonce, validation coupon/voucher, vérif email) sont rate-limitées
+          (<code>lib/rate-limit.ts</code>) ; webhook Stripe vérifie la signature + idempotent
+          (RC-02/RC-03 déjà en place) ; webhook email entrant refuse tout tant que
+          <code>INBOUND_EMAIL_SECRET</code> n'est pas configuré (pas branché en prod).</li>
+        <li><b>Vérifié</b> — aucune clé/secret en dur dans le code source (historique git
+          compris), <code>SUPABASE_SERVICE_ROLE_KEY</code> jamais importé depuis un composant
+          client. Emails : les champs saisis par le client (nom, message) passent par
+          <code>esc()</code> avant d'être insérés dans le HTML — pas d'injection possible dans
+          les emails admin.</li>
+        <li><b>Note mineure, pas corrigée</b> — <code>/api/pay-qr/[id]</code> et l'upload photo
+          satisfaction s'appuient sur l'imprévisibilité de l'UUID plutôt qu'un vrai token/auth
+          dédié (cohérent avec le reste de l'app, risque faible, mentionné pour mémoire).</li>
+        <li><code>tsc</code> + <code>eslint</code> propres.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-19 (22) — audit design Chrome (pilote + admin) : ellipsis plaque</h3>
       <p class="pill">Demande de Romain : auditer visuellement pilote et admin sur Chrome
         (page par page, écrans réels). Trouvé un vrai bug CSS, un faux positif (cache),
