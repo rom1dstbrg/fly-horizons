@@ -40,6 +40,8 @@ export default async function PiloteLayout({ children }: { children: React.React
   ).length;
 
   // Plaque pilote (sidebar) : identité + licence/medical + pastille de statut.
+  // `issues` alimente le détail dépliable au clic sur la pastille — jusqu'ici
+  // le pilote devait déjà cliquer jusqu'au profil pour savoir CE QUI manquait.
   const pilotIdInfo: PilotIdInfo = {
     nom: profile?.full_name || "Pilote",
     licenceNumero: pilote.licence_numero,
@@ -47,6 +49,7 @@ export default async function PiloteLayout({ children }: { children: React.React
     medicalExpiration: pilote.medical_expiration,
     legalOk: legal.ok,
     legalWarn: legal.issues.some((i) => i.severity === "warn"),
+    issues: legal.issues.map((i) => ({ label: i.label, severity: i.severity })),
   };
 
   // Pastille « Mes vols » : nombre de vols du pilote encore actifs (ni effectués,
@@ -69,7 +72,11 @@ export default async function PiloteLayout({ children }: { children: React.React
         pilot={pilotIdInfo}
         isAdmin={profile?.role === "admin"}
       />
-      <main className="flex-1 min-w-0 lg:ml-64 min-h-screen">
+      {/* lg:ml-[76px] = largeur du rail replié (état de repos). `peer-hover:` (le
+          peer est le <aside> de PiloteSidebar) pousse le contenu à 256px pendant
+          le survol — sinon la sidebar dépliée recouvre le début du contenu
+          (colonnes de tableau, titres) au lieu de le décaler : bug trouvé le 19/09. */}
+      <main className="flex-1 min-w-0 lg:ml-[76px] lg:peer-hover:ml-64 transition-[margin-left] duration-200 ease-out min-h-screen">
         <div className="px-4 pt-16 pb-[calc(76px+env(safe-area-inset-bottom))] sm:px-6 sm:pt-16 lg:p-8 lg:pt-8 lg:pb-8">
           {children}
         </div>

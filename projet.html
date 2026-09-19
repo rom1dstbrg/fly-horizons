@@ -984,6 +984,482 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-19 (20) — sidebar : "Vue admin" redescendu, plaque pilote refaite</h3>
+      <p class="pill">Deux demandes : (1) le bouton "Vue admin" doit être en bas, pas dans
+        l'en-tête ; (2) la plaque pilote (nom/licence) doit être refaite, le texte étant quasi
+        invisible.</p>
+      <ul>
+        <li><code>components/pilote/PiloteSidebar.tsx</code> : "Vue admin" quitte l'en-tête pour
+          rejoindre "Déconnexion" en bas, avec le même traitement (icône fixe, libellé qui
+          glisse). L'en-tête ne porte plus que le logo.</li>
+        <li><b>Plaque refaite en un seul bloc</b> (avant : deux blocs structurellement différents
+          selon replié/déplié, source du glissement vertical déjà corrigé une fois — ce nouveau
+          bloc unique l'évite par construction). L'avatar reste à position fixe, seul le texte à
+          sa droite glisse/se cache. Contraste remonté : la ligne licence passe de
+          <code>text-muted-foreground/70</code> (à peine visible) à <code>text-muted-foreground</code>
+          plein. Le bouton de la plaque devient un simple <code>&lt;div&gt;</code> non focusable
+          quand il n'y a rien à déplier (au lieu d'un bouton toujours cliquable qui ne faisait
+          rien) — corrige au passage le P3 accessibilité relevé par la critique du 19/09.</li>
+        <li><code>tsc</code> + <code>eslint</code> propres. <b>Pas vérifié à l'écran</b> —
+          extension Chrome indisponible.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-09-19 (19) — sidebar : liste continue sans groupes, actif sur le texte</h3>
+      <p class="pill">Deux changements demandés : (1) retirer les groupes "Vols"/"Réglages" et
+        leurs séparateurs — une seule liste continue ; (2) l'indicateur de page active ne doit
+        plus être un fond plein ("card"), mais quelque chose sur le texte.</p>
+      <ul>
+        <li><code>components/pilote/PiloteSidebar.tsx</code> : type <code>NavSection</code>
+          supprimé, <code>NAVIGATION</code> redevient un simple tableau plat de 6 liens. L'actif
+          se lit maintenant en texte navy + gras (<code>text-navy font-semibold</code>) au lieu
+          d'un fond <code>bg-navy</code> — plus aucun fond plein nulle part pour l'état actif, ni
+          en replié ni en déplié. Le survol garde un fond gris neutre (<code>hover:bg-secondary</code>)
+          uniquement sur les items inactifs — retour d'interaction, pas indicateur de page.</li>
+        <li><code>tsc</code> + <code>eslint</code> propres. <b>Pas vérifié à l'écran</b> —
+          extension Chrome indisponible.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-09-19 (18) — fix : fond bleu actif non carré en mode replié</h3>
+      <p class="pill">Autre effet de bord du passage en <code>w-full</code> partout : le fond
+        actif/survol (<code>bg-navy</code>) s'appliquait à toute la ligne large au lieu d'un carré
+        autour de l'icône seule en mode replié.</p>
+      <ul>
+        <li><code>components/pilote/PiloteSidebar.tsx</code> : le fond coloré (actif ET survol) ne
+          vit plus au même endroit selon l'état — replié, il s'applique à une petite enveloppe
+          carrée (32px) autour de l'icône ; déplié, à la ligne entière comme avant. La position de
+          l'icône elle-même reste inchangée (toujours ancrée par le même padding fixe).
+          <code>tsc</code> + <code>eslint</code> propres. <b>Pas vérifié à l'écran</b> — extension
+          Chrome indisponible.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-09-19 (17) — fix : pastille "Mes vols" décollée de l'icône en mode replié</h3>
+      <p class="pill">Effet de bord du correctif précédent : en rendant la ligne toujours
+        <code>w-full</code> (pour que l'icône ne bouge plus), la pastille repliée — ancrée en
+        <code>absolute</code> au coin de la LIGNE entière — s'est retrouvée collée au bord droit
+        de la ligne (large) au lieu du coin de l'icône (étroite).</p>
+      <ul>
+        <li><code>components/pilote/PiloteSidebar.tsx</code> : l'icône est maintenant enveloppée
+          dans son propre conteneur <code>relative</code>, et la pastille repliée s'ancre à CETTE
+          enveloppe (donc au coin de l'icône) plutôt qu'à la ligne entière.
+          <code>tsc</code> + <code>eslint</code> propres. <b>Pas vérifié à l'écran</b> — extension
+          Chrome indisponible.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-09-19 (16) — fix : les icônes de la sidebar ne doivent JAMAIS bouger</h3>
+      <p class="pill">Précision de Romain sur le comportement voulu : la bar s'élargit vers la
+        droite, le texte apparaît dans l'espace ajouté, mais l'icône elle-même ne doit ni se
+        recentrer ni se déplacer d'un pixel entre replié et déplié. La version précédente changeait
+        la largeur/l'alignement de la ligne elle-même (<code>w-9 justify-center</code> replié vs
+        <code>w-full px-3</code> déplié) — l'icône bougeait donc forcément, même avec la même
+        hauteur.</p>
+      <ul>
+        <li><code>components/pilote/PiloteSidebar.tsx</code> : la ligne de nav (et la ligne
+          "Déconnexion") utilisent maintenant EXACTEMENT les mêmes classes dans les deux états
+          (<code>w-full</code>, padding fixe <code>px-3</code>) — plus aucun conditionnel sur la
+          largeur ou l'alignement. Seul le libellé (toujours monté, jamais démonté) change
+          d'opacité et glisse de quelques pixels via CSS. Le padding horizontal de la <code>nav</code>
+          elle-même (<code>px-2.5</code>) est aussi devenu constant — avant il changeait de 2px
+          selon l'état, ce qui suffisait à faire bouger l'icône malgré tout. Retour à un simple
+          <code>transition</code> CSS (retiré <code>framer-motion</code>, plus nécessaire
+          puisque le libellé reste monté en permanence).</li>
+        <li><code>tsc</code> + <code>eslint</code> propres. <b>Pas vérifié à l'écran</b> —
+          extension Chrome indisponible.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-09-19 (15) — animation d'entrée/sortie des libellés de la sidebar</h3>
+      <p class="pill">Demande de Romain : les libellés doivent glisser (gauche→droite à
+        l'ouverture, inverse à la fermeture) plutôt qu'apparaître/disparaître d'un coup. Un simple
+        swap conditionnel ne peut pas animer une sortie (React démonte l'élément direct, rien à
+        transitionner) — passage par <code>framer-motion</code> (déjà une dépendance du projet,
+        utilisé ailleurs comme <code>ReservationDrawer</code>).</p>
+      <ul>
+        <li><code>components/pilote/PiloteSidebar.tsx</code> : les 2 branches distinctes
+          (repliée/dépliée) de chaque item de nav fusionnées en un seul <code>&lt;Link&gt;</code>
+          — l'icône reste toujours montée, seul le libellé (et le badge numérique) est
+          conditionnel, dans un <code>&lt;AnimatePresence&gt;</code> avec un
+          <code>motion.span</code> (glissement horizontal 8px + fondu, 150ms). Icône passée à une
+          taille fixe (16px) dans les deux états au lieu de 17/15px, pour éviter un micro-décalage
+          supplémentaire.</li>
+        <li><code>tsc</code> + <code>eslint</code> propres. <b>Pas vérifié à l'écran</b> —
+          extension Chrome indisponible.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-09-19 (14) — fix : décalage vertical des icônes entre replié et déplié</h3>
+      <p class="pill">Cause trouvée sur capture d'écran (pas besoin de la vidéo) : les lignes de
+        nav repliées (44px) et dépliées (~36px calculé par le padding) n'avaient pas exactement
+        la même hauteur, et les séparateurs de section non plus (ligne fine de 17px repliée vs
+        bloc de texte de ~30px déplié) — tout glissait verticalement d'un état à l'autre.</p>
+      <ul>
+        <li><code>components/pilote/PiloteSidebar.tsx</code> : lignes de nav repliées et dépliées
+          passées à une hauteur explicite identique (<code>h-9</code>, 36px) au lieu de dépendre
+          du padding (variable selon les métriques de police). Séparateurs de section : même
+          conteneur (<code>pt-3 pb-1 px-3</code>) dans les deux états, seul le contenu à
+          l'intérieur change (ligne fine ou texte "VOLS"/"RÉGLAGES") au lieu de deux blocs de
+          hauteurs différentes.</li>
+        <li><code>tsc</code> + <code>eslint</code> propres. <b>Pas vérifié à l'écran cette fois</b>
+          — extension Chrome à nouveau indisponible.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-09-19 (13) — fix : les libellés de la sidebar passaient par 2 lignes pendant l'animation</h3>
+      <p class="pill">Cause : au survol, le contenu replié→déplié bascule instantanément (icônes
+        seules → icônes+texte), mais la largeur du rail met 200ms à s'animer de 76px à 256px. Le
+        texte, sans contrainte, se mettait donc à la ligne pendant cette fenêtre étroite avant de
+        se réaligner sur une seule ligne une fois la largeur finale atteinte — l'effet de "saut"
+        que Romain décrivait sans trouver les mots.</p>
+      <ul>
+        <li><code>components/pilote/PiloteSidebar.tsx</code> : <code>whitespace-nowrap</code>
+          ajouté sur les libellés de nav, la ligne licence/medical de la plaque et "Déconnexion" —
+          le texte reste sur une ligne et se révèle progressivement avec la largeur du conteneur
+          (clippé par l'<code>overflow-hidden</code> déjà présent) au lieu de se réorganiser.</li>
+        <li><code>tsc</code> + <code>eslint</code> propres. Vérifié en direct dans Chrome (état
+          replié et déplié tous les deux corrects) ; le flash exact pendant les 200ms de
+          transition n'est pas capturable en capture d'écran statique, mais c'est le correctif
+          standard pour ce type de bug et il ne casse rien par ailleurs.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-09-19 (12) — fix : la sidebar dépliée recouvrait le contenu au lieu de le pousser</h3>
+      <p class="pill">Trouvé et corrigé en direct sur Chrome (extension enfin connectée). Le
+        survol posait la sidebar dépliée PAR-DESSUS le contenu (colonnes de tableau et titre de
+        page coupés derrière elle) au lieu de le décaler.</p>
+      <ul>
+        <li><code>components/pilote/PiloteSidebar.tsx</code> : classe <code>peer</code> ajoutée au
+          <code>&lt;aside&gt;</code> desktop. <code>app/pilote/layout.tsx</code> :
+          <code>&lt;main&gt;</code> passe de <code>lg:ml-[76px]</code> fixe à
+          <code>lg:ml-[76px] lg:peer-hover:ml-64</code> (+ transition) — le contenu se décale
+          maintenant en même temps que la sidebar se déplie, ne se fait plus recouvrir.</li>
+        <li><b>Vérifié en direct dans Chrome</b> : replié et déplié tous les deux corrects, rien
+          de coupé, plaque en bas, pastille "Mes vols" (2) en jaune sur l'icône repliée.
+          <code>tsc</code> + <code>eslint</code> propres.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-09-19 (11) — sidebar pilote repliable (rail au repos, déplié au survol)</h3>
+      <p class="pill">Après la maquette à 3 directions (A/B/C), Romain choisit un mélange B+C : rail
+        d'icônes replié par défaut, qui se déplie au survol de la souris et se referme quand elle
+        quitte. Sans les sections en carte de C ("trop de card"). Plaque pilote (nom/licence)
+        déplacée en bas, au-dessus de la déconnexion, au lieu d'en haut.</p>
+      <ul>
+        <li><b><code>components/pilote/PiloteSidebar.tsx</code> réécrit.</b> <code>NavContent</code>
+          prend un prop <code>collapsed</code> : replié → icône seule (<code>/icone.svg</code>,
+          logo carré existant) dans l'en-tête, items de nav en icônes centrées 44px avec pastille
+          point (pas de nombre), séparateurs fins à la place des libellés de section, plaque
+          réduite à un avatar (initiale) + pastille de statut. Déplié → identique à la version
+          actuelle (texte complet, badges numériques). Bouton "Admin" et bouton fermer mobile
+          masqués à l'état replié (pas la place, pas critique). Le <code>&lt;aside&gt;</code>
+          desktop change de largeur au survol (<code>onMouseEnter</code>/<code>onMouseLeave</code>,
+          76px → 256px, <code>transition-[width]</code>) et se pose PAR-DESSUS le contenu
+          (<code>shadow-xl</code> + z-index) sans le pousser. Tiroir mobile inchangé, toujours en
+          version dépliée (pas de survol au tactile).</li>
+        <li><code>app/pilote/layout.tsx</code> : marge du contenu principal passée de
+          <code>lg:ml-64</code> à <code>lg:ml-[76px]</code> (largeur du rail replié = état de
+          repos réel).</li>
+        <li><code>tsc</code> + <code>eslint</code> + scan <code>impeccable detect</code> : propres.
+          <b>Pas vérifié à l'écran</b> — extension Chrome indisponible pendant toute cette partie.
+          Chantier plus gros que les précédents (nouvelle mécanique d'interaction, pas juste des
+          classes CSS) : à tester particulièrement attentivement — survol/sortie de souris,
+          largeur du contenu qui ne bouge pas, tiroir mobile toujours correct.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-09-19 (10) — fix débordement bouton "Admin" + style plaque pilote</h3>
+      <p class="pill">Deux retours de Romain sur capture d'écran mobile. Extension Chrome
+        déconnectée à nouveau ce coup-ci — corrections faites au raisonnement/code, <b>pas
+        vérifiées à l'écran</b>, à confirmer par Romain.</p>
+      <ul>
+        <li><b>Bouton "Admin" qui dépassait de la barre d'en-tête.</b> Hauteur du bouton fixée
+          explicitement (<code>h-7</code> + <code>leading-none</code> sur l'icône et le texte) au
+          lieu de dépendre du line-height du texte, qui pouvait varier selon la police système du
+          téléphone. <code>components/pilote/PiloteSidebar.tsx</code>.</li>
+        <li><b>Style de la plaque pilote ("Fly Horizons" / "BE.FCL...") ne collait pas au reste.</b>
+          Le nom était en <code>text-[13px]</code> (taille isolée, ne correspond à aucune autre
+          taille du fichier) et la ligne licence/medical en <code>font-mono</code> — une police à
+          chasse fixe qui ne s'utilise nulle part ailleurs dans la sidebar, façon extrait de
+          terminal collé dans une UI sans-serif. Nom repassé en <code>text-sm</code> (comme les
+          liens de nav), ligne licence en <code>text-[11px]</code> sans police mono. Padding
+          gauche aligné sur l'en-tête (<code>px-5</code> au lieu de <code>px-4</code>).</li>
+        <li><b>tsc</b> + <b>eslint</b> propres. <b>Pas vérifié visuellement</b> — extension Chrome
+          indisponible cette fois.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-09-19 (9) — alignement visuel état "actif" sidebar pilote sur admin</h3>
+      <p class="pill">Extension Claude-in-Chrome enfin connectée cette fois — première vraie
+        inspection visuelle en direct de la session (plus seulement du code). Fausse piste au
+        départ (cru voir un fond navy sombre sur l'admin en regardant une miniature compressée —
+        corrigé après zoom : les deux sidebars sont bien blanches/plates). Le vrai écart, confirmé
+        en zoomant sur les deux en vrai : <b>l'état "page active" avait deux langages visuels
+        différents</b> — admin = pastille pleine navy + texte blanc + ombre légère (déjà en place,
+        jamais touché) ; pilote = simple teinte grise pâle + bordure gauche fine, sans ombre.
+        Exactement le P1 "état actif trop discret" de la critique sidebar du 19/09, laissé de côté
+        ce jour-là.</p>
+      <ul>
+        <li><b>Romain : "aligne les deux".</b> <code>components/pilote/PiloteSidebar.tsx</code> :
+          le lien de nav actif reprend exactement les classes de
+          <code>components/admin/AdminSidebar.tsx</code> (<code>bg-navy text-white shadow-sm
+          rounded-lg</code> au lieu de <code>border-l-2 bg-secondary/60</code>), badge actif
+          <code>bg-primary text-[#0b2238]</code> au lieu de <code>bg-primary/20</code>, et les
+          espacements/labels de section (<code>py-1 space-y-0.5</code>, <code>text-[9px] font-bold
+          text-muted-foreground/40 tracking-[1.5px]</code>) calqués à l'identique. Vérifié en
+          direct dans Chrome après coup. <code>tsc</code> + <code>eslint</code> : propres.</li>
+        <li><b>Écarté en route :</b> le logo diffère aussi entre les deux (badge carré + majuscules
+          + sous-titre doré "Administration" en admin, vs badge rond + casse normale en pilote,
+          deux fichiers SVG différents) — Romain a précisé que ce n'était pas ce qui le gênait
+          ("je parle du style, pas des logos"). Pas touché, à reprendre séparément si besoin un
+          jour.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-09-19 (8) — critique design sidebar pilote + signaux mobile + "Vue admin" remonté</h3>
+      <p class="pill">Même méthode sur <code>components/pilote/PiloteSidebar.tsx</code>. Score 24/40
+        (meilleure des 3 pages passées en revue), 0 P0. Verdict : bonne exécution visuelle, mais
+        aucun signal de statut (pastille légale, badges) n'atteint le mobile — barre du haut et
+        barre du bas ne portent jamais rien alors que les compteurs sont déjà calculés côté
+        serveur. Rapport persisté dans <code>.impeccable/critique/</code>.</p>
+      <ul>
+        <li><b>Romain a choisi : signaux mobiles + remonter "Vue admin".</b>
+          <code>components/pilote/PiloteSidebar.tsx</code> : pastille rouge/ambre ajoutée sur
+          l'onglet "Plus" (barre du bas) et sur le logo de la barre du haut, calculée depuis
+          <code>legalOk</code>/<code>legalWarn</code> + les compteurs vols/profil déjà transmis —
+          avant, il fallait ouvrir tout le tiroir pour voir quoi que ce soit. "Vue admin" quitte le
+          bloc bas (même poids que "Déconnexion") pour l'en-tête, à côté du logo — pour ce compte
+          admin+pilote fusionné c'est l'un des liens les plus utilisés, il ne devait pas être
+          enterré. <code>tsc</code> + <code>eslint</code> + scan <code>impeccable detect</code> :
+          propres.</li>
+        <li><b>Reste ouvert :</b> état "page active" trop discret + 2 systèmes de couleur
+          différents pour "ça demande attention" (doré vs rouge/ambre/vert) ; le badge "Mon profil"
+          ne compte que les erreurs bloquantes, pas les avertissements (contradiction possible avec
+          la pastille) ; typo 9-11px partout, pire ici car présent sur chaque page ; bouton de la
+          plaque focusable mais inerte quand tout va bien, déconnexion sans confirmation.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-09-19 (7) — critique design "Mes vols" + badge annonce + accessibilité clavier</h3>
+      <p class="pill">Même méthode (2 agents indépendants, ancrée code, pas de captures — extension
+        Chrome toujours indisponible) sur <code>/pilote/vols</code>. Score 22/40, 0 P0 cette fois
+        (2 P1). Verdict : exécution visuelle correcte (mieux que le dashboard), mais le tableau
+        traite chaque ligne comme équivalente — aucun marqueur "annonce", aucune hiérarchie
+        temporelle, clic dupliqué (ligne entière + bouton "Voir") sans accès clavier. Rapport
+        persisté dans <code>.impeccable/critique/</code>.</p>
+      <ul>
+        <li><b>Romain a choisi : marquer les vols "annonce" + corriger le clic dupliqué</b> (la
+          hiérarchie temporelle attend). <code>components/pilote/PiloteVolsClient.tsx</code> :
+          badge "Annonce" à côté du nom client quand <code>type_resa === 'annonce_pilote'</code>
+          (invisible avant, il fallait ouvrir le tiroir pour savoir) ; ligne du tableau devient un
+          vrai élément interactif (<code>role="button"</code>, <code>tabIndex</code>,
+          <code>onKeyDown</code> Entrée/Espace) au lieu d'un <code>onClick</code> sur chaque
+          <code>&lt;td&gt;</code> — le bouton "Voir" (doublon) est retiré, seul "M&amp;B" reste en
+          action explicite (avec <code>stopPropagation</code>). Bonus : bouton "M&amp;B" masqué sur
+          un vol annulé. <code>tsc</code> + <code>eslint</code> + scan <code>impeccable detect</code> :
+          propres.</li>
+        <li><b>Reste ouvert :</b> hiérarchie temporelle (vol d'aujourd'hui vs dans 4 mois identiques),
+          pas de recherche/tri, headers 9px, échec silencieux si le lookup pilote rate.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-09-19 (6) — critique design + refonte hiérarchie visuelle du dashboard pilote</h3>
+      <p class="pill">Après validation du chantier UX (5), Romain constate que "l'interface est
+        toujours au même visuellement" — normal, ce chantier n'était que guidage/consolidation, pas
+        une passe design. Lancé une critique formelle (2 agents indépendants : revue design +
+        scan/preuve technique, méthodologie <code>/impeccable critique</code>) sur le dashboard
+        pilote. Score 20/40 (Acceptable). Verdict : forme de dashboard SaaS générique, aucune
+        hiérarchie (StatGrid/À traiter/vols/météo ont tous le même poids visuel) — c'est très
+        probablement la cause exacte du "rien n'a changé". Scan technique propre (0 trouvaille) :
+        confirme que le problème est structurel, pas des "tells IA" détectables. Rapport persisté
+        dans <code>.impeccable/critique/</code>.</p>
+      <ul>
+        <li><b>Romain a choisi : hiérarchie visuelle d'abord</b> (sur 2 P0 trouvés), ton sobre/pro
+          gardé tel quel, scope limité au dashboard pour l'instant (pas les autres pages).</li>
+        <li><b>Refonte <code>app/pilote/page.tsx</code>.</b> Le StatGrid (4 tuiles, en tête de page)
+          est retiré de sa position dominante et remplacé par une bande fine de chiffres en bas de
+          page (texte, pas de cartes/icônes). "Prochains vols" (tableau générique de 6 lignes)
+          devient "Prochain vol" : une seule carte proéminente pour le vol le plus proche
+          (heure/date en grand, badge statut, client, durée), avec un lien discret "+N autres vols"
+          si besoin — appariée à la météo, même poids visuel, toutes deux juste après "À traiter".
+          La tuile "Profil" (dangereuse en rouge) disparaît du bloc de stats — déjà signalée dans
+          "À traiter" quand bloquante, la doublure était juste du bruit. <code>tsc</code> +
+          <code>eslint</code> + scan <code>impeccable detect</code> : propres.</li>
+        <li><b>Non traité, hors scope choisi :</b> l'autre P0 (le badge "Mes vols" de la sidebar et
+          la tuile "Vols à venir" du dashboard comptaient avec des filtres différents — pas
+          forcément un bug, mais à trancher) ; la surcharge de systèmes de couleur (P1) ; le manque
+          de point focal accessible partout ; les autres pages (Mes vols, Annonces, Profil,
+          Disponibilités) n'ont pas eu de passe critique.</li>
+        <li><b>Limite de cette session :</b> l'extension Claude-in-Chrome n'était pas connectée —
+          toute la critique et la refonte sont ancrées dans le code, jamais vérifiées à l'écran.
+          Romain doit valider visuellement dans son <code>npm run dev</code> avant qu'on considère
+          ça acquis.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-09-19 (5) — chantier UX/UI espace pilote : reprendre les composants admin</h3>
+      <p class="pill">Après le test réel du flow annonce, Romain demande de reprendre l'interface
+        admin pour l'espace pilote — pas un ravalement visuel, un vrai travail de guidage sans
+        cacher de fonctionnalités. Exécuté en 6 phases (plan détaillé dans l'historique de session,
+        non conservé en fichier séparé) :</p>
+      <ul>
+        <li><b>1 — Composants partagés.</b> <code>PiloteProfilForm</code> et
+          <code>PiloteDisponibilitesClient</code> passent de leur stylisation maison à
+          <code>FormField</code>/<code>FormSection</code>/<code>FormGrid</code>/<code>FormFooter</code>
+          (déjà utilisés côté admin) ; la sauvegarde des disponibilités a maintenant une
+          confirmation persistante au lieu d'un toast 3s. Dashboard pilote : chiffres clés en
+          <code>StatCard</code>/<code>StatGrid</code> (vols à venir, à régler, annonces actives,
+          statut profil) — le bloc « À traiter » n'a pas bougé (déjà le mieux guidé de l'app).</li>
+        <li><b>2 — Sidebar.</b> La pastille de statut légal (point rouge/ambre/vert) se déplie
+          maintenant au clic pour montrer CE QUI manque, avec un lien direct vers le profil —
+          avant il fallait déjà être sur le profil pour le savoir.</li>
+        <li><b>3 — Les 3 flows de création de vol différenciés.</b> Le plus gros trou identifié :
+          3 boutons nus (icône + un mot) sans aucune différenciation. Remplacés par un seul bouton
+          « Nouveau vol » qui ouvre un menu décrit (repris du pattern déjà construit côté admin
+          dans <code>VolsPageActions.tsx</code>, étendu au desktop qui n'avait pas de description
+          non plus).</li>
+        <li><b>4 — Disponibilités.</b> Ajout d'un encart expliquant explicitement que ce calendrier
+          conditionne les réservations clients sur les annonces — c'était dilué dans une phrase de
+          sous-titre, maintenant mis en avant.</li>
+        <li><b>5 — Clarté dashboard.</b> Badge « Annonce » renforcé (pastille colorée au lieu d'un
+          texte gris entre parenthèses) dans la liste des prochains vols ; carte « Annonces
+          actives » qui invite à en publier une si le pilote n'en a aucune — répond à la remarque
+          du 15/09 (« dashboard trop générique »).</li>
+        <li><b>6 — Aide contextuelle.</b> Nouveau composant <code>HelpTip</code>
+          (<code>components/pilote/ui.tsx</code>) — bulle d'aide au clic (fonctionne au tactile,
+          contrairement au <code>title</code> HTML), pas encore utilisé nulle part. Appliqué à
+          Masse &amp; Centrage pour expliquer TODR/LDR, sans toucher au calculateur lui-même
+          (calc/PDF/METAR laissés intacts comme convenu).</li>
+        <li>Deux composants partagés élargis pour accepter du JSX en plus du texte brut :
+          <code>FormField.label</code>, <code>FormSection.title</code>,
+          <code>PiloteHeader.subtitle</code> (tous passent de <code>string</code> à
+          <code>ReactNode</code>, rétrocompatible). <code>tsc</code> + <code>eslint</code> OK sur
+          tous les fichiers touchés.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-09-19 (4) — retours du premier test réel bout-en-bout du flow annonce</h3>
+      <p class="pill">Romain a testé pour de vrai : réservé un vol publié, confirmé créneau + route,
+        payé via QR, marqué payé, marqué vol effectué. « Le flow est bon », mais plusieurs points
+        trouvés en le faisant pour de vrai.</p>
+      <ul>
+        <li><b>Bouton « Envoyer au client » trop facile à cliquer par erreur</b> pendant le traçage
+          de route — c'était le bouton principal (rempli), devant « Sauvegarder ». Inversé :
+          Sauvegarder est maintenant le bouton principal, Envoyer au client passe en discret, à
+          droite. <code>components/admin/reservation-drawer/RouteSection.tsx</code>.</li>
+        <li><b>QR de paiement : ambiguïté appareil photo vs appli bancaire.</b> Scanner avec
+          l'appareil photo du téléphone ouvre juste une page web (le lien encodé), pas un paiement —
+          il faut ouvrir son appli bancaire, qui a son propre scanner. Précisé sous le QR et dans le
+          texte. <code>app/(public)/vol/annonce/paiement/[token]/PaiementStatus.tsx</code>.</li>
+        <li><b>Rien ne rappelait au pilote de vérifier un paiement reçu.</b> Nouveau cron quotidien
+          <code>/api/cron/pilote-payment-checkin</code> : email au pilote (pas au client) 3 jours
+          après un vol d'annonce toujours pas marqué « payé », une seule fois par réservation
+          (colonne <code>payment_checkin_sent_at</code>). Migration
+          <code>20260919b_pilote_payment_checkin.sql</code> à exécuter dans Supabase, + entrée
+          ajoutée à <code>vercel.json</code> (crons).</li>
+        <li><b>Republier une annonce annulée/réservée créait un doublon</b> — l'ancienne ligne
+          restait coincée, non publiée, dans la liste du pilote pour toujours ; deux étapes pour
+          lui (republier + gérer l'ancienne). <code>republishAnnonce()</code> réactive maintenant la
+          MÊME ligne (remet <code>statut: 'publiee'</code>, <code>places_reservees: 0</code> en
+          mode « à la place ») au lieu d'insérer une nouvelle ligne.
+          <code>finalizeAnnonceGroupPricing()</code> exclut maintenant aussi les réservations
+          <code>vol_effectue</code> d'un cycle précédent du calcul du nouveau groupe (sécurité pour
+          que la réactivation en place ne mélange jamais deux cycles de vente).
+          <code>lib/actions/annonces.ts</code>, <code>lib/annonces-pilote-server.ts</code>.</li>
+        <li><b>Attribution d'un pilote à une réservation admin standard : impossible.</b> Bloc B
+          (assignation manuelle) existait déjà en code mais n'était jamais branché dans le drawer
+          depuis le gel du 08/09 (avec le bloc C, mise en jeu). Réactivé <i>seul</i> — assigner/
+          réassigner/retirer un pilote, emails automatiques inclus — sans reprendre la mise en jeu
+          « premier arrivé » (hors périmètre tant qu'il n'y a qu'un seul pilote réel, cf. mémoire
+          <code>project_marketplace_legal_risk</code>). Nouveau slot dans le drawer, visible admin
+          uniquement, sur les réservations standard non annulées.
+          <code>components/admin/reservation-drawer/PiloteAssignBlock.tsx</code> (nettoyé de la
+          mise en jeu), <code>ReservationDrawer.tsx</code>.</li>
+        <li><b>Reste ouvert, plus gros chantier :</b> Romain trouve l'interface pilote globalement
+          pas assez guidante pour quelqu'un qui n'a pas construit l'app lui-même — « le pilote peut
+          vite se trouver perdu ». Pas traité ici (pas un correctif ponctuel), à reprendre en
+          session dédiée avec une direction claire avant de coder, comme convenu pour le dashboard
+          cockpit (cf. Board).</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-09-19 (3) — fix : une annonce annulée restait coincée « reservee » pour toujours</h3>
+      <ul>
+        <li>Une annonce passe en <code>reservee</code> dès la <b>première demande</b> reçue
+          (avant même confirmation ou paiement par le pilote, cf.
+          <code>/api/vol-annonce/submit</code>) — elle disparaît du public à ce moment-là.
+          Mais si cette demande était ensuite annulée (déclinée, client silencieux...),
+          rien ne relibérait l'annonce : elle restait <code>reservee</code> indéfiniment,
+          invisible au public <b>et</b> au pilote, seul recours manuel = « Republier »
+          (crée un doublon, perd les vues/l'historique). Concrètement : un pilote ne
+          pouvait pas proposer le même vol à quelqu'un d'autre après une annulation.</li>
+        <li>Corrigé dans <code>updateStatutReservation()</code> (<code>lib/actions/reservations.ts</code>),
+          même endroit qui libère déjà le voucher/stock à l'annulation : une réservation
+          <code>annonce_pilote</code> annulée relibère maintenant son annonce
+          (repasse <code>reservee</code> → <code>publiee</code> ; en mode « à la place »,
+          décrémente <code>places_reservees</code> plutôt que de tout rouvrir). Garde-fou
+          (compare-and-swap) pour ne jamais rouvrir une annonce que le pilote a annulée
+          lui-même entretemps. Aucune migration.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-09-19 (2) — fix + features : part pilote à la clôture, badge « à confirmer » cliquable, upload photo profil</h3>
+      <ul>
+        <li><b>Fix « à la place » : la part pilote ne se recalculait pas à la clôture.</b>
+          <code>finalizeAnnonceGroupPricing()</code> (<code>lib/annonces-pilote-server.ts</code>)
+          fige déjà le montant de chaque client sur les occupants réels (part égale, pilote
+          compris dans le calcul) mais ne mettait jamais à jour <code>annonces_pilote.part_pilote</code> :
+          la part affichée/enregistrée pour le pilote restait celle estimée à la publication
+          (sur la capacité max déclarée), plus juste une fois le groupe clôturé avec moins de
+          passagers que prévu. Corrigé : <code>part_pilote</code> est maintenant mis à jour au
+          même moment que l'<code>acompte</code> des clients, sur les deux chemins de clôture
+          (<code>cloturerGroupeAnnonce</code> et clôture automatique dans
+          <code>/api/vol-annonce/submit</code>). Pas de migration, correctif de code seul.</li>
+        <li><b>Badge « À confirmer » (annonces) rendu cliquable.</b> Ouvre une popup qui explique
+          la raison précise (part sous le minimum légal NCO.GEN.104, ou attestation à
+          reconfirmer) au lieu de laisser le pilote deviner. <code>components/pilote/AnnoncesList.tsx</code>.</li>
+        <li><b>Photo de profil pilote : lien OU upload.</b> Le champ texte (lien direct) reste,
+          avec un bouton « Envoyer une photo » à côté qui upload et compresse (sharp → webp
+          800×800, bucket <code>annonces</code>, chemin fixe <code>profil/&lt;pilote_id&gt;.webp</code>,
+          upsert). <code>lib/actions/pilote-profil.ts</code> (<code>uploadPiloteProfilPhoto</code>),
+          <code>components/pilote/PiloteProfilForm.tsx</code>.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-09-19 (1) — fix : publication d'annonce encore bloquée à part pilote = 0</h3>
+      <ul>
+        <li>La décision du 13/09 (seuil légal NCO.GEN.104 = avertissement seulement, plus
+          bloquant) était bien appliquée côté serveur (<code>lib/actions/annonces.ts</code>,
+          <code>evaluerPartPilote</code>) mais pas en base : la contrainte SQL d'origine
+          (<code>check (part_pilote &gt; 0)</code>, posée le 13/08 avant cette décision)
+          continuait de refuser l'insertion quand la part pilote est à 0. Trouvé en testant
+          une publication réelle à 0. Corrigé par contrainte <code>part_pilote &gt;= 0</code>
+          — migration <code>20260919_annonces_part_pilote_non_bloquant.sql</code>,
+          <b>à exécuter dans Supabase</b> avant de retester.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-14 (fin de session) — bilan complet : emails, fusion admin/pilote, sécurité</h3>
       <p class="pill">Cette entrée résume toute la session du 14/09 pour une reprise à froid — les
         entrées ci-dessous détaillent chaque étape dans l'ordre chronologique où elle a eu lieu.

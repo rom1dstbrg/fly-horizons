@@ -84,17 +84,24 @@ export function PaiementStatus({
       {iban ? (
         <div className="flex flex-col sm:flex-row gap-5">
           {/* QR EPC */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={qrUrl}
-            alt="QR code de virement SEPA"
-            width={150}
-            height={150}
-            className="rounded-xl border border-border bg-white shrink-0 self-center sm:self-start"
-          />
+          <div className="flex flex-col items-center sm:items-start gap-1.5 shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={qrUrl}
+              alt="QR code de virement SEPA"
+              width={150}
+              height={150}
+              className="rounded-xl border border-border bg-white"
+            />
+            <p className="text-[10px] text-[#0b2238]/50 text-center sm:text-left max-w-[150px] leading-snug">
+              Pas avec l&apos;appareil photo : ouvrez votre appli bancaire, elle a son propre
+              scanner.
+            </p>
+          </div>
           <div className="min-w-0 flex-1 space-y-3">
             <p className="text-xs text-[#0b2238]/55">
-              Scannez le QR avec votre appli bancaire, ou saisissez le virement manuellement :
+              Scannez le QR <strong>depuis votre appli bancaire</strong> (pas l&apos;appareil
+              photo, qui ouvrirait juste une page web), ou saisissez le virement manuellement :
             </p>
             <Field
               label="IBAN"

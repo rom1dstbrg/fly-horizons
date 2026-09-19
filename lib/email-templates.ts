@@ -2373,3 +2373,31 @@ export function piloteReleasedFlightAdminEmail(p: {
 
   return adminEmailBase(body, "Un pilote a rendu un vol · Fly Horizons");
 }
+
+/**
+ * Rappel automatique au pilote lui-même (pas au client) : un vol issu d'une
+ * annonce a eu lieu depuis quelques jours et n'est toujours pas marqué
+ * « payé ». Objectif : rendre visible un impayé qui traînerait sinon
+ * silencieusement (cf. cron/pilote-payment-checkin, décision 2026-09-19 —
+ * demande explicite de Romain après un test réel du flow annonce).
+ */
+export function pilotePaiementCheckinEmail(p: {
+  clientNom: string;
+  dateStr: string;
+  montant: number | null;
+  jours: number;
+  volsUrl: string;
+}): string {
+  const body = `
+    <p style="margin:0 0 16px;font-size:16px;font-weight:700;">Paiement pas encore marqué reçu</p>
+    <p style="margin:0 0 12px;">
+      Le vol avec ${esc(p.clientNom)} du ${esc(p.dateStr)} a eu lieu il y a ${p.jours} jours et n'est
+      toujours pas marqué « payé » dans votre espace. Un petit contrôle de votre compte s'impose peut-être.
+    </p>
+    ${adminLine("Client", esc(p.clientNom))}
+    ${adminLine("Date du vol", esc(p.dateStr))}
+    ${p.montant != null ? adminLine("Montant attendu", `${p.montant} €`) : ""}
+    ${adminLink(p.volsUrl, "Ouvrir « Mes vols »")}`;
+
+  return adminEmailBase(body, "Rappel paiement · Fly Horizons");
+}

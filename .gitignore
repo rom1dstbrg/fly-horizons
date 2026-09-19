@@ -48,3 +48,7 @@ next-env.d.ts
 
 # raccourci bureau (app locale, pas le site)
 /.desktop-shortcut
+
+# impeccable — état de process local (PID/port, cache de hook), pas d'historique projet
+.impeccable/hook.cache.json
+.impeccable/live/

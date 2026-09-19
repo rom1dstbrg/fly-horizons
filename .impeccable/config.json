@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "projet.html"
+        ],
+        "createdAt": "2026-09-19T09:31:18.991Z",
+        "reason": "internal dev-only pilotage doc (projet.html), pre-existing contrast pattern reused verbatim from rest of file, not a shipped product surface"
+      }
+    ]
+  }
+}

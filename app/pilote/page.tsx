@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { AlertTriangle, AlertCircle, CheckCircle2, ArrowRight, PlaneTakeoff, Plane, Clock } from "lucide-react";
+import { AlertTriangle, AlertCircle, CheckCircle2, ArrowRight, PlaneTakeoff, Plane, Clock, ShieldCheck } from "lucide-react";
 import { piloteLegalStatus } from "@/lib/pilote/legal";
 import { AdminBadge, getResaBadge } from "@/components/admin/ui";
 import { MetarWidget } from "@/components/admin/MetarWidget";
@@ -22,13 +22,18 @@ export default async function PiloteDashboard() {
   const legal = piloteLegalStatus(pilote);
   const today = new Date().toISOString().slice(0, 10);
 
-  const [{ count: demandesEnAttente }, { count: volsNonPayes }, { data: prochainsVols }] = pilote
+  const [{ count: demandesEnAttente }, { count: volsNonPayes }, { count: volsAvenirTotal }, { count: annoncesActives }, { data: prochainsVols }] = pilote
     ? await Promise.all([
         admin.from("reservations").select("id", { count: "exact", head: true })
           .eq("pilote_id", pilote.id).eq("statut", "demande_recue"),
         admin.from("reservations").select("id", { count: "exact", head: true })
           .eq("pilote_id", pilote.id).eq("type_resa", "annonce_pilote")
           .neq("pilote_paye", true).not("statut", "in", "(vol_effectue,annulee,demande_recue)"),
+        admin.from("reservations").select("id", { count: "exact", head: true })
+          .eq("pilote_id", pilote.id).neq("type_resa", "perso")
+          .gte("date_vol", today).not("statut", "in", "(vol_effectue,annulee)"),
+        admin.from("annonces_pilote").select("id", { count: "exact", head: true })
+          .eq("pilote_id", pilote.id).eq("statut", "publiee"),
         admin.from("reservations")
           .select("id, date_vol, heure_vol, duree, statut, type_resa, clients(prenom, nom)")
           .eq("pilote_id", pilote.id).neq("type_resa", "perso")
@@ -36,10 +41,12 @@ export default async function PiloteDashboard() {
           .order("date_vol", { ascending: true }).order("heure_vol", { ascending: true })
           .limit(6),
       ])
-    : [{ count: 0 }, { count: 0 }, { data: [] }];
+    : [{ count: 0 }, { count: 0 }, { count: 0 }, { count: 0 }, { data: [] }];
 
   const nDemandes = demandesEnAttente ?? 0;
   const nNonPayes = volsNonPayes ?? 0;
+  const nAvenir = volsAvenirTotal ?? 0;
+  const nAnnonces = annoncesActives ?? 0;
   const legalErrors = legal.issues.filter((i) => i.severity === "error");
   const legalWarnings = legal.issues.filter((i) => i.severity !== "error");
 
@@ -123,54 +130,68 @@ export default async function PiloteDashboard() {
         </div>
       )}
 
-      {/* ── Prochains vols + météo ───────────────────────────────────── */}
-      <div className="grid lg:grid-cols-[3fr_2fr] gap-5 items-start">
+      {/* ── Prochain vol + météo : les deux choses qu'on regarde le matin ── */}
+      <div className="grid lg:grid-cols-[3fr_2fr] gap-5 items-stretch">
 
         <div>
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span className="flex h-[19px] w-[19px] shrink-0 items-center justify-center rounded-full bg-navy text-[10px] font-bold text-white">2</span>
-              <h2 className="text-[11px] font-bold text-foreground uppercase tracking-[1.4px]">Prochains vols</h2>
-            </div>
-            <Link href="/pilote/vols" className="text-xs text-muted-foreground hover:text-navy transition-colors flex items-center gap-1">
-              Voir tout <ArrowRight size={11} />
-            </Link>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="flex h-[19px] w-[19px] shrink-0 items-center justify-center rounded-full bg-navy text-[10px] font-bold text-white">2</span>
+            <h2 className="text-[11px] font-bold text-foreground uppercase tracking-[1.4px]">Prochain vol</h2>
           </div>
           {vols.length === 0 ? (
-            <div className="bg-card rounded-xl border border-navy/15 px-4 py-6 flex flex-col items-center justify-center gap-2 text-center">
-              <Plane size={18} className="text-muted-foreground/40" />
+            <div className="bg-card rounded-xl border border-navy/15 px-6 py-10 h-[calc(100%-31px)] flex flex-col items-center justify-center gap-2 text-center">
+              <Plane size={22} className="text-muted-foreground/30" />
               <p className="text-sm text-muted-foreground">Aucun vol à venir pour l&apos;instant.</p>
+              <Link href="/pilote/annonces" className="text-xs font-semibold text-navy hover:underline mt-1">
+                Publier une annonce →
+              </Link>
             </div>
-          ) : (
-            <div className="bg-card rounded-xl border border-navy/15 overflow-hidden">
-              <div className="grid grid-cols-[64px_1fr_auto] gap-2 px-4 py-1.5 bg-secondary/60 border-b border-border">
-                <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-[1px]">Date</span>
-                <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-[1px]">Client</span>
-                <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-[1px]">Statut</span>
-              </div>
-              {vols.map((r, i) => {
-                const client = r.clients as unknown as { prenom: string; nom: string } | null;
-                const name = client ? `${client.prenom} ${client.nom}`.trim() : "—";
-                const date = new Date(r.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", { day: "numeric", month: "short" });
-                const statut = getResaBadge(r);
-                return (
-                  <Link key={r.id} href="/pilote/vols"
-                    className={`grid grid-cols-[64px_1fr_auto] items-center gap-2 px-4 py-2.5 hover:bg-secondary transition-colors group ${i < vols.length - 1 ? "border-b border-border" : ""}`}
-                  >
-                    <span className="font-mono text-xs font-semibold text-foreground">
-                      {date}
-                      <span className="block font-normal text-muted-foreground">{r.heure_vol ? r.heure_vol.slice(0, 5) : "à confirmer"}</span>
-                    </span>
-                    <span className="text-sm font-medium text-foreground truncate">
-                      {name}
-                      {r.type_resa === "annonce_pilote" && <span className="ml-1.5 text-[10px] font-normal text-muted-foreground">(annonce)</span>}
-                    </span>
+          ) : (() => {
+            const next = vols[0];
+            const autres = vols.length - 1;
+            const client = next.clients as unknown as { prenom: string; nom: string } | null;
+            const name = client ? `${client.prenom} ${client.nom}`.trim() : "—";
+            const dateStr = new Date(next.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
+              weekday: "long", day: "numeric", month: "long",
+            });
+            const statut = getResaBadge(next);
+            return (
+              <>
+                <Link
+                  href="/pilote/vols"
+                  className="block bg-card rounded-xl border border-navy/15 hover:border-navy/30 transition-colors p-5"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-2xl font-black text-foreground leading-none">
+                        {next.heure_vol ? next.heure_vol.slice(0, 5) : "Heure à confirmer"}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1.5 capitalize">{dateStr}</p>
+                    </div>
                     <AdminBadge variant={statut.variant} label={statut.label} />
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-4 pt-4 border-t border-border">
+                    <span className="text-sm font-semibold text-foreground">{name}</span>
+                    {next.type_resa === "annonce_pilote" && (
+                      <span className="shrink-0 text-[9px] font-bold uppercase tracking-wide text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                        Annonce
+                      </span>
+                    )}
+                    <span className="text-xs text-muted-foreground ml-auto">{next.duree} min</span>
+                  </div>
+                </Link>
+                {autres > 0 && (
+                  <Link
+                    href="/pilote/vols"
+                    className="flex items-center justify-between mt-2 px-1 py-1 text-xs text-muted-foreground hover:text-navy transition-colors"
+                  >
+                    <span>+ {autres} autre{autres > 1 ? "s" : ""} vol{autres > 1 ? "s" : ""} à venir</span>
+                    <ArrowRight size={11} />
                   </Link>
-                );
-              })}
-            </div>
-          )}
+                )}
+              </>
+            );
+          })()}
         </div>
 
         <div>
@@ -187,6 +208,34 @@ export default async function PiloteDashboard() {
           </Suspense>
         </div>
 
+      </div>
+
+      {/* ── Chiffres clés — secondaires, après ce qui compte vraiment ── */}
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3 rounded-lg border border-border bg-secondary/30 text-xs">
+        <Link href="/pilote/vols" className="flex items-baseline gap-1.5 hover:text-navy transition-colors">
+          <span className="font-bold text-foreground">{nAvenir}</span>
+          <span className="text-muted-foreground">vol{nAvenir > 1 ? "s" : ""} à venir</span>
+        </Link>
+        <Link
+          href="/pilote/vols"
+          className={`flex items-baseline gap-1.5 transition-colors ${nNonPayes > 0 ? "hover:text-amber-800" : "hover:text-navy"}`}
+        >
+          <span className={`font-bold ${nNonPayes > 0 ? "text-amber-700" : "text-foreground"}`}>{nNonPayes}</span>
+          <span className={nNonPayes > 0 ? "text-amber-700/80" : "text-muted-foreground"}>à régler</span>
+        </Link>
+        <Link href="/pilote/annonces" className="flex items-baseline gap-1.5 hover:text-navy transition-colors">
+          <span className="font-bold text-foreground">{nAnnonces}</span>
+          <span className="text-muted-foreground">annonce{nAnnonces > 1 ? "s" : ""} active{nAnnonces > 1 ? "s" : ""}</span>
+        </Link>
+        {legal.ok ? (
+          <span className="flex items-center gap-1.5 text-muted-foreground ml-auto">
+            <ShieldCheck size={12} className="text-emerald-600 shrink-0" /> Profil en règle
+          </span>
+        ) : (
+          <Link href="/pilote/profil" className="flex items-center gap-1.5 text-red-600 hover:text-red-700 transition-colors ml-auto font-semibold">
+            <ShieldCheck size={12} className="shrink-0" /> Profil à compléter
+          </Link>
+        )}
       </div>
     </div>
   );

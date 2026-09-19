@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Check, AlertCircle } from "lucide-react";
-import { updateMyPiloteProfile } from "@/lib/actions/pilote-profil";
+import { Loader2, Check, AlertCircle, Upload } from "lucide-react";
+import { updateMyPiloteProfile, uploadPiloteProfilPhoto } from "@/lib/actions/pilote-profil";
 import { piloteLegalStatus } from "@/lib/pilote/legal";
+import { FormSection, FormGrid, FormField, FormFooter } from "@/components/admin/ui";
 import type { Pilote } from "@/types/database";
 
 const fieldBase =
@@ -16,7 +17,6 @@ const fieldByState: Record<"error" | "warn" | "ok", string> = {
 };
 const field = `${fieldBase} ${fieldByState.ok}`;
 const legalField = (s: "error" | "warn" | "ok") => `${fieldBase} ${fieldByState[s]}`;
-const labelCls = "text-xs font-semibold text-muted-foreground flex items-center gap-1.5";
 
 function LabelMark({ state }: { state: "error" | "warn" | "ok" }) {
   if (state === "error")
@@ -31,6 +31,9 @@ export function PiloteProfilForm({ pilote }: { pilote: Pilote }) {
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState("");
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
     bio: pilote.bio ?? "",
@@ -67,6 +70,21 @@ export function PiloteProfilForm({ pilote }: { pilote: Pilote }) {
   const licNumState = stateOf("licence_numero");
   const licExpState = stateOf("licence_expiration");
   const medExpState = stateOf("medical_expiration");
+
+  async function handlePhotoFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setPhotoError("");
+    setUploadingPhoto(true);
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await uploadPiloteProfilPhoto(fd);
+    setUploadingPhoto(false);
+    if (res.error) { setPhotoError(res.error); return; }
+    setForm((f) => ({ ...f, photo_url: res.url! }));
+    setSaved(false);
+  }
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -111,86 +129,109 @@ export function PiloteProfilForm({ pilote }: { pilote: Pilote }) {
       </div>
 
       {/* Informations légales */}
-      <div className="rounded-[10px] border border-navy/15 bg-card p-5 space-y-4">
-        <h2 className="text-sm font-bold text-foreground">Informations légales</h2>
-        <p className="text-xs text-muted-foreground -mt-2">
-          Déclaratif. Ces champs doivent être remplis et à jour pour recevoir des vols.
-        </p>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className={labelCls}>Numéro de licence <LabelMark state={licNumState} /></label>
-            <input className={legalField(licNumState)} value={form.licence_numero} onChange={set("licence_numero")} placeholder="BE.FCL.PPL...." />
-          </div>
-          <div className="space-y-1.5">
-            <label className={labelCls}>Qualifications / ratings</label>
-            <input className={field} value={form.ratings} onChange={set("ratings")} placeholder="SEP(land), Night, Radio FR/EN" />
-          </div>
-          <div className="space-y-1.5">
-            <label className={labelCls}>Expiration licence / SEP <LabelMark state={licExpState} /></label>
-            <input type="date" className={legalField(licExpState)} value={form.licence_expiration} onChange={set("licence_expiration")} />
-          </div>
-          <div className="space-y-1.5">
-            <label className={labelCls}>Expiration certificat médical <LabelMark state={medExpState} /></label>
-            <input type="date" className={legalField(medExpState)} value={form.medical_expiration} onChange={set("medical_expiration")} />
-          </div>
-        </div>
+      <div className="rounded-[10px] border border-navy/15 bg-card p-5">
+        <FormSection
+          title="Informations légales"
+          description="Déclaratif. Ces champs doivent être remplis et à jour pour recevoir des vols."
+        >
+          <FormGrid cols={2}>
+            <FormField label={<>Numéro de licence <LabelMark state={licNumState} /></>}>
+              <input className={legalField(licNumState)} value={form.licence_numero} onChange={set("licence_numero")} placeholder="BE.FCL.PPL...." />
+            </FormField>
+            <FormField label="Qualifications / ratings">
+              <input className={field} value={form.ratings} onChange={set("ratings")} placeholder="SEP(land), Night, Radio FR/EN" />
+            </FormField>
+            <FormField label={<>Expiration licence / SEP <LabelMark state={licExpState} /></>}>
+              <input type="date" className={legalField(licExpState)} value={form.licence_expiration} onChange={set("licence_expiration")} />
+            </FormField>
+            <FormField label={<>Expiration certificat médical <LabelMark state={medExpState} /></>}>
+              <input type="date" className={legalField(medExpState)} value={form.medical_expiration} onChange={set("medical_expiration")} />
+            </FormField>
+          </FormGrid>
+        </FormSection>
       </div>
 
       {/* Coordonnées & présentation */}
-      <div className="rounded-[10px] border border-navy/15 bg-card p-5 space-y-4">
-        <h2 className="text-sm font-bold text-foreground">Coordonnées &amp; présentation</h2>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className={labelCls}>Téléphone</label>
-            <input className={field} value={form.telephone} onChange={set("telephone")} placeholder="+32 4xx xx xx xx" />
-          </div>
-          <div className="space-y-1.5">
-            <label className={labelCls}>IBAN (participation aux frais)</label>
-            <input className={field} value={form.iban} onChange={set("iban")} placeholder="BE.. .... .... ...." />
-            <p className="text-[11px] text-muted-foreground">Le client vous règle directement dessus. Un QR de virement est généré pour lui.</p>
-          </div>
-          <div className="space-y-1.5 sm:col-span-2">
-            <label className={labelCls}>Photo (URL)</label>
-            <input className={field} value={form.photo_url} onChange={set("photo_url")} placeholder="https://..." />
-            <p className="text-[11px] text-muted-foreground">Visible par le client sur la page de son vol.</p>
-          </div>
-          <div className="space-y-1.5 sm:col-span-2">
-            <label className={labelCls}>Bio courte</label>
-            <textarea
-              className={`${field} h-auto py-2 min-h-[80px] resize-y`}
-              value={form.bio}
-              onChange={set("bio")}
-              placeholder="Pilote en formation ATPL, basé à Charleroi..."
-            />
-          </div>
-          <div className="space-y-1.5 sm:col-span-2">
-            <label className={labelCls}>Signature (emails aux clients)</label>
-            <textarea
-              className={`${field} h-auto py-2 min-h-[60px] resize-y`}
-              value={form.signature}
-              onChange={set("signature")}
-              placeholder={`${pilote.nom} · Pilote${form.telephone ? ` · ${form.telephone}` : ""}`}
-            />
-            <p className="text-[11px] text-muted-foreground">
-              Ajoutée en bas de vos messages au client. Laissez vide pour la signature par défaut
-              (nom · Pilote · téléphone).
-            </p>
-          </div>
-        </div>
+      <div className="rounded-[10px] border border-navy/15 bg-card p-5">
+        <FormSection title="Coordonnées & présentation">
+          <FormGrid cols={2}>
+            <FormField label="Téléphone">
+              <input className={field} value={form.telephone} onChange={set("telephone")} placeholder="+32 4xx xx xx xx" />
+            </FormField>
+            <FormField label="IBAN (participation aux frais)" hint="Le client vous règle directement dessus. Un QR de virement est généré pour lui.">
+              <input className={field} value={form.iban} onChange={set("iban")} placeholder="BE.. .... .... ...." />
+            </FormField>
+            <FormField label="Photo" hint="Visible par le client sur la page de son vol." className="sm:col-span-2">
+              <div className="flex items-start gap-3">
+                {form.photo_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={form.photo_url}
+                    alt=""
+                    className="w-9 h-9 rounded-full object-cover border border-navy/15 shrink-0"
+                  />
+                )}
+                <div className="flex-1 space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <input
+                      className={field}
+                      value={form.photo_url}
+                      onChange={set("photo_url")}
+                      placeholder="https://... (lien direct vers une image)"
+                    />
+                    <span className="text-xs text-muted-foreground shrink-0">ou</span>
+                    <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoFile} className="hidden" />
+                    <button
+                      type="button"
+                      onClick={() => photoInputRef.current?.click()}
+                      disabled={uploadingPhoto}
+                      className="h-9 px-3 rounded-lg border border-navy/15 bg-card text-xs font-semibold text-foreground hover:bg-secondary transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-50"
+                    >
+                      {uploadingPhoto ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
+                      Envoyer une photo
+                    </button>
+                  </div>
+                  {photoError && <p className="text-[11px] text-destructive">{photoError}</p>}
+                </div>
+              </div>
+            </FormField>
+            <FormField label="Bio courte" className="sm:col-span-2">
+              <textarea
+                className={`${field} h-auto py-2 min-h-[80px] resize-y`}
+                value={form.bio}
+                onChange={set("bio")}
+                placeholder="Pilote en formation ATPL, basé à Charleroi..."
+              />
+            </FormField>
+            <FormField
+              label="Signature (emails aux clients)"
+              hint="Ajoutée en bas de vos messages au client. Laissez vide pour la signature par défaut (nom · Pilote · téléphone)."
+              className="sm:col-span-2"
+            >
+              <textarea
+                className={`${field} h-auto py-2 min-h-[60px] resize-y`}
+                value={form.signature}
+                onChange={set("signature")}
+                placeholder={`${pilote.nom} · Pilote${form.telephone ? ` · ${form.telephone}` : ""}`}
+              />
+            </FormField>
+          </FormGrid>
+        </FormSection>
       </div>
 
-      <div className="flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={isPending}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-[#e6a800] transition-colors disabled:opacity-60 cursor-pointer"
-        >
-          {isPending ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
-          Enregistrer
-        </button>
-        {saved && <span className="text-xs font-medium text-emerald-600">Enregistré</span>}
-        {error && <span className="text-xs font-medium text-destructive">{error}</span>}
-      </div>
+      {saved && (
+        <div className="px-4 py-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-700 flex items-center gap-2">
+          <Check size={14} className="shrink-0" />
+          Profil enregistré.
+        </div>
+      )}
+      {error && (
+        <div className="px-4 py-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
+          {error}
+        </div>
+      )}
+
+      <FormFooter pending={isPending} submitLabel="Enregistrer" />
 
       {pilote.conditions_accepted_at && (
         <p className="text-[11px] text-muted-foreground">

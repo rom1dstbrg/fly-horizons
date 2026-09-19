@@ -1,5 +1,5 @@
 interface FormFieldProps {
-  label: string;
+  label: React.ReactNode;
   htmlFor?: string;
   required?: boolean;
   error?: string;

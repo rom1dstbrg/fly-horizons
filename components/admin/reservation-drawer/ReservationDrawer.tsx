@@ -28,10 +28,13 @@ import { MessagesTab } from "./MessagesTab";
 import { EmailComposer } from "./EmailComposer";
 import { ItinerairesModal } from "./ItinerairesModal";
 import { ActionFooter } from "./ActionFooter";
-// Blocs B/C (assignation / mise en jeu) GELÉS — pivot 08/09.
-// Bloc D réactivé pour les annonces pilote (règlement par virement direct) via
+// Bloc C (mise en jeu premier-arrivé, flight_offers) reste GELÉ — pivot 08/09,
+// cf. mémoire project_marketplace_legal_risk. Bloc B (assignation manuelle
+// d'un vol standard) réactivé le 19/09, sans la mise en jeu. Bloc D réactivé
+// pour les annonces pilote (règlement par virement direct) via
 // AnnoncePiloteActions — voir décision 08/09 soir.
 import { AnnoncePiloteActions } from "./AnnoncePiloteActions";
+import { PiloteAssignBlock } from "./PiloteAssignBlock";
 import { AvionReserveBadge } from "./AvionReserveBadge";
 import { useReservationDraft } from "./hooks/useReservationDraft";
 import { useBilanVol } from "./hooks/useBilanVol";
@@ -393,6 +396,19 @@ export function ReservationDrawer({
                         viewerRole={viewerRole}
                         onStatusChange={onStatusChange}
                         onFieldsChange={onFieldsChange}
+                      />
+                    ) : undefined
+                  }
+                  piloteAssignSlot={
+                    viewerRole === "admin" && r.type_resa === "standard" && r.statut !== "annulee" ? (
+                      <PiloteAssignBlock
+                        reservationId={r.id}
+                        currentPiloteId={r.pilote_id}
+                        clientPrenom={r.clients?.prenom ?? ""}
+                        dateVol={r.date_vol}
+                        onChanged={(piloteId, piloteNom) =>
+                          onFieldsChange?.(r.id, { pilote_id: piloteId, pilotes: piloteNom ? { nom: piloteNom } : null })
+                        }
                       />
                     ) : undefined
                   }

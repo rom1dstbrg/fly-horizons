@@ -122,17 +122,9 @@ export function RouteSection({
 
       <div className="flex items-center gap-2 mt-2 flex-wrap">
         <button
-          onClick={onSend}
-          disabled={isPending || routeDraft.length === 0}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-navy text-white text-xs font-semibold hover:brightness-90 transition-colors disabled:opacity-40 cursor-pointer"
-        >
-          {isPending ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}
-          {localRouteStatus ? "Renvoyer au client" : "Envoyer au client"}
-        </button>
-        <button
           onClick={onSave}
           disabled={isPending || routeDraft.length === 0}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-muted-foreground text-xs font-semibold hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-40 cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-navy text-white text-xs font-semibold hover:brightness-90 transition-colors disabled:opacity-40 cursor-pointer"
         >
           {isPending ? <Loader2 size={11} className="animate-spin" /> : <Save size={11} />}
           Sauvegarder
@@ -144,6 +136,15 @@ export function RouteSection({
         >
           <Copy size={11} />
           {foreFlightCopied ? "Copié !" : "ForeFlight"}
+        </button>
+        <button
+          onClick={onSend}
+          disabled={isPending || routeDraft.length === 0}
+          title="Envoie la route au client par email pour qu'il l'accepte"
+          className="flex items-center gap-1.5 px-3 py-1.5 ml-auto rounded-lg text-muted-foreground text-xs font-semibold hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-40 cursor-pointer"
+        >
+          {isPending ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}
+          {localRouteStatus ? "Renvoyer au client" : "Envoyer au client"}
         </button>
       </div>
 

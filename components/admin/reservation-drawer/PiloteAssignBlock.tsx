@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { User, Loader2, X, Check, Send, Megaphone } from "lucide-react";
+import { User, Loader2, X, Check, Send } from "lucide-react";
 import {
   listAssignablePilotes,
   assignPilote,
@@ -9,13 +9,16 @@ import {
   unassignPilote,
   type AssignablePilote,
 } from "@/lib/actions/pilote-assign";
-import { createOffer, cancelOffer, getOpenOffer, type OpenOfferInfo } from "@/lib/actions/flight-offers";
 import { ConfirmActionDialog, type PendingAction } from "./ConfirmActionDialog";
 
-// Bloc B/C · attribution d'un vol standard à un pilote, depuis le drawer admin.
-// - « Assigner » : attribution directe, email auto au client (§5.2).
-// - « Réassigner » : panneau email de changement de pilote éditable (§5.4).
-// - « Proposer à tous les pilotes » : mise en jeu premier arrivé, 48h (bloc C).
+// Bloc B · attribution d'un vol standard à un pilote, depuis le drawer admin.
+// Réactivé le 19/09 (était câblé mais jamais branché dans le drawer, cf.
+// nettoyage git 08/09) — Romain n'avait aucun moyen d'attribuer un pilote à
+// une réservation admin déjà en cours. La mise en jeu « premier arrivé »
+// (bloc C, flight_offers) n'est PAS reprise ici : hors périmètre tant qu'il
+// n'y a qu'un seul pilote réel, cf. mémoire project_marketplace_legal_risk.
+// - « Assigner » : attribution directe, email auto au client.
+// - « Réassigner » : panneau email de changement de pilote éditable.
 
 function changePiloteEmailBody(clientPrenom: string, dateStr: string, nouveauPilote: string) {
   return (
@@ -49,16 +52,12 @@ export function PiloteAssignBlock({
   const [emailSubject, setEmailSubject] = useState("");
   const [emailBody, setEmailBody] = useState("");
 
-  const [offer, setOffer] = useState<OpenOfferInfo>(null);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
 
   useEffect(() => {
     let cancel = false;
     listAssignablePilotes().then((list) => {
       if (!cancel) setPilotes(list);
-    });
-    getOpenOffer(reservationId).then((o) => {
-      if (!cancel) setOffer(o);
     });
     return () => {
       cancel = true;
@@ -80,7 +79,6 @@ export function PiloteAssignBlock({
     startTransition(async () => {
       const res = await assignPilote(reservationId, selected);
       if (res.error) return show(res.error, false);
-      setOffer(null);
       onChanged(selected, res.piloteNom ?? null);
       show(res.emailError ? "Pilote assigné · un email n'est pas parti" : "Pilote assigné, emails envoyés", !res.emailError);
     });
@@ -133,52 +131,6 @@ export function PiloteAssignBlock({
     });
   }
 
-  function runCreateOffer() {
-    startTransition(async () => {
-      const res = await createOffer(reservationId);
-      if (res.error) return show(res.error, false);
-      setOffer({ sentTo: res.sentTo ?? 0, expiresAt: new Date(Date.now() + 48 * 3600 * 1000).toISOString() });
-      show(
-        res.emailError
-          ? `Offre créée · un email n'est pas parti`
-          : `Offre envoyée à ${res.sentTo} pilote${(res.sentTo ?? 0) > 1 ? "s" : ""}`,
-        !res.emailError,
-      );
-    });
-  }
-
-  function askCreateOffer() {
-    setPendingAction({
-      title: "Proposer ce vol à tous les pilotes ?",
-      description: "Tous les pilotes en règle et libres sur ce créneau recevront un email. Le premier qui le prend devient le pilote du vol. Sans preneur, l'offre expire au bout de 48 h.",
-      confirmLabel: "Proposer à tous",
-      run: runCreateOffer,
-    });
-  }
-
-  function runCancelOffer() {
-    startTransition(async () => {
-      const res = await cancelOffer(reservationId);
-      if (res.error) return show(res.error, false);
-      setOffer(null);
-      show("Offre retirée", true);
-    });
-  }
-
-  function askCancelOffer() {
-    setPendingAction({
-      title: "Retirer l'offre en cours ?",
-      description: "Les pilotes ne pourront plus prendre ce vol depuis leur espace. Vous reprenez la main sur l'attribution.",
-      confirmLabel: "Retirer l'offre",
-      danger: true,
-      run: runCancelOffer,
-    });
-  }
-
-  const offerExpiresStr = offer
-    ? new Date(offer.expiresAt).toLocaleString("fr-BE", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
-    : "";
-
   return (
     <div className="rounded-xl border border-navy/15 bg-navy/5 p-3.5 space-y-2.5">
       <p className="text-[10px] font-bold text-navy uppercase tracking-[1.5px] flex items-center gap-1.5">
@@ -186,26 +138,7 @@ export function PiloteAssignBlock({
         Pilote
       </p>
 
-      {offer ? (
-        <div className="rounded-lg border border-navy/20 bg-white p-2.5 space-y-2">
-          <p className="text-xs text-foreground flex items-center gap-1.5">
-            <Megaphone size={12} className="text-navy shrink-0" />
-            Mise en jeu en cours · <strong>{offer.sentTo}</strong> pilote{offer.sentTo > 1 ? "s" : ""} contacté{offer.sentTo > 1 ? "s" : ""}
-          </p>
-          <p className="text-[11px] text-muted-foreground">Expire le {offerExpiresStr}</p>
-          <button
-            type="button"
-            onClick={askCancelOffer}
-            disabled={isPending}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-border text-xs font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-50 cursor-pointer"
-          >
-            {isPending ? <Loader2 size={11} className="animate-spin" /> : <X size={11} />}
-            Retirer l&apos;offre
-          </button>
-        </div>
-      ) : (
-        <>
-          <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2">
             <select
               value={selected}
               onChange={(e) => setSelected(e.target.value)}
@@ -269,30 +202,16 @@ export function PiloteAssignBlock({
             </div>
           )}
 
-          {currentPiloteId && !emailOpen && (
-            <button
-              type="button"
-              onClick={askUnassign}
-              disabled={isPending}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-border text-xs font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-50 cursor-pointer"
-            >
-              {isPending ? <Loader2 size={11} className="animate-spin" /> : <X size={11} />}
-              Retirer, sans réassigner
-            </button>
-          )}
-
-          {!currentPiloteId && !emailOpen && (
-            <button
-              type="button"
-              onClick={askCreateOffer}
-              disabled={isPending}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border text-xs font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-50 cursor-pointer"
-            >
-              {isPending ? <Loader2 size={11} className="animate-spin" /> : <Megaphone size={11} />}
-              Proposer à tous les pilotes
-            </button>
-          )}
-        </>
+      {currentPiloteId && !emailOpen && (
+        <button
+          type="button"
+          onClick={askUnassign}
+          disabled={isPending}
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-border text-xs font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-50 cursor-pointer"
+        >
+          {isPending ? <Loader2 size={11} className="animate-spin" /> : <X size={11} />}
+          Retirer, sans réassigner
+        </button>
       )}
 
       {feedback && (

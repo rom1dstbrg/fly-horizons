@@ -74,7 +74,7 @@ export async function updateStatutReservation(
     if (statut === "annulee") {
       const { data: resaData } = await supabase
         .from("reservations")
-        .select("voucher_code, product_id")
+        .select("voucher_code, product_id, annonce_id, passagers")
         .eq("id", id)
         .single();
       if (resaData?.voucher_code) {
@@ -86,6 +86,35 @@ export async function updateStatutReservation(
       }
       if (resaData?.product_id) {
         await supabase.rpc("release_product_stock", { p_product_id: resaData.product_id });
+      }
+      // Idem pour une annonce pilote : elle passe en "reservee" dès la première
+      // demande (avant même confirmation ou paiement, cf. /api/vol-annonce/submit),
+      // donc annuler cette demande sans rien libérer la laisse coincée pour
+      // toujours — invisible au public et au pilote, seul recours manuel :
+      // republier un doublon (perd vues/historique). CAS (compare-and-swap) pour
+      // ne jamais réouvrir une annonce que le pilote a annulée lui-même entretemps.
+      if (resaData?.annonce_id) {
+        const { data: annonce } = await supabase
+          .from("annonces_pilote")
+          .select("statut, mode_vente, places_reservees")
+          .eq("id", resaData.annonce_id)
+          .single();
+        if (annonce?.mode_vente === "place") {
+          const prev = annonce.places_reservees ?? 0;
+          const next = Math.max(0, prev - (resaData.passagers ?? 1));
+          await supabase
+            .from("annonces_pilote")
+            .update({ places_reservees: next, statut: "publiee" })
+            .eq("id", resaData.annonce_id)
+            .eq("places_reservees", prev)
+            .in("statut", ["publiee", "reservee"]);
+        } else if (annonce?.statut === "reservee") {
+          await supabase
+            .from("annonces_pilote")
+            .update({ statut: "publiee" })
+            .eq("id", resaData.annonce_id)
+            .eq("statut", "reservee");
+        }
       }
     }
 

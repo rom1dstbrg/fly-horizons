@@ -176,8 +176,13 @@ export async function updateAnnonce(id: string, data: {
   }
 }
 
-// Republier une annonce annulée/réservée en une nouvelle annonce publiée, sans
-// tout ressaisir — duplique les champs, laisse l'ancienne ligne intacte (historique).
+// Republier une annonce annulée/réservée : remet la MÊME ligne active, sans en
+// créer une nouvelle (avant le 19/09 : dupliquait dans une nouvelle ligne,
+// laissant l'ancienne trainer dans la liste du pilote — deux étapes pour lui
+// : republier puis se dépatouiller de l'ancienne). Sûr même en mode « à la
+// place » : les anciens occupants gardent leurs propres réservations
+// (historique intact), et finalizeAnnonceGroupPricing() (lib/annonces-pilote-server.ts)
+// exclut déjà les vols déjà effectués du calcul d'un nouveau groupe.
 export async function republishAnnonce(id: string) {
   try {
     const pilote = await checkPilote();
@@ -187,30 +192,22 @@ export async function republishAnnonce(id: string) {
 
     const { data: source } = await admin
       .from("annonces_pilote")
-      .select("titre, duree, places, prix_total, part_pilote, mode_vente, description, images, legal_ok, legal_ok_at, route_waypoints")
+      .select("statut, mode_vente")
       .eq("id", id)
       .eq("pilote_id", pilote.id)
       .single();
 
     if (!source) return { error: "Annonce introuvable" };
+    if (source.statut === "publiee") return { error: "Cette annonce est déjà publiée" };
 
-    const { error } = await admin.from("annonces_pilote").insert({
-      pilote_id: pilote.id,
-      titre: source.titre,
-      duree: source.duree,
-      places: source.places,
-      prix_total: source.prix_total,
-      part_pilote: source.part_pilote,
-      mode_vente: source.mode_vente ?? "avion",
-      description: source.description,
-      images: source.images,
-      route_waypoints: source.route_waypoints,
-      // On reporte l'attestation de la source. Si elle n'était pas attestée
-      // (annonce d'avant le garde-fou), la copie reste « à confirmer » : le
-      // pilote devra l'éditer, ce qui repasse par la case à cocher.
-      legal_ok: source.legal_ok ?? false,
-      legal_ok_at: source.legal_ok_at ?? null,
-    });
+    const { error } = await admin
+      .from("annonces_pilote")
+      .update({
+        statut: "publiee",
+        ...(source.mode_vente === "place" ? { places_reservees: 0 } : {}),
+      })
+      .eq("id", id)
+      .eq("pilote_id", pilote.id);
 
     if (error) return { error: "Erreur republication de l'annonce" };
 

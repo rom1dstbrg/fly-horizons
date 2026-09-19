@@ -1,6 +1,8 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
-import { AlertCircle, X } from "lucide-react";
+import { AlertCircle, X, HelpCircle } from "lucide-react";
 
 // ── Chrome partagé de l'espace pilote ────────────────────────────────────────
 // Un seul vocabulaire visuel, aligné sur l'identité Fly Horizons (STYLE-STATUS) :
@@ -17,7 +19,7 @@ export function PiloteHeader({
   action,
 }: {
   title: string;
-  subtitle?: string;
+  subtitle?: ReactNode;
   action?: ReactNode;
 }) {
   return (
@@ -74,6 +76,36 @@ export function PiloteAlert({
     </Link>
   ) : (
     inner
+  );
+}
+
+/**
+ * Aide contextuelle inline — pour le jargon technique (M&C, part légale...)
+ * sans empiler encore du texte de paragraphe partout. Au clic (pas au survol
+ * seul : fonctionne aussi au doigt sur mobile), pas de tooltip natif `title`
+ * (trop petit, pas de retour à la ligne, invisible au tactile).
+ */
+export function HelpTip({ children }: { children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <span className="relative inline-flex align-middle">
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
+        className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-secondary text-muted-foreground hover:bg-navy/10 hover:text-navy transition-colors cursor-pointer"
+        aria-label="Aide"
+      >
+        <HelpCircle size={11} />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-[150]" onClick={() => setOpen(false)} />
+          <div className="absolute z-[160] left-1/2 -translate-x-1/2 top-[calc(100%+6px)] w-60 bg-navy text-white text-xs leading-relaxed rounded-lg px-3 py-2 shadow-lg">
+            {children}
+          </div>
+        </>
+      )}
+    </span>
   );
 }
 

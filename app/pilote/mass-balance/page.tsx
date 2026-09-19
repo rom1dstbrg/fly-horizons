@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { MassBalanceClient, type ResaContext } from "@/components/admin/mass-balance/MassBalanceClient";
 import type { MbSheetRow } from "@/components/admin/mass-balance/SheetsList";
 import type { MassBalanceInputs } from "@/lib/mass-balance/da40-calc";
-import { PiloteHeader } from "@/components/pilote/ui";
+import { PiloteHeader, HelpTip } from "@/components/pilote/ui";
 
 export const metadata = { title: "Masse & centrage — Espace pilote" };
 
@@ -100,7 +100,20 @@ export default async function PiloteMassBalancePage({
     <div className="space-y-5">
       <PiloteHeader
         title="Masse & centrage"
-        subtitle="Feuille de masse et centrage DA40 + performances TODR / LDR. Enregistrez et imprimez, ou utilisez le calculateur librement."
+        subtitle={
+          <>
+            Feuille de masse et centrage DA40 + performances{" "}
+            <span className="inline-flex items-center gap-1">
+              TODR / LDR
+              <HelpTip>
+                <strong>TODR</strong> (Take-Off Distance Required) : distance nécessaire au
+                décollage. <strong>LDR</strong> (Landing Distance Required) : distance nécessaire
+                à l&apos;atterrissage. Calculées à partir du poids, de la météo et de la piste.
+              </HelpTip>
+            </span>
+            . Enregistrez et imprimez, ou utilisez le calculateur librement.
+          </>
+        }
       />
       <MassBalanceClient resa={resa} sheets={sheets} initialSheetId={sheetId ?? null} viewerRole="pilote" />
     </div>

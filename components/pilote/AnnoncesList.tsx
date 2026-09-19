@@ -44,10 +44,13 @@ function AnnonceManageCard({
   const [isCloturePending, startClotureTransition] = useTransition();
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [clotureError, setClotureError] = useState<string | null>(null);
+  const [showAConfirmerInfo, setShowAConfirmerInfo] = useState(false);
 
   const check = evaluerPartPilote(annonce.prix_total, annonce.part_pilote, annonce.places);
   const prixClient = Math.max(0, annonce.prix_total - annonce.part_pilote);
-  const aConfirmer = annonce.statut === "publiee" && (check.level === "block" || annonce.legal_ok === false);
+  const partSousLeMinimum = check.level === "block";
+  const legalPasReattestee = annonce.legal_ok === false;
+  const aConfirmer = annonce.statut === "publiee" && (partSousLeMinimum || legalPasReattestee);
   const groupeOuvert = annonce.mode_vente === "place" && annonce.statut === "publiee" && (annonce.places_reservees ?? 0) > 0;
 
   function handleCloture() {
@@ -99,9 +102,13 @@ function AnnonceManageCard({
             {STATUT_LABEL[annonce.statut]}
           </span>
           {aConfirmer && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded">
+            <button
+              type="button"
+              onClick={() => setShowAConfirmerInfo(true)}
+              className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded hover:bg-red-100 transition-colors cursor-pointer"
+            >
               <ShieldAlert size={11} /> À confirmer
-            </span>
+            </button>
           )}
           <span className="ml-auto flex items-center gap-2.5 text-[11px] text-muted-foreground" title="Statistiques de consultation">
             <span className="flex items-center gap-1"><Eye size={12} /> {stats?.vues ?? 0}</span>
@@ -186,6 +193,47 @@ function AnnonceManageCard({
           </button>
         </div>
       </div>
+
+      {showAConfirmerInfo && (
+        <div
+          className="fixed inset-0 z-[300] bg-black/50 flex items-center justify-center p-4"
+          onClick={() => setShowAConfirmerInfo(false)}
+        >
+          <div
+            className="bg-card rounded-2xl w-full max-w-sm p-5 space-y-3 shadow-xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-sm font-bold text-foreground flex items-center gap-2">
+                <ShieldAlert size={15} className="text-red-600 shrink-0" />
+                Pourquoi « À confirmer » ?
+              </p>
+              <button
+                onClick={() => setShowAConfirmerInfo(false)}
+                className="p-1 rounded-full hover:bg-secondary transition-colors cursor-pointer shrink-0"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {partSousLeMinimum && (
+              <p className="text-xs text-muted-foreground leading-relaxed">{check.message}</p>
+            )}
+            {legalPasReattestee && (
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Cette annonce a été publiée ou modifiée sans reconfirmer que vous réalisez
+                réellement le vol et partagez vos frais. Modifiez-la et cochez la case
+                d&apos;attestation à la dernière étape pour lever l&apos;alerte.
+              </p>
+            )}
+
+            <p className="text-[11px] text-muted-foreground/70 leading-relaxed border-t border-border pt-2.5">
+              Cette annonce reste publiée et réservable : ce badge est un rappel visible
+              uniquement par vous, pas par les clients.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
