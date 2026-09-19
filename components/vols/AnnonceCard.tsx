@@ -58,7 +58,7 @@ export function AnnonceCard({ annonce, newTab = false }: { annonce: AnnonceCardD
         {/* Contenu bas */}
         <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-5">
           <p className="text-[#F2B705] text-[11px] font-bold uppercase tracking-[2px] mb-1">
-            Vol partagé · {annonce.pilote_nom}
+            Pilote : {annonce.pilote_nom.split(" ")[0]}
           </p>
           <h3 className="text-white font-bold text-[19px] sm:text-[21px] leading-tight mb-1.5">
             {annonce.titre?.trim() || `Jusqu'à ${annonce.places} passager${annonce.places > 1 ? "s" : ""}`}

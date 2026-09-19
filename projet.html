@@ -1020,6 +1020,21 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-19 (29) — card vol : "Pilote : prénom" au lieu de "Vol partagé · nom complet"</h3>
+      <p class="pill">Demande de Romain sur la card <code>AnnonceCard</code> (homepage +
+        /nos-offres) : "Vol partagé · Romain Destanebrg" remplacé par "Pilote : Romain" — choisi
+        entre deux options proposées, précision ajoutée par Romain : prénom seul, pas nom
+        complet.</p>
+      <ul>
+        <li><code>components/vols/AnnonceCard.tsx</code> : <code>{annonce.pilote_nom}</code> →
+          <code>{annonce.pilote_nom.split(" ")[0]}</code> pour n'afficher que le prénom (même
+          pattern que <code>pilotePropFrom()</code> dans <code>lib/actions/reservations.ts</code>
+          pour la voix des emails).</li>
+        <li>Vérifié à l'écran sur Chrome. <code>tsc</code> + <code>eslint</code> propres.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-19 (28) — "Nos vols" → "Les vols" (nav, headings, footer, FAQ)</h3>
       <p class="pill">Demande de Romain, cohérente avec le chantier "tout par l'espace pilote" :
         "Nos vols" sous-entend des vols qui appartiennent à Fly Horizons, alors qu'ils sont
