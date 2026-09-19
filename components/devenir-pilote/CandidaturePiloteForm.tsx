@@ -1,10 +1,10 @@
 "use client";
 
-import { useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { submitContact } from "@/lib/actions/contacts";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, CheckCircle2 } from "lucide-react";
 
 const inputCls = "w-full h-10 px-3 rounded-lg border border-border bg-input text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all placeholder:text-muted-foreground";
 const labelCls = "block text-sm font-medium text-foreground mb-1.5";
@@ -18,7 +18,7 @@ const LICENCES = ["PPL", "CPL", "ATPL", "Autre"];
 // compte pilote automatique.
 export function CandidaturePiloteForm() {
   const [isPending, startTransition] = useTransition();
-  const router = useRouter();
+  const [submitted, setSubmitted] = useState(false);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -53,12 +53,12 @@ export function CandidaturePiloteForm() {
         toast.error(r.error);
         return;
       }
-      toast.success("Candidature envoyée ! Nous revenons vers vous rapidement.", { duration: 3000 });
-      setTimeout(() => router.push("/"), 3000);
+      setSubmitted(true);
     });
   }
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="space-y-5">
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -131,5 +131,27 @@ export function CandidaturePiloteForm() {
       </p>
 
     </form>
+
+    {submitted && (
+      <div className="fixed inset-0 z-[300] bg-black/50 flex items-center justify-center p-4">
+        <div className="bg-card rounded-2xl w-full max-w-sm p-8 shadow-xl flex flex-col items-center text-center">
+          <div className="w-14 h-14 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mb-5">
+            <CheckCircle2 size={26} className="text-emerald-600" />
+          </div>
+          <h2 className="text-xl font-black text-foreground mb-2">Candidature bien reçue</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-8">
+            Merci ! Nous revenons vers vous rapidement pour en discuter, avant toute activation
+            d&apos;un compte pilote.
+          </p>
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center w-full h-11 px-6 bg-primary text-primary-foreground rounded-lg font-black text-sm hover:bg-[#e6a800] transition-all shadow-gold"
+          >
+            Retour à l&apos;accueil
+          </Link>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

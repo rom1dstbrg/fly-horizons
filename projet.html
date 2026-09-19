@@ -1020,6 +1020,28 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-19 (25) — "Devenir pilote" : présentation/formulaire séparés, popup de succès</h3>
+      <p class="pill">Retour de Romain juste après la livraison de (24) : le formulaire doit être
+        sur sa propre page (pas côte à côte avec la présentation), et la confirmation d'envoi
+        doit être un popup avec un bouton retour accueil, pas une petite alerte (toast).</p>
+      <ul>
+        <li><code>app/(public)/devenir-pilote/page.tsx</code> : redevient une page de présentation
+          pure (étapes + encart légal), pleine largeur, sans formulaire — deux CTA "Faire une
+          demande" (haut de page + bandeau de fin) renvoient vers la nouvelle page.</li>
+        <li><code>app/(public)/devenir-pilote/candidature/page.tsx</code> (nouveau) : porte le
+          formulaire seul, avec un lien retour vers la présentation.</li>
+        <li><code>components/devenir-pilote/CandidaturePiloteForm.tsx</code> : la confirmation
+          n'est plus un <code>toast.success</code> + redirection automatique après 3s, mais un
+          vrai popup (overlay <code>fixed inset-0</code>, même pattern que
+          <code>ConfirmActionDialog</code> côté admin) avec icône de succès, message, et un
+          bouton "Retour à l'accueil" que le visiteur déclenche lui-même.</li>
+        <li>Testé en conditions réelles sur Chrome : page présentation → page candidature →
+          soumission → popup affiché → clic sur le bouton → retour effectif à l'accueil → ligne
+          de test nettoyée en base. <code>tsc</code> + <code>eslint</code> propres.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-19 (24) — page publique "Devenir pilote" (candidature, pas d'inscription)</h3>
       <p class="pill">Demande de Romain : une page publique, liée dans le footer, expliquant Fly
         Horizons aux pilotes et leur permettant de faire une demande. Contrainte explicite :
