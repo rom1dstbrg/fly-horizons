@@ -209,7 +209,7 @@ function NavContent({
                       <ChevronDown size={12} className={`shrink-0 text-muted-foreground transition-transform ${showIssues ? "rotate-180" : ""}`} />
                     )}
                   </div>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground whitespace-nowrap overflow-hidden">
+                  <p className="mt-0.5 text-[11px] text-muted-foreground truncate">
                     {pilot.licenceNumero || "—"} · lic. {frDate(pilot.licenceExpiration)} · med. {frDate(pilot.medicalExpiration)}
                   </p>
                 </div>

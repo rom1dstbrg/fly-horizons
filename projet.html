@@ -984,6 +984,42 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-19 (22) — audit design Chrome (pilote + admin) : ellipsis plaque</h3>
+      <p class="pill">Demande de Romain : auditer visuellement pilote et admin sur Chrome
+        (page par page, écrans réels). Trouvé un vrai bug CSS, un faux positif (cache),
+        et deux items de données à trancher avec Romain (pas du code) :</p>
+      <ul>
+        <li><b>Corrigé</b> — <code>components/pilote/PiloteSidebar.tsx</code> : la ligne
+          licence/médical de la plaque (sidebar dépliée) était en
+          <code>whitespace-nowrap overflow-hidden</code> sans <code>text-ellipsis</code> :
+          le texte trop long pour les 256px de la sidebar se coupait net au milieu d'un mot
+          ("· me" au lieu de "· med. 09/09/2027…"). Passé à <code>truncate</code> (le même
+          utilitaire déjà utilisé sur le nom juste au-dessus) — vérifié à l'écran, ellipsis
+          propre maintenant.</li>
+        <li><b>Faux positif (cache), pas touché</b> — le dashboard <code>/pilote</code>
+          affiche le badge "demande_recue" brut au lieu de "Nouvelle demande" sur la carte
+          "Prochain vol". Le mapping existe bien dans <code>STATUT_RESA</code>
+          (<code>components/admin/ui/AdminBadge.tsx</code>) et le même composant
+          (<code>getResaBadge</code>) affiche correctement "Nouvelle demande" sur
+          <code>/pilote/vols</code> pour la même réservation — code identique, un seul
+          écran est faux : très probablement le cache dev déjà rencontré cette session,
+          pas un bug de code. À revérifier après un restart du serveur dev.</li>
+        <li><b>Donnée, pas du code</b> — la plaque pilote affiche "Fly Horizons" comme nom
+          au lieu du nom de Romain (<code>profiles.full_name</code>), alors que
+          <code>/admin</code> affiche correctement "Romain" (mais celui-là est en dur dans
+          le code, donc ne prouve rien sur la valeur réelle en base).</li>
+        <li><b>Donnée, pas du code</b> — le nom "Romain DESTANEBRG" (lettres inversées,
+          devrait être DESTANBERG) apparaît identique sur les cartes d'annonces publiques,
+          la liste admin des réservations et la colonne pilote — cohérent partout, donc
+          bien une coquille dans la fiche elle-même, pas un bug d'affichage.</li>
+        <li>Reste du balayage (dashboard/vols/annonces/profil/dispos/M&amp;B pilote,
+          dashboard/réservations/drawer/paramètres admin) : rien d'autre relevé, cohérent
+          avec les décisions de style déjà prises cette session.</li>
+        <li><code>tsc</code> + <code>eslint</code> propres.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-19 (21) — fix : annonce coincée si le pilote ignore une demande 72h</h3>
       <p class="pill">Suite à la demande de Romain d'auditer les situations non testées pour
         garantir que le pilote ne se retrouve jamais bloqué : le cron
