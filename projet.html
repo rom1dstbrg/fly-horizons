@@ -1020,6 +1020,20 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-19 (26) — "Devenir pilote" : mise en page recalée pleine largeur</h3>
+      <p class="pill">Suite du (25) : une fois le formulaire déplacé sur sa propre page, les
+        cards restaient coincées à gauche (<code>max-w-3xl</code> hérité de l'ancienne mise en
+        page à deux colonnes).</p>
+      <ul>
+        <li><code>app/(public)/devenir-pilote/page.tsx</code> : contenu passé pleine largeur
+          (retrait du <code>max-w-3xl</code>) ; les 4 étapes passent d'une grille 2 colonnes à
+          <code>sm:grid-cols-2 lg:grid-cols-4</code> pour occuper l'espace au lieu de rester
+          empilées à gauche.</li>
+        <li>Vérifié à l'écran sur Chrome.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-19 (25) — "Devenir pilote" : présentation/formulaire séparés, popup de succès</h3>
       <p class="pill">Retour de Romain juste après la livraison de (24) : le formulaire doit être
         sur sa propre page (pas côte à côte avec la présentation), et la confirmation d'envoi

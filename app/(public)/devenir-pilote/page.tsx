@@ -56,35 +56,33 @@ export default function DevenirPilotePage() {
             </Link>
           </div>
 
-          <div className="max-w-3xl space-y-6">
+          <div className="space-y-6">
 
             {/* Étapes */}
             <div className="bg-card border border-border rounded-lg p-8 sm:p-10 shadow-premium">
-              <h2 className="text-xl font-black text-foreground mb-6">Comment ça marche</h2>
-              <div className="grid sm:grid-cols-2 gap-6">
+              <h2 className="text-xl font-black text-foreground mb-8">Comment ça marche</h2>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
                 {ETAPES.map(({ icon: Icon, titre, texte }, i) => (
-                  <div key={titre} className="flex gap-3.5">
-                    <div className="w-9 h-9 rounded-lg bg-secondary border border-border flex items-center justify-center text-[#0b2238] shrink-0">
+                  <div key={titre}>
+                    <div className="w-9 h-9 rounded-lg bg-secondary border border-border flex items-center justify-center text-[#0b2238] mb-3.5">
                       <Icon size={16} />
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wide mb-0.5">
-                        Étape {i + 1}
-                      </p>
-                      <p className="font-black text-foreground text-sm mb-1">{titre}</p>
-                      <p className="text-muted-foreground text-xs leading-relaxed">{texte}</p>
-                    </div>
+                    <p className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wide mb-0.5">
+                      Étape {i + 1}
+                    </p>
+                    <p className="font-black text-foreground text-sm mb-1.5">{titre}</p>
+                    <p className="text-muted-foreground text-xs leading-relaxed">{texte}</p>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Cadre légal — même formulation que /cgp */}
-            <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg">
-              <p className="text-xs font-bold text-foreground uppercase tracking-[2px] mb-1">
+            <div className="p-5 bg-primary/10 border border-primary/30 rounded-lg">
+              <p className="text-xs font-bold text-foreground uppercase tracking-[2px] mb-1.5">
                 Activité de partage de coûts · NCO.GEN.104
               </p>
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <p className="text-sm text-muted-foreground leading-relaxed max-w-3xl">
                 Les vols Fly Horizons sont des vols en partage de coûts au sens du règlement
                 EASA NCO.GEN.104, entre personnes non professionnelles. Ce n&apos;est pas un
                 service de transport aérien commercial : le passager règle uniquement sa
@@ -100,7 +98,7 @@ export default function DevenirPilotePage() {
             </div>
 
             {/* CTA de fin */}
-            <div className="bg-navy rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="bg-navy rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <div className="flex-1">
                 <p className="text-white font-black text-lg mb-1">Prêt à vous lancer ?</p>
                 <p className="text-white/50 text-sm">Deux minutes suffisent pour nous laisser vos coordonnées.</p>
