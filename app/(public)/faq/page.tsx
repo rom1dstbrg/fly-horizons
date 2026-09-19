@@ -126,8 +126,8 @@ const THEMES: Theme[] = [
       },
       {
         q: "Quelle est la contribution pour un vol partagé en Belgique ?",
-        aText: "La contribution aux frais pour un vol partagé dépend de la formule choisie : durée libre (30, 60, 90 ou 120 minutes) ou vol à itinéraire fixe vers une destination, taxes d'escale incluses le cas échéant. Tous les montants à jour sont affichés sur la page Nos vols, sans frais cachés.",
-        a: <>La contribution aux frais pour un vol partagé dépend de la formule choisie : durée libre (30, 60, 90 ou 120 minutes) ou vol à itinéraire fixe vers une destination, taxes d&apos;escale incluses le cas échéant. Tous les montants à jour sont affichés sur la page <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Nos vols</Link>, sans frais cachés.</>,
+        aText: "La contribution aux frais pour un vol partagé dépend de la formule choisie : durée libre (30, 60, 90 ou 120 minutes) ou vol à itinéraire fixe vers une destination, taxes d'escale incluses le cas échéant. Tous les montants à jour sont affichés sur la page Les vols, sans frais cachés.",
+        a: <>La contribution aux frais pour un vol partagé dépend de la formule choisie : durée libre (30, 60, 90 ou 120 minutes) ou vol à itinéraire fixe vers une destination, taxes d&apos;escale incluses le cas échéant. Tous les montants à jour sont affichés sur la page <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Les vols</Link>, sans frais cachés.</>,
       },
       /* Masqué 29/07/2026 en attendant confirmation légale — voir audit-legal-fly-horizons.html
       {

@@ -1020,6 +1020,27 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-19 (28) — "Nos vols" → "Les vols" (nav, headings, footer, FAQ)</h3>
+      <p class="pill">Demande de Romain, cohérente avec le chantier "tout par l'espace pilote" :
+        "Nos vols" sous-entend des vols qui appartiennent à Fly Horizons, alors qu'ils sont
+        désormais publiés par des pilotes (à terme potentiellement plusieurs) — "Les vols" reste
+        neutre.</p>
+      <ul>
+        <li>Renommé partout où le libellé apparaît côté public :
+          <code>components/layout/Header.tsx</code> (nav desktop + menu mobile),
+          <code>components/layout/Footer.tsx</code> (colonne Informations),
+          <code>app/(public)/page.tsx</code> (titre de section homepage),
+          <code>app/(public)/nos-offres/page.tsx</code> (H1 de la page),
+          <code>app/(public)/faq/page.tsx</code> (texte de réponse + lien).</li>
+        <li>Laissé tel quel : <code>app/admin/analytics/page.tsx</code> (libellé interne
+          <code>PATH_LABELS</code> pour le reporting analytics de Romain, jamais vu par un
+          visiteur) et l'URL <code>/nos-offres</code> elle-même (changer une URL publique déjà
+          indexée sort du périmètre d'un simple changement de libellé).</li>
+        <li>Vérifié à l'écran sur Chrome. <code>tsc</code> + <code>eslint</code> propres.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-19 (27) — homepage : suite du chantier "tout par l'espace pilote"</h3>
       <p class="pill">Suite directe de la décision du 13/09 : le flag <code>catalogue_source</code>
         est déjà à <code>'annonces'</code> et les 6 <code>products</code> sont déjà tous

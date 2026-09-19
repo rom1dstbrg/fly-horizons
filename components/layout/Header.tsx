@@ -87,7 +87,7 @@ export function Header() {
 
             {/* Nav desktop */}
             <nav className="hidden md:flex items-center gap-1 mr-2">
-              <Link href="/nos-offres" className={navLinkClass}>Nos vols</Link>
+              <Link href="/nos-offres" className={navLinkClass}>Les vols</Link>
               {/* Masqué 29/07/2026 en attendant confirmation légale — voir audit-legal-fly-horizons.html */}
               {/* <Link href="/vol-sur-mesure" className={navLinkClass}>Vol sur mesure</Link> */}
               <Link href="/galerie" className={navLinkClass}>Galerie</Link>
@@ -150,7 +150,7 @@ export function Header() {
             </Link>
             <Link href="/nos-offres" className="flex items-center gap-2.5 text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
               <Ticket size={16} className="text-muted-foreground" />
-              Nos vols
+              Les vols
             </Link>
             {/* Masqué 29/07/2026 en attendant confirmation légale — voir audit-legal-fly-horizons.html
             <Link href="/vol-sur-mesure" className="flex items-center gap-2.5 text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMenuOpen(false)}>
