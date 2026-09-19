@@ -1061,6 +1061,33 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-19 (31) — audit SEO : sitemap ne listait aucun vol réel</h3>
+      <p class="pill">Question de Romain sur le niveau SEO/Google. Trouvé un vrai trou :
+        <code>app/sitemap.ts</code> ne listait que les <code>products</code> admin (tous
+        <code>active=false</code> depuis le passage aux annonces) — les 4 vraies pages de vol
+        (<code>/vol/annonce/[id]</code>) n'apparaissaient nulle part dans le sitemap, donc
+        invisibles pour l'indexation Google malgré des metadata + JSON-LD déjà corrects sur
+        ces pages elles-mêmes.</p>
+      <ul>
+        <li><code>app/sitemap.ts</code> : ajout d'une requête sur
+          <code>annonces_pilote where statut='publiee'</code>, <code>/devenir-pilote</code> et
+          <code>/cgp</code> (absent alors que <code>/politique-de-confidentialite</code> y
+          était). Bug en cours de route : première tentative sur
+          <code>annonces_pilote.updated_at</code>, colonne inexistante (seul
+          <code>created_at</code> existe) — corrigé et vérifié via <code>/sitemap.xml</code> en
+          direct : les 4 vols apparaissent.</li>
+        <li>Vérifié en passant, rien à corriger : <code>robots.ts</code> ne bloque rien
+          d'utile (liste <code>allow</code> redondante mais pas de <code>disallow: "/"</code>
+          global, donc les nouvelles pages ne sont pas bloquées même absentes de la liste) ;
+          <code>&lt;html lang="fr"&gt;</code> présent ; un seul <code>&lt;h1&gt;</code> par page
+          vérifié sur les pages clés ; <code>/vol/annonce/[id]</code> a déjà
+          <code>generateMetadata</code> dynamique (titre/description/canonical) + JSON-LD
+          Product avec prix.</li>
+        <li><code>tsc</code> + <code>eslint</code> propres.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-19 (30) — footer : nom de Romain retiré ; audit CGP/RGPD corrigé</h3>
       <p class="pill">Deux demandes de Romain : (1) ne plus afficher son nom dans le footer ; (2)
         auditer CGP + RGPD par rapport au fonctionnement réel actuel. Détail complet de l'audit
