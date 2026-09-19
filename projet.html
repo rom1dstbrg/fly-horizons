@@ -1061,6 +1061,28 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-19 (33) — fix déploiement Vercel bloqué : cron 2×/jour incompatible Hobby</h3>
+      <p class="pill">Romain a signalé "Vercel n'a pas détecté" après le push de 71 commits. En
+        creusant via l'API Vercel (MCP) : ce n'est pas un problème de détection, Vercel rejette
+        le déploiement. <code>vercel.json</code> contient un cron
+        (<code>flight-offer-deadline</code>) à <code>0 */12 * * *</code> (2×/jour) — le plan
+        Hobby n'autorise qu'un cron par jour maximum. Cette entrée vient d'un commit plus ancien
+        (<code>44ba252</code>, chantier espace pilote), jamais poussée jusqu'ici : elle dormait
+        dans les commits locaux en attente, donc jamais testée contre les limites du plan.</p>
+      <ul>
+        <li>Confirmé via l'API Vercel (<code>list_deployments</code>) : aucun déploiement,
+          même en échec, pour le commit <code>607649f</code> — la tentative de déploiement
+          échouait avant même de créer un enregistrement visible.</li>
+        <li><code>vercel.json</code> : <code>flight-offer-deadline</code> repassé à
+          <code>0 8 * * *</code> (1×/jour, aligné sur les autres crons). Conséquence mineure :
+          une offre "premier arrivé" expirée peut rester visible jusqu'à ~24h après ses 48h
+          (au lieu de ~12h avant) avant d'être marquée <code>expiree</code>.</li>
+        <li>Poussé, déploiement production relancé manuellement via l'API Vercel pour ne pas
+          attendre le prochain webhook.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-19 (32) — audit liens cassés (0 trouvé) + noindex sur l'étape de réservation</h3>
       <p class="pill">Demande de Romain : vérifier que les "pages introuvables" croisées plus tôt
         dans la session sont corrigées. Vérification : les 3 "Page introuvable" rencontrées
