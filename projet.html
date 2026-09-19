@@ -1061,6 +1061,30 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-19 (32) — audit liens cassés (0 trouvé) + noindex sur l'étape de réservation</h3>
+      <p class="pill">Demande de Romain : vérifier que les "pages introuvables" croisées plus tôt
+        dans la session sont corrigées. Vérification : les 3 "Page introuvable" rencontrées
+        pendant l'audit design (/admin/espace-pilote, /admin/parametres, /admin/equipe)
+        étaient des URLs que j'avais devinées à la main en explorant l'admin — aucune ne
+        correspond à un vrai lien cliquable dans l'app (les bonnes URLs étaient /pilote,
+        /admin/settings, /admin/pilotes). Pas un bug à corriger : une mauvaise supposition de ma
+        part pendant l'exploration.</p>
+      <ul>
+        <li>Audit complet par lecture de code (pas de clic manuel) : les 11 liens de la sidebar
+          admin, les 6 de la sidebar pilote, et les 14 liens statiques + 4 patterns de route
+          dynamique du site public pointent tous vers un fichier <code>page.tsx</code> réel.
+          Zéro lien cassé trouvé.</li>
+        <li><b>SEO, trouvé en vérifiant</b> — <code>/vol/annonce/[id]/reserver</code> (étape de
+          formulaire de réservation) n'avait pas de <code>robots: noindex</code> : elle pouvait
+          être indexée par Google et concurrencer la vraie page produit
+          <code>/vol/annonce/[id]</code> dans les résultats. Ajouté
+          <code>robots: {"{"} index: false, follow: true {"}"}</code>, même logique que
+          <code>/nos-pilotes/[id]</code> qui l'avait déjà.</li>
+        <li><code>tsc</code> + <code>eslint</code> propres.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-19 (31) — audit SEO : sitemap ne listait aucun vol réel</h3>
       <p class="pill">Question de Romain sur le niveau SEO/Google. Trouvé un vrai trou :
         <code>app/sitemap.ts</code> ne listait que les <code>products</code> admin (tous

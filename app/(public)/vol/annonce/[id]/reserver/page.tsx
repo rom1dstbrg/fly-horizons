@@ -14,7 +14,12 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { data } = await supabase.from("annonces_pilote").select("duree, pilotes(nom)").eq("id", id).maybeSingle();
   if (!data) return {};
   const pilote = data.pilotes as unknown as { nom: string } | null;
-  return { title: `Réserver · Vol avec ${pilote?.nom ?? "un pilote"} · ${data.duree} min` };
+  return {
+    title: `Réserver · Vol avec ${pilote?.nom ?? "un pilote"} · ${data.duree} min`,
+    // Étape de formulaire, pas une page de contenu : ne doit pas concurrencer
+    // /vol/annonce/[id] dans les résultats de recherche.
+    robots: { index: false, follow: true },
+  };
 }
 
 export default async function AnnonceReserverPage({ params }: { params: Promise<{ id: string }> }) {
