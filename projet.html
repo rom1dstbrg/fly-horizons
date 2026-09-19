@@ -260,6 +260,42 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-09-19 · Page publique pilotes</p>
+      <h3>Une page "Devenir pilote" ouvre la porte aux candidatures, pas aux comptes pilotes</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Romain veut une page publique, liée dans le footer, qui explique Fly Horizons aux
+          pilotes et leur permet de faire une demande — explicitement "lisse légalement". Le
+          risque déjà noté en mémoire/décisions antérieures : 2 points juridiques jamais
+          tranchés avec un avocat (part de coûts du pilote au titre du partage de frais
+          NCO.GEN.104, 2 documents à obtenir), et la règle "ne pas ouvrir à de vrais pilotes
+          tiers sans avocat".</dd>
+        <dt>Décision</dt>
+        <dd>La page (<code>/devenir-pilote</code>) est un formulaire de <b>candidature</b> —
+          nom, licence (PPL/CPL/ATPL), heures, message — qui atterrit dans l'inbox admin
+          existante (<code>/admin/contacts</code>, réutilise <code>contacts</code>/
+          <code>contact_messages</code> et <code>submitContact()</code>, rien de nouveau côté
+          backend). Aucune création de compte pilote, aucune activation automatique : Romain
+          reçoit le message et décide manuellement, comme n'importe quel autre message de
+          contact. Le texte légal de la page reprend mot pour mot la formulation déjà en ligne
+          sur <code>/cgp</code> (partage de coûts NCO.GEN.104, pas de transport commercial, pas
+          de rémunération pilote, pas de commission Fly Horizons) plutôt que d'inventer une
+          nouvelle formulation non relue par un avocat.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Un formulaire créant directement une fiche <code>pilotes</code> ou un compte en
+          attente d'activation : écarté — ça aurait techniquement ouvert la marketplace à des
+          tiers avant que les 2 points juridiques soient tranchés, ce que la règle existante
+          interdit explicitement.</dd>
+        <dt>Conséquences</dt>
+        <dd>Le contenu de la page reste dans le registre déjà assumé publiquement (celui de
+          <code>/cgp</code>) : aucune nouvelle exposition juridique créée par ce chantier. Si
+          une vraie candidature arrive un jour, la décision de créer le compte pilote — et donc
+          d'ouvrir réellement la marketplace à un tiers — reste entièrement entre les mains de
+          Romain, au moment où il le décide, pas avant.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-09-14 · Refonte emails — reprise du chantier</p>
       <h3>Emails admin séparés des emails publics ; suppression du surtitre doré en tête des emails publics</h3>
       <dl>
@@ -982,6 +1018,47 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-09-19 (24) — page publique "Devenir pilote" (candidature, pas d'inscription)</h3>
+      <p class="pill">Demande de Romain : une page publique, liée dans le footer, expliquant Fly
+        Horizons aux pilotes et leur permettant de faire une demande. Contrainte explicite :
+        "lisse légalement". Vu le risque déjà noté en mémoire (2 points juridiques jamais
+        tranchés avec un avocat, "ne pas ouvrir à de vrais pilotes tiers sans avocat"), j'ai
+        d'abord fait préciser la nature exacte de la page avant de coder : c'est une
+        <b>candidature</b> (nom, licence PPL/CPL/ATPL, heures, message) qui atterrit dans
+        l'admin pour que Romain décide manuellement de créer ou non un compte pilote — jamais
+        une inscription/activation automatique.</p>
+      <ul>
+        <li>Choix d'implémentation pour rester dans le cadre déjà couvert légalement : la
+          candidature réutilise entièrement l'infrastructure <code>/contact</code> existante
+          (table <code>contacts</code> + <code>contact_messages</code>, rate limiting, email de
+          notif admin + accusé de réception client, page <code>/admin/contacts</code> déjà
+          connue de Romain) au lieu d'une nouvelle table/page admin — aucune création de compte
+          pilote n'est possible depuis cette page, seulement un message que Romain traite comme
+          les autres.</li>
+        <li><code>app/(public)/devenir-pilote/page.tsx</code> : 4 étapes ("vous êtes en règle" →
+          "vous publiez un vol" → "des passagers réservent" → "vous restez seul responsable du
+          vol"), puis un encart légal qui reprend mot pour mot la formulation déjà utilisée et
+          assumée sur <code>/cgp</code> (partage de coûts NCO.GEN.104, pas de transport aérien
+          commercial, pas de rémunération pilote, pas de commission Fly Horizons) plutôt que
+          d'inventer une nouvelle formulation.</li>
+        <li><code>components/devenir-pilote/CandidaturePiloteForm.tsx</code> : nom, email,
+          téléphone, licence (select PPL/CPL/ATPL/Autre), heures de vol, aéronef, message libre
+          — assemblés puis envoyés via <code>submitContact()</code> existant (sujet fixe
+          "Candidature pilote"). Disclaimer sous le bouton : "prise de contact, pas une
+          inscription automatique".</li>
+        <li><code>components/layout/Footer.tsx</code> : lien "Vous êtes pilote ?" ajouté à la
+          colonne Pratique (mobile + desktop).</li>
+        <li>Testé en conditions réelles sur Chrome : soumission → toast de confirmation →
+          message visible dans <code>/admin/contacts</code> avec le sujet et tous les champs
+          lisibles → ligne de test nettoyée en base après vérification.
+          <code>tsc</code> + <code>eslint</code> propres.</li>
+        <li>Le texte n'a pas été relu par un avocat (aucun texte de ce projet ne l'a été) — je
+          me suis limité à réutiliser la formulation déjà en ligne sur <code>/cgp</code>,
+          jamais rien inventé de nouveau sur le plan juridique.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-09-19 (23) — audit backend/sécurité : script-breakout JSON-LD corrigé</h3>

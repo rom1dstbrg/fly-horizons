@@ -40,6 +40,7 @@ const PRATIQUE = [
   { href: "/access-ebci", label: "Plan d'accès · EBCI" },
   { href: "/nos-offres", label: "Faire une demande" },
   { href: "/account",     label: "Mon compte" },
+  { href: "/devenir-pilote", label: "Vous êtes pilote ?" },
 ];
 
 export function Footer() {
