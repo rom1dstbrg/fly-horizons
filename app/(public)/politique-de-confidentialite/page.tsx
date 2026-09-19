@@ -41,10 +41,19 @@ Données collectées : prénom, nom, adresse e-mail, mot de passe (hashé, jamai
 Finalités : authentification, accès à l'historique des réservations et commandes.
 Base légale : exécution d'un contrat (art. 6.1.b RGPD).
 
-FORMULAIRE DE CONTACT
-Données collectées : prénom, nom, adresse e-mail, message.
-Finalités : répondre à votre demande.
+FORMULAIRE DE CONTACT (dont candidature pilote)
+Données collectées : prénom, nom, adresse e-mail, message. Pour une candidature pilote (formulaire dédié) : également téléphone, licence détenue (PPL/CPL/ATPL/autre), heures de vol totales, aéronef ou aérodrome habituel.
+Finalités : répondre à votre demande ; pour une candidature, évaluer l'éligibilité avant toute activation d'un compte pilote — la candidature ne crée aucun compte ni aucun accès automatiquement.
 Base légale : intérêt légitime (art. 6.1.f RGPD).
+
+ESPACE PILOTE (compte actif)
+Données collectées : prénom, nom, adresse e-mail, téléphone, numéro de licence, dates d'expiration de la licence et du certificat médical, IBAN, photo de profil, biographie courte.
+Finalités : vérification de l'éligibilité à recevoir des vols, organisation des vols publiés, et — pour l'IBAN — génération du lien et du QR code de virement permettant au passager de régler directement le pilote (voir CGP, article 7). L'IBAN n'est jamais celui du Client, uniquement celui du pilote.
+Base légale : exécution d'un contrat (art. 6.1.b RGPD).
+
+VOLS PUBLIÉS PAR UN PILOTE (ANNONCES)
+Lorsque vous réservez un vol publié par un pilote, vos coordonnées (prénom, nom, e-mail, téléphone, nombre de passagers) sont transmises à ce pilote afin qu'il organise le vol avec vous et reçoive votre règlement. Voir article 4 pour le détail de ce destinataire.
+Base légale : exécution d'un contrat (art. 6.1.b RGPD).
 
 MESURE D'AUDIENCE INTERNE
 Données collectées : pages visitées, page d'entrée sur le site (référent), type d'appareil (mobile, tablette, ordinateur), identifiant technique aléatoire stocké dans votre navigateur pour distinguer les visites d'un même appareil.
@@ -59,21 +68,26 @@ Base légale : intérêt légitime (art. 6.1.f RGPD).`,
   },
   {
     title: "3. Données non collectées",
-    content: `Fly Horizons ne collecte pas les données suivantes :
-- Données bancaires (numéro de carte, IBAN) : le paiement est géré exclusivement par Stripe, qui traite ces données directement selon ses propres standards de sécurité (PCI-DSS).
+    content: `Fly Horizons ne collecte pas les données suivantes concernant le Client (passager) :
+- Numéro de carte bancaire : pour les achats boutique, le paiement est géré exclusivement par Stripe, qui traite ces données directement selon ses propres standards de sécurité (PCI-DSS).
+- IBAN du Client : jamais demandé ni collecté. Seul l'IBAN du pilote publiant un vol est enregistré (voir article 2, « Espace pilote »), afin de permettre au Client de le régler directement par virement.
 - Données de santé détaillées : seule une mention d'une contre-indication éventuelle au vol peut être signalée librement par le passager dans le champ commentaire.
 - Données de géolocalisation en dehors des waypoints choisis volontairement par le client pour un vol sur mesure.
 - Données de navigation à des fins publicitaires ou de profilage : aucun outil de tracking tiers (Google Analytics, Meta Pixel, etc.) n'est installé sur ce site. Une mesure d'audience strictement interne existe néanmoins, décrite aux sections 2 et 8.`,
   },
   {
     title: "4. Destinataires des données",
-    content: `Vos données ne sont jamais vendues ni cédées à des tiers à des fins commerciales. Elles peuvent être transmises aux sous-traitants techniques suivants, dans le strict cadre de leur mission :
+    content: `Vos données ne sont jamais vendues ni cédées à des tiers à des fins commerciales. Elles peuvent être transmises aux destinataires suivants, dans le strict cadre de leur mission :
 
-Stripe (stripe.com) : traitement des paiements en ligne. Données transmises : e-mail, montant, identifiant de commande. Stripe est certifié PCI-DSS niveau 1.
+Le pilote publiant le vol réservé : lorsque vous réservez un vol publié par un pilote (annonce), vos prénom, nom, e-mail, téléphone et nombre de passagers lui sont transmis afin qu'il organise le vol et reçoive votre règlement directement (voir CGP, article 7). Le pilote traite ces données pour son propre compte, dans le cadre de l'organisation du vol.
+
+Stripe (stripe.com) : traitement des paiements en ligne pour les achats boutique. Données transmises : e-mail, montant, identifiant de commande. Stripe est certifié PCI-DSS niveau 1.
 
 Supabase (supabase.com) : hébergement de la base de données. Les données sont stockées sur des serveurs situés en Europe (région EU-West).
 
 Resend (resend.com) : envoi des e-mails transactionnels (confirmations, bons de vol, rappels). Données transmises : prénom, nom, e-mail, contenu de l'e-mail.
+
+Anthropic (anthropic.com) : si vous utilisez l'assistant de conversation (chat) du site, le contenu de vos messages est transmis à Anthropic (modèle Claude) pour générer une réponse. N'y indiquez pas de données que vous ne souhaitez pas transmettre à ce prestataire.
 
 Ces prestataires agissent en tant que sous-traitants au sens du RGPD. Ils s'engagent contractuellement à traiter vos données uniquement sur instruction de Fly Horizons et à mettre en place les mesures de sécurité appropriées.
 
@@ -89,7 +103,9 @@ Données de commande boutique : 5 ans à compter de la commande (obligation comp
 
 Données de compte utilisateur : jusqu'à la suppression du compte par l'utilisateur ou, en l'absence d'activité, 3 ans après la dernière connexion.
 
-Données de contact (formulaire) : 2 ans à compter de la dernière interaction.
+Données de profil pilote (licence, certificat médical, IBAN, photo, bio) : conservées pendant la durée d'activité du compte pilote, supprimées ou anonymisées à la désactivation du compte, sous réserve des obligations comptables (5 ans).
+
+Données de contact (formulaire) et de candidature pilote : 2 ans à compter de la dernière interaction.
 
 Enquêtes de satisfaction : données anonymisées après 1 an.
 
@@ -119,8 +135,8 @@ Pour exercer l'un de ces droits, envoyez un e-mail à info@fly-horizons.com en p
 
 - Connexion chiffrée HTTPS (TLS) sur l'ensemble du site.
 - Mots de passe utilisateurs hashés (bcrypt) via Supabase Auth, jamais stockés en clair.
-- Données bancaires jamais stockées sur les serveurs de Fly Horizons (délégation complète à Stripe).
-- Accès à la base de données restreint via Row Level Security (RLS) de Supabase.
+- Numéro de carte bancaire du Client jamais stocké sur les serveurs de Fly Horizons (délégation complète à Stripe pour les achats boutique). L'IBAN d'un pilote est stocké en base sous accès verrouillé (voir point suivant), et n'est jamais transmis à un Client autrement que via le lien/QR de virement de son propre vol.
+- Accès à la base de données restreint via Row Level Security (RLS) de Supabase : les tables sensibles (réservations, données pilotes, y compris IBAN) sont inaccessibles avec la clé publique du site, seul le serveur peut y accéder.
 - Tokens de paiement à usage unique et expiration automatique.
 - Accès administrateur protégé par authentification forte.`,
   },
@@ -188,9 +204,9 @@ export default function PolitiqueConfidentialitePage() {
             {/* Métadonnées */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-border rounded-2xl overflow-hidden mb-4">
               {[
-                { label: "Version",             value: "1.0" },
+                { label: "Version",             value: "1.1" },
                 { label: "Responsable",         value: "DESTANBERG Romain" },
-                { label: "Mise à jour",         value: "5 juin 2026" },
+                { label: "Mise à jour",         value: "19 septembre 2026" },
                 { label: "Droit applicable",    value: "RGPD · Loi belge 2018" },
               ].map(({ label, value }) => (
                 <div key={label} className="bg-card px-5 py-4">

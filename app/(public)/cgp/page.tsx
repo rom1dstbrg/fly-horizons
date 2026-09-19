@@ -20,6 +20,8 @@ Site web : fly-horizons.com
 
 Fly Horizons est une initiative de partage de coûts aéronautiques exercée conformément au règlement EASA (EU) No 965/2012, article NCO.GEN.104.
 
+Fly Horizons met en relation des pilotes privés et des passagers pour ces vols en partage de frais. Fly Horizons n'est pas l'exploitant des vols et n'assure aucune fonction de transporteur aérien : chaque pilote reste seul commandant de bord et seul responsable de la préparation, de la conduite et de la sécurité de son vol.
+
 IMPORTANT. Nature non commerciale des vols : Les vols proposés sur ce site ne constituent PAS un service de transport aérien commercial. Il s'agit exclusivement de vols en partage de coûts (cost-sharing) au sens de la réglementation européenne. Le paiement effectué par les passagers couvre uniquement leur quote-part des frais directs du vol (carburant, location de l'aéronef, redevances aéroportuaires). Le pilote supporte sa propre part proportionnelle des coûts et ne perçoit aucune rémunération pour ses services de pilotage.`,
   },
   {
@@ -97,11 +99,13 @@ Prix final : Le montant total est calculé après le vol sur la base de la duré
 
 Tarif horaire vol : Le coût par minute de vol est déterminé par le tarif en vigueur au moment de la réservation, consultable sur le site ou communiqué sur demande. Ce tarif couvre les frais directs (carburant, location de l'aéronef, redevances).
 
-Paiement sécurisé : Les paiements en ligne sont traités par Stripe (stripe.com), solution de paiement conforme aux normes PCI-DSS. Fly Horizons ne stocke aucune donnée bancaire sur ses serveurs.
+Vols publiés par un pilote (annonces) : Le règlement se fait par virement bancaire direct entre le Client et le pilote qui a publié le vol. L'IBAN du pilote et un QR code de virement SEPA pré-rempli sont fournis au Client sur la page de paiement du vol. Fly Horizons n'encaisse à aucun moment ces sommes, ne perçoit aucune commission et n'intervient pas dans l'encaissement.
+
+Achats boutique (produits physiques) : Les paiements en ligne sont traités par Stripe (stripe.com), solution de paiement conforme aux normes PCI-DSS. Fly Horizons ne stocke aucune donnée bancaire sur ses serveurs pour ces achats.
 
 Lien de paiement : Pour les réservations créées par l'exploitant à la suite d'un contact par e-mail, un lien de paiement sécurisé est envoyé au Client par e-mail.
 
-Validation : La commande ou la réservation est définitivement validée à réception de la confirmation de paiement.
+Validation : La commande ou la réservation est définitivement validée à réception de la confirmation de paiement (ou, pour un vol réglé par virement direct, à réception du virement par le pilote).
 
 Droit de refus : Fly Horizons se réserve le droit d'accepter ou de refuser toute demande de vol, à sa seule discrétion et sans obligation de justification, tant que le paiement n'a pas été reçu et confirmé. La soumission d'une demande ne constitue ni une réservation ferme ni un engagement de la part de Fly Horizons.`,
   },
@@ -135,7 +139,11 @@ Tout comportement mettant en danger la sécurité du vol peut entraîner une int
   },
   {
     title: "10. Annulations et politique de remboursement",
-    content: `ANNULATION PAR LE CLIENT
+    content: `VOLS PUBLIÉS PAR UN PILOTE (ANNONCES), RÉGLÉS PAR VIREMENT DIRECT
+
+Le paiement d'un vol publié par un pilote se fait directement au pilote (voir article 7) : la somme ne transite jamais par Fly Horizons. Un éventuel remboursement relève donc du pilote qui a perçu le virement, et non de Fly Horizons. Fly Horizons reste l'interlocuteur du Client pour organiser une annulation ou un report, et transmet la demande au pilote concerné.
+
+ANNULATION PAR LE CLIENT
 
 Les vols en partage de coûts impliquent des frais fixes (réservation de l'appareil, préparation du vol) qui sont engagés indépendamment de la présence des passagers. Par conséquent, aucun remboursement en espèces n'est accordé.
 
@@ -237,9 +245,9 @@ export default function CgpPage() {
             {/* Métadonnées */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-border rounded-2xl overflow-hidden mb-4">
               {[
-                { label: "Version",          value: "1.2" },
+                { label: "Version",          value: "1.3" },
                 { label: "Exploitant",       value: "DESTANBERG Romain" },
-                { label: "Mise à jour",      value: "1er septembre 2026" },
+                { label: "Mise à jour",      value: "19 septembre 2026" },
                 { label: "Droit applicable", value: "Droit belge · EASA" },
               ].map(({ label, value }) => (
                 <div key={label} className="bg-card px-5 py-4">

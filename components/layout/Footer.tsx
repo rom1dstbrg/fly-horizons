@@ -125,7 +125,7 @@ export function Footer() {
 
           {/* Barre de bas mobile */}
           <div className="flex flex-col items-center gap-2.5 text-center">
-            <p className="text-[11px] text-white/25">© {year} Fly Horizons, DESTANBERG Romain, Rue des Fusillés, 6040 Charleroi. Tous droits réservés.</p>
+            <p className="text-[11px] text-white/25">© {year} Fly Horizons, Rue des Fusillés, 6040 Charleroi. Tous droits réservés.</p>
             <div className="flex items-center gap-2.5 text-[11px] text-white/25">
               <Link href="/cgp" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">Conditions générales</Link>
               <span className="text-white/15">·</span>
@@ -214,7 +214,7 @@ export function Footer() {
 
           {/* ── Barre de bas ────────────────────────────────────────── */}
           <div className="py-5 border-t border-white/5 flex items-center justify-between gap-3">
-            <p className="text-xs text-white/25">© {year} Fly Horizons, DESTANBERG Romain, Rue des Fusillés, 6040 Charleroi. Tous droits réservés.</p>
+            <p className="text-xs text-white/25">© {year} Fly Horizons, Rue des Fusillés, 6040 Charleroi. Tous droits réservés.</p>
             <div className="flex items-center gap-4 text-xs text-white/25">
               <div className="flex items-center gap-3">
                 <Link href="/cgp" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">Conditions générales</Link>

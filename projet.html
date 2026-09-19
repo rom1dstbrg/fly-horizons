@@ -260,6 +260,47 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-09-19 (2) · Audit légal CGP/RGPD post-marketplace</p>
+      <h3>CGP et politique de confidentialité resynchronisées sur le fonctionnement réel (virement direct, données pilote)</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Demande de Romain : auditer CGP et RGPD "avec la nouvelle version de Fly Horizons,
+          pour que tout soit légal", suite au passage effectif du catalogue public sur
+          <code>annonces_pilote</code> (flag <code>catalogue_source</code>) et à l'ouverture de
+          <code>/devenir-pilote</code>. Les deux documents dataient du modèle précédent
+          (catalogue admin, paiement Stripe uniquement) et contenaient des affirmations
+          désormais fausses : la RGPD affirmait ne collecter aucun IBAN alors que l'IBAN du
+          pilote est stocké et diffusé au client (QR virement) ; le CGP promettait un
+          remboursement/crédit émis par Fly Horizons pour des vols payés par virement direct au
+          pilote, alors que la charte pilote interne dit explicitement l'inverse ("le
+          remboursement est de votre ressort, puisque vous avez perçu la somme").</dd>
+        <dt>Décision</dt>
+        <dd>Corrigé les incohérences factuelles vérifiables en réutilisant le langage déjà
+          établi dans le code (charte pilote <code>lib/pilote/charte.ts</code>, encart
+          NCO.GEN.104 déjà utilisé sur <code>/cgp</code> et <code>/devenir-pilote</code>) plutôt
+          que d'inventer un nouveau texte juridique : mécanisme de paiement réel (virement
+          direct pilote vs Stripe boutique) ajouté au CGP art. 7, clause de remboursement
+          corrigée art. 10, positionnement "mise en relation, pas transporteur" ajouté art. 1 ;
+          côté RGPD, ajout des catégories de données pilote (licence, IBAN, candidature) et du
+          pilote comme destinataire de données, correction de l'affirmation fausse sur l'IBAN,
+          ajout d'Anthropic (chatbot) comme sous-traitant manquant. Versions et dates de mise à
+          jour incrémentées sur les deux pages.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Réécriture complète des deux documents pour couvrir aussi les zones grises (clauses
+          spécifiques à l'avion/l'assurance qui supposent un seul pilote et un seul appareil,
+          question de la responsabilité si un pilote tiers est un jour activé) : écarté pour
+          cette passe — ce sont des choix de fond qui engagent la responsabilité de Fly Horizons
+          au-delà d'une simple mise à jour factuelle, à trancher avec un avocat le jour où un
+          second pilote est réellement activé, pas avant.</dd>
+        <dt>Conséquences</dt>
+        <dd>Aucun de ces textes (avant ou après cette passe) n'a jamais été relu par un avocat.
+          Restent identifiés mais volontairement non traités : les clauses CGP art. 8/9/12
+          (masse 190 kg, DA40, assurance New CAG) supposent un seul avion/pilote et devront être
+          généralisées si un second pilote avec un autre appareil est activé.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-09-19 · Page publique pilotes</p>
       <h3>Une page "Devenir pilote" ouvre la porte aux candidatures, pas aux comptes pilotes</h3>
       <dl>
@@ -1018,6 +1059,35 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-09-19 (30) — footer : nom de Romain retiré ; audit CGP/RGPD corrigé</h3>
+      <p class="pill">Deux demandes de Romain : (1) ne plus afficher son nom dans le footer ; (2)
+        auditer CGP + RGPD par rapport au fonctionnement réel actuel. Détail complet de l'audit
+        et des corrections dans l'entrée Décisions du même jour.</p>
+      <ul>
+        <li><code>components/layout/Footer.tsx</code> : "DESTANBERG Romain" retiré de la ligne
+          de copyright (desktop + mobile), adresse conservée. La mention "Exploitant :
+          DESTANBERG Romain" sur <code>/cgp</code> et <code>/politique-de-confidentialite</code>
+          n'a pas été touchée — probable obligation légale d'identification du vendeur en ligne
+          (Code de droit économique belge), distincte d'une simple ligne de copyright.</li>
+        <li><code>app/(public)/cgp/page.tsx</code> : ajout du positionnement "mise en relation,
+          pas transporteur" (art. 1), description du paiement par virement direct au pilote
+          (art. 7, à côté de Stripe pour la boutique), correction de la clause de remboursement
+          pour préciser que Fly Horizons ne peut pas rembourser un vol dont il n'a jamais perçu
+          l'argent (art. 10). Version 1.2 → 1.3.</li>
+        <li><code>app/(public)/politique-de-confidentialite/page.tsx</code> : ajout des
+          catégories "candidature pilote" et "espace pilote" (licence, IBAN, photo, bio) en
+          section 2, correction de l'affirmation fausse "aucun IBAN collecté" en section 3, ajout
+          du pilote et d'Anthropic (chatbot) comme destinataires en section 4, durée de
+          conservation des données pilote en section 5, précision sur le stockage de l'IBAN en
+          section 7. Version 1.0 → 1.1.</li>
+        <li>Vérifié à l'écran sur Chrome : les deux pages légales s'affichent normalement,
+          accordéon fonctionnel. <code>tsc</code> + <code>eslint</code> propres.</li>
+        <li>Aucun de ces textes n'a été relu par un avocat, avant ou après cette passe — à faire
+          relire par Romain avant toute mise en avant publique renforcée.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-09-19 (29) — card vol : "Pilote : prénom" au lieu de "Vol partagé · nom complet"</h3>
