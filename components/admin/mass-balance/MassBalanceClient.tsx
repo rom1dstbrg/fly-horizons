@@ -13,6 +13,7 @@ import {
 } from "@/lib/mass-balance/da40-calc";
 import { saveMassBalanceSheet, updateMassBalanceSheet } from "@/lib/actions/mass-balance";
 import { CgEnvelopeChart } from "./CgEnvelopeChart";
+import { ChargementFields } from "./ChargementFields";
 import { PerfResultBlocks } from "./PerfResultBlocks";
 import { MbEditModal } from "./MbEditModal";
 import { SheetsList, type MbSheetRow } from "./SheetsList";
@@ -98,7 +99,7 @@ export function MassBalanceClient({
   const [error, setError] = useState("");
   const [previewing, setPreviewing] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [modalTab, setModalTab] = useState<"chargement" | "performances" | null>(null);
+  const [perfModalOpen, setPerfModalOpen] = useState(false);
 
   const computed = useMemo(() => computeMassBalance(inputs), [inputs]);
 
@@ -118,7 +119,6 @@ export function MassBalanceClient({
       rpax2: split.rpax2,
       flightDate: resa.date_vol ?? inputs.flightDate,
     });
-    setModalTab("chargement");
   }
 
   function save(asNew = false) {
@@ -293,92 +293,105 @@ export function MassBalanceClient({
 
         {/* ═══ 1 · CHARGEMENT ═══ */}
         <div>
-          <SectionHeader n="1" title="Chargement" onEdit={() => setModalTab("chargement")} />
-          <div className="card-premium p-4 sm:p-5 max-w-[900px] space-y-4">
-            {/* Résumé — une seule info, pas reprise ailleurs (le carburant est déjà dans le tableau) */}
-            <p className="text-sm font-semibold text-foreground pb-3 border-b border-border">
-              {1 + [inputs.fpax, inputs.rpax1, inputs.rpax2].filter((v) => v > 0).length} occupant
-              {inputs.fpax + inputs.rpax1 + inputs.rpax2 > 0 ? "s" : ""}
-              {inputs.bag > 0 ? " + bagages" : ""}
-            </p>
-
-            {/* Tableau et enveloppe — même poids visuel, même hauteur, une seule paire */}
-            <div className="flex flex-col lg:flex-row lg:items-start gap-6">
-              <div className="lg:w-[400px] shrink-0 min-w-0 overflow-x-auto">
-                <table className="w-full border-collapse text-xs">
-                  <thead>
-                    <tr>
-                      {["Poste", "Masse", "Bras", "Moment"].map((h, i) => (
-                        <th
-                          key={h}
-                          className={`border border-border bg-secondary px-1.5 py-1 font-semibold ${
-                            i === 0 ? "text-left" : "text-right"
-                          }`}
-                        >
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="font-mono tabular-nums">
-                    {computed.rows.map((row, i) => (
-                      <tr key={i} className={row.total ? "bg-secondary font-semibold" : ""}>
-                        <td
-                          className={`border border-border px-1.5 py-1 text-left font-sans ${
-                            row.out ? "text-red-600 font-semibold" : ""
-                          }`}
-                        >
-                          {row.poste}
-                          {row.sub && (
-                            <span className={`block ${MB.help} font-normal`}>{row.sub}</span>
-                          )}
-                        </td>
-                        <td className={`border border-border px-1.5 py-1 text-right ${row.out ? "text-red-600" : ""}`}>
-                          {fr(row.masse, 1)}
-                        </td>
-                        <td className="border border-border px-1.5 py-1 text-right">
-                          {row.bras == null ? "—" : fr(row.bras, row.total ? 3 : row.bras < 3 ? 2 : 3)}
-                        </td>
-                        <td className={`border border-border px-1.5 py-1 text-right ${row.out ? "text-red-600" : ""}`}>
-                          {fr(row.moment, 2)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="lg:w-[420px] shrink-0 min-w-0">
-                <div className="flex items-center justify-between mb-2">
-                  <p className={MB.groupLabel}>Enveloppe de centrage</p>
-                  {computed.withinLimits ? (
-                    <span className="text-xs font-semibold text-green-700">Catégorie {computed.category}</span>
-                  ) : (
-                    <span className="text-xs font-semibold text-red-700">Hors limites</span>
-                  )}
-                </div>
-                <CgEnvelopeChart points={computed.points} />
-              </div>
+          <SectionHeader n="1" title="Chargement" />
+          <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-4 items-stretch">
+            {/* Saisie — avion, carburant, occupants & bagages */}
+            <div className="card-premium p-4 sm:p-5 flex flex-col">
+              <ChargementFields
+                inputs={inputs}
+                computedFuelL={computed.fuelL}
+                computedFuelKg={computed.fuelKg}
+                patch={patch}
+              />
             </div>
 
-            {/* Note de référence — partagée, une seule fois, sous la paire */}
-            {!computed.withinLimits && (
-              <ul className="ml-4 list-disc text-xs text-red-700">
-                {computed.issues.map((it, i) => (
-                  <li key={i}>{it}</li>
-                ))}
-              </ul>
-            )}
-            <p className={MB.help}>
-              Limites : avant 2,40 m (jusqu&apos;à 980 kg) → 2,46 m à 1150 kg ; arrière 2,59 m ; Utility ≤ 980 kg ; mini
-              780 kg. Réf. NewCAG rév. 4.1 — vérifier l&apos;AFM.
-            </p>
+            {/* Résultat — tableau + enveloppe */}
+            <div className="card-premium p-4 sm:p-5 space-y-4">
+              {/* Résumé — une seule info, pas reprise ailleurs (le carburant est déjà dans le tableau) */}
+              <p className="text-sm font-semibold text-foreground pb-3 border-b border-border">
+                {1 + [inputs.fpax, inputs.rpax1, inputs.rpax2].filter((v) => v > 0).length} occupant
+                {inputs.fpax + inputs.rpax1 + inputs.rpax2 > 0 ? "s" : ""}
+                {inputs.bag > 0 ? " + bagages" : ""}
+              </p>
+
+              {/* Tableau et enveloppe — même poids visuel, même hauteur, une seule paire */}
+              <div className="flex flex-wrap items-start gap-6">
+                <div className="flex-1 min-w-[320px] overflow-x-auto">
+                  <table className="w-full border-collapse text-xs">
+                    <thead>
+                      <tr>
+                        {["Poste", "Masse", "Bras", "Moment"].map((h, i) => (
+                          <th
+                            key={h}
+                            className={`border border-border bg-secondary px-1.5 py-1 font-semibold ${
+                              i === 0 ? "text-left" : "text-right"
+                            }`}
+                          >
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="font-mono tabular-nums">
+                      {computed.rows.map((row, i) => (
+                        <tr key={i} className={row.total ? "bg-secondary font-semibold" : ""}>
+                          <td
+                            className={`border border-border px-1.5 py-1 text-left font-sans ${
+                              row.out ? "text-red-600 font-semibold" : ""
+                            }`}
+                          >
+                            {row.poste}
+                            {row.sub && (
+                              <span className={`block ${MB.help} font-normal`}>{row.sub}</span>
+                            )}
+                          </td>
+                          <td className={`border border-border px-1.5 py-1 text-right ${row.out ? "text-red-600" : ""}`}>
+                            {fr(row.masse, 1)}
+                          </td>
+                          <td className="border border-border px-1.5 py-1 text-right">
+                            {row.bras == null ? "—" : fr(row.bras, row.total ? 3 : row.bras < 3 ? 2 : 3)}
+                          </td>
+                          <td className={`border border-border px-1.5 py-1 text-right ${row.out ? "text-red-600" : ""}`}>
+                            {fr(row.moment, 2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="flex-1 min-w-[320px]">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className={MB.groupLabel}>Enveloppe de centrage</p>
+                    {computed.withinLimits ? (
+                      <span className="text-xs font-semibold text-green-700">Catégorie {computed.category}</span>
+                    ) : (
+                      <span className="text-xs font-semibold text-red-700">Hors limites</span>
+                    )}
+                  </div>
+                  <CgEnvelopeChart points={computed.points} />
+                </div>
+              </div>
+
+              {/* Note de référence — partagée, une seule fois, sous la paire */}
+              {!computed.withinLimits && (
+                <ul className="ml-4 list-disc text-xs text-red-700">
+                  {computed.issues.map((it, i) => (
+                    <li key={i}>{it}</li>
+                  ))}
+                </ul>
+              )}
+              <p className={MB.help}>
+                Limites : avant 2,40 m (jusqu&apos;à 980 kg) → 2,46 m à 1150 kg ; arrière 2,59 m ; Utility ≤ 980 kg ;
+                mini 780 kg. Réf. NewCAG rév. 4.1 — vérifier l&apos;AFM.
+              </p>
+            </div>
           </div>
         </div>
 
         {/* ═══ 2 · PERFORMANCES ═══ */}
         <div className="space-y-3">
-          <SectionHeader n="2" title="Performances" onEdit={() => setModalTab("performances")} />
+          <SectionHeader n="2" title="Performances" onEdit={() => setPerfModalOpen(true)} />
           <PerfResultBlocks perf={inputs.perf} computed={computed.perf} />
 
           {/* Enregistrement */}
@@ -453,15 +466,10 @@ export function MassBalanceClient({
         />
       </div>
 
-      {modalTab && (
+      {perfModalOpen && (
         <MbEditModal
           inputs={inputs}
-          computedFuelL={computed.fuelL}
-          computedFuelKg={computed.fuelKg}
-          tab={modalTab}
-          onTabChange={setModalTab}
-          onClose={() => setModalTab(null)}
-          patch={patch}
+          onClose={() => setPerfModalOpen(false)}
           patchAero={patchAero}
           patchPerf={patchPerf}
         />
