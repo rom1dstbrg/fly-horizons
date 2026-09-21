@@ -260,6 +260,51 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-09-21 · Admin de bureau Python (V0.1) — projet séparé, lit directement Supabase</p>
+      <h3>Cockpit desktop en Python/CustomTkinter, hors de ce repo, clé service-role directe</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Romain trouve l'admin web parfois lent. Audit honnête fait en session : 100% des
+          lectures/écritures de l'admin passent déjà par <code>lib/supabase/admin.ts</code> (clé
+          service-role, RLS contourné) — la session cookie Next.js ne sert qu'à vérifier le rôle.
+          Un client Python avec la même clé peut donc faire les mêmes opérations sans passer par
+          Next.js/Vercel. Décision de démarrer petit : juste la structure (sidebar) + l'écran
+          Cockpit, pour sentir le gain de vitesse réel avant d'investir plus.</dd>
+        <dt>Décision</dt>
+        <dd>Application construite dans un <b>dossier totalement séparé</b>,
+          <code>C:\Users\romai\Documents\Projects\fly-horizons-admin</code> (demande explicite de
+          Romain — pas dans ce repo, pas dans <code>.desktop-shortcut/</code> qui est un wrapper
+          pywebview existant autour de <code>npm run dev</code>, pas une réimplémentation). Stack :
+          Python + CustomTkinter + <code>supabase-py</code> (clé service-role, copiée depuis
+          <code>.env.local</code> dans son propre <code>.env</code> gitignoré) + PyInstaller
+          (exe + raccourci Bureau). Charte portée depuis <code>brand_export/colors.json</code> +
+          <code>typography.json</code> (Poppins, déjà installée sur ce PC) ; structure de
+          sidebar et badges de statut portés depuis <code>components/admin/AdminSidebar.tsx</code>
+          et <code>AdminBadge.tsx</code>. V0.1 : seul l'écran Cockpit (port de
+          <code>app/admin/page.tsx</code>, sans le calendrier interactif) est fonctionnel : à
+          traiter, vols de demain, météo EBCI (fetch direct aviationweather.gov), dernières
+          réservations. Le reste de la sidebar affiche un écran "Bientôt disponible".</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Réécrire tout l'admin d'un coup : écarté par l'audit de la session précédente — trop
+          de surface (17 sections, PDF, emails, dizaines d'actions) pour un seul chantier, et
+          risque de double maintenance des règles métier (Python + TypeScript) si le web est gardé
+          en parallèle, ce qui est de toute façon obligatoire (cron Vercel, webhook Stripe, site
+          public restent nécessairement en ligne).</dd>
+        <dt>Conséquences</dt>
+        <dd>Nouvelle surface avec la clé service-role : elle vit maintenant aussi dans le
+          <code>.env</code> (gitignoré) du projet <code>fly-horizons-admin</code>, un repo distinct
+          non couvert par les conventions de cet <code>AGENTS.md</code> — à garder en tête si la
+          clé est un jour tournée côté Supabase. <b>Bug latent découvert en construisant le
+          portage</b> : <code>app/admin/page.tsx</code> interroge
+          <code>contacts.prenom</code>, colonne qui n'existe pas (la table n'a que
+          <code>nom</code>) ; comme le code ne lit que <code>data</code> du <code>Promise.all</code>
+          sans vérifier <code>error</code>, la requête échoue silencieusement et le compteur
+          "messages non lus" du Cockpit web affiche vraisemblablement toujours 0. Pas corrigé ici
+          (hors scope de cette session) — à corriger dans ce repo à l'occasion.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-09-19 (2) · Audit légal CGP/RGPD post-marketplace</p>
       <h3>CGP et politique de confidentialité resynchronisées sur le fonctionnement réel (virement direct, données pilote)</h3>
       <dl>
@@ -1059,6 +1104,32 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-09-21 (1) — admin de bureau Python V0.1 (projet séparé, hors de ce repo)</h3>
+      <p class="pill">Suite à l'audit de faisabilité (session précédente) : Romain voulait une V0.1
+        de l'admin en Python, connectée en direct à Supabase, pour tester le gain de vitesse.
+        Détail complet (contexte, alternatives, conséquences) dans l'onglet Décisions du
+        21/09.</p>
+      <ul>
+        <li>Nouveau projet <code>C:\Users\romai\Documents\Projects\fly-horizons-admin</code> —
+          Python + CustomTkinter + <code>supabase-py</code> (clé service-role) + PyInstaller.
+          Pas dans ce repo (demande explicite), donc pas de commit ici pour le code de l'app.</li>
+        <li>Sidebar portée de <code>components/admin/AdminSidebar.tsx</code> (mêmes sections/
+          libellés) ; seul l'écran Cockpit est câblé, le reste affiche "Bientôt disponible".</li>
+        <li>Cockpit = port de <code>app/admin/page.tsx</code> (à traiter, demain, météo EBCI,
+          dernières réservations), sans le calendrier interactif. Testé avec de vraies données
+          Supabase (4 réservations réelles récupérées, météo EBCI en direct).</li>
+        <li>Charte visuelle portée depuis <code>brand_export/</code> (couleurs, Poppins) et
+          <code>AdminBadge.tsx</code> (libellés/couleurs de statut) — rendu comparé visuellement
+          à l'admin web.</li>
+        <li>Exe buildé (<code>FlyHorizonsAdmin.exe</code>) + raccourci Bureau créés et testés.</li>
+        <li><b>Bug trouvé dans ce repo au passage</b> (non corrigé, cf. Décisions) :
+          <code>app/admin/page.tsx</code> interroge une colonne <code>contacts.prenom</code>
+          inexistante ; échoue silencieusement, le compteur "messages non lus" du Cockpit web
+          affiche probablement toujours 0.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-09-19 (33) — fix déploiement Vercel bloqué : cron 2×/jour incompatible Hobby</h3>
