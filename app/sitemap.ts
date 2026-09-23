@@ -1,6 +1,11 @@
 import { MetadataRoute } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+// Sans ça le sitemap est figé au build : une annonce annulée après le déploiement
+// y restait listée, et Google tombait sur une page notFound() servie avec
+// <meta robots noindex> (alerte Search Console du 23/09).
+export const revalidate = 3600;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
   const adminSupabase = createAdminClient();
@@ -46,7 +51,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${siteUrl}/devenir-pilote`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
     // Masqué 29/07/2026 en attendant confirmation légale — voir audit-legal-fly-horizons.html
     // { url: `${siteUrl}/vol-sur-mesure`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
-    { url: `${siteUrl}/shop`, lastModified: new Date(), changeFrequency: "daily", priority: 0.7 },
     { url: `${siteUrl}/galerie`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
     { url: `${siteUrl}/faq`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
     { url: `${siteUrl}/contact`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },

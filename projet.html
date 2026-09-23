@@ -1106,6 +1106,20 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-23 (1) — sitemap : alerte Search Console "Exclue par la balise noindex"</h3>
+      <p class="pill">Cause : <code>app/sitemap.ts</code> était figé au build (cache Vercel, ~2 jours) et
+        listait encore les 4 annonces, toutes passées en <code>annulee</code> depuis. Leur page appelle
+        <code>notFound()</code> sous le <code>loading.tsx</code> de (public) : réponse 200 +
+        <code>&lt;meta robots noindex&gt;</code>, d'où l'alerte.</p>
+      <ul>
+        <li><code>export const revalidate = 3600</code> sur le sitemap : une annonce annulée en sort en 1 h max.</li>
+        <li><code>/shop</code> retiré du sitemap (404, la page n'existe plus).</li>
+        <li>Non traité : le sitemap et les canonicals pointent vers <code>fly-horizons.com</code> alors que
+          Vercel redirige vers <code>www.fly-horizons.com</code> (308).</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-21 (1) — admin de bureau Python V0.1 (projet séparé, hors de ce repo)</h3>
       <p class="pill">Suite à l'audit de faisabilité (session précédente) : Romain voulait une V0.1
         de l'admin en Python, connectée en direct à Supabase, pour tester le gain de vitesse.
