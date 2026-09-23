@@ -260,6 +260,32 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-09-23 · Interface mobile pilote (+ admin) — approche retenue, chantier à planifier</p>
+      <h3>Mêmes routes, vues mobiles dédiées sur les écrans clés (approche A)</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Romain veut un espace pilote (et admin si possible) vraiment utilisable au téléphone :
+          garder le desktop, et avoir en plus une version repensée pour le mobile. Existant : bottom
+          nav, header et drawer mobiles déjà là (<code>PiloteSidebar.tsx</code>,
+          <code>AdminSidebar.tsx</code>), admin installable en PWA ; mais le contenu des pages est
+          desktop-first compressé.</dd>
+        <dt>Décision</dt>
+        <dd>Approche A : mêmes URLs, même data serveur, mêmes server actions ; sur les écrans qui
+          comptent, un composant de vue mobile distinct (listes, bottom sheets, actions au pouce) à
+          côté de la vue desktop. Ajout à l'écran d'accueil (PWA) étendu au pilote. Pages
+          occasionnelles : juste "ne casse pas". <b>Pas commencé</b> — à faire plus tard.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>App mobile séparée (<code>/m/...</code> ou détection user-agent) : liberté totale mais
+          double maintenance à chaque évolution, cas tablette/paysage ambigus.</dd>
+        <dt>Conséquences</dt>
+        <dd>Estimation ≈ 8–12 sessions (pilote 4–6, dont M&amp;B et création de résa/Leaflet ;
+          admin quotidien 3–4 ; pages occasionnelles 1–2). Au démarrage : lister avec Romain ce
+          qu'il fait réellement au téléphone pour prioriser, puis maquettes mobiles HTML validées
+          avant de coder (leçon du chantier M&amp;B Chargement).</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-09-21 · Admin de bureau Python (V0.1) — projet séparé, lit directement Supabase</p>
       <h3>Cockpit desktop en Python/CustomTkinter, hors de ce repo, clé service-role directe</h3>
       <dl>
