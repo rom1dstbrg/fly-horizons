@@ -22,7 +22,7 @@ const AdminRouteEditorDynamic = dynamic(
 );
 const RouteMapReadOnlyDynamic = dynamic(() => import("@/components/maps/RouteMapReadOnly"), {
   ssr: false,
-  loading: () => <div className="h-[190px] animate-pulse rounded-[14px] bg-st-surface" />,
+  loading: () => <div className="h-[340px] animate-pulse rounded-[14px] bg-st-surface" />,
 });
 
 const STATUS: Record<string, { label: string; tone: "warning" | "success" | "neutral" }> = {
@@ -107,7 +107,7 @@ export function RouteTab({ reservation: r, route, onOpenEditor, onOpenItineraire
           <p className="text-[13px] font-semibold text-st-text">Itinéraire de l&apos;offre</p>
           <Badge tone="neutral">Fixé</Badge>
         </div>
-        <RouteMapReadOnlyDynamic waypoints={productRoute} height="190px" />
+        <RouteMapReadOnlyDynamic waypoints={productRoute} height="340px" />
         <p className="text-[12px] text-st-muted">Itinéraire fixé par l&apos;offre achetée : connu du client avant la réservation, non modifiable ici.</p>
       </div>
     );
@@ -124,10 +124,10 @@ export function RouteTab({ reservation: r, route, onOpenEditor, onOpenItineraire
       {route.localRouteStatus === "modification_requested" && route.localRouteFeedback && <ClientFeedback text={route.localRouteFeedback} />}
 
       {!route.proposalLoaded ? (
-        <div className="h-[190px] animate-pulse rounded-[14px] bg-st-surface" />
+        <div className="h-[340px] animate-pulse rounded-[14px] bg-st-surface" />
       ) : pts.length > 0 ? (
         <div className="overflow-hidden rounded-[14px]">
-          <RouteMapReadOnlyDynamic waypoints={pts} height="190px" />
+          <RouteMapReadOnlyDynamic waypoints={pts} height="340px" />
         </div>
       ) : (
         <div className="grid h-[120px] place-items-center rounded-[14px] border border-dashed border-st-line-strong text-[13px] text-st-muted">Aucune route tracée</div>
@@ -232,14 +232,14 @@ export function RouteEditorFullscreen({ open, reservation: r, route, onClose, on
           </label>
           <p className="text-[11.5px] text-st-muted">Clic sur la carte : ajouter un point. Glisser un point : le déplacer.</p>
         </div>
-        <div className="relative min-h-0 flex-1 lg:h-full">
+        <div className="relative min-h-[45dvh] flex-1 lg:h-full lg:min-h-0">
           {route.proposalLoaded ? (
             <AdminRouteEditorDynamic
               waypoints={route.routeDraft}
               onChange={route.setRouteDraft}
               clientWaypoints={r.type_resa === "perso" ? r.waypoints ?? [] : []}
               stopovers={r.type_resa === "perso" ? r.stopovers ?? [] : []}
-              height="100%"
+              height="fill"
             />
           ) : (
             <div className="h-full w-full animate-pulse bg-st-surface" />

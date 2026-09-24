@@ -129,7 +129,12 @@ export function AdminRouteEditor({ waypoints, onChange, clientWaypoints = [], st
     });
 
     mapRef.current = map;
+    // La carte suit la taille de son conteneur (éditeur plein écran, rotation
+    // du téléphone) : sans ça Leaflet garde la taille du premier affichage.
+    const ro = new ResizeObserver(() => map.invalidateSize());
+    ro.observe(containerRef.current);
     return () => {
+      ro.disconnect();
       map.remove();
       mapRef.current = null;
     };
@@ -219,6 +224,12 @@ export function AdminRouteEditor({ waypoints, onChange, clientWaypoints = [], st
       soMarkersRef.current.push(m);
     });
   }, [stopovers]);
+
+  // `height="fill"` : la carte remplit son parent (éditeur plein écran), sans
+  // bordure ni aide sous la carte (l'aide est dans la colonne de gauche).
+  if (height === "fill") {
+    return <div ref={containerRef} className="z-0 h-full w-full" />;
+  }
 
   return (
     <div className="space-y-1">

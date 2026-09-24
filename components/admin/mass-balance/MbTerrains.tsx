@@ -12,8 +12,8 @@ import { MB, NumberField } from "./fields";
 // ── Terrains et performances (24/09) ───────────────────────────────────────
 // Une colonne par terrain, dans l'ordre du vol : Départ, Destination,
 // Dégagement. Tout se fait dans la colonne (plus de tiroir, demande de
-// Romain) : on tape l'OACI, on touche la piste (le TODA / LDA se remplit), le
-// METAR arrive tout seul pour un terrain connu ; « Modifier » déplie la saisie
+// Romain) : on tape l'OACI, le METAR arrive tout seul dès les 4 lettres, on
+// touche la piste (le TODA / LDA se remplit) ; « Modifier » déplie la saisie
 // à la main (météo, distance, METAR brut) juste en dessous.
 
 type Which = "dep" | "dest" | "alt";
@@ -66,14 +66,15 @@ function TerrainColumn({
     }
   }
 
-  // METAR importé tout seul pour un terrain connu, une fois par OACI.
+  // METAR importé tout seul dès qu'un OACI complet (4 lettres) est saisi, connu
+  // de l'outil ou non ; une fois par OACI.
   useEffect(() => {
     const icao = (ad.icao || "").trim().toUpperCase();
-    if (!rec || ad.rawMetar || tried.current === icao) return;
+    if (icao.length !== 4 || ad.rawMetar || tried.current === icao) return;
     tried.current = icao;
     void fetchMetar(icao);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ad.icao, ad.rawMetar, rec]);
+  }, [ad.icao, ad.rawMetar]);
 
   function setIcao(v: string) {
     const icao = v.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);

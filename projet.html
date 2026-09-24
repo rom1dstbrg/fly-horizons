@@ -1189,6 +1189,19 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-24 (5) — METAR automatique, carte de route</h3>
+      <ul>
+        <li>M&amp;B : le METAR se charge dès qu'un OACI de 4 lettres est saisi, même pour un terrain absent de
+          <code>lib/mass-balance/aerodromes.ts</code>.</li>
+        <li>Éditeur de route plein écran : la carte faisait 0 px de haut (page blanche) — mode <code>height="fill"</code>
+          dans <code>AdminRouteEditor</code> + redimensionnement automatique (ResizeObserver).</li>
+        <li>Aperçu de la route dans le tiroir : 190 → 340 px de haut.</li>
+        <li><b>À faire plus tard (demande de Romain)</b> : base des aérodromes de Belgique, nord de la France, ouest de
+          l'Allemagne et Pays-Bas avec leurs pistes (cap, TODA, LDA), pour remplacer la petite liste codée en dur.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-24 (4) — retours de Romain sur M&amp;B et le tiroir</h3>
       <ul>
         <li><b>ZFM seul hors limites</b> (décollage et atterrissage bons) : le verdict reste GO, alerte orange avec le
