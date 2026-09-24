@@ -106,7 +106,7 @@ export default async function PiloteDashboard() {
         actions={
           <>
             <div className="max-sm:hidden"><PiloteVolsActions variant="secondary" /></div>
-            <LinkButton href="/pilote/annonces">
+            <LinkButton href="/pilote/annonces/nouvelle">
               <PlaneTakeoff />
               <ButtonLabel full="Publier un vol" short="Publier" />
             </LinkButton>
@@ -183,7 +183,7 @@ export default async function PiloteDashboard() {
           <Card className="flex flex-col items-center justify-center gap-2 py-10 text-center">
             <span className="grid h-11 w-11 place-items-center rounded-full bg-st-surface text-st-muted"><Plane size={20} /></span>
             <p className="font-semibold text-st-text">Aucun vol à venir</p>
-            <Link href="/pilote/annonces" className="text-[13px] font-semibold text-st-ink hover:underline">Publier une annonce</Link>
+            <Link href="/pilote/annonces/nouvelle" className="text-[13px] font-semibold text-st-ink hover:underline">Publier une annonce</Link>
           </Card>
         )}
 

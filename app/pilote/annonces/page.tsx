@@ -1,35 +1,18 @@
-import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import Link from "next/link";
+import { AlertTriangle, PlaneTakeoff } from "lucide-react";
 import { PiloteAnnoncesClient } from "@/components/pilote/PiloteAnnoncesClient";
-import { PiloteHeader } from "@/components/pilote/ui";
-import { piloteLegalStatus } from "@/lib/pilote/legal";
+import { Button, ButtonLabel, LinkButton, PageHeader } from "@/components/pilote/studio";
+import { ANNONCE_COLUMNS, loadPiloteForAnnonces } from "@/lib/pilote/annonces-page";
 
 export const metadata = { title: "Mes annonces — Espace pilote" };
 
-function isProbablyIban(v: string | null | undefined): boolean {
-  if (!v) return false;
-  return /^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(v.replace(/\s+/g, "").toUpperCase());
-}
-
 export default async function PiloteAnnoncesPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  const admin = createAdminClient();
-  const { data: pilote } = await admin
-    .from("pilotes")
-    .select(
-      "id, nom, iban, licence_numero, licence_expiration, medical_expiration, conditions_accepted_at",
-    )
-    .eq("user_id", user!.id)
-    .single();
+  const { admin, pilote, publishGate } = await loadPiloteForAnnonces();
 
   const { data: annonces } = pilote
     ? await admin
         .from("annonces_pilote")
-        .select(
-          "id, titre, duree, places, prix_total, part_pilote, mode_vente, places_reservees, description, images, statut, legal_ok, route_waypoints",
-        )
+        .select(ANNONCE_COLUMNS)
         .eq("pilote_id", pilote.id)
         .order("created_at", { ascending: false })
     : { data: [] };
@@ -55,30 +38,32 @@ export default async function PiloteAnnoncesPage() {
     for (const id of Object.keys(stats)) stats[id].visiteurs = uniques[id]?.size ?? 0;
   }
 
-  // Garde-fous publication : légal à jour (décision 2026-09-06) + IBAN valide
-  // (règlement par virement direct au pilote).
-  let publishGate: string | null = null;
-  if (!pilote) {
-    publishGate = "Fiche pilote introuvable.";
-  } else if (!piloteLegalStatus(pilote).ok) {
-    publishGate =
-      "Complétez vos informations légales (numéro de licence, expirations, charte) dans votre profil pour publier une annonce.";
-  } else if (!isProbablyIban(pilote.iban)) {
-    publishGate =
-      "Ajoutez un IBAN valide dans votre profil : c'est là que le client vous réglera par virement.";
-  }
+  const publishLabel = <><PlaneTakeoff /><ButtonLabel full="Publier un vol" short="Publier" /></>;
 
   return (
-    <div className="space-y-6">
-      <PiloteHeader
+    <div className="space-y-5">
+      <PageHeader
         title="Mes annonces"
-        subtitle="Publiez vos offres de vol : durée, prix, photos. Le client choisit sa date."
+        actions={
+          publishGate
+            ? <Button disabled>{publishLabel}</Button>
+            : <LinkButton href="/pilote/annonces/nouvelle">{publishLabel}</LinkButton>
+        }
       />
+      {publishGate && (
+        <div className="flex items-start gap-2.5 rounded-[14px] bg-st-warn-soft px-4 py-3 text-[13px] text-st-warn">
+          <AlertTriangle size={16} className="mt-px shrink-0" />
+          <p>
+            {publishGate}{" "}
+            <Link href="/pilote/profil" className="font-semibold underline underline-offset-2">Ouvrir mon profil</Link>
+          </p>
+        </div>
+      )}
       <PiloteAnnoncesClient
-        annonces={annonces ?? []}
+        annonces={(annonces ?? []) as never}
         piloteNom={pilote?.nom ?? ""}
         stats={stats}
-        publishGate={publishGate}
+        canPublish={!publishGate}
       />
     </div>
   );

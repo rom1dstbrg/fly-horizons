@@ -1189,6 +1189,21 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-25 — Mes annonces en style Studio</h3>
+      <ul>
+        <li>Maquette publiée et validée : https://claude.ai/artifact/44nCfqbjeYCoNr8RLYEsnb. Choix de Romain : garder les cartes
+          du site public (<code>components/vols/AnnonceCard</code>, nouveau mode <code>onClick</code>, rendu identique) + les
+          4 stats de l'option A + le tiroir.</li>
+        <li><code>/pilote/annonces</code> : 4 stats (En vente, À confirmer, Vues, Visiteurs), onglets En vente / Réservées /
+          Archivées, pastille d'état et vues sous chaque carte, un clic ouvre le tiroir (prix client, alerte « À confirmer »
+          expliquée sur place, groupe ouvert, actions). Retirer / clôturer / supprimer passent par la fenêtre de confirmation.</li>
+        <li>Le formulaire quitte la popup : pages <code>/pilote/annonces/nouvelle</code> et
+          <code>/pilote/annonces/[id]/modifier</code>, champs et boutons Studio, récapitulatif du tarif en direct.
+          Logique des 5 étapes inchangée. Garde-fou de publication partagé dans <code>lib/pilote/annonces-page.ts</code>.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-24 (6) — METAR toujours frais</h3>
       <ul>
         <li>M&amp;B : le METAR est rechargé aussi quand on efface puis retape le même OACI, quand on recopie le

@@ -2,14 +2,15 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import { createAnnonce, updateAnnonce, uploadAnnonceImage, deleteAnnonceImageFile } from "@/lib/actions/annonces";
 import { evaluerPartPilote } from "@/lib/annonces-pilote";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   AlertTriangle, ShieldCheck, PlaneTakeoff, ImagePlus, X,
   ChevronLeft, ChevronRight, Loader2, Route, Clock, Check,
 } from "lucide-react";
+import { Button, FormField, Input, Segmented, Select, Textarea } from "@/components/pilote/studio";
+import { cn } from "@/lib/utils";
 import type { AnnonceRow } from "./AnnoncesList";
 import type { WaypointDraft } from "@/components/admin/AdminRouteEditor";
 
@@ -18,7 +19,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 const AdminRouteEditorDynamic = dynamic(
   () => import("@/components/admin/AdminRouteEditor").then(m => ({ default: m.AdminRouteEditor })),
-  { ssr: false, loading: () => <div className="h-[340px] rounded-lg bg-secondary/40 animate-pulse" /> }
+  { ssr: false, loading: () => <div className="h-[340px] animate-pulse rounded-[14px] bg-st-surface" /> }
 );
 
 type ImageItem = { path: string; url: string };
@@ -31,15 +32,54 @@ const STEPS: { key: Step; label: string }[] = [
   { key: "legal", label: "Publication" },
 ];
 
-export function AnnonceForm({
-  onDone,
-  onCancel,
-  editing,
-}: {
-  onDone: () => void;
-  onCancel: () => void;
-  editing?: AnnonceRow;
+const eur = (v: number) => `${v.toLocaleString("fr-BE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+
+// Grande option cliquable (type de vol, mode de vente) : bordure navy + anneau
+// quand elle est choisie.
+function Option({ selected, onClick, icon: Icon, title, desc }: {
+  selected: boolean;
+  onClick: () => void;
+  icon?: React.ComponentType<{ size?: number }>;
+  title: string;
+  desc: string;
 }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={selected}
+      className={cn(
+        "flex w-full cursor-pointer items-center gap-3 rounded-[14px] border bg-white p-3.5 text-left transition-all",
+        selected ? "border-st-ink ring-4 ring-st-ink-soft" : "border-st-line hover:border-st-line-strong hover:bg-st-surface",
+      )}
+    >
+      {Icon && (
+        <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-[10px]", selected ? "bg-st-ink text-white" : "bg-st-surface text-st-text-2")}>
+          <Icon size={16} />
+        </span>
+      )}
+      <span className="min-w-0 flex-1">
+        <span className="block text-[13.5px] font-semibold text-st-text">{title}</span>
+        <span className="mt-0.5 block text-xs leading-snug text-st-muted">{desc}</span>
+      </span>
+      {selected && Icon && <Check size={16} className="shrink-0 text-st-ink" />}
+    </button>
+  );
+}
+
+function SumRow({ label, children, strong }: { label: React.ReactNode; children: React.ReactNode; strong?: boolean }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4 py-2 text-[13px] first:pt-0 last:pb-0">
+      <span className="text-st-text-2">{label}</span>
+      <span className={cn("st-num text-right", strong ? "text-[15px] font-semibold text-st-text" : "text-st-text")}>{children}</span>
+    </div>
+  );
+}
+
+// Formulaire d'annonce en 5 étapes, rendu en page (/pilote/annonces/nouvelle et
+// /pilote/annonces/[id]/modifier) : à la fin ou sur « Annuler », retour à la liste.
+export function AnnonceForm({ editing }: { editing?: AnnonceRow }) {
+  const router = useRouter();
   const [step, setStep] = useState<Step>("type");
   const [maxStepIndex, setMaxStepIndex] = useState(0);
   const [hasRoute, setHasRoute] = useState<boolean | null>(editing ? !!editing.route_waypoints?.length : null);
@@ -90,6 +130,10 @@ export function AnnonceForm({
   );
   // En mode « à la place », la part est calculée pile au minimum légal : rien à avertir.
   const showCheck = modeVente === "avion" && prixTotal !== "" && partValue !== "";
+
+  function backToList() {
+    router.push("/pilote/annonces");
+  }
 
   async function handleFilesSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
@@ -151,7 +195,8 @@ export function AnnonceForm({
         ? await updateAnnonce(editing.id, payload)
         : await createAnnonce(payload);
       if (result?.error) { setError(result.error); return; }
-      onDone();
+      router.push("/pilote/annonces");
+      router.refresh();
     });
   }
 
@@ -185,336 +230,274 @@ export function AnnonceForm({
     setStep(key);
   }
 
+  const nextLabel = step === "legal"
+    ? (isPending ? (editing ? "Enregistrement…" : "Publication…") : (editing ? "Enregistrer les modifications" : "Publier ce vol"))
+    : STEPS[stepIndex + 1] ? `Continuer : ${STEPS[stepIndex + 1].label.toLowerCase()}` : "Continuer";
+
   return (
     <div className="space-y-5">
       {error && (
-        <div ref={errorRef} className="bg-destructive/10 border border-destructive/30 text-destructive text-sm rounded-md px-4 py-3">
+        <div ref={errorRef} className="rounded-[12px] bg-st-bad-soft px-3.5 py-2.5 text-[13px] text-st-bad">
           {error}
         </div>
       )}
 
       {/* Indicateur d'étapes — cliquable pour changer directement d'étape */}
-      <div className="flex items-center gap-1.5">
-        {STEPS.map((s, i) => (
-          <button
-            key={s.key}
-            type="button"
-            onClick={() => jumpTo(s.key, i)}
-            disabled={!canJumpTo(i)}
-            className={`flex-1 h-1.5 rounded-full transition-colors ${canJumpTo(i) ? "cursor-pointer" : "cursor-not-allowed"} ${i <= stepIndex ? "bg-primary" : "bg-secondary"}`}
-            aria-label={s.label}
-          />
-        ))}
+      <div className="space-y-2">
+        <div className="grid grid-cols-5 gap-1">
+          {STEPS.map((s, i) => (
+            <button
+              key={s.key}
+              type="button"
+              onClick={() => jumpTo(s.key, i)}
+              disabled={!canJumpTo(i)}
+              className={cn(
+                "h-1 rounded-full transition-colors",
+                canJumpTo(i) ? "cursor-pointer" : "cursor-not-allowed",
+                i <= stepIndex ? "bg-st-ink" : "bg-st-line",
+              )}
+              aria-label={s.label}
+            />
+          ))}
+        </div>
+        <p className="text-[12.5px] text-st-muted">
+          Étape {stepIndex + 1} sur {STEPS.length} · {STEPS[stepIndex].label}
+        </p>
       </div>
-      <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide -mt-3">
-        Étape {stepIndex + 1} sur {STEPS.length} · {STEPS[stepIndex].label}
-      </p>
 
-      <div className="min-h-[320px]">
-        {/* ── Étape : Type ─────────────────────────────────────────── */}
-        {step === "type" && (
-          <div className="space-y-2.5">
-            <p className="text-sm text-muted-foreground">Quel type de vol souhaitez-vous publier ?</p>
-            {([
-              { val: true, icon: Route, title: "Vol avec itinéraire", desc: "Vous tracez la route sur une carte, affichée au client sur l'annonce." },
-              { val: false, icon: Clock, title: "Vol à durée fixe", desc: "Une durée en minutes, sans itinéraire précis — le plus simple." },
-            ] as const).map(({ val, icon: Icon, title, desc }) => (
-              <button
-                key={String(val)}
-                type="button"
-                onClick={() => { setHasRoute(val); goNext(); }}
-                className={`w-full flex items-center gap-3.5 text-left rounded-lg border p-4 transition-colors cursor-pointer group ${
-                  hasRoute === val ? "border-primary bg-primary/5" : "border-navy/15 hover:border-primary/50 hover:bg-primary/5"
-                }`}
-              >
-                <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                  hasRoute === val ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground group-hover:text-primary group-hover:bg-primary/10"
-                }`}>
-                  <Icon size={16} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground">{title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
-                </div>
-                {hasRoute === val && <Check size={16} className="text-primary shrink-0" />}
-              </button>
-            ))}
-          </div>
-        )}
+      {/* ── Étape : Type ─────────────────────────────────────────── */}
+      {step === "type" && (
+        <div className="space-y-2.5">
+          <p className="text-[13px] text-st-text-2">Quel type de vol souhaitez-vous publier ?</p>
+          <Option
+            selected={hasRoute === true}
+            onClick={() => { setHasRoute(true); goNext(); }}
+            icon={Route}
+            title="Vol avec itinéraire"
+            desc="Vous tracez la route sur une carte, affichée au client sur l'annonce."
+          />
+          <Option
+            selected={hasRoute === false}
+            onClick={() => { setHasRoute(false); goNext(); }}
+            icon={Clock}
+            title="Vol à durée fixe"
+            desc="Une durée en minutes, sans itinéraire précis. Le plus simple."
+          />
+        </div>
+      )}
 
-        {/* ── Étape : Le vol ───────────────────────────────────────── */}
-        {step === "vol" && (
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label className="text-sm text-muted-foreground">Titre de l&apos;annonce</Label>
+      {/* ── Étape : Le vol ───────────────────────────────────────── */}
+      {step === "vol" && (
+        <div className="space-y-4">
+          <FormField id="annonce-titre" label="Titre de l'annonce" hint="Facultatif : sans titre, l'annonce affiche le nombre de passagers.">
+            <Input
+              id="annonce-titre" type="text" maxLength={80} placeholder="Ex. Coucher de soleil sur la Meuse"
+              value={titre} onChange={e => setTitre(e.target.value)}
+            />
+          </FormField>
+
+          <div className="grid grid-cols-2 gap-3.5">
+            <FormField id="annonce-duree" label="Durée (minutes)">
               <Input
-                type="text" maxLength={80} placeholder="Ex. Coucher de soleil sur la Wallonie"
-                value={titre} onChange={e => setTitre(e.target.value)}
-                className="bg-card border-navy/15"
+                id="annonce-duree" type="number" inputMode="numeric" min={10} max={240} required placeholder="60"
+                value={duree} onChange={e => setDuree(e.target.value)}
               />
-              <p className="text-[11px] text-muted-foreground">
-                Facultatif — sans titre, l&apos;annonce affiche votre nom par défaut.
-              </p>
-            </div>
+            </FormField>
+            <FormField id="annonce-places" label="Passagers max">
+              <Select id="annonce-places" value={places} onChange={e => setPlaces(e.target.value)} required>
+                {[1, 2, 3, 4, 5, 6].map(p => <option key={p} value={p}>{p} place{p > 1 ? "s" : ""}</option>)}
+              </Select>
+            </FormField>
+          </div>
 
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-sm text-muted-foreground">Durée (minutes) *</Label>
+          {hasRoute && (
+            <FormField
+              label="Itinéraire : cliquez sur la carte pour placer vos points"
+              hint="Fond « Aéronautique » en haut à droite pour repérer zones et aérodromes. Tracé indicatif, affiché au client ; il ne change ni la durée ni le prix."
+            >
+              <div className="overflow-hidden rounded-[14px] border border-st-line">
+                <AdminRouteEditorDynamic waypoints={routeDraft} onChange={setRouteDraft} height="340px" />
+              </div>
+            </FormField>
+          )}
+        </div>
+      )}
+
+      {/* ── Étape : Tarif ────────────────────────────────────────── */}
+      {step === "tarif" && (
+        <div className="space-y-4">
+          <FormField label="Mode de vente">
+            <div className="grid grid-cols-2 gap-2">
+              <Option selected={modeVente === "avion"} onClick={() => setModeVente("avion")} title="Avion entier" desc="Un seul client réserve et règle le vol entier." />
+              <Option selected={modeVente === "place"} onClick={() => setModeVente("place")} title="À la place" desc="Plusieurs clients, chacun règle sa place. Part égale automatique." />
+            </div>
+          </FormField>
+
+          <FormField id="annonce-prix" label="Coût total du vol (€)" hint="Location de l'avion, carburant, taxes d'aérodrome : ce total se partage entre vous et vos passagers.">
+            <Input
+              id="annonce-prix" type="number" inputMode="decimal" min="0" step="0.01" required placeholder="300"
+              value={prixTotal} onChange={e => setPrixTotal(e.target.value)}
+            />
+          </FormField>
+
+          {modeVente === "avion" && (
+            <FormField id="annonce-part" label="Votre part" hint="Ce que vous payez vous-même, indépendant du nombre de passagers.">
+              <div className="flex items-center gap-2">
                 <Input
-                  type="number" min={10} max={240} required placeholder="60"
-                  value={duree} onChange={e => setDuree(e.target.value)}
-                  className="bg-card border-navy/15"
+                  id="annonce-part" type="number" inputMode="decimal" min="0" step="0.01" required placeholder={partMode === "pct" ? "25" : "75"}
+                  value={partValue} onChange={e => setPartValue(e.target.value)}
+                />
+                <Segmented
+                  value={partMode}
+                  onChange={setPartMode}
+                  items={[{ key: "pct", label: "%" }, { key: "eur", label: "€" }]}
                 />
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-sm text-muted-foreground">Places passagers maximum *</Label>
-                <select value={places} onChange={e => setPlaces(e.target.value)} required
-                  className="w-full h-10 bg-card border border-navy/15 text-foreground rounded-md px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring">
-                  {[1, 2, 3, 4, 5, 6].map(p => <option key={p} value={p}>{p} place{p > 1 ? "s" : ""}</option>)}
-                </select>
-                <p className="text-[11px] text-muted-foreground">
-                  Le nombre maximum de passagers acceptés — pas forcément le nombre final.
-                </p>
-              </div>
-            </div>
+            </FormField>
+          )}
 
-            {hasRoute && (
-              <div className="space-y-2">
-                <Label className="text-sm text-muted-foreground">Itinéraire — cliquez sur la carte pour placer vos points</Label>
-                <AdminRouteEditorDynamic waypoints={routeDraft} onChange={setRouteDraft} height="340px" />
-                <p className="text-[11px] text-muted-foreground">
-                  Basculez sur le fond « Aéronautique » (en haut à droite de la carte) pour repérer
-                  zones et aérodromes. Ce tracé est indicatif : affiché au client sur la page de
-                  l&apos;annonce, il ne change rien à la durée ni au prix.
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── Étape : Tarif ────────────────────────────────────────── */}
-        {step === "tarif" && (
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label className="text-sm text-muted-foreground">Mode de vente *</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {([
-                  ["avion", "Tout l'avion", "Un seul client réserve et règle le vol entier."],
-                  ["place", "Vente à la place", "Plusieurs clients, chacun règle sa place — part égale automatique."],
-                ] as const).map(([val, title, desc]) => (
-                  <button
-                    key={val}
-                    type="button"
-                    onClick={() => setModeVente(val)}
-                    className={`text-left rounded-lg border px-3 py-2.5 transition-colors cursor-pointer ${
-                      modeVente === val ? "border-primary bg-primary/5" : "border-navy/15 bg-card hover:border-foreground/30"
-                    }`}
-                  >
-                    <span className="block text-sm font-semibold text-foreground">{title}</span>
-                    <span className="block text-[11px] text-muted-foreground mt-0.5">{desc}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-sm text-muted-foreground">Coût total du vol (€) *</Label>
-              <Input
-                type="number" min="0" step="0.01" required placeholder="300"
-                value={prixTotal} onChange={e => setPrixTotal(e.target.value)}
-                className="bg-card border-navy/15"
-              />
-              <p className="text-[11px] text-muted-foreground">
-                Location de l&apos;avion, carburant, taxes d&apos;aérodrome. C&apos;est ce total qui se
-                partage entre vous et vos passagers.
-              </p>
-            </div>
-
-            {modeVente === "avion" ? (
-              <div className="space-y-1.5">
-                <Label className="text-sm text-muted-foreground">Votre part *</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="number" min="0" step="0.01" required placeholder={partMode === "pct" ? "25" : "75"}
-                    value={partValue} onChange={e => setPartValue(e.target.value)}
-                    className="bg-card border-navy/15"
-                  />
-                  <div className="flex rounded-md border border-navy/15 overflow-hidden shrink-0">
-                    <button type="button" onClick={() => setPartMode("pct")}
-                      className={`px-3 h-10 text-sm font-semibold cursor-pointer transition-colors ${partMode === "pct" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}>
-                      %
-                    </button>
-                    <button type="button" onClick={() => setPartMode("eur")}
-                      className={`px-3 h-10 text-sm font-semibold cursor-pointer transition-colors border-l border-border ${partMode === "eur" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}>
-                      €
-                    </button>
-                  </div>
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  Ce que vous payez vous-même, fixé par vous — indépendant du nombre de passagers.
-                </p>
-              </div>
-            ) : (
-              prixTotal !== "" && (
-                <div className="bg-secondary/40 border border-navy/15 rounded-lg px-4 py-3 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Votre part (calculée automatiquement)</span>
-                    <span className="text-lg font-black text-foreground">{partPiloteAuto.toFixed(2)} €</span>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground">
-                    Partage à parts égales entre vous et les passagers max. ({placesNum + 1} parts) —
-                    recalculé sur les occupants réels à la clôture du groupe.
+          {prixTotal !== "" && (modeVente === "place" || partValue !== "") && (
+            <div className="rounded-[14px] bg-st-surface px-4 py-3">
+              {modeVente === "avion" ? (
+                <>
+                  <SumRow label="Vous payez">{eur(Math.max(0, partPiloteEuros))}</SumRow>
+                  <SumRow label="Prix affiché au client" strong>{eur(prixClient)}</SumRow>
+                </>
+              ) : (
+                <>
+                  <SumRow label={`Votre part (${placesNum + 1} parts égales)`}>{eur(partPiloteAuto)}</SumRow>
+                  <SumRow label="Solde à partager entre les passagers">{eur(prixClient)}</SumRow>
+                  <SumRow label="Prix par passager si complet" strong>{eur(prixParPlace)}</SumRow>
+                  <p className="mt-2 text-xs leading-snug text-st-muted">
+                    Recalculé sur les occupants réels à la clôture du groupe : plus cher par passager si le groupe
+                    part avant d&apos;être complet.
                   </p>
-                </div>
-              )
-            )}
-
-            {prixTotal !== "" && (modeVente === "place" || partValue !== "") && modeVente === "avion" && (
-              <div className="bg-secondary/40 border border-navy/15 rounded-lg px-4 py-3 flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Prix affiché au client</span>
-                <span className="text-lg font-black text-foreground">{prixClient.toFixed(2)} €</span>
-              </div>
-            )}
-
-            {prixTotal !== "" && modeVente === "place" && (
-              <div className="bg-secondary/40 border border-navy/15 rounded-lg px-4 py-3 space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Solde à partager entre les passagers</span>
-                  <span className="text-lg font-black text-foreground">{prixClient.toFixed(2)} €</span>
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  Prix par passager si les {placesNum} places se remplissent : {prixParPlace.toFixed(2)} € chacun
-                  (plus si le groupe se clôture avant d&apos;être complet).
-                </p>
-              </div>
-            )}
-
-            {showCheck && (
-              <div className={`flex items-start gap-2.5 rounded-lg px-4 py-3 text-sm border ${
-                check.level === "block" ? "bg-red-50 border-red-200 text-red-700"
-                : check.level === "warn" ? "bg-amber-50 border-amber-200 text-amber-700"
-                : "bg-emerald-50 border-emerald-200 text-emerald-700"
-              }`}>
-                {check.level !== "ok" && <AlertTriangle size={16} className="shrink-0 mt-0.5" />}
-                {check.level === "ok" && <ShieldCheck size={16} className="shrink-0 mt-0.5" />}
-                <div>
-                  <p className="font-semibold">
-                    {check.level === "ok"
-                      ? `Votre part : ${check.pct}% (minimum recommandé ${check.minPct}% pour ${places} passager${Number(places) > 1 ? "s" : ""})`
-                      : (check.message ?? "")}
-                  </p>
-                  {check.level !== "ok" && (
-                    <p className="text-xs opacity-80 mt-0.5">Part actuelle : {check.pct}% · minimum recommandé {check.minPct}%</p>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── Étape : Présentation ─────────────────────────────────── */}
-        {step === "presentation" && (
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label className="text-sm text-muted-foreground">Description</Label>
-              <textarea
-                value={description} onChange={e => setDescription(e.target.value)}
-                rows={5} placeholder="Décrivez le vol, l'itinéraire envisagé, l'ambiance..."
-                className="w-full px-3 py-2 rounded-md border border-navy/15 bg-card text-foreground text-sm resize-none focus:outline-none focus:ring-1 focus:ring-ring"
-              />
+                </>
+              )}
             </div>
+          )}
 
-            <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground">Photos (jusqu&apos;à {MAX_IMAGES}) — la 1ère est la couverture</Label>
-              <div className="flex flex-wrap gap-3">
-                {images.map((img, i) => (
-                  <div key={img.path} className="relative w-24 h-24 rounded-lg overflow-hidden border border-navy/15 group">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={img.url} alt="" className="w-full h-full object-cover" />
-                    {i === 0 && (
-                      <span className="absolute top-1 left-1 bg-primary text-primary-foreground text-[9px] font-bold uppercase px-1.5 py-0.5 rounded">
-                        Couverture
-                      </span>
-                    )}
-                    <button type="button" onClick={() => removeImage(i)}
-                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center cursor-pointer hover:bg-black/80">
-                      <X size={11} />
-                    </button>
-                    <div className="absolute bottom-1 left-1 right-1 flex justify-between">
-                      <button type="button" disabled={i === 0} onClick={() => moveImage(i, -1)}
-                        className="w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center cursor-pointer hover:bg-black/80 disabled:opacity-30 disabled:cursor-not-allowed">
-                        <ChevronLeft size={11} />
-                      </button>
-                      <button type="button" disabled={i === images.length - 1} onClick={() => moveImage(i, 1)}
-                        className="w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center cursor-pointer hover:bg-black/80 disabled:opacity-30 disabled:cursor-not-allowed">
-                        <ChevronRight size={11} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                {images.length < MAX_IMAGES && (
-                  <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}
-                    className="w-24 h-24 rounded-lg border-2 border-dashed border-navy/20 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors cursor-pointer disabled:opacity-50">
-                    {uploading ? <Loader2 size={18} className="animate-spin" /> : <ImagePlus size={18} />}
-                    <span className="text-[10px]">Ajouter</span>
-                  </button>
+          {showCheck && (
+            <div className={cn(
+              "flex items-start gap-2.5 rounded-[14px] px-3.5 py-3 text-[13px]",
+              check.level === "ok" ? "bg-st-ok-soft text-st-ok" : "bg-st-warn-soft text-st-warn",
+            )}>
+              {check.level === "ok" ? <ShieldCheck size={16} className="mt-px shrink-0" /> : <AlertTriangle size={16} className="mt-px shrink-0" />}
+              <div>
+                <p className="font-semibold leading-snug">
+                  {check.level === "ok"
+                    ? `Votre part : ${check.pct} % (minimum recommandé ${check.minPct} % pour ${places} passager${Number(places) > 1 ? "s" : ""})`
+                    : (check.message ?? "")}
+                </p>
+                {check.level !== "ok" && (
+                  <p className="mt-0.5 text-xs opacity-80">Part actuelle : {check.pct} % · minimum recommandé {check.minPct} %</p>
                 )}
               </div>
-              <input
-                ref={fileInputRef} type="file" accept="image/*" multiple hidden
-                onChange={handleFilesSelected}
-              />
             </div>
-          </div>
-        )}
+          )}
+        </div>
+      )}
 
-        {/* ── Étape : Publication ──────────────────────────────────── */}
-        {step === "legal" && (
-          <div className="space-y-4">
-            <label className="flex items-start gap-2.5 rounded-lg border border-navy/15 bg-secondary/30 px-4 py-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={legalOk}
-                onChange={e => setLegalOk(e.target.checked)}
-                className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-primary"
-              />
-              <span className="text-xs text-muted-foreground">
-                Je confirme que je réalise réellement ce vol et que je partage mes frais avec les
-                passagers. Je ne fais pas de transport à titre onéreux : ma part reste à ma charge.
-              </span>
-            </label>
-            <p className="text-[11px] text-muted-foreground">
-              Vos disponibilités (quand vous êtes libre de voler) se gèrent séparément, dans
-              l&apos;onglet « Disponibilités » — un seul calendrier, valable pour toutes vos annonces.
-            </p>
-          </div>
-        )}
-      </div>
+      {/* ── Étape : Présentation ─────────────────────────────────── */}
+      {step === "presentation" && (
+        <div className="space-y-4">
+          <FormField id="annonce-description" label="Description">
+            <Textarea
+              id="annonce-description"
+              value={description} onChange={e => setDescription(e.target.value)}
+              rows={5} placeholder="Décrivez le vol, l'itinéraire envisagé, l'ambiance…"
+              className="resize-none"
+            />
+          </FormField>
 
-      <div className="flex items-center justify-between gap-2 pt-2 border-t border-border">
+          <FormField label={`Photos (jusqu'à ${MAX_IMAGES}) : la première est la couverture`}>
+            <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4">
+              {images.map((img, i) => (
+                <div key={img.path} className="relative aspect-square overflow-hidden rounded-[12px] border border-st-line">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={img.url} alt="" className="h-full w-full object-cover" />
+                  {i === 0 && (
+                    <span className="absolute left-1.5 top-1.5 rounded-[6px] bg-st-ink px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                      Couverture
+                    </span>
+                  )}
+                  <button type="button" onClick={() => removeImage(i)} aria-label="Retirer la photo"
+                    className="absolute right-1.5 top-1.5 grid h-6 w-6 cursor-pointer place-items-center rounded-full bg-black/60 text-white hover:bg-black/80">
+                    <X size={12} />
+                  </button>
+                  <div className="absolute inset-x-1.5 bottom-1.5 flex justify-between">
+                    <button type="button" disabled={i === 0} onClick={() => moveImage(i, -1)} aria-label="Déplacer vers la gauche"
+                      className="grid h-6 w-6 cursor-pointer place-items-center rounded-full bg-black/60 text-white hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-30">
+                      <ChevronLeft size={12} />
+                    </button>
+                    <button type="button" disabled={i === images.length - 1} onClick={() => moveImage(i, 1)} aria-label="Déplacer vers la droite"
+                      className="grid h-6 w-6 cursor-pointer place-items-center rounded-full bg-black/60 text-white hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-30">
+                      <ChevronRight size={12} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {images.length < MAX_IMAGES && (
+                <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}
+                  className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-[12px] border border-dashed border-st-line-strong text-st-muted transition-colors hover:border-st-ink hover:text-st-text disabled:opacity-50">
+                  {uploading ? <Loader2 size={18} className="animate-spin" /> : <ImagePlus size={18} />}
+                  <span className="text-[11px] font-[550]">Ajouter</span>
+                </button>
+              )}
+            </div>
+            <input
+              ref={fileInputRef} type="file" accept="image/*" multiple hidden
+              onChange={handleFilesSelected}
+            />
+          </FormField>
+        </div>
+      )}
+
+      {/* ── Étape : Publication ──────────────────────────────────── */}
+      {step === "legal" && (
+        <div className="space-y-3">
+          <label className="flex cursor-pointer items-start gap-3 rounded-[14px] bg-st-surface px-4 py-3.5">
+            <input
+              type="checkbox"
+              checked={legalOk}
+              onChange={e => setLegalOk(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#0b2238]"
+            />
+            <span className="text-[13px] leading-snug text-st-text-2">
+              Je confirme que je réalise réellement ce vol et que je partage mes frais avec les
+              passagers. Je ne fais pas de transport à titre onéreux : ma part reste à ma charge.
+            </span>
+          </label>
+          <p className="text-xs leading-snug text-st-muted">
+            Vos disponibilités (quand vous êtes libre de voler) se gèrent à part, dans
+            « Disponibilités » : un seul calendrier, valable pour toutes vos annonces.
+          </p>
+        </div>
+      )}
+
+      {/* Bas de formulaire : secondaire à gauche, validation pleine largeur */}
+      <div className="grid grid-cols-[auto_1fr] gap-2.5 pt-2">
         {stepIndex > 0 ? (
-          <button type="button" onClick={goBack}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer">
-            <ChevronLeft size={15} /> Retour
-          </button>
+          <Button variant="secondary" size="lg" className="sm:h-[38px] sm:text-[13px]" onClick={goBack}>
+            <ChevronLeft />
+            Retour
+          </Button>
         ) : (
-          <button type="button" onClick={onCancel}
-            className="px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer">
+          <Button variant="secondary" size="lg" className="sm:h-[38px] sm:text-[13px]" onClick={backToList}>
             Annuler
-          </button>
+          </Button>
         )}
-        <button
-          type="button"
+        <Button
+          size="lg"
+          className="sm:h-[38px] sm:text-[13px]"
           onClick={goNext}
-          disabled={!canProceed[step] || isPending || uploading}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-[#e6a800] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          disabled={!canProceed[step] || uploading}
+          loading={isPending}
         >
-          {isPending ? <Loader2 size={14} className="animate-spin" /> : step === "legal" ? <PlaneTakeoff size={14} /> : null}
-          {step === "legal"
-            ? (isPending ? (editing ? "Enregistrement..." : "Publication...") : (editing ? "Enregistrer les modifications" : "Publier ce vol"))
-            : "Continuer"}
-          {step !== "legal" && <ChevronRight size={15} />}
-        </button>
+          {!isPending && step === "legal" && <PlaneTakeoff />}
+          <span className="truncate">{nextLabel}</span>
+          {step !== "legal" && <ChevronRight />}
+        </Button>
       </div>
     </div>
   );

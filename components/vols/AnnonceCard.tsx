@@ -20,18 +20,14 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 // place du dégradé de secours, et le nom du pilote à la place du titre produit.
 // Pointe vers /vol/annonce/[id], pas un slug texte (une annonce reste un
 // vol ponctuel à usage unique, pas une offre catalogue réutilisable).
-export function AnnonceCard({ annonce, newTab = false }: { annonce: AnnonceCardData; newTab?: boolean }) {
+// `onClick` (espace pilote) : la carte devient un bouton qui ouvre le tiroir de
+// gestion au lieu du lien vers la page publique ; rendu identique.
+export function AnnonceCard({ annonce, newTab = false, onClick }: { annonce: AnnonceCardData; newTab?: boolean; onClick?: () => void }) {
   const image = annonce.cover_image
     ? `${SUPABASE_URL}/storage/v1/object/public/annonces/${annonce.cover_image}`
     : null;
 
-  return (
-    <Link
-      href={`/vol/annonce/${annonce.id}`}
-      target={newTab ? "_blank" : undefined}
-      rel={newTab ? "noopener noreferrer" : undefined}
-      className="group block focus-visible:outline-none"
-    >
+  const content = (
       <article className="relative overflow-hidden rounded-lg aspect-[4/3] sm:aspect-[3/4]">
         {/* Fond de secours toujours rendu en dessous : si la photo est cassée
             (fichier supprimé du storage, référence orpheline...) ou manquante,
@@ -81,6 +77,24 @@ export function AnnonceCard({ annonce, newTab = false }: { annonce: AnnonceCardD
           </div>
         </div>
       </article>
+  );
+
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className="group block w-full cursor-pointer text-left focus-visible:outline-none">
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <Link
+      href={`/vol/annonce/${annonce.id}`}
+      target={newTab ? "_blank" : undefined}
+      rel={newTab ? "noopener noreferrer" : undefined}
+      className="group block focus-visible:outline-none"
+    >
+      {content}
     </Link>
   );
 }

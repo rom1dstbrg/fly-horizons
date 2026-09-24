@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { cancelAnnonce, republishAnnonce, deleteAnnonce, cloturerGroupeAnnonce } from "@/lib/actions/annonces";
+import { AlertTriangle, ExternalLink, Lock, Pencil, RotateCcw, X } from "lucide-react";
 import { evaluerPartPilote } from "@/lib/annonces-pilote";
-import { AnnonceCard as PublicAnnonceCard } from "@/components/vols/AnnonceCard";
-import { Loader2, X, Eye, Users2, Pencil, RotateCcw, ShieldAlert, Trash2, Lock } from "lucide-react";
+import {
+  Badge, Button, LinkButton, SheetBody, SheetFooter, SheetHeader, SheetHero, SheetRow, SheetRows,
+  type BadgeTone,
+} from "@/components/pilote/studio";
 
 export interface AnnonceRow {
   id: string;
@@ -27,234 +28,180 @@ export interface AnnonceStats {
   visiteurs: number;
 }
 
-function AnnonceManageCard({
-  annonce,
-  piloteNom,
-  stats,
-  onEdit,
-}: {
-  annonce: AnnonceRow;
-  piloteNom: string;
-  stats?: AnnonceStats;
-  onEdit: (a: AnnonceRow) => void;
-}) {
-  const [isPending, startTransition] = useTransition();
-  const [isRepublishPending, startRepublishTransition] = useTransition();
-  const [isDeletePending, startDeleteTransition] = useTransition();
-  const [isCloturePending, startClotureTransition] = useTransition();
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [clotureError, setClotureError] = useState<string | null>(null);
-  const [showAConfirmerInfo, setShowAConfirmerInfo] = useState(false);
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+export const coverUrl = (path: string) => `${SUPABASE_URL}/storage/v1/object/public/annonces/${path}`;
+const eur = (v: number) => `${v.toLocaleString("fr-BE", { maximumFractionDigits: 2 })} €`;
 
-  const check = evaluerPartPilote(annonce.prix_total, annonce.part_pilote, annonce.places);
-  const prixClient = Math.max(0, annonce.prix_total - annonce.part_pilote);
+// Tout ce qu'on déduit d'une annonce pour l'afficher : prix client, alerte
+// « À confirmer », groupe ouvert, pastille d'état. Une seule source pour la
+// grille et le tiroir.
+export function annonceInfo(a: AnnonceRow) {
+  const check = evaluerPartPilote(a.prix_total, a.part_pilote, a.places);
+  const prixTotalClient = Math.max(0, a.prix_total - a.part_pilote);
+  const parPlace = a.mode_vente === "place";
+  const prixClient = parPlace
+    ? Math.round((prixTotalClient / Math.max(1, a.places)) * 100) / 100
+    : prixTotalClient;
   const partSousLeMinimum = check.level === "block";
-  const legalPasReattestee = annonce.legal_ok === false;
-  const aConfirmer = annonce.statut === "publiee" && (partSousLeMinimum || legalPasReattestee);
-  const groupeOuvert = annonce.mode_vente === "place" && annonce.statut === "publiee" && (annonce.places_reservees ?? 0) > 0;
+  const legalPasReattestee = a.legal_ok === false;
+  const aConfirmer = a.statut === "publiee" && (partSousLeMinimum || legalPasReattestee);
+  const reservees = a.places_reservees ?? 0;
+  const groupeOuvert = parPlace && a.statut === "publiee" && reservees > 0;
 
-  function handleCloture() {
-    setClotureError(null);
-    startClotureTransition(async () => {
-      const r = await cloturerGroupeAnnonce(annonce.id);
-      if (r?.error) setClotureError(r.error);
-    });
-  }
+  let badge: { tone: BadgeTone; label: string };
+  if (a.statut === "annulee") badge = { tone: "neutral", label: "Retirée" };
+  else if (a.statut === "reservee") badge = { tone: "info", label: "Réservée" };
+  else if (aConfirmer) badge = { tone: "warning", label: "À confirmer" };
+  else if (groupeOuvert) badge = { tone: "gold", label: `Groupe ouvert · ${reservees}/${a.places}` };
+  else badge = { tone: "success", label: "En vente" };
 
-  const STATUT_LABEL: Record<AnnonceRow["statut"], string> = {
-    publiee: "Publiée",
-    reservee: "Réservée",
-    annulee: "Annulée",
-  };
-
-  function handleDelete() {
-    setDeleteError(null);
-    startDeleteTransition(async () => {
-      const r = await deleteAnnonce(annonce.id);
-      if (r?.error) setDeleteError(r.error);
-    });
-  }
-
-  return (
-    <div className="bg-card border border-navy/15 rounded-[10px] overflow-hidden flex flex-col">
-      <div className={`p-3 pb-0 ${annonce.statut !== "publiee" ? "opacity-60" : ""}`}>
-        <PublicAnnonceCard
-          newTab
-          annonce={{
-            id: annonce.id,
-            titre: annonce.titre,
-            duree: annonce.duree,
-            places: annonce.places,
-            prix_client:
-              annonce.mode_vente === "place"
-                ? Math.round((prixClient / Math.max(1, annonce.places)) * 100) / 100
-                : prixClient,
-            pilote_nom: piloteNom,
-            cover_image: annonce.images[0] ?? null,
-            mode_vente: annonce.mode_vente,
-          }}
-        />
-      </div>
-
-      <div className="p-4 pt-3 space-y-3 flex-1 flex flex-col">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground bg-secondary px-2 py-0.5 rounded">
-            {STATUT_LABEL[annonce.statut]}
-          </span>
-          {aConfirmer && (
-            <button
-              type="button"
-              onClick={() => setShowAConfirmerInfo(true)}
-              className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded hover:bg-red-100 transition-colors cursor-pointer"
-            >
-              <ShieldAlert size={11} /> À confirmer
-            </button>
-          )}
-          <span className="ml-auto flex items-center gap-2.5 text-[11px] text-muted-foreground" title="Statistiques de consultation">
-            <span className="flex items-center gap-1"><Eye size={12} /> {stats?.vues ?? 0}</span>
-            <span className="flex items-center gap-1"><Users2 size={12} /> {stats?.visiteurs ?? 0}</span>
-          </span>
-        </div>
-
-        {annonce.description && (
-          <p className="text-xs text-muted-foreground line-clamp-2">{annonce.description}</p>
-        )}
-
-        <p className="text-xs text-muted-foreground">
-          Prix total {annonce.prix_total.toFixed(2)} € · Votre part {annonce.part_pilote.toFixed(2)} € ({check.pct}%) ·{" "}
-          {annonce.mode_vente === "place"
-            ? `${annonce.places - (annonce.places_reservees ?? 0)}/${annonce.places} place${annonce.places > 1 ? "s" : ""} dispo`
-            : `${annonce.places} place${annonce.places > 1 ? "s" : ""}`}
-        </p>
-
-        {groupeOuvert && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 space-y-1.5">
-            <p className="text-xs text-amber-800 flex items-start gap-1.5">
-              <Lock size={12} className="shrink-0 mt-0.5" />
-              Groupe pas encore complet — le prix définitif de chaque passager se fige à la
-              clôture (part égale entre occupants réels), pas avant.
-            </p>
-            <button
-              onClick={handleCloture}
-              disabled={isCloturePending}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-600 text-white text-[11px] font-semibold hover:bg-amber-700 transition-colors cursor-pointer disabled:opacity-50"
-            >
-              {isCloturePending ? <Loader2 size={11} className="animate-spin" /> : <Lock size={11} />}
-              Clôturer le groupe maintenant
-            </button>
-            {clotureError && <p className="text-[11px] text-red-700">{clotureError}</p>}
-          </div>
-        )}
-
-        {deleteError && (
-          <p className="text-xs text-destructive bg-destructive/10 border border-destructive/30 rounded-md px-2.5 py-1.5">
-            {deleteError}
-          </p>
-        )}
-
-        <div className="flex items-center gap-1 mt-auto pt-1 border-t border-border">
-          {annonce.statut === "publiee" && (
-            <>
-              <button
-                onClick={() => onEdit(annonce)}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-all cursor-pointer"
-              >
-                <Pencil size={12} />
-                Modifier
-              </button>
-              <button
-                onClick={() => startTransition(async () => { await cancelAnnonce(annonce.id); })}
-                disabled={isPending}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all cursor-pointer disabled:opacity-50"
-              >
-                {isPending ? <Loader2 size={12} className="animate-spin" /> : <X size={12} />}
-                Annuler
-              </button>
-            </>
-          )}
-          {annonce.statut !== "publiee" && (
-            <button
-              onClick={() => startRepublishTransition(async () => { await republishAnnonce(annonce.id); })}
-              disabled={isRepublishPending}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-all cursor-pointer disabled:opacity-50"
-            >
-              {isRepublishPending ? <Loader2 size={12} className="animate-spin" /> : <RotateCcw size={12} />}
-              Republier
-            </button>
-          )}
-          <button
-            onClick={handleDelete}
-            disabled={isDeletePending}
-            title="Supprimer définitivement"
-            className="flex items-center gap-1.5 ml-auto px-2.5 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all cursor-pointer disabled:opacity-50"
-          >
-            {isDeletePending ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
-            Supprimer
-          </button>
-        </div>
-      </div>
-
-      {showAConfirmerInfo && (
-        <div
-          className="fixed inset-0 z-[300] bg-black/50 flex items-center justify-center p-4"
-          onClick={() => setShowAConfirmerInfo(false)}
-        >
-          <div
-            className="bg-card rounded-2xl w-full max-w-sm p-5 space-y-3 shadow-xl"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <p className="text-sm font-bold text-foreground flex items-center gap-2">
-                <ShieldAlert size={15} className="text-red-600 shrink-0" />
-                Pourquoi « À confirmer » ?
-              </p>
-              <button
-                onClick={() => setShowAConfirmerInfo(false)}
-                className="p-1 rounded-full hover:bg-secondary transition-colors cursor-pointer shrink-0"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            {partSousLeMinimum && (
-              <p className="text-xs text-muted-foreground leading-relaxed">{check.message}</p>
-            )}
-            {legalPasReattestee && (
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Cette annonce a été publiée ou modifiée sans reconfirmer que vous réalisez
-                réellement le vol et partagez vos frais. Modifiez-la et cochez la case
-                d&apos;attestation à la dernière étape pour lever l&apos;alerte.
-              </p>
-            )}
-
-            <p className="text-[11px] text-muted-foreground/70 leading-relaxed border-t border-border pt-2.5">
-              Cette annonce reste publiée et réservable : ce badge est un rappel visible
-              uniquement par vous, pas par les clients.
-            </p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  return { check, prixClient, parPlace, partSousLeMinimum, legalPasReattestee, aConfirmer, reservees, groupeOuvert, badge };
 }
 
-export function AnnoncesList({
-  annonces,
-  piloteNom,
+export type AnnonceAction = "retirer" | "republier" | "cloturer" | "supprimer";
+
+// Contenu du tiroir d'une annonce (le cadre Sheet est posé par l'appelant).
+export function AnnonceSheetContent({
+  annonce: a,
   stats,
-  onEdit,
+  error,
+  pending,
+  onClose,
+  onAction,
 }: {
-  annonces: AnnonceRow[];
-  piloteNom: string;
-  stats?: Record<string, AnnonceStats>;
-  onEdit: (a: AnnonceRow) => void;
+  annonce: AnnonceRow;
+  stats?: AnnonceStats;
+  error: string | null;
+  pending: AnnonceAction | null;
+  onClose: () => void;
+  onAction: (action: AnnonceAction) => void;
 }) {
-  if (annonces.length === 0) return null;
+  const info = annonceInfo(a);
+  const titre = a.titre?.trim() || `Vol de ${a.duree} min`;
+  const route = a.route_waypoints?.length
+    ? a.route_waypoints.map((w) => w.nom?.trim() || "?").join(" → ")
+    : null;
+
   return (
-    <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(260px, 300px))" }}>
-      {annonces.map(a => (
-        <AnnonceManageCard key={a.id} annonce={a} piloteNom={piloteNom} stats={stats?.[a.id]} onEdit={onEdit} />
-      ))}
-    </div>
+    <>
+      <SheetHeader
+        title={titre}
+        subtitle={`${a.duree} min · ${info.parPlace ? "vente à la place" : "avion entier"}`}
+        leading={
+          a.images[0] ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={coverUrl(a.images[0])} alt="" className="h-11 w-11 shrink-0 rounded-[11px] object-cover" />
+          ) : (
+            <span className="h-11 w-11 shrink-0 rounded-[11px] bg-gradient-to-br from-[#0b2238] to-[#1a4a8a]" />
+          )
+        }
+        onClose={onClose}
+      />
+      <SheetBody>
+        <SheetHero
+          label="Prix client"
+          aside={<Badge tone={info.badge.tone}>{info.badge.label}</Badge>}
+          hint={`Coût total ${eur(a.prix_total)} · votre part ${eur(a.part_pilote)} (${info.check.pct} %)`}
+        >
+          {eur(info.prixClient)}
+          <span className="ml-1 text-[15px] text-st-muted">{info.parPlace ? "/ place" : "/ avion"}</span>
+        </SheetHero>
+
+        {info.aConfirmer && (
+          <div className="flex gap-2.5 rounded-[14px] bg-st-warn-soft px-3.5 py-3 text-[12.5px] text-st-warn">
+            <AlertTriangle size={16} className="mt-px shrink-0" />
+            <div className="space-y-1.5">
+              <p className="text-[13px] font-semibold">Pourquoi « À confirmer » ?</p>
+              {info.partSousLeMinimum && info.check.message && <p className="leading-snug">{info.check.message}</p>}
+              {info.legalPasReattestee && (
+                <p className="leading-snug">
+                  L&apos;annonce a été publiée ou modifiée sans reconfirmer que vous réalisez le vol et partagez
+                  vos frais. Modifiez-la et cochez l&apos;attestation à la dernière étape.
+                </p>
+              )}
+              <p className="leading-snug opacity-80">L&apos;annonce reste en vente : vous seul voyez cette alerte.</p>
+            </div>
+          </div>
+        )}
+
+        {info.groupeOuvert && (
+          <div className="flex gap-2.5 rounded-[14px] bg-st-gold-soft px-3.5 py-3 text-[12.5px] text-st-gold-text">
+            <Lock size={16} className="mt-px shrink-0" />
+            <div>
+              <p className="text-[13px] font-semibold">
+                Groupe ouvert : {info.reservees} place{info.reservees > 1 ? "s" : ""} sur {a.places} réservée{info.reservees > 1 ? "s" : ""}
+              </p>
+              <p className="mt-0.5 leading-snug">
+                Le prix de chaque passager se fige à la clôture (part égale entre les occupants réels).
+              </p>
+            </div>
+          </div>
+        )}
+
+        <SheetRows>
+          <SheetRow label="Places">
+            {info.parPlace ? `${a.places - info.reservees} / ${a.places} libres` : `${a.places} passager${a.places > 1 ? "s" : ""} max`}
+          </SheetRow>
+          <SheetRow label="Mode de vente">{info.parPlace ? "À la place" : "Avion entier"}</SheetRow>
+          <SheetRow label="Vues">
+            {stats?.vues ?? 0} · {stats?.visiteurs ?? 0} visiteur{(stats?.visiteurs ?? 0) > 1 ? "s" : ""}
+          </SheetRow>
+          <SheetRow label="Itinéraire" className="truncate">{route ?? "Durée fixe, sans tracé"}</SheetRow>
+          <SheetRow label="Photos">{a.images.length}</SheetRow>
+        </SheetRows>
+
+        {a.description && <p className="line-clamp-4 text-[13px] leading-relaxed text-st-text-2">{a.description}</p>}
+
+        {error && <p className="rounded-[12px] bg-st-bad-soft px-3 py-2 text-[12.5px] text-st-bad">{error}</p>}
+      </SheetBody>
+
+      <SheetFooter>
+        <div className="space-y-2">
+          {a.statut === "publiee" ? (
+            <>
+              <LinkButton href={`/pilote/annonces/${a.id}/modifier`} fullWidth size="lg" className="sm:h-[38px] sm:text-[13px]">
+                <Pencil />
+                Modifier l&apos;annonce
+              </LinkButton>
+              <div className="grid grid-cols-2 gap-2">
+                {info.groupeOuvert ? (
+                  <Button variant="secondary" onClick={() => onAction("cloturer")} loading={pending === "cloturer"}>
+                    {pending !== "cloturer" && <Lock />}
+                    Clôturer le groupe
+                  </Button>
+                ) : (
+                  <Button variant="secondary" onClick={() => onAction("retirer")} loading={pending === "retirer"}>
+                    {pending !== "retirer" && <X />}
+                    Retirer
+                  </Button>
+                )}
+                <LinkButton href={`/vol/annonce/${a.id}`} target="_blank" rel="noopener noreferrer" variant="secondary">
+                  <ExternalLink />
+                  Page publique
+                </LinkButton>
+              </div>
+              {info.groupeOuvert && (
+                <Button variant="secondary" fullWidth onClick={() => onAction("retirer")} loading={pending === "retirer"}>
+                  {pending !== "retirer" && <X />}
+                  Retirer de la vente
+                </Button>
+              )}
+            </>
+          ) : (
+            <Button fullWidth size="lg" className="sm:h-[38px] sm:text-[13px]" onClick={() => onAction("republier")} loading={pending === "republier"}>
+              {pending !== "republier" && <RotateCcw />}
+              Remettre en vente
+            </Button>
+          )}
+          <button
+            type="button"
+            onClick={() => onAction("supprimer")}
+            className="block w-full cursor-pointer py-1.5 text-center text-[12.5px] font-[550] text-st-bad hover:underline"
+          >
+            Supprimer l&apos;annonce
+          </button>
+        </div>
+      </SheetFooter>
+    </>
   );
 }
