@@ -10,6 +10,7 @@ import {
 import { ResaBadge, AnnonceTag } from "@/components/pilote/ResaBadge";
 import { PiloteVolsActions } from "@/components/pilote/PiloteVolsActions";
 import { MetarChip } from "@/components/pilote/MetarChip";
+import { RoutePath } from "@/components/pilote/RoutePath";
 import { cn } from "@/lib/utils";
 
 type Wp = { nom?: string | null };
@@ -28,10 +29,11 @@ type NextFlight = {
   products: { route_waypoints: Wp[] | null } | null;
 };
 
-const routeOf = (f: NextFlight) => {
+const pointsOf = (f: NextFlight) => {
   const wps = f.final_waypoints?.length ? f.final_waypoints : f.products?.route_waypoints;
-  return wps?.length ? wps.map((w) => w.nom?.trim() || "?").join(" → ") : null;
+  return wps?.length ? wps.map((w) => w.nom?.trim() || "?") : null;
 };
+const routeOf = (f: NextFlight) => pointsOf(f)?.join(" → ") ?? null;
 
 function inDays(date: string, today: string): string {
   const n = Math.round((new Date(date + "T12:00:00Z").getTime() - new Date(today + "T12:00:00Z").getTime()) / 86400000);
@@ -159,7 +161,6 @@ export default async function PiloteDashboard() {
                 label="Client"
                 value={<span className="flex flex-wrap items-center gap-1.5">{next.clients ? `${next.clients.prenom} ${next.clients.nom}` : "—"}{next.type_resa === "annonce_pilote" && <AnnonceTag />}</span>}
               />
-              <Metric size="sm" label="Route" value={routeOf(next) ?? "À tracer"} />
               <Metric size="sm" label="Durée" value={`${next.duree} min`} />
               <Metric
                 size="sm"
@@ -168,6 +169,15 @@ export default async function PiloteDashboard() {
                 hint={next.poids_total != null ? `${next.poids_total} kg au total` : "poids non renseigné"}
               />
             </CardSplit>
+            {/* La route sur toute la largeur : 5 ou 6 étapes tiennent sur une ou deux lignes. */}
+            <div className="border-t border-st-line px-4 py-3.5 sm:px-5">
+              <p className="text-[12.5px] text-st-muted">Route</p>
+              {pointsOf(next) ? (
+                <RoutePath points={pointsOf(next)!} className="mt-1" />
+              ) : (
+                <p className="mt-1 text-[14px] text-st-muted">À tracer</p>
+              )}
+            </div>
           </Card>
         ) : (
           <Card className="flex flex-col items-center justify-center gap-2 py-10 text-center">

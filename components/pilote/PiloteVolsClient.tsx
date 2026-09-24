@@ -9,7 +9,7 @@ import {
   Button, DateTile, EmptyState, Segmented, StatCard, StatGrid,
   Table, TableCell, TableHeaderCell, TableRow, TableSearch,
 } from "@/components/pilote/studio";
-import { AnnonceTag, ResaBadge, RouteStatusBadge } from "@/components/pilote/ResaBadge";
+import { ResaBadge, RouteStatusText } from "@/components/pilote/ResaBadge";
 
 type Reservation = DrawerReservation;
 
@@ -147,19 +147,15 @@ export function PiloteVolsClient({ reservations: initial }: { reservations: Rese
                     </div>
                   </TableCell>
                   <TableCell>
-                    <p className="flex items-center justify-end gap-1.5 font-[550] sm:justify-start">
-                      <span className="truncate">{client}</span>
-                      {r.type_resa === "annonce_pilote" && <AnnonceTag />}
+                    <p className="truncate font-[550]">{client}</p>
+                    <p className="text-xs text-st-muted">
+                      {r.type_resa === "annonce_pilote" && <span className="font-semibold text-st-gold-text">Annonce · </span>}
+                      {pax != null ? `${pax} pax${r.poids_total != null ? ` · ${r.poids_total} kg` : ""}` : ""}
                     </p>
-                    {pax != null && (
-                      <p className="text-xs text-st-muted">
-                        {pax} pax{r.poids_total != null ? ` · ${r.poids_total} kg` : ""}
-                      </p>
-                    )}
                   </TableCell>
                   <TableCell>
                     <p className="max-w-[280px] truncate text-st-text-2 max-sm:max-w-none">{cities ?? <span className="text-st-muted">À tracer</span>}</p>
-                    <RouteStatusBadge status={routeStatus(r)} />
+                    <RouteStatusText status={routeStatus(r)} />
                   </TableCell>
                   <TableCell align="right">{r.duree} min</TableCell>
                   <TableCell>

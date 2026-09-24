@@ -29,6 +29,22 @@ export function RouteStatusBadge({ status }: { status: string | null }) {
   return <Badge size="sm" tone={ok ? "success" : "warning"}>{conf.label.replace(" ✓", "")}</Badge>;
 }
 
+// Même information en texte discret, pour les listes où une seule pastille
+// (le statut du vol) doit ressortir par ligne.
+export function RouteStatusText({ status }: { status: string | null }) {
+  const TEXT: Record<string, string> = {
+    pending: "Route envoyée, en attente",
+    sent: "Route envoyée, en attente",
+    accepted: "Route validée",
+    validated: "Route validée",
+    modification_requested: "Le client demande une modification",
+  };
+  const text = status ? TEXT[status] : null;
+  if (!text) return null;
+  const ok = status === "accepted" || status === "validated";
+  return <p className={ok ? "text-xs text-st-muted" : "text-xs font-semibold text-st-warn"}>{text}</p>;
+}
+
 // Étiquette « Annonce » : vol issu d'une annonce publiée par le pilote.
 export function AnnonceTag() {
   return <Badge size="sm" tone="gold">Annonce</Badge>;
