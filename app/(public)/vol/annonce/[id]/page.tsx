@@ -136,8 +136,8 @@ export default async function AnnonceDetailPage({ params }: { params: Promise<{ 
                 largeur, pour que « Votre pilote » remonte à droite) ── */}
             <div className="space-y-6">
               <VolImageGallery images={galleryImages} title={annonce.titre?.trim() || `Vol partagé avec ${pilote.nom}`} duree={annonce.duree} />
-              <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg">
-                <p className="text-[10px] font-bold text-foreground uppercase tracking-[2px] mb-1">
+              <div className="pt-4 border-t border-border">
+                <p className="text-[10px] font-bold text-primary uppercase tracking-[2px] mb-1.5">
                   Vol en partage de coûts · NCO.GEN.104
                 </p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
