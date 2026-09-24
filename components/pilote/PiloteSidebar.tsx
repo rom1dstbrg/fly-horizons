@@ -123,12 +123,11 @@ export function PiloteSidebar({ counts = {}, pilot, isAdmin = false }: {
         open ? "w-64 shadow-[0_24px_60px_-20px_rgba(15,17,23,0.35)]" : "w-[76px]",
       )}
     >
-      {/* Marque : icône seule au repos, logotype complet ouvert. */}
+      {/* Marque : l'icône ne bouge jamais ; ouvert, le nom apparaît à côté. (Le
+          logotype complet contient déjà l'icône : l'afficher ici la doublait.) */}
       <Link href="/pilote" className="mb-3.5 flex h-10 shrink-0 items-center gap-3 px-[10px]">
         <Image src="/icone.svg" alt="Fly Horizons" width={28} height={28} className="h-7 w-7 shrink-0" unoptimized priority />
-        <span className={labelCls(open)}>
-          <Image src="/fly-horizons-logo-navy.svg" alt="" width={120} height={24} className="h-5 w-auto" style={{ width: "auto" }} unoptimized />
-        </span>
+        <span className={cn(labelCls(open), "text-[15px] font-semibold tracking-[-0.01em] text-st-ink")}>Fly Horizons</span>
       </Link>
 
       <nav className="flex flex-col gap-0.5" aria-label="Navigation pilote">
