@@ -260,6 +260,36 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-09-24 · Refonte du tiroir d'un vol (pilote + admin) et de Masse &amp; centrage — maquette v2 validée</p>
+      <h3>Tiroir guidé à 4 onglets, éditeur de route plein écran, M&amp;B saisie sur l'avion vu de dessus</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Audit de Romain sur l'étape 1 Studio : tiroir « très brouillon » comparé à Nexus, M&amp;B « trop
+          brouillon », performances peu intuitives. Maquette v1 refusée (place perdue, désordre au téléphone, M&amp;B
+          « part dans tous les sens »). Maquette v2 :
+          <a href="https://claude.ai/artifact/NNm46hEzPNXp5KQLGMchLZ">Tiroir et M&amp;B</a>.</dd>
+        <dt>Décision</dt>
+        <dd><b>Tiroir</b> (même composant admin + pilote) : en-tête d'une ligne ; onglets Aperçu · Route · Messages ·
+          Dossier (Modifier + Historique fusionnés), pastille animée, libellé seulement sur l'onglet actif ; frise du
+          parcours + « prochaine étape » avec une seule action principale, uniquement dans Aperçu ; fenêtre de
+          confirmation qui explique ce que l'action déclenche avant tout envoi au client ; Reporter / Annuler en petit.
+          Route : aperçu (carte puis liste des points dessous) + <b>éditeur plein écran</b>. Admin : NewCAG en case à
+          cocher dans la prochaine étape, Bilan vol et Email libre repliés dans Dossier.
+          <b>M&amp;B</b> : structure des applis de référence (ForeFlight, Garmin Pilot) — saisie sur l'avion vu de
+          dessus (sièges 2×2, bagages, carburant sur les ailes), résultat à côté (enveloppe + jauges masse /
+          centrage), terrains en dessous (OACI, piste, METAR auto, jauge distance nécessaire / disponible), bande de
+          verdict en haut. Le tableau de calcul doit figurer dans le PDF, qui est refait aussi.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>v1 : frise + prochaine étape au-dessus de tous les onglets (trop de hauteur perdue), carte de route
+          éditable dans le tiroir (trop petit sur PC), M&amp;B en 4 blocs numérotés + résultat à droite (illisible).
+          Parcours M&amp;B pas à pas : non retenu, Romain ne savait pas l'imaginer ; on a pris les références du marché.</dd>
+        <dt>Conséquences</dt>
+        <dd>Ordre : M&amp;B, puis tiroir + éditeur de route, puis PDF. Calculs et METAR inchangés. Détails du tiroir au
+          téléphone à ajuster en test réel.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-09-24 · Espace pilote — restyle « Studio » (bureau + téléphone), maquette en cours de validation</p>
       <h3>/pilote adopte le style et les règles mobiles de Nexus, couleurs Fly Horizons gardées</h3>
       <dl>

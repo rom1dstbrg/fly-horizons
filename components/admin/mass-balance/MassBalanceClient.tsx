@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Download, RotateCcw, Save, Users, Pencil, CheckCircle2, AlertTriangle, Clock, Files, CopyPlus } from "lucide-react";
+import { Check, Download, RotateCcw, Save, Users, CheckCircle2, AlertTriangle, Clock, Files, CopyPlus, ChevronDown, Table2 } from "lucide-react";
 import {
   computeMassBalance,
   defaultInputs,
@@ -14,20 +14,20 @@ import {
 import { CG_AFT, MASS_MAX, cgFwd } from "@/lib/mass-balance/da40-data";
 import { saveMassBalanceSheet, updateMassBalanceSheet } from "@/lib/actions/mass-balance";
 import {
-  Badge, Button, ButtonLabel, Card, CardSplit, Input, PageHeader, SectionHeader, Segmented,
-  Sheet, SheetBody, SheetHeader,
+  Badge, Button, ButtonLabel, Card, Input, PageHeader, Sheet, SheetBody, SheetHeader,
 } from "@/components/pilote/studio";
 import { cn } from "@/lib/utils";
 import { CgEnvelopeChart } from "./CgEnvelopeChart";
-import { ChargementFields } from "./ChargementFields";
-import { PerfResultBlocks } from "./PerfResultBlocks";
-import { MbEditModal } from "./MbEditModal";
+import { MbAircraftLoad } from "./MbAircraftLoad";
+import { MbTerrains } from "./MbTerrains";
 import { SheetsList, type MbSheetRow } from "./SheetsList";
 
-// ── Outil Masse & centrage DA40 (admin + pilote), style « Studio » (24/09) ──
-// Le verdict GO / NO-GO et les 4 chiffres qui comptent sont en haut ; au
-// téléphone une barre compacte reste collée en haut et le reste se range en
-// 3 onglets (Chargement, Perfs, Détail). Calculs, PDF et METAR inchangés.
+// ── Outil Masse & centrage DA40 (admin + pilote) — maquette v2 validée le 24/09 ──
+// Structure des applis de référence (ForeFlight, Garmin Pilot) : une bande de
+// verdict en haut (collée en haut au téléphone), le chargement saisi sur
+// l'avion vu de dessus, le résultat à côté (enveloppe + jauges), les terrains
+// en dessous. Ordre de préparation : poids → carburant → terrains.
+// Calculs, PDF et METAR inchangés.
 
 export interface ResaContext {
   id: string;
@@ -80,10 +80,8 @@ export function MassBalanceClient({
   const [error, setError] = useState("");
   const [previewing, setPreviewing] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [perfModalOpen, setPerfModalOpen] = useState(false);
   const [sheetsOpen, setSheetsOpen] = useState(false);
-  // Téléphone : un onglet à la fois au lieu d'une longue page (bureau : tout visible).
-  const [tab, setTab] = useState<"chargement" | "perfs" | "detail">("chargement");
+  const [showTable, setShowTable] = useState(false);
 
   const computed = useMemo(() => computeMassBalance(inputs), [inputs]);
 
@@ -203,17 +201,11 @@ export function MassBalanceClient({
   })();
 
   const V = {
-    go: {
-      icon: CheckCircle2, tile: "bg-st-ok", text: "text-st-ok", title: "GO · vol autorisé",
-      sub: `Masse, centrage et performances dans les limites · catégorie ${computed.category}`,
-    },
-    incomplet: {
-      icon: Clock, tile: "bg-st-warn", text: "text-st-warn", title: "Incomplet · performances à renseigner",
-      sub: "Masse et centrage OK. Renseignez les conditions et TODA / LDA pour conclure.",
-    },
+    go: { icon: CheckCircle2, tile: "bg-st-ok", text: "text-st-ok", title: "GO · vol autorisé", sub: `Catégorie ${computed.category}` },
+    incomplet: { icon: Clock, tile: "bg-st-warn", text: "text-st-warn", title: "Incomplet", sub: "Masse et centrage OK, terrains à renseigner" },
     nogo: {
-      icon: AlertTriangle, tile: "bg-st-bad", text: "text-st-bad", title: "NO-GO · vol non autorisé en l'état",
-      sub: [...(!computed.withinLimits ? computed.issues : []), ...perfKo.map((v) => v.message)].join(" · ") || "Vérifiez la masse, le centrage et les performances.",
+      icon: AlertTriangle, tile: "bg-st-bad", text: "text-st-bad", title: "NO-GO",
+      sub: [...(!computed.withinLimits ? computed.issues : []), ...perfKo.map((v) => v.message)].join(" · ") || "Vérifiez la masse, le centrage et les performances",
     },
   }[overall];
   const VIcon = V.icon;
@@ -227,41 +219,35 @@ export function MassBalanceClient({
   const fwd = cgFwd(computed.tom);
   const pos = (cg: number) => Math.max(0, Math.min(100, ((cg - CG_MIN) / (CG_MAX - CG_MIN)) * 100));
   const cgOut = computed.cgTom < fwd || computed.cgTom > CG_AFT;
-  const signed = (n: number | null) => (n == null ? "—" : `${n >= 0 ? "+" : ""}${n}`);
+  const signed = (n: number | null) => (n == null ? "—" : `${n >= 0 ? "+" : ""}${n.toLocaleString("fr-BE")} m`);
   const marginTone = (n: number | null) => (n == null ? "text-st-muted" : n >= 0 ? "text-st-ok" : "text-st-bad");
-  const depIcao = inputs.perf.dep.icao?.trim();
-  const destIcao = inputs.perf.dest.icao?.trim();
-  const occupants = 1 + [inputs.fpax, inputs.rpax1, inputs.rpax2].filter((v) => v > 0).length;
 
-  const resaChip = resa && (
-    <div className="flex min-w-0 items-center gap-2 rounded-[14px] bg-st-surface py-1.5 pl-3 pr-1.5">
-      <Users size={15} className="shrink-0 text-st-text-2" />
-      <span className="min-w-0 flex-1 leading-tight">
-        <span className="block truncate text-[13px] font-semibold text-st-text">
-          {resa.clientLabel ?? "Réservation liée"}
-          {resa.date_vol && (
-            <span className="font-medium text-st-muted">
-              {" · "}
-              {new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "short", day: "numeric", month: "short" })}
-            </span>
-          )}
-        </span>
-        <span className="block truncate text-[12px] text-st-muted">
-          {resa.passagers ?? 1} passager{(resa.passagers ?? 1) > 1 ? "s" : ""} · {resa.poids_total != null ? `${resa.poids_total} kg` : "poids non renseigné"}
-        </span>
-      </span>
-      <Button variant="secondary" size="sm" onClick={importFromResa}>
-        Importer les poids
-      </Button>
+  const massBar = (h = "h-2") => (
+    <div className={cn("overflow-hidden rounded-full bg-st-surface-hover", h)}>
+      <div className={cn("h-full rounded-full", massOver ? "bg-st-bad" : "bg-st-ink")} style={{ width: `${massPct}%` }} />
+    </div>
+  );
+  const cgBar = (h = "h-2") => (
+    <div className={cn("relative rounded-full bg-st-surface-hover", h)}>
+      <div className="absolute inset-y-0 rounded-full bg-st-ok/25" style={{ left: `${pos(fwd)}%`, right: `${100 - pos(CG_AFT)}%` }} />
+      <div className={cn("absolute -top-1 -bottom-1 w-[3px] -translate-x-1/2 rounded-full", cgOut ? "bg-st-bad" : "bg-st-ink")} style={{ left: `${pos(computed.cgTom)}%` }} />
     </div>
   );
 
-  // Visible au bureau, ou sur l'onglet choisi au téléphone.
-  const onTab = (t: typeof tab) => (tab === t ? "block" : "hidden lg:block");
-  const bigNum = "st-num text-[24px] font-medium leading-tight tracking-[-0.03em]";
+  const resaChip = resa && (
+    <div className="flex min-w-0 items-center gap-2">
+      <span className="min-w-0 truncate rounded-[9px] bg-st-surface px-2.5 py-1.5 text-[12.5px] text-st-text-2">
+        <Users size={13} className="mr-1.5 inline -translate-y-px" />
+        <b className="font-semibold text-st-text">{resa.clientLabel ?? "Réservation liée"}</b>
+        {resa.date_vol && ` · ${new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "short", day: "numeric", month: "short" })}`}
+        {` · ${resa.passagers ?? 1} pax${resa.poids_total != null ? ` · ${resa.poids_total} kg` : ""}`}
+      </span>
+      <Button variant="secondary" size="sm" onClick={importFromResa}>Importer les poids</Button>
+    </div>
+  );
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <PageHeader
         title="Masse & centrage"
         actions={
@@ -284,138 +270,122 @@ export function MassBalanceClient({
       />
       {error && <p className="rounded-[11px] bg-st-bad-soft px-3 py-2 text-[13px] font-medium text-st-bad">{error}</p>}
 
-      {/* ═══ Verdict — téléphone : barre compacte collée en haut + onglets ═══ */}
-      <div className="sticky top-[env(safe-area-inset-top)] z-20 -mx-4 space-y-2 bg-st-bg/90 px-4 pb-2 pt-1 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:hidden">
-        <div className="flex items-center gap-3 rounded-[18px] border border-st-line bg-white px-3.5 py-3 shadow-st-sm">
+      {/* ═══ Bande de verdict — téléphone : collée en haut, verdict + 2 jauges ═══ */}
+      <div className="sticky top-[env(safe-area-inset-top)] z-20 -mx-4 bg-st-bg/90 px-4 pb-2 pt-1 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:hidden">
+        <div className="flex items-center gap-3 rounded-[18px] border border-st-line bg-white px-3 py-2.5 shadow-st-sm">
           <span className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-[12px] text-white", V.tile)}>
-            <VIcon size={20} />
+            <VIcon size={19} />
           </span>
           <div className="min-w-0 flex-1">
-            <p className={cn("truncate text-[16px] font-semibold", V.text)}>{V.title}</p>
-            <p className="st-num truncate text-[12.5px] text-st-muted">
-              <span className={massOver ? "font-semibold text-st-bad" : ""}>{fr(computed.tom, 1)} / {MASS_MAX} kg</span>
-              {" · "}
-              <span className={cgOut ? "font-semibold text-st-bad" : ""}>CG {fr(computed.cgTom, 3)} m</span>
-            </p>
+            <p className={cn("truncate text-[15px] font-semibold", V.text)}>{V.title}</p>
+            <div className="mt-1 grid grid-cols-2 gap-2">
+              <div className="min-w-0">
+                <p className={cn("st-num truncate text-[10.5px]", massOver ? "font-semibold text-st-bad" : "text-st-muted")}>{fr(computed.tom, 0)} / {MASS_MAX} kg</p>
+                <div className="mt-1">{massBar("h-[5px]")}</div>
+              </div>
+              <div className="min-w-0">
+                <p className={cn("st-num truncate text-[10.5px]", cgOut ? "font-semibold text-st-bad" : "text-st-muted")}>CG {fr(computed.cgTom, 3)} m</p>
+                <div className="mt-1">{cgBar("h-[5px]")}</div>
+              </div>
+            </div>
           </div>
         </div>
-        <Segmented
-          fill
-          value={tab}
-          onChange={setTab}
-          items={[
-            { key: "chargement", label: "Chargement" },
-            { key: "perfs", label: "Perfs" },
-            { key: "detail", label: "Détail" },
-          ]}
-        />
       </div>
       {resa && <div className="lg:hidden">{resaChip}</div>}
 
-      {/* ═══ Verdict — bureau : carte composée ═══ */}
-      <Card padded={false} className="hidden overflow-hidden lg:block">
-        <div className="flex items-center justify-between gap-4 p-5">
-          <div className="flex min-w-0 items-center gap-3.5">
-            <span className={cn("grid h-12 w-12 shrink-0 place-items-center rounded-[14px] text-white", V.tile)}>
-              <VIcon size={24} />
-            </span>
-            <div className="min-w-0">
-              <p className={cn("text-[22px] font-semibold tracking-[-0.02em]", V.text)}>{V.title}</p>
-              <p className="text-[13px] text-st-muted">{V.sub}</p>
-            </div>
-          </div>
-          {resa && <div className="max-w-[440px] shrink-0">{resaChip}</div>}
+      {/* ═══ Bande de verdict — bureau : tout sur une ligne ═══ */}
+      <div className="hidden items-center gap-4 rounded-[18px] border border-st-line bg-white px-4 py-2.5 shadow-st-sm lg:flex">
+        <span className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-[12px] text-white", V.tile)}>
+          <VIcon size={19} />
+        </span>
+        <div className="min-w-0 max-w-[260px]">
+          <p className={cn("text-[16px] font-semibold", V.text)}>{V.title}</p>
+          <p className="truncate text-[11.5px] text-st-muted" title={V.sub}>{V.sub}</p>
         </div>
-        <CardSplit>
-          <div>
-            <p className="text-[12.5px] text-st-muted">Masse au décollage</p>
-            <p className={cn(bigNum, massOver ? "text-st-bad" : "text-st-text")}>
-              {fr(computed.tom, 1)} <span className="text-[14px] text-st-muted">/ {MASS_MAX} kg</span>
-            </p>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-st-surface-hover">
-              <div className={cn("h-full rounded-full", massOver ? "bg-st-bad" : "bg-st-ink")} style={{ width: `${massPct}%` }} />
+        <div className="ml-2 flex gap-6">
+          {[
+            ["Masse", `${fr(computed.tom, 1)} kg`, massOver ? "text-st-bad" : "text-st-text"],
+            ["Centrage", `${fr(computed.cgTom, 3)} m`, cgOut ? "text-st-bad" : "text-st-text"],
+            ["Décollage", signed(depMargin), marginTone(depMargin)],
+            ["Atterrissage", signed(ldgMargin), marginTone(ldgMargin)],
+          ].map(([l, v, t]) => (
+            <div key={l} className="leading-tight">
+              <p className="text-[11.5px] text-st-muted">{l}</p>
+              <p className={cn("st-num text-[15px] font-semibold", t)}>{v}</p>
             </div>
-            <p className="mt-1.5 text-[12px] text-st-muted">
-              {massOver ? `${fr(computed.tom - MASS_MAX, 1)} kg de trop` : `Reste ${fr(MASS_MAX - computed.tom, 1)} kg`}
-            </p>
-          </div>
-          <div>
-            <p className="text-[12.5px] text-st-muted">Centrage au décollage</p>
-            <p className={cn(bigNum, cgOut ? "text-st-bad" : "text-st-text")}>
-              {fr(computed.cgTom, 3)} <span className="text-[14px] text-st-muted">m</span>
-            </p>
-            <div className="relative mt-2 h-1.5 rounded-full bg-st-surface-hover">
-              <div className="absolute inset-y-0 rounded-full bg-st-ok/25" style={{ left: `${pos(fwd)}%`, right: `${100 - pos(CG_AFT)}%` }} />
-              <div className={cn("absolute -top-1 h-3.5 w-[3px] -translate-x-1/2 rounded-full", cgOut ? "bg-st-bad" : "bg-st-ink")} style={{ left: `${pos(computed.cgTom)}%` }} />
-            </div>
-            <p className="mt-1.5 text-[12px] text-st-muted">Limites {fr(fwd, 3)} à {fr(CG_AFT, 2)} m</p>
-          </div>
-          <div>
-            <p className="text-[12.5px] text-st-muted">Marge décollage{depIcao ? ` · ${depIcao}` : ""}</p>
-            <p className={cn(bigNum, marginTone(depMargin))}>
-              {signed(depMargin)} <span className="text-[14px] text-st-muted">m</span>
-            </p>
-            <p className="mt-1.5 text-[12px] text-st-muted">
-              {computed.perf.dep.todr125 != null ? `TODR×1,25 ${computed.perf.dep.todr125} m` : "TODR à calculer"}
-              {computed.perf.dep.toda != null ? ` · TODA ${computed.perf.dep.toda} m` : ""}
-            </p>
-          </div>
-          <div>
-            <p className="text-[12.5px] text-st-muted">Marge atterrissage{destIcao ? ` · ${destIcao}` : ""}</p>
-            <p className={cn(bigNum, marginTone(ldgMargin))}>
-              {signed(ldgMargin)} <span className="text-[14px] text-st-muted">m</span>
-            </p>
-            <p className="mt-1.5 text-[12px] text-st-muted">
-              {computed.perf.ldg.ldr != null ? `LDR ${computed.perf.ldg.ldr} m` : "LDR à calculer"} · pire cas dest. / alt.
-            </p>
-          </div>
-        </CardSplit>
-      </Card>
+          ))}
+        </div>
+        <span className="flex-1" />
+        {resaChip}
+      </div>
 
-      {/* ═══ Chargement (largeur fixe) | Enveloppe et calcul (le reste) ═══
-          Principe de composition : la saisie garde 380 px, le résultat prend
-          toute la place restante ; à partir de xl l'enveloppe et le tableau
-          s'y partagent la largeur à parts égales, alignés en haut. */}
-      <div className="grid items-start gap-5 lg:grid-cols-[380px_minmax(0,1fr)]">
-        <Card className={onTab("chargement")}>
-          <SectionHeader
-            title="Chargement"
-            action={
-              <span className="text-[12.5px] text-st-muted">
-                {occupants} occupant{occupants > 1 ? "s" : ""}{inputs.bag > 0 ? " + bagages" : ""}
-              </span>
-            }
-          />
-          <div className="mt-3">
-            <ChargementFields inputs={inputs} computedFuelL={computed.fuelL} computedFuelKg={computed.fuelKg} patch={patch} />
-          </div>
+      {/* ═══ L'avion | le résultat ═══
+          Principe : la saisie se fait sur l'avion (largeur fixe 430 px), le
+          résultat prend le reste ; les deux cartes ont la même hauteur. */}
+      <div className="grid items-stretch gap-4 lg:grid-cols-[430px_minmax(0,1fr)]">
+        <Card padded={false} className="overflow-hidden">
+          <MbAircraftLoad inputs={inputs} patch={patch} computedFuelL={computed.fuelL} computedFuelKg={computed.fuelKg} />
         </Card>
 
-        <Card className={onTab("detail")}>
-          <SectionHeader
-            title="Enveloppe et calcul"
-            action={
-              computed.withinLimits
-                ? <Badge tone="success">Catégorie {computed.category}</Badge>
-                : <Badge tone="danger">Hors limites</Badge>
-            }
-          />
-          <div className="mt-3 grid items-start gap-5 xl:grid-cols-2">
-            <div className="min-w-0">
+        <Card padded={false} className="flex flex-col overflow-hidden">
+          <div className="flex items-center justify-between gap-2 px-4 pt-4 sm:px-5">
+            <h2 className="text-sm font-semibold text-st-text">Résultat</h2>
+            {computed.withinLimits ? <Badge tone="success">Dans les limites</Badge> : <Badge tone="danger">Hors limites</Badge>}
+          </div>
+          <div className="flex flex-1 items-center justify-center px-3 py-2 sm:px-4">
+            <div className="w-full max-w-[560px]">
               <CgEnvelopeChart points={computed.points} />
             </div>
-            <div className="min-w-0 overflow-x-auto">
+          </div>
+          <div className="grid grid-cols-2 border-t border-st-line">
+            <div className="px-4 py-3 sm:px-5">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-[12.5px] text-st-muted">Masse au décollage</span>
+                <b className={cn("st-num text-[18px] font-medium tracking-[-0.02em]", massOver ? "text-st-bad" : "text-st-text")}>
+                  {fr(computed.tom, 1)} <span className="text-[12px] text-st-muted">/ {MASS_MAX}</span>
+                </b>
+              </div>
+              <div className="mt-2">{massBar()}</div>
+              <p className="mt-1.5 text-[11.5px] text-st-muted">
+                {massOver ? `${fr(computed.tom - MASS_MAX, 1)} kg de trop` : `Reste ${fr(MASS_MAX - computed.tom, 1)} kg`}
+              </p>
+            </div>
+            <div className="border-l border-st-line px-4 py-3 sm:px-5">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-[12.5px] text-st-muted">Centrage</span>
+                <b className={cn("st-num text-[18px] font-medium tracking-[-0.02em]", cgOut ? "text-st-bad" : "text-st-text")}>
+                  {fr(computed.cgTom, 3)} <span className="text-[12px] text-st-muted">m</span>
+                </b>
+              </div>
+              <div className="mt-2">{cgBar()}</div>
+              <p className="mt-1.5 flex justify-between text-[11.5px] text-st-muted">
+                <span>avant {fr(fwd, 3)}</span>
+                <span>arrière {fr(CG_AFT, 2)}</span>
+              </p>
+            </div>
+          </div>
+          {!computed.withinLimits && (
+            <ul className="list-disc space-y-0.5 border-t border-st-line py-2.5 pl-8 pr-4 text-[12.5px] text-st-bad">
+              {computed.issues.map((it, i) => <li key={i}>{it}</li>)}
+            </ul>
+          )}
+          <button
+            type="button"
+            onClick={() => setShowTable((v) => !v)}
+            aria-expanded={showTable}
+            className="flex cursor-pointer items-center gap-2 border-t border-st-line px-4 py-3 text-left text-[12.5px] font-[550] text-st-text-2 transition-colors hover:bg-st-surface sm:px-5"
+          >
+            <Table2 size={15} />
+            Tableau de calcul
+            <ChevronDown size={15} className={cn("ml-auto text-st-muted transition-transform", showTable && "rotate-180")} />
+          </button>
+          {showTable && (
+            <div className="overflow-x-auto px-4 pb-4 sm:px-5">
               <table className="st-num w-full border-separate border-spacing-0 text-[12.5px]">
                 <thead>
                   <tr>
                     {["Poste", "Masse", "Bras", "Moment"].map((h, i) => (
-                      <th
-                        key={h}
-                        className={cn(
-                          "h-8 bg-st-surface px-2 font-medium text-st-muted first:rounded-l-[8px] last:rounded-r-[8px]",
-                          i === 0 ? "text-left" : "text-right",
-                        )}
-                      >
+                      <th key={h} className={cn("h-8 bg-st-surface px-2 font-medium text-st-muted first:rounded-l-[8px] last:rounded-r-[8px]", i === 0 ? "text-left" : "text-right")}>
                         {h}
                       </th>
                     ))}
@@ -423,11 +393,7 @@ export function MassBalanceClient({
                 </thead>
                 <tbody>
                   {computed.rows.map((row, i) => {
-                    const cell = cn(
-                      "px-2 py-1.5 text-right",
-                      row.total ? "bg-st-surface font-semibold" : "border-t border-st-line-soft",
-                      row.out && "text-st-bad",
-                    );
+                    const cell = cn("px-2 py-1.5 text-right", row.total ? "bg-st-surface font-semibold" : "border-t border-st-line-soft", row.out && "text-st-bad");
                     return (
                       <tr key={i}>
                         <td className={cn(cell, "text-left", row.total && "rounded-l-[8px]")}>
@@ -442,42 +408,23 @@ export function MassBalanceClient({
                   })}
                 </tbody>
               </table>
+              <p className="mt-2 text-[11.5px] text-st-muted">
+                Limites : avant 2,40 m (jusqu&apos;à 980 kg) → 2,46 m à 1150 kg ; arrière 2,59 m ; Utility ≤ 980 kg ; mini 780 kg.
+                Réf. NewCAG rév. 4.1, vérifier l&apos;AFM.
+              </p>
             </div>
-          </div>
-          {!computed.withinLimits && (
-            <ul className="mt-3 list-disc space-y-0.5 pl-4 text-[12.5px] text-st-bad">
-              {computed.issues.map((it, i) => <li key={i}>{it}</li>)}
-            </ul>
           )}
-          <p className="mt-3 text-[12px] text-st-muted">
-            Limites : avant 2,40 m (jusqu&apos;à 980 kg) → 2,46 m à 1150 kg ; arrière 2,59 m ; Utility ≤ 980 kg ;
-            mini 780 kg. Réf. NewCAG rév. 4.1, vérifier l&apos;AFM.
-          </p>
         </Card>
       </div>
 
-      {/* ═══ Performances ═══ */}
-      <Card padded={false} className={cn("overflow-hidden", onTab("perfs"))}>
-        <div className="px-4 pb-1 pt-4 sm:px-5 sm:pt-5">
-          <SectionHeader
-            title="Performances"
-            action={
-              <Button variant="secondary" size="sm" onClick={() => setPerfModalOpen(true)}>
-                <Pencil /> Modifier
-              </Button>
-            }
-          />
+      {/* ═══ Terrains et performances ═══ */}
+      <Card padded={false} className="overflow-hidden">
+        <div className="flex items-center justify-between gap-2 px-4 pt-4 sm:px-5">
+          <h2 className="text-sm font-semibold text-st-text">Terrains et performances</h2>
+          <span className="text-[12px] text-st-muted max-sm:hidden">METAR importé automatiquement</span>
         </div>
-        <PerfResultBlocks perf={inputs.perf} computed={computed.perf} />
+        <MbTerrains perf={inputs.perf} computed={computed.perf} onChangeAero={patchAero} onChange={patchPerf} />
       </Card>
-
-      <MbEditModal
-        open={perfModalOpen}
-        inputs={inputs}
-        onClose={() => setPerfModalOpen(false)}
-        patchAero={patchAero}
-        patchPerf={patchPerf}
-      />
 
       {/* ═══ Feuilles enregistrées ═══ */}
       <Sheet value={sheetsOpen ? true : null} onClose={() => setSheetsOpen(false)} width="lg">

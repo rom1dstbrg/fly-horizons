@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { Cloud, Loader2, CornerDownLeft } from "lucide-react";
-import type { AerodromeInput, PerfInputs } from "@/lib/mass-balance/da40-calc";
+import type { AerodromeInput } from "@/lib/mass-balance/da40-calc";
 import { extractFromRawMetar } from "@/lib/mass-balance/da40-calc";
 import { findAerodrome } from "@/lib/mass-balance/aerodromes";
 import { MB, NumberField } from "./fields";
 
-type Which = "dep" | "dest" | "alt";
+// Saisie complète d'un terrain (OACI, pistes, METAR ou météo à la main,
+// TODA / LDA) — ouverte depuis le crayon d'une colonne de MbTerrains.
+
 
 export interface RunwayPick {
   heading: number;
@@ -16,7 +18,7 @@ export interface RunwayPick {
   lda: number | null;
 }
 
-function AeroRow({
+export function AeroRow({
   label,
   ad,
   narrow,
@@ -213,81 +215,6 @@ function AeroRow({
           </button>
         </div>
       )}
-    </div>
-  );
-}
-
-/**
- * Saisie des conditions & pistes — Départ / Destination / Alternate — utilisée
- * dans l'onglet « Performances » de la popup de saisie. Les résultats calculés
- * (TODR/LDR, verdicts) sont affichés en lecture seule sur la page principale
- * (PerfResultBlocks dans MassBalanceClient), pas ici.
- */
-export function PerfInputsSection({
-  perf,
-  onChangeAero,
-  onChange,
-}: {
-  perf: PerfInputs;
-  onChangeAero: (which: Which, patch: Partial<AerodromeInput>) => void;
-  onChange: (patch: Partial<Pick<PerfInputs, "toda" | "ldaDest" | "ldaAlt">>) => void;
-}) {
-  function handleRunway(which: Which, rw: RunwayPick) {
-    if (which === "dep") onChange({ toda: rw.toda });
-    else if (which === "dest") onChange({ ldaDest: rw.lda });
-    else onChange({ ldaAlt: rw.lda });
-  }
-
-  function copyFromDep(target: "dest" | "alt") {
-    const s = perf.dep;
-    onChangeAero(target, {
-      icao: s.icao,
-      rwy: s.rwy,
-      elev: s.elev,
-      qnh: s.qnh,
-      oat: s.oat,
-      wdir: s.wdir,
-      wspd: s.wspd,
-      rawMetar: s.rawMetar,
-    });
-    const rec = findAerodrome(s.icao);
-    const rw = rec?.runways.find((r) => r.heading === s.rwy);
-    if (rw) {
-      if (target === "dest") onChange({ ldaDest: rw.lda });
-      else onChange({ ldaAlt: rw.lda });
-    }
-  }
-
-  const depHasIcao = !!perf.dep.icao?.trim();
-
-  return (
-    <div className="space-y-3">
-      <AeroRow
-        label="Départ"
-        ad={perf.dep}
-        onChange={(p) => onChangeAero("dep", p)}
-        onRunway={(rw) => handleRunway("dep", rw)}
-        extra={<NumberField label="TODA m" value={perf.toda} onChange={(v) => onChange({ toda: v })} size="md" />}
-      />
-      <AeroRow
-        label="Destination"
-        ad={perf.dest}
-        canCopyDep={depHasIcao}
-        onCopyDep={() => copyFromDep("dest")}
-        onChange={(p) => onChangeAero("dest", p)}
-        onRunway={(rw) => handleRunway("dest", rw)}
-        extra={<NumberField label="LDA m" value={perf.ldaDest} onChange={(v) => onChange({ ldaDest: v })} size="md" />}
-      />
-      <AeroRow
-        label="Alternate"
-        ad={perf.alt}
-        narrow
-        canCopyDep={depHasIcao}
-        onCopyDep={() => copyFromDep("alt")}
-        onChange={(p) => onChangeAero("alt", p)}
-        onRunway={(rw) => handleRunway("alt", rw)}
-        extra={<NumberField label="LDA m" value={perf.ldaAlt} onChange={(v) => onChange({ ldaAlt: v })} size="md" />}
-      />
     </div>
   );
 }

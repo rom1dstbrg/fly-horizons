@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 // ── Échelle de style de l'outil Masse & centrage (« Studio », 24/09) ───────
 // Un seul jeu de tailles / classes, appliqué partout (MassBalanceClient,
-// ChargementFields, PerfSection). Ne pas réinventer de tailles ailleurs.
+// MbAircraftLoad, MbTerrains, PerfSection). Ne pas réinventer de tailles ailleurs.
 
 export const MB = {
   /** Titre de sous-groupe dans une section (« Carburant », « Conditions »…). */
@@ -125,24 +125,4 @@ export function Stepper({
       </button>
     </div>
   );
-}
-
-// ── Encadré de verdict ───────────────────────────────────────────────────
-
-export function VerdictBox({
-  status,
-  message,
-  className = "",
-}: {
-  status: "ok" | "ko" | "pending";
-  message: string;
-  className?: string;
-}) {
-  const tone =
-    status === "ok"
-      ? "text-st-ok bg-st-ok-soft"
-      : status === "ko"
-        ? "text-st-bad bg-st-bad-soft"
-        : "text-st-text-2 bg-st-surface";
-  return <p className={cn("rounded-[11px] px-3 py-2 text-xs font-semibold", tone, className)}>{message}</p>;
 }
