@@ -1,4 +1,4 @@
-import { STATUT_RESA, STATUT_PERSO, type BadgeVariant } from "./AdminBadge";
+import { STATUT_RESA, STATUT_PERSO, type BadgeVariant } from "./statuts";
 
 // Le webhook Stripe remet volontairement les résas standard en `en_attente` après paiement
 // en ligne (au lieu de `acompte_recu`) pour rester dans le même flux "en attente de

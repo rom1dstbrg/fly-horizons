@@ -41,16 +41,15 @@ function inDays(date: string, today: string): string {
 export default async function PiloteDashboard() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user!.id).single();
-  const prenom = profile?.full_name?.split(" ")[0] ?? "";
 
   const admin = createAdminClient();
   const { data: pilote } = await admin
     .from("pilotes")
-    .select("id, licence_numero, licence_expiration, medical_expiration, conditions_accepted_at")
+    .select("id, nom, licence_numero, licence_expiration, medical_expiration, conditions_accepted_at")
     .eq("user_id", user!.id)
     .maybeSingle();
   const legal = piloteLegalStatus(pilote);
+  const prenom = pilote?.nom?.trim().split(/\s+/)[0] ?? "";
   const today = new Date().toISOString().slice(0, 10);
 
   const [{ data: demandes }, { data: nonPayes }, { data: prochains }] = pilote
@@ -156,14 +155,16 @@ export default async function PiloteDashboard() {
             </div>
             <CardSplit>
               <Metric
+                size="sm"
                 label="Client"
-                value={<span className="flex items-center gap-1.5 text-[15px] font-semibold tracking-normal sm:text-[15px]">{next.clients ? `${next.clients.prenom} ${next.clients.nom}` : "—"}{next.type_resa === "annonce_pilote" && <AnnonceTag />}</span>}
+                value={<span className="flex flex-wrap items-center gap-1.5">{next.clients ? `${next.clients.prenom} ${next.clients.nom}` : "—"}{next.type_resa === "annonce_pilote" && <AnnonceTag />}</span>}
               />
-              <Metric label="Route" value={<span className="text-[15px] font-[550] tracking-normal sm:text-[15px]">{routeOf(next) ?? "À tracer"}</span>} />
-              <Metric label="Durée" value={`${next.duree} min`} />
+              <Metric size="sm" label="Route" value={routeOf(next) ?? "À tracer"} />
+              <Metric size="sm" label="Durée" value={`${next.duree} min`} />
               <Metric
+                size="sm"
                 label="Passagers"
-                value={`${next.passagers ?? "—"}`}
+                value={`${next.passagers ?? "—"} passager${(next.passagers ?? 0) > 1 ? "s" : ""}`}
                 hint={next.poids_total != null ? `${next.poids_total} kg au total` : "poids non renseigné"}
               />
             </CardSplit>

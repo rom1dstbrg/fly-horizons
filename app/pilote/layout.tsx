@@ -36,7 +36,7 @@ export default async function PiloteLayout({ children }: { children: React.React
   const admin = createAdminClient();
   const { data: pilote } = await admin
     .from("pilotes")
-    .select("id, statut, conditions_accepted_at, licence_numero, licence_expiration, medical_expiration")
+    .select("id, nom, statut, conditions_accepted_at, licence_numero, licence_expiration, medical_expiration")
     .eq("user_id", user.id)
     .maybeSingle();
   if (!pilote || pilote.statut !== "actif") redirect("/");
@@ -54,7 +54,8 @@ export default async function PiloteLayout({ children }: { children: React.React
   // `issues` alimente le détail dépliable au clic sur la pastille — jusqu'ici
   // le pilote devait déjà cliquer jusqu'au profil pour savoir CE QUI manquait.
   const pilotIdInfo: PilotIdInfo = {
-    nom: profile?.full_name || "Pilote",
+    // Nom de la fiche pilote d'abord : le compte de Romain s'appelle « Fly Horizons ».
+    nom: pilote.nom || profile?.full_name || "Pilote",
     licenceNumero: pilote.licence_numero,
     licenceExpiration: pilote.licence_expiration,
     medicalExpiration: pilote.medical_expiration,
@@ -97,7 +98,8 @@ export default async function PiloteLayout({ children }: { children: React.React
           metar={<Suspense fallback={null}><MetarChip /></Suspense>}
         />
         <main className="flex-1 px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-[calc(1.25rem+env(safe-area-inset-top))] sm:px-6 lg:px-7 lg:pb-8 lg:pt-6">
-          {children}
+          {/* Largeur plafonnée : sur un grand écran les cartes ne s'étirent pas sur 2 000 px. */}
+          <div className="mx-auto w-full max-w-[1320px]">{children}</div>
         </main>
       </div>
       <PiloteTabBar

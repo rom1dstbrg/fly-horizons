@@ -101,7 +101,7 @@ export function PiloteIssues({ pilot, onNavigate }: { pilot: PilotIdInfo; onNavi
   );
 }
 
-const rowCls = "group relative flex h-10 w-full shrink-0 items-center gap-3 rounded-[11px] px-[14px] text-[13.5px] transition-colors";
+const rowCls = "group relative flex h-10 w-full shrink-0 items-center gap-3 rounded-[11px] px-[14px] text-[13.5px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-st-ink/20";
 const labelCls = (open: boolean) =>
   cn("min-w-0 flex-1 overflow-hidden whitespace-nowrap text-left transition-[opacity,transform] duration-200 ease-out", open ? "translate-x-0 opacity-100" : "-translate-x-1.5 opacity-0");
 

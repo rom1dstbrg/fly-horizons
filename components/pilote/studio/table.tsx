@@ -93,7 +93,7 @@ export function TableHeaderCell({ children, align = "left", className }: {
   return (
     <th
       className={cn(
-        "h-9 whitespace-nowrap bg-st-surface px-3 py-0 text-xs font-medium text-st-muted first:rounded-l-[9px] last:rounded-r-[9px]",
+        "h-9 whitespace-nowrap bg-st-surface px-3 py-0 text-xs font-medium text-st-muted first:rounded-l-[9px] first:pl-4 last:rounded-r-[9px] last:pr-4",
         align === "right" ? "text-right" : align === "center" ? "text-center" : "text-left",
         className,
       )}
@@ -138,7 +138,7 @@ export function TableCell({ children, align = "left", className }: {
   return (
     <td
       className={cn(
-        "border-t border-st-line-soft px-3 py-3 text-st-text [tr:first-child>&]:border-t-0",
+        "border-t border-st-line-soft px-3 py-3 text-st-text first:pl-4 last:pr-4 [tr:first-child>&]:border-t-0",
         align === "right" ? "st-num text-right" : align === "center" ? "text-center" : "text-left",
         className,
       )}

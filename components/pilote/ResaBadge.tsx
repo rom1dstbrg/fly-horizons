@@ -1,5 +1,5 @@
 import { getResaBadge } from "@/components/admin/ui/resaBadge";
-import type { BadgeVariant } from "@/components/admin/ui/AdminBadge";
+import type { BadgeVariant } from "@/components/admin/ui/statuts";
 import { ROUTE_STATUS_CONFIG } from "@/components/admin/reservation-drawer/types";
 import { Badge, type BadgeTone } from "@/components/pilote/studio";
 

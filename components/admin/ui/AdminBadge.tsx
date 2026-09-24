@@ -1,15 +1,8 @@
 "use client";
 
 // ── Variants ───────────────────────────────────────────────────
-export type BadgeVariant =
-  | "warning"    // yellow   — En attente
-  | "info"       // blue     — Planifié / Lu
-  | "success"    // green    — Confirmé / Disponible
-  | "primary"    // purple   — Effectué
-  | "danger"     // red      — Annulé / Expiré
-  | "secondary"  // gray     — Archivé / Utilisé
-  | "orange"     // orange   — Paiement en att.
-  | "emerald";   // emerald  — Acompte reçu / Répondu
+import { STATUT_RESA, STATUT_PERSO, type BadgeVariant } from "./statuts";
+export { STATUT_RESA, STATUT_PERSO, type BadgeVariant };
 
 const CLASSES: Record<BadgeVariant, string> = {
   warning:   "bg-yellow-100  text-yellow-700  border-yellow-200",
@@ -49,27 +42,7 @@ export function AdminBadge({
 // Libellés pensés pour être clairs sans connaître la plateforme (l'espace pilote
 // affiche les mêmes badges). « heure_confirmee » = date, heure et route actées :
 // on l'appelle « Vol confirmé », pas « Heure confirmée ».
-export const STATUT_RESA: Record<string, { label: string; variant: BadgeVariant }> = {
-  demande_recue:   { label: "Nouvelle demande",     variant: "warning" },
-  payment_pending: { label: "Paiement en attente",  variant: "orange"  },
-  en_attente:      { label: "À confirmer",          variant: "warning" },
-  // Standard n'utilise pas ce statut dans son flux automatique (Stripe → en_attente directement),
-  // mais il reste atteignable manuellement (cash, "Marquer paiement reçu") — label requis pour l'affichage.
-  acompte_recu:    { label: "Payé",                 variant: "emerald" },
-  date_confirmee:  { label: "Date confirmée",       variant: "info"    },
-  heure_confirmee: { label: "Vol confirmé",         variant: "success" },
-  vol_effectue:    { label: "Vol effectué",         variant: "primary" },
-  annulee:         { label: "Annulée",              variant: "danger"  },
-};
 
-export const STATUT_PERSO: Record<string, { label: string; variant: BadgeVariant }> = {
-  en_attente:      { label: "En attente",      variant: "warning" },
-  acompte_recu:    { label: "Provision reçue", variant: "emerald" },
-  date_confirmee:  { label: "Date confirmée",  variant: "info"    },
-  heure_confirmee: { label: "Vol confirmé",    variant: "success" },
-  vol_effectue:    { label: "Vol effectué",    variant: "primary" },
-  annulee:         { label: "Annulée",         variant: "danger"  },
-};
 
 export const STATUT_ORDER: Record<string, { label: string; variant: BadgeVariant }> = {
   pending:    { label: "En attente",  variant: "warning"   },

@@ -68,18 +68,29 @@ export function CardSplit({ className, children }: { className?: string; childre
 }
 
 // Libellé + valeur (+ contexte) : la cellule type d'une carte composée.
-export function Metric({ label, value, hint, tone, className }: {
+export function Metric({ label, value, hint, tone, size = "lg", className }: {
   label: React.ReactNode;
   value: React.ReactNode;
   hint?: React.ReactNode;
   tone?: "ok" | "warn" | "bad";
+  /** lg : un chiffre (masse, marge). sm : un texte (client, route) — toutes les
+   *  cellules d'une même rangée prennent la même taille. */
+  size?: "lg" | "sm";
   className?: string;
 }) {
   const toneCls = tone === "ok" ? "text-st-ok" : tone === "warn" ? "text-st-warn" : tone === "bad" ? "text-st-bad" : "text-st-text";
   return (
     <div className={cn("flex min-w-0 flex-col gap-0.5", className)}>
       <span className="truncate text-[12.5px] text-st-muted">{label}</span>
-      <span className={cn("st-num truncate text-[19px] font-medium leading-tight tracking-[-0.03em] sm:text-[22px]", toneCls)}>{value}</span>
+      <span
+        className={cn(
+          "st-num min-w-0",
+          size === "lg" ? "truncate text-[19px] font-medium leading-tight tracking-[-0.03em] sm:text-[22px]" : "text-[15px] font-semibold leading-snug",
+          toneCls,
+        )}
+      >
+        {value}
+      </span>
       {hint && <span className="truncate text-[12px] text-st-muted">{hint}</span>}
     </div>
   );
