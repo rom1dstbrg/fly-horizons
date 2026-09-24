@@ -1189,6 +1189,26 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-24 (3) — refontes validées (maquette v2) : M&amp;B, tiroir d'un vol, PDF M&amp;B</h3>
+      <p class="pill">Décision du jour dans l'onglet Décisions. Admin et pilote partagent le tiroir et la M&amp;B : les deux
+        passent au nouveau style. Calculs, METAR et règles d'accès inchangés.</p>
+      <ul>
+        <li><b>M&amp;B</b> : chargement saisi sur l'avion vu de dessus (<code>MbAircraftLoad</code>), résultat à côté
+          (enveloppe, jauges, tableau replié), terrains en 3 colonnes avec METAR importé tout seul et jauge de distance
+          (<code>MbTerrains</code>). Anciens <code>ChargementFields</code>, <code>PerfResultBlocks</code>,
+          <code>MbEditModal</code> supprimés.</li>
+        <li><b>Tiroir</b> : en-tête d'une ligne, onglets Aperçu / Route / Messages / Dossier à pastille glissante,
+          frise + prochaine étape dans Aperçu, fenêtre de confirmation qui liste ce que l'action déclenche (heure
+          choisissable : nouvelle action <code>setReservationHeure</code>), éditeur de route plein écran, messages en
+          pleine hauteur. Anciens <code>InfosTab</code>, <code>ActionFooter</code>, <code>RouteSection</code>,
+          <code>ModifierTab</code>, <code>HistoriqueTab</code>, <code>PaymentLinkCard</code>, <code>AvionReserveBadge</code> supprimés.</li>
+        <li><b>PDF M&amp;B</b> refait dans la même logique (verdict, chargement, enveloppe + tableau de calcul, jauges,
+          terrains en 3 colonnes) ; corrigé au passage : séparateur des milliers affiché « 1/093 » et « ≤ » affiché « d ».</li>
+        <li>Reste : Annonces, Disponibilités, Profil, création de réservation, fenêtre des itinéraires types, audit sur un vrai téléphone.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-24 (2) — espace pilote « Studio », étape 2 : Masse &amp; centrage (+ corrections accueil)</h3>
       <p class="pill">Outil partagé admin + pilote : les deux passent en Studio (accord de Romain, l'admin suivra).
         Calculs, PDF et METAR non touchés.</p>
