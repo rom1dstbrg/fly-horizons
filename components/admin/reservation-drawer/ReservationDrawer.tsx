@@ -518,6 +518,7 @@ export function ReservationDrawer({
         showAll={itineraires.showAll}
         setShowAll={itineraires.setShowAll}
         onApply={itineraires.apply}
+        canManage={isAdmin}
       />
 
       <ConfirmActionDialog

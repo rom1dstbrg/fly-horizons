@@ -1,18 +1,20 @@
 "use client";
 
-import { X, Loader2, Navigation, Clock } from "lucide-react";
+import { useEffect } from "react";
+import Link from "next/link";
+import { Loader2, Navigation, ChevronRight } from "lucide-react";
 import type { Itineraire } from "@/lib/actions/itineraires";
+import { Badge, Segmented, SheetCloseButton } from "@/components/pilote/studio";
+import { RoutePath } from "@/components/pilote/RoutePath";
 
-const DUREE_LABELS: Record<number, string> = { 30: "30'", 60: "1h", 90: "1h30", 120: "2h" };
-const DUREE_COLORS: Record<number, { badge: string; bar: string }> = {
-  30:  { badge: "bg-sky-100 text-sky-700",         bar: "bg-sky-400"     },
-  60:  { badge: "bg-primary/10 text-primary",      bar: "bg-primary"     },
-  90:  { badge: "bg-violet-100 text-violet-700",   bar: "bg-violet-400"  },
-  120: { badge: "bg-emerald-100 text-emerald-700", bar: "bg-emerald-400" },
-};
+// Itinéraires types (style « Studio », 24/09) : ouverts depuis l'onglet Route du
+// tiroir ou l'éditeur plein écran. Un clic charge l'itinéraire sur la carte.
+// Bureau : fenêtre centrée ; téléphone : feuille qui monte du bas.
+
+const DUREE_LABELS: Record<number, string> = { 30: "30 min", 60: "1 h", 90: "1 h 30", 120: "2 h" };
 
 export function ItinerairesModal({
-  open, onClose, duree, items, loading, showAll, setShowAll, onApply,
+  open, onClose, duree, items, loading, showAll, setShowAll, onApply, canManage = false,
 }: {
   open: boolean;
   onClose: () => void;
@@ -22,106 +24,113 @@ export function ItinerairesModal({
   showAll: boolean;
   setShowAll: (v: boolean) => void;
   onApply: (itin: Itineraire) => void;
+  /** Admin : lien vers la gestion des itinéraires. */
+  canManage?: boolean;
 }) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
   if (!open) return null;
 
-  const filtered = showAll || !duree ? items : items.filter(it => it.duree_estimee === duree);
+  const forThis = duree != null ? items.filter((it) => it.duree_estimee === duree) : items;
+  const filtered = showAll || duree == null ? items : forThis;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-[2000] flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md shadow-2xl border border-border flex flex-col max-h-[80vh] pb-[env(safe-area-inset-bottom)] sm:pb-0">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Navigation size={15} className="text-primary" />
-            </div>
-            <div>
-              <h3 className="text-sm font-black text-foreground">Itinéraires enregistrés</h3>
-              <p className="text-[10px] text-muted-foreground">Cliquez pour charger sur la carte</p>
+    <div className="pilote-studio fixed inset-0 z-[2000] flex items-end justify-center bg-st-ink/30 font-sans backdrop-blur-[1.5px] motion-safe:animate-in motion-safe:fade-in sm:items-center sm:p-4" onClick={onClose}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="itin-title"
+        onClick={(e) => e.stopPropagation()}
+        className="flex max-h-[85dvh] w-full flex-col overflow-hidden rounded-t-[26px] bg-white pb-[env(safe-area-inset-bottom)] text-st-text shadow-st-panel motion-safe:animate-in motion-safe:slide-in-from-bottom-4 sm:max-w-[480px] sm:rounded-[20px] sm:pb-0"
+      >
+        <div className="mx-auto mt-2.5 h-1 w-[38px] shrink-0 rounded-full bg-st-line-strong sm:hidden" />
+        <div className="flex shrink-0 items-center justify-between gap-3 px-5 pb-3 pt-3 sm:pt-5">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[11px] bg-st-surface text-st-ink">
+              <Navigation size={17} />
+            </span>
+            <div className="min-w-0">
+              <h2 id="itin-title" className="text-base font-semibold">Itinéraires types</h2>
+              <p className="text-[12px] text-st-muted">Un clic charge l&apos;itinéraire sur la carte</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer">
-            <X size={16} />
-          </button>
+          <SheetCloseButton onClick={onClose} />
         </div>
 
-        {duree != null && (
-          <div className="px-5 py-2.5 border-b border-border shrink-0 flex items-center justify-between bg-muted/30">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-              <Clock size={10} />
-              {showAll
-                ? `Tous les itinéraires (${items.length})`
-                : `Vol ${duree} min — ${items.filter(it => it.duree_estimee === duree).length} itinéraire${items.filter(it => it.duree_estimee === duree).length !== 1 ? "s" : ""}`
-              }
-            </p>
-            <button
-              onClick={() => setShowAll(!showAll)}
-              className={`text-[10px] font-bold px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${showAll ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary"}`}
-            >
-              {showAll ? "Filtrer" : "Afficher tout"}
-            </button>
+        {duree != null && items.length > 0 && (
+          <div className="shrink-0 px-5 pb-3">
+            <Segmented
+              fill
+              value={showAll ? "all" : "this"}
+              onChange={(k) => setShowAll(k === "all")}
+              items={[
+                { key: "this", label: `Vol de ${DUREE_LABELS[duree] ?? `${duree} min`}`, count: forThis.length },
+                { key: "all", label: "Tous", count: items.length },
+              ]}
+            />
           </div>
         )}
 
-        <div className="flex-1 min-h-0 overflow-y-auto">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain border-t border-st-line-soft">
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 size={20} className="animate-spin text-muted-foreground" />
+            <div className="flex items-center justify-center py-12 text-st-muted">
+              <Loader2 size={20} className="animate-spin" />
             </div>
           ) : items.length === 0 ? (
-            <div className="py-10 text-center px-5">
-              <p className="text-sm text-muted-foreground">Aucun itinéraire enregistré</p>
-              <a href="/admin/itineraires" className="mt-2 text-xs font-bold text-primary hover:underline block">
-                Créer des itinéraires →
-              </a>
+            <div className="px-5 py-10 text-center">
+              <p className="text-sm text-st-text-2">Aucun itinéraire enregistré.</p>
+              {canManage && (
+                <Link href="/admin/itineraires" className="mt-2 inline-block text-[13px] font-semibold text-st-ink hover:underline">
+                  Créer des itinéraires
+                </Link>
+              )}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="py-10 text-center px-5">
-              <p className="text-sm text-muted-foreground">Aucun itinéraire pour {duree} min</p>
-              <button onClick={() => setShowAll(true)} className="mt-2 text-xs font-bold text-primary hover:underline cursor-pointer">
-                Afficher tous les itinéraires
+            <div className="px-5 py-10 text-center">
+              <p className="text-sm text-st-text-2">Aucun itinéraire pour un vol de {duree} min.</p>
+              <button type="button" onClick={() => setShowAll(true)} className="mt-2 cursor-pointer text-[13px] font-semibold text-st-ink hover:underline">
+                Voir tous les itinéraires
               </button>
             </div>
           ) : (
-            filtered.map((itin, i) => {
-              const col = itin.duree_estimee ? DUREE_COLORS[itin.duree_estimee] : null;
-              return (
-                <button
-                  key={itin.id}
-                  type="button"
-                  onClick={() => onApply(itin)}
-                  className={`w-full text-left flex items-stretch hover:bg-primary/5 transition-colors cursor-pointer ${i < filtered.length - 1 ? "border-b border-border" : ""}`}
-                >
-                  <div className={`w-1 shrink-0 ${col ? col.bar : "bg-muted-foreground/20"}`} />
-                  <div className="flex-1 min-w-0 px-4 py-3">
-                    <div className="flex items-start justify-between gap-3 mb-1.5">
-                      <p className="text-sm font-bold text-foreground leading-snug">{itin.nom}</p>
-                      {itin.duree_estimee && col && (
-                        <span className={`inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-md shrink-0 ${col.badge}`}>
-                          {DUREE_LABELS[itin.duree_estimee]}
-                        </span>
+            <ul className="divide-y divide-st-line-soft">
+              {filtered.map((itin) => (
+                <li key={itin.id}>
+                  <button
+                    type="button"
+                    onClick={() => onApply(itin)}
+                    className="flex w-full cursor-pointer items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-st-surface"
+                  >
+                    <span className="min-w-0 flex-1 space-y-1">
+                      <span className="flex items-center gap-2">
+                        <span className="truncate text-[14px] font-semibold text-st-text">{itin.nom}</span>
+                        {itin.duree_estimee != null && (
+                          <Badge size="sm" tone="neutral">{DUREE_LABELS[itin.duree_estimee] ?? `${itin.duree_estimee} min`}</Badge>
+                        )}
+                      </span>
+                      {itin.waypoints.length > 0 && (
+                        <RoutePath points={itin.waypoints.map((w) => w.nom || "?")} className="text-[12px] [&_b]:font-medium" />
                       )}
-                    </div>
-                    <div className="flex flex-wrap gap-x-1 gap-y-0.5">
-                      {itin.waypoints.slice(0, 5).map((wp, wi) => (
-                        <span key={wi} className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                          {wi > 0 && <span className="text-muted-foreground/40">›</span>}
-                          {wp.nom}
-                        </span>
-                      ))}
-                      {itin.waypoints.length > 5 && (
-                        <span className="text-[10px] text-muted-foreground/60">+{itin.waypoints.length - 5}</span>
-                      )}
-                    </div>
-                    {itin.notes && (
-                      <p className="text-[10px] text-muted-foreground/60 mt-1 line-clamp-1 italic">{itin.notes}</p>
-                    )}
-                  </div>
-                </button>
-              );
-            })
+                      {itin.notes && <span className="block truncate text-[11.5px] text-st-muted">{itin.notes}</span>}
+                    </span>
+                    <ChevronRight size={16} className="shrink-0 text-st-muted" />
+                  </button>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
+
+        {canManage && items.length > 0 && (
+          <div className="shrink-0 border-t border-st-line-soft px-5 py-3 text-right">
+            <Link href="/admin/itineraires" className="text-[12.5px] font-semibold text-st-ink hover:underline">Gérer les itinéraires</Link>
+          </div>
+        )}
       </div>
     </div>
   );
