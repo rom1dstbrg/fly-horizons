@@ -185,6 +185,20 @@ export function RouteEditorFullscreen({ open, reservation: r, route, onClose, on
   const prenom = r.clients?.prenom?.trim() || "Le client";
   const dateLabel = new Date(r.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "short", day: "numeric", month: "short" });
   const sent = !!route.localRouteStatus;
+  // Avant la confirmation du créneau, la route part avec la confirmation :
+  // l'envoi séparé reste possible mais discret (retour de Romain, 24/09). Après,
+  // il sert à renvoyer une route modifiée pour que le client la valide.
+  const beforeConfirm = ["demande_recue", "en_attente", "acompte_recu", "date_confirmee", "payment_pending"].includes(r.statut);
+  const askSend = () =>
+    ask({
+      title: sent ? "Renvoyer la route au client ?" : "Envoyer la route au client maintenant ?",
+      consequences: [
+        `${prenom} reçoit la route par email et peut la valider ou demander une modification.`,
+        ...(beforeConfirm && !sent ? ["Sans cet envoi, elle partirait de toute façon avec la confirmation du créneau."] : []),
+      ],
+      confirmLabel: "Envoyer",
+      run: route.sendRoute,
+    });
 
   return createPortal(
     <div className="pilote-studio fixed inset-0 z-[200] flex flex-col bg-st-bg font-sans text-st-text" role="dialog" aria-modal="true" aria-label="Éditeur de route">
@@ -193,21 +207,8 @@ export function RouteEditorFullscreen({ open, reservation: r, route, onClose, on
           Route <span className="font-medium text-st-muted">· {r.clients?.prenom} {r.clients?.nom} · {dateLabel} · {r.duree} min</span>
         </p>
         <span className="flex-1" />
-        <Button variant="secondary" onClick={route.saveRoute} loading={route.isPending} disabled={pts.length === 0} className="max-sm:hidden">
+        <Button onClick={route.saveRoute} loading={route.isPending} disabled={pts.length === 0}>
           <Save /> Enregistrer
-        </Button>
-        <Button
-          disabled={pts.length === 0}
-          onClick={() =>
-            ask({
-              title: sent ? "Renvoyer la route au client ?" : "Envoyer la route au client ?",
-              consequences: [`${prenom} reçoit la route par email et peut la valider ou demander une modification.`],
-              confirmLabel: "Envoyer",
-              run: route.sendRoute,
-            })
-          }
-        >
-          <Send /> <span className="max-sm:hidden">Enregistrer et envoyer</span><span className="sm:hidden">Envoyer</span>
         </Button>
         <button type="button" onClick={onClose} aria-label="Fermer l'éditeur" className="grid h-[38px] w-[38px] shrink-0 cursor-pointer place-items-center rounded-[11px] border border-st-line bg-white text-st-text-2 transition-colors hover:bg-st-surface">
           <X size={17} />
@@ -219,6 +220,22 @@ export function RouteEditorFullscreen({ open, reservation: r, route, onClose, on
           <PointList points={route.routeDraft} onRemove={(i) => route.setRouteDraft(route.routeDraft.filter((_, k) => k !== i))} />
           {route.routeStats && (
             <p className="rounded-[12px] bg-st-surface px-3 py-2 text-[12.5px] text-st-text-2">≈ {route.routeStats.totalMin} min · {route.routeStats.distKm} km</p>
+          )}
+          {/* Envoi au client : discret avant la confirmation, bouton secondaire après. */}
+          {beforeConfirm && !sent ? (
+            <p className="text-[12px] leading-snug text-st-muted">
+              La route partira au client avec la confirmation du créneau.{" "}
+              <button type="button" onClick={askSend} disabled={pts.length === 0} className="cursor-pointer font-[550] text-st-ink hover:underline disabled:opacity-40">
+                L&apos;envoyer maintenant
+              </button>
+            </p>
+          ) : (
+            <div className="space-y-1.5">
+              <Button variant="secondary" size="sm" fullWidth onClick={askSend} disabled={pts.length === 0}>
+                <Send /> {sent ? "Renvoyer au client" : "Envoyer au client"}
+              </Button>
+              <p className="text-[11.5px] text-st-muted">Après une modification, renvoyez-la pour que le client la valide.</p>
+            </div>
           )}
           <div className="grid grid-cols-2 gap-2">
             <Button variant="secondary" size="sm" onClick={onOpenItineraires}><Navigation /> Itinéraires types</Button>
