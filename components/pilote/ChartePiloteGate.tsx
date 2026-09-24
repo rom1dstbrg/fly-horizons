@@ -2,7 +2,8 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Check } from "lucide-react";
+import { Check } from "lucide-react";
+import { Button } from "@/components/pilote/studio";
 import { acceptCharte } from "@/lib/actions/pilote-profil";
 import { CHARTE_PILOTE_TITRE, CHARTE_PILOTE_TEXTE } from "@/lib/pilote/charte";
 
@@ -35,11 +36,11 @@ export function ChartePiloteGate() {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-navy/40 backdrop-blur-[2px] p-4">
-      <div className="flex w-full max-w-2xl flex-col rounded-2xl border border-border bg-card shadow-xl max-h-[calc(100vh-2rem)]">
-        <div className="border-b border-border px-6 py-4 shrink-0">
-          <h2 className="text-lg font-bold text-foreground">{CHARTE_PILOTE_TITRE}</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
+    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-st-ink/30 backdrop-blur-[1.5px] sm:items-center sm:p-4">
+      <div className="flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[26px] bg-white pb-[env(safe-area-inset-bottom)] shadow-st-panel sm:max-h-[calc(100dvh-2rem)] sm:rounded-[22px] sm:pb-0">
+        <div className="shrink-0 px-6 pb-3 pt-5">
+          <h2 className="text-lg font-semibold tracking-[-0.01em] text-st-text">{CHARTE_PILOTE_TITRE}</h2>
+          <p className="mt-0.5 text-[13px] text-st-muted">
             Merci de lire cette charte jusqu&apos;au bout avant de rejoindre l&apos;espace pilote.
           </p>
         </div>
@@ -47,25 +48,20 @@ export function ChartePiloteGate() {
         <div
           ref={scrollRef}
           onScroll={onScroll}
-          className="flex-1 overflow-y-auto px-6 py-5 text-sm leading-relaxed text-foreground whitespace-pre-line"
+          className="mx-3 flex-1 overflow-y-auto overscroll-contain whitespace-pre-line rounded-[16px] bg-st-surface px-4 py-4 text-[13.5px] leading-relaxed text-st-text-2"
         >
           {CHARTE_PILOTE_TEXTE}
         </div>
 
-        <div className="border-t border-border px-6 py-4 shrink-0 space-y-2">
-          {error && <p className="text-xs text-destructive">{error}</p>}
+        <div className="shrink-0 space-y-2 px-6 py-4">
+          {error && <p className="text-[12.5px] text-st-bad">{error}</p>}
           {!reachedEnd && (
-            <p className="text-xs text-muted-foreground">Faites défiler jusqu&apos;en bas pour activer le bouton.</p>
+            <p className="text-[12.5px] text-st-muted">Faites défiler jusqu&apos;en bas pour activer le bouton.</p>
           )}
-          <button
-            type="button"
-            onClick={accept}
-            disabled={!reachedEnd || isPending}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-[#e6a800] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-          >
-            {isPending ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+          <Button fullWidth size="lg" className="sm:h-[38px] sm:text-[13px]" onClick={accept} disabled={!reachedEnd} loading={isPending}>
+            {!isPending && <Check />}
             J&apos;ai lu et j&apos;accepte la charte
-          </button>
+          </Button>
         </div>
       </div>
     </div>
