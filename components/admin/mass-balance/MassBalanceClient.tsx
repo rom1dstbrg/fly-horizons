@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Download, RotateCcw, Save, Users, CheckCircle2, AlertTriangle, Clock, Files, CopyPlus, ChevronDown, Table2 } from "lucide-react";
+import { Check, Download, RotateCcw, Save, CheckCircle2, AlertTriangle, Clock, Files, CopyPlus, ChevronDown, Table2 } from "lucide-react";
 import {
   computeMassBalance,
   defaultInputs,
@@ -12,6 +12,7 @@ import {
   type PerfInputs,
 } from "@/lib/mass-balance/da40-calc";
 import { CG_AFT, MASS_MAX, cgFwd } from "@/lib/mass-balance/da40-data";
+import { minFuelGalInLimits, onlyZfmOut } from "@/lib/mass-balance/zfm-check";
 import { saveMassBalanceSheet, updateMassBalanceSheet } from "@/lib/actions/mass-balance";
 import {
   Badge, Button, ButtonLabel, Card, Input, PageHeader, Sheet, SheetBody, SheetHeader,
@@ -179,7 +180,11 @@ export function MassBalanceClient({
   ];
   const perfKo = perfVerdicts.filter((v) => v.status === "ko");
   const perfPending = perfVerdicts.some((v) => v.status === "pending");
-  const overall: "go" | "nogo" | "incomplet" = !computed.withinLimits
+  // Seul le ZFM (réservoirs vides) hors limites, décollage et atterrissage bons :
+  // le vol reste possible, alerte orange + carburant minimum (demande de Romain, 24/09).
+  const zfmWarn = onlyZfmOut(computed);
+  const minFuel = zfmWarn ? minFuelGalInLimits(computed) : null;
+  const overall: "go" | "nogo" | "incomplet" = !computed.withinLimits && !zfmWarn
     ? "nogo"
     : perfKo.length > 0
       ? "nogo"
@@ -201,11 +206,11 @@ export function MassBalanceClient({
   })();
 
   const V = {
-    go: { icon: CheckCircle2, tile: "bg-st-ok", text: "text-st-ok", title: "GO · vol autorisé", sub: `Catégorie ${computed.category}` },
+    go: { icon: CheckCircle2, tile: "bg-st-ok", text: "text-st-ok", title: "GO · vol autorisé", sub: zfmWarn ? "Point ZFM à vérifier" : `Catégorie ${computed.category}` },
     incomplet: { icon: Clock, tile: "bg-st-warn", text: "text-st-warn", title: "Incomplet", sub: "Masse et centrage OK, terrains à renseigner" },
     nogo: {
       icon: AlertTriangle, tile: "bg-st-bad", text: "text-st-bad", title: "NO-GO",
-      sub: [...(!computed.withinLimits ? computed.issues : []), ...perfKo.map((v) => v.message)].join(" · ") || "Vérifiez la masse, le centrage et les performances",
+      sub: [...(!computed.withinLimits && !zfmWarn ? computed.issues : []), ...perfKo.map((v) => v.message)].join(" · ") || "Vérifiez la masse, le centrage et les performances",
     },
   }[overall];
   const VIcon = V.icon;
@@ -234,15 +239,35 @@ export function MassBalanceClient({
     </div>
   );
 
-  const resaChip = resa && (
-    <div className="flex min-w-0 items-center gap-2">
-      <span className="min-w-0 truncate rounded-[9px] bg-st-surface px-2.5 py-1.5 text-[12.5px] text-st-text-2">
-        <Users size={13} className="mr-1.5 inline -translate-y-px" />
-        <b className="font-semibold text-st-text">{resa.clientLabel ?? "Réservation liée"}</b>
-        {resa.date_vol && ` · ${new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "short", day: "numeric", month: "short" })}`}
-        {` · ${resa.passagers ?? 1} pax${resa.poids_total != null ? ` · ${resa.poids_total} kg` : ""}`}
-      </span>
-      <Button variant="secondary" size="sm" onClick={importFromResa}>Importer les poids</Button>
+  const resaInfo = resa
+    ? {
+        label: `${resa.clientLabel ?? "Réservation liée"}${resa.date_vol ? ` · ${new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "short", day: "numeric", month: "short" })}` : ""}`,
+        detail: `${resa.passagers ?? 1} passager${(resa.passagers ?? 1) > 1 ? "s" : ""} · ${resa.poids_total != null ? `${resa.poids_total} kg au total` : "poids non renseigné"}`,
+      }
+    : null;
+
+  // Distances : besoin / disponible (pire cas destination / dégagement à l'atterrissage).
+  const depNeed = computed.perf.dep.todr125;
+  const depAvail = computed.perf.dep.toda;
+  const ldgNeed = computed.perf.ldg.ldr;
+  const ldgAvail = [computed.perf.ldg.ldaDest, computed.perf.ldg.ldaAlt].filter((n): n is number => n != null).reduce<number | null>((m, n) => (m == null ? n : Math.min(m, n)), null);
+  const distBar = (need: number | null, avail: number | null, margin: number | null) => (
+    <div className="h-1.5 overflow-hidden rounded-full bg-st-surface-hover">
+      {need != null && avail != null && avail > 0 && (
+        <div className={cn("h-full rounded-full", margin != null && margin < 0 ? "bg-st-bad" : "bg-st-ink")} style={{ width: `${Math.min(100, (need / avail) * 100)}%` }} />
+      )}
+    </div>
+  );
+
+  const zfmAlert = zfmWarn && (
+    <div className="flex gap-2.5 rounded-[14px] bg-st-warn-soft px-3.5 py-2.5 text-[12.5px] leading-snug text-st-warn">
+      <AlertTriangle size={16} className="mt-px shrink-0" />
+      <p>
+        <b className="font-semibold">Point ZFM hors limites (réservoirs vides).</b> Décollage et atterrissage sont dans les limites : vérifiez.{" "}
+        {minFuel != null
+          ? <>Gardez au moins <b className="font-semibold">{fr(minFuel, 1)} gal</b> dans les réservoirs : en dessous, le centrage sort des limites. Il en restera {fr(Math.max(0, inputs.fuelGal - inputs.tripGal), 1)} gal à l&apos;atterrissage.</>
+          : "Aucune quantité de carburant ne ramène ce chargement dans les limites."}
+      </p>
     </div>
   );
 
@@ -291,46 +316,51 @@ export function MassBalanceClient({
           </div>
         </div>
       </div>
-      {resa && <div className="lg:hidden">{resaChip}</div>}
 
-      {/* ═══ Bande de verdict — bureau : tout sur une ligne ═══ */}
-      <div className="hidden items-center gap-4 rounded-[18px] border border-st-line bg-white px-4 py-2.5 shadow-st-sm lg:flex">
-        <span className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-[12px] text-white", V.tile)}>
-          <VIcon size={19} />
-        </span>
-        <div className="min-w-0 max-w-[260px]">
-          <p className={cn("text-[16px] font-semibold", V.text)}>{V.title}</p>
-          <p className="truncate text-[11.5px] text-st-muted" title={V.sub}>{V.sub}</p>
+      {/* ═══ Bande de verdict — bureau ═══
+          Grille pleine largeur : le verdict, puis 4 cellules égales (masse,
+          centrage, décollage, atterrissage), chacune avec sa jauge. Plus
+          d'espace vide à droite ; le vol lié est dans la carte Chargement. */}
+      <Card padded={false} className="hidden overflow-hidden lg:grid lg:grid-cols-[minmax(0,1.25fr)_repeat(4,minmax(0,1fr))]">
+        <div className="flex min-w-0 items-center gap-3 px-4 py-3">
+          <span className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-[12px] text-white", V.tile)}>
+            <VIcon size={19} />
+          </span>
+          <div className="min-w-0">
+            <p className={cn("text-[16px] font-semibold leading-tight", V.text)}>{V.title}</p>
+            <p className="truncate text-[11.5px] text-st-muted" title={V.sub}>{V.sub}</p>
+          </div>
         </div>
-        <div className="ml-2 flex gap-6">
-          {[
-            ["Masse", `${fr(computed.tom, 1)} kg`, massOver ? "text-st-bad" : "text-st-text"],
-            ["Centrage", `${fr(computed.cgTom, 3)} m`, cgOut ? "text-st-bad" : "text-st-text"],
-            ["Décollage", signed(depMargin), marginTone(depMargin)],
-            ["Atterrissage", signed(ldgMargin), marginTone(ldgMargin)],
-          ].map(([l, v, t]) => (
-            <div key={l} className="leading-tight">
-              <p className="text-[11.5px] text-st-muted">{l}</p>
-              <p className={cn("st-num text-[15px] font-semibold", t)}>{v}</p>
+        {[
+          { l: "Masse au décollage", v: `${fr(computed.tom, 1)} kg`, t: massOver ? "text-st-bad" : "text-st-text", bar: massBar("h-1.5"), f: `max ${MASS_MAX} kg` },
+          { l: "Centrage", v: `${fr(computed.cgTom, 3)} m`, t: cgOut ? "text-st-bad" : "text-st-text", bar: cgBar("h-1.5"), f: `${fr(fwd, 3)} à ${fr(CG_AFT, 2)} m` },
+          { l: "Décollage", v: signed(depMargin), t: marginTone(depMargin), bar: distBar(depNeed, depAvail, depMargin), f: depNeed != null && depAvail != null ? `${depNeed} / ${depAvail} m` : "terrain à renseigner" },
+          { l: "Atterrissage", v: signed(ldgMargin), t: marginTone(ldgMargin), bar: distBar(ldgNeed, ldgAvail, ldgMargin), f: ldgNeed != null && ldgAvail != null ? `${ldgNeed} / ${ldgAvail} m` : "terrain à renseigner" },
+        ].map((c) => (
+          <div key={c.l} className="min-w-0 border-l border-st-line px-4 py-3">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="truncate text-[11.5px] text-st-muted">{c.l}</span>
+              <span className={cn("st-num shrink-0 text-[15px] font-semibold", c.t)}>{c.v}</span>
             </div>
-          ))}
-        </div>
-        <span className="flex-1" />
-        {resaChip}
-      </div>
+            <div className="mt-2">{c.bar}</div>
+            <p className="st-num mt-1.5 truncate text-[11px] text-st-muted">{c.f}</p>
+          </div>
+        ))}
+      </Card>
+      {zfmAlert}
 
       {/* ═══ L'avion | le résultat ═══
           Principe : la saisie se fait sur l'avion (largeur fixe 430 px), le
           résultat prend le reste ; les deux cartes ont la même hauteur. */}
       <div className="grid items-stretch gap-4 lg:grid-cols-[430px_minmax(0,1fr)]">
         <Card padded={false} className="overflow-hidden">
-          <MbAircraftLoad inputs={inputs} patch={patch} computedFuelL={computed.fuelL} computedFuelKg={computed.fuelKg} />
+          <MbAircraftLoad inputs={inputs} patch={patch} computedFuelL={computed.fuelL} computedFuelKg={computed.fuelKg} resa={resaInfo} onImportResa={importFromResa} />
         </Card>
 
         <Card padded={false} className="flex flex-col overflow-hidden">
           <div className="flex items-center justify-between gap-2 px-4 pt-4 sm:px-5">
             <h2 className="text-sm font-semibold text-st-text">Résultat</h2>
-            {computed.withinLimits ? <Badge tone="success">Dans les limites</Badge> : <Badge tone="danger">Hors limites</Badge>}
+            {computed.withinLimits ? <Badge tone="success">Dans les limites</Badge> : zfmWarn ? <Badge tone="warning">ZFM à vérifier</Badge> : <Badge tone="danger">Hors limites</Badge>}
           </div>
           <div className="flex flex-1 items-center justify-center px-3 py-2 sm:px-4">
             <div className="w-full max-w-[560px]">
@@ -365,7 +395,7 @@ export function MassBalanceClient({
             </div>
           </div>
           {!computed.withinLimits && (
-            <ul className="list-disc space-y-0.5 border-t border-st-line py-2.5 pl-8 pr-4 text-[12.5px] text-st-bad">
+            <ul className={cn("list-disc space-y-0.5 border-t border-st-line py-2.5 pl-8 pr-4 text-[12.5px]", zfmWarn ? "text-st-warn" : "text-st-bad")}>
               {computed.issues.map((it, i) => <li key={i}>{it}</li>)}
             </ul>
           )}

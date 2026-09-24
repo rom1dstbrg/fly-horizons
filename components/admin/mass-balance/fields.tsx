@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 // ── Échelle de style de l'outil Masse & centrage (« Studio », 24/09) ───────
 // Un seul jeu de tailles / classes, appliqué partout (MassBalanceClient,
-// MbAircraftLoad, MbTerrains, PerfSection). Ne pas réinventer de tailles ailleurs.
+// MbAircraftLoad, MbTerrains). Ne pas réinventer de tailles ailleurs.
 
 export const MB = {
   /** Titre de sous-groupe dans une section (« Carburant », « Conditions »…). */

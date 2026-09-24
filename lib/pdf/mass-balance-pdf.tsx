@@ -16,6 +16,7 @@ import {
 import type { MassBalanceInputs, MassBalanceComputed, Verdict } from "@/lib/mass-balance/da40-calc";
 import { buildEnvelopeGeometry } from "@/lib/mass-balance/envelope-geometry";
 import { CG_AFT, MASS_MAX, cgFwd } from "@/lib/mass-balance/da40-data";
+import { minFuelGalInLimits, onlyZfmOut } from "@/lib/mass-balance/zfm-check";
 
 export interface MassBalancePDFData {
   aircraftReg: string;
@@ -232,11 +233,14 @@ function MassBalancePDF({ data }: { data: MassBalancePDFData }) {
   // Verdict combiné, même règle que la page.
   const perfVerdicts = [p.dep.verdict, p.ldg.verdictDest, p.ldg.verdictAlt];
   const perfKo = perfVerdicts.filter((v) => v.status === "ko");
-  const overall: Verdict["status"] = !computed.withinLimits || perfKo.length ? "ko" : perfVerdicts.some((v) => v.status === "pending") ? "pending" : "ok";
+  // Seul le ZFM hors limites (décollage et atterrissage bons) : GO avec alerte.
+  const zfmWarn = onlyZfmOut(computed);
+  const minFuel = zfmWarn ? minFuelGalInLimits(computed) : null;
+  const overall: Verdict["status"] = (!computed.withinLimits && !zfmWarn) || perfKo.length ? "ko" : perfVerdicts.some((v) => v.status === "pending") ? "pending" : "ok";
   const vt = toneOf(overall);
   const vTitle = overall === "ok" ? "GO · vol autorisé" : overall === "pending" ? "Incomplet · performances à renseigner" : "NO-GO · vol non autorisé en l'état";
   const vSub = overall === "ko"
-    ? [...(!computed.withinLimits ? computed.issues : []), ...perfKo.map((v) => v.message)].join(" · ")
+    ? [...(!computed.withinLimits && !zfmWarn ? computed.issues : []), ...perfKo.map((v) => v.message)].join(" · ")
     : overall === "ok" ? `Masse, centrage et performances dans les limites · catégorie ${computed.category}` : "Masse et centrage dans les limites";
 
   const depMargin = p.dep.todr125 != null && p.dep.toda != null ? p.dep.toda - p.dep.todr125 : null;
@@ -285,6 +289,17 @@ function MassBalancePDF({ data }: { data: MassBalancePDFData }) {
           <Figure label="Marge décollage" value={signed(depMargin)} color={mColor(depMargin)} />
           <Figure label="Marge atterrissage" value={signed(ldgMargin)} color={mColor(ldgMargin)} sub="pire cas dest. / dégagement" />
         </View>
+
+        {zfmWarn ? (
+          <Text style={{ fontSize: 7, color: S.warn, backgroundColor: S.warnSoft, borderRadius: 6, padding: 7, marginTop: -4, marginBottom: 12 }}>
+            {pdfSafe(
+              "Point ZFM hors limites (réservoirs vides) ; décollage et atterrissage dans les limites : à vérifier. " +
+                (minFuel != null
+                  ? `Garder au moins ${fr(minFuel, 1)} gal dans les réservoirs : en dessous, le centrage sort des limites.`
+                  : "Aucune quantité de carburant ne ramène ce chargement dans les limites."),
+            )}
+          </Text>
+        ) : null}
 
         {/* Chargement */}
         <SectionTitle right={`Masse à vide ${fr(computed.bem, 1)} kg · bras ${fr(computed.bemArm, 3)} m`}>Chargement</SectionTitle>

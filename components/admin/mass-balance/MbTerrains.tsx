@@ -1,19 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Pencil, Plus } from "lucide-react";
+import { Pencil, CornerDownLeft, Cloud, ChevronUp } from "lucide-react";
 import type { AerodromeInput, PerfComputed, PerfInputs } from "@/lib/mass-balance/da40-calc";
+import { extractFromRawMetar } from "@/lib/mass-balance/da40-calc";
 import { findAerodrome } from "@/lib/mass-balance/aerodromes";
-import { Button, Sheet, SheetBody, SheetFooter, SheetHeader } from "@/components/pilote/studio";
+import { Button } from "@/components/pilote/studio";
 import { cn } from "@/lib/utils";
-import { AeroRow, type RunwayPick } from "./PerfSection";
-import { NumberField } from "./fields";
+import { MB, NumberField } from "./fields";
 
-// ── Terrains et performances (maquette v2 validée, 24/09) ─────────────────
+// ── Terrains et performances (24/09) ───────────────────────────────────────
 // Une colonne par terrain, dans l'ordre du vol : Départ, Destination,
-// Dégagement. On touche la piste, le TODA / LDA se remplit ; le METAR est
-// importé tout seul dès qu'un terrain connu est saisi. « Modifier » ouvre la
-// saisie complète (OACI, météo à la main, METAR brut) dans un tiroir.
+// Dégagement. Tout se fait dans la colonne (plus de tiroir, demande de
+// Romain) : on tape l'OACI, on touche la piste (le TODA / LDA se remplit), le
+// METAR arrive tout seul pour un terrain connu ; « Modifier » déplie la saisie
+// à la main (météo, distance, METAR brut) juste en dessous.
 
 type Which = "dep" | "dest" | "alt";
 
@@ -32,15 +33,8 @@ function wxLine(ad: AerodromeInput): string | null {
 }
 
 function TerrainColumn({
-  which,
-  ad,
-  avail,
-  need,
-  needLabel,
-  error,
-  onChange,
-  onRunway,
-  onEdit,
+  which, ad, avail, need, needLabel, error, canCopyDep,
+  onChange, onDist, onCopyDep,
 }: {
   which: Which;
   ad: AerodromeInput;
@@ -48,107 +42,154 @@ function TerrainColumn({
   need: number | null;
   needLabel: string;
   error?: string;
+  canCopyDep: boolean;
   onChange: (p: Partial<AerodromeInput>) => void;
-  onRunway: (rw: RunwayPick) => void;
-  onEdit: () => void;
+  onDist: (v: number | null) => void;
+  onCopyDep: () => void;
 }) {
   const rec = findAerodrome(ad.icao);
-  const [metarState, setMetarState] = useState<"idle" | "loading" | "ok" | "ko">(ad.rawMetar ? "ok" : "idle");
+  const [editing, setEditing] = useState(false);
+  const [metar, setMetar] = useState<{ state: "idle" | "loading" | "ok" | "ko"; msg?: string }>({ state: ad.rawMetar ? "ok" : "idle" });
+  const [raw, setRaw] = useState("");
   const tried = useRef<string | null>(null);
+
+  async function fetchMetar(icao: string) {
+    setMetar({ state: "loading" });
+    try {
+      const res = await fetch(`/api/admin/metar?icao=${encodeURIComponent(icao)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error();
+      onChange({ oat: data.oat ?? ad.oat, qnh: data.qnh ?? ad.qnh, wdir: data.wdir ?? ad.wdir, wspd: data.wspd ?? ad.wspd, rawMetar: data.raw || "" });
+      setMetar({ state: "ok" });
+    } catch {
+      setMetar({ state: "ko", msg: "METAR indisponible : saisie à la main ou METAR brut" });
+    }
+  }
 
   // METAR importé tout seul pour un terrain connu, une fois par OACI.
   useEffect(() => {
     const icao = (ad.icao || "").trim().toUpperCase();
     if (!rec || ad.rawMetar || tried.current === icao) return;
     tried.current = icao;
-    let cancelled = false;
-    (async () => {
-      setMetarState("loading");
-      try {
-        const res = await fetch(`/api/admin/metar?icao=${encodeURIComponent(icao)}`);
-        const data = await res.json();
-        if (!res.ok) throw new Error();
-        if (cancelled) return;
-        onChange({ oat: data.oat ?? ad.oat, qnh: data.qnh ?? ad.qnh, wdir: data.wdir ?? ad.wdir, wspd: data.wspd ?? ad.wspd, rawMetar: data.raw || "" });
-        setMetarState("ok");
-      } catch {
-        if (!cancelled) setMetarState("ko");
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [ad.icao, ad.rawMetar, rec, ad.oat, ad.qnh, ad.wdir, ad.wspd, onChange]);
+    void fetchMetar(icao);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ad.icao, ad.rawMetar, rec]);
 
-  function pickRunway(ident: string) {
-    if (!rec) return;
-    const rw = rec.runways.find((r) => r.ident === ident);
-    if (!rw) return;
-    onChange({ rwy: rw.heading, elev: rec.elevation });
-    onRunway({ heading: rw.heading, elev: rec.elevation, toda: rw.toda, lda: rw.lda });
+  function setIcao(v: string) {
+    const icao = v.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
+    const found = findAerodrome(icao);
+    onChange({ icao, rawMetar: "", ...(found ? { elev: found.elevation } : {}) });
   }
 
-  const hasIcao = !!ad.icao?.trim();
+  function pickRunway(ident: string) {
+    const rw = rec?.runways.find((r) => r.ident === ident);
+    if (!rec || !rw) return;
+    onChange({ rwy: rw.heading, elev: rec.elevation });
+    onDist(which === "dep" ? rw.toda : rw.lda);
+  }
+
+  function parseRaw() {
+    const p = extractFromRawMetar(raw);
+    if (!p.found) { setMetar({ state: "ko", msg: "Rien reconnu dans ce METAR" }); return; }
+    onChange({ oat: p.oat ?? ad.oat, qnh: p.qnh ?? ad.qnh, wdir: p.wdir ?? ad.wdir, wspd: p.wspd ?? ad.wspd, rawMetar: raw.trim().toUpperCase() });
+    setMetar({ state: "ok" });
+    setRaw("");
+  }
+
   const margin = need != null && avail != null ? avail - need : null;
   const wx = wxLine(ad);
 
   return (
-    <div className="min-w-0 px-4 py-3.5 sm:px-5">
+    <div className="min-w-0 space-y-2.5 px-4 py-3.5 sm:px-5">
       <div className="flex items-center justify-between gap-2">
         <span className="text-[12.5px] text-st-muted">{ROLE[which].label}</span>
-        {hasIcao && (
-          <button type="button" onClick={onEdit} aria-label={`Modifier ${ROLE[which].label}`} className="grid h-7 w-7 cursor-pointer place-items-center rounded-[8px] text-st-muted transition-colors hover:bg-st-surface hover:text-st-text">
-            <Pencil size={14} />
+        {canCopyDep && !ad.icao && (
+          <button type="button" onClick={onCopyDep} className="inline-flex cursor-pointer items-center gap-1 text-[12px] font-[550] text-st-ink hover:underline">
+            <CornerDownLeft size={12} /> Comme le départ
           </button>
         )}
       </div>
 
-      {!hasIcao ? (
-        <Button variant="secondary" size="sm" className="mt-2" onClick={onEdit}>
-          <Plus /> Ajouter le terrain
-        </Button>
-      ) : (
-        <>
-          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-            <b className="mr-1 font-mono text-[17px] font-bold text-st-text">{ad.icao.toUpperCase()}</b>
-            {rec?.runways.map((r) => (
-              <button
-                key={r.ident}
-                type="button"
-                onClick={() => pickRunway(r.ident)}
-                title={`Piste ${r.ident} · cap ${r.heading}°`}
-                className={cn(
-                  "h-[30px] min-w-[38px] cursor-pointer rounded-[9px] border px-2 font-mono text-[12px] font-semibold transition-colors",
-                  ad.rwy === r.heading ? "border-st-ink bg-st-ink text-white" : "border-st-line bg-white text-st-text hover:bg-st-surface",
-                )}
-              >
-                {r.ident}
-              </button>
-            ))}
+      {/* OACI + pistes */}
+      <div className="flex flex-wrap items-center gap-1.5">
+        <input
+          value={ad.icao}
+          onChange={(e) => setIcao(e.target.value)}
+          placeholder="OACI"
+          aria-label={`OACI ${ROLE[which].label}`}
+          maxLength={4}
+          className={cn("w-[74px] px-2 text-center font-mono font-bold uppercase tracking-wide", MB.input)}
+        />
+        {rec?.runways.map((r) => (
+          <button
+            key={r.ident}
+            type="button"
+            onClick={() => pickRunway(r.ident)}
+            title={`Piste ${r.ident} · cap ${r.heading}°`}
+            className={cn(
+              "h-10 min-w-10 cursor-pointer rounded-[10px] border px-2 font-mono text-[12.5px] font-semibold transition-colors",
+              ad.rwy === r.heading ? "border-st-ink bg-st-ink text-white" : "border-st-line bg-white text-st-text hover:bg-st-surface",
+            )}
+          >
+            {r.ident}
+          </button>
+        ))}
+        {ad.icao && ad.icao.length === 4 && !rec && <span className="text-[11.5px] text-st-muted">terrain inconnu : pistes à la main</span>}
+      </div>
+
+      {/* Météo */}
+      <div className="flex items-center gap-1.5 text-[11.5px] text-st-text-2">
+        <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", metar.state === "ok" ? "bg-st-ok" : metar.state === "ko" ? "bg-st-bad" : "bg-st-line-strong")} />
+        <span className="min-w-0 flex-1 truncate">
+          {metar.state === "loading" ? "METAR en cours…" : wx ?? (metar.state === "ko" ? metar.msg : "Météo à renseigner")}
+        </span>
+        {ad.icao && (
+          <button type="button" onClick={() => setEditing((v) => !v)} aria-expanded={editing} className="inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-[8px] px-1.5 py-1 font-[550] text-st-ink hover:bg-st-surface">
+            {editing ? <ChevronUp size={13} /> : <Pencil size={12} />} {editing ? "Fermer" : "Modifier"}
+          </button>
+        )}
+      </div>
+
+      {editing && (
+        <div className="space-y-2.5 rounded-[14px] bg-st-surface p-3">
+          <div className="flex flex-wrap items-end gap-2">
+            {which !== "alt" && <NumberField label="Piste °" size="sm" value={ad.rwy} onChange={(v) => onChange({ rwy: v })} min={0} max={360} />}
+            {which !== "alt" && <NumberField label="Élév. ft" value={ad.elev} onChange={(v) => onChange({ elev: v })} />}
+            <NumberField label="QNH" value={ad.qnh} onChange={(v) => onChange({ qnh: v })} />
+            <NumberField label="OAT °C" size="sm" value={ad.oat} onChange={(v) => onChange({ oat: v })} />
+            <NumberField label="Vent °" size="sm" value={ad.wdir} onChange={(v) => onChange({ wdir: v })} min={0} max={360} />
+            <NumberField label="Vent kt" size="sm" value={ad.wspd} onChange={(v) => onChange({ wspd: v })} min={0} />
+            <NumberField label={`${ROLE[which].dist} m`} value={avail} onChange={onDist} />
           </div>
-          <p className="mt-1.5 flex min-w-0 items-center gap-1.5 text-[11.5px] text-st-text-2">
-            <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", metarState === "ok" ? "bg-st-ok" : metarState === "ko" ? "bg-st-bad" : "bg-st-line-strong")} />
-            <span className="truncate">
-              {metarState === "loading" ? "METAR en cours…" : wx ?? (metarState === "ko" ? "METAR indisponible, saisie à la main" : "Météo à renseigner")}
-            </span>
-          </p>
-          <div className="mt-2.5">
-            <div className="flex items-baseline justify-between gap-2 text-[12px]">
-              <span className="truncate text-st-muted">
-                {error ?? (need != null && avail != null ? `${needLabel} ${nf(need)} / ${ROLE[which].dist} ${nf(avail)} m` : avail == null ? "Choisissez une piste" : `${ROLE[which].dist} ${nf(avail)} m`)}
-              </span>
-              {margin != null && (
-                <b className={cn("st-num shrink-0 font-semibold", margin >= 0 ? "text-st-ok" : "text-st-bad")}>
-                  {margin >= 0 ? "+" : ""}{nf(margin)} m
-                </b>
-              )}
-            </div>
-            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-st-surface-hover">
-              {need != null && avail != null && avail > 0 && (
-                <div className={cn("h-full rounded-full", margin != null && margin < 0 ? "bg-st-bad" : "bg-st-ink")} style={{ width: `${Math.min(100, (need / avail) * 100)}%` }} />
-              )}
-            </div>
+          <div className="flex gap-2">
+            <input value={raw} onChange={(e) => setRaw(e.target.value)} placeholder="Coller un METAR brut" aria-label="METAR brut" className={cn("min-w-0 flex-1 px-2.5 font-mono text-[12px]", MB.input)} />
+            <Button variant="secondary" size="sm" className="h-10" onClick={parseRaw} disabled={!raw.trim()}>Extraire</Button>
+            <Button variant="secondary" size="sm" className="h-10" onClick={() => fetchMetar(ad.icao.toUpperCase())} disabled={ad.icao.length < 3} aria-label="Recharger le METAR">
+              <Cloud />
+            </Button>
           </div>
-        </>
+          {ad.rawMetar && <p className="break-all font-mono text-[10.5px] text-st-muted">{ad.rawMetar}</p>}
+        </div>
       )}
+
+      {/* Distance nécessaire / disponible */}
+      <div>
+        <div className="flex items-baseline justify-between gap-2 text-[12px]">
+          <span className="truncate text-st-muted">
+            {error ?? (need != null && avail != null ? `${needLabel} ${nf(need)} / ${ROLE[which].dist} ${nf(avail)} m` : avail == null ? "Choisissez une piste" : `${ROLE[which].dist} ${nf(avail)} m`)}
+          </span>
+          {margin != null && (
+            <b className={cn("st-num shrink-0 font-semibold", margin >= 0 ? "text-st-ok" : "text-st-bad")}>
+              {margin >= 0 ? "+" : ""}{nf(margin)} m
+            </b>
+          )}
+        </div>
+        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-st-surface-hover">
+          {need != null && avail != null && avail > 0 && (
+            <div className={cn("h-full rounded-full", margin != null && margin < 0 ? "bg-st-bad" : "bg-st-ink")} style={{ width: `${Math.min(100, (need / avail) * 100)}%` }} />
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -164,14 +205,6 @@ export function MbTerrains({
   onChangeAero: (which: Which, patch: Partial<AerodromeInput>) => void;
   onChange: (patch: Partial<Pick<PerfInputs, "toda" | "ldaDest" | "ldaAlt">>) => void;
 }) {
-  const [editing, setEditing] = useState<Which | null>(null);
-
-  function handleRunway(which: Which, rw: RunwayPick) {
-    if (which === "dep") onChange({ toda: rw.toda });
-    else if (which === "dest") onChange({ ldaDest: rw.lda });
-    else onChange({ ldaAlt: rw.lda });
-  }
-
   function copyFromDep(target: "dest" | "alt") {
     const s = perf.dep;
     onChangeAero(target, { icao: s.icao, rwy: s.rwy, elev: s.elev, qnh: s.qnh, oat: s.oat, wdir: s.wdir, wspd: s.wspd, rawMetar: s.rawMetar });
@@ -181,48 +214,16 @@ export function MbTerrains({
 
   const d = computed.dep;
   const l = computed.ldg;
-  const distField = (which: Which) =>
-    which === "dep" ? (
-      <NumberField label="TODA m" value={perf.toda} onChange={(v) => onChange({ toda: v })} />
-    ) : which === "dest" ? (
-      <NumberField label="LDA m" value={perf.ldaDest} onChange={(v) => onChange({ ldaDest: v })} />
-    ) : (
-      <NumberField label="LDA m" value={perf.ldaAlt} onChange={(v) => onChange({ ldaAlt: v })} />
-    );
+  const depSet = !!perf.dep.icao?.trim();
 
   return (
-    <>
-      <div className="grid grid-cols-1 divide-y divide-st-line sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-        <TerrainColumn which="dep" ad={perf.dep} avail={perf.toda} need={d.todr125} needLabel="TODR ×1,25" error={d.error}
-          onChange={(p) => onChangeAero("dep", p)} onRunway={(rw) => handleRunway("dep", rw)} onEdit={() => setEditing("dep")} />
-        <TerrainColumn which="dest" ad={perf.dest} avail={perf.ldaDest} need={l.ldr} needLabel="LDR" error={l.error}
-          onChange={(p) => onChangeAero("dest", p)} onRunway={(rw) => handleRunway("dest", rw)} onEdit={() => setEditing("dest")} />
-        <TerrainColumn which="alt" ad={perf.alt} avail={perf.ldaAlt} need={l.ldr} needLabel="LDR" error={l.error}
-          onChange={(p) => onChangeAero("alt", p)} onRunway={(rw) => handleRunway("alt", rw)} onEdit={() => setEditing("alt")} />
-      </div>
-
-      <Sheet value={editing} onClose={() => setEditing(null)} width="lg">
-        {(w) => (
-          <>
-            <SheetHeader title={ROLE[w].label} subtitle="Terrain, piste et météo" onClose={() => setEditing(null)} />
-            <SheetBody>
-              <AeroRow
-                label={ROLE[w].label}
-                ad={perf[w]}
-                narrow={w === "alt"}
-                canCopyDep={w !== "dep" && !!perf.dep.icao?.trim()}
-                onCopyDep={() => w !== "dep" && copyFromDep(w)}
-                onChange={(p) => onChangeAero(w, p)}
-                onRunway={(rw) => handleRunway(w, rw)}
-                extra={distField(w)}
-              />
-            </SheetBody>
-            <SheetFooter>
-              <Button fullWidth size="lg" onClick={() => setEditing(null)}>Terminer</Button>
-            </SheetFooter>
-          </>
-        )}
-      </Sheet>
-    </>
+    <div className="grid grid-cols-1 divide-y divide-st-line lg:grid-cols-3 lg:divide-x lg:divide-y-0">
+      <TerrainColumn which="dep" ad={perf.dep} avail={perf.toda} need={d.todr125} needLabel="TODR ×1,25" error={d.error} canCopyDep={false}
+        onChange={(p) => onChangeAero("dep", p)} onDist={(v) => onChange({ toda: v })} onCopyDep={() => {}} />
+      <TerrainColumn which="dest" ad={perf.dest} avail={perf.ldaDest} need={l.ldr} needLabel="LDR" error={l.error} canCopyDep={depSet}
+        onChange={(p) => onChangeAero("dest", p)} onDist={(v) => onChange({ ldaDest: v })} onCopyDep={() => copyFromDep("dest")} />
+      <TerrainColumn which="alt" ad={perf.alt} avail={perf.ldaAlt} need={l.ldr} needLabel="LDR" error={l.error} canCopyDep={depSet}
+        onChange={(p) => onChangeAero("alt", p)} onDist={(v) => onChange({ ldaAlt: v })} onCopyDep={() => copyFromDep("alt")} />
+    </div>
   );
 }
