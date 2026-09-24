@@ -1,6 +1,7 @@
+import { Info } from "lucide-react";
 import { getPiloteDisponibilites } from "@/lib/actions/pilote-disponibilites";
 import { PiloteDisponibilitesClient } from "@/components/pilote/PiloteDisponibilitesClient";
-import { PiloteHeader, PiloteAlert } from "@/components/pilote/ui";
+import { PageHeader } from "@/components/pilote/studio";
 
 export const metadata = { title: "Disponibilités — Espace pilote" };
 
@@ -9,20 +10,17 @@ export default async function PiloteDisponibilitesPage() {
   const rienConfigure = !plage && exceptions.length === 0;
 
   return (
-    <div className="space-y-6">
-      <PiloteHeader
-        title="Disponibilités"
-        subtitle="Un seul calendrier, valable pour toutes vos annonces : le client ne verra que vos créneaux libres."
-      />
-      <PiloteAlert tone="info">
-        <p className="font-semibold">À quoi ça sert : ça conditionne les réservations clients.</p>
-        <p className="mt-1">
-          Quand un client réserve un vol sur une de vos annonces, il ne peut choisir une date/heure
-          que dans les créneaux que vous ouvrez ici. {rienConfigure
-            ? "Rien n'est configuré pour l'instant : vos annonces restent ouvertes à n'importe quelle date, sans restriction."
-            : "Ce que vous voyez ci-dessous est donc directement ce que vos clients pourront réserver."}
+    <div className="mx-auto w-full max-w-lg space-y-5">
+      <PageHeader title="Disponibilités" />
+      <div className="flex gap-2.5 rounded-[14px] bg-st-info-soft px-4 py-3 text-[13px] leading-snug text-st-info">
+        <Info size={16} className="mt-px shrink-0" />
+        <p>
+          Un seul calendrier pour toutes vos annonces : un client ne peut réserver que dans les créneaux ouverts ici.{" "}
+          {rienConfigure
+            ? "Rien n'est configuré : vos annonces sont réservables à n'importe quelle date."
+            : "Ce que vous voyez ci-dessous est ce que vos clients peuvent réserver."}
         </p>
-      </PiloteAlert>
+      </div>
       <PiloteDisponibilitesClient initialPlage={plage} initialExceptions={exceptions} />
     </div>
   );
