@@ -260,6 +260,33 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-09-24 · Espace pilote — restyle « Studio » (bureau + téléphone), maquette en cours de validation</p>
+      <h3>/pilote adopte le style et les règles mobiles de Nexus, couleurs Fly Horizons gardées</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Romain a vu le style « Studio » appliqué à Nexus et veut le même pour l'espace pilote,
+          sur le bureau et au téléphone ; les pilotes doivent pouvoir tout faire au téléphone.
+          Précise la décision du 23/09 (approche A) et remplace, pour <code>/pilote</code> seulement,
+          le style « plat et bordé » du 16/09.</dd>
+        <dt>Décision</dt>
+        <dd>Habillage Studio (cartes radius 20, boutons 38 px radius 11, contrôles segmentés, tiroir
+          flottant, feuille qui monte du bas au téléphone, barre d'onglets flottante) avec navy
+          <code>#0b2238</code> à la place du noir et or en accent. Sidebar rétractable gardée, restylée ;
+          barre du haut ajoutée. Priorités : Masse &amp; centrage (hyper pratique, calculs/PDF/METAR
+          intouchés) puis Mes vols. Maquette avant tout code :
+          <a href="https://claude.ai/artifact/11MRPaSJ4Fgph3dyUnry22">Studio pilote</a>
+          (7 écrans, vote par écran, choix Poppins / Geist).</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Simple changement de couleurs sur le layout actuel (déjà refusé sur Nexus) ; boutons en
+          pilule ; mode sombre ; bouton flottant (FAB).</dd>
+        <dt>Conséquences</dt>
+        <dd>Site public et admin inchangés. Après validation : tokens et composants partagés d'abord,
+          puis pages une par une (M&amp;B et création de résa/Leaflet à part), puis audit sur un vrai
+          téléphone.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-09-23 · Interface mobile pilote (+ admin) — approche retenue, chantier à planifier</p>
       <h3>Mêmes routes, vues mobiles dédiées sur les écrans clés (approche A)</h3>
       <dl>
