@@ -15,7 +15,7 @@ import {
 type View = "vente" | "reservees" | "archives";
 const VIEW_STATUT: Record<View, AnnonceRow["statut"]> = { vente: "publiee", reservees: "reservee", archives: "annulee" };
 const EMPTY: Record<View, string> = {
-  vente: "Aucune annonce en vente.",
+  vente: "Aucune annonce en vente. Les annonces retirées sont dans « Archivées ».",
   reservees: "Aucune annonce réservée.",
   archives: "Aucune annonce retirée.",
 };
@@ -35,7 +35,11 @@ export function PiloteAnnoncesClient({
   canPublish: boolean;
 }) {
   const router = useRouter();
-  const [view, setView] = useState<View>("vente");
+  // Ouvre le premier onglet qui a des annonces (sinon « En vente » vide ferait
+  // croire que tout a disparu).
+  const [view, setView] = useState<View>(
+    () => (["vente", "reservees", "archives"] as View[]).find((v) => annonces.some((a) => a.statut === VIEW_STATUT[v])) ?? "vente",
+  );
   const [openId, setOpenId] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<PendingAction | null>(null);
   const [pending, setPending] = useState<AnnonceAction | null>(null);
