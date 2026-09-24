@@ -1159,6 +1159,25 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-24 (1) — espace pilote « Studio », étape 1 : base, coque, Accueil, Mes vols</h3>
+      <p class="pill">Maquette validée en entier par Romain (Poppins gardée). Admin et site public inchangés.</p>
+      <ul>
+        <li>Couleurs Studio préfixées <code>st-</code> dans <code>app/globals.css</code> + règles téléphone
+          (tableau en cartes, bande de chiffres, pas de défilement latéral).</li>
+        <li>Composants partagés <code>components/pilote/studio/*</code> : bouton, pastille, carte composée,
+          en-tête, contrôle segmenté, chiffres clés, tableau, feuille/tiroir, champs, menu de choix, tuile de date.</li>
+        <li>Coque : sidebar rétractable restylée, barre du haut (fil d'Ariane + METAR EBCI + avatar),
+          barre d'onglets flottante au téléphone (Accueil · Vols · M&amp;B · Annonces · Plus) avec feuille « Plus ».</li>
+        <li>Pages refaites : Tableau de bord (prochain vol en carte composée, À traiter, Ensuite) et Mes vols
+          (4 chiffres, onglets, recherche, M&amp;B par ligne, cartes au téléphone).</li>
+        <li>Tiroir de réservation : enveloppe Studio côté pilote (feuille au téléphone, panneau flottant au
+          bureau) ; contenu des onglets inchangé pour l'instant. Côté admin : rien ne change.</li>
+        <li>Reste : M&amp;B, Annonces, Disponibilités, Profil, création de réservation, contenu du tiroir,
+          audit sur un vrai téléphone.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-23 (1) — sitemap : alerte Search Console "Exclue par la balise noindex"</h3>
       <p class="pill">Cause : <code>app/sitemap.ts</code> était figé au build (cache Vercel, ~2 jours) et
         listait encore les 4 annonces, toutes passées en <code>annulee</code> depuis. Leur page appelle

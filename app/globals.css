@@ -425,3 +425,92 @@
     display: none !important;
   }
 }
+
+/* ==============================================
+   ESPACE PILOTE — style « Studio » (validé le 24/09/2026)
+   Repris de Nexus, couleurs Fly Horizons : navy à la place du noir,
+   or en accent. Préfixe st- pour ne jamais toucher au site public ni à
+   l'admin. Composants : components/pilote/studio/*.
+   ============================================== */
+@theme {
+  --color-st-bg:          #f5f6f8;
+  --color-st-surface:     #f4f5f7;
+  --color-st-surface-hover: #eceef2;
+  --color-st-line:        #eceef2;
+  --color-st-line-soft:   #f2f3f6;
+  --color-st-line-strong: #dcdfe6;
+  --color-st-text:        #0f1117;
+  --color-st-text-2:      #4d5463;
+  --color-st-muted:       #9aa0ac;
+  --color-st-ink:         #0b2238;
+  --color-st-ink-hover:   #16334f;
+  --color-st-ink-soft:    #e8edf3;
+  --color-st-gold:        #F2B705;
+  --color-st-gold-soft:   #fdf4d6;
+  --color-st-gold-text:   #8a6400;
+  --color-st-ok:          #16794a;
+  --color-st-ok-soft:     #e7f5ec;
+  --color-st-warn:        #b3560c;
+  --color-st-warn-soft:   #fff3e6;
+  --color-st-bad:         #c4372c;
+  --color-st-bad-soft:    #fdecea;
+  --color-st-info:        #2b5cb8;
+  --color-st-info-soft:   #eaf0fb;
+
+  --shadow-st-sm:    0 1px 2px rgba(15,17,23,.03);
+  --shadow-st-md:    0 4px 12px -2px rgba(15,17,23,.06), 0 2px 4px -2px rgba(15,17,23,.04);
+  --shadow-st-lg:    0 14px 34px -10px rgba(15,17,23,.22);
+  --shadow-st-panel: 0 30px 60px -20px rgba(15,17,23,.35);
+  --shadow-st-ink:   0 1px 2px rgba(11,34,56,.25), 0 6px 14px -8px rgba(11,34,56,.6);
+}
+
+@keyframes st-tab-label-in {
+  from { opacity: 0; transform: translateX(-4px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Comme une app : la page ne défile jamais sur le côté ni ne rebondit. */
+:root:has(.pilote-studio) body { overflow-x: clip; overscroll-behavior: none; }
+:root:has(.pilote-studio) { touch-action: manipulation; }
+.pilote-studio .st-num { font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+
+/* Téléphone : chaque ligne de tableau devient une carte (components/pilote/studio/table.tsx
+   recopie l'en-tête de chaque colonne dans data-label). */
+@media (max-width: 639px) {
+  .st-table table, .st-table tbody, .st-table tr, .st-table td { display: block; width: 100%; }
+  .st-table { padding: 0; }
+  .st-table-toolbar { padding: 0.75rem 0.75rem 0.5rem; }
+  .st-table thead { display: none; }
+  .st-table tr { padding: 0.75rem 1rem; }
+  .st-table tbody tr + tr { border-top: 1px solid var(--color-st-line-soft); }
+  .st-table-toolbar + div tbody tr:first-child { border-top: 1px solid var(--color-st-line-soft); }
+  .st-table td {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem;
+    padding: 0.2rem 0; border-top: 0; text-align: right; white-space: normal;
+  }
+  .st-table td::before {
+    content: attr(data-label); flex-shrink: 0; font-size: 0.75rem;
+    color: var(--color-st-muted); text-align: left;
+  }
+  .st-table td[data-label=""] { justify-content: flex-end; }
+  .st-table td[data-label=""]::before { content: none; }
+  .st-table td[data-role="title"] { display: block; padding-bottom: 0.35rem; text-align: left; font-size: 0.9375rem; }
+  .st-table td[data-role="title"]::before { content: none; }
+
+  /* Chiffres clés : une bande qu'on fait défiler du doigt. */
+  .st-stat-strip {
+    display: flex; overflow-x: auto; gap: 0.5rem; margin-inline: -1rem; padding-inline: 1rem;
+    scroll-snap-type: x mandatory; scroll-padding-inline: 1rem; scrollbar-width: none;
+  }
+  .st-stat-strip::-webkit-scrollbar { display: none; }
+  .st-stat-strip > * { flex: 0 0 auto; min-width: 9.5rem; max-width: 75%; scroll-snap-align: start; }
+  .st-stat-strip [data-stat-card] { padding: 0.625rem 0.75rem; }
+  .st-stat-strip [data-stat-value] { margin-top: 0.125rem; font-size: 1.125rem; line-height: 1.5rem; }
+  .st-stat-strip [data-stat-hint] { display: none; }
+}
+.st-table tr[hidden] { display: none !important; }
+
+/* Actions d'en-tête : icône seule sous 380 px. */
+@media (max-width: 379px) {
+  .st-header-actions > a, .st-header-actions > button { width: 38px; padding: 0; gap: 0; }
+}

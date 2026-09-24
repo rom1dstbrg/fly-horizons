@@ -1,6 +1,6 @@
 import { Wind, Eye, Thermometer, Gauge } from "lucide-react";
 
-type MetarJson = {
+export type MetarJson = {
   rawOb: string;
   temp: number | null;
   dewp: number | null;
@@ -42,7 +42,7 @@ function parseVisSM(visib: string | number | null): number {
   return n; // already in SM
 }
 
-function flightRules(
+export function flightRules(
   visib: string | number | null,
   clouds: { cover: string; base: number }[] | null,
 ): { label: "VFR" | "MVFR" | "IFR" | "LIFR"; bg: string; text: string } {

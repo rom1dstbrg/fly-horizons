@@ -1,13 +1,24 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PiloteSidebar, type PilotIdInfo } from "@/components/pilote/PiloteSidebar";
+import { PiloteTopBar } from "@/components/pilote/PiloteTopBar";
+import { PiloteTabBar } from "@/components/pilote/PiloteTabBar";
+import { MetarChip } from "@/components/pilote/MetarChip";
 import { ChartePiloteGate } from "@/components/pilote/ChartePiloteGate";
 import { piloteLegalStatus } from "@/lib/pilote/legal";
 
 export const metadata: Metadata = {
   title: "Fly Horizons · Espace pilote",
+};
+
+// Plein écran au téléphone : le contenu passe sous les zones de l'iPhone, les
+// barres ajoutent elles-mêmes env(safe-area-inset-*).
+export const viewport: Viewport = {
+  viewportFit: "cover",
+  themeColor: "#f5f6f8",
 };
 
 export default async function PiloteLayout({ children }: { children: React.ReactNode }) {
@@ -62,25 +73,38 @@ export default async function PiloteLayout({ children }: { children: React.React
     .neq("statut", "vol_effectue")
     .neq("statut", "annulee");
 
+  // Point or sur l'onglet « Vols » du téléphone : ce qui attend une action du
+  // pilote (nouvelle demande, heure à confirmer).
+  const { count: volsATraiter } = await admin
+    .from("reservations")
+    .select("id", { count: "exact", head: true })
+    .eq("pilote_id", pilote.id)
+    .in("statut", ["demande_recue", "en_attente"]);
+
+  const counts = {
+    "/pilote/profil": profilAlerts,
+    "/pilote/vols": volsAlerts ?? 0,
+  };
+
   return (
-    <div className="min-h-screen bg-background flex">
-      <PiloteSidebar
-        counts={{
-          "/pilote/profil": profilAlerts,
-          "/pilote/vols": volsAlerts ?? 0,
-        }}
+    <div className="pilote-studio flex min-h-screen bg-st-bg font-sans text-st-text">
+      <PiloteSidebar counts={counts} pilot={pilotIdInfo} isAdmin={profile?.role === "admin"} />
+      {/* lg:pl-[76px] = largeur du rail replié : ouvert au survol, il se pose
+          PAR-DESSUS le contenu sans le pousser (choix du 24/09, Studio). */}
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col lg:pl-[76px]">
+        <PiloteTopBar
+          pilot={pilotIdInfo}
+          metar={<Suspense fallback={null}><MetarChip /></Suspense>}
+        />
+        <main className="flex-1 px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-[calc(1.25rem+env(safe-area-inset-top))] sm:px-6 lg:px-7 lg:pb-8 lg:pt-6">
+          {children}
+        </main>
+      </div>
+      <PiloteTabBar
         pilot={pilotIdInfo}
         isAdmin={profile?.role === "admin"}
+        badges={{ "/pilote/vols": volsATraiter ?? 0, "/pilote/profil": profilAlerts }}
       />
-      {/* lg:ml-[76px] = largeur du rail replié (état de repos). `peer-hover:` (le
-          peer est le <aside> de PiloteSidebar) pousse le contenu à 256px pendant
-          le survol — sinon la sidebar dépliée recouvre le début du contenu
-          (colonnes de tableau, titres) au lieu de le décaler : bug trouvé le 19/09. */}
-      <main className="flex-1 min-w-0 lg:ml-[76px] lg:peer-hover:ml-64 transition-[margin-left] duration-200 ease-out min-h-screen">
-        <div className="px-4 pt-16 pb-[calc(76px+env(safe-area-inset-bottom))] sm:px-6 sm:pt-16 lg:p-8 lg:pt-8 lg:pb-8">
-          {children}
-        </div>
-      </main>
       {charteRequise && <ChartePiloteGate />}
     </div>
   );

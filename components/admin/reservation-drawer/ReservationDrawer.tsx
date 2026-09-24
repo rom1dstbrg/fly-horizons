@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useSyncExternalStore } from "react";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Check, Minimize2, Save, Copy, Loader2, Info, Map, MessageSquare, Pencil, History } from "lucide-react";
@@ -19,6 +19,7 @@ import {
 } from "@/lib/actions/reservations";
 import { AdminBadge, type BadgeVariant } from "@/components/admin/ui/AdminBadge";
 import { getResaBadge } from "@/components/admin/ui/resaBadge";
+import { SheetCloseButton } from "@/components/pilote/studio";
 import type { DrawerReservation, EmailTemplate, Tab } from "./types";
 import { InfosTab } from "./InfosTab";
 import { RouteSection } from "./RouteSection";
@@ -50,6 +51,17 @@ const AdminRouteEditorDynamic = dynamic(
 
 // Onglets du drawer. Compact : seul l'onglet actif affiche son libellé, les
 // autres se réduisent à leur icône (le drawer reste étroit même à 5 onglets).
+// Espace pilote (« Studio », 24/09) : au téléphone le tiroir est une feuille qui
+// monte du bas, sur le bureau un panneau flottant ; l'admin garde son panneau.
+const SM_QUERY = "(min-width: 640px)";
+function useIsSmUp() {
+  return useSyncExternalStore(
+    (cb) => { const m = window.matchMedia(SM_QUERY); m.addEventListener("change", cb); return () => m.removeEventListener("change", cb); },
+    () => window.matchMedia(SM_QUERY).matches,
+    () => true,
+  );
+}
+
 const DRAWER_TABS: { id: Tab; label: string; Icon: typeof Info }[] = [
   { id: "infos", label: "Infos", Icon: Info },
   { id: "route", label: "Route", Icon: Map },
@@ -286,6 +298,8 @@ export function ReservationDrawer({
 
   const r = reservation;
   const statut = r ? getResaBadge(r) : null;
+  const studio = viewerRole === "pilote";
+  const isSmUp = useIsSmUp();
   const hasRoute = !!route.localRouteStatus || route.routeDraft.length > 0 || !!r?.products?.route_waypoints?.length;
   // NewCAG (réservation avion) est un outil propre à l'exploitant admin — pas pertinent
   // pour un pilote tiers qui gère son propre avion en dehors de ce système.
@@ -299,16 +313,33 @@ export function ReservationDrawer({
         {r && (
           <>
             <motion.div
-              className="fixed inset-0 bg-foreground/20 backdrop-blur-[1px] z-50"
+              className={studio ? "fixed inset-0 z-[70] bg-st-ink/20 backdrop-blur-[1.5px]" : "fixed inset-0 bg-foreground/20 backdrop-blur-[1px] z-50"}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={onClose}
             />
 
             <motion.aside
-              className={`fixed right-0 top-0 bottom-0 w-full bg-card border-l border-border shadow-[−8px_0_40px_rgba(17,51,86,.12)] z-50 flex flex-col transition-[max-width] duration-200 ease-in-out ${emailOpen ? "max-w-2xl" : "max-w-lg"}`}
-              initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              className={studio
+                ? `fixed inset-x-0 bottom-0 z-[70] flex max-h-[92dvh] flex-col overflow-hidden rounded-t-[26px] bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-16px_40px_-16px_rgba(15,17,23,0.3)] sm:inset-x-auto sm:bottom-3 sm:right-3 sm:top-3 sm:max-h-none sm:w-[calc(100%-1.5rem)] sm:rounded-[22px] sm:pb-0 sm:shadow-st-panel transition-[max-width] duration-200 ${emailOpen ? "sm:max-w-2xl" : "sm:max-w-[500px]"}`
+                : `fixed right-0 top-0 bottom-0 w-full bg-card border-l border-border shadow-[−8px_0_40px_rgba(17,51,86,.12)] z-50 flex flex-col transition-[max-width] duration-200 ease-in-out ${emailOpen ? "max-w-2xl" : "max-w-lg"}`}
+              initial={studio && !isSmUp ? { y: "100%" } : { x: studio ? "calc(100% + 24px)" : "100%" }}
+              animate={studio && !isSmUp ? { y: 0 } : { x: 0 }}
+              exit={studio && !isSmUp ? { y: "100%" } : { x: studio ? "calc(100% + 24px)" : "100%" }}
+              transition={studio ? { duration: 0.3, ease: [0.2, 0, 0, 1] } : { type: "spring", damping: 28, stiffness: 300 }}
             >
+              {studio && <div className="mx-auto mt-2.5 h-1 w-[38px] shrink-0 rounded-full bg-st-line-strong sm:hidden" />}
+              {studio ? (
+              <div className="flex items-start justify-between gap-3 px-5 pb-3 pt-3 sm:pt-5 shrink-0">
+                <div className="min-w-0">
+                  <p className="truncate text-base font-semibold text-st-text">{r.clients?.prenom} {r.clients?.nom}</p>
+                  <div className="mt-1 flex items-center gap-2">
+                    {statut && <AdminBadge variant={statut.variant} label={statut.label} />}
+                    <span className="font-mono text-xs text-st-muted">#{r.id.slice(0, 8).toUpperCase()}</span>
+                  </div>
+                </div>
+                <SheetCloseButton onClick={onClose} />
+              </div>
+              ) : (
               <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2.5 mb-1">
@@ -324,6 +355,7 @@ export function ReservationDrawer({
                   <X size={16} />
                 </button>
               </div>
+              )}
 
               <AnimatePresence>
                 {feedback && (
@@ -338,7 +370,32 @@ export function ReservationDrawer({
                 )}
               </AnimatePresence>
 
-              {!emailOpen && (
+              {!emailOpen && studio && (
+                <div className="mx-5 mb-1 grid shrink-0 gap-0.5 rounded-[11px] bg-st-surface-hover p-[3px]" style={{ gridTemplateColumns: `repeat(${DRAWER_TABS.length}, minmax(0, 1fr))` }} role="tablist">
+                  {DRAWER_TABS.map(({ id, label, Icon }) => {
+                    const active = activeTab === id;
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        role="tab"
+                        aria-selected={active}
+                        aria-label={label}
+                        title={label}
+                        onClick={() => setActiveTab(id)}
+                        className={`flex min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-[8px] py-[6px] text-[12.5px] transition-colors ${
+                          active ? "bg-white font-semibold text-st-text shadow-[0_1px_2px_rgba(15,17,23,0.08)]" : "font-medium text-st-muted hover:text-st-text"
+                        }`}
+                      >
+                        <Icon size={14} className="shrink-0" />
+                        {active && <span className="truncate">{label}</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {!emailOpen && !studio && (
                 <div className="flex border-b border-border shrink-0">
                   {DRAWER_TABS.map(({ id, label, Icon }) => {
                     const active = activeTab === id;

@@ -1,11 +1,42 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { AlertTriangle, AlertCircle, ChevronRight, PlaneTakeoff, Plane, Scale, Phone, CheckCircle2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { AlertTriangle, AlertCircle, CheckCircle2, ArrowRight, PlaneTakeoff, Plane, Clock, ShieldCheck } from "lucide-react";
 import { piloteLegalStatus } from "@/lib/pilote/legal";
-import { AdminBadge, getResaBadge } from "@/components/admin/ui";
-import { MetarWidget } from "@/components/admin/MetarWidget";
+import {
+  Card, CardSplit, Metric, PageHeader, SectionHeader, LinkButton, ButtonLabel, DateTile, Badge,
+} from "@/components/pilote/studio";
+import { ResaBadge, AnnonceTag } from "@/components/pilote/ResaBadge";
+import { PiloteVolsActions } from "@/components/pilote/PiloteVolsActions";
+import { MetarChip } from "@/components/pilote/MetarChip";
+import { cn } from "@/lib/utils";
+
+type Wp = { nom?: string | null };
+type NextFlight = {
+  id: string;
+  date_vol: string;
+  heure_vol: string | null;
+  duree: number;
+  statut: string;
+  type_resa: string;
+  payment_status: string | null;
+  passagers: number | null;
+  poids_total: number | null;
+  final_waypoints: Wp[] | null;
+  clients: { prenom: string; nom: string; telephone: string | null } | null;
+  products: { route_waypoints: Wp[] | null } | null;
+};
+
+const routeOf = (f: NextFlight) => {
+  const wps = f.final_waypoints?.length ? f.final_waypoints : f.products?.route_waypoints;
+  return wps?.length ? wps.map((w) => w.nom?.trim() || "?").join(" → ") : null;
+};
+
+function inDays(date: string, today: string): string {
+  const n = Math.round((new Date(date + "T12:00:00Z").getTime() - new Date(today + "T12:00:00Z").getTime()) / 86400000);
+  return n <= 0 ? "aujourd'hui" : n === 1 ? "demain" : `dans ${n} jours`;
+}
 
 export default async function PiloteDashboard() {
   const supabase = await createClient();
@@ -22,221 +53,189 @@ export default async function PiloteDashboard() {
   const legal = piloteLegalStatus(pilote);
   const today = new Date().toISOString().slice(0, 10);
 
-  const [{ count: demandesEnAttente }, { count: volsNonPayes }, { count: volsAvenirTotal }, { count: annoncesActives }, { data: prochainsVols }] = pilote
+  const [{ data: demandes }, { data: nonPayes }, { data: prochains }] = pilote
     ? await Promise.all([
-        admin.from("reservations").select("id", { count: "exact", head: true })
-          .eq("pilote_id", pilote.id).eq("statut", "demande_recue"),
-        admin.from("reservations").select("id", { count: "exact", head: true })
+        admin.from("reservations").select("id, date_vol, statut, clients(prenom, nom)")
+          .eq("pilote_id", pilote.id).in("statut", ["demande_recue", "en_attente"])
+          .order("date_vol", { ascending: true }),
+        admin.from("reservations").select("id, date_vol, clients(prenom, nom)")
           .eq("pilote_id", pilote.id).eq("type_resa", "annonce_pilote")
-          .neq("pilote_paye", true).not("statut", "in", "(vol_effectue,annulee,demande_recue)"),
-        admin.from("reservations").select("id", { count: "exact", head: true })
-          .eq("pilote_id", pilote.id).neq("type_resa", "perso")
-          .gte("date_vol", today).not("statut", "in", "(vol_effectue,annulee)"),
-        admin.from("annonces_pilote").select("id", { count: "exact", head: true })
-          .eq("pilote_id", pilote.id).eq("statut", "publiee"),
+          .neq("pilote_paye", true).not("statut", "in", "(vol_effectue,annulee,demande_recue)")
+          .order("date_vol", { ascending: true }),
         admin.from("reservations")
-          .select("id, date_vol, heure_vol, duree, statut, type_resa, clients(prenom, nom)")
+          .select("id, date_vol, heure_vol, duree, statut, type_resa, payment_status, passagers, poids_total, final_waypoints, clients(prenom, nom, telephone), products(route_waypoints)")
           .eq("pilote_id", pilote.id).neq("type_resa", "perso")
           .gte("date_vol", today).not("statut", "in", "(vol_effectue,annulee)")
           .order("date_vol", { ascending: true }).order("heure_vol", { ascending: true })
           .limit(6),
       ])
-    : [{ count: 0 }, { count: 0 }, { count: 0 }, { count: 0 }, { data: [] }];
+    : [{ data: [] }, { data: [] }, { data: [] }];
 
-  const nDemandes = demandesEnAttente ?? 0;
-  const nNonPayes = volsNonPayes ?? 0;
-  const nAvenir = volsAvenirTotal ?? 0;
-  const nAnnonces = annoncesActives ?? 0;
-  const legalErrors = legal.issues.filter((i) => i.severity === "error");
-  const legalWarnings = legal.issues.filter((i) => i.severity !== "error");
+  type Row = { id: string; date_vol: string; statut?: string; clients: { prenom: string; nom: string } | null };
+  const nameOf = (r: Row) => (r.clients ? `${r.clients.prenom} ${r.clients.nom}`.trim() : "Client");
+  const dateOf = (d: string) => new Date(d + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "short", day: "numeric", month: "short", timeZone: "Europe/Brussels" });
 
-  type ActionItem = { label: string; href: string; icon: React.ElementType };
-  const urgentItems: ActionItem[] = [
-    ...(legalErrors.length > 0 ? [{ label: "Profil incomplet : vous ne pouvez pas recevoir de vols", href: "/pilote/profil", icon: AlertTriangle }] : []),
-    ...(nDemandes > 0 ? [{ label: `${nDemandes} demande${nDemandes > 1 ? "s" : ""} reçue${nDemandes > 1 ? "s" : ""} à confirmer`, href: "/pilote/vols", icon: AlertTriangle }] : []),
-    ...(nNonPayes > 0 ? [{ label: `${nNonPayes} vol${nNonPayes > 1 ? "s" : ""} à régler par le client`, href: "/pilote/vols", icon: AlertTriangle }] : []),
+  // Ce qui attend une action du pilote, le plus bloquant d'abord.
+  type Todo = { tone: "bad" | "warn"; label: string; detail?: string; href: string };
+  const todos: Todo[] = [
+    ...legal.issues.filter((i) => i.severity === "error").map((i) => ({ tone: "bad" as const, label: i.label, detail: "Vous ne pouvez pas recevoir de vols", href: "/pilote/profil" })),
+    ...((demandes ?? []) as unknown as Row[]).map((r) => ({
+      tone: "warn" as const,
+      label: r.statut === "demande_recue" ? "Nouvelle demande à confirmer" : "Heure à confirmer",
+      detail: `${nameOf(r)} · ${dateOf(r.date_vol)}`,
+      href: "/pilote/vols",
+    })),
+    ...((nonPayes ?? []) as unknown as Row[]).map((r) => ({ tone: "bad" as const, label: "Vol à régler par le client", detail: `${nameOf(r)} · ${dateOf(r.date_vol)}`, href: "/pilote/vols" })),
+    ...legal.issues.filter((i) => i.severity !== "error").map((i) => ({ tone: "warn" as const, label: i.label, href: "/pilote/profil" })),
   ];
-  const todayItems: ActionItem[] = [
-    ...(legalWarnings.length > 0 ? legalWarnings.map((i) => ({ label: i.label, href: "/pilote/profil", icon: AlertCircle })) : []),
-  ];
-  const allActionItems = [...urgentItems, ...todayItems];
-  const isUrgent = urgentItems.length > 0;
+
+  const vols = (prochains ?? []) as unknown as NextFlight[];
+  const next = vols[0] ?? null;
 
   const now = new Date();
-  const greeting = now.getHours() < 12 ? "Bonjour" : now.getHours() < 18 ? "Bon après-midi" : "Bonsoir";
-  const dateLabel = now.toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long" });
-
-  const vols = prochainsVols ?? [];
+  const hour = Number(now.toLocaleTimeString("fr-BE", { hour: "2-digit", hour12: false, timeZone: "Europe/Brussels" }));
+  const greeting = hour < 12 ? "Bonjour" : hour < 18 ? "Bon après-midi" : "Bonsoir";
+  const dateLabel = now.toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Brussels" });
 
   return (
-    <div className="space-y-6 w-full">
+    <div className="space-y-5">
+      <PageHeader
+        title={`${greeting}${prenom ? `, ${prenom}` : ""}`}
+        description={dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1)}
+        actions={
+          <>
+            <div className="max-sm:hidden"><PiloteVolsActions variant="secondary" /></div>
+            <LinkButton href="/pilote/annonces">
+              <PlaneTakeoff />
+              <ButtonLabel full="Publier un vol" short="Publier" />
+            </LinkButton>
+          </>
+        }
+      />
 
-      <div className="flex items-start justify-between gap-3 flex-wrap pb-4 border-b border-border">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">
-            {greeting}{prenom ? `, ${prenom}` : ""}
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1)}
-          </p>
-        </div>
-        <Link
-          href="/pilote/annonces"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-[#e6a800] transition-colors"
-        >
-          <PlaneTakeoff size={15} />
-          Publier un vol
-        </Link>
+      {/* Téléphone : pas de barre du haut, le METAR vient ici. */}
+      <div className="lg:hidden">
+        <Suspense fallback={null}><MetarChip /></Suspense>
       </div>
 
-      {/* ── À traiter ────────────────────────────────────────────────── */}
-      {allActionItems.length === 0 ? (
-        <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center gap-3">
-          <CheckCircle2 size={14} className="text-green-500 shrink-0" />
-          <p className="text-sm font-medium text-green-700">Tout est en ordre, rien à traiter.</p>
-        </div>
-      ) : (
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="flex h-[19px] w-[19px] shrink-0 items-center justify-center rounded-full bg-navy text-[10px] font-bold text-white">1</span>
-            <h2 className="text-[11px] font-bold text-foreground uppercase tracking-[1.4px]">À traiter</h2>
-            <span className={`inline-flex items-center justify-center w-[17px] h-[17px] rounded-full text-[9.5px] font-bold text-white ${isUrgent ? "bg-red-500" : "bg-amber-500"}`}>
-              {allActionItems.length}
-            </span>
-          </div>
-          <div className="bg-card rounded-xl border border-navy/15 overflow-hidden">
-            {allActionItems.map((item, i) => {
-              const Icon = item.icon;
-              const urgent = i < urgentItems.length;
-              return (
-                <Link key={i} href={item.href}
-                  className={`flex items-center gap-3 px-4 py-2.5 border-l-[3px] transition-colors group ${
-                    i < allActionItems.length - 1 ? "border-b border-border" : ""
-                  } ${
-                    urgent
-                      ? "border-l-red-500 bg-red-50/70 hover:bg-red-50"
-                      : "border-l-amber-400 bg-amber-50/50 hover:bg-amber-50"
-                  }`}
-                >
-                  <Icon size={13} className={urgent ? "text-red-500 shrink-0" : "text-amber-500 shrink-0"} />
-                  <span className={`text-xs font-medium flex-1 leading-snug ${urgent ? "text-red-900" : "text-amber-900"}`}>
-                    {item.label}
-                  </span>
-                  <ArrowRight size={10} className={`shrink-0 transition-colors ${urgent ? "text-red-300 group-hover:text-red-400" : "text-amber-300 group-hover:text-amber-400"}`} />
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* ── Prochain vol + météo : les deux choses qu'on regarde le matin ── */}
-      <div className="grid lg:grid-cols-[3fr_2fr] gap-5 items-stretch">
-
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="flex h-[19px] w-[19px] shrink-0 items-center justify-center rounded-full bg-navy text-[10px] font-bold text-white">2</span>
-            <h2 className="text-[11px] font-bold text-foreground uppercase tracking-[1.4px]">Prochain vol</h2>
-          </div>
-          {vols.length === 0 ? (
-            <div className="bg-card rounded-xl border border-navy/15 px-6 py-10 h-[calc(100%-31px)] flex flex-col items-center justify-center gap-2 text-center">
-              <Plane size={22} className="text-muted-foreground/30" />
-              <p className="text-sm text-muted-foreground">Aucun vol à venir pour l&apos;instant.</p>
-              <Link href="/pilote/annonces" className="text-xs font-semibold text-navy hover:underline mt-1">
-                Publier une annonce →
-              </Link>
-            </div>
-          ) : (() => {
-            const next = vols[0];
-            const autres = vols.length - 1;
-            const client = next.clients as unknown as { prenom: string; nom: string } | null;
-            const name = client ? `${client.prenom} ${client.nom}`.trim() : "—";
-            const dateStr = new Date(next.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
-              weekday: "long", day: "numeric", month: "long",
-            });
-            const statut = getResaBadge(next);
-            return (
-              <>
-                <Link
-                  href="/pilote/vols"
-                  className="block bg-card rounded-xl border border-navy/15 hover:border-navy/30 transition-colors p-5"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-2xl font-black text-foreground leading-none">
-                        {next.heure_vol ? next.heure_vol.slice(0, 5) : "Heure à confirmer"}
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-1.5 capitalize">{dateStr}</p>
-                    </div>
-                    <AdminBadge variant={statut.variant} label={statut.label} />
-                  </div>
-                  <div className="flex items-center gap-1.5 mt-4 pt-4 border-t border-border">
-                    <span className="text-sm font-semibold text-foreground">{name}</span>
-                    {next.type_resa === "annonce_pilote" && (
-                      <span className="shrink-0 text-[9px] font-bold uppercase tracking-wide text-primary bg-primary/10 px-1.5 py-0.5 rounded">
-                        Annonce
-                      </span>
-                    )}
-                    <span className="text-xs text-muted-foreground ml-auto">{next.duree} min</span>
-                  </div>
-                </Link>
-                {autres > 0 && (
-                  <Link
-                    href="/pilote/vols"
-                    className="flex items-center justify-between mt-2 px-1 py-1 text-xs text-muted-foreground hover:text-navy transition-colors"
-                  >
-                    <span>+ {autres} autre{autres > 1 ? "s" : ""} vol{autres > 1 ? "s" : ""} à venir</span>
-                    <ArrowRight size={11} />
-                  </Link>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
+        {/* Prochain vol — carte composée : l'heure en grand, puis une rangée de cellules. */}
+        {next ? (
+          <Card padded={false} className="overflow-hidden">
+            <div className="p-4 sm:p-5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[12.5px] text-st-muted">Prochain vol</span>
+                <ResaBadge reservation={next} />
+              </div>
+              <div className="mt-2 flex flex-wrap items-end gap-x-5 gap-y-1">
+                <p className="st-num text-[40px] font-medium leading-none tracking-[-0.035em] text-st-text">
+                  {next.heure_vol ? next.heure_vol.slice(0, 5) : "--:--"}
+                </p>
+                <div className="pb-0.5">
+                  <p className="text-[15px] font-semibold capitalize text-st-text">
+                    {new Date(next.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Brussels" })}
+                  </p>
+                  <p className="text-[12.5px] text-st-muted">{next.heure_vol ? inDays(next.date_vol, today) : `heure à confirmer · ${inDays(next.date_vol, today)}`}</p>
+                </div>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <LinkButton href={`/pilote/mass-balance?resa=${next.id}`} size="sm">
+                  <Scale />
+                  Préparer la M&amp;B
+                </LinkButton>
+                {next.clients?.telephone && (
+                  <LinkButton href={`tel:${next.clients.telephone.replace(/\s+/g, "")}`} variant="secondary" size="sm">
+                    <Phone />
+                    Appeler
+                  </LinkButton>
                 )}
-              </>
-            );
-          })()}
-        </div>
-
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="flex h-[19px] w-[19px] shrink-0 items-center justify-center rounded-full bg-navy text-[10px] font-bold text-white">3</span>
-            <h2 className="text-[11px] font-bold text-foreground uppercase tracking-[1.4px]">Météo</h2>
-          </div>
-          <Suspense fallback={
-            <div className="bg-card rounded-xl border border-navy/15 px-4 py-3 flex items-center gap-2 text-xs text-muted-foreground">
-              <Clock size={12} className="animate-pulse" /> Chargement météo...
+                <LinkButton href="/pilote/vols" variant="secondary" size="sm">
+                  Ouvrir le vol
+                </LinkButton>
+              </div>
             </div>
-          }>
-            <MetarWidget />
-          </Suspense>
-        </div>
-
-      </div>
-
-      {/* ── Chiffres clés — secondaires, après ce qui compte vraiment ── */}
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3 rounded-lg border border-border bg-secondary/30 text-xs">
-        <Link href="/pilote/vols" className="flex items-baseline gap-1.5 hover:text-navy transition-colors">
-          <span className="font-bold text-foreground">{nAvenir}</span>
-          <span className="text-muted-foreground">vol{nAvenir > 1 ? "s" : ""} à venir</span>
-        </Link>
-        <Link
-          href="/pilote/vols"
-          className={`flex items-baseline gap-1.5 transition-colors ${nNonPayes > 0 ? "hover:text-amber-800" : "hover:text-navy"}`}
-        >
-          <span className={`font-bold ${nNonPayes > 0 ? "text-amber-700" : "text-foreground"}`}>{nNonPayes}</span>
-          <span className={nNonPayes > 0 ? "text-amber-700/80" : "text-muted-foreground"}>à régler</span>
-        </Link>
-        <Link href="/pilote/annonces" className="flex items-baseline gap-1.5 hover:text-navy transition-colors">
-          <span className="font-bold text-foreground">{nAnnonces}</span>
-          <span className="text-muted-foreground">annonce{nAnnonces > 1 ? "s" : ""} active{nAnnonces > 1 ? "s" : ""}</span>
-        </Link>
-        {legal.ok ? (
-          <span className="flex items-center gap-1.5 text-muted-foreground ml-auto">
-            <ShieldCheck size={12} className="text-emerald-600 shrink-0" /> Profil en règle
-          </span>
+            <CardSplit>
+              <Metric
+                label="Client"
+                value={<span className="flex items-center gap-1.5 text-[15px] font-semibold tracking-normal sm:text-[15px]">{next.clients ? `${next.clients.prenom} ${next.clients.nom}` : "—"}{next.type_resa === "annonce_pilote" && <AnnonceTag />}</span>}
+              />
+              <Metric label="Route" value={<span className="text-[15px] font-[550] tracking-normal sm:text-[15px]">{routeOf(next) ?? "À tracer"}</span>} />
+              <Metric label="Durée" value={`${next.duree} min`} />
+              <Metric
+                label="Passagers"
+                value={`${next.passagers ?? "—"}`}
+                hint={next.poids_total != null ? `${next.poids_total} kg au total` : "poids non renseigné"}
+              />
+            </CardSplit>
+          </Card>
         ) : (
-          <Link href="/pilote/profil" className="flex items-center gap-1.5 text-red-600 hover:text-red-700 transition-colors ml-auto font-semibold">
-            <ShieldCheck size={12} className="shrink-0" /> Profil à compléter
-          </Link>
+          <Card className="flex flex-col items-center justify-center gap-2 py-10 text-center">
+            <span className="grid h-11 w-11 place-items-center rounded-full bg-st-surface text-st-muted"><Plane size={20} /></span>
+            <p className="font-semibold text-st-text">Aucun vol à venir</p>
+            <Link href="/pilote/annonces" className="text-[13px] font-semibold text-st-ink hover:underline">Publier une annonce</Link>
+          </Card>
         )}
+
+        {/* À traiter */}
+        <Card className="flex flex-col">
+          <SectionHeader
+            title="À traiter"
+            action={todos.length > 0 ? <Badge tone={todos.some((t) => t.tone === "bad") ? "danger" : "warning"}>{todos.length}</Badge> : undefined}
+          />
+          {todos.length === 0 ? (
+            <p className="mt-3 flex items-center gap-2 text-sm text-st-ok">
+              <CheckCircle2 size={16} /> Tout est en ordre, rien à traiter.
+            </p>
+          ) : (
+            <ul className="mt-2 divide-y divide-st-line-soft">
+              {todos.slice(0, 6).map((t, i) => (
+                <li key={i}>
+                  <Link href={t.href} className="group flex items-center gap-3 py-2.5">
+                    <span className={cn("grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[10px]", t.tone === "bad" ? "bg-st-bad-soft text-st-bad" : "bg-st-warn-soft text-st-warn")}>
+                      {t.tone === "bad" ? <AlertTriangle size={15} /> : <AlertCircle size={15} />}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[13.5px] font-[550] text-st-text">{t.label}</span>
+                      {t.detail && <span className="block truncate text-xs text-st-muted">{t.detail}</span>}
+                    </span>
+                    <ChevronRight size={16} className="shrink-0 text-st-muted transition-colors group-hover:text-st-text" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
       </div>
+
+      {/* Les vols suivants */}
+      {vols.length > 1 && (
+        <Card>
+          <SectionHeader
+            title="Ensuite"
+            action={<Link href="/pilote/vols" className="text-[12.5px] font-semibold text-st-ink hover:underline">Tous mes vols</Link>}
+          />
+          <ul className="mt-2 divide-y divide-st-line-soft">
+            {vols.slice(1).map((v) => (
+              <li key={v.id}>
+                <Link href="/pilote/vols" className="flex items-center gap-3 py-2.5">
+                  <DateTile date={v.date_vol} today={v.date_vol === today} />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-1.5 text-[13.5px] font-[550] text-st-text">
+                      <span className="truncate">{v.clients ? `${v.clients.prenom} ${v.clients.nom}` : "—"}</span>
+                      {v.type_resa === "annonce_pilote" && <AnnonceTag />}
+                    </span>
+                    <span className="block truncate text-xs text-st-muted">
+                      {v.heure_vol ? v.heure_vol.slice(0, 5) : "heure à fixer"} · {v.duree} min{routeOf(v) ? ` · ${routeOf(v)}` : ""}
+                    </span>
+                  </span>
+                  <span className="max-sm:hidden"><ResaBadge reservation={v} /></span>
+                  <ChevronRight size={16} className="shrink-0 text-st-muted" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
     </div>
   );
 }
