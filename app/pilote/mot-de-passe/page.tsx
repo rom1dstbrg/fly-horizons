@@ -3,9 +3,10 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { changePassword } from "@/lib/actions/auth";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button, FormField, Input, PageHeader } from "@/components/pilote/studio";
 
+// Arrivée depuis l'invitation pilote (premier mot de passe) ou depuis « Mon
+// profil » (changement) : même formulaire, retour à l'accueil pilote ensuite.
 export default function PiloteSetPasswordPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -24,52 +25,22 @@ export default function PiloteSetPasswordPage() {
   }
 
   return (
-    <div className="max-w-sm mx-auto space-y-6">
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Choisissez votre mot de passe</h1>
-        <p className="text-muted-foreground text-sm mt-0.5">Dernière étape avant d&apos;accéder à votre espace pilote.</p>
-      </div>
+    <div className="mx-auto w-full max-w-lg space-y-5">
+      <PageHeader title="Mot de passe" back={{ href: "/pilote/profil", label: "Mon profil" }} />
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
-            {error}
-          </div>
-        )}
+        {error && <p className="rounded-[12px] bg-st-bad-soft px-3.5 py-2.5 text-[13px] text-st-bad">{error}</p>}
 
-        <div className="space-y-1.5">
-          <Label htmlFor="password" className="text-sm font-semibold text-foreground">Mot de passe</Label>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="••••••••"
-            required
-            autoComplete="new-password"
-            className="bg-card border-navy/15 text-foreground placeholder:text-muted-foreground/40"
-          />
-        </div>
+        <FormField id="password" label="Nouveau mot de passe">
+          <Input id="password" name="password" type="password" placeholder="••••••••" required autoComplete="new-password" />
+        </FormField>
+        <FormField id="confirm" label="Confirmer le mot de passe">
+          <Input id="confirm" name="confirm" type="password" placeholder="••••••••" required autoComplete="new-password" />
+        </FormField>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="confirm" className="text-sm font-semibold text-foreground">Confirmer le mot de passe</Label>
-          <Input
-            id="confirm"
-            name="confirm"
-            type="password"
-            placeholder="••••••••"
-            required
-            autoComplete="new-password"
-            className="bg-card border-navy/15 text-foreground placeholder:text-muted-foreground/40"
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={isPending}
-          className="w-full py-3.5 bg-primary text-primary-foreground font-black text-sm rounded-lg hover:bg-[#e6a800] transition-colors disabled:opacity-60 cursor-pointer"
-        >
-          {isPending ? "Enregistrement..." : "Valider et accéder à mon espace"}
-        </button>
+        <Button type="submit" size="lg" fullWidth loading={isPending} className="sm:h-[38px] sm:text-[13px]">
+          {isPending ? "Enregistrement…" : "Enregistrer le mot de passe"}
+        </Button>
       </form>
     </div>
   );

@@ -2,30 +2,34 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Check, AlertCircle, Upload } from "lucide-react";
+import Link from "next/link";
+import { Check, AlertCircle, ShieldCheck, Upload, KeyRound } from "lucide-react";
 import { updateMyPiloteProfile, uploadPiloteProfilPhoto } from "@/lib/actions/pilote-profil";
 import { piloteLegalStatus } from "@/lib/pilote/legal";
-import { FormSection, FormGrid, FormField, FormFooter } from "@/components/admin/ui";
+import { Badge, Button, FormField, Input, SectionHeader, Textarea } from "@/components/pilote/studio";
+import { cn } from "@/lib/utils";
 import type { Pilote } from "@/types/database";
 
-const fieldBase =
-  "w-full h-9 px-3 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-navy/20";
-const fieldByState: Record<"error" | "warn" | "ok", string> = {
-  error: "border-red-400 bg-red-50",
-  warn: "border-amber-400 bg-amber-50",
-  ok: "border-border bg-[#f5f8ff]",
-};
-const field = `${fieldBase} ${fieldByState.ok}`;
-const legalField = (s: "error" | "warn" | "ok") => `${fieldBase} ${fieldByState[s]}`;
+type LegalState = "error" | "warn" | "ok";
 
-function LabelMark({ state }: { state: "error" | "warn" | "ok" }) {
-  if (state === "error")
-    return <span className="text-[10px] font-bold text-red-600 uppercase tracking-wide">à compléter</span>;
-  if (state === "warn")
-    return <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wide">expire bientôt</span>;
-  return null;
+// Bordure d'un champ légal selon son état recalculé en direct.
+const legalCls: Record<LegalState, string> = {
+  error: "border-st-bad focus:border-st-bad focus:ring-st-bad-soft",
+  warn: "border-st-warn focus:border-st-warn focus:ring-st-warn-soft",
+  ok: "",
+};
+
+function LegalLabel({ children, state }: { children: React.ReactNode; state: LegalState }) {
+  return (
+    <span className="inline-flex flex-wrap items-center gap-1.5">
+      {children}
+      {state === "error" && <Badge tone="danger" size="sm">à compléter</Badge>}
+      {state === "warn" && <Badge tone="warning" size="sm">expire bientôt</Badge>}
+    </span>
+  );
 }
 
+// Formulaire Studio : pas de cartes, sections titrées, validation pleine largeur.
 export function PiloteProfilForm({ pilote }: { pilote: Pilote }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -61,7 +65,7 @@ export function PiloteProfilForm({ pilote }: { pilote: Pilote }) {
   };
 
   // État visuel d'un champ légal d'après le statut recalculé en direct.
-  const stateOf = (name: "licence_numero" | "licence_expiration" | "medical_expiration"): "error" | "warn" | "ok" => {
+  const stateOf = (name: "licence_numero" | "licence_expiration" | "medical_expiration"): LegalState => {
     const rel = legal.issues.filter((i) => i.field === name);
     if (rel.some((i) => i.severity === "error")) return "error";
     if (rel.some((i) => i.severity === "warn")) return "warn";
@@ -101,149 +105,122 @@ export function PiloteProfilForm({ pilote }: { pilote: Pilote }) {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-6">
+    <form onSubmit={submit} className="space-y-7">
       {/* Statut légal */}
-      <div
-        className={`rounded-[10px] border border-navy/15 p-4 ${
-          legal.ok ? "bg-emerald-50/60" : "bg-red-50/60"
-        }`}
-      >
-        <p className={`text-sm font-semibold ${legal.ok ? "text-emerald-900" : "text-red-900"}`}>
-          {legal.ok ? "Vous êtes en règle pour recevoir des vols." : "Profil incomplet, vous ne pouvez pas recevoir de vols."}
-        </p>
-        {legal.issues.length > 0 && (
-          <ul className="mt-2 space-y-1">
-            {legal.issues.map((i) => (
-              <li
-                key={i.code}
-                className={`flex items-center gap-1.5 text-xs ${
-                  i.severity === "error" ? "text-red-700" : "text-amber-700"
-                }`}
-              >
-                <AlertCircle size={12} className="shrink-0" />
-                {i.label}
-              </li>
-            ))}
-          </ul>
-        )}
+      <div className={cn("flex gap-2.5 rounded-[14px] px-4 py-3.5 text-[13px]", legal.ok ? "bg-st-ok-soft text-st-ok" : "bg-st-bad-soft text-st-bad")}>
+        {legal.ok ? <ShieldCheck size={17} className="mt-px shrink-0" /> : <AlertCircle size={17} className="mt-px shrink-0" />}
+        <div className="min-w-0">
+          <p className="font-semibold">
+            {legal.ok ? "Vous êtes en règle pour recevoir des vols." : "Profil incomplet : vous ne pouvez pas recevoir de vols."}
+          </p>
+          {legal.issues.length > 0 && (
+            <ul className="mt-1.5 space-y-1">
+              {legal.issues.map((i) => (
+                <li key={i.code} className={cn("text-[12.5px] leading-snug", i.severity === "error" ? "text-st-bad" : "text-st-warn")}>
+                  {i.label}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
 
       {/* Informations légales */}
-      <div className="rounded-[10px] border border-navy/15 bg-card p-5">
-        <FormSection
-          title="Informations légales"
-          description="Déclaratif. Ces champs doivent être remplis et à jour pour recevoir des vols."
-        >
-          <FormGrid cols={2}>
-            <FormField label={<>Numéro de licence <LabelMark state={licNumState} /></>}>
-              <input className={legalField(licNumState)} value={form.licence_numero} onChange={set("licence_numero")} placeholder="BE.FCL.PPL...." />
-            </FormField>
-            <FormField label="Qualifications / ratings">
-              <input className={field} value={form.ratings} onChange={set("ratings")} placeholder="SEP(land), Night, Radio FR/EN" />
-            </FormField>
-            <FormField label={<>Expiration licence / SEP <LabelMark state={licExpState} /></>}>
-              <input type="date" className={legalField(licExpState)} value={form.licence_expiration} onChange={set("licence_expiration")} />
-            </FormField>
-            <FormField label={<>Expiration certificat médical <LabelMark state={medExpState} /></>}>
-              <input type="date" className={legalField(medExpState)} value={form.medical_expiration} onChange={set("medical_expiration")} />
-            </FormField>
-          </FormGrid>
-        </FormSection>
-      </div>
+      <section className="space-y-3.5">
+        <div>
+          <SectionHeader title="Informations légales" />
+          <p className="mt-0.5 text-[12.5px] text-st-muted">Déclaratif : à remplir et à tenir à jour pour recevoir des vols.</p>
+        </div>
+        <FormField id="p-licence" label={<LegalLabel state={licNumState}>Numéro de licence</LegalLabel>}>
+          <Input id="p-licence" className={legalCls[licNumState]} value={form.licence_numero} onChange={set("licence_numero")} placeholder="BE.FCL.PPL…." />
+        </FormField>
+        <div className="grid grid-cols-1 gap-3.5 min-[420px]:grid-cols-2">
+          <FormField id="p-licexp" label={<LegalLabel state={licExpState}>Expiration licence / SEP</LegalLabel>}>
+            <Input id="p-licexp" type="date" className={legalCls[licExpState]} value={form.licence_expiration} onChange={set("licence_expiration")} />
+          </FormField>
+          <FormField id="p-medexp" label={<LegalLabel state={medExpState}>Expiration médical</LegalLabel>}>
+            <Input id="p-medexp" type="date" className={legalCls[medExpState]} value={form.medical_expiration} onChange={set("medical_expiration")} />
+          </FormField>
+        </div>
+        <FormField id="p-ratings" label="Qualifications">
+          <Input id="p-ratings" value={form.ratings} onChange={set("ratings")} placeholder="SEP(land), Night, Radio FR/EN" />
+        </FormField>
+      </section>
 
       {/* Coordonnées & présentation */}
-      <div className="rounded-[10px] border border-navy/15 bg-card p-5">
-        <FormSection title="Coordonnées & présentation">
-          <FormGrid cols={2}>
-            <FormField label="Téléphone">
-              <input className={field} value={form.telephone} onChange={set("telephone")} placeholder="+32 4xx xx xx xx" />
-            </FormField>
-            <FormField label="IBAN (participation aux frais)" hint="Le client vous règle directement dessus. Un QR de virement est généré pour lui.">
-              <input className={field} value={form.iban} onChange={set("iban")} placeholder="BE.. .... .... ...." />
-            </FormField>
-            <FormField label="Photo" hint="Visible par le client sur la page de son vol." className="sm:col-span-2">
-              <div className="flex items-start gap-3">
-                {form.photo_url && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={form.photo_url}
-                    alt=""
-                    className="w-9 h-9 rounded-full object-cover border border-navy/15 shrink-0"
-                  />
-                )}
-                <div className="flex-1 space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <input
-                      className={field}
-                      value={form.photo_url}
-                      onChange={set("photo_url")}
-                      placeholder="https://... (lien direct vers une image)"
-                    />
-                    <span className="text-xs text-muted-foreground shrink-0">ou</span>
-                    <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoFile} className="hidden" />
-                    <button
-                      type="button"
-                      onClick={() => photoInputRef.current?.click()}
-                      disabled={uploadingPhoto}
-                      className="h-9 px-3 rounded-lg border border-navy/15 bg-card text-xs font-semibold text-foreground hover:bg-secondary transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-50"
-                    >
-                      {uploadingPhoto ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
-                      Envoyer une photo
-                    </button>
-                  </div>
-                  {photoError && <p className="text-[11px] text-destructive">{photoError}</p>}
-                </div>
-              </div>
-            </FormField>
-            <FormField label="Bio courte" className="sm:col-span-2">
-              <textarea
-                className={`${field} h-auto py-2 min-h-[80px] resize-y`}
-                value={form.bio}
-                onChange={set("bio")}
-                placeholder="Pilote en formation ATPL, basé à Charleroi..."
-              />
-            </FormField>
-            <FormField
-              label="Signature (emails aux clients)"
-              hint="Ajoutée en bas de vos messages au client. Laissez vide pour la signature par défaut (nom · Pilote · téléphone)."
-              className="sm:col-span-2"
-            >
-              <textarea
-                className={`${field} h-auto py-2 min-h-[60px] resize-y`}
-                value={form.signature}
-                onChange={set("signature")}
-                placeholder={`${pilote.nom} · Pilote${form.telephone ? ` · ${form.telephone}` : ""}`}
-              />
-            </FormField>
-          </FormGrid>
-        </FormSection>
+      <section className="space-y-3.5">
+        <SectionHeader title="Coordonnées et présentation" />
+        <div className="grid grid-cols-1 gap-3.5 min-[420px]:grid-cols-2">
+          <FormField id="p-tel" label="Téléphone">
+            <Input id="p-tel" type="tel" value={form.telephone} onChange={set("telephone")} placeholder="+32 4xx xx xx xx" />
+          </FormField>
+          <FormField id="p-iban" label="IBAN">
+            <Input id="p-iban" value={form.iban} onChange={set("iban")} placeholder="BE.. .... .... ...." />
+          </FormField>
+        </div>
+        <p className="-mt-1.5 text-xs text-st-muted">Le client vous règle directement sur cet IBAN : un QR de virement est généré pour lui.</p>
+
+        <FormField id="p-photo" label="Photo" hint="Visible par le client sur la page de son vol." error={photoError || undefined}>
+          <div className="flex items-center gap-2.5">
+            {form.photo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={form.photo_url} alt="" className="h-11 w-11 shrink-0 rounded-full border border-st-line object-cover" />
+            ) : (
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-st-ink text-[13px] font-semibold text-white">
+                {pilote.nom.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
+              </span>
+            )}
+            <Input id="p-photo" className="min-w-0" value={form.photo_url} onChange={set("photo_url")} placeholder="Lien direct vers une image" />
+            <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoFile} className="hidden" />
+            <Button variant="secondary" className="h-11" onClick={() => photoInputRef.current?.click()} loading={uploadingPhoto} aria-label="Envoyer une photo">
+              {!uploadingPhoto && <Upload />}
+              <span className="max-sm:hidden">Envoyer</span>
+            </Button>
+          </div>
+        </FormField>
+
+        <FormField id="p-bio" label="Bio courte">
+          <Textarea id="p-bio" className="resize-y" value={form.bio} onChange={set("bio")} placeholder="Pilote en formation ATPL, basé à Charleroi…" />
+        </FormField>
+        <FormField
+          id="p-signature"
+          label="Signature des emails aux clients"
+          hint="Ajoutée en bas de vos messages. Vide : signature par défaut (nom · Pilote · téléphone)."
+        >
+          <Textarea
+            id="p-signature"
+            className="min-h-16 resize-y"
+            value={form.signature}
+            onChange={set("signature")}
+            placeholder={`${pilote.nom} · Pilote${form.telephone ? ` · ${form.telephone}` : ""}`}
+          />
+        </FormField>
+      </section>
+
+      <div className="space-y-3">
+        {saved && (
+          <p className="flex items-center gap-2 rounded-[12px] bg-st-ok-soft px-3.5 py-2.5 text-[13px] text-st-ok">
+            <Check size={15} className="shrink-0" />
+            Profil enregistré.
+          </p>
+        )}
+        {error && <p className="rounded-[12px] bg-st-bad-soft px-3.5 py-2.5 text-[13px] text-st-bad">{error}</p>}
+
+        <Button type="submit" size="lg" fullWidth loading={isPending} className="sm:h-[38px] sm:text-[13px]">
+          {isPending ? "Enregistrement…" : "Enregistrer"}
+        </Button>
+
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs text-st-muted">
+          <span>
+            {pilote.conditions_accepted_at &&
+              `Charte pilote acceptée le ${new Date(pilote.conditions_accepted_at).toLocaleDateString("fr-BE", { day: "2-digit", month: "long", year: "numeric" })}${pilote.conditions_version ? ` (version ${pilote.conditions_version})` : ""}.`}
+          </span>
+          <Link href="/pilote/mot-de-passe" className="inline-flex items-center gap-1 font-[550] text-st-ink hover:underline">
+            <KeyRound size={13} />
+            Changer mon mot de passe
+          </Link>
+        </div>
       </div>
-
-      {saved && (
-        <div className="px-4 py-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-700 flex items-center gap-2">
-          <Check size={14} className="shrink-0" />
-          Profil enregistré.
-        </div>
-      )}
-      {error && (
-        <div className="px-4 py-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
-          {error}
-        </div>
-      )}
-
-      <FormFooter pending={isPending} submitLabel="Enregistrer" />
-
-      {pilote.conditions_accepted_at && (
-        <p className="text-[11px] text-muted-foreground">
-          Charte pilote acceptée le{" "}
-          {new Date(pilote.conditions_accepted_at).toLocaleDateString("fr-BE", {
-            day: "2-digit",
-            month: "long",
-            year: "numeric",
-          })}
-          {pilote.conditions_version ? ` (version ${pilote.conditions_version})` : ""}.
-        </p>
-      )}
     </form>
   );
 }
