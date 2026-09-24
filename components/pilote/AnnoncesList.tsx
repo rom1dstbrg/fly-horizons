@@ -49,11 +49,11 @@ export function annonceInfo(a: AnnonceRow) {
   const groupeOuvert = parPlace && a.statut === "publiee" && reservees > 0;
 
   let badge: { tone: BadgeTone; label: string };
-  if (a.statut === "annulee") badge = { tone: "neutral", label: "Retirée" };
+  if (a.statut === "annulee") badge = { tone: "neutral", label: "Hors ligne" };
   else if (a.statut === "reservee") badge = { tone: "info", label: "Réservée" };
   else if (aConfirmer) badge = { tone: "warning", label: "À confirmer" };
   else if (groupeOuvert) badge = { tone: "gold", label: `Groupe ouvert · ${reservees}/${a.places}` };
-  else badge = { tone: "success", label: "En vente" };
+  else badge = { tone: "success", label: "En ligne" };
 
   return { check, prixClient, parPlace, partSousLeMinimum, legalPasReattestee, aConfirmer, reservees, groupeOuvert, badge };
 }
@@ -119,7 +119,7 @@ export function AnnonceSheetContent({
                   vos frais. Modifiez-la et cochez l&apos;attestation à la dernière étape.
                 </p>
               )}
-              <p className="leading-snug opacity-80">L&apos;annonce reste en vente : vous seul voyez cette alerte.</p>
+              <p className="leading-snug opacity-80">L&apos;annonce reste en ligne : vous seul voyez cette alerte.</p>
             </div>
           </div>
         )}
@@ -172,7 +172,7 @@ export function AnnonceSheetContent({
                 ) : (
                   <Button variant="secondary" onClick={() => onAction("retirer")} loading={pending === "retirer"}>
                     {pending !== "retirer" && <X />}
-                    Retirer
+                    Mettre hors ligne
                   </Button>
                 )}
                 <LinkButton href={`/vol/annonce/${a.id}`} target="_blank" rel="noopener noreferrer" variant="secondary">
@@ -183,15 +183,21 @@ export function AnnonceSheetContent({
               {info.groupeOuvert && (
                 <Button variant="secondary" fullWidth onClick={() => onAction("retirer")} loading={pending === "retirer"}>
                   {pending !== "retirer" && <X />}
-                  Retirer de la vente
+                  Mettre hors ligne
                 </Button>
               )}
             </>
           ) : (
-            <Button fullWidth size="lg" className="sm:h-[38px] sm:text-[13px]" onClick={() => onAction("republier")} loading={pending === "republier"}>
-              {pending !== "republier" && <RotateCcw />}
-              Remettre en vente
-            </Button>
+            <>
+              <Button fullWidth size="lg" className="sm:h-[38px] sm:text-[13px]" onClick={() => onAction("republier")} loading={pending === "republier"}>
+                {pending !== "republier" && <RotateCcw />}
+                Remettre en ligne
+              </Button>
+              <LinkButton href={`/pilote/annonces/${a.id}/modifier`} variant="secondary" fullWidth>
+                <Pencil />
+                Modifier l&apos;annonce
+              </LinkButton>
+            </>
           )}
           <button
             type="button"

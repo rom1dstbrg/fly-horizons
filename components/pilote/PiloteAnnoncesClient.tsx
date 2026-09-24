@@ -12,12 +12,14 @@ import {
   type AnnonceAction, type AnnonceRow, type AnnonceStats,
 } from "./AnnoncesList";
 
-type View = "vente" | "reservees" | "archives";
-const VIEW_STATUT: Record<View, AnnonceRow["statut"]> = { vente: "publiee", reservees: "reservee", archives: "annulee" };
+// Deux onglets : en ligne (réservable sur le site) ou hors ligne (retirée par
+// le pilote, ou réservée : avion entier pris / groupe clôturé). La pastille de
+// la carte dit laquelle.
+type View = "enLigne" | "horsLigne";
+const inView = (a: AnnonceRow, v: View) => (v === "enLigne") === (a.statut === "publiee");
 const EMPTY: Record<View, string> = {
-  vente: "Aucune annonce en vente. Les annonces retirées sont dans « Archivées ».",
-  reservees: "Aucune annonce réservée.",
-  archives: "Aucune annonce retirée.",
+  enLigne: "Aucune annonce en ligne. Les annonces retirées ou réservées sont dans « Hors ligne ».",
+  horsLigne: "Aucune annonce hors ligne.",
 };
 
 // Page « Mes annonces » (maquette validée le 25/09) : les annonces s'affichent
@@ -35,11 +37,9 @@ export function PiloteAnnoncesClient({
   canPublish: boolean;
 }) {
   const router = useRouter();
-  // Ouvre le premier onglet qui a des annonces (sinon « En vente » vide ferait
+  // Ouvre « Hors ligne » s'il n'y a rien en ligne (sinon un onglet vide ferait
   // croire que tout a disparu).
-  const [view, setView] = useState<View>(
-    () => (["vente", "reservees", "archives"] as View[]).find((v) => annonces.some((a) => a.statut === VIEW_STATUT[v])) ?? "vente",
-  );
+  const [view, setView] = useState<View>(() => (annonces.some((a) => inView(a, "enLigne")) || annonces.length === 0 ? "enLigne" : "horsLigne"));
   const [openId, setOpenId] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<PendingAction | null>(null);
   const [pending, setPending] = useState<AnnonceAction | null>(null);
@@ -61,16 +61,15 @@ export function PiloteAnnoncesClient({
   }
 
   const counts = {
-    vente: annonces.filter((a) => a.statut === "publiee").length,
-    reservees: annonces.filter((a) => a.statut === "reservee").length,
-    archives: annonces.filter((a) => a.statut === "annulee").length,
+    enLigne: annonces.filter((a) => inView(a, "enLigne")).length,
+    horsLigne: annonces.filter((a) => inView(a, "horsLigne")).length,
   };
   const enVente = annonces.filter((a) => a.statut === "publiee").map((a) => annonceInfo(a));
   const groupes = enVente.filter((i) => i.groupeOuvert).length;
   const aConfirmer = enVente.filter((i) => i.aConfirmer).length;
   const vues = annonces.reduce((s, a) => s + (stats[a.id]?.vues ?? 0), 0);
   const visiteurs = annonces.reduce((s, a) => s + (stats[a.id]?.visiteurs ?? 0), 0);
-  const rows = annonces.filter((a) => a.statut === VIEW_STATUT[view]);
+  const rows = annonces.filter((a) => inView(a, view));
 
   function run(action: AnnonceAction, a: AnnonceRow) {
     setError(null);
@@ -96,13 +95,13 @@ export function PiloteAnnoncesClient({
     const info = annonceInfo(a);
     const pendingAction: Record<Exclude<AnnonceAction, "republier">, PendingAction> = {
       retirer: {
-        title: "Retirer cette annonce de la vente ?",
+        title: "Mettre cette annonce hors ligne ?",
         consequences: [
           "Elle disparaît du site : plus aucun client ne peut la réserver.",
           "Les réservations déjà faites ne sont pas annulées.",
-          "Vous pourrez la remettre en vente depuis l'onglet « Archivées ».",
+          "Vous pourrez la remettre en ligne depuis l'onglet « Hors ligne ».",
         ],
-        confirmLabel: "Retirer de la vente",
+        confirmLabel: "Mettre hors ligne",
         run: () => run("retirer", a),
       },
       cloturer: {
@@ -117,7 +116,7 @@ export function PiloteAnnoncesClient({
       },
       supprimer: {
         title: "Supprimer définitivement cette annonce ?",
-        description: "L'annonce et ses photos sont effacées. Impossible si une réservation a déjà été faite dessus : retirez-la de la vente à la place.",
+        description: "L'annonce et ses photos sont effacées. Impossible si une réservation a déjà été faite dessus : mettez-la hors ligne à la place.",
         confirmLabel: "Supprimer",
         danger: true,
         run: () => run("supprimer", a),
@@ -129,7 +128,7 @@ export function PiloteAnnoncesClient({
   return (
     <>
       <StatGrid>
-        <StatCard label="En vente" value={counts.vente} hint={groupes > 0 ? `dont ${groupes} groupe${groupes > 1 ? "s" : ""} ouvert${groupes > 1 ? "s" : ""}` : ""} />
+        <StatCard label="En ligne" value={counts.enLigne} hint={groupes > 0 ? `dont ${groupes} groupe${groupes > 1 ? "s" : ""} ouvert${groupes > 1 ? "s" : ""}` : ""} />
         <StatCard label="À confirmer" value={aConfirmer} tone={aConfirmer > 0 ? "warn" : undefined} hint={aConfirmer > 0 ? "à vérifier dans l'annonce" : "tout est en règle"} />
         <StatCard label="Vues" value={vues.toLocaleString("fr-BE")} hint="depuis la publication" />
         <StatCard label="Visiteurs" value={visiteurs.toLocaleString("fr-BE")} hint="personnes différentes" />
@@ -140,9 +139,8 @@ export function PiloteAnnoncesClient({
         onChange={setView}
         className="max-sm:w-full"
         items={[
-          { key: "vente", label: "En vente", count: counts.vente },
-          { key: "reservees", label: "Réservées", count: counts.reservees },
-          { key: "archives", label: "Archivées", count: counts.archives },
+          { key: "enLigne", label: "En ligne", count: counts.enLigne },
+          { key: "horsLigne", label: "Hors ligne", count: counts.horsLigne },
         ]}
       />
 
@@ -155,7 +153,7 @@ export function PiloteAnnoncesClient({
             const s = stats[a.id];
             return (
               <div key={a.id} className="min-w-0">
-                <div className={a.statut === "annulee" ? "opacity-60" : undefined}>
+                <div className={a.statut !== "publiee" ? "opacity-60" : undefined}>
                   <AnnonceCard
                     onClick={() => { setError(null); setOpenId(a.id); }}
                     annonce={{
