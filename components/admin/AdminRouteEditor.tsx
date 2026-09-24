@@ -131,12 +131,16 @@ export function AdminRouteEditor({ waypoints, onChange, clientWaypoints = [], st
     mapRef.current = map;
     // La carte suit la taille de son conteneur (éditeur plein écran, rotation
     // du téléphone) : sans ça Leaflet garde la taille du premier affichage.
-    const ro = new ResizeObserver(() => map.invalidateSize());
+    const ro = new ResizeObserver(() => {
+      if (mapRef.current === map) map.invalidateSize({ animate: false });
+    });
     ro.observe(containerRef.current);
     return () => {
       ro.disconnect();
-      map.remove();
       mapRef.current = null;
+      map.stop();
+      map.off();
+      map.remove();
     };
   }, []);
 

@@ -115,11 +115,15 @@ export default function RouteMapReadOnly({ waypoints, height = "280px", classNam
         [EBCI.lat, EBCI.lng],
         ...waypoints.map(wp => [wp.lat, wp.lng] as [number, number]),
       ]);
-      map.fitBounds(bounds, { padding: [40, 40] });
+      // Sans animation : si la carte est retirée pendant un zoom animé (changement
+      // d'onglet, fermeture du tiroir), Leaflet plante sur « _leaflet_pos ».
+      map.fitBounds(bounds, { padding: [40, 40], animate: false });
     }
 
     mapRef.current = map;
     return () => {
+      map.stop();
+      map.off();
       map.remove();
       mapRef.current = null;
     };
