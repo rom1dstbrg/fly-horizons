@@ -107,10 +107,10 @@ function AeroRow({
   }
 
   return (
-    <div className="rounded-lg border border-border bg-white p-3">
+    <div className="rounded-[16px] border border-st-line bg-white p-3.5">
       {/* Ligne 1 : identité + actions */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs font-bold uppercase tracking-wide text-navy w-16 shrink-0">{label}</span>
+        <span className="w-full text-[13px] font-semibold text-st-text sm:w-24 sm:shrink-0">{label}</span>
         <input
           type="text"
           value={ad.icao}
@@ -123,7 +123,7 @@ function AeroRow({
           type="button"
           onClick={fetchMetar}
           disabled={loading}
-          className="inline-flex items-center gap-1 h-8 px-2 rounded-md border border-navy text-navy text-[11px] font-semibold hover:bg-navy hover:text-white transition-colors disabled:opacity-50 cursor-pointer"
+          className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-[11px] border border-st-line bg-white px-3 text-[12.5px] font-[550] text-st-text shadow-st-sm transition-colors hover:bg-st-surface disabled:opacity-50"
         >
           {loading ? <Loader2 size={11} className="animate-spin" /> : <Cloud size={11} />}
           METAR
@@ -133,14 +133,14 @@ function AeroRow({
             type="button"
             onClick={onCopyDep}
             title="Reprendre l'aérodrome de départ"
-            className="inline-flex items-center gap-1 h-8 px-2 rounded-md border border-navy/40 text-navy text-[11px] font-semibold hover:bg-navy/10 transition-colors cursor-pointer"
+            className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-[11px] border border-st-line bg-white px-3 text-[12.5px] font-[550] text-st-text-2 transition-colors hover:bg-st-surface"
           >
             <CornerDownLeft size={11} />= Départ
           </button>
         )}
         {rec && (
           <span className="inline-flex items-center gap-1">
-            <span className="text-[11px] text-muted-foreground">Pistes</span>
+            <span className="text-[12px] text-st-muted">Pistes</span>
             {rec.runways.map((r) => (
               <button
                 key={r.ident}
@@ -151,22 +151,22 @@ function AeroRow({
                   (r.toda ? ` · TODA ${r.toda} m` : "") +
                   (r.lda ? ` · LDA ${r.lda} m` : "")
                 }
-                className={`h-7 px-1.5 rounded border text-[11px] font-semibold font-mono transition-colors cursor-pointer ${
+                className={`h-10 min-w-10 cursor-pointer rounded-[10px] border px-2 font-mono text-[12.5px] font-semibold transition-colors ${
                   selRwy === r.ident
-                    ? "bg-navy text-white border-navy"
-                    : "border-navy/30 text-navy hover:bg-navy/10"
+                    ? "border-st-ink bg-st-ink text-white"
+                    : "border-st-line bg-white text-st-text hover:bg-st-surface"
                 }`}
               >
                 {r.ident}
               </button>
             ))}
-            <span className="text-[11px] text-muted-foreground">· {rec.elevation} ft</span>
+            <span className="text-[12px] text-st-muted">· {rec.elevation} ft</span>
           </span>
         )}
         <button
           type="button"
           onClick={() => setShowPaste((s) => !s)}
-          className="text-[11px] text-muted-foreground underline underline-offset-2 cursor-pointer"
+          className="cursor-pointer text-[12px] text-st-muted underline underline-offset-2 hover:text-st-text"
         >
           METAR brut
         </button>
@@ -186,14 +186,14 @@ function AeroRow({
       {status.msg && (
         <p
           className={`mt-1.5 text-[11px] ${
-            status.tone === "ok" ? "text-green-600" : status.tone === "ko" ? "text-red-600" : "text-muted-foreground"
+            status.tone === "ok" ? "text-st-ok" : status.tone === "ko" ? "text-st-bad" : "text-st-muted"
           }`}
         >
           {status.msg}
         </p>
       )}
       {ad.rawMetar ? (
-        <p className="mt-1 font-mono text-[10px] text-muted-foreground break-all">{ad.rawMetar}</p>
+        <p className="mt-1 break-all font-mono text-[11px] text-st-muted">{ad.rawMetar}</p>
       ) : null}
       {showPaste && (
         <div className="mt-2 flex items-start gap-2">
@@ -202,12 +202,12 @@ function AeroRow({
             value={rawPaste}
             onChange={(e) => setRawPaste(e.target.value)}
             placeholder="EBCI 051220Z 24008KT 9999 18/12 Q1015"
-            className="flex-1 rounded-md border border-input bg-background p-1.5 font-mono text-[11px] focus:outline-none focus:ring-2 focus:ring-ring"
+            className="flex-1 rounded-[11px] border border-st-line bg-white p-2 font-mono text-[16px] text-st-text outline-none focus:border-st-ink focus:ring-4 focus:ring-st-ink-soft sm:text-[12px]"
           />
           <button
             type="button"
             onClick={parsePaste}
-            className="h-8 px-2.5 rounded-md border border-navy text-navy text-[11px] font-semibold hover:bg-navy hover:text-white transition-colors cursor-pointer"
+            className="h-10 cursor-pointer rounded-[11px] bg-st-ink px-3 text-[12.5px] font-[550] text-white transition-colors hover:bg-st-ink-hover"
           >
             Extraire
           </button>
@@ -261,8 +261,7 @@ export function PerfInputsSection({
   const depHasIcao = !!perf.dep.icao?.trim();
 
   return (
-    <div className="space-y-2">
-      <p className={MB.groupLabel}>Conditions &amp; pistes</p>
+    <div className="space-y-3">
       <AeroRow
         label="Départ"
         ad={perf.dep}

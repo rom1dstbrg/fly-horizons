@@ -1,5 +1,4 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { PageHeader } from "@/components/admin/PageHeader";
 import { MassBalanceClient, type ResaContext } from "@/components/admin/mass-balance/MassBalanceClient";
 import type { MbSheetRow } from "@/components/admin/mass-balance/SheetsList";
 import type { MassBalanceInputs } from "@/lib/mass-balance/da40-calc";
@@ -79,14 +78,7 @@ export default async function MassBalancePage({
     };
   }
 
-  return (
-    <div className="space-y-5">
-      <PageHeader
-        domain="vols"
-        title="Masse & centrage"
-        subtitle="Feuille de masse et centrage DA40 + performances TODR / LDR, à enregistrer et imprimer"
-      />
-      <MassBalanceClient resa={resa} sheets={sheets} initialSheetId={sheetId ?? null} />
-    </div>
-  );
+  // L'en-tête (titre + Feuilles / PDF / Enregistrer) est rendu par MassBalanceClient,
+  // passé au style « Studio » le 24/09 (l'admin suivra).
+  return <MassBalanceClient resa={resa} sheets={sheets} initialSheetId={sheetId ?? null} />;
 }

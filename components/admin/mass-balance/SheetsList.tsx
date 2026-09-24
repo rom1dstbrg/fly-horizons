@@ -1,11 +1,12 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, Copy, Trash2, Download, PlaneTakeoff } from "lucide-react";
-import { EmptyState } from "@/components/admin/ui";
+import { Copy, Trash2, Download, PlaneTakeoff } from "lucide-react";
+import { EmptyState, Badge } from "@/components/pilote/studio";
 import { deleteMassBalanceSheet } from "@/lib/actions/mass-balance";
 import type { MassBalanceInputs } from "@/lib/mass-balance/da40-calc";
+import { cn } from "@/lib/utils";
 
 export interface MbSheetRow {
   id: string;
@@ -21,13 +22,15 @@ export interface MbSheetRow {
 
 function dateLabel(d: string | null): string {
   if (!d) return "sans date";
-  return new Date(d + "T12:00:00Z").toLocaleDateString("fr-BE", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  return new Date(d + "T12:00:00Z").toLocaleDateString("fr-BE", { day: "numeric", month: "short", year: "numeric" });
 }
 
+const iconBtn =
+  "grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-st-line bg-white text-st-text-2 transition-colors hover:bg-st-surface hover:text-st-text disabled:opacity-50";
+
+// Feuilles enregistrées (dans le tiroir « Feuilles ») : un tap sur la ligne
+// l'ouvre ; PDF, dupliquer et (admin) supprimer à droite. La suppression se
+// confirme dans la ligne, jamais par window.confirm.
 export function SheetsList({
   sheets,
   currentId,
@@ -43,6 +46,7 @@ export function SheetsList({
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [confirmId, setConfirmId] = useState<string | null>(null);
 
   if (sheets.length === 0) {
     return (
@@ -55,69 +59,63 @@ export function SheetsList({
   }
 
   function remove(id: string) {
-    if (!confirm("Supprimer cette feuille de masse et centrage ?")) return;
     startTransition(async () => {
       await deleteMassBalanceSheet(id);
+      setConfirmId(null);
       router.refresh();
     });
   }
 
   return (
-    <ul className="divide-y divide-border rounded-xl border border-border overflow-hidden">
-      {sheets.map((s) => (
-        <li
-          key={s.id}
-          className={`flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-3 ${
-            s.id === currentId ? "bg-[#f5f8ff]" : "bg-white"
-          }`}
-        >
-          <span className="font-mono text-sm font-semibold text-navy">{s.aircraft_reg}</span>
-          <span className="text-sm text-foreground">{dateLabel(s.flight_date)}</span>
-          {(s.label || s.clientLabel) && (
-            <span className="text-xs text-muted-foreground">· {s.label || s.clientLabel}</span>
-          )}
-          <span className="text-[11px] text-muted-foreground/70">
-            maj {new Date(s.updated_at).toLocaleDateString("fr-BE", { day: "2-digit", month: "2-digit" })}
-          </span>
+    <ul className="divide-y divide-st-line overflow-hidden rounded-[16px] border border-st-line">
+      {sheets.map((s) => {
+        const current = s.id === currentId;
+        return (
+          <li key={s.id} className={cn("flex items-center gap-3 px-3.5 py-3", current ? "bg-st-ink-soft" : "bg-white")}>
+            <button type="button" onClick={() => onOpen(s)} className="min-w-0 flex-1 cursor-pointer text-left">
+              <span className="flex items-center gap-2">
+                <span className="font-mono text-[13px] font-semibold text-st-ink">{s.aircraft_reg}</span>
+                <span className="text-[13.5px] font-[550] text-st-text">{dateLabel(s.flight_date)}</span>
+                {current && <Badge size="sm" tone="ink">Ouverte</Badge>}
+              </span>
+              <span className="block truncate text-[12px] text-st-muted">
+                {s.label || s.clientLabel || "Calcul libre"} · modifiée le{" "}
+                {new Date(s.updated_at).toLocaleDateString("fr-BE", { day: "2-digit", month: "2-digit" })}
+              </span>
+            </button>
 
-          <div className="ml-auto flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => onOpen(s)}
-              className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-border text-xs font-medium hover:bg-secondary transition-colors cursor-pointer"
-            >
-              <FileText size={13} /> Ouvrir
-            </button>
-            <a
-              href={`/api/admin/mass-balance/${s.id}/pdf`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-border text-xs font-medium hover:bg-secondary transition-colors cursor-pointer"
-            >
-              <Download size={13} /> PDF
-            </a>
-            <button
-              type="button"
-              onClick={() => onDuplicate(s)}
-              title="Dupliquer"
-              className="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-border hover:bg-secondary transition-colors cursor-pointer"
-            >
-              <Copy size={13} />
-            </button>
-            {viewerRole === "admin" && (
-              <button
-                type="button"
-                onClick={() => remove(s.id)}
-                disabled={isPending}
-                title="Supprimer"
-                className="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-border text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 cursor-pointer"
-              >
-                <Trash2 size={13} />
-              </button>
+            {confirmId === s.id ? (
+              <span className="flex shrink-0 items-center gap-1.5">
+                <button type="button" onClick={() => setConfirmId(null)} className="h-9 cursor-pointer rounded-[10px] px-2.5 text-[12.5px] font-[550] text-st-text-2 hover:bg-st-surface">
+                  Annuler
+                </button>
+                <button
+                  type="button"
+                  onClick={() => remove(s.id)}
+                  disabled={isPending}
+                  className="h-9 cursor-pointer rounded-[10px] border border-st-line bg-white px-2.5 text-[12.5px] font-[550] text-st-bad hover:bg-st-bad-soft disabled:opacity-50"
+                >
+                  Supprimer
+                </button>
+              </span>
+            ) : (
+              <span className="flex shrink-0 items-center gap-1.5">
+                <a href={`/api/admin/mass-balance/${s.id}/pdf`} target="_blank" rel="noopener noreferrer" title="PDF" aria-label="PDF" className={iconBtn}>
+                  <Download size={15} />
+                </a>
+                <button type="button" onClick={() => onDuplicate(s)} title="Dupliquer" aria-label="Dupliquer" className={iconBtn}>
+                  <Copy size={15} />
+                </button>
+                {viewerRole === "admin" && (
+                  <button type="button" onClick={() => setConfirmId(s.id)} title="Supprimer" aria-label="Supprimer" className={cn(iconBtn, "text-st-bad hover:bg-st-bad-soft hover:text-st-bad")}>
+                    <Trash2 size={15} />
+                  </button>
+                )}
+              </span>
             )}
-          </div>
-        </li>
-      ))}
+          </li>
+        );
+      })}
     </ul>
   );
 }

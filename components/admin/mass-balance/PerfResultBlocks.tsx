@@ -1,22 +1,23 @@
 import { CheckCircle2, AlertTriangle, Clock } from "lucide-react";
 import type { PerfInputs, PerfComputed, Verdict } from "@/lib/mass-balance/da40-calc";
+import { CardSplit } from "@/components/pilote/studio";
+import { cn } from "@/lib/utils";
 
-// ── Lecture seule — 4 blocs séparés Départ / Décollage / Destination /
-// Atterrissage, avec les valeurs calculées et les marges bien visibles.
+// ── Lecture seule — 4 cellules Départ / Décollage / Destination /
+// Atterrissage dans une carte composée (« Studio »), marges bien visibles.
 // La saisie (ICAO, météo, pistes, TODA/LDA) se fait dans MbEditModal.
 
-function tone(status: Verdict["status"] | "neutral") {
-  if (status === "ok") return { bg: "bg-green-50/60", text: "text-green-700", icon: CheckCircle2 };
-  if (status === "ko") return { bg: "bg-red-50/60", text: "text-red-700", icon: AlertTriangle };
-  if (status === "pending") return { bg: "bg-amber-50/50", text: "text-amber-700", icon: Clock };
-  return { bg: "bg-white", text: "text-navy", icon: null };
-}
+const TONE = {
+  ok: { text: "text-st-ok", icon: CheckCircle2 },
+  ko: { text: "text-st-bad", icon: AlertTriangle },
+  pending: { text: "text-st-warn", icon: Clock },
+} as const;
 
-function Kv({ label, value }: { label: string; value: string }) {
+function Kv({ label, value, strong, tone }: { label: string; value: string; strong?: boolean; tone?: string }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-[10.5px] text-muted-foreground">{label}</span>
-      <span className="font-mono text-[11px] font-semibold text-foreground">{value}</span>
+    <div className="flex items-baseline justify-between gap-3 text-[12px]">
+      <span className="text-st-muted">{label}</span>
+      <span className={cn("st-num text-right", strong ? "font-semibold" : "", tone ?? "text-st-text")}>{value}</span>
     </div>
   );
 }
@@ -26,13 +27,16 @@ function windLabel(wdir: number | null, wspd: number | null): string {
   return `${wdir ?? "—"}° / ${wspd ?? "—"} kt`;
 }
 
-function BlockHeader({ label, tone: t }: { label: string; tone: ReturnType<typeof tone> }) {
-  const Icon = t.icon;
+const signed = (n: number | null) => (n == null ? "—" : `${n >= 0 ? "+" : ""}${n} m`);
+
+function Head({ label, status }: { label: string; status?: Verdict["status"] }) {
+  const t = status ? TONE[status] : null;
+  const Icon = t?.icon;
   return (
-    <div className="mb-2 flex items-center gap-1.5">
-      {Icon && <Icon size={12} className={t.text} />}
-      <span className={`text-[10px] font-bold uppercase tracking-wide ${t.text}`}>{label}</span>
-    </div>
+    <p className={cn("flex items-center gap-1.5 text-[12.5px]", t ? t.text : "text-st-muted")}>
+      {Icon && <Icon size={13} />}
+      {label}
+    </p>
   );
 }
 
@@ -49,20 +53,19 @@ export function PerfResultBlocks({ perf, computed }: { perf: PerfInputs; compute
       : l.verdictDest.status === "pending" || l.verdictAlt.status === "pending"
         ? "pending"
         : "ok";
+  const tOff = TONE[d.verdict.status].text;
+  const tLdg = TONE[ldgWorst].text;
 
-  const tDep = tone("neutral");
-  const tDest = tone("neutral");
-  const tOff = tone(d.verdict.status);
-  const tLdg = tone(ldgWorst);
+  const big = "st-num mt-0.5 text-[20px] font-medium leading-tight tracking-[-0.03em]";
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+    <CardSplit className="border-t-0">
       {/* Départ */}
-      <div className={`rounded-xl border border-border ${tDep.bg} p-3.5`}>
-        <BlockHeader label="Départ" tone={tDep} />
-        <p className="mb-2 font-mono text-base font-bold text-foreground">
+      <div className="space-y-2">
+        <Head label="Départ" />
+        <p className={cn(big, "text-st-text")}>
           {perf.dep.icao?.trim() || "—"}
-          {perf.dep.rwy != null && <span className="ml-2 text-xs font-semibold text-muted-foreground">RWY {perf.dep.rwy}°</span>}
+          {perf.dep.rwy != null && <span className="ml-2 text-[12px] font-medium text-st-muted">RWY {perf.dep.rwy}°</span>}
         </p>
         <div className="space-y-1">
           <Kv label="QNH / OAT" value={`${perf.dep.qnh ?? "—"} hPa / ${perf.dep.oat ?? "—"}°C`} />
@@ -72,29 +75,22 @@ export function PerfResultBlocks({ perf, computed }: { perf: PerfInputs; compute
       </div>
 
       {/* Décollage */}
-      <div className={`rounded-xl border border-border ${tOff.bg} p-3.5`}>
-        <BlockHeader label="Décollage" tone={tOff} />
-        <p className={`mb-2 font-mono text-xl font-extrabold ${tOff.text}`}>
-          {d.error ?? (d.todr125 != null ? `${d.todr125} m` : "—")}
-        </p>
+      <div className="space-y-2">
+        <Head label="Décollage" status={d.verdict.status} />
+        <p className={cn(big, tOff)}>{d.error ?? signed(depMargin)}</p>
         <div className="space-y-1">
           <Kv label="TODR × 1,25" value={d.todr125 != null ? `${d.todr125} m` : "—"} />
           <Kv label="TODA" value={d.toda != null ? `${d.toda} m` : "—"} />
-          <div className="flex items-center justify-between">
-            <span className="text-[10.5px] text-muted-foreground">Marge</span>
-            <span className={`font-mono text-[11px] font-bold ${tOff.text}`}>
-              {depMargin != null ? `${depMargin >= 0 ? "+" : ""}${depMargin} m` : "—"}
-            </span>
-          </div>
+          <Kv label="Marge" value={signed(depMargin)} strong tone={tOff} />
         </div>
       </div>
 
       {/* Destination */}
-      <div className={`rounded-xl border border-border ${tDest.bg} p-3.5`}>
-        <BlockHeader label="Destination" tone={tDest} />
-        <p className="mb-2 font-mono text-base font-bold text-foreground">
+      <div className="space-y-2">
+        <Head label="Destination" />
+        <p className={cn(big, "text-st-text")}>
           {perf.dest.icao?.trim() || "—"}
-          {perf.dest.rwy != null && <span className="ml-2 text-xs font-semibold text-muted-foreground">RWY {perf.dest.rwy}°</span>}
+          {perf.dest.rwy != null && <span className="ml-2 text-[12px] font-medium text-st-muted">RWY {perf.dest.rwy}°</span>}
         </p>
         <div className="space-y-1">
           <Kv label="QNH / OAT" value={`${perf.dest.qnh ?? "—"} hPa / ${perf.dest.oat ?? "—"}°C`} />
@@ -104,24 +100,15 @@ export function PerfResultBlocks({ perf, computed }: { perf: PerfInputs; compute
       </div>
 
       {/* Atterrissage */}
-      <div className={`rounded-xl border border-border ${tLdg.bg} p-3.5`}>
-        <BlockHeader label="Atterrissage" tone={tLdg} />
-        <p className={`mb-2 font-mono text-xl font-extrabold ${tLdg.text}`}>
-          {l.error ?? (l.ldr != null ? `${l.ldr} m` : "—")}
-        </p>
+      <div className="space-y-2">
+        <Head label="Atterrissage" status={ldgWorst} />
+        <p className={cn(big, tLdg)}>{l.error ?? signed(ldgMarginDest)}</p>
         <div className="space-y-1">
-          <Kv label="LDR dest." value={l.ldr != null && l.ldaDest != null ? `${l.ldr} m / LDA ${l.ldaDest} m` : "—"} />
-          <Kv label="LDR alt." value={l.ldr != null && l.ldaAlt != null ? `${l.ldr} m / LDA ${l.ldaAlt} m` : "—"} />
-          <div className="flex items-center justify-between">
-            <span className="text-[10.5px] text-muted-foreground">Marge (dest. / alt.)</span>
-            <span className={`font-mono text-[11px] font-bold ${tLdg.text}`}>
-              {ldgMarginDest != null ? `${ldgMarginDest >= 0 ? "+" : ""}${ldgMarginDest}` : "—"}
-              {" / "}
-              {ldgMarginAlt != null ? `${ldgMarginAlt >= 0 ? "+" : ""}${ldgMarginAlt}` : "—"} m
-            </span>
-          </div>
+          <Kv label="LDR / LDA dest." value={l.ldr != null && l.ldaDest != null ? `${l.ldr} / ${l.ldaDest} m` : "—"} />
+          <Kv label="LDR / LDA alt." value={l.ldr != null && l.ldaAlt != null ? `${l.ldr} / ${l.ldaAlt} m` : "—"} />
+          <Kv label="Marge alt." value={signed(ldgMarginAlt)} strong tone={tLdg} />
         </div>
       </div>
-    </div>
+    </CardSplit>
   );
 }
