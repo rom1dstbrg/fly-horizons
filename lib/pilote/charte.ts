@@ -42,4 +42,4 @@ Seul Fly Horizons annule un vol auprès du passager. Si un vol ne peut pas se te
 10. Retrait
 Fly Horizons peut suspendre ou retirer votre accès à l'espace pilote à tout moment, notamment en cas de non respect de la présente charte, de la réglementation applicable ou de la sécurité des vols.
 
-En cochant l'acceptation, vous confirmez avoir lu l'intégralité de ce texte et vous engager à le respecter.`;
+En cliquant sur « J'ai lu et j'accepte la charte », vous confirmez avoir lu l'intégralité de ce texte et vous engager à le respecter.`;
