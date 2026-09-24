@@ -10,7 +10,7 @@ export { StatCard, StatGrid } from "./stat-card";
 export { EmptyState } from "./empty-state";
 export { Table, TableSearch, TableHeaderCell, TableRow, TableCell } from "./table";
 export {
-  Sheet, SheetHeader, SheetBody, SheetFooter, SheetHero, SheetRows, SheetRow,
+  Sheet, SHEET_MAX_W, SheetHeader, SheetBody, SheetFooter, SheetHero, SheetRows, SheetRow,
   SheetCloseButton, SheetList, SheetListLink, SheetListButton,
 } from "./sheet";
 export { Input, Textarea, Select, FormField } from "./field";

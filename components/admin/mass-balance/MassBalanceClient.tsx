@@ -457,7 +457,7 @@ export function MassBalanceClient({
       </Card>
 
       {/* ═══ Feuilles enregistrées ═══ */}
-      <Sheet value={sheetsOpen ? true : null} onClose={() => setSheetsOpen(false)} width="lg">
+      <Sheet value={sheetsOpen ? true : null} onClose={() => setSheetsOpen(false)}>
         {() => (
           <>
             <SheetHeader

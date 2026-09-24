@@ -17,7 +17,7 @@ import {
   setCashPayment,
   setReservationHeure,
 } from "@/lib/actions/reservations";
-import { DateTile, PillTabs, SheetCloseButton } from "@/components/pilote/studio";
+import { DateTile, PillTabs, SHEET_MAX_W, SheetCloseButton } from "@/components/pilote/studio";
 import { ResaBadge } from "@/components/pilote/ResaBadge";
 import type { DrawerReservation, EmailTemplate, Tab } from "./types";
 import { OverviewTab } from "./OverviewTab";
@@ -341,7 +341,7 @@ export function ReservationDrawer({
               role="dialog"
               aria-modal="true"
               aria-label={`Vol de ${r.clients?.prenom ?? ""} ${r.clients?.nom ?? ""}`}
-              className={`pilote-studio fixed inset-x-0 bottom-0 top-[max(3.5rem,env(safe-area-inset-top))] z-[70] flex flex-col overflow-hidden rounded-t-[26px] bg-white font-sans text-st-text shadow-[0_-16px_40px_-16px_rgba(15,17,23,0.3)] sm:inset-x-auto sm:bottom-3 sm:right-3 sm:top-3 sm:w-[calc(100%-1.5rem)] sm:rounded-[22px] sm:shadow-st-panel ${emailOpen ? "sm:max-w-[640px]" : "sm:max-w-[560px]"}`}
+              className={`pilote-studio fixed inset-x-0 bottom-0 top-[max(3.5rem,env(safe-area-inset-top))] z-[70] flex flex-col overflow-hidden rounded-t-[26px] bg-white font-sans text-st-text shadow-[0_-16px_40px_-16px_rgba(15,17,23,0.3)] sm:inset-x-auto sm:bottom-3 sm:right-3 sm:top-3 sm:w-[calc(100%-1.5rem)] sm:rounded-[22px] sm:shadow-st-panel ${emailOpen ? "sm:max-w-[640px]" : SHEET_MAX_W}`}
               initial={isSmUp ? { x: "calc(100% + 24px)" } : { y: "100%" }}
               animate={isSmUp ? { x: 0 } : { y: 0 }}
               exit={isSmUp ? { x: "calc(100% + 24px)" } : { y: "100%" }}

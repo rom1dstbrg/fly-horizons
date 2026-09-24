@@ -8,13 +8,14 @@ import { cn } from "@/lib/utils";
 // monte du bas (poignée, un tap à l'extérieur la ferme, bouton gris « Fermer »),
 // sur le bureau un panneau flottant décollé de 12 px des bords, coins 22 px.
 // L'appelant passe la valeur ouverte (ou null) et une fonction de rendu ; la
-// feuille ne gère que l'ouverture et la fermeture.
-export function Sheet<T>({ value, onClose, children, width = "md" }: {
+// feuille ne gère que l'ouverture et la fermeture. Largeur sur le bureau :
+// 560 px pour tous les tiroirs, la même que celui d'un vol (ReservationDrawer).
+export const SHEET_MAX_W = "sm:max-w-[560px]";
+
+export function Sheet<T>({ value, onClose, children }: {
   value: T | null;
   onClose: () => void;
   children: (value: T) => React.ReactNode;
-  /** Largeur du panneau sur le bureau. */
-  width?: "md" | "lg";
 }) {
   // Garde la dernière valeur affichée pendant la fermeture (pas de panneau vide
   // qui glisse).
@@ -45,7 +46,7 @@ export function Sheet<T>({ value, onClose, children, width = "md" }: {
         className={cn(
           "absolute inset-x-0 bottom-0 flex max-h-[90dvh] flex-col overflow-hidden rounded-t-[26px] bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-16px_40px_-16px_rgba(15,17,23,0.3)] transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
           "sm:inset-x-auto sm:bottom-3 sm:right-3 sm:top-3 sm:max-h-none sm:w-[calc(100%-1.5rem)] sm:rounded-[22px] sm:pb-0 sm:shadow-st-panel",
-          width === "lg" ? "sm:max-w-[520px]" : "sm:max-w-[420px]",
+          SHEET_MAX_W,
           open ? "translate-y-0 sm:translate-x-0" : "translate-y-full sm:translate-y-0 sm:translate-x-[calc(100%+1.5rem)]",
         )}
       >

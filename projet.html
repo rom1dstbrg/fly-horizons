@@ -1200,6 +1200,9 @@
         <li>Le formulaire quitte la popup : pages <code>/pilote/annonces/nouvelle</code> et
           <code>/pilote/annonces/[id]/modifier</code>, champs et boutons Studio, récapitulatif du tarif en direct.
           Logique des 5 étapes inchangée. Garde-fou de publication partagé dans <code>lib/pilote/annonces-page.ts</code>.</li>
+        <li>Retours de Romain : deux onglets « En ligne » / « Hors ligne » (plus d'onglet Réservées), « Modifier » aussi
+          hors ligne. Règle : <b>tous les tiroirs font 560 px de large</b> sur le bureau, comme celui d'un vol
+          (<code>SHEET_MAX_W</code> dans <code>components/pilote/studio/sheet.tsx</code>, utilisé aussi par le tiroir d'un vol).</li>
       </ul>
     </div>
 
