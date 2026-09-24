@@ -132,9 +132,18 @@ export default async function AnnonceDetailPage({ params }: { params: Promise<{ 
 
           <div className="grid md:grid-cols-[1fr_380px] lg:grid-cols-[1fr_400px] gap-10 lg:gap-14 items-start">
 
-            {/* ── Gauche : galerie ── */}
-            <div>
+            {/* ── Gauche : galerie + cadre légal (sous les photos, sur leur
+                largeur, pour que « Votre pilote » remonte à droite) ── */}
+            <div className="space-y-6">
               <VolImageGallery images={galleryImages} title={annonce.titre?.trim() || `Vol partagé avec ${pilote.nom}`} duree={annonce.duree} />
+              <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg">
+                <p className="text-[10px] font-bold text-foreground uppercase tracking-[2px] mb-1">
+                  Vol en partage de coûts · NCO.GEN.104
+                </p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Fly Horizons n&apos;est pas un service de transport aérien commercial. {pilote.nom} partage un vol qu&apos;il organise déjà : votre participation couvre une quote-part des frais réels (avion, carburant, taxes d&apos;aérodrome), sans marge commerciale.
+                </p>
+              </div>
             </div>
 
             {/* ── Droite : info + CTA (sticky) ── */}
@@ -202,15 +211,6 @@ export default async function AnnonceDetailPage({ params }: { params: Promise<{ 
                   <p className="text-[10px] text-[#0b2238]/40 flex items-start gap-1.5 leading-relaxed">
                     <Lock size={9} className="shrink-0 mt-0.5" />
                     <span>Demande jusqu&apos;à <strong className="text-foreground/60">48 h avant le vol</strong>.</span>
-                  </p>
-                </div>
-
-                <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg">
-                  <p className="text-[10px] font-bold text-foreground uppercase tracking-[2px] mb-1">
-                    Vol en partage de coûts · NCO.GEN.104
-                  </p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Fly Horizons n&apos;est pas un service de transport aérien commercial. {pilote.nom} partage un vol qu&apos;il organise déjà : votre participation couvre une quote-part des frais réels (avion, carburant, taxes d&apos;aérodrome), sans marge commerciale.
                   </p>
                 </div>
 
