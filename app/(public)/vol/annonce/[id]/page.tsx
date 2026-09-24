@@ -141,7 +141,7 @@ export default async function AnnonceDetailPage({ params }: { params: Promise<{ 
                   Vol en partage de coûts · NCO.GEN.104
                 </p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Fly Horizons n&apos;est pas un service de transport aérien commercial. {pilote.nom} partage un vol qu&apos;il organise déjà : votre participation couvre une quote-part des frais réels (avion, carburant, taxes d&apos;aérodrome), sans marge commerciale.
+                  Fly Horizons n&apos;est pas un service de transport aérien commercial. {pilote.nom}{" "}partage un vol qu&apos;il organise déjà : votre participation couvre une quote-part des frais réels (avion, carburant, taxes d&apos;aérodrome), sans marge commerciale.
                 </p>
               </div>
             </div>
