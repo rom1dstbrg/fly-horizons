@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useTransition, useEffect, useSyncExternalStore } from "react";
-import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check, Minimize2, Save, Copy, Loader2, Info, Map, MessageSquare, Pencil, History } from "lucide-react";
+import { Check, AlertTriangle, Info, Route as RouteIcon, MessageSquare, FolderOpen } from "lucide-react";
 import {
   updateStatutReservation,
   updateStatutReservationPerso,
@@ -16,19 +15,18 @@ import {
   sendBoardingPassEmail,
   proposeSlot,
   setCashPayment,
+  setReservationHeure,
 } from "@/lib/actions/reservations";
-import { AdminBadge, type BadgeVariant } from "@/components/admin/ui/AdminBadge";
-import { getResaBadge } from "@/components/admin/ui/resaBadge";
-import { SheetCloseButton } from "@/components/pilote/studio";
+import { DateTile, PillTabs, SheetCloseButton } from "@/components/pilote/studio";
+import { ResaBadge } from "@/components/pilote/ResaBadge";
 import type { DrawerReservation, EmailTemplate, Tab } from "./types";
-import { InfosTab } from "./InfosTab";
-import { RouteSection } from "./RouteSection";
-import { ModifierTab } from "./ModifierTab";
-import { HistoriqueTab } from "./HistoriqueTab";
+import { OverviewTab } from "./OverviewTab";
+import { RouteTab, RouteEditorFullscreen } from "./RouteTab";
 import { MessagesTab } from "./MessagesTab";
+import { DossierTab } from "./DossierTab";
 import { EmailComposer } from "./EmailComposer";
 import { ItinerairesModal } from "./ItinerairesModal";
-import { ActionFooter } from "./ActionFooter";
+import { ConfirmActionDialog, type PendingAction } from "./ConfirmActionDialog";
 // Bloc C (mise en jeu premier-arrivé, flight_offers) reste GELÉ — pivot 08/09,
 // cf. mémoire project_marketplace_legal_risk. Bloc B (assignation manuelle
 // d'un vol standard) réactivé le 19/09, sans la mise en jeu. Bloc D réactivé
@@ -36,7 +34,6 @@ import { ActionFooter } from "./ActionFooter";
 // AnnoncePiloteActions — voir décision 08/09 soir.
 import { AnnoncePiloteActions } from "./AnnoncePiloteActions";
 import { PiloteAssignBlock } from "./PiloteAssignBlock";
-import { AvionReserveBadge } from "./AvionReserveBadge";
 import { useReservationDraft } from "./hooks/useReservationDraft";
 import { useBilanVol } from "./hooks/useBilanVol";
 import { useRouteProposal } from "./hooks/useRouteProposal";
@@ -44,15 +41,13 @@ import { useReservationHistory } from "./hooks/useReservationHistory";
 import { useReservationMessages } from "./hooks/useReservationMessages";
 import { useItineraires } from "./hooks/useItineraires";
 
-const AdminRouteEditorDynamic = dynamic(
-  () => import("@/components/admin/AdminRouteEditor").then(m => ({ default: m.AdminRouteEditor })),
-  { ssr: false, loading: () => <div className="h-[280px] rounded-lg bg-secondary animate-pulse" /> }
-);
-
-// Onglets du drawer. Compact : seul l'onglet actif affiche son libellé, les
-// autres se réduisent à leur icône (le drawer reste étroit même à 5 onglets).
-// Espace pilote (« Studio », 24/09) : au téléphone le tiroir est une feuille qui
-// monte du bas, sur le bureau un panneau flottant ; l'admin garde son panneau.
+// ── Tiroir d'un vol (admin + pilote) — maquette v2 validée le 24/09 ────────
+// En-tête d'une ligne, 4 onglets à pastille glissante (Aperçu, Route,
+// Messages, Dossier ; libellé sur l'onglet actif seulement). La frise et la
+// « prochaine étape » vivent dans Aperçu ; les autres onglets ont toute la
+// hauteur. Toute action qui écrit au client passe par une fenêtre de
+// confirmation qui dit ce qu'elle déclenche. La route se trace en plein écran.
+// Téléphone : feuille qui monte du bas ; bureau : panneau flottant.
 const SM_QUERY = "(min-width: 640px)";
 function useIsSmUp() {
   return useSyncExternalStore(
@@ -62,12 +57,11 @@ function useIsSmUp() {
   );
 }
 
-const DRAWER_TABS: { id: Tab; label: string; Icon: typeof Info }[] = [
-  { id: "infos", label: "Infos", Icon: Info },
-  { id: "route", label: "Route", Icon: Map },
-  { id: "messages", label: "Messages", Icon: MessageSquare },
-  { id: "modifier", label: "Modifier", Icon: Pencil },
-  { id: "historique", label: "Historique", Icon: History },
+const TABS: { key: Tab; label: string; icon: typeof Info }[] = [
+  { key: "apercu", label: "Aperçu", icon: Info },
+  { key: "route", label: "Route", icon: RouteIcon },
+  { key: "messages", label: "Messages", icon: MessageSquare },
+  { key: "dossier", label: "Dossier", icon: FolderOpen },
 ];
 
 export function ReservationDrawer({
@@ -81,8 +75,8 @@ export function ReservationDrawer({
   onClose: () => void;
   onStatusChange?: (id: string, newStatut: string) => void;
   onFieldsChange?: (id: string, fields: Partial<DrawerReservation>) => void;
-  // Un pilote gère ses propres demandes (marketplace) avec ce même drawer, mais
-  // sans les sections internes à l'admin (bilan financier, réservation NewCAG).
+  // Un pilote gère ses propres vols avec ce même tiroir, sans les outils
+  // internes à l'admin (bilan financier, NewCAG, email libre, Stripe).
   viewerRole?: "admin" | "pilote";
 }) {
   const isPerso = reservation?.type_resa === "perso";
@@ -94,9 +88,10 @@ export function ReservationDrawer({
   const [isCashPaymentPending, startCashPaymentTransition] = useTransition();
   const [avionReserve, setAvionReserveLocal] = useState(reservation?.avion_reserve ?? false);
   const [cashPayment, setCashPaymentLocal] = useState(reservation?.cash_payment ?? false);
-  const [activeTab, setActiveTab] = useState<Tab>("infos");
+  const [activeTab, setActiveTab] = useState<Tab>("apercu");
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null);
-  const [mapFullscreen, setMapFullscreen] = useState(false);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   const [emailOpen, setEmailOpen] = useState(false);
   const [emailSubject, setEmailSubject] = useState("");
   const [emailBody, setEmailBody] = useState("");
@@ -113,7 +108,8 @@ export function ReservationDrawer({
   });
   const bilan = useBilanVol(reservation, showFeedback);
   const route = useRouteProposal(reservation, showFeedback, onFieldsChange);
-  const history = useReservationHistory(reservation, activeTab);
+  // L'historique se charge à l'ouverture de Dossier (il y vit depuis la refonte).
+  const history = useReservationHistory(reservation, activeTab === "dossier" ? "historique" : activeTab);
   const messages = useReservationMessages(reservation, activeTab);
   const itineraires = useItineraires(route.setRouteDraft);
 
@@ -121,10 +117,11 @@ export function ReservationDrawer({
     if (!reservation) return;
     setAvionReserveLocal(reservation.avion_reserve ?? false);
     setCashPaymentLocal(reservation.cash_payment ?? false);
-    setActiveTab("infos");
+    setActiveTab("apercu");
     setEmailOpen(false);
     setIncludeReschedule(false);
-    setMapFullscreen(false);
+    setEditorOpen(false);
+    setPendingAction(null);
     bilan.reset(reservation);
     route.reset(reservation);
     history.reset();
@@ -151,12 +148,25 @@ export function ReservationDrawer({
     });
   }
 
-  // "Confirmer date + heure" / "Confirmer l'heure" — pour le standard, envoie la route
-  // dans le même geste si elle n'a jamais été envoyée ou a changé depuis (§1bis du plan).
-  function doConfirmHeureConfirmee() {
+  // « Confirmer le créneau » : pour le standard, envoie la route dans le même
+  // geste si elle n'a jamais été envoyée ou a changé depuis (§1bis du plan).
+  // `time` : heure choisie dans la fenêtre de confirmation (elle est d'abord
+  // enregistrée, puis la confirmation part avec).
+  function doConfirmHeureConfirmee(time?: string) {
     if (!reservation) return;
-    if (isPerso) { doChangeStatut("heure_confirmee"); return; }
     startTransition(async () => {
+      if (time && time !== reservation.heure_vol?.slice(0, 5)) {
+        const h = await setReservationHeure(reservation.id, time);
+        if (h.error) { showFeedback("Erreur : " + h.error, false); return; }
+        onFieldsChange?.(reservation.id, { heure_vol: time });
+      }
+      if (isPerso) {
+        const r = await updateStatutReservationPerso(reservation.id, "heure_confirmee");
+        if (r.error) { showFeedback("Erreur : " + r.error, false); return; }
+        onStatusChange?.(reservation.id, "heure_confirmee");
+        showFeedback(r.emailError ? "Statut mis à jour · email non envoyé, réessayez" : "Statut mis à jour, email envoyé ✓", !r.emailError);
+        return;
+      }
       const needsRoute = route.hasUnsentChanges();
       const routePayload = needsRoute
         ? { waypoints: route.parsedWaypoints(), comment: route.routeComment }
@@ -297,15 +307,24 @@ export function ReservationDrawer({
   // ── Render ───────────────────────────────────────────────────────────────
 
   const r = reservation;
-  const statut = r ? getResaBadge(r) : null;
-  const studio = viewerRole === "pilote";
   const isSmUp = useIsSmUp();
+  const isAdmin = viewerRole === "admin";
   const hasRoute = !!route.localRouteStatus || route.routeDraft.length > 0 || !!r?.products?.route_waypoints?.length;
-  // NewCAG (réservation avion) est un outil propre à l'exploitant admin — pas pertinent
-  // pour un pilote tiers qui gère son propre avion en dehors de ce système.
-  const showNewCAG = !!r && viewerRole === "admin" && r.statut !== "annulee" && (
-    isPerso || ["acompte_recu", "date_confirmee", "heure_confirmee", "vol_effectue"].includes(r.statut)
-  );
+
+  function runConfirmed(time?: string) {
+    if (!pendingAction) return;
+    pendingAction.run(time);
+    setPendingAction(null);
+  }
+
+  const subtitle = r
+    ? [
+        r.type_resa === "annonce_pilote" ? "Annonce" : r.type_resa === "perso" ? "Vol perso" : "Standard",
+        new Date(r.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "short", day: "numeric", month: "short" }),
+        `${r.duree} min`,
+        `#${r.id.slice(0, 8).toUpperCase()}`,
+      ].join(" · ")
+    : "";
 
   return (
     <>
@@ -313,214 +332,35 @@ export function ReservationDrawer({
         {r && (
           <>
             <motion.div
-              className={studio ? "fixed inset-0 z-[70] bg-st-ink/20 backdrop-blur-[1.5px]" : "fixed inset-0 bg-foreground/20 backdrop-blur-[1px] z-50"}
+              className="fixed inset-0 z-[70] bg-st-ink/20 backdrop-blur-[1.5px]"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={onClose}
             />
 
             <motion.aside
-              className={studio
-                ? `fixed inset-x-0 bottom-0 z-[70] flex max-h-[92dvh] flex-col overflow-hidden rounded-t-[26px] bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-16px_40px_-16px_rgba(15,17,23,0.3)] sm:inset-x-auto sm:bottom-3 sm:right-3 sm:top-3 sm:max-h-none sm:w-[calc(100%-1.5rem)] sm:rounded-[22px] sm:pb-0 sm:shadow-st-panel transition-[max-width] duration-200 ${emailOpen ? "sm:max-w-2xl" : "sm:max-w-[500px]"}`
-                : `fixed right-0 top-0 bottom-0 w-full bg-card border-l border-border shadow-[−8px_0_40px_rgba(17,51,86,.12)] z-50 flex flex-col transition-[max-width] duration-200 ease-in-out ${emailOpen ? "max-w-2xl" : "max-w-lg"}`}
-              initial={studio && !isSmUp ? { y: "100%" } : { x: studio ? "calc(100% + 24px)" : "100%" }}
-              animate={studio && !isSmUp ? { y: 0 } : { x: 0 }}
-              exit={studio && !isSmUp ? { y: "100%" } : { x: studio ? "calc(100% + 24px)" : "100%" }}
-              transition={studio ? { duration: 0.3, ease: [0.2, 0, 0, 1] } : { type: "spring", damping: 28, stiffness: 300 }}
+              role="dialog"
+              aria-modal="true"
+              aria-label={`Vol de ${r.clients?.prenom ?? ""} ${r.clients?.nom ?? ""}`}
+              className={`pilote-studio fixed inset-x-0 bottom-0 top-[max(3.5rem,env(safe-area-inset-top))] z-[70] flex flex-col overflow-hidden rounded-t-[26px] bg-white font-sans text-st-text shadow-[0_-16px_40px_-16px_rgba(15,17,23,0.3)] sm:inset-x-auto sm:bottom-3 sm:right-3 sm:top-3 sm:w-[calc(100%-1.5rem)] sm:rounded-[22px] sm:shadow-st-panel ${emailOpen ? "sm:max-w-[560px]" : "sm:max-w-[460px]"}`}
+              initial={isSmUp ? { x: "calc(100% + 24px)" } : { y: "100%" }}
+              animate={isSmUp ? { x: 0 } : { y: 0 }}
+              exit={isSmUp ? { x: "calc(100% + 24px)" } : { y: "100%" }}
+              transition={{ duration: 0.3, ease: [0.2, 0, 0, 1] }}
             >
-              {studio && <div className="mx-auto mt-2.5 h-1 w-[38px] shrink-0 rounded-full bg-st-line-strong sm:hidden" />}
-              {studio ? (
-              <div className="flex items-start justify-between gap-3 px-5 pb-3 pt-3 sm:pt-5 shrink-0">
-                <div className="min-w-0">
-                  <p className="truncate text-base font-semibold text-st-text">{r.clients?.prenom} {r.clients?.nom}</p>
-                  <div className="mt-1 flex items-center gap-2">
-                    {statut && <AdminBadge variant={statut.variant} label={statut.label} />}
-                    <span className="font-mono text-xs text-st-muted">#{r.id.slice(0, 8).toUpperCase()}</span>
-                  </div>
+              <div className="mx-auto mt-2.5 h-1 w-[38px] shrink-0 rounded-full bg-st-line-strong sm:hidden" />
+
+              {/* En-tête d'une ligne */}
+              <div className="flex shrink-0 items-center gap-3 px-[18px] pb-3 pt-3 sm:pt-4">
+                <DateTile date={r.date_vol} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[15.5px] font-semibold text-st-text">{r.clients?.prenom} {r.clients?.nom}</p>
+                  <p className="truncate text-[12px] text-st-muted">{subtitle}</p>
                 </div>
-                <SheetCloseButton onClick={onClose} />
+                <span className="max-[380px]:hidden"><ResaBadge reservation={r} /></span>
+                <SheetCloseButton onClick={emailOpen ? () => { setEmailOpen(false); setIncludeReschedule(false); } : onClose} />
               </div>
-              ) : (
-              <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2.5 mb-1">
-                    {statut && <AdminBadge variant={statut.variant} label={statut.label} />}
-                    {showNewCAG && avionReserve && (
-                      <AvionReserveBadge onCancel={() => doToggleAvion(false)} isPending={isReservePending} />
-                    )}
-                    <span className="text-xs text-muted-foreground font-mono">#{r.id.slice(0, 8).toUpperCase()}</span>
-                  </div>
-                  <p className="text-sm font-semibold text-foreground truncate">{r.clients?.prenom} {r.clients?.nom}</p>
-                </div>
-                <button onClick={onClose} className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground shrink-0 cursor-pointer">
-                  <X size={16} />
-                </button>
-              </div>
-              )}
 
-              <AnimatePresence>
-                {feedback && (
-                  <motion.div
-                    className={`mx-4 mt-3 px-3 py-2 rounded-lg text-sm flex items-center gap-2 shrink-0 border ${
-                      feedback.ok ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-700"
-                    }`}
-                    initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                  >
-                    <Check size={13} /> {feedback.msg}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {!emailOpen && studio && (
-                <div className="mx-5 mb-1 grid shrink-0 gap-0.5 rounded-[11px] bg-st-surface-hover p-[3px]" style={{ gridTemplateColumns: `repeat(${DRAWER_TABS.length}, minmax(0, 1fr))` }} role="tablist">
-                  {DRAWER_TABS.map(({ id, label, Icon }) => {
-                    const active = activeTab === id;
-                    return (
-                      <button
-                        key={id}
-                        type="button"
-                        role="tab"
-                        aria-selected={active}
-                        aria-label={label}
-                        title={label}
-                        onClick={() => setActiveTab(id)}
-                        className={`flex min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-[8px] py-[6px] text-[12.5px] transition-colors ${
-                          active ? "bg-white font-semibold text-st-text shadow-[0_1px_2px_rgba(15,17,23,0.08)]" : "font-medium text-st-muted hover:text-st-text"
-                        }`}
-                      >
-                        <Icon size={14} className="shrink-0" />
-                        {active && <span className="truncate">{label}</span>}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {!emailOpen && !studio && (
-                <div className="flex border-b border-border shrink-0">
-                  {DRAWER_TABS.map(({ id, label, Icon }) => {
-                    const active = activeTab === id;
-                    return (
-                      <button
-                        key={id}
-                        onClick={() => setActiveTab(id)}
-                        aria-label={label}
-                        aria-current={active ? "page" : undefined}
-                        title={label}
-                        className={`relative flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-semibold transition-colors cursor-pointer ${
-                          active ? "text-navy" : "text-muted-foreground hover:text-foreground"
-                        }`}
-                      >
-                        <Icon size={14} className="shrink-0" />
-                        {active && <span className="truncate">{label}</span>}
-                        {active && (
-                          <motion.span
-                            layoutId="drawer-tab-underline"
-                            className="absolute left-0 right-0 -bottom-px h-[2px] bg-navy"
-                            transition={{ type: "spring", stiffness: 500, damping: 38 }}
-                          />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {!emailOpen && activeTab === "infos" && (
-                <InfosTab
-                  reservation={r}
-                  viewerRole={viewerRole}
-                  avionReserve={avionReserve}
-                  isReservePending={isReservePending}
-                  onToggleAvion={doToggleAvion}
-                  bilan={bilan}
-                  linkCopied={linkCopied}
-                  onCopyPaymentLink={copyPaymentLink}
-                  onOpenEmailComposer={openEmailComposer}
-                  onApplyTemplate={applyTemplate}
-                  isPending={isPending}
-                  cashPayment={cashPayment}
-                  isCashPaymentPending={isCashPaymentPending}
-                  onToggleCashPayment={doToggleCashPayment}
-                  piloteParticipationSlot={
-                    r.type_resa === "annonce_pilote" ? (
-                      <AnnoncePiloteActions
-                        reservationId={r.id}
-                        statut={r.statut}
-                        piloteePaye={r.pilote_paye === true}
-                        montant={r.acompte ?? null}
-                        dateVol={r.date_vol}
-                        heureVol={r.heure_vol}
-                        viewerRole={viewerRole}
-                        onStatusChange={onStatusChange}
-                        onFieldsChange={onFieldsChange}
-                      />
-                    ) : undefined
-                  }
-                  piloteAssignSlot={
-                    viewerRole === "admin" && r.type_resa === "standard" && r.statut !== "annulee" ? (
-                      <PiloteAssignBlock
-                        reservationId={r.id}
-                        currentPiloteId={r.pilote_id}
-                        clientPrenom={r.clients?.prenom ?? ""}
-                        dateVol={r.date_vol}
-                        onChanged={(piloteId, piloteNom) =>
-                          onFieldsChange?.(r.id, { pilote_id: piloteId, pilotes: piloteNom ? { nom: piloteNom } : null })
-                        }
-                      />
-                    ) : undefined
-                  }
-                />
-              )}
-
-              {!emailOpen && activeTab === "route" && (
-                <div className="flex-1 overflow-y-auto px-5 py-4">
-                  <RouteSection
-                    reservation={r}
-                    routeDraft={route.routeDraft}
-                    setRouteDraft={route.setRouteDraft}
-                    routeComment={route.routeComment}
-                    setRouteComment={route.setRouteComment}
-                    proposalLoaded={route.proposalLoaded}
-                    localRouteStatus={route.localRouteStatus}
-                    localRouteFeedback={route.localRouteFeedback}
-                    routeStats={route.routeStats}
-                    isPending={route.isPending}
-                    foreFlightCopied={route.foreFlightCopied}
-                    onSave={route.saveRoute}
-                    onSend={route.sendRoute}
-                    onCopyForeFlight={route.copyForeFlight}
-                    onOpenItineraires={itineraires.open}
-                    onFullscreen={() => setMapFullscreen(true)}
-                  />
-                </div>
-              )}
-
-              {!emailOpen && activeTab === "messages" && (
-                <MessagesTab
-                  reservation={r}
-                  messages={messages.messages}
-                  loading={messages.loading}
-                  onOptimisticAdd={messages.append}
-                  onOptimisticRemove={messages.removeById}
-                  onSent={messages.reset}
-                />
-              )}
-
-              {!emailOpen && activeTab === "modifier" && (
-                <ModifierTab
-                  reservation={r}
-                  fields={draft.fields}
-                  setters={draft.setters}
-                  readOnly={viewerRole === "pilote"}
-                  pilotAnnonceEditable={viewerRole === "pilote" && r.type_resa === "annonce_pilote"}
-                />
-              )}
-
-              {!emailOpen && activeTab === "historique" && (
-                <HistoriqueTab loading={history.loading} loaded={history.loaded} items={history.items} />
-              )}
-
-              {emailOpen && (
+              {emailOpen ? (
                 <EmailComposer
                   reservation={r}
                   subject={emailSubject}
@@ -533,70 +373,141 @@ export function ReservationDrawer({
                   onSend={sendEmailCustom}
                   onCancel={() => { setEmailOpen(false); setIncludeReschedule(false); }}
                 />
+              ) : (
+                <>
+                  <PillTabs
+                    className="mx-[18px] shrink-0"
+                    value={activeTab}
+                    onChange={setActiveTab}
+                    items={TABS.map((t) => ({ ...t, count: t.key === "messages" ? messages.messages.length : undefined }))}
+                  />
+
+                  {activeTab === "messages" ? (
+                    <MessagesTab
+                      key="messages"
+                      reservation={r}
+                      messages={messages.messages}
+                      loading={messages.loading}
+                      onOptimisticAdd={messages.append}
+                      onOptimisticRemove={messages.removeById}
+                      onSent={messages.reset}
+                    />
+                  ) : (
+                    <div key={activeTab} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-[18px] pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-4 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 motion-safe:duration-200">
+                      {activeTab === "apercu" && (
+                        <OverviewTab
+                          reservation={r}
+                          viewerRole={viewerRole}
+                          routeStatus={route.localRouteStatus}
+                          hasRoute={hasRoute}
+                          isPending={isPending}
+                          isCashPending={isCashPending}
+                          isProposePending={isProposePending}
+                          avionReserve={avionReserve}
+                          isReservePending={isReservePending}
+                          onToggleAvion={doToggleAvion}
+                          cashPayment={cashPayment}
+                          isCashPaymentPending={isCashPaymentPending}
+                          onToggleCashPayment={doToggleCashPayment}
+                          linkCopied={linkCopied}
+                          onCopyPaymentLink={copyPaymentLink}
+                          ask={setPendingAction}
+                          onConfirmSlot={doConfirmHeureConfirmee}
+                          onChangeStatut={doChangeStatut}
+                          onSendPaymentLink={doSendPaymentLink}
+                          onResendPaymentLink={doResendPaymentLink}
+                          onSendBoardingPass={doSendBoardingPass}
+                          onSendReschedule={doSendRescheduleInvite}
+                          onRecordCash={doRecordCash}
+                          onProposeSlot={doProposeSlot}
+                          onGoTo={setActiveTab}
+                          annonceSlot={
+                            r.type_resa === "annonce_pilote" ? (
+                              <AnnoncePiloteActions
+                                reservationId={r.id}
+                                statut={r.statut}
+                                piloteePaye={r.pilote_paye === true}
+                                montant={r.acompte ?? null}
+                                dateVol={r.date_vol}
+                                heureVol={r.heure_vol}
+                                viewerRole={viewerRole}
+                                onStatusChange={onStatusChange}
+                                onFieldsChange={onFieldsChange}
+                                ask={setPendingAction}
+                              />
+                            ) : undefined
+                          }
+                          assignSlot={
+                            isAdmin && r.type_resa === "standard" && r.statut !== "annulee" ? (
+                              <PiloteAssignBlock
+                                reservationId={r.id}
+                                currentPiloteId={r.pilote_id}
+                                clientPrenom={r.clients?.prenom ?? ""}
+                                dateVol={r.date_vol}
+                                onChanged={(piloteId, piloteNom) =>
+                                  onFieldsChange?.(r.id, { pilote_id: piloteId, pilotes: piloteNom ? { nom: piloteNom } : null })
+                                }
+                              />
+                            ) : undefined
+                          }
+                        />
+                      )}
+
+                      {activeTab === "route" && (
+                        <RouteTab reservation={r} route={route} onOpenEditor={() => setEditorOpen(true)} onOpenItineraires={itineraires.open} />
+                      )}
+
+                      {activeTab === "dossier" && (
+                        <DossierTab
+                          reservation={r}
+                          viewerRole={viewerRole}
+                          fields={draft.fields}
+                          setters={draft.setters}
+                          isSaving={draft.isPending}
+                          onSave={draft.save}
+                          onSavePassagersPoids={draft.savePassagersPoids}
+                          history={{ loading: history.loading, loaded: history.loaded, items: history.items }}
+                          bilan={bilan}
+                          isPending={isPending}
+                          onApplyTemplate={applyTemplate}
+                          onOpenEmailComposer={openEmailComposer}
+                          ask={setPendingAction}
+                        />
+                      )}
+                    </div>
+                  )}
+                </>
               )}
 
-              {!emailOpen && (
-                <ActionFooter
-                  reservation={r}
-                  activeTab={activeTab}
-                  isPending={isPending}
-                  isCashPending={isCashPending}
-                  isProposePending={isProposePending}
-                  hasRoute={hasRoute}
-                  routeProposalLoaded={route.proposalLoaded}
-                  viewerRole={viewerRole}
-                  onChangeStatut={doChangeStatut}
-                  onConfirmHeureConfirmee={doConfirmHeureConfirmee}
-                  onSendReschedule={doSendRescheduleInvite}
-                  onSendBoardingPass={doSendBoardingPass}
-                  onSendPaymentLink={doSendPaymentLink}
-                  onResendPaymentLink={doResendPaymentLink}
-                  onRecordCash={doRecordCash}
-                  onProposeSlot={doProposeSlot}
-                  modifier={{ isPending: draft.isPending, save: draft.save, savePassagersPoids: draft.savePassagersPoids }}
-                />
-              )}
+              {/* Retour d'une action : petite pastille en bas du tiroir */}
+              <AnimatePresence>
+                {feedback && (
+                  <motion.div
+                    className="pointer-events-none absolute inset-x-0 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-10 flex justify-center px-4"
+                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
+                  >
+                    <p className={`flex items-center gap-2 rounded-full px-4 py-2 text-[12.5px] font-semibold shadow-st-lg ${feedback.ok ? "bg-st-ink text-white" : "bg-st-bad text-white"}`}>
+                      {feedback.ok ? <Check size={14} /> : <AlertTriangle size={14} />}
+                      {feedback.msg}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.aside>
-
-            {mapFullscreen && (
-              <div className="fixed inset-0 z-[200] flex flex-col bg-background">
-                <div className="flex items-center justify-between px-4 py-3 bg-card border-b border-border shrink-0">
-                  <p className="text-sm font-semibold text-foreground flex items-center gap-2">
-                    Tracé de route
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={route.saveRoute}
-                      disabled={route.isPending || route.routeDraft.length === 0}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-navy text-white text-xs font-semibold hover:brightness-90 transition-colors disabled:opacity-40 cursor-pointer"
-                    >
-                      {route.isPending ? <Loader2 size={11} className="animate-spin" /> : <Save size={11} />}
-                      Sauvegarder
-                    </button>
-                    <button
-                      onClick={route.copyForeFlight}
-                      disabled={route.routeDraft.length === 0}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-40 cursor-pointer"
-                    >
-                      <Copy size={11} />
-                      {route.foreFlightCopied ? "Copié !" : "ForeFlight"}
-                    </button>
-                    <button
-                      onClick={() => setMapFullscreen(false)}
-                      className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground cursor-pointer"
-                    >
-                      <Minimize2 size={16} />
-                    </button>
-                  </div>
-                </div>
-                <div className="flex-1 p-3 overflow-hidden">
-                  <AdminRouteEditorDynamic waypoints={route.routeDraft} onChange={route.setRouteDraft} height="calc(100vh - 72px)" />
-                </div>
-              </div>
-            )}
           </>
         )}
       </AnimatePresence>
+
+      {r && (
+        <RouteEditorFullscreen
+          open={editorOpen}
+          reservation={r}
+          route={route}
+          onClose={() => setEditorOpen(false)}
+          onOpenItineraires={itineraires.open}
+          ask={setPendingAction}
+        />
+      )}
 
       <ItinerairesModal
         open={itineraires.showModal}
@@ -607,6 +518,13 @@ export function ReservationDrawer({
         showAll={itineraires.showAll}
         setShowAll={itineraires.setShowAll}
         onApply={itineraires.apply}
+      />
+
+      <ConfirmActionDialog
+        action={pendingAction}
+        isPending={isPending || route.isPending}
+        onCancel={() => setPendingAction(null)}
+        onConfirm={runConfirmed}
       />
     </>
   );

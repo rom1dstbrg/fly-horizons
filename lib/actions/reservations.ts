@@ -1573,3 +1573,36 @@ export async function setCashPayment(id: string, cashPayment: boolean) {
   }
 }
 
+
+// Fixe l'heure du vol juste avant « Confirmer le créneau » (fenêtre de
+// confirmation du tiroir, 24/09) : le pilote choisit l'heure dans la fenêtre au
+// lieu d'aller la saisir dans l'onglet Dossier. Aucun email ici : c'est la
+// confirmation qui prévient le client, dans le même geste.
+export async function setReservationHeure(id: string, heure: string) {
+  try {
+    const actor = await checkAdminOrOwningPilote(id);
+    if (!/^\d{2}:\d{2}$/.test(heure)) return { error: "Heure invalide" };
+    const supabase = createAdminClient();
+    const { data: resa } = await supabase.from("reservations").select("heure_vol, statut").eq("id", id).single();
+    if (!resa) return { error: "Réservation introuvable" };
+    if (["annulee", "vol_effectue"].includes(resa.statut)) return { error: "Réservation clôturée" };
+    if (resa.heure_vol?.slice(0, 5) === heure) return { success: true };
+
+    const { error } = await supabase.from("reservations").update({ heure_vol: heure }).eq("id", id);
+    if (error) return { error: error.message };
+    await supabase.from("reservation_history").insert({
+      reservation_id: id,
+      action: "field_changed",
+      field: "heure_vol",
+      old_value: resa.heure_vol?.slice(0, 5) ?? "—",
+      new_value: heure,
+      author: actor.role === "pilote" ? `pilote:${actor.piloteNom}` : "admin",
+      note: "Heure fixée à la confirmation du créneau",
+    });
+    revalidatePath("/pilote/vols");
+    revalidatePath("/admin/vols");
+    return { success: true };
+  } catch {
+    return { error: "Erreur serveur" };
+  }
+}

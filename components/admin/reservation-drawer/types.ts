@@ -76,7 +76,8 @@ export interface DrawerReservation {
   products?: { route_waypoints: Waypoint[] | null } | null;
 }
 
-export type Tab = "infos" | "route" | "messages" | "modifier" | "historique";
+// Onglets du tiroir depuis la refonte du 24/09 (Modifier + Historique → Dossier).
+export type Tab = "apercu" | "route" | "messages" | "dossier";
 
 export type HistoryItem = {
   id: string;

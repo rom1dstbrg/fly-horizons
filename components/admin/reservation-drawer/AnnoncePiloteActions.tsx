@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { CheckCircle2, Clock, Send, PlaneLanding, XCircle, Loader2, Download, Banknote } from "lucide-react";
+import { CheckCircle2, Clock, Banknote, Send, XCircle, PlaneLanding, Download } from "lucide-react";
+import { Badge, Button, Input } from "@/components/pilote/studio";
 import {
   setPilotePaye,
   renvoyerLienVirement,
@@ -9,6 +10,7 @@ import {
   cancelAnnonceDemande,
 } from "@/lib/actions/pilote-paiement";
 import { brusselsTimestamp } from "@/lib/utils";
+import type { PendingAction } from "./ConfirmActionDialog";
 
 const VOL_EFFECTUE_DELAI_MS = 8 * 60 * 60 * 1000;
 
@@ -26,6 +28,8 @@ interface Props {
   viewerRole?: "admin" | "pilote";
   onStatusChange?: (id: string, statut: string) => void;
   onFieldsChange?: (id: string, fields: { pilote_paye?: boolean }) => void;
+  /** Fenêtre de confirmation du tiroir (annulation de la demande). */
+  ask?: (a: PendingAction) => void;
 }
 
 export function AnnoncePiloteActions({
@@ -38,6 +42,7 @@ export function AnnoncePiloteActions({
   viewerRole = "pilote",
   onStatusChange,
   onFieldsChange,
+  ask,
 }: Props) {
   const [isPending, startTransition] = useTransition();
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
@@ -80,175 +85,100 @@ export function AnnoncePiloteActions({
     );
   }
 
+  // Style Studio (24/09) : bloc « Règlement » de l'onglet Aperçu du tiroir.
   return (
-    <div className="mt-3 pt-3 border-t border-border space-y-3">
-      <div className="flex items-center gap-2">
-        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px]">
-          Règlement
-        </p>
-        {piloteePaye ? (
-          <span className="text-[11px] font-semibold text-emerald-600 flex items-center gap-1">
-            <CheckCircle2 size={12} /> Reçu
-          </span>
-        ) : (
-          <span className="text-[11px] font-medium text-amber-600 flex items-center gap-1">
-            <Clock size={12} /> En attente
-          </span>
-        )}
+    <div className="space-y-3 rounded-[16px] border border-st-line p-3.5">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[13px] font-semibold text-st-text">Règlement</p>
+        {piloteePaye ? <Badge tone="success" dot>Reçu</Badge> : <Badge tone="warning" dot>En attente</Badge>}
       </div>
 
-      <p className="text-xs text-muted-foreground">
+      <p className="text-[12.5px] leading-snug text-st-text-2">
         {montant != null ? (
           <>
-            <strong className="text-foreground">{montant} €</strong> à régler par le client
-            directement sur votre IBAN. Fly Horizons n&apos;encaisse rien.
+            <b className="font-semibold text-st-text">{montant} €</b> à régler par le client directement sur votre IBAN.
+            Fly Horizons n&apos;encaisse rien.
           </>
         ) : (
-          "Prix pas encore fixé — le groupe de cette annonce (vente à la place) n'est pas encore complet. Clôturez-le depuis « Mes annonces » pour figer le prix définitif de chaque passager."
+          "Prix pas encore fixé : le groupe de cette annonce (vente à la place) n'est pas encore complet. Clôturez-le depuis « Mes annonces » pour figer le prix de chaque passager."
         )}
       </p>
 
       {msg && (
-        <p className={`text-xs rounded-md px-2.5 py-1.5 border ${msg.ok ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-red-50 border-red-200 text-red-700"}`}>
-          {msg.text}
-        </p>
+        <p className={`rounded-[10px] px-3 py-2 text-[12.5px] font-medium ${msg.ok ? "bg-st-ok-soft text-st-ok" : "bg-st-bad-soft text-st-bad"}`}>{msg.text}</p>
       )}
 
       {!cancelled && !done && (
         <div className="flex flex-wrap gap-2">
           {montant != null && (piloteePaye ? (
-            <button
-              type="button"
-              disabled={isPending}
-              onClick={() =>
-                run(
-                  () => setPilotePaye(reservationId, false),
-                  "Paiement remis en attente",
-                  () => onFieldsChange?.(reservationId, { pilote_paye: false }),
-                )
-              }
-              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-navy text-white text-xs font-semibold hover:brightness-90 transition-colors disabled:opacity-50 cursor-pointer"
+            <Button
+              variant="secondary"
+              size="sm"
+              loading={isPending}
+              onClick={() => run(() => setPilotePaye(reservationId, false), "Paiement remis en attente", () => onFieldsChange?.(reservationId, { pilote_paye: false }))}
             >
-              {isPending ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
               Annuler « payé »
-            </button>
+            </Button>
           ) : (
             <>
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={() => marquerPaye("virement")}
-                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-navy text-white text-xs font-semibold hover:brightness-90 transition-colors disabled:opacity-50 cursor-pointer"
-              >
-                {isPending ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
-                Le client m&apos;a payé
-              </button>
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={() => marquerPaye("especes")}
-                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border text-xs font-medium hover:bg-secondary transition-colors disabled:opacity-50 cursor-pointer"
-              >
-                <Banknote size={12} /> Payé en espèces
-              </button>
+              <Button size="sm" loading={isPending} onClick={() => marquerPaye("virement")} className="flex-1">
+                <CheckCircle2 /> Le client m&apos;a payé
+              </Button>
+              <Button variant="secondary" size="sm" disabled={isPending} onClick={() => marquerPaye("especes")}>
+                <Banknote /> En espèces
+              </Button>
             </>
           ))}
-
           {!piloteePaye && montant != null && (
-            <button
-              type="button"
-              disabled={isPending}
-              onClick={() => run(() => renvoyerLienVirement(reservationId), "Lien de paiement renvoyé ✓")}
-              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border text-xs font-medium hover:bg-secondary transition-colors disabled:opacity-50 cursor-pointer"
-            >
-              <Send size={12} /> Renvoyer le lien
-            </button>
+            <Button variant="secondary" size="sm" disabled={isPending} onClick={() => run(() => renvoyerLienVirement(reservationId), "Lien de paiement renvoyé ✓")}>
+              <Send /> Renvoyer le lien
+            </Button>
           )}
-
           {!piloteePaye && (
-            <>
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={() =>
-                  run(
-                    () => cancelAnnonceDemande(reservationId),
-                    "Demande annulée, annonce remise en vente",
-                    () => onStatusChange?.(reservationId, "annulee"),
-                  )
-                }
-                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-red-200 text-red-600 text-xs font-medium hover:bg-red-50 transition-colors disabled:opacity-50 cursor-pointer"
-              >
-                <XCircle size={12} /> Annuler la demande
-              </button>
-            </>
+            <Button
+              variant="danger"
+              size="sm"
+              disabled={isPending}
+              onClick={() => {
+                const go = () => run(() => cancelAnnonceDemande(reservationId), "Demande annulée, annonce remise en vente", () => onStatusChange?.(reservationId, "annulee"));
+                if (ask) ask({ title: "Annuler cette demande ?", consequences: ["La demande passe en « Annulée » et les places sont remises en vente sur votre annonce.", "Aucun email n'est envoyé : prévenez le client par message."], confirmLabel: "Annuler la demande", danger: true, run: go });
+                else go();
+              }}
+            >
+              <XCircle /> Annuler la demande
+            </Button>
           )}
         </div>
       )}
 
       {piloteePaye && !done && !cancelled && (
-        <div className="space-y-2">
-          {effectueBloque ? (
-            <p className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Clock size={12} /> « Vol effectué » disponible 8 h après l&apos;heure du décollage.
-            </p>
-          ) : !showEffectue ? (
-            <button
-              type="button"
-              onClick={() => setShowEffectue(true)}
-              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border text-xs font-medium hover:bg-secondary transition-colors cursor-pointer"
-            >
-              <PlaneLanding size={12} /> Marquer le vol effectué
-            </button>
-          ) : (
-            <div className="rounded-lg border border-border p-3 space-y-2">
-              <label className="block text-[11px] font-semibold text-muted-foreground">
-                Minutes réellement volées (optionnel)
-                <input
-                  type="number"
-                  min={1}
-                  max={600}
-                  value={dureeReelle}
-                  onChange={(e) => setDureeReelle(e.target.value)}
-                  placeholder="ex. 55"
-                  className="mt-1 w-full h-8 rounded-md border border-border bg-input px-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                />
-              </label>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  disabled={isPending}
-                  onClick={() =>
-                    run(
-                      () => marquerVolEffectue(reservationId, dureeReelle ? Number(dureeReelle) : undefined),
-                      "Vol marqué effectué ✓",
-                      () => onStatusChange?.(reservationId, "vol_effectue"),
-                    )
-                  }
-                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-navy text-white text-xs font-semibold hover:brightness-90 transition-colors disabled:opacity-50 cursor-pointer"
-                >
-                  {isPending ? <Loader2 size={12} className="animate-spin" /> : <PlaneLanding size={12} />}
-                  Confirmer
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowEffectue(false)}
-                  className="h-8 px-3 rounded-lg border border-border text-xs font-medium hover:bg-secondary transition-colors cursor-pointer"
-                >
-                  Annuler
-                </button>
-              </div>
+        effectueBloque ? (
+          <p className="flex items-center gap-1.5 text-[12.5px] text-st-muted"><Clock size={14} /> « Vol effectué » disponible 8 h après l&apos;heure du décollage.</p>
+        ) : !showEffectue ? (
+          <Button variant="secondary" size="sm" onClick={() => setShowEffectue(true)}><PlaneLanding /> Marquer le vol effectué</Button>
+        ) : (
+          <div className="space-y-2 rounded-[12px] bg-st-surface p-3">
+            <label className="block">
+              <span className="mb-1 block text-[12px] font-[550] text-st-text-2">Minutes réellement volées (optionnel)</span>
+              <Input type="number" min={1} max={600} value={dureeReelle} onChange={(e) => setDureeReelle(e.target.value)} placeholder="ex. 55" />
+            </label>
+            <div className="grid grid-cols-[auto_1fr] gap-2">
+              <Button variant="secondary" size="sm" onClick={() => setShowEffectue(false)}>Annuler</Button>
+              <Button
+                size="sm"
+                loading={isPending}
+                onClick={() => run(() => marquerVolEffectue(reservationId, dureeReelle ? Number(dureeReelle) : undefined), "Vol marqué effectué ✓", () => onStatusChange?.(reservationId, "vol_effectue"))}
+              >
+                <PlaneLanding /> Confirmer
+              </Button>
             </div>
-          )}
-        </div>
+          </div>
+        )
       )}
 
       {(piloteePaye || done) && (
-        <a
-          href={`/api/invoice/reservation/${reservationId}`}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-navy hover:underline"
-        >
-          <Download size={12} /> Reçu client (PDF)
+        <a href={`/api/invoice/reservation/${reservationId}`} className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-st-ink hover:underline">
+          <Download size={14} /> Reçu client (PDF)
         </a>
       )}
     </div>

@@ -1,8 +1,12 @@
 "use client";
 
-import { Loader2, Send, RotateCcw } from "lucide-react";
+import { Send, RotateCcw } from "lucide-react";
+import { Button, Input, Textarea } from "@/components/pilote/studio";
+import { cn } from "@/lib/utils";
 import type { DrawerReservation } from "./types";
 
+// Email libre (admin), ouvert depuis Dossier › « Email libre et modèles ».
+// Prend toute la hauteur du tiroir à la place des onglets.
 export function EmailComposer({
   reservation, subject, setSubject, body, setBody,
   includeReschedule, setIncludeReschedule,
@@ -20,59 +24,34 @@ export function EmailComposer({
   onCancel: () => void;
 }) {
   return (
-    <div className="flex-1 flex flex-col min-h-0 px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] gap-3">
-      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] shrink-0">Email libre</p>
-      <div className="shrink-0">
-        <p className="text-[10px] text-muted-foreground mb-1">À</p>
-        <p className="text-xs text-foreground font-medium">{reservation.clients?.email}</p>
-      </div>
-      <div className="shrink-0">
-        <p className="text-[10px] text-muted-foreground mb-1">Sujet</p>
-        <input
-          autoFocus
-          value={subject}
-          onChange={e => setSubject(e.target.value)}
-          className="w-full h-8 px-2.5 rounded-lg border border-input bg-background text-xs focus:outline-none focus:ring-1 focus:ring-navy/30"
-        />
-      </div>
-      <div className="flex-1 min-h-0 flex flex-col">
-        <p className="text-[10px] text-muted-foreground mb-1">Message</p>
-        <textarea
-          value={body}
-          onChange={e => setBody(e.target.value)}
-          className="flex-1 min-h-0 w-full px-2.5 py-2 rounded-lg border border-input bg-background text-xs resize-none focus:outline-none focus:ring-1 focus:ring-navy/30"
-        />
-      </div>
-      <div className="shrink-0">
-        <button
-          type="button"
-          onClick={() => setIncludeReschedule(!includeReschedule)}
-          className={[
-            "flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors w-full cursor-pointer",
-            includeReschedule
-              ? "border-amber-300 bg-amber-50 text-amber-700"
-              : "border-border text-muted-foreground hover:bg-secondary",
-          ].join(" ")}
-        >
-          <RotateCcw size={11} className={includeReschedule ? "text-amber-600" : ""} />
-          {includeReschedule ? "Lien de report inclus dans l'email ✓" : "Ajouter un lien de report"}
-        </button>
-      </div>
-      <div className="flex items-center gap-2 shrink-0">
-        <button
-          onClick={onSend}
-          disabled={isPending || !subject.trim() || !body.trim()}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-navy text-white text-xs font-semibold hover:brightness-90 transition-colors disabled:opacity-50 cursor-pointer"
-        >
-          {isPending ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
-          Envoyer
-        </button>
-        <button
-          onClick={onCancel}
-          className="px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-secondary transition-colors cursor-pointer"
-        >
-          Annuler
-        </button>
+    <div className="flex min-h-0 flex-1 flex-col gap-3 px-[18px] pb-[calc(1rem+env(safe-area-inset-bottom))] pt-1">
+      <p className="text-[12.5px] text-st-muted">
+        À <b className="font-semibold text-st-text">{reservation.clients?.email ?? "client sans email"}</b>
+      </p>
+      <label className="block shrink-0">
+        <span className="mb-1 block text-[12px] font-[550] text-st-text-2">Sujet</span>
+        <Input autoFocus value={subject} onChange={(e) => setSubject(e.target.value)} />
+      </label>
+      <label className="flex min-h-0 flex-1 flex-col">
+        <span className="mb-1 block text-[12px] font-[550] text-st-text-2">Message</span>
+        <Textarea value={body} onChange={(e) => setBody(e.target.value)} className="min-h-40 flex-1 resize-none" />
+      </label>
+      <button
+        type="button"
+        onClick={() => setIncludeReschedule(!includeReschedule)}
+        className={cn(
+          "flex w-full shrink-0 cursor-pointer items-center gap-2 rounded-[11px] border px-3 py-2 text-[12.5px] font-[550] transition-colors",
+          includeReschedule ? "border-transparent bg-st-warn-soft text-st-warn" : "border-st-line text-st-text-2 hover:bg-st-surface",
+        )}
+      >
+        <RotateCcw size={14} />
+        {includeReschedule ? "Lien de report inclus dans l'email" : "Ajouter un lien de report"}
+      </button>
+      <div className="grid shrink-0 grid-cols-[auto_1fr] gap-2">
+        <Button variant="secondary" onClick={onCancel}>Annuler</Button>
+        <Button onClick={onSend} loading={isPending} disabled={!subject.trim() || !body.trim()}>
+          <Send /> Envoyer
+        </Button>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState, useTransition } from "react";
-import { Send, Loader2, User } from "lucide-react";
+import { Send, Loader2 } from "lucide-react";
 import { sendReservationMessage, type ReservationMessage } from "@/lib/actions/reservation-messages";
 import type { DrawerReservation } from "./types";
 
@@ -65,79 +65,36 @@ export function MessagesTab({
     });
   }
 
+  // Pleine hauteur (maquette v2 validée le 24/09) : la conversation remplit le
+  // tiroir, la zone de saisie reste collée en bas.
   return (
-    <div className="flex-1 flex flex-col min-h-0">
-      <div className="px-5 pt-3 pb-2 border-b border-border shrink-0">
-        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px]">
-          Messages · {reservation.clients?.email ?? "client sans email"}
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-[18px] py-3">
+        <p className="mb-3 text-center text-[11.5px] text-st-muted">
+          Envoyé depuis info@fly-horizons.com, à votre nom. {reservation.clients?.prenom || "Le client"} répond via un lien.
         </p>
-        <p className="text-[10px] text-muted-foreground mt-0.5">
-          Envoyé depuis info@fly-horizons.com, à votre nom. Le client répond via un lien.
-        </p>
-      </div>
-
-      <div className="flex-1 overflow-y-auto px-5 py-4">
         {loading ? (
-          <p className="text-xs text-muted-foreground text-center py-8">Chargement…</p>
+          <p className="py-8 text-center text-[12.5px] text-st-muted">Chargement…</p>
         ) : messages.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-8">
-            Aucun message. Écrivez ci-dessous pour démarrer la conversation.
-          </p>
+          <p className="py-8 text-center text-[12.5px] text-st-muted">Aucun message. Écrivez ci-dessous pour démarrer la conversation.</p>
         ) : (
           messages.map((msg, i) => {
             const isClient = msg.author === "client";
             const isFirst = i === 0 || messages[i - 1].author !== msg.author;
             const isLast = i === messages.length - 1 || messages[i + 1].author !== msg.author;
             const senderLabel = msg.author_nom?.trim() || (isClient ? "Client" : "Fly Horizons");
-            const timeStr = new Date(msg.created_at).toLocaleString("fr-BE", {
-              day: "numeric",
-              month: "short",
-              hour: "2-digit",
-              minute: "2-digit",
-            });
+            const timeStr = new Date(msg.created_at).toLocaleString("fr-BE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
             return (
-              <div
-                key={msg.id}
-                className={[
-                  "flex items-start gap-2",
-                  isClient ? "" : "flex-row-reverse",
-                  i === 0 ? "" : isFirst ? "mt-4" : "mt-1",
-                ].join(" ")}
-              >
-                <div className="w-6 shrink-0 pt-0.5">
-                  {isFirst && (
-                    <div
-                      className={[
-                        "w-6 h-6 rounded-md flex items-center justify-center text-[9px] font-black",
-                        isClient
-                          ? "bg-secondary text-muted-foreground border border-border"
-                          : "bg-navy text-white",
-                      ].join(" ")}
-                    >
-                      {isClient ? <User size={11} /> : senderLabel.charAt(0).toUpperCase()}
-                    </div>
-                  )}
+              <div key={msg.id} className={`flex flex-col ${isClient ? "items-start" : "items-end"} ${i === 0 ? "" : isFirst ? "mt-3" : "mt-1"}`}>
+                {isFirst && <p className="mb-0.5 px-1 text-[11px] font-medium text-st-muted">{senderLabel}</p>}
+                <div
+                  className={`max-w-[85%] whitespace-pre-wrap px-3 py-2 text-[13px] leading-snug ${
+                    isClient ? "rounded-[14px] rounded-bl-[5px] bg-st-surface text-st-text" : "rounded-[14px] rounded-br-[5px] bg-st-ink text-white"
+                  }`}
+                >
+                  {msg.content}
                 </div>
-                <div className={`flex flex-col max-w-[82%] ${isClient ? "items-start" : "items-end"}`}>
-                  {isFirst && (
-                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[1px] mb-0.5 px-0.5">
-                      {senderLabel}
-                    </p>
-                  )}
-                  <div
-                    className={[
-                      "px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap rounded-lg",
-                      isClient
-                        ? "bg-secondary text-foreground"
-                        : "bg-navy text-white",
-                    ].join(" ")}
-                  >
-                    {msg.content}
-                  </div>
-                  {isLast && (
-                    <p className="text-[9px] text-muted-foreground mt-0.5 px-0.5">{timeStr}</p>
-                  )}
-                </div>
+                {isLast && <p className="mt-0.5 px-1 text-[10.5px] text-st-muted">{timeStr}</p>}
               </div>
             );
           })
@@ -145,29 +102,24 @@ export function MessagesTab({
         <div ref={bottomRef} />
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="shrink-0 border-t border-border px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
-      >
-        {error && <p className="text-xs text-destructive mb-2">{error}</p>}
-        <div className="flex items-end gap-2 rounded-xl border border-border bg-background px-3 py-2">
+      <form onSubmit={handleSubmit} className="shrink-0 border-t border-st-line-soft px-[18px] pb-[calc(0.875rem+env(safe-area-inset-bottom))] pt-3">
+        {error && <p className="mb-2 text-[12px] text-st-bad">{error}</p>}
+        <div className="flex items-end gap-2 rounded-[14px] border border-st-line bg-white py-1.5 pl-3 pr-1.5 focus-within:border-st-ink focus-within:ring-4 focus-within:ring-st-ink-soft">
           <textarea
             ref={textareaRef}
             value={content}
-            onChange={e => {
-              setContent(e.target.value);
-              setError("");
-            }}
-            placeholder="Votre message au client…"
+            onChange={(e) => { setContent(e.target.value); setError(""); }}
+            placeholder={`Votre message à ${reservation.clients?.prenom || "votre client"}…`}
             rows={1}
-            className="flex-1 bg-transparent text-xs text-foreground resize-none focus:outline-none leading-relaxed min-h-[20px] max-h-[140px] overflow-y-auto"
+            className="max-h-[140px] min-h-[24px] flex-1 resize-none self-center overflow-y-auto bg-transparent text-[16px] leading-snug text-st-text outline-none placeholder:text-st-muted sm:text-[13px]"
           />
           <button
             type="submit"
+            aria-label="Envoyer"
             disabled={isPending || !content.trim()}
-            className="w-7 h-7 rounded-lg bg-navy text-white flex items-center justify-center hover:brightness-110 disabled:opacity-40 transition-all cursor-pointer shrink-0"
+            className="grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-[10px] bg-st-ink text-white transition-opacity disabled:opacity-40"
           >
-            {isPending ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
+            {isPending ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
           </button>
         </div>
       </form>

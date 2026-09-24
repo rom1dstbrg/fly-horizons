@@ -16,3 +16,4 @@ export {
 export { Input, Textarea, Select, FormField } from "./field";
 export { DateTile } from "./date-tile";
 export { ChoiceMenu } from "./choice-menu";
+export { PillTabs } from "./pill-tabs";
