@@ -1189,6 +1189,17 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-25 (3) — Nouvelle réservation et vol hors site en style Studio</h3>
+      <ul>
+        <li><code>/pilote/reservations/new</code> et <code>/new-horsite</code> : formulaires Studio (max-w-lg, sans cartes,
+          Annuler + validation). Mêmes champs et mêmes actions serveur. Ces composants ne servent plus qu'au pilote
+          depuis le 14/09 : l'admin n'est pas touché.</li>
+        <li>Nouveaux composants communs : <code>ClientPicker</code> (client existant ou nouveau, auparavant copié dans
+          chaque formulaire) et <code>ChoiceCard</code> (grande option cliquable, reprise aussi par le formulaire d'annonce).</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-25 (2) — Profil et mot de passe en style Studio</h3>
       <ul>
         <li><code>/pilote/profil</code> : formulaire Studio sans cartes (max-w-lg), statut légal en bandeau, champs légaux bordés

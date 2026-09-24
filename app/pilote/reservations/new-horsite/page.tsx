@@ -1,8 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CreateHorSiteForm } from "@/components/admin/CreateHorSiteForm";
-import { PiloteHeader } from "@/components/pilote/ui";
-import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { PageHeader } from "@/components/pilote/studio";
 
 export const metadata = { title: "Vol hors-site — Espace pilote" };
 
@@ -19,20 +17,8 @@ export default async function NewHorSitePage() {
   );
 
   return (
-    <div className="space-y-6">
-      <div>
-        <Link
-          href="/pilote/vols"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-2"
-        >
-          <ChevronLeft size={15} /> Retour à mes vols
-        </Link>
-        <PiloteHeader
-          title="Vol hors-site"
-          subtitle="Enregistrez un vol effectué en dehors du site (Messenger, téléphone, sur place…) pour garder votre historique et votre CA à jour."
-        />
-      </div>
-
+    <div className="mx-auto w-full max-w-lg space-y-5">
+      <PageHeader title="Vol hors site" back={{ href: "/pilote/vols", label: "Mes vols" }} />
       <CreateHorSiteForm clients={clients ?? []} prixHeure={prixHeure} />
     </div>
   );

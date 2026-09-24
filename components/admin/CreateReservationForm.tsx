@@ -1,42 +1,29 @@
-﻿"use client";
+"use client";
 
 import { useState, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { Check, CreditCard, CircleCheck } from "lucide-react";
 import { createAdminReservation } from "@/lib/actions/reservations";
-import { Loader2, UserPlus, Users, Search, Check } from "lucide-react";
-import { FormSection, FormFooter } from "@/components/admin/ui";
-
-interface Client {
-  id: string;
-  prenom: string;
-  nom: string;
-  email: string;
-  telephone: string | null;
-}
+import {
+  Button, ChoiceCard, ClientPicker, FormField, Input, SectionHeader, Segmented, Select,
+  clientDraftError, emptyClientDraft, type PickerClient,
+} from "@/components/pilote/studio";
 
 interface Props {
-  clients: Client[];
+  clients: PickerClient[];
   prixHeure: number;
 }
 
-const DUREES = [30, 60, 90, 120];
+const DUREES = ["30", "60", "90", "120"] as const;
 
+// Nouvelle réservation créée par le pilote (client au téléphone, par email…).
+// Formulaire Studio : sans cartes, trois sections, validation pleine largeur.
 export function CreateReservationForm({ clients, prixHeure }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  // Client mode
-  const [clientMode, setClientMode] = useState<"existing" | "new">("existing");
-  const [clientSearch, setClientSearch] = useState("");
-  const [selectedClientId, setSelectedClientId] = useState<string>("");
+  const [client, setClient] = useState(() => emptyClientDraft("existing"));
 
-  // New client fields
-  const [newPrenom, setNewPrenom] = useState("");
-  const [newNom, setNewNom] = useState("");
-  const [newEmail, setNewEmail] = useState("");
-  const [newTelephone, setNewTelephone] = useState("");
-
-  // Reservation fields
   const [dateVol, setDateVol] = useState("");
   const [heureVol, setHeureVol] = useState("10:00");
   const [duree, setDuree] = useState(60);
@@ -44,31 +31,19 @@ export function CreateReservationForm({ clients, prixHeure }: Props) {
   const [poidsTotal, setPoidsTotal] = useState("");
   const [voucherCode, setVoucherCode] = useState("");
 
-  // Payment
   const [envoyerPaiement, setEnvoyerPaiement] = useState(true);
   const [montantOverride, setMontantOverride] = useState("");
   const [sendEmail, setSendEmail] = useState(true);
 
-  // Feedback
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const filteredClients = useMemo(() => {
-    const q = clientSearch.toLowerCase();
-    return clients.filter(c =>
-      c.prenom.toLowerCase().includes(q) ||
-      c.nom.toLowerCase().includes(q) ||
-      (c.email ?? "").toLowerCase().includes(q)
-    );
-  }, [clients, clientSearch]);
-
-  const selectedClient = clients.find(c => c.id === selectedClientId);
-
+  const prixCalcule = Math.round((prixHeure / 60) * duree);
   const prixEstime = useMemo(() => {
     const override = parseFloat(montantOverride);
     if (!isNaN(override) && override >= 0) return override;
-    return Math.round((prixHeure / 60) * duree);
-  }, [prixHeure, duree, montantOverride]);
+    return prixCalcule;
+  }, [prixCalcule, montantOverride]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -77,21 +52,18 @@ export function CreateReservationForm({ clients, prixHeure }: Props) {
 
     if (!dateVol) { setError("La date est obligatoire."); return; }
     if (!heureVol) { setError("L'heure est obligatoire."); return; }
-    if (clientMode === "existing" && !selectedClientId) {
-      setError("Sélectionnez un client existant."); return;
-    }
-    if (clientMode === "new" && (!newPrenom || !newNom || !newEmail)) {
-      setError("Prénom, nom et email du nouveau client sont obligatoires."); return;
-    }
+    const clientError = clientDraftError(client, true);
+    if (clientError) { setError(clientError); return; }
 
     startTransition(async () => {
       const override = parseFloat(montantOverride);
+      const isNew = client.mode === "new";
       const result = await createAdminReservation({
-        client_id: clientMode === "existing" ? selectedClientId : undefined,
-        prenom: clientMode === "new" ? newPrenom : undefined,
-        nom: clientMode === "new" ? newNom : undefined,
-        email: clientMode === "new" ? newEmail : undefined,
-        telephone: clientMode === "new" ? newTelephone : undefined,
+        client_id: isNew ? undefined : client.selectedId,
+        prenom: isNew ? client.prenom : undefined,
+        nom: isNew ? client.nom : undefined,
+        email: isNew ? client.email : undefined,
+        telephone: isNew ? client.telephone : undefined,
         date_vol: dateVol,
         heure_vol: heureVol,
         duree,
@@ -108,274 +80,109 @@ export function CreateReservationForm({ clients, prixHeure }: Props) {
         return;
       }
 
-      if (!sendEmail) {
-        setSuccess("Réservation créée, aucun email envoyé ✓");
-      } else if (envoyerPaiement && prixEstime > 0) {
-        setSuccess("Réservation créée et email de paiement envoyé au client ✓");
-      } else {
-        setSuccess("Réservation créée et marquée comme confirmée ✓");
-      }
+      if (!sendEmail) setSuccess("Réservation créée, aucun email envoyé.");
+      else if (envoyerPaiement && prixEstime > 0) setSuccess("Réservation créée, lien de paiement envoyé au client.");
+      else setSuccess("Réservation créée et confirmée.");
       setTimeout(() => router.push("/pilote/vols"), 1500);
     });
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
-
+    <form onSubmit={handleSubmit} className="space-y-7">
       {/* Client */}
-      <div className="card-premium p-5 space-y-4">
-        <FormSection title="Client" />
-
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setClientMode("existing")}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
-              clientMode === "existing"
-                ? "bg-navy text-white border-navy"
-                : "border-border text-muted-foreground hover:bg-secondary"
-            } cursor-pointer`}
-          >
-            <Users size={14} /> Client existant
-          </button>
-          <button
-            type="button"
-            onClick={() => setClientMode("new")}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
-              clientMode === "new"
-                ? "bg-navy text-white border-navy"
-                : "border-border text-muted-foreground hover:bg-secondary"
-            } cursor-pointer`}
-          >
-            <UserPlus size={14} /> Nouveau client
-          </button>
-        </div>
-
-        {clientMode === "existing" && (
-          <div className="space-y-2">
-            <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <input
-                value={clientSearch}
-                onChange={e => { setClientSearch(e.target.value); setSelectedClientId(""); }}
-                placeholder="Rechercher par nom ou email…"
-                className="w-full h-9 pl-9 pr-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-            {clientSearch && (
-              <div className="border border-border rounded-lg overflow-hidden max-h-48 overflow-y-auto">
-                {filteredClients.length === 0 ? (
-                  <p className="p-3 text-sm text-muted-foreground text-center">Aucun client trouvé</p>
-                ) : (
-                  filteredClients.slice(0, 8).map(c => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => { setSelectedClientId(c.id); setClientSearch(`${c.prenom} ${c.nom}`); }}
-                      className="w-full text-left px-3 py-2.5 hover:bg-secondary transition-colors border-b border-border last:border-0"
-                    >
-                      <p className="text-sm font-medium text-foreground">{c.prenom} {c.nom}</p>
-                      <p className="text-xs text-muted-foreground">{c.email}{c.telephone ? ` · ${c.telephone}` : ""}</p>
-                    </button>
-                  ))
-                )}
-              </div>
-            )}
-            {selectedClient && (
-              <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm">
-                <Check size={14} className="text-emerald-600 shrink-0" />
-                <span className="font-medium text-emerald-700">{selectedClient.prenom} {selectedClient.nom}</span>
-                <span className="text-emerald-600 text-xs">{selectedClient.email}</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {clientMode === "new" && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Prénom *</label>
-              <input value={newPrenom} onChange={e => setNewPrenom(e.target.value)} required
-                className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Nom *</label>
-              <input value={newNom} onChange={e => setNewNom(e.target.value)} required
-                className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Email *</label>
-              <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} required
-                className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Téléphone</label>
-              <input type="tel" value={newTelephone} onChange={e => setNewTelephone(e.target.value)}
-                className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-            </div>
-          </div>
-        )}
-      </div>
+      <section className="space-y-3.5">
+        <SectionHeader title="Client" />
+        <ClientPicker clients={clients} value={client} onChange={setClient} />
+      </section>
 
       {/* Vol */}
-      <div className="card-premium p-5 space-y-4">
-        <FormSection title="Détails du vol" />
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1.5">Date du vol *</label>
-            <input type="date" value={dateVol} onChange={e => setDateVol(e.target.value)} required
-              className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1.5">Heure de départ *</label>
-            <input type="time" value={heureVol} onChange={e => setHeureVol(e.target.value)} required
-              className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-          </div>
+      <section className="space-y-3.5">
+        <SectionHeader title="Le vol" />
+        <div className="grid grid-cols-2 gap-3.5">
+          <FormField id="r-date" label="Date">
+            <Input id="r-date" type="date" value={dateVol} onChange={e => setDateVol(e.target.value)} required />
+          </FormField>
+          <FormField id="r-heure" label="Heure de départ">
+            <Input id="r-heure" type="time" value={heureVol} onChange={e => setHeureVol(e.target.value)} required />
+          </FormField>
         </div>
-
-        <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1.5">Durée du vol *</label>
-          <div className="flex gap-2 flex-wrap">
-            {DUREES.map(d => (
-              <button
-                key={d}
-                type="button"
-                onClick={() => setDuree(d)}
-                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors cursor-pointer ${
-                  duree === d
-                    ? "bg-navy text-white border-navy"
-                    : "border-border text-muted-foreground hover:bg-secondary"
-                }`}
-              >
-                {d} min
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1.5">Passagers</label>
-            <select value={passagers} onChange={e => setPassagers(parseInt(e.target.value))}
-              className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring">
-              {[1, 2, 3].map(n => <option key={n} value={n}>{n}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1.5">Poids total (kg)</label>
-            <input type="number" min="0" value={poidsTotal} onChange={e => setPoidsTotal(e.target.value)}
-              placeholder="Ex : 180"
-              className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1.5">Code voucher (optionnel)</label>
-          <input
-            value={voucherCode}
-            onChange={e => setVoucherCode(e.target.value.toUpperCase())}
-            placeholder="XXXX-XXXX-XXXX-XXXX"
-            className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring"
+        <FormField label="Durée">
+          <Segmented
+            fill
+            value={String(duree) as (typeof DUREES)[number]}
+            onChange={(v) => setDuree(Number(v))}
+            items={DUREES.map(d => ({ key: d, label: `${d} min` }))}
           />
+        </FormField>
+        <div className="grid grid-cols-2 gap-3.5">
+          <FormField id="r-pax" label="Passagers">
+            <Select id="r-pax" value={passagers} onChange={e => setPassagers(parseInt(e.target.value))}>
+              {[1, 2, 3].map(n => <option key={n} value={n}>{n}</option>)}
+            </Select>
+          </FormField>
+          <FormField id="r-poids" label="Poids total (kg)">
+            <Input id="r-poids" type="number" inputMode="numeric" min="0" value={poidsTotal} onChange={e => setPoidsTotal(e.target.value)} placeholder="180" />
+          </FormField>
         </div>
-      </div>
+        <FormField id="r-voucher" label="Code voucher (facultatif)">
+          <Input id="r-voucher" className="font-mono" value={voucherCode} onChange={e => setVoucherCode(e.target.value.toUpperCase())} placeholder="XXXX-XXXX-XXXX-XXXX" />
+        </FormField>
+      </section>
 
       {/* Paiement */}
-      <div className="card-premium p-5 space-y-4">
-        <FormSection title="Paiement" />
-
-        <div className="bg-secondary rounded-lg p-3 flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Prix calculé ({duree} min à {prixHeure} €/h)
-          </p>
-          <p className="text-lg font-bold text-foreground">{prixEstime} €</p>
+      <section className="space-y-3.5">
+        <SectionHeader title="Paiement" />
+        <div className="flex items-baseline justify-between gap-3 rounded-[14px] bg-st-surface px-4 py-3">
+          <span className="text-[13px] text-st-text-2">Prix calculé ({duree} min à {prixHeure} €/h)</span>
+          <span className="st-num text-lg font-semibold text-st-text">{prixEstime} €</span>
         </div>
-
-        <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-            Montant personnalisé (laissez vide pour utiliser le prix calculé)
-          </label>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              min="0"
-              step="1"
-              value={montantOverride}
-              onChange={e => setMontantOverride(e.target.value)}
-              placeholder={String(Math.round((prixHeure / 60) * duree))}
-              className="w-40 h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-            <span className="text-sm text-muted-foreground">€</span>
-          </div>
-        </div>
-
+        <FormField id="r-montant" label="Montant personnalisé" hint="Vide : le prix calculé est utilisé.">
+          <Input id="r-montant" type="number" inputMode="decimal" min="0" step="1" value={montantOverride} onChange={e => setMontantOverride(e.target.value)} placeholder={`${prixCalcule} €`} />
+        </FormField>
         <div className="space-y-2">
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="radio"
-              name="paymentMode"
-              checked={envoyerPaiement}
-              onChange={() => setEnvoyerPaiement(true)}
-              className="mt-0.5"
-            />
-            <div>
-              <p className="text-sm font-medium text-foreground">Envoyer un lien de paiement par email</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Le client reçoit un email avec un lien Stripe sécurisé pour payer ({prixEstime} €).
-              </p>
-            </div>
-          </label>
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="radio"
-              name="paymentMode"
-              checked={!envoyerPaiement}
-              onChange={() => setEnvoyerPaiement(false)}
-              className="mt-0.5"
-            />
-            <div>
-              <p className="text-sm font-medium text-foreground">Marquer comme confirmé (pas de paiement en ligne)</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                La réservation est directement en statut &quot;En attente&quot;, à utiliser si le client paie en espèces ou par virement.
-              </p>
-            </div>
-          </label>
-        </div>
-
-        <label className="flex items-start gap-3 cursor-pointer pt-3 border-t border-border">
-          <input
-            type="checkbox"
-            checked={sendEmail}
-            onChange={e => setSendEmail(e.target.checked)}
-            className="mt-0.5"
+          <ChoiceCard
+            selected={envoyerPaiement}
+            onClick={() => setEnvoyerPaiement(true)}
+            icon={CreditCard}
+            title="Envoyer un lien de paiement"
+            desc={`Le client reçoit un email avec un lien Stripe sécurisé (${prixEstime} €).`}
           />
-          <div>
-            <p className="text-sm font-medium text-foreground">Envoyer un email au client</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Décochez pour créer la réservation silencieusement (ex : vous préparez encore la route ou le dossier avant de le contacter).
-            </p>
-          </div>
+          <ChoiceCard
+            selected={!envoyerPaiement}
+            onClick={() => setEnvoyerPaiement(false)}
+            icon={CircleCheck}
+            title="Confirmer sans paiement en ligne"
+            desc="Espèces ou virement : la réservation passe directement en attente."
+          />
+        </div>
+        <label className="flex cursor-pointer items-start gap-3 rounded-[14px] bg-st-surface px-4 py-3">
+          <input type="checkbox" checked={sendEmail} onChange={e => setSendEmail(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#0b2238]" />
+          <span>
+            <span className="block text-[13.5px] font-semibold text-st-text">Envoyer un email au client</span>
+            <span className="mt-0.5 block text-xs leading-snug text-st-muted">
+              Décochez pour créer la réservation sans prévenir le client (route ou dossier encore en préparation).
+            </span>
+          </span>
         </label>
+      </section>
+
+      <div className="space-y-3">
+        {error && <p className="rounded-[12px] bg-st-bad-soft px-3.5 py-2.5 text-[13px] text-st-bad">{error}</p>}
+        {success && (
+          <p className="flex items-center gap-2 rounded-[12px] bg-st-ok-soft px-3.5 py-2.5 text-[13px] text-st-ok">
+            <Check size={15} className="shrink-0" />
+            {success}
+          </p>
+        )}
+        <div className="grid grid-cols-[auto_1fr] gap-2.5">
+          <Button variant="secondary" size="lg" className="sm:h-[38px] sm:text-[13px]" onClick={() => router.push("/pilote/vols")}>
+            Annuler
+          </Button>
+          <Button type="submit" size="lg" className="sm:h-[38px] sm:text-[13px]" loading={isPending} disabled={!!success}>
+            <span className="truncate">{envoyerPaiement && sendEmail ? "Créer et envoyer le lien" : "Créer la réservation"}</span>
+          </Button>
+        </div>
       </div>
-
-      {error && (
-        <div className="px-4 py-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="px-4 py-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-700 flex items-center gap-2">
-          <Check size={14} className="shrink-0" />
-          {success}
-        </div>
-      )}
-
-      <FormFooter
-        pending={isPending}
-        submitLabel={envoyerPaiement ? "Créer et envoyer le lien de paiement" : "Créer la réservation"}
-        onCancel={() => router.push("/pilote/vols")}
-      />
     </form>
   );
 }

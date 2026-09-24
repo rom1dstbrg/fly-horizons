@@ -7,9 +7,9 @@ import { createAnnonce, updateAnnonce, uploadAnnonceImage, deleteAnnonceImageFil
 import { evaluerPartPilote } from "@/lib/annonces-pilote";
 import {
   AlertTriangle, ShieldCheck, PlaneTakeoff, ImagePlus, X,
-  ChevronLeft, ChevronRight, Loader2, Route, Clock, Check,
+  ChevronLeft, ChevronRight, Loader2, Route, Clock,
 } from "lucide-react";
-import { Button, FormField, Input, Segmented, Select, Textarea } from "@/components/pilote/studio";
+import { Button, ChoiceCard, FormField, Input, Segmented, Select, Textarea } from "@/components/pilote/studio";
 import { cn } from "@/lib/utils";
 import type { AnnonceRow } from "./AnnoncesList";
 import type { WaypointDraft } from "@/components/admin/AdminRouteEditor";
@@ -33,39 +33,6 @@ const STEPS: { key: Step; label: string }[] = [
 ];
 
 const eur = (v: number) => `${v.toLocaleString("fr-BE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
-
-// Grande option cliquable (type de vol, mode de vente) : bordure navy + anneau
-// quand elle est choisie.
-function Option({ selected, onClick, icon: Icon, title, desc }: {
-  selected: boolean;
-  onClick: () => void;
-  icon?: React.ComponentType<{ size?: number }>;
-  title: string;
-  desc: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={selected}
-      className={cn(
-        "flex w-full cursor-pointer items-center gap-3 rounded-[14px] border bg-white p-3.5 text-left transition-all",
-        selected ? "border-st-ink ring-4 ring-st-ink-soft" : "border-st-line hover:border-st-line-strong hover:bg-st-surface",
-      )}
-    >
-      {Icon && (
-        <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-[10px]", selected ? "bg-st-ink text-white" : "bg-st-surface text-st-text-2")}>
-          <Icon size={16} />
-        </span>
-      )}
-      <span className="min-w-0 flex-1">
-        <span className="block text-[13.5px] font-semibold text-st-text">{title}</span>
-        <span className="mt-0.5 block text-xs leading-snug text-st-muted">{desc}</span>
-      </span>
-      {selected && Icon && <Check size={16} className="shrink-0 text-st-ink" />}
-    </button>
-  );
-}
 
 function SumRow({ label, children, strong }: { label: React.ReactNode; children: React.ReactNode; strong?: boolean }) {
   return (
@@ -269,14 +236,14 @@ export function AnnonceForm({ editing }: { editing?: AnnonceRow }) {
       {step === "type" && (
         <div className="space-y-2.5">
           <p className="text-[13px] text-st-text-2">Quel type de vol souhaitez-vous publier ?</p>
-          <Option
+          <ChoiceCard
             selected={hasRoute === true}
             onClick={() => { setHasRoute(true); goNext(); }}
             icon={Route}
             title="Vol avec itinéraire"
             desc="Vous tracez la route sur une carte, affichée au client sur l'annonce."
           />
-          <Option
+          <ChoiceCard
             selected={hasRoute === false}
             onClick={() => { setHasRoute(false); goNext(); }}
             icon={Clock}
@@ -328,8 +295,8 @@ export function AnnonceForm({ editing }: { editing?: AnnonceRow }) {
         <div className="space-y-4">
           <FormField label="Mode de vente">
             <div className="grid grid-cols-2 gap-2">
-              <Option selected={modeVente === "avion"} onClick={() => setModeVente("avion")} title="Avion entier" desc="Un seul client réserve et règle le vol entier." />
-              <Option selected={modeVente === "place"} onClick={() => setModeVente("place")} title="À la place" desc="Plusieurs clients, chacun règle sa place. Part égale automatique." />
+              <ChoiceCard selected={modeVente === "avion"} onClick={() => setModeVente("avion")} title="Avion entier" desc="Un seul client réserve et règle le vol entier." />
+              <ChoiceCard selected={modeVente === "place"} onClick={() => setModeVente("place")} title="À la place" desc="Plusieurs clients, chacun règle sa place. Part égale automatique." />
             </div>
           </FormField>
 

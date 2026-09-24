@@ -2,35 +2,28 @@
 
 import { useState, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { Check, TrendingUp, TrendingDown } from "lucide-react";
 import { createHorSiteReservation } from "@/lib/actions/reservations";
-import { Loader2, UserPlus, Users, Search, Check, TrendingUp, TrendingDown } from "lucide-react";
-import { FormSection, FormFooter } from "@/components/admin/ui";
-
-interface Client {
-  id: string;
-  prenom: string;
-  nom: string;
-  email: string | null;
-  telephone: string | null;
-}
+import {
+  Button, ClientPicker, FormField, Input, SectionHeader, Segmented, Select, Textarea,
+  clientDraftError, emptyClientDraft, type PickerClient,
+} from "@/components/pilote/studio";
+import { cn } from "@/lib/utils";
 
 interface Props {
-  clients: Client[];
+  clients: PickerClient[];
   prixHeure: number;
 }
 
+const eur = (v: number) => `${v.toLocaleString("fr-BE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+
+// Vol effectué hors du site (Messenger, téléphone, sur place) : enregistré
+// comme effectué et payé, sans email. Formulaire Studio.
 export function CreateHorSiteForm({ clients, prixHeure }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const [clientMode, setClientMode] = useState<"existing" | "new">("new");
-  const [clientSearch, setClientSearch] = useState("");
-  const [selectedClientId, setSelectedClientId] = useState<string>("");
-
-  const [newPrenom, setNewPrenom] = useState("");
-  const [newNom, setNewNom] = useState("");
-  const [newEmail, setNewEmail] = useState("");
-  const [newTelephone, setNewTelephone] = useState("");
+  const [client, setClient] = useState(() => emptyClientDraft("new"));
 
   const [typeResa, setTypeResa] = useState<"standard" | "perso">("standard");
   const [dateVol, setDateVol] = useState("");
@@ -45,17 +38,6 @@ export function CreateHorSiteForm({ clients, prixHeure }: Props) {
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-
-  const filteredClients = useMemo(() => {
-    const q = clientSearch.toLowerCase();
-    return clients.filter(c =>
-      c.prenom.toLowerCase().includes(q) ||
-      c.nom.toLowerCase().includes(q) ||
-      (c.email ?? "").toLowerCase().includes(q)
-    );
-  }, [clients, clientSearch]);
-
-  const selectedClient = clients.find(c => c.id === selectedClientId);
 
   const dureeNum = parseFloat(duree) || 0;
 
@@ -80,21 +62,18 @@ export function CreateHorSiteForm({ clients, prixHeure }: Props) {
 
     if (!dateVol) { setError("La date est obligatoire."); return; }
     if (dureeNum <= 0) { setError("La durée doit être supérieure à 0."); return; }
-    if (clientMode === "existing" && !selectedClientId) {
-      setError("Sélectionnez un client existant."); return;
-    }
-    if (clientMode === "new" && (!newPrenom || !newNom)) {
-      setError("Prénom et nom obligatoires."); return;
-    }
+    const clientError = clientDraftError(client, false);
+    if (clientError) { setError(clientError); return; }
     if (montantRecu === "") { setError("Renseignez le montant reçu."); return; }
 
     startTransition(async () => {
+      const isNew = client.mode === "new";
       const result = await createHorSiteReservation({
-        client_id: clientMode === "existing" ? selectedClientId : undefined,
-        prenom: clientMode === "new" ? newPrenom : undefined,
-        nom: clientMode === "new" ? newNom : undefined,
-        email: clientMode === "new" ? (newEmail || undefined) : undefined,
-        telephone: clientMode === "new" ? (newTelephone || undefined) : undefined,
+        client_id: isNew ? undefined : client.selectedId,
+        prenom: isNew ? client.prenom : undefined,
+        nom: isNew ? client.nom : undefined,
+        email: isNew ? (client.email || undefined) : undefined,
+        telephone: isNew ? (client.telephone || undefined) : undefined,
         type_resa: typeResa,
         date_vol: dateVol,
         heure_vol: heureVol || undefined,
@@ -117,279 +96,105 @@ export function CreateHorSiteForm({ clients, prixHeure }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
-
+    <form onSubmit={handleSubmit} className="space-y-7">
       {/* Client */}
-      <div className="card-premium p-5 space-y-4">
-        <FormSection title="Client" />
-
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => { setClientMode("new"); setSelectedClientId(""); setClientSearch(""); }}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors cursor-pointer ${
-              clientMode === "new"
-                ? "bg-navy text-white border-navy"
-                : "border-border text-muted-foreground hover:bg-secondary"
-            }`}
-          >
-            <UserPlus size={14} /> Nouveau client
-          </button>
-          <button
-            type="button"
-            onClick={() => { setClientMode("existing"); }}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors cursor-pointer ${
-              clientMode === "existing"
-                ? "bg-navy text-white border-navy"
-                : "border-border text-muted-foreground hover:bg-secondary"
-            }`}
-          >
-            <Users size={14} /> Client existant
-          </button>
-        </div>
-
-        {clientMode === "new" && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Prénom *</label>
-              <input value={newPrenom} onChange={e => setNewPrenom(e.target.value)} required
-                className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Nom *</label>
-              <input value={newNom} onChange={e => setNewNom(e.target.value)} required
-                className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Email <span className="text-muted-foreground/60 font-normal">(optionnel)</span></label>
-              <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)}
-                placeholder="Pour les emails futurs"
-                className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Téléphone</label>
-              <input type="tel" value={newTelephone} onChange={e => setNewTelephone(e.target.value)}
-                className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-            </div>
-          </div>
-        )}
-
-        {clientMode === "existing" && (
-          <div className="space-y-2">
-            <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <input
-                value={clientSearch}
-                onChange={e => { setClientSearch(e.target.value); setSelectedClientId(""); }}
-                placeholder="Rechercher par nom ou email…"
-                className="w-full h-9 pl-9 pr-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-            {clientSearch && (
-              <div className="border border-border rounded-lg overflow-hidden max-h-48 overflow-y-auto">
-                {filteredClients.length === 0 ? (
-                  <p className="p-3 text-sm text-muted-foreground text-center">Aucun client trouvé</p>
-                ) : (
-                  filteredClients.slice(0, 8).map(c => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => { setSelectedClientId(c.id); setClientSearch(`${c.prenom} ${c.nom}`); }}
-                      className="w-full text-left px-3 py-2.5 hover:bg-secondary transition-colors border-b border-border last:border-0 cursor-pointer"
-                    >
-                      <p className="text-sm font-medium text-foreground">{c.prenom} {c.nom}</p>
-                      <p className="text-xs text-muted-foreground">{c.email ?? "—"}{c.telephone ? ` · ${c.telephone}` : ""}</p>
-                    </button>
-                  ))
-                )}
-              </div>
-            )}
-            {selectedClient && (
-              <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm">
-                <Check size={14} className="text-emerald-600 shrink-0" />
-                <span className="font-medium text-emerald-700">{selectedClient.prenom} {selectedClient.nom}</span>
-                {selectedClient.email && <span className="text-emerald-600 text-xs">{selectedClient.email}</span>}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+      <section className="space-y-3.5">
+        <SectionHeader title="Client" />
+        <ClientPicker clients={clients} value={client} onChange={setClient} emailRequired={false} newFirst />
+      </section>
 
       {/* Vol */}
-      <div className="card-premium p-5 space-y-4">
-        <FormSection title="Détails du vol" />
-
-        <div className="flex gap-2">
-          {(["standard", "perso"] as const).map(t => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTypeResa(t)}
-              className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors cursor-pointer ${
-                typeResa === t
-                  ? "bg-navy text-white border-navy"
-                  : "border-border text-muted-foreground hover:bg-secondary"
-              }`}
-            >
-              {t === "standard" ? "Standard" : "Sur mesure"}
-            </button>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1.5">Date du vol *</label>
-            <input type="date" value={dateVol} onChange={e => setDateVol(e.target.value)} required
-              className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1.5">Heure de départ <span className="text-muted-foreground/60 font-normal">(optionnel)</span></label>
-            <input type="time" value={heureVol} onChange={e => setHeureVol(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1.5">Durée réelle du vol (minutes) *</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              min="1"
-              step="1"
-              value={duree}
-              onChange={e => setDuree(e.target.value)}
-              placeholder="Ex : 55"
-              className="w-32 h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-            <span className="text-sm text-muted-foreground">min</span>
-            {dureeNum > 0 && (
-              <span className="text-xs text-muted-foreground">
-                = {Math.floor(dureeNum / 60) > 0 ? `${Math.floor(dureeNum / 60)}h` : ""}{dureeNum % 60 > 0 ? `${dureeNum % 60}` : ""}
-                {Math.floor(dureeNum / 60) > 0 && dureeNum % 60 > 0 ? "min" : Math.floor(dureeNum / 60) === 0 ? "min" : ""}
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1.5">Passagers</label>
-            <select value={passagers} onChange={e => setPassagers(parseInt(e.target.value))}
-              className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer">
-              {[1, 2, 3].map(n => <option key={n} value={n}>{n}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1.5">Poids total (kg)</label>
-            <input type="number" min="0" value={poidsTotal} onChange={e => setPoidsTotal(e.target.value)}
-              placeholder="Ex : 180"
-              className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1.5">Commentaire / notes</label>
-          <textarea
-            value={commentaire}
-            onChange={e => setCommentaire(e.target.value)}
-            rows={2}
-            placeholder="Route, conditions, remarques…"
-            className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+      <section className="space-y-3.5">
+        <SectionHeader title="Le vol" />
+        <FormField label="Type de vol">
+          <Segmented
+            fill
+            value={typeResa}
+            onChange={setTypeResa}
+            items={[{ key: "standard", label: "Standard" }, { key: "perso", label: "Sur mesure" }]}
           />
+        </FormField>
+        <div className="grid grid-cols-2 gap-3.5">
+          <FormField id="h-date" label="Date">
+            <Input id="h-date" type="date" value={dateVol} onChange={e => setDateVol(e.target.value)} required />
+          </FormField>
+          <FormField id="h-heure" label="Heure (facultatif)">
+            <Input id="h-heure" type="time" value={heureVol} onChange={e => setHeureVol(e.target.value)} />
+          </FormField>
         </div>
-      </div>
+        <FormField
+          id="h-duree"
+          label="Durée réelle (minutes)"
+          hint={dureeNum >= 60 ? `Soit ${Math.floor(dureeNum / 60)} h${dureeNum % 60 ? ` ${Math.round(dureeNum % 60)} min` : ""}.` : undefined}
+        >
+          <Input id="h-duree" type="number" inputMode="numeric" min="1" step="1" value={duree} onChange={e => setDuree(e.target.value)} placeholder="55" />
+        </FormField>
+        <div className="grid grid-cols-2 gap-3.5">
+          <FormField id="h-pax" label="Passagers">
+            <Select id="h-pax" value={passagers} onChange={e => setPassagers(parseInt(e.target.value))}>
+              {[1, 2, 3].map(n => <option key={n} value={n}>{n}</option>)}
+            </Select>
+          </FormField>
+          <FormField id="h-poids" label="Poids total (kg)">
+            <Input id="h-poids" type="number" inputMode="numeric" min="0" value={poidsTotal} onChange={e => setPoidsTotal(e.target.value)} placeholder="180" />
+          </FormField>
+        </div>
+        <FormField id="h-comment" label="Notes">
+          <Textarea id="h-comment" className="min-h-16 resize-none" value={commentaire} onChange={e => setCommentaire(e.target.value)} rows={2} placeholder="Route, conditions, remarques…" />
+        </FormField>
+      </section>
 
-      {/* Finance */}
-      <div className="card-premium p-5 space-y-4">
-        <FormSection title="Finances" />
-
+      {/* Finances */}
+      <section className="space-y-3.5">
+        <div>
+          <SectionHeader title="Finances" />
+          <p className="mt-0.5 text-[12.5px] text-st-muted">Enregistré comme vol effectué et payé. Aucun email n&apos;est envoyé.</p>
+        </div>
         {dureeNum > 0 && (
-          <div className="bg-secondary rounded-lg p-3 flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              Prix calculé ({dureeNum} min × {prixHeure} €/h)
-            </p>
-            <p className="text-lg font-bold text-foreground">{prixCalcule.toFixed(2)} €</p>
+          <div className="flex items-baseline justify-between gap-3 rounded-[14px] bg-st-surface px-4 py-3">
+            <span className="text-[13px] text-st-text-2">Prix calculé ({dureeNum} min à {prixHeure} €/h)</span>
+            <span className="st-num text-lg font-semibold text-st-text">{eur(prixCalcule)}</span>
           </div>
         )}
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-              Prix dû <span className="text-muted-foreground/60 font-normal">(calculé auto, modifiable)</span>
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={prixDuOverride}
-                onChange={e => setPrixDuOverride(e.target.value)}
-                placeholder={prixCalcule.toFixed(2)}
-                className="w-36 h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-              <span className="text-sm text-muted-foreground">€</span>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1.5">Montant reçu *</label>
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={montantRecu}
-                onChange={e => setMontantRecu(e.target.value)}
-                placeholder="Ex : 250.00"
-                className="w-36 h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-              <span className="text-sm text-muted-foreground">€</span>
-            </div>
-          </div>
+        <div className="grid grid-cols-2 gap-3.5">
+          <FormField id="h-du" label="Prix dû" hint="Vide : prix calculé.">
+            <Input id="h-du" type="number" inputMode="decimal" min="0" step="0.01" value={prixDuOverride} onChange={e => setPrixDuOverride(e.target.value)} placeholder={prixCalcule.toFixed(2)} />
+          </FormField>
+          <FormField id="h-recu" label="Montant reçu">
+            <Input id="h-recu" type="number" inputMode="decimal" min="0" step="0.01" value={montantRecu} onChange={e => setMontantRecu(e.target.value)} placeholder="250.00" />
+          </FormField>
         </div>
-
         {hasSurplus && (
-          <div className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium ${
-            surplus >= 0
-              ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-              : "bg-red-50 border-red-200 text-red-700"
-          }`}>
-            {surplus >= 0
-              ? <TrendingUp size={14} className="shrink-0" />
-              : <TrendingDown size={14} className="shrink-0" />
-            }
+          <div className={cn(
+            "flex items-center gap-2.5 rounded-[12px] px-3.5 py-2.5 text-[13px]",
+            surplus >= 0 ? "bg-st-ok-soft text-st-ok" : "bg-st-bad-soft text-st-bad",
+          )}>
+            {surplus >= 0 ? <TrendingUp size={15} className="shrink-0" /> : <TrendingDown size={15} className="shrink-0" />}
             <span>
-              {surplus >= 0 ? "Surplus" : "Déficit"} :{" "}
-              <span className="font-bold">{surplus >= 0 ? "+" : ""}{surplus.toFixed(2)} €</span>
-              <span className="ml-2 font-normal text-xs opacity-75">
-                ({montantRecuNum.toFixed(2)} reçu − {prixDu.toFixed(2)} dû)
-              </span>
+              {surplus >= 0 ? "Surplus" : "Déficit"} : <b className="st-num">{surplus >= 0 ? "+" : ""}{eur(surplus)}</b>
+              <span className="ml-1.5 text-xs opacity-75">({eur(montantRecuNum)} reçu, {eur(prixDu)} dû)</span>
             </span>
           </div>
         )}
+      </section>
 
-        <p className="text-xs text-muted-foreground">
-          La réservation sera enregistrée comme <strong>vol effectué / payé</strong>. Aucun email ne sera envoyé.
-        </p>
+      <div className="space-y-3">
+        {error && <p className="rounded-[12px] bg-st-bad-soft px-3.5 py-2.5 text-[13px] text-st-bad">{error}</p>}
+        {success && (
+          <p className="flex items-center gap-2 rounded-[12px] bg-st-ok-soft px-3.5 py-2.5 text-[13px] text-st-ok">
+            <Check size={15} className="shrink-0" />
+            Vol hors site enregistré. Redirection…
+          </p>
+        )}
+        <div className="grid grid-cols-[auto_1fr] gap-2.5">
+          <Button variant="secondary" size="lg" className="sm:h-[38px] sm:text-[13px]" onClick={() => router.push("/pilote/vols")}>
+            Annuler
+          </Button>
+          <Button type="submit" size="lg" className="sm:h-[38px] sm:text-[13px]" loading={isPending} disabled={success}>
+            Enregistrer le vol
+          </Button>
+        </div>
       </div>
-
-      {error && (
-        <div className="px-4 py-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="px-4 py-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-700 flex items-center gap-2">
-          <Check size={14} className="shrink-0" />
-          Réservation hors-site enregistrée. Redirection…
-        </div>
-      )}
-
-      <FormFooter
-        pending={isPending}
-        submitLabel="Enregistrer le vol"
-        onCancel={() => router.push("/pilote/vols")}
-      />
     </form>
   );
 }
