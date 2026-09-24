@@ -52,34 +52,49 @@ function TerrainColumn({
   const [metar, setMetar] = useState<{ state: "idle" | "loading" | "ok" | "ko"; msg?: string }>({ state: ad.rawMetar ? "ok" : "idle" });
   const [raw, setRaw] = useState("");
   const tried = useRef<string | null>(null);
+  // Numéro de la dernière requête : une réponse arrivée après un changement
+  // d'OACI est ignorée.
+  const reqId = useRef(0);
 
   async function fetchMetar(icao: string) {
+    const id = ++reqId.current;
     setMetar({ state: "loading" });
     try {
       const res = await fetch(`/api/admin/metar?icao=${encodeURIComponent(icao)}`);
       const data = await res.json();
+      if (id !== reqId.current) return;
       if (!res.ok) throw new Error();
       onChange({ oat: data.oat ?? ad.oat, qnh: data.qnh ?? ad.qnh, wdir: data.wdir ?? ad.wdir, wspd: data.wspd ?? ad.wspd, rawMetar: data.raw || "" });
       setMetar({ state: "ok" });
     } catch {
+      if (id !== reqId.current) return;
       setMetar({ state: "ko", msg: "METAR indisponible : saisie à la main ou METAR brut" });
     }
   }
 
-  // METAR importé tout seul dès qu'un OACI complet (4 lettres) est saisi, connu
-  // de l'outil ou non ; une fois par OACI.
+  // METAR frais importé tout seul dès qu'un OACI complet (4 lettres) est présent :
+  // saisi, recopié du départ ou venant d'une feuille enregistrée (on ne garde pas
+  // un METAR périmé). Effacer puis retaper le même code relance l'import.
   useEffect(() => {
     const icao = (ad.icao || "").trim().toUpperCase();
-    if (icao.length !== 4 || ad.rawMetar || tried.current === icao) return;
+    if (icao.length !== 4) {
+      tried.current = null;
+      reqId.current++;
+      setMetar((m) => (m.state === "loading" ? { state: "idle" } : m));
+      return;
+    }
+    if (tried.current === icao) return;
     tried.current = icao;
     void fetchMetar(icao);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ad.icao, ad.rawMetar]);
+  }, [ad.icao]);
 
   function setIcao(v: string) {
     const icao = v.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
     const found = findAerodrome(icao);
     onChange({ icao, rawMetar: "", ...(found ? { elev: found.elevation } : {}) });
+    // OACI complet tapé : on déroule la météo, comme un clic sur « Modifier ».
+    if (icao.length === 4) setEditing(true);
   }
 
   function pickRunway(ident: string) {
