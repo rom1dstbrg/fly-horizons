@@ -37,7 +37,10 @@ export function DispoGrid({ monday, today, ouverts, reservations, visiteVue }: {
   reservations: CreneauResa[];
   visiteVue: boolean;
 }) {
-  const [week, setWeek] = useState(0);
+  // Semaine affichée à l'ouverture : celle du premier jour réservable (J+2). Un
+  // dimanche, la semaine en cours est déjà passée : on ouvre sur la suivante.
+  const firstWeek = addDaysIso(today, 2) >= addDaysIso(monday, 7) ? 1 : 0;
+  const [week, setWeek] = useState(firstWeek);
   const [open, setOpen] = useState(() => new Set(ouverts));
   const [saved, setSaved] = useState(() => new Set(ouverts));
   const [saving, startSaving] = useTransition();
@@ -187,7 +190,7 @@ export function DispoGrid({ monday, today, ouverts, reservations, visiteVue }: {
       <PageHeader
         title="Disponibilités"
         actions={<>
-          <Button variant="secondary" size="icon" aria-label="Revoir la visite" title="Revoir la visite" onClick={() => { setWeek(0); setTourOpen(true); }}>
+          <Button variant="secondary" size="icon" aria-label="Revoir la visite" title="Revoir la visite" onClick={() => { setWeek(firstWeek); setTourOpen(true); }}>
             <CircleHelp />
           </Button>
           <Button variant="secondary" data-tour="rec" onClick={() => setRecOpen(true)}>
@@ -217,7 +220,7 @@ export function DispoGrid({ monday, today, ouverts, reservations, visiteVue }: {
             </span>
             <Button variant="secondary" size="icon" aria-label="Semaine suivante" onClick={() => setWeek(week + 1)}><ChevronRight /></Button>
           </div>
-          {week > 0 && <Button variant="ghost" size="sm" className="hidden sm:inline-flex" onClick={() => setWeek(0)}>Cette semaine</Button>}
+          {week !== firstWeek && <Button variant="ghost" size="sm" className="hidden sm:inline-flex" onClick={() => setWeek(firstWeek)}>Revenir à aujourd&apos;hui</Button>}
           <span className="w-full text-center text-[12.5px] text-st-muted sm:ml-auto sm:w-auto">
             <b className="st-num font-semibold text-st-text">{weekCount}</b> bloc{weekCount > 1 ? "s" : ""} ouvert{weekCount > 1 ? "s" : ""} cette semaine
           </span>
@@ -271,7 +274,6 @@ export function DispoGrid({ monday, today, ouverts, reservations, visiteVue }: {
                 const res = reserved.get(k);
                 const isOpen = open.has(k);
                 const past = date < today;
-                const dayClosed = !res && BLOCS.every((x) => !open.has(key(date, x)));
                 const label = `${DAYS[d]} ${Number(date.slice(8))}, ${b} h à ${b + BLOC_H} h : ${res ? `réservé (${res})` : isOpen ? "ouvert" : "fermé"}`;
                 return (
                   <button
@@ -291,10 +293,11 @@ export function DispoGrid({ monday, today, ouverts, reservations, visiteVue }: {
                         ? "cursor-default border-st-ink bg-st-ink text-white"
                         : isOpen
                           ? "cursor-pointer border-st-gold bg-st-gold-soft text-st-gold-text hover:bg-[#fbecb8]"
-                          : dayClosed
-                            ? "cursor-pointer border-transparent bg-[repeating-linear-gradient(135deg,var(--color-st-surface)_0_6px,#e9ebef_6px_12px)] hover:bg-st-surface-hover"
-                            : "cursor-pointer border-transparent bg-st-surface hover:bg-st-surface-hover",
-                      past && "cursor-default opacity-40",
+                          // Hachuré = jour passé, plus modifiable ; gris uni = fermé, à toucher.
+                          : past
+                            ? "cursor-default border-transparent bg-[repeating-linear-gradient(135deg,var(--color-st-surface)_0_6px,#eceef2_6px_12px)]"
+                            : "cursor-pointer border-st-line bg-st-surface hover:bg-st-surface-hover",
+                      past && isOpen && "cursor-default opacity-50",
                       isOpen !== saved.has(k) && "after:absolute after:right-1.5 after:top-1.5 after:size-1.5 after:rounded-full after:content-['']",
                       isOpen !== saved.has(k) && (isOpen ? "after:bg-st-gold-text" : "after:bg-st-ink"),
                     )}
