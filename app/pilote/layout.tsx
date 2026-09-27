@@ -9,6 +9,7 @@ import { PiloteTabBar } from "@/components/pilote/PiloteTabBar";
 import { MetarChip } from "@/components/pilote/MetarChip";
 import { ChartePiloteGate } from "@/components/pilote/ChartePiloteGate";
 import { piloteLegalStatus } from "@/lib/pilote/legal";
+import { CHARTE_VERSION } from "@/lib/pilote/charte";
 
 export const metadata: Metadata = {
   title: "Fly Horizons · Espace pilote",
@@ -36,13 +37,15 @@ export default async function PiloteLayout({ children }: { children: React.React
   const admin = createAdminClient();
   const { data: pilote } = await admin
     .from("pilotes")
-    .select("id, nom, statut, conditions_accepted_at, licence_numero, licence_expiration, medical_expiration, medical_classe, docs_status, docs_verified_at")
+    .select("id, nom, statut, conditions_accepted_at, conditions_version, licence_numero, licence_expiration, medical_expiration, medical_classe, docs_status, docs_verified_at")
     .eq("user_id", user.id)
     .maybeSingle();
   if (!pilote || pilote.statut !== "actif") redirect("/");
 
-  // Charte pilote non encore acceptée : on bloque l'espace derrière le popup.
-  const charteRequise = !pilote.conditions_accepted_at;
+  // Charte non acceptée, ou acceptée dans une version antérieure : on bloque
+  // l'espace derrière le popup (CHARTE_VERSION change = nouvelle acceptation).
+  const charteMiseAJour = !!pilote.conditions_accepted_at && pilote.conditions_version !== CHARTE_VERSION;
+  const charteRequise = !pilote.conditions_accepted_at || charteMiseAJour;
 
   // Compte invité sans mot de passe : le middleware le garde sur
   // /pilote/mot-de-passe ; on retire la navigation, qui ne mènerait nulle part.
@@ -53,7 +56,7 @@ export default async function PiloteLayout({ children }: { children: React.React
         <main className="flex-1 px-4 pb-10 pt-[calc(2.5rem+env(safe-area-inset-top))] sm:px-6">
           {children}
         </main>
-        {charteRequise && <ChartePiloteGate />}
+        {charteRequise && <ChartePiloteGate updated={charteMiseAJour} />}
       </div>
     );
   }
@@ -121,7 +124,7 @@ export default async function PiloteLayout({ children }: { children: React.React
         isAdmin={profile?.role === "admin"}
         badges={{ "/pilote/vols": volsATraiter ?? 0, "/pilote/profil": profilAlerts }}
       />
-      {charteRequise && <ChartePiloteGate />}
+      {charteRequise && <ChartePiloteGate updated={charteMiseAJour} />}
     </div>
   );
 }

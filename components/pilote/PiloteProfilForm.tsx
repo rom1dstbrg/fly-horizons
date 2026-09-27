@@ -3,7 +3,8 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Check, AlertCircle, Upload, KeyRound, IdCard, User, Mail, Settings, Plus, X } from "lucide-react";
+import { Check, AlertCircle, Upload, KeyRound, IdCard, User, Mail, Settings, Plus, X, FileText } from "lucide-react";
+import { ChartePiloteGate } from "@/components/pilote/ChartePiloteGate";
 import { updateMyPiloteProfile, uploadPiloteProfilPhoto } from "@/lib/actions/pilote-profil";
 import { piloteLegalStatus } from "@/lib/pilote/legal";
 import { QUALIF_TYPES, defaultExpiry, type Qualification } from "@/lib/pilote/qualifications";
@@ -201,6 +202,7 @@ export function PiloteProfilForm({ pilote, documentsSlot, initialTab }: {
   const [photoError, setPhotoError] = useState("");
   const photoInputRef = useRef<HTMLInputElement>(null);
   const verified = !!pilote.docs_verified_at;
+  const [showCharte, setShowCharte] = useState(false);
 
   const [form, setForm] = useState({
     bio: pilote.bio ?? "",
@@ -474,12 +476,17 @@ export function PiloteProfilForm({ pilote, documentsSlot, initialTab }: {
                     Changer mon mot de passe
                   </Link>
                 </SettingRow>
-                <SettingRow title="Charte pilote" desc="Acceptée à votre premier accès.">
-                  <p className="pt-0.5 text-[14px] text-st-text">
-                    {pilote.conditions_accepted_at
-                      ? `Acceptée le ${new Date(pilote.conditions_accepted_at).toLocaleDateString("fr-BE", { day: "numeric", month: "long", year: "numeric" })}${pilote.conditions_version ? ` (version ${pilote.conditions_version})` : ""}`
-                      : "Non acceptée"}
-                  </p>
+                <SettingRow title="Charte pilote" desc="Les règles que vous avez acceptées pour voler avec Fly Horizons.">
+                  <div className="space-y-2.5">
+                    <p className="pt-0.5 text-[14px] text-st-text">
+                      {pilote.conditions_accepted_at
+                        ? `Acceptée le ${new Date(pilote.conditions_accepted_at).toLocaleDateString("fr-BE", { day: "numeric", month: "long", year: "numeric" })}${pilote.conditions_version ? ` (version du ${pilote.conditions_version.split("-").reverse().join("/")})` : ""}`
+                        : "Non acceptée"}
+                    </p>
+                    <Button variant="secondary" onClick={() => setShowCharte(true)}>
+                      <FileText /> Relire la charte
+                    </Button>
+                  </div>
                 </SettingRow>
               </div>
             )}
@@ -500,6 +507,7 @@ export function PiloteProfilForm({ pilote, documentsSlot, initialTab }: {
           )}
         </div>
       </div>
+      {showCharte && <ChartePiloteGate onClose={() => setShowCharte(false)} />}
     </form>
   );
 }

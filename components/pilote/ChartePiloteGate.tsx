@@ -7,10 +7,13 @@ import { Button } from "@/components/pilote/studio";
 import { acceptCharte } from "@/lib/actions/pilote-profil";
 import { CHARTE_PILOTE_TITRE, CHARTE_PILOTE_TEXTE } from "@/lib/pilote/charte";
 
-// Bloc A · item 6 — popup obligatoire au premier accès. Le bouton d'acceptation
-// ne s'active qu'une fois le texte lu jusqu'en bas. Non fermable autrement.
+// Bloc A · item 6 — popup obligatoire au premier accès, et à chaque nouvelle
+// version de la charte (`updated`). Le bouton d'acceptation ne s'active qu'une
+// fois le texte lu jusqu'en bas ; non fermable autrement. `onClose` : mode
+// relecture (profil → Compte), même fenêtre avec un simple bouton Fermer.
 
-export function ChartePiloteGate() {
+export function ChartePiloteGate({ updated = false, onClose }: { updated?: boolean; onClose?: () => void } = {}) {
+  const readOnly = !!onClose;
   const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [reachedEnd, setReachedEnd] = useState(false);
@@ -36,12 +39,24 @@ export function ChartePiloteGate() {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-st-ink/30 backdrop-blur-[1.5px] sm:items-center sm:p-4">
-      <div className="flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[26px] bg-white pb-[env(safe-area-inset-bottom)] shadow-st-panel sm:max-h-[calc(100dvh-2rem)] sm:rounded-[22px] sm:pb-0">
+    <div
+      className="fixed inset-0 z-[100] flex items-end justify-center bg-st-ink/30 backdrop-blur-[1.5px] sm:items-center sm:p-4"
+      onClick={readOnly ? onClose : undefined}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        onClick={(e) => e.stopPropagation()}
+        className="flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[26px] bg-white pb-[env(safe-area-inset-bottom)] shadow-st-panel sm:max-h-[calc(100dvh-2rem)] sm:rounded-[22px] sm:pb-0"
+      >
         <div className="shrink-0 px-6 pb-3 pt-5">
           <h2 className="text-lg font-semibold tracking-[-0.01em] text-st-text">{CHARTE_PILOTE_TITRE}</h2>
           <p className="mt-0.5 text-[13px] text-st-muted">
-            Merci de lire cette charte jusqu&apos;au bout avant de rejoindre l&apos;espace pilote.
+            {readOnly
+              ? "La charte que vous avez acceptée."
+              : updated
+                ? "La charte a été mise à jour. Merci de la relire jusqu'au bout et de l'accepter pour continuer."
+                : "Merci de lire cette charte jusqu'au bout avant de rejoindre l'espace pilote."}
           </p>
         </div>
 
@@ -53,6 +68,11 @@ export function ChartePiloteGate() {
           {CHARTE_PILOTE_TEXTE}
         </div>
 
+        {readOnly ? (
+          <div className="shrink-0 px-6 py-4">
+            <Button fullWidth size="lg" variant="secondary" className="sm:h-[38px] sm:text-[13px]" onClick={onClose}>Fermer</Button>
+          </div>
+        ) : (
         <div className="shrink-0 space-y-2 px-6 py-4">
           {error && <p className="text-[12.5px] text-st-bad">{error}</p>}
           {!reachedEnd && (
@@ -63,6 +83,7 @@ export function ChartePiloteGate() {
             J&apos;ai lu et j&apos;accepte la charte
           </Button>
         </div>
+        )}
       </div>
     </div>
   );

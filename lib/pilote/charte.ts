@@ -6,7 +6,7 @@
 // Toute modification de fond du texte doit s'accompagner d'un changement de
 // CHARTE_VERSION, ce qui redemandera l'acceptation à chaque pilote.
 
-export const CHARTE_VERSION = "2026-09";
+export const CHARTE_VERSION = "2026-09-27";
 
 export const CHARTE_PILOTE_TITRE = "Charte du pilote Fly Horizons";
 
@@ -16,7 +16,9 @@ export const CHARTE_PILOTE_TEXTE = `Fly Horizons met en relation des passagers e
 Vous êtes seul commandant de bord. Vous assumez l'entière responsabilité de la préparation, de la conduite et de la sécurité de chaque vol qui vous est attribué, y compris la décision de partir ou non selon la météo, l'état de l'appareil et votre propre forme du jour.
 
 2. Licences et aptitude
-Vous déclarez détenir une licence en cours de validité, un certificat médical valide et les qualifications nécessaires au vol envisagé, et rester dans les limites d'expérience récente exigées par la réglementation. Vous tenez à jour dans votre profil les numéros et dates d'expiration correspondants. Un profil incomplet ou une date dépassée vous rend inéligible à toute attribution de vol.
+Vous déclarez détenir une licence en cours de validité, un certificat médical valide et les qualifications nécessaires au vol envisagé. Vous envoyez depuis votre profil une copie de votre licence (page de la qualification SEP comprise) et de votre certificat médical. Fly Horizons les vérifie, relève les dates de validité, puis supprime les fichiers : seule la trace de la vérification est conservée. À chaque renouvellement, vous envoyez le nouveau document. Une date dépassée vous rend inéligible à toute attribution de vol.
+
+Vous restez dans les limites d'expérience récente exigées par la réglementation, en particulier au moins 3 décollages et 3 atterrissages dans les 90 jours précédant tout vol avec passagers. C'est à vous de le vérifier avant chaque vol.
 
 3. Cadre du partage de frais
 Les vols proposés relèvent du partage de frais entre personnes non professionnelles. Le montant demandé au passager ne peut couvrir que les coûts directs du vol, votre part de pilote incluse, sans marge bénéficiaire. La part restant à votre charge ne peut pas descendre sous le seuil réglementaire applicable au partage de frais.
@@ -34,7 +36,7 @@ Vous contactez le passager, convenez du créneau, transmettez les informations p
 Les coordonnées du passager vous sont communiquées uniquement pour organiser son vol. Vous ne les utilisez à aucune autre fin, vous ne les transmettez à personne et vous ne les conservez pas au delà de ce qui est nécessaire au vol et à son suivi immédiat.
 
 8. Engagements pris
-Un vol que vous acceptez est un engagement. Vous ne le rendez que dans le délai prévu par l'espace pilote, et au delà de ce délai vous prévenez Fly Horizons par téléphone. Vous ne modifiez pas un créneau déjà convenu pour votre seule convenance.
+Un vol que vous acceptez est un engagement. Vous ne le rendez en ligne qu'au moins 3 jours avant le vol ; au delà, vous prévenez Fly Horizons par téléphone. Vous ne modifiez pas un créneau déjà convenu pour votre seule convenance.
 
 9. Annulation
 Seul Fly Horizons annule un vol auprès du passager. Si un vol ne peut pas se tenir, vous en faites la demande à Fly Horizons plutôt que de l'annuler vous-même.

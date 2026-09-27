@@ -260,6 +260,24 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-09-27 (6) · Charte pilote, version du 27/09</p>
+      <h3>Charte mise à jour et redemandée à tous les pilotes ; relisible depuis le profil</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>La charte ne reflétait plus le fonctionnement (justificatifs vérifiés puis supprimés, expérience récente, délai de 3 jours).
+          Et changer <code>CHARTE_VERSION</code> ne redemandait rien : l'espace ne vérifiait que la présence d'une acceptation.</dd>
+        <dt>Décision</dt>
+        <dd>Point 2 réécrit (justificatifs, renouvellement, 3 décollages et 3 atterrissages en 90 jours), point 8 précisé (3 jours).
+          Version <code>2026-09-27</code>. L'espace pilote bloque aussi quand la version acceptée n'est pas la version en cours
+          (popup « La charte a été mise à jour »). Profil → Compte : « Relire la charte », même popup en lecture seule.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Modifier le texte sans nouvelle acceptation (pas de preuve que le pilote a lu la version en vigueur).</dd>
+        <dt>Conséquences</dt>
+        <dd>Tous les pilotes, Romain compris, réacceptent la charte à leur prochaine visite. Toujours sans avis d'avocat.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-09-27 (5) · Le pilote envoie, Romain relève</p>
       <h3>Licence, SEP et médical saisis uniquement par Romain à la vérification ; qualifications en liste</h3>
       <dl>
@@ -1344,6 +1362,16 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-09-27 (15) — Charte : relecture et nouvelle version</h3>
+      <ul>
+        <li>Profil → Compte : date et version d'acceptation, bouton « Relire la charte » (popup de la charte en lecture seule).</li>
+        <li><code>ChartePiloteGate</code> : modes acceptation / mise à jour / relecture. Layout pilote : une version acceptée différente
+          de <code>CHARTE_VERSION</code> redemande l'acceptation.</li>
+        <li>Texte de la charte mis à jour (points 2 et 8), version <code>2026-09-27</code>.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-09-27 (14) — Le pilote envoie, Romain relève ; qualifications en liste</h3>
