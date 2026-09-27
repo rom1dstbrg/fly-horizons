@@ -62,6 +62,26 @@ function Panel({ title, desc, children }: { title: string; desc?: React.ReactNod
   );
 }
 
+// Une ligne par réglage (façon pages de réglages Nexus / Vercel) : nom et
+// explication à gauche (1/3), champ à droite (2/3), filet fin entre les lignes.
+// Tous les champs démarrent sur la même verticale. Téléphone : empilé.
+function SettingRow({ title, desc, htmlFor, children }: {
+  title: string;
+  desc?: React.ReactNode;
+  htmlFor?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="grid gap-2.5 py-5 first:pt-0 last:pb-0 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] md:gap-10">
+      <div>
+        <label htmlFor={htmlFor} className="text-[13.5px] font-semibold text-st-text">{title}</label>
+        {desc && <p className="mt-0.5 text-[12.5px] leading-snug text-st-muted">{desc}</p>}
+      </div>
+      <div className="min-w-0">{children}</div>
+    </div>
+  );
+}
+
 export function PiloteProfilForm({ pilote, documentsSlot, initialTab }: {
   pilote: Pilote;
   documentsSlot?: React.ReactNode;
@@ -284,8 +304,8 @@ export function PiloteProfilForm({ pilote, documentsSlot, initialTab }: {
             )}
 
             {tab === "profil" && (
-              <Panel title="Profil" desc="Photo et bio : affichées sur vos annonces et sur la page du vol du client.">
-                <FormField id="p-photo" label="Photo" error={photoError || undefined}>
+              <div className="divide-y divide-st-line-soft">
+                <SettingRow title="Photo" desc="Affichée sur vos annonces et sur la page du vol du client.">
                   <div className="flex items-center gap-3">
                     {form.photo_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -300,56 +320,57 @@ export function PiloteProfilForm({ pilote, documentsSlot, initialTab }: {
                       {!uploadingPhoto && <Upload />} {form.photo_url ? "Changer la photo" : "Envoyer une photo"}
                     </Button>
                   </div>
-                </FormField>
-                <div className="grid gap-3.5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-                  <FormField id="p-bio" label="Bio courte">
-                    <Textarea id="p-bio" className="min-h-32 resize-y" value={form.bio} onChange={set("bio")} placeholder="Pilote en formation ATPL, basé à Charleroi…" />
-                  </FormField>
-                  <div className="space-y-3.5">
-                    <FormField id="p-tel" label="Téléphone" hint="Pour que Romain et vos clients puissent vous joindre.">
-                      <Input id="p-tel" type="tel" value={form.telephone} onChange={set("telephone")} placeholder="+32 4xx xx xx xx" />
-                    </FormField>
-                    <FormField id="p-iban" label="IBAN" hint="Vos clients d'annonces vous paient dessus : un QR de virement est généré pour eux.">
-                      <Input id="p-iban" value={form.iban} onChange={set("iban")} placeholder="BE.. .... .... ...." />
-                    </FormField>
-                  </div>
-                </div>
-              </Panel>
+                  {photoError && <p className="mt-2 text-[12.5px] text-st-bad">{photoError}</p>}
+                </SettingRow>
+                <SettingRow title="Présentation" htmlFor="p-bio" desc="Quelques lignes sur vous, affichées avec votre photo.">
+                  <Textarea id="p-bio" className="min-h-32 resize-y" value={form.bio} onChange={set("bio")} placeholder="Pilote en formation ATPL, basé à Charleroi…" />
+                </SettingRow>
+                <SettingRow title="Téléphone" htmlFor="p-tel" desc="Pour que Romain et vos clients puissent vous joindre.">
+                  <Input id="p-tel" type="tel" className="max-w-sm" value={form.telephone} onChange={set("telephone")} placeholder="+32 4xx xx xx xx" />
+                </SettingRow>
+                <SettingRow title="IBAN" htmlFor="p-iban" desc="Les clients de vos annonces vous paient dessus, avec un QR de virement.">
+                  <Input id="p-iban" className="max-w-sm" value={form.iban} onChange={set("iban")} placeholder="BE.. .... .... ...." />
+                </SettingRow>
+              </div>
             )}
 
             {tab === "emails" && (
-              <Panel title="Emails aux clients" desc="Ajoutée en bas des messages que vous envoyez depuis l'espace pilote.">
-                <div className="max-w-2xl">
-                  <FormField id="p-signature" label="Signature" hint="Vide : signature par défaut (nom · Pilote · téléphone).">
-                    <Textarea
-                      id="p-signature"
-                      className="min-h-28 resize-y"
-                      value={form.signature}
-                      onChange={set("signature")}
-                      placeholder={`${pilote.nom} · Pilote${form.telephone ? ` · ${form.telephone}` : ""}`}
-                    />
-                  </FormField>
-                </div>
-              </Panel>
+              <div className="divide-y divide-st-line-soft">
+                <SettingRow
+                  title="Signature"
+                  htmlFor="p-signature"
+                  desc="Ajoutée en bas des messages que vous envoyez aux clients. Vide : nom · Pilote · téléphone."
+                >
+                  <Textarea
+                    id="p-signature"
+                    className="min-h-28 resize-y"
+                    value={form.signature}
+                    onChange={set("signature")}
+                    placeholder={`${pilote.nom} · Pilote${form.telephone ? ` · ${form.telephone}` : ""}`}
+                  />
+                </SettingRow>
+              </div>
             )}
 
             {tab === "compte" && (
-              <Panel title="Compte">
-                <div className="max-w-2xl space-y-4">
-                  <SheetRows>
-                    <SheetRow label="Email de connexion">{pilote.email}</SheetRow>
-                    <SheetRow label="Charte pilote">
-                      {pilote.conditions_accepted_at
-                        ? `Acceptée le ${new Date(pilote.conditions_accepted_at).toLocaleDateString("fr-BE", { day: "numeric", month: "long", year: "numeric" })}${pilote.conditions_version ? ` (version ${pilote.conditions_version})` : ""}`
-                        : "Non acceptée"}
-                    </SheetRow>
-                  </SheetRows>
-                  <Link href="/pilote/mot-de-passe" className="inline-flex items-center gap-2.5 rounded-[12px] border border-st-line bg-white px-4 py-2.5 text-[13.5px] font-medium text-st-text transition-colors hover:bg-st-surface">
-                    <KeyRound size={16} className="text-st-muted" />
+              <div className="divide-y divide-st-line-soft">
+                <SettingRow title="Email de connexion" desc="Pour changer d'adresse, contactez Romain.">
+                  <p className="pt-0.5 text-[14px] text-st-text">{pilote.email}</p>
+                </SettingRow>
+                <SettingRow title="Mot de passe">
+                  <Link href="/pilote/mot-de-passe" className="inline-flex items-center gap-2.5 rounded-[11px] border border-st-line bg-white px-4 py-2 text-[13px] font-[550] text-st-text shadow-st-sm transition-colors hover:bg-st-surface">
+                    <KeyRound size={15} className="text-st-muted" />
                     Changer mon mot de passe
                   </Link>
-                </div>
-              </Panel>
+                </SettingRow>
+                <SettingRow title="Charte pilote" desc="Acceptée à votre premier accès.">
+                  <p className="pt-0.5 text-[14px] text-st-text">
+                    {pilote.conditions_accepted_at
+                      ? `Acceptée le ${new Date(pilote.conditions_accepted_at).toLocaleDateString("fr-BE", { day: "numeric", month: "long", year: "numeric" })}${pilote.conditions_version ? ` (version ${pilote.conditions_version})` : ""}`
+                      : "Non acceptée"}
+                  </p>
+                </SettingRow>
+              </div>
             )}
           </div>
 
