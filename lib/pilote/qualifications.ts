@@ -1,5 +1,6 @@
-// Qualifications du pilote hors SEP (la SEP est relevée par Romain sur la
-// licence). Module neutre : utilisé par le profil (client) et l'action serveur.
+// Qualifications déclarées par le pilote. La SEP y figure aussi (2 ans), mais
+// l'éligibilité se base sur la date relevée par Romain sur la licence
+// (pilotes.licence_expiration). Module neutre : profil (client) et action serveur.
 // Durées de validité usuelles EASA ; la date calculée reste modifiable.
 
 export interface Qualification {
@@ -10,6 +11,7 @@ export interface Qualification {
 }
 
 export const QUALIF_TYPES: { key: string; label: string; months: number | null }[] = [
+  { key: "SEP", label: "SEP (monomoteur à pistons)", months: 24 },
   { key: "MEP", label: "MEP (multimoteur à pistons)", months: 12 },
   { key: "IR_SE", label: "IR monomoteur", months: 12 },
   { key: "IR_ME", label: "IR multimoteur", months: 12 },

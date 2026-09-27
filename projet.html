@@ -1351,7 +1351,8 @@
         <li>Onglet Licence : 2 étapes (envoyer les justificatifs, vérification par Romain), Justificatifs en premier, licence / SEP / médical
           en lecture seule avec pastilles (« Après vérification », « À compléter par Romain », Valable, Expire bientôt, Expiré).</li>
         <li><code>piloteLegalStatus</code> : avant vérification, seule l'alerte des justificatifs ; après, les valeurs manquantes ne bloquent plus.</li>
-        <li>Autres qualifications : liste avec expiration calculée (<code>lib/pilote/qualifications.ts</code>), visible dans le tiroir admin.
+        <li>Qualifications : liste avec expiration calculée (SEP 2 ans, MEP et IR 1 an ; <code>lib/pilote/qualifications.ts</code>), visible dans le tiroir admin.
+          La SEP de la liste est déclarative ; l'éligibilité reste basée sur la SEP relevée par Romain.
           Migration <code>20260927b_pilote_qualifications.sql</code>.</li>
       </ul>
     </div>

@@ -168,7 +168,7 @@ function QualificationsEditor({ value, onChange }: { value: Qualification[]; onC
           })}
         </div>
       )}
-      <Button variant="secondary" size="sm" onClick={() => onChange([...value, { type: "MEP", label: null, obtenue: null, expire: null }])}>
+      <Button variant="secondary" size="sm" onClick={() => onChange([...value, { type: value.some((q) => q.type === "SEP") ? "MEP" : "SEP", label: null, obtenue: null, expire: null }])}>
         <Plus /> Ajouter une qualification
       </Button>
     </div>
@@ -415,8 +415,8 @@ export function PiloteProfilForm({ pilote, documentsSlot, initialTab }: {
                   </SettingRow>
 
                   <SettingRow
-                    title="Autres qualifications"
-                    desc="Facultatif. L'expiration se calcule à partir de la date d'obtention (MEP et IR : 1 an), vous pouvez la corriger."
+                    title="Qualifications"
+                    desc="L'expiration se calcule à partir de la date d'obtention ou de prorogation (SEP : 2 ans, MEP et IR : 1 an), vous pouvez la corriger."
                   >
                     <QualificationsEditor value={qualifications} onChange={(q) => { setQualifications(q); setSaved(false); }} />
                   </SettingRow>

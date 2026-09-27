@@ -253,7 +253,7 @@ function DocumentsTab({ pilote }: { pilote: Pilote }) {
             {missing(pilote.medical_classe ? CLASSE[pilote.medical_classe] : null)}
             {pilote.medical_expiration && <span className="text-st-muted"> · jusqu&apos;au {fr(pilote.medical_expiration)}</span>}
           </SheetRow>
-          <SheetRow label="Autres qualifications">
+          <SheetRow label="Qualifications">
             {Array.isArray(pilote.qualifications) && pilote.qualifications.length
               ? pilote.qualifications.map((q) => `${qualifLabel(q)}${q.expire ? ` (${fr(q.expire)})` : ""}`).join(", ")
               : <span className="text-st-muted">Aucune</span>}
