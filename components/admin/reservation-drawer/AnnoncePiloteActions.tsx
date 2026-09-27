@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { CheckCircle2, Clock, Banknote, Send, XCircle, PlaneLanding, Download } from "lucide-react";
-import { Badge, Button, Input } from "@/components/pilote/studio";
+import Link from "next/link";
+import { Check, Clock, Banknote, Send, PlaneLanding, Download, Receipt } from "lucide-react";
+import { Button, Input } from "@/components/pilote/studio";
 import {
   setPilotePaye,
   renvoyerLienVirement,
@@ -12,6 +13,8 @@ import {
 import { brusselsTimestamp } from "@/lib/utils";
 import type { PendingAction } from "./ConfirmActionDialog";
 import { PaiementRecuForm, type PaiementMode } from "@/components/pilote/PaiementRecuForm";
+import { EtatBadge, PartageFrais, paiementDetail } from "@/components/pilote/PaiementUI";
+import { etatPaiement, todayBrussels } from "@/lib/pilote/transactions-shared";
 
 const VOL_EFFECTUE_DELAI_MS = 8 * 60 * 60 * 1000;
 
@@ -24,6 +27,11 @@ interface Props {
   statut: string;
   piloteePaye: boolean;
   montant: number | null;
+  /** Date à laquelle le paiement a été marqué reçu (pilote_paye_at). */
+  payeLe?: string | null;
+  /** Coût total du vol et part du pilote (annonce), pour la barre du partage. */
+  cout?: number | null;
+  part?: number | null;
   dateVol: string;
   heureVol: string | null;
   viewerRole?: "admin" | "pilote";
@@ -38,6 +46,9 @@ export function AnnoncePiloteActions({
   statut,
   piloteePaye,
   montant,
+  payeLe = null,
+  cout = null,
+  part = null,
   dateVol,
   heureVol,
   viewerRole = "pilote",
@@ -89,30 +100,45 @@ export function AnnoncePiloteActions({
     );
   }
 
-  // Style Studio (24/09) : bloc « Règlement » de l'onglet Aperçu du tiroir.
+  // Bloc « Règlement » de l'onglet Aperçu du tiroir, aligné sur la page
+  // Transactions (27/09) : même pastille d'état, montant en bloc gris, barre du
+  // partage des frais, mêmes boutons et même confirmation du montant.
+  const today = todayBrussels();
+  const etat = etatPaiement({ pilote_paye: piloteePaye, statut, date_vol: dateVol, acompte: montant }, today);
+  const detail = paiementDetail({ etat, payeLe, montant, date: dateVol }, today);
+
   return (
-    <div className="space-y-3 rounded-[16px] border border-st-line p-3.5">
+    <div className="space-y-3.5 rounded-[16px] border border-st-line p-3.5">
       <div className="flex items-center justify-between gap-2">
         <p className="text-[13px] font-semibold text-st-text">Règlement</p>
-        {piloteePaye ? <Badge tone="success" dot>Reçu</Badge> : <Badge tone="warning" dot>En attente</Badge>}
+        <EtatBadge etat={etat} />
       </div>
 
-      <p className="text-[12.5px] leading-snug text-st-text-2">
+      <div className="rounded-[14px] bg-st-surface p-3.5">
+        <p className="text-[12.5px] text-st-muted">Montant du passager</p>
         {montant != null ? (
           <>
-            <b className="font-semibold text-st-text">{montant} €</b> à régler par le client directement sur votre IBAN.
-            Fly Horizons n&apos;encaisse rien.
+            <p className="st-num mt-0.5 text-[26px] font-medium leading-tight tracking-[-0.03em] text-st-text">
+              {montant.toLocaleString("fr-BE", { maximumFractionDigits: 2 })} €
+            </p>
+            <p className="mt-0.5 text-[12.5px] text-st-muted">
+              {etat === "recu" ? detail : `${detail} · virement direct sur votre IBAN, Fly Horizons n'encaisse rien`}
+            </p>
           </>
         ) : (
-          "Prix pas encore fixé : le groupe de cette annonce (vente à la place) n'est pas encore complet. Clôturez-le depuis « Mes annonces » pour figer le prix de chaque passager."
+          <p className="mt-1 text-[12.5px] leading-snug text-st-text-2">
+            Prix pas encore fixé : le groupe de cette annonce (vente à la place) n&apos;est pas complet. Clôturez-le depuis « Mes annonces » pour figer le prix de chaque passager.
+          </p>
         )}
-      </p>
+      </div>
+
+      {cout != null && part != null && <PartageFrais cout={cout} part={part} />}
 
       {msg && (
         <p className={`rounded-[10px] px-3 py-2 text-[12.5px] font-medium ${msg.ok ? "bg-st-ok-soft text-st-ok" : "bg-st-bad-soft text-st-bad"}`}>{msg.text}</p>
       )}
 
-      {!cancelled && !done && confirmMode && montant != null && !piloteePaye && (
+      {!cancelled && !done && montant != null && !piloteePaye && (confirmMode ? (
         <PaiementRecuForm
           mode={confirmMode}
           montantPrevu={montant}
@@ -120,49 +146,31 @@ export function AnnoncePiloteActions({
           onCancel={() => setConfirmMode(null)}
           onConfirm={(m) => marquerPaye(confirmMode, m)}
         />
-      )}
-
-      {!cancelled && !done && !confirmMode && (
-        <div className="flex flex-wrap gap-2">
-          {montant != null && (piloteePaye ? (
-            <Button
-              variant="secondary"
-              size="sm"
-              loading={isPending}
-              onClick={() => run(() => setPilotePaye(reservationId, false), "Paiement remis en attente", () => onFieldsChange?.(reservationId, { pilote_paye: false }))}
-            >
-              Annuler « payé »
+      ) : (
+        <div className="space-y-2">
+          <Button fullWidth disabled={isPending} onClick={() => { setMsg(null); setConfirmMode("virement"); }}>
+            <Check />Marquer comme reçu
+          </Button>
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="secondary" disabled={isPending} onClick={() => { setMsg(null); setConfirmMode("especes"); }}>
+              <Banknote />En espèces
             </Button>
-          ) : (
-            <>
-              <Button size="sm" disabled={isPending} onClick={() => setConfirmMode("virement")} className="flex-1">
-                <CheckCircle2 /> Le client m&apos;a payé
-              </Button>
-              <Button variant="secondary" size="sm" disabled={isPending} onClick={() => setConfirmMode("especes")}>
-                <Banknote /> En espèces
-              </Button>
-            </>
-          ))}
-          {!piloteePaye && montant != null && (
-            <Button variant="secondary" size="sm" disabled={isPending} onClick={() => run(() => renvoyerLienVirement(reservationId), "Lien de paiement renvoyé ✓")}>
-              <Send /> Renvoyer le lien
+            <Button variant="secondary" disabled={isPending} onClick={() => run(() => renvoyerLienVirement(reservationId), "Lien de paiement renvoyé ✓")}>
+              <Send />Renvoyer le lien
             </Button>
-          )}
-          {!piloteePaye && (
-            <Button
-              variant="danger"
-              size="sm"
-              disabled={isPending}
-              onClick={() => {
-                const go = () => run(() => cancelAnnonceDemande(reservationId), "Demande annulée, annonce remise en vente", () => onStatusChange?.(reservationId, "annulee"));
-                if (ask) ask({ title: "Annuler cette demande ?", consequences: ["La demande passe en « Annulée » et les places sont remises en vente sur votre annonce.", "Aucun email n'est envoyé : prévenez le client par message."], confirmLabel: "Annuler la demande", danger: true, run: go });
-                else go();
-              }}
-            >
-              <XCircle /> Annuler la demande
-            </Button>
-          )}
+          </div>
         </div>
+      ))}
+
+      {!cancelled && !done && piloteePaye && montant != null && (
+        <Button
+          variant="secondary"
+          fullWidth
+          loading={isPending}
+          onClick={() => run(() => setPilotePaye(reservationId, false), "Paiement remis en attente", () => onFieldsChange?.(reservationId, { pilote_paye: false }))}
+        >
+          Remettre en attente
+        </Button>
       )}
 
       {piloteePaye && !done && !cancelled && (
@@ -190,10 +198,35 @@ export function AnnoncePiloteActions({
         )
       )}
 
-      {(piloteePaye || done) && (
-        <a href={`/api/invoice/reservation/${reservationId}`} className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-st-ink hover:underline">
-          <Download size={14} /> Reçu client (PDF)
-        </a>
+      {(piloteePaye || done || viewerRole === "pilote") && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+          {(piloteePaye || done) && (
+            <a href={`/api/invoice/reservation/${reservationId}`} className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-st-ink hover:underline">
+              <Download size={14} /> Reçu client (PDF)
+            </a>
+          )}
+          {viewerRole === "pilote" && (
+            <Link href="/pilote/transactions" className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-st-ink hover:underline">
+              <Receipt size={14} /> Mes transactions
+            </Link>
+          )}
+        </div>
+      )}
+
+      {/* Action destructrice : petit lien rouge centré, avec sa confirmation. */}
+      {!cancelled && !done && !piloteePaye && !confirmMode && (
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() => {
+            const go = () => run(() => cancelAnnonceDemande(reservationId), "Demande annulée, annonce remise en vente", () => onStatusChange?.(reservationId, "annulee"));
+            if (ask) ask({ title: "Annuler cette demande ?", consequences: ["La demande passe en « Annulée » et les places sont remises en vente sur votre annonce.", "Aucun email n'est envoyé : prévenez le client par message."], confirmLabel: "Annuler la demande", danger: true, run: go });
+            else go();
+          }}
+          className="block w-full cursor-pointer text-center text-[12.5px] font-[550] text-st-bad hover:underline disabled:opacity-50"
+        >
+          Annuler la demande
+        </button>
       )}
     </div>
   );

@@ -1387,6 +1387,18 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-27 (19) — Bloc « Règlement » du tiroir aligné sur Transactions</h3>
+      <ul>
+        <li><code>AnnoncePiloteActions</code> : même pastille d'état (Reçu / En attente / À relancer), montant du passager en bloc gris avec
+          « reçu le … » ou « vol fait il y a … », barre du partage des frais (annonce chargée par Mes vols), mêmes boutons que Transactions
+          (« Marquer comme reçu » plein, « En espèces » | « Renvoyer le lien »), « Remettre en attente », « Annuler la demande » en petit lien
+          rouge centré, lien « Mes transactions » côté pilote.</li>
+        <li><code>components/pilote/PaiementUI.tsx</code> : <code>EtatBadge</code>, <code>PartageFrais</code>, <code>paiementDetail</code>,
+          une seule source pour Transactions et le tiroir.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-27 (18) — Paiement confirmé avec le montant reçu ; onglet « Tout » dans Mes vols</h3>
       <ul>
         <li>« Marquer comme reçu » et « En espèces » ouvrent <code>PaiementRecuForm</code> : montant prévu prérempli, modifiable, puis « Confirmer ».

@@ -17,7 +17,7 @@ export default async function PiloteVolsPage({ searchParams }: { searchParams: P
   const { data: reservations } = pilote
     ? await admin
         .from("reservations")
-        .select("*, clients(*), pilotes(nom), route_proposals(status, created_at)")
+        .select("*, clients(*), pilotes(nom), route_proposals(status, created_at), annonces_pilote(prix_total, part_pilote, mode_vente)")
         .eq("pilote_id", pilote.id)
         .neq("type_resa", "perso")
         .order("date_vol", { ascending: true })

@@ -55,6 +55,8 @@ export interface DrawerReservation {
   pilote_assigned_at?: string | null;
   pilote_declaration_at?: string | null;
   annonce_id?: string | null;
+  /** Annonce d'origine (coût total du vol, part du pilote) — chargée par Mes vols. */
+  annonces_pilote?: { prix_total: number; part_pilote: number; mode_vente?: "avion" | "place" } | null;
   pilotes?: { nom: string; iban?: string | null; paylink?: string | null } | null;
 
   // Modèle A — le pilote encaisse en direct (Bloc D)

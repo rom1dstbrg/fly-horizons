@@ -2,19 +2,20 @@
 
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Banknote, Check, Clock, Download, ExternalLink, Receipt, Send } from "lucide-react";
+import { Banknote, Check, Download, ExternalLink, Receipt, Send } from "lucide-react";
 import { setPilotePaye, renvoyerLienVirement } from "@/lib/actions/pilote-paiement";
 import {
   bilanTransactions, formatMinutes, ordreVols,
-  type PaiementEtat, type PiloteTransaction,
+  type PiloteTransaction,
 } from "@/lib/pilote/transactions-shared";
 import {
-  Badge, Button, ButtonLabel, buttonClasses, Card, CardSplit, DateTile, EmptyState, LinkButton, Metric, PageHeader, Segmented,
+  Button, ButtonLabel, buttonClasses, Card, CardSplit, DateTile, EmptyState, LinkButton, Metric, PageHeader, Segmented,
   Sheet, SheetBody, SheetFooter, SheetHeader, SheetHero, SheetRow, SheetRows,
   Table, TableCell, TableHeaderCell, TableRow, TableSearch,
 } from "@/components/pilote/studio";
 import { cn } from "@/lib/utils";
 import { PaiementRecuForm, type PaiementMode } from "./PaiementRecuForm";
+import { EtatBadge, PartageFrais, paiementDetail } from "./PaiementUI";
 
 // Page « Transactions » du pilote (maquette validée le 27/09, option B) : une
 // grande carte en haut (reçu dans l'année, mini graphique par mois, puis
@@ -26,46 +27,9 @@ const MOIS = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
 const eur = (v: number | null, d = 0) =>
   v == null ? "—" : v.toLocaleString("fr-BE", { minimumFractionDigits: d, maximumFractionDigits: 2 }) + " €";
 const pct = (a: number, b: number) => (b > 0 ? Math.round((a / b) * 100) : 0);
-const frDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("fr-BE", { day: "2-digit", month: "2-digit", timeZone: "Europe/Brussels" });
 const longDate = (d: string) =>
   new Date(d + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "short", day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Brussels" });
 const plural = (n: number, s: string) => `${n} ${s}${n > 1 ? "s" : ""}`;
-
-export function EtatBadge({ etat }: { etat: PaiementEtat }) {
-  if (etat === "recu") return <Badge tone="success"><Check className="size-3" />Reçu</Badge>;
-  if (etat === "relance") return <Badge tone="warning"><AlertTriangle className="size-3" />À relancer</Badge>;
-  return <Badge tone="neutral"><Clock className="size-3" />En attente</Badge>;
-}
-
-function etatDetail(t: PiloteTransaction, today: string): string {
-  if (t.etat === "recu") return t.payeLe ? `reçu le ${frDate(t.payeLe)}` : "reçu";
-  if (t.montant == null) return "prix fixé à la clôture du groupe";
-  if (t.etat === "attente") return `vol le ${frDate(t.date + "T12:00:00Z")}`;
-  const jours = Math.round((new Date(today + "T12:00:00Z").getTime() - new Date(t.date + "T12:00:00Z").getTime()) / 86400000);
-  return jours <= 0 ? "vol fait aujourd'hui" : `vol fait il y a ${plural(jours, "jour")}`;
-}
-
-// Barre du partage des frais d'un vol : passagers en navy, pilote en or.
-function PartageFrais({ cout, part }: { cout: number; part: number }) {
-  const pax = Math.max(0, cout - part);
-  return (
-    <div>
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <p className="text-[13px] font-semibold text-st-text">Partage des frais du vol</p>
-        <span className="st-num text-[12.5px] text-st-muted">{eur(cout)}</span>
-      </div>
-      <div className="flex h-2.5 gap-0.5 overflow-hidden rounded-full">
-        {pax > 0 && <span className="bg-st-ink" style={{ flex: pax }} />}
-        {part > 0 && <span className="bg-st-gold" style={{ flex: part }} />}
-      </div>
-      <div className="mt-2 flex flex-wrap justify-between gap-x-4 gap-y-1 text-[12px] text-st-text-2">
-        <span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-[3px] bg-st-ink" />Passagers <b className="st-num font-semibold text-st-text">{eur(pax)}</b></span>
-        <span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-[3px] bg-st-gold" />Vous <b className="st-num font-semibold text-st-text">{eur(part)} · {pct(part, cout)} %</b></span>
-      </div>
-    </div>
-  );
-}
 
 export function PiloteTransactionsClient({ rows, today }: { rows: PiloteTransaction[]; today: string }) {
   const router = useRouter();
@@ -247,7 +211,7 @@ export function PiloteTransactionsClient({ rows, today }: { rows: PiloteTransact
               <TableCell>
                 <div className="flex flex-col items-start gap-1 max-sm:items-end">
                   <EtatBadge etat={t.etat} />
-                  <span className="text-[12px] text-st-muted max-sm:hidden">{etatDetail(t, today)}</span>
+                  <span className="text-[12px] text-st-muted max-sm:hidden">{paiementDetail(t, today)}</span>
                 </div>
               </TableCell>
             </TableRow>
@@ -260,7 +224,7 @@ export function PiloteTransactionsClient({ rows, today }: { rows: PiloteTransact
           <>
             <SheetHeader title={t.client} subtitle={t.titre} leading={<DateTile date={t.date} today={t.date === today} />} onClose={close} />
             <SheetBody>
-              <SheetHero label="Montant du passager" aside={<EtatBadge etat={t.etat} />} hint={etatDetail(t, today)}>
+              <SheetHero label="Montant du passager" aside={<EtatBadge etat={t.etat} />} hint={paiementDetail(t, today)}>
                 {eur(t.montant, 0)}
               </SheetHero>
               {t.cout != null && t.part != null && <PartageFrais cout={t.cout} part={t.part} />}
