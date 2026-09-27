@@ -260,6 +260,22 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-09-27 (4) · Plus de déclaration avant vol</p>
+      <h3>La vérification des documents par Romain suffit ; l'expérience récente reste un rappel</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Romain vérifie licence, SEP et médical en amont (page de vérification) ; la carte à cocher dans chaque vol faisait doublon à ses yeux.</dd>
+        <dt>Décision</dt>
+        <dd>Carte « Déclaration avant vol » retirée du tiroir d'un vol, action serveur supprimée. Remplace le point C des décisions précédentes.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Garder une seule case discrète par vol (trace de l'expérience récente et de l'assurance, qui dépendent du vol) : proposée, non retenue pour l'instant.</dd>
+        <dt>Conséquences</dt>
+        <dd>Expérience récente et assurance passagers ne sont plus confirmées nulle part : rappel dans le profil et le guide seulement.
+          Colonne <code>reservations.pilote_declaration_at</code> inutilisée.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-09-27 (3) · Renouvellement des documents pilote</p>
       <h3>Après vérification, les dates ne changent que par un nouveau document validé par Romain</h3>
       <dl>
@@ -1307,6 +1323,14 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-09-27 (13) — Déclaration avant vol retirée</h3>
+      <ul>
+        <li>Plus de carte « Déclaration avant vol » dans le tiroir d'un vol (pilote et admin) ; <code>PreflightDeclarationBlock</code>
+          et <code>lib/actions/pilote-declaration.ts</code> supprimés. Profil et guide : l'expérience récente est à vérifier par le pilote lui-même.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-09-27 (12) — Onglet Licence repensé pour un pilote qui découvre le système</h3>

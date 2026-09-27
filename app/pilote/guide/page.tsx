@@ -105,7 +105,7 @@ export default function PiloteGuidePage() {
           "Contactez le passager et convenez du créneau.",
           "Tracez la route et envoyez-la au passager, qui la valide ou demande une modification.",
           "Préparez la masse et centrage et les performances dans l'onglet M&B.",
-          "Avant le vol, faites la déclaration dans le vol : 3 décollages et atterrissages en 90 jours, SEP et médical valides, avion assuré.",
+          "Avant le vol : vérifiez votre expérience récente (3 décollages et atterrissages en 90 jours) et l'assurance passagers de l'avion.",
           "Le jour J : météo, décision de partir ou non, accueil du passager.",
           "Après le vol : mettez à jour son statut dans Mes vols (et le paiement pour une annonce).",
         ]} />
@@ -117,7 +117,7 @@ export default function PiloteGuidePage() {
           <li><strong className="text-st-text">Un vol accepté est un engagement.</strong> Vous pouvez le rendre en ligne jusqu&apos;à 3 jours avant. Plus tard, appelez Romain.</li>
           <li><strong className="text-st-text">Seul Fly Horizons annule</strong> un vol auprès du passager. Si le vol ne peut pas se faire, prévenez Romain.</li>
           <li><strong className="text-st-text">Un créneau convenu ne bouge pas</strong> pour votre seule convenance.</li>
-          <li><strong className="text-st-text">Expérience récente.</strong> Au moins 3 décollages et 3 atterrissages dans les 90 jours avant chaque vol avec passagers (FCL.060) : à vérifier vous-même, à confirmer dans la déclaration avant vol.</li>
+          <li><strong className="text-st-text">Expérience récente.</strong> Au moins 3 décollages et 3 atterrissages dans les 90 jours avant chaque vol avec passagers (FCL.060) : à vérifier vous-même avant chaque vol.</li>
           <li><strong className="text-st-text">Appareil autorisé et assuré</strong>, avec l&apos;assurance passagers en vigueur.</li>
           <li><strong className="text-st-text">Les coordonnées des passagers</strong> servent uniquement à organiser leur vol : ne les transmettez pas, ne les gardez pas.</li>
         </ul>

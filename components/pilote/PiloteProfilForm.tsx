@@ -403,7 +403,7 @@ export function PiloteProfilForm({ pilote, documentsSlot, initialTab }: {
                   <SettingRow title="Expérience récente" desc="Règle FCL.060, à vérifier vous-même avant chaque vol.">
                     <p className="text-[13px] leading-relaxed text-st-text-2">
                       Pour emmener des passagers, vous devez avoir fait au moins <strong className="text-st-text">3 décollages et 3 atterrissages
-                      dans les 90 jours</strong> avant le vol. Vous le confirmez dans la déclaration avant vol, dans chaque vol.
+                      dans les 90 jours</strong> avant le vol. C&apos;est à vous de le vérifier avant chaque vol.
                     </p>
                   </SettingRow>
                 </div>

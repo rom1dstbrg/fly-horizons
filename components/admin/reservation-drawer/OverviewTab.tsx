@@ -130,7 +130,6 @@ export function OverviewTab({
   onGoTo,
   annonceSlot,
   assignSlot,
-  preflightSlot,
 }: {
   reservation: DrawerReservation;
   viewerRole: "admin" | "pilote";
@@ -158,8 +157,6 @@ export function OverviewTab({
   annonceSlot?: React.ReactNode;
   /** Attribution d'un pilote (admin). */
   assignSlot?: React.ReactNode;
-  /** Déclaration du pilote avant le vol. */
-  preflightSlot?: React.ReactNode;
 }) {
   const [proposing, setProposing] = useState(false);
   const isAdmin = viewerRole === "admin";
@@ -325,7 +322,6 @@ export function OverviewTab({
       )}
 
       {assignSlot}
-      {preflightSlot}
 
       {/* L'essentiel */}
       <div>
