@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { FileCheck, Mail, Plane, TriangleAlert, UserPlus } from "lucide-react";
 import { createPilote, togglePiloteActif, updatePilote, deletePilote, resendPiloteInvitation } from "@/lib/actions/pilotes";
 import { piloteLegalStatus } from "@/lib/pilote/legal";
+import { qualifLabel } from "@/lib/pilote/qualifications";
 import { ConfirmActionDialog, type PendingAction } from "@/components/admin/reservation-drawer/ConfirmActionDialog";
 import {
   Badge, Button, EmptyState, FormField, Input, LinkButton, PageHeader, Segmented, Sheet, SheetBody, SheetFooter,
@@ -251,6 +252,11 @@ function DocumentsTab({ pilote }: { pilote: Pilote }) {
           <SheetRow label="Médical">
             {missing(pilote.medical_classe ? CLASSE[pilote.medical_classe] : null)}
             {pilote.medical_expiration && <span className="text-st-muted"> · jusqu&apos;au {fr(pilote.medical_expiration)}</span>}
+          </SheetRow>
+          <SheetRow label="Autres qualifications">
+            {Array.isArray(pilote.qualifications) && pilote.qualifications.length
+              ? pilote.qualifications.map((q) => `${qualifLabel(q)}${q.expire ? ` (${fr(q.expire)})` : ""}`).join(", ")
+              : <span className="text-st-muted">Aucune</span>}
           </SheetRow>
         </SheetRows>
 

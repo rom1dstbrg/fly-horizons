@@ -3,30 +3,22 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Check, AlertCircle, Upload, KeyRound, IdCard, User, Mail, Settings } from "lucide-react";
+import { Check, AlertCircle, Upload, KeyRound, IdCard, User, Mail, Settings, Plus, X } from "lucide-react";
 import { updateMyPiloteProfile, uploadPiloteProfilPhoto } from "@/lib/actions/pilote-profil";
 import { piloteLegalStatus } from "@/lib/pilote/legal";
+import { QUALIF_TYPES, defaultExpiry, type Qualification } from "@/lib/pilote/qualifications";
 import type { ProfilTab } from "@/lib/pilote/profil-tabs";
-import {
-  Badge, Button, FormField, Input, PillTabs, Select, StatCard, StatGrid, Textarea,
-} from "@/components/pilote/studio";
+import { Badge, Button, Input, PillTabs, Select, StatCard, StatGrid, Textarea } from "@/components/pilote/studio";
 import { cn } from "@/lib/utils";
 import type { Pilote } from "@/types/database";
 
 // Profil pilote (27/09), même mise en page que « Mes vols » : chiffres clés en
 // haut, puis une grande carte. Bureau : menu des sections à gauche, contenu à
-// droite (champs sur deux colonnes). Téléphone : onglets à pastille au-dessus.
-// Un seul état de formulaire : « Enregistrer » sauve tout, quel que soit l'onglet.
-// Une fois vérifiés par Romain, licence / SEP / médical ne se modifient plus ici :
-// le pilote envoie le nouveau document, Romain met les dates à jour en validant.
+// droite en lignes de réglage. Téléphone : onglets à pastille au-dessus.
+// Licence, SEP et médical ne se saisissent pas ici : le pilote envoie ses
+// justificatifs, Romain relève les valeurs en les vérifiant.
 
 type LegalState = "error" | "warn" | "ok";
-
-const legalCls: Record<LegalState, string> = {
-  error: "border-st-bad focus:border-st-bad focus:ring-st-bad-soft",
-  warn: "border-st-warn focus:border-st-warn focus:ring-st-warn-soft",
-  ok: "",
-};
 
 const CLASSE: Record<string, string> = { classe1: "Classe 1", classe2: "Classe 2", lapl: "LAPL" };
 const frDate = (iso: string | null) => (iso ? iso.slice(0, 10).split("-").reverse().join("/") : "—");
@@ -34,24 +26,13 @@ const toneOf = (s: LegalState) => (s === "error" ? "bad" as const : s === "warn"
 
 const TABS: { key: ProfilTab; label: string; desc: string; icon: React.ComponentType<{ size?: number; className?: string }> }[] = [
   { key: "profil", label: "Profil", desc: "Photo, bio, contact, IBAN", icon: User },
-  { key: "licence", label: "Licence", desc: "Licence, médical, justificatifs", icon: IdCard },
+  { key: "licence", label: "Licence", desc: "Justificatifs, qualifications", icon: IdCard },
   { key: "emails", label: "Emails", desc: "Signature des messages", icon: Mail },
   { key: "compte", label: "Compte", desc: "Connexion et charte", icon: Settings },
 ];
 
-function LegalLabel({ children, state }: { children: React.ReactNode; state: LegalState }) {
-  return (
-    <span className="inline-flex flex-wrap items-center gap-1.5">
-      {children}
-      {state === "error" && <Badge tone="danger" size="sm">à compléter</Badge>}
-      {state === "warn" && <Badge tone="warning" size="sm">expire bientôt</Badge>}
-    </span>
-  );
-}
-
 // Une ligne par réglage (façon pages de réglages Nexus / Vercel) : nom et
-// explication à gauche (1/3), champ à droite (2/3), filet fin entre les lignes.
-// Tous les champs démarrent sur la même verticale. Téléphone : empilé.
+// explication à gauche (1/3), contenu à droite (2/3), filet fin entre les lignes.
 function SettingRow({ title, desc, htmlFor, children }: {
   title: string;
   desc?: React.ReactNode;
@@ -69,24 +50,23 @@ function SettingRow({ title, desc, htmlFor, children }: {
   );
 }
 
-// Pastille d'état d'une valeur légale (licence, SEP, médical).
-function StateBadge({ state, empty }: { state: LegalState; empty: boolean }) {
-  if (empty) return <Badge tone="danger" size="sm">Manquant</Badge>;
+// Pastille d'état d'une valeur relevée par Romain.
+function StateBadge({ state, empty, verified }: { state: LegalState; empty: boolean; verified: boolean }) {
+  if (empty) return verified ? <Badge tone="warning" size="sm">À compléter par Romain</Badge> : <Badge size="sm">Après vérification</Badge>;
   if (state === "error") return <Badge tone="danger" size="sm">Expiré</Badge>;
   if (state === "warn") return <Badge tone="warning" size="sm">Expire bientôt</Badge>;
   return <Badge tone="success" size="sm">Valable</Badge>;
 }
 
-// Valeurs vérifiées par Romain, en lecture seule.
-function ValueList({ items }: { items: { label: string; value: string | null; state: LegalState }[] }) {
+function ValueList({ items, verified }: { items: { label: string; value: string | null; state: LegalState }[]; verified: boolean }) {
   return (
     <dl className="divide-y divide-st-line-soft rounded-[14px] border border-st-line bg-white">
       {items.map((it) => (
         <div key={it.label} className="flex items-center justify-between gap-3 px-4 py-2.5">
           <dt className="text-[13px] text-st-text-2">{it.label}</dt>
           <dd className="flex items-center gap-2 text-right text-[13.5px] font-medium text-st-text">
-            {it.value ?? "—"}
-            <StateBadge state={it.state} empty={!it.value} />
+            {it.value && <span>{it.value}</span>}
+            <StateBadge state={it.state} empty={!it.value} verified={verified} />
           </dd>
         </div>
       ))}
@@ -96,11 +76,10 @@ function ValueList({ items }: { items: { label: string; value: string | null; st
 
 type StepState = "done" | "current" | "todo" | "redo";
 
-// « Où en êtes-vous ? » : les 3 étapes pour recevoir des vols, avec la
-// prochaine action en clair (pilote qui découvre le système).
+// Étapes pour recevoir des vols, avec la prochaine action en clair.
 function Steps({ steps }: { steps: { title: string; detail: string; state: StepState }[] }) {
   return (
-    <ol className="grid gap-2.5 md:grid-cols-3">
+    <ol className="grid gap-2.5 md:grid-cols-2">
       {steps.map((st, i) => (
         <li
           key={st.title}
@@ -127,6 +106,75 @@ function Steps({ steps }: { steps: { title: string; detail: string; state: StepS
   );
 }
 
+// Liste des qualifications : type, obtenue le, expire le (calculée à partir du
+// type et de la date d'obtention, modifiable).
+function QualificationsEditor({ value, onChange }: { value: Qualification[]; onChange: (q: Qualification[]) => void }) {
+  const today = new Date().toISOString().slice(0, 10);
+  const update = (i: number, patch: Partial<Qualification>) => onChange(value.map((q, j) => (j === i ? { ...q, ...patch } : q)));
+
+  return (
+    <div className="space-y-2.5">
+      {value.length > 0 && (
+        <div className="divide-y divide-st-line-soft rounded-[14px] border border-st-line bg-white">
+          {value.map((q, i) => {
+            const months = QUALIF_TYPES.find((t) => t.key === q.type)?.months ?? null;
+            const expired = !!q.expire && q.expire < today;
+            return (
+              <div key={i} className="grid gap-2.5 p-3 sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
+                <div className="space-y-1">
+                  <p className="text-[11.5px] font-medium text-st-muted">Qualification</p>
+                  <Select
+                    aria-label="Qualification"
+                    value={q.type}
+                    onChange={(e) => update(i, { type: e.target.value, expire: defaultExpiry(e.target.value, q.obtenue) })}
+                  >
+                    {QUALIF_TYPES.map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}
+                  </Select>
+                  {q.type === "AUTRE" && (
+                    <Input aria-label="Nom de la qualification" value={q.label ?? ""} onChange={(e) => update(i, { label: e.target.value })} placeholder="Nom" />
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[11.5px] font-medium text-st-muted">Obtenue ou prorogée le</p>
+                  <Input
+                    type="date"
+                    aria-label="Obtenue le"
+                    value={q.obtenue ?? ""}
+                    onChange={(e) => update(i, { obtenue: e.target.value || null, expire: defaultExpiry(q.type, e.target.value || null) ?? q.expire })}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[11.5px] font-medium text-st-muted">
+                    {months ? `Expire le (${months % 12 === 0 ? `${months / 12} an${months > 12 ? "s" : ""}` : `${months} mois`})` : "Expire le (si applicable)"}
+                  </p>
+                  <Input
+                    type="date"
+                    aria-label="Expire le"
+                    className={expired ? "border-st-bad" : undefined}
+                    value={q.expire ?? ""}
+                    onChange={(e) => update(i, { expire: e.target.value || null })}
+                  />
+                </div>
+                <button
+                  type="button"
+                  aria-label="Retirer cette qualification"
+                  onClick={() => onChange(value.filter((_, j) => j !== i))}
+                  className="grid h-[38px] w-[38px] cursor-pointer place-items-center justify-self-end rounded-[11px] text-st-muted transition-colors hover:bg-st-surface hover:text-st-text"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      <Button variant="secondary" size="sm" onClick={() => onChange([...value, { type: "MEP", label: null, obtenue: null, expire: null }])}>
+        <Plus /> Ajouter une qualification
+      </Button>
+    </div>
+  );
+}
+
 export function PiloteProfilForm({ pilote, documentsSlot, initialTab }: {
   pilote: Pilote;
   documentsSlot?: React.ReactNode;
@@ -139,7 +187,7 @@ export function PiloteProfilForm({ pilote, documentsSlot, initialTab }: {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoError, setPhotoError] = useState("");
   const photoInputRef = useRef<HTMLInputElement>(null);
-  const locked = !!pilote.docs_verified_at;
+  const verified = !!pilote.docs_verified_at;
 
   const [form, setForm] = useState({
     bio: pilote.bio ?? "",
@@ -147,23 +195,10 @@ export function PiloteProfilForm({ pilote, documentsSlot, initialTab }: {
     telephone: pilote.telephone ?? "",
     signature: pilote.signature ?? "",
     iban: pilote.iban ?? "",
-    licence_numero: pilote.licence_numero ?? "",
-    licence_expiration: pilote.licence_expiration ?? "",
-    medical_expiration: pilote.medical_expiration ?? "",
-    medical_classe: pilote.medical_classe ?? "",
-    ratings: pilote.ratings ?? "",
   });
+  const [qualifications, setQualifications] = useState<Qualification[]>(Array.isArray(pilote.qualifications) ? pilote.qualifications : []);
 
-  // Statut recalculé en direct à partir des champs du formulaire.
-  const legal = piloteLegalStatus({
-    licence_numero: form.licence_numero || null,
-    licence_expiration: form.licence_expiration || null,
-    medical_expiration: form.medical_expiration || null,
-    medical_classe: form.medical_classe || null,
-    docs_status: pilote.docs_status,
-    docs_verified_at: pilote.docs_verified_at,
-    conditions_accepted_at: pilote.conditions_accepted_at,
-  });
+  const legal = piloteLegalStatus(pilote);
   const errors = legal.issues.filter((i) => i.severity === "error");
 
   const [tab, setTab] = useState<ProfilTab>(initialTab ?? (legal.ok ? "profil" : "licence"));
@@ -173,7 +208,7 @@ export function PiloteProfilForm({ pilote, documentsSlot, initialTab }: {
     window.history.replaceState(null, "", `?onglet=${t}`);
   }
 
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm((f) => ({ ...f, [k]: e.target.value }));
     setSaved(false);
   };
@@ -204,39 +239,32 @@ export function PiloteProfilForm({ pilote, documentsSlot, initialTab }: {
     e.preventDefault();
     setError("");
     startTransition(async () => {
-      const res = await updateMyPiloteProfile(form);
+      const res = await updateMyPiloteProfile({ ...form, qualifications });
       if (res.error) { setError(res.error); return; }
       setSaved(true);
       router.refresh();
     });
   }
 
-  const filled = !!(form.licence_numero && form.licence_expiration && form.medical_classe && form.medical_expiration);
-  const sent = pilote.docs_status === "envoyes" || pilote.docs_status === "verifies";
+  const status = pilote.docs_status;
   const steps: { title: string; detail: string; state: StepState }[] = [
     {
-      title: "Licence et médical",
-      detail: filled ? "Renseignés." : "Remplissez les champs ci-dessous, puis Enregistrer.",
-      state: filled ? "done" : "current",
-    },
-    {
-      title: "Justificatifs",
-      detail: pilote.docs_status === "refuses" ? "Refusés : renvoyez-les." : sent ? "Envoyés à Romain." : "Ajoutez une photo ou un PDF, puis envoyez-les.",
-      state: pilote.docs_status === "refuses" ? "redo" : sent ? "done" : filled ? "current" : "todo",
+      title: "Envoyer vos justificatifs",
+      detail: status === "refuses" ? "Refusés : corrigez et renvoyez-les." : status === "envoyes" || status === "verifies" ? "Envoyés à Romain." : "Licence (page SEP comprise) et certificat médical, en photo ou PDF.",
+      state: status === "refuses" ? "redo" : status === "envoyes" || status === "verifies" ? "done" : "current",
     },
     {
       title: "Vérification par Romain",
-      detail: pilote.docs_status === "verifies" ? "Faite : vous pouvez recevoir des vols." : pilote.docs_status === "envoyes" ? "En cours. Vous recevrez un email." : "Après l'envoi des justificatifs.",
-      state: pilote.docs_status === "verifies" ? "done" : pilote.docs_status === "envoyes" ? "current" : "todo",
+      detail: status === "verifies" ? "Faite : vous pouvez recevoir des vols." : status === "envoyes" ? "En cours : il relève vos dates. Vous recevrez un email." : "Après votre envoi.",
+      state: status === "verifies" ? "done" : status === "envoyes" ? "current" : "todo",
     },
   ];
-  const allVerified = locked && pilote.docs_status === "verifies";
 
   const docsLabel =
-    pilote.docs_status === "verifies" ? "Vérifiés"
-    : pilote.docs_status === "envoyes" ? (locked ? "Nouveau document envoyé" : "En vérification")
-    : pilote.docs_status === "refuses" ? "Refusés" : "À envoyer";
-  const docsTone = pilote.docs_status === "verifies" || (pilote.docs_status === "envoyes" && locked) ? undefined : pilote.docs_status === "envoyes" ? "warn" as const : "bad" as const;
+    status === "verifies" ? "Vérifiés"
+    : status === "envoyes" ? (verified ? "Nouveau document envoyé" : "En vérification")
+    : status === "refuses" ? "Refusés" : "À envoyer";
+  const docsTone = status === "verifies" || (status === "envoyes" && verified) ? undefined : status === "envoyes" ? "warn" as const : "bad" as const;
 
   return (
     <form onSubmit={submit} className="space-y-5">
@@ -247,22 +275,22 @@ export function PiloteProfilForm({ pilote, documentsSlot, initialTab }: {
           tone={legal.ok ? "ok" : "bad"}
           hint={legal.ok ? "Vous pouvez recevoir des vols" : "Aucun vol en attendant"}
         />
-        <StatCard label="Qualification SEP" value={frDate(form.licence_expiration || null)} tone={toneOf(stateOf("licence_expiration"))} hint="Valable jusqu'au" />
+        <StatCard label="Qualification SEP" value={frDate(pilote.licence_expiration)} tone={toneOf(stateOf("licence_expiration"))} hint="Valable jusqu'au" />
         <StatCard
           label="Certificat médical"
-          value={frDate(form.medical_expiration || null)}
+          value={frDate(pilote.medical_expiration)}
           tone={toneOf(stateOf("medical_expiration"))}
-          hint={form.medical_classe ? `${CLASSE[form.medical_classe]}, valable jusqu'au` : "Classe à renseigner"}
+          hint={pilote.medical_classe ? `${CLASSE[pilote.medical_classe]}, valable jusqu'au` : "Relevé par Romain"}
         />
         <StatCard
-          label="Documents"
+          label="Justificatifs"
           value={docsLabel}
           tone={docsTone}
           hint={pilote.docs_verified_at ? `Vérifiés le ${frDate(pilote.docs_verified_at)}` : "Vérifiés par Romain"}
         />
       </StatGrid>
 
-      {!legal.ok && (
+      {errors.length > 0 && (
         <div className="flex gap-2.5 rounded-[14px] bg-st-bad-soft px-4 py-3 text-[13px] text-st-bad">
           <AlertCircle size={17} className="mt-px shrink-0" />
           <ul className="space-y-0.5">
@@ -313,103 +341,6 @@ export function PiloteProfilForm({ pilote, documentsSlot, initialTab }: {
         {/* Contenu de la section */}
         <div className="rounded-[20px] border border-st-line bg-white shadow-st-sm">
           <div className="p-4 sm:p-6">
-            {tab === "licence" && (
-              <div className="space-y-6">
-                {allVerified ? (
-                  <p className="rounded-[14px] bg-st-ok-soft px-4 py-3 text-[13px] text-st-ok">
-                    Tout est vérifié{pilote.docs_verified_at ? ` depuis le ${frDate(pilote.docs_verified_at)}` : ""}. Quand vous renouvelez
-                    votre médical ou votre SEP, envoyez le nouveau document dans « Justificatifs » : Romain mettra la date à jour.
-                  </p>
-                ) : (
-                  <div className="space-y-2.5">
-                    <p className="text-[13.5px] font-semibold text-st-text">Pour recevoir des vols, 3 étapes</p>
-                    <Steps steps={steps} />
-                  </div>
-                )}
-
-                <div className="divide-y divide-st-line-soft">
-                  <SettingRow
-                    title="Licence et SEP"
-                    htmlFor="p-licence"
-                    desc="Le numéro de votre licence, et la date de fin de validité de votre qualification SEP (avion monomoteur à pistons)."
-                  >
-                    {locked ? (
-                      <div className="space-y-2">
-                        <ValueList items={[
-                          { label: "Numéro de licence", value: pilote.licence_numero, state: stateOf("licence_numero") },
-                          { label: "SEP valable jusqu'au", value: pilote.licence_expiration ? frDate(pilote.licence_expiration) : null, state: stateOf("licence_expiration") },
-                        ]} />
-                        <p className="text-[12px] text-st-muted">Vérifié par Romain. SEP prolongée : envoyez la nouvelle page dans « Justificatifs ».</p>
-                      </div>
-                    ) : (
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <FormField id="p-licence" label={<LegalLabel state={stateOf("licence_numero")}>Numéro de licence</LegalLabel>}>
-                          <Input id="p-licence" className={legalCls[stateOf("licence_numero")]} value={form.licence_numero} onChange={set("licence_numero")} placeholder="BE.FCL.PPL…." />
-                        </FormField>
-                        <FormField id="p-licexp" label={<LegalLabel state={stateOf("licence_expiration")}>SEP valable jusqu&apos;au</LegalLabel>}>
-                          <Input id="p-licexp" type="date" className={legalCls[stateOf("licence_expiration")]} value={form.licence_expiration} onChange={set("licence_expiration")} />
-                        </FormField>
-                      </div>
-                    )}
-                  </SettingRow>
-
-                  <SettingRow
-                    title="Certificat médical"
-                    htmlFor="p-medclasse"
-                    desc="La classe (1, 2 ou LAPL) et la date de fin de validité inscrites sur votre certificat."
-                  >
-                    {locked ? (
-                      <div className="space-y-2">
-                        <ValueList items={[
-                          { label: "Classe", value: pilote.medical_classe ? CLASSE[pilote.medical_classe] : null, state: stateOf("medical_classe") },
-                          { label: "Valable jusqu'au", value: pilote.medical_expiration ? frDate(pilote.medical_expiration) : null, state: stateOf("medical_expiration") },
-                        ]} />
-                        {!pilote.medical_classe ? (
-                          <p className="text-[12.5px] font-medium text-st-bad">
-                            La classe manque : envoyez votre certificat médical dans « Justificatifs », Romain la complétera.
-                          </p>
-                        ) : (
-                          <p className="text-[12px] text-st-muted">Vérifié par Romain. Nouveau médical : envoyez-le dans « Justificatifs ».</p>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <FormField id="p-medclasse" label={<LegalLabel state={stateOf("medical_classe")}>Classe</LegalLabel>}>
-                          <Select id="p-medclasse" className={legalCls[stateOf("medical_classe")]} value={form.medical_classe} onChange={set("medical_classe")}>
-                            <option value="">Choisir</option>
-                            <option value="classe1">Classe 1</option>
-                            <option value="classe2">Classe 2</option>
-                            <option value="lapl">LAPL</option>
-                          </Select>
-                        </FormField>
-                        <FormField id="p-medexp" label={<LegalLabel state={stateOf("medical_expiration")}>Valable jusqu&apos;au</LegalLabel>}>
-                          <Input id="p-medexp" type="date" className={legalCls[stateOf("medical_expiration")]} value={form.medical_expiration} onChange={set("medical_expiration")} />
-                        </FormField>
-                      </div>
-                    )}
-                  </SettingRow>
-
-                  <SettingRow
-                    title="Justificatifs"
-                    desc="Une photo ou un PDF de votre licence (page SEP comprise) et de votre certificat médical. Romain les vérifie puis les supprime : seule la date de vérification est gardée."
-                  >
-                    {documentsSlot}
-                  </SettingRow>
-
-                  <SettingRow title="Autres qualifications" htmlFor="p-ratings" desc="Facultatif : vol de nuit, IR, radio…">
-                    <Input id="p-ratings" className="max-w-md" value={form.ratings} onChange={set("ratings")} placeholder="Night, IR, Radio FR/EN" />
-                  </SettingRow>
-
-                  <SettingRow title="Expérience récente" desc="Règle FCL.060, à vérifier vous-même avant chaque vol.">
-                    <p className="text-[13px] leading-relaxed text-st-text-2">
-                      Pour emmener des passagers, vous devez avoir fait au moins <strong className="text-st-text">3 décollages et 3 atterrissages
-                      dans les 90 jours</strong> avant le vol. C&apos;est à vous de le vérifier avant chaque vol.
-                    </p>
-                  </SettingRow>
-                </div>
-              </div>
-            )}
-
             {tab === "profil" && (
               <div className="divide-y divide-st-line-soft">
                 <SettingRow title="Photo" desc="Affichée sur vos annonces et sur la page du vol du client.">
@@ -438,6 +369,65 @@ export function PiloteProfilForm({ pilote, documentsSlot, initialTab }: {
                 <SettingRow title="IBAN" htmlFor="p-iban" desc="Les clients de vos annonces vous paient dessus, avec un QR de virement.">
                   <Input id="p-iban" className="max-w-sm" value={form.iban} onChange={set("iban")} placeholder="BE.. .... .... ...." />
                 </SettingRow>
+              </div>
+            )}
+
+            {tab === "licence" && (
+              <div className="space-y-6">
+                {status === "verifies" && legal.ok ? (
+                  <p className="rounded-[14px] bg-st-ok-soft px-4 py-3 text-[13px] text-st-ok">
+                    Tout est vérifié{pilote.docs_verified_at ? ` depuis le ${frDate(pilote.docs_verified_at)}` : ""}. Nouveau médical ou SEP
+                    prolongée : envoyez le document dans « Justificatifs », Romain mettra la date à jour.
+                  </p>
+                ) : (
+                  <div className="space-y-2.5">
+                    <p className="text-[13.5px] font-semibold text-st-text">Pour recevoir des vols</p>
+                    <Steps steps={steps} />
+                  </div>
+                )}
+
+                <div className="divide-y divide-st-line-soft">
+                  <SettingRow
+                    title="Justificatifs"
+                    desc="Une photo ou un PDF de votre licence (page SEP comprise) et de votre certificat médical. Romain les vérifie puis les supprime : seule la date de vérification est gardée."
+                  >
+                    {documentsSlot}
+                  </SettingRow>
+
+                  <SettingRow title="Licence et SEP" desc="Relevées par Romain sur votre licence. La SEP (avion monomoteur à pistons) est valable 2 ans.">
+                    <ValueList
+                      verified={verified}
+                      items={[
+                        { label: "Numéro de licence", value: pilote.licence_numero, state: stateOf("licence_numero") },
+                        { label: "SEP valable jusqu'au", value: pilote.licence_expiration ? frDate(pilote.licence_expiration) : null, state: stateOf("licence_expiration") },
+                      ]}
+                    />
+                  </SettingRow>
+
+                  <SettingRow title="Certificat médical" desc="Relevé par Romain sur votre certificat.">
+                    <ValueList
+                      verified={verified}
+                      items={[
+                        { label: "Classe", value: pilote.medical_classe ? CLASSE[pilote.medical_classe] : null, state: stateOf("medical_classe") },
+                        { label: "Valable jusqu'au", value: pilote.medical_expiration ? frDate(pilote.medical_expiration) : null, state: stateOf("medical_expiration") },
+                      ]}
+                    />
+                  </SettingRow>
+
+                  <SettingRow
+                    title="Autres qualifications"
+                    desc="Facultatif. L'expiration se calcule à partir de la date d'obtention (MEP et IR : 1 an), vous pouvez la corriger."
+                  >
+                    <QualificationsEditor value={qualifications} onChange={(q) => { setQualifications(q); setSaved(false); }} />
+                  </SettingRow>
+
+                  <SettingRow title="Expérience récente" desc="Règle FCL.060, à vérifier vous-même avant chaque vol.">
+                    <p className="text-[13px] leading-relaxed text-st-text-2">
+                      Pour emmener des passagers, vous devez avoir fait au moins <strong className="text-st-text">3 décollages et 3 atterrissages
+                      dans les 90 jours</strong> avant le vol.
+                    </p>
+                  </SettingRow>
+                </div>
               </div>
             )}
 

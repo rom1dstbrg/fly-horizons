@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireSelfActivePilote } from "./auth-guards";
 import { CHARTE_VERSION } from "@/lib/pilote/charte";
+import { QUALIF_TYPES, type Qualification } from "@/lib/pilote/qualifications";
 import sharp from "sharp";
 
 const MAX_PHOTO_SIZE = 12 * 1024 * 1024; // 12 Mo avant compression
@@ -16,14 +17,11 @@ export type PiloteProfilInput = {
   telephone?: string | null;
   signature?: string | null;
   iban?: string | null;
-  licence_numero?: string | null;
-  licence_expiration?: string | null; // 'YYYY-MM-DD' ou ''
-  medical_expiration?: string | null;
-  medical_classe?: string | null;
-  ratings?: string | null;
+  qualifications?: Qualification[];
 };
 
-const MEDICAL_CLASSES = ["classe1", "classe2", "lapl"];
+// Licence, SEP et médical ne passent jamais par ici : Romain les relève sur les
+// justificatifs en les vérifiant (verifyPiloteDocuments, décision 27/09).
 
 const clean = (v: string | null | undefined) => {
   const s = (v ?? "").trim();
@@ -43,20 +41,16 @@ export async function updateMyPiloteProfile(input: PiloteProfilInput) {
     const { piloteId } = await requireSelfActivePilote();
     const db = createAdminClient();
 
-    const medicalClasse = clean(input.medical_classe);
-    if (medicalClasse && !MEDICAL_CLASSES.includes(medicalClasse)) return { error: "Classe médicale invalide" };
-
-    const next = {
-      licence_numero: clean(input.licence_numero),
-      licence_expiration: cleanDate(input.licence_expiration),
-      medical_expiration: cleanDate(input.medical_expiration),
-      medical_classe: medicalClasse,
-    };
-
-    // Déjà vérifiés : ces champs ne changent plus que par un nouveau document,
-    // que Romain valide (verifyPiloteDocuments). On les ignore ici.
-    const { data: current } = await db.from("pilotes").select("docs_verified_at").eq("id", piloteId).single();
-    const locked = !!current?.docs_verified_at;
+    const types = new Set(QUALIF_TYPES.map((t) => t.key));
+    const qualifications = (input.qualifications ?? []).slice(0, 12).map((q) => {
+      if (!types.has(q.type)) throw new Error("Qualification invalide");
+      return {
+        type: q.type,
+        label: q.type === "AUTRE" ? clean(q.label)?.slice(0, 60) ?? null : null,
+        obtenue: cleanDate(q.obtenue),
+        expire: cleanDate(q.expire),
+      };
+    });
 
     const { error } = await db
       .from("pilotes")
@@ -66,8 +60,7 @@ export async function updateMyPiloteProfile(input: PiloteProfilInput) {
         telephone: clean(input.telephone),
         signature: clean(input.signature),
         iban: clean(input.iban),
-        ...(locked ? {} : next),
-        ratings: clean(input.ratings),
+        qualifications,
       })
       .eq("id", piloteId);
 
@@ -76,7 +69,8 @@ export async function updateMyPiloteProfile(input: PiloteProfilInput) {
     revalidatePath("/pilote");
     return { success: true };
   } catch (e) {
-    return { error: e instanceof Error && e.message === "Date invalide" ? "Date invalide" : "Erreur serveur" };
+    const msg = e instanceof Error ? e.message : "";
+    return { error: msg === "Date invalide" || msg === "Qualification invalide" ? msg : "Erreur serveur" };
   }
 }
 

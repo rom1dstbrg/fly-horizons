@@ -56,47 +56,41 @@ export function piloteLegalStatus(p: PiloteLegalFields | null | undefined): Pilo
   const warnLimit = new Date(today);
   warnLimit.setDate(warnLimit.getDate() + WARN_DAYS);
 
-  const checkExpiry = (
-    value: string | null,
-    code: string,
-    label: string,
-    field: LegalIssue["field"],
-  ) => {
-    if (!value) {
-      issues.push({ code: `${code}_missing`, label: `${label} : date d'expiration non renseignée`, severity: "error", field });
-      return;
+  // Le pilote envoie ses justificatifs ; Romain relève licence, SEP, médical en
+  // les vérifiant (décision 27/09). Tant que rien n'est vérifié, une seule
+  // alerte : les justificatifs. Ensuite, seules les dates dépassées bloquent ;
+  // une valeur manquante est un avertissement pour Romain, pas pour le pilote.
+  if (!p.docs_verified_at) {
+    if (p.docs_status === "envoyes") {
+      issues.push({ code: "docs_pending", label: "Justificatifs en cours de vérification par Romain", severity: "error" });
+    } else if (p.docs_status === "refuses") {
+      issues.push({ code: "docs_refused", label: "Justificatifs refusés : à renvoyer", severity: "error", field: "documents" });
+    } else {
+      issues.push({ code: "docs_missing", label: "Envoyez vos justificatifs (licence et certificat médical)", severity: "error", field: "documents" });
     }
-    const d = new Date(`${value}T00:00:00`);
-    if (Number.isNaN(d.getTime())) {
-      issues.push({ code: `${code}_invalid`, label: `${label} : date invalide`, severity: "error", field });
-      return;
+  } else {
+    const checkExpiry = (value: string | null, code: string, label: string, field: LegalIssue["field"]) => {
+      const d = value ? new Date(`${value}T00:00:00`) : null;
+      if (!value || !d || Number.isNaN(d.getTime())) {
+        issues.push({ code: `${code}_missing`, label: `${label} : date à compléter par Romain`, severity: "warn", field });
+      } else if (d < today) {
+        issues.push({ code: `${code}_expired`, label: `${label} expiré le ${frDate(value)} : envoyez le nouveau document`, severity: "error", field });
+      } else if (d < warnLimit) {
+        issues.push({ code: `${code}_soon`, label: `${label} expire le ${frDate(value)}`, severity: "warn", field });
+      }
+    };
+    if (!p.licence_numero?.trim()) {
+      issues.push({ code: "licence_numero", label: "Numéro de licence à compléter par Romain", severity: "warn", field: "licence_numero" });
     }
-    if (d < today) {
-      issues.push({ code: `${code}_expired`, label: `${label} expiré le ${frDate(value)}`, severity: "error", field });
-    } else if (d < warnLimit) {
-      issues.push({ code: `${code}_soon`, label: `${label} expire le ${frDate(value)}`, severity: "warn", field });
+    checkExpiry(p.licence_expiration, "licence", "Qualification SEP", "licence_expiration");
+    checkExpiry(p.medical_expiration, "medical", "Certificat médical", "medical_expiration");
+    if (!p.medical_classe) {
+      issues.push({ code: "medical_classe", label: "Classe médicale à compléter par Romain", severity: "warn", field: "medical_classe" });
     }
-  };
-
-  if (!p.licence_numero?.trim()) {
-    issues.push({ code: "licence_numero", label: "Numéro de licence non renseigné", severity: "error", field: "licence_numero" });
-  }
-  checkExpiry(p.licence_expiration, "licence", "Qualification SEP", "licence_expiration");
-  checkExpiry(p.medical_expiration, "medical", "Certificat médical", "medical_expiration");
-  if (!p.medical_classe) {
-    issues.push({ code: "medical_classe", label: "Classe du certificat médical non renseignée", severity: "error", field: "medical_classe" });
-  }
-
-  // Renouvellement (nouveau médical, SEP prolongée) d'un pilote déjà vérifié : il
-  // reste en règle sur ses dates vérifiées pendant que Romain regarde le nouveau document.
-  if (p.docs_status === "envoyes" && p.docs_verified_at) {
-    issues.push({ code: "docs_renewal", label: "Nouveau document en cours de vérification", severity: "warn" });
-  } else if (p.docs_status === "envoyes") {
-    issues.push({ code: "docs_pending", label: "Documents en cours de vérification par Fly Horizons", severity: "error" });
-  } else if (p.docs_status === "refuses") {
-    issues.push({ code: "docs_refused", label: "Documents refusés : à renvoyer", severity: "error", field: "documents" });
-  } else if (p.docs_status !== "verifies") {
-    issues.push({ code: "docs_missing", label: "Documents à envoyer pour vérification (licence, certificat médical)", severity: "error", field: "documents" });
+    // Renouvellement : le pilote reste en règle sur ses dates vérifiées.
+    if (p.docs_status === "envoyes") {
+      issues.push({ code: "docs_renewal", label: "Nouveau document en cours de vérification", severity: "warn" });
+    }
   }
   if (!p.conditions_accepted_at) {
     issues.push({ code: "charte", label: "Charte pilote non acceptée", severity: "error" });

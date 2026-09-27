@@ -49,6 +49,7 @@ export interface Pilote {
   docs_verified_at: string | null;
   docs_note: string | null;
   ratings: string | null;
+  qualifications: import("@/lib/pilote/qualifications").Qualification[];
   conditions_accepted_at: string | null;
   conditions_version: string | null;
   bio: string | null;
