@@ -1413,6 +1413,16 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-27 (25) — Éditeur d'itinéraire : ordre d'ajout ou route optimisée</h3>
+      <ul>
+        <li>En haut de l'éditeur, deux onglets : « Ordre d'ajout » (par défaut, les points dans l'ordre des clics) et « Route optimisée »
+          (trajet le plus court depuis et vers EBCI, <code>optimizeWaypoints</code> de <code>lib/route-optimize.ts</code>), avec les km gagnés.</li>
+        <li>L'ordre d'ajout reste en mémoire : ajouter, déplacer, renommer ou retirer un point en mode optimisé le met à jour, et revenir au
+          premier onglet le rétablit. C'est l'ordre affiché qui est enregistré.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-27 (24) — Route en magenta sur les cartes pilote</h3>
       <ul>
         <li>Le pointillé or se perdait sur la carte VFR : trait plein magenta <code>#E0138C</code> (convention aviation) sur liseré blanc,

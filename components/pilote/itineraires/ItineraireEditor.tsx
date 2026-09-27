@@ -2,12 +2,13 @@
 
 import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { Save, Trash2, X } from "lucide-react";
 import type { WaypointDraft } from "@/components/admin/AdminRouteEditor";
 import { createItineraire, updateItineraire, type Itineraire } from "@/lib/actions/itineraires";
-import { Button, FormField, Input, Textarea } from "@/components/pilote/studio";
+import { Button, FormField, Input, Segmented, Textarea } from "@/components/pilote/studio";
 import { calcRouteStats } from "@/lib/route-stats";
+import { optimizeWaypoints } from "@/lib/route-optimize";
 import { toDraft } from "./ItineraireParts";
 
 // Éditeur plein écran d'un itinéraire (maquette validée le 27/09), même
@@ -20,6 +21,21 @@ const AdminRouteEditorDynamic = dynamic(
   { ssr: false, loading: () => <div className="h-full w-full animate-pulse bg-st-surface" /> },
 );
 
+type Ordre = "ajout" | "optimise";
+
+// Ordre des points (27/09) : « Ordre d'ajout » (par défaut) suit l'ordre des
+// clics ; « Route optimisée » réordonne pour le trajet le plus court depuis et
+// vers EBCI. On garde toujours l'ordre d'ajout en mémoire : revenir au premier
+// onglet le rétablit. C'est l'ordre affiché qui est enregistré.
+function optimizedOrder(points: WaypointDraft[]): number[] {
+  const parsed = points
+    .map((p, i) => ({ lat: parseFloat(p.lat), lng: parseFloat(p.lng), i }))
+    .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+  const order = optimizeWaypoints(parsed).map((p) => p.i);
+  // Points sans coordonnées valides (ne devrait pas arriver) : laissés à la fin.
+  return [...order, ...points.map((_, i) => i).filter((i) => !order.includes(i))];
+}
+
 export function ItineraireEditor({ itin, onClose, onSaved }: {
   /** null = nouvel itinéraire. */
   itin: Itineraire | null;
@@ -29,7 +45,33 @@ export function ItineraireEditor({ itin, onClose, onSaved }: {
   const [nom, setNom] = useState(itin?.nom ?? "");
   const [duree, setDuree] = useState(itin?.duree_estimee != null ? String(itin.duree_estimee) : "");
   const [notes, setNotes] = useState(itin?.notes ?? "");
-  const [points, setPoints] = useState<WaypointDraft[]>(() => (itin ? toDraft(itin) : []));
+  // `added` : les points dans l'ordre où le pilote les a posés.
+  const [added, setAdded] = useState<WaypointDraft[]>(() => (itin ? toDraft(itin) : []));
+  const [ordre, setOrdre] = useState<Ordre>("ajout");
+  const perm = useMemo(
+    () => (ordre === "optimise" ? optimizedOrder(added) : added.map((_, i) => i)),
+    [added, ordre],
+  );
+  const points = useMemo(() => perm.map((i) => added[i]), [perm, added]);
+
+  // Les modifications arrivent dans l'ordre affiché (carte, liste) : on les
+  // reporte sur l'ordre d'ajout. Ajout = en fin de liste ; retrait = l'élément
+  // qui manque ; déplacement / renommage = même longueur.
+  function setPoints(next: WaypointDraft[]) {
+    if (next.length === points.length + 1) {
+      setAdded([...added, next[next.length - 1]]);
+    } else if (next.length === points.length - 1) {
+      let k = next.findIndex((p, i) => p !== points[i]);
+      if (k === -1) k = points.length - 1;
+      setAdded(added.filter((_, i) => i !== perm[k]));
+    } else if (next.length === points.length) {
+      const copy = [...added];
+      next.forEach((p, i) => { copy[perm[i]] = p; });
+      setAdded(copy);
+    } else {
+      setAdded(next);
+    }
+  }
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -40,6 +82,8 @@ export function ItineraireEditor({ itin, onClose, onSaved }: {
   }, [onClose]);
 
   const stats = calcRouteStats(points);
+  const statsAjout = ordre === "optimise" ? calcRouteStats(added) : stats;
+  const gainKm = stats && statsAjout ? Math.round(statsAjout.distKm - stats.distKm) : 0;
 
   function save() {
     setError(null);
@@ -73,6 +117,26 @@ export function ItineraireEditor({ itin, onClose, onSaved }: {
       </div>
       <div className="flex min-h-0 flex-1 flex-col-reverse lg:grid lg:grid-cols-[340px_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)]">
         <div className="min-h-0 space-y-4 overflow-y-auto border-st-line bg-white p-4 max-lg:max-h-[48dvh] max-lg:border-t lg:border-r">
+          <div className="space-y-1.5">
+            <Segmented
+              fill
+              value={ordre}
+              onChange={setOrdre}
+              items={[
+                { key: "ajout", label: "Ordre d'ajout" },
+                { key: "optimise", label: "Route optimisée" },
+              ]}
+            />
+            <p className="text-[11.5px] leading-snug text-st-muted">
+              {ordre === "ajout"
+                ? "Les points sont suivis dans l'ordre où vous les posez."
+                : added.length < 3
+                  ? "Trajet le plus court depuis et vers EBCI (utile à partir de 3 points)."
+                  : gainKm > 0
+                    ? `Trajet le plus court depuis et vers EBCI : ${gainKm} km de moins que l'ordre d'ajout.`
+                    : "Trajet le plus court depuis et vers EBCI : l'ordre d'ajout l'était déjà."}
+            </p>
+          </div>
           {error && <p className="rounded-[12px] bg-st-bad-soft px-3.5 py-2.5 text-[13px] text-st-bad">{error}</p>}
           <FormField id="itin-nom" label="Nom">
             <Input id="itin-nom" value={nom} onChange={(e) => setNom(e.target.value)} placeholder="Ex. Lacs de l'Eau d'Heure" />
