@@ -96,6 +96,15 @@ export function bilanTransactions(rows: PiloteTransaction[]): TransactionsBilan 
   return b;
 }
 
+// Même ordre que Mes vols : les vols à venir du plus proche au plus lointain,
+// puis les vols passés (ou effectués) du plus récent au plus ancien.
+export function ordreVols(rows: PiloteTransaction[], today: string): PiloteTransaction[] {
+  const passe = (t: PiloteTransaction) => t.effectue || t.date < today;
+  const aVenir = rows.filter((t) => !passe(t)).sort((a, b) => a.date.localeCompare(b.date) || (a.heure ?? "").localeCompare(b.heure ?? ""));
+  const passes = rows.filter(passe).sort((a, b) => b.date.localeCompare(a.date) || (b.heure ?? "").localeCompare(a.heure ?? ""));
+  return [...aVenir, ...passes];
+}
+
 export function formatMinutes(min: number): string {
   const h = Math.floor(min / 60);
   const m = Math.round(min % 60);

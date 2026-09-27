@@ -45,17 +45,30 @@ function pick<T>(v: T | T[] | null | undefined): T | null {
   return Array.isArray(v) ? v[0] ?? null : v ?? null;
 }
 
-/** Le pilote (ou l'admin) confirme / infirme que le client a réglé (virement ou espèces). */
+/**
+ * Le pilote (ou l'admin) confirme / infirme que le client a réglé (virement ou espèces).
+ * `montant` : somme réellement reçue, confirmée par le pilote. Si elle diffère du
+ * montant prévu, `acompte` est corrigé (et tracé dans l'historique) : c'est ce
+ * montant qui figure ensuite partout (Transactions, relevé, reçu, email).
+ */
 export async function setPilotePaye(
   reservationId: string,
   paye: boolean,
   mode: "virement" | "especes" = "virement",
+  montant?: number,
 ) {
   try {
     const actor = await requireAdminOrOwningPilote(reservationId);
     const { db, resa } = await loadPiloteVol(reservationId);
     if (!resa) return { error: "Réservation introuvable" };
     if (!isPiloteVol(resa)) return { error: "Ce vol n'est pas géré par un pilote" };
+
+    let nouveauMontant: number | null = null;
+    if (paye && montant !== undefined) {
+      if (!Number.isFinite(montant) || montant <= 0 || montant > 100000) return { error: "Montant invalide" };
+      const arrondi = Math.round(montant * 100) / 100;
+      if (arrondi !== resa.acompte) nouveauMontant = arrondi;
+    }
 
     // Quand on marque « payé », la résa doit avancer : on la sort de
     // « payment_pending » et de tout statut de début (demande_recue / en_attente).
@@ -75,10 +88,23 @@ export async function setPilotePaye(
         pilote_paye: paye,
         pilote_paye_at: paye ? new Date().toISOString() : null,
         statut: restored,
+        ...(nouveauMontant !== null ? { acompte: nouveauMontant } : {}),
         ...(paye ? { pre_payment_statut: null, payment_token: null } : {}),
       })
       .eq("id", reservationId);
     if (error) return { error: error.message };
+
+    if (nouveauMontant !== null) {
+      await db.from("reservation_history").insert({
+        reservation_id: reservationId,
+        action: "field_changed",
+        field: "acompte",
+        old_value: resa.acompte != null ? String(resa.acompte) : null,
+        new_value: String(nouveauMontant),
+        author: actor.role === "pilote" ? `pilote:${actor.piloteNom}` : "admin",
+        note: "Montant corrigé à la confirmation du paiement",
+      });
+    }
 
     await db.from("reservation_history").insert({
       reservation_id: reservationId,
@@ -97,6 +123,7 @@ export async function setPilotePaye(
     revalidatePath("/admin/vols");
     revalidatePath("/admin/transactions");
     revalidatePath("/pilote/vols");
+    revalidatePath("/pilote/transactions");
 
     // Email « paiement confirmé » au client — optionnel, on n'échoue pas la
     // confirmation si l'envoi rate (même logique que marquerVolEffectue).
@@ -104,7 +131,8 @@ export async function setPilotePaye(
     if (paye) {
       const client = pick<{ prenom: string; nom: string; email: string }>(resa.clients);
       const pilote = pick<{ nom: string }>(resa.pilotes);
-      if (client?.email && typeof resa.acompte === "number" && resa.acompte > 0) {
+      const montantFinal = nouveauMontant ?? resa.acompte;
+      if (client?.email && typeof montantFinal === "number" && montantFinal > 0) {
         const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
           weekday: "long", day: "numeric", month: "long", year: "numeric",
         });
@@ -121,7 +149,7 @@ export async function setPilotePaye(
               heure: (resa.heure_vol ?? "").slice(0, 5),
               duree: resa.duree,
               piloteNom: pilote?.nom ?? "votre pilote",
-              montant: resa.acompte,
+              montant: montantFinal,
               receiptUrl: `${siteUrl()}/api/invoice/reservation/${reservationId}`,
             }),
           });
@@ -131,7 +159,7 @@ export async function setPilotePaye(
       }
     }
 
-    return { success: true, statut: restored, emailError };
+    return { success: true, statut: restored, emailError, acompte: nouveauMontant ?? resa.acompte };
   } catch {
     return { error: "Erreur serveur" };
   }

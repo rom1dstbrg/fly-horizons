@@ -43,10 +43,8 @@ export function PiloteVolsClient({ reservations: initial, openId }: {
   const router = useRouter();
   const [reservations, setReservations] = useState<Reservation[]>(initial);
   const [drawer, setDrawer] = useState<Reservation | null>(() => initial.find((r) => r.id === openId) ?? null);
-  const [view, setView] = useState<"avenir" | "passes">(() => {
-    const r = initial.find((x) => x.id === openId);
-    return r && isPast(r) ? "passes" : "avenir";
-  });
+  // « Tout » d'abord, comme dans Transactions (demande du 27/09).
+  const [view, setView] = useState<"tout" | "avenir" | "passes">("tout");
   const [query, setQuery] = useState("");
 
   function handleStatusChange(id: string, newStatut: string) {
@@ -89,7 +87,9 @@ export function PiloteVolsClient({ reservations: initial, openId }: {
   }
 
   const needle = query.trim().toLowerCase();
-  const rows = (view === "avenir" ? aVenir : passes).filter((r) => {
+  // Même ordre partout (Mes vols, Transactions) : les vols à venir du plus
+  // proche au plus lointain, puis les vols passés du plus récent au plus ancien.
+  const rows = (view === "tout" ? [...aVenir, ...passes] : view === "avenir" ? aVenir : passes).filter((r) => {
     if (!needle) return true;
     const hay = `${r.clients?.prenom ?? ""} ${r.clients?.nom ?? ""} ${routeCities(r) ?? ""}`.toLowerCase();
     return hay.includes(needle);
@@ -112,6 +112,7 @@ export function PiloteVolsClient({ reservations: initial, openId }: {
               value={view}
               onChange={setView}
               items={[
+                { key: "tout", label: "Tout", count: reservations.length },
                 { key: "avenir", label: "À venir", count: aVenir.length },
                 { key: "passes", label: "Passés", count: passes.length },
               ]}
@@ -134,7 +135,7 @@ export function PiloteVolsClient({ reservations: initial, openId }: {
           {rows.length === 0 ? (
             <tr>
               <td colSpan={6} className="py-10 text-center text-sm text-st-muted">
-                {needle ? "Aucun vol ne correspond." : view === "avenir" ? "Aucun vol à venir." : "Aucun vol passé."}
+                {needle ? "Aucun vol ne correspond." : view === "tout" ? "Aucun vol." : view === "avenir" ? "Aucun vol à venir." : "Aucun vol passé."}
               </td>
             </tr>
           ) : (

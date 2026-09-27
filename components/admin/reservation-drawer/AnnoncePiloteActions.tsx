@@ -11,6 +11,7 @@ import {
 } from "@/lib/actions/pilote-paiement";
 import { brusselsTimestamp } from "@/lib/utils";
 import type { PendingAction } from "./ConfirmActionDialog";
+import { PaiementRecuForm, type PaiementMode } from "@/components/pilote/PaiementRecuForm";
 
 const VOL_EFFECTUE_DELAI_MS = 8 * 60 * 60 * 1000;
 
@@ -27,7 +28,7 @@ interface Props {
   heureVol: string | null;
   viewerRole?: "admin" | "pilote";
   onStatusChange?: (id: string, statut: string) => void;
-  onFieldsChange?: (id: string, fields: { pilote_paye?: boolean }) => void;
+  onFieldsChange?: (id: string, fields: { pilote_paye?: boolean; acompte?: number | null }) => void;
   /** Fenêtre de confirmation du tiroir (annulation de la demande). */
   ask?: (a: PendingAction) => void;
 }
@@ -48,6 +49,8 @@ export function AnnoncePiloteActions({
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [dureeReelle, setDureeReelle] = useState("");
   const [showEffectue, setShowEffectue] = useState(false);
+  // Le paiement se confirme avec le montant reçu, modifiable (27/09).
+  const [confirmMode, setConfirmMode] = useState<PaiementMode | null>(null);
 
   const done = statut === "vol_effectue";
   const cancelled = statut === "annulee";
@@ -62,9 +65,9 @@ export function AnnoncePiloteActions({
   }
 
   function run(
-    fn: () => Promise<{ error?: string; success?: boolean; emailError?: boolean; statut?: string }>,
+    fn: () => Promise<{ error?: string; success?: boolean; emailError?: boolean; statut?: string; acompte?: number | null }>,
     okText: string,
-    after?: (r: { statut?: string }) => void,
+    after?: (r: { statut?: string; acompte?: number | null }) => void,
   ) {
     startTransition(async () => {
       const r = await fn();
@@ -74,12 +77,13 @@ export function AnnoncePiloteActions({
     });
   }
 
-  function marquerPaye(mode: "virement" | "especes") {
+  function marquerPaye(mode: PaiementMode, montantRecu: number) {
     run(
-      () => setPilotePaye(reservationId, true, mode),
+      () => setPilotePaye(reservationId, true, mode, montantRecu),
       mode === "especes" ? "Paiement en espèces confirmé ✓" : "Paiement confirmé ✓",
       (r) => {
-        onFieldsChange?.(reservationId, { pilote_paye: true });
+        setConfirmMode(null);
+        onFieldsChange?.(reservationId, { pilote_paye: true, ...(r.acompte !== undefined ? { acompte: r.acompte } : {}) });
         if (r.statut) onStatusChange?.(reservationId, r.statut);
       },
     );
@@ -108,7 +112,17 @@ export function AnnoncePiloteActions({
         <p className={`rounded-[10px] px-3 py-2 text-[12.5px] font-medium ${msg.ok ? "bg-st-ok-soft text-st-ok" : "bg-st-bad-soft text-st-bad"}`}>{msg.text}</p>
       )}
 
-      {!cancelled && !done && (
+      {!cancelled && !done && confirmMode && montant != null && !piloteePaye && (
+        <PaiementRecuForm
+          mode={confirmMode}
+          montantPrevu={montant}
+          loading={isPending}
+          onCancel={() => setConfirmMode(null)}
+          onConfirm={(m) => marquerPaye(confirmMode, m)}
+        />
+      )}
+
+      {!cancelled && !done && !confirmMode && (
         <div className="flex flex-wrap gap-2">
           {montant != null && (piloteePaye ? (
             <Button
@@ -121,10 +135,10 @@ export function AnnoncePiloteActions({
             </Button>
           ) : (
             <>
-              <Button size="sm" loading={isPending} onClick={() => marquerPaye("virement")} className="flex-1">
+              <Button size="sm" disabled={isPending} onClick={() => setConfirmMode("virement")} className="flex-1">
                 <CheckCircle2 /> Le client m&apos;a payé
               </Button>
-              <Button variant="secondary" size="sm" disabled={isPending} onClick={() => marquerPaye("especes")}>
+              <Button variant="secondary" size="sm" disabled={isPending} onClick={() => setConfirmMode("especes")}>
                 <Banknote /> En espèces
               </Button>
             </>

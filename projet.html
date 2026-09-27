@@ -1387,6 +1387,18 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-27 (18) — Paiement confirmé avec le montant reçu ; onglet « Tout » dans Mes vols</h3>
+      <ul>
+        <li>« Marquer comme reçu » et « En espèces » ouvrent <code>PaiementRecuForm</code> : montant prévu prérempli, modifiable, puis « Confirmer ».
+          Même formulaire dans le tiroir des Transactions et dans le bloc Règlement du tiroir d'un vol (pilote et admin).</li>
+        <li><code>setPilotePaye(id, true, mode, montant)</code> : un montant différent corrige <code>acompte</code>, avec une ligne d'historique
+          « Montant corrigé à la confirmation du paiement » ; l'email « paiement confirmé » reprend le montant corrigé.</li>
+        <li>Mes vols : onglets Tout / À venir / Passés, « Tout » par défaut. Transactions et Mes vols trient pareil : à venir du plus proche au plus
+          lointain, puis passés du plus récent au plus ancien (<code>ordreVols</code>).</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-27 (17) — Onglet Transactions du pilote + feuille « Plus » refaite</h3>
       <ul>
         <li><code>app/pilote/transactions</code> + <code>PiloteTransactionsClient</code> : carte composite (reçu, graphique par mois, à recevoir,

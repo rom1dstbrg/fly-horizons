@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, Banknote, Check, Clock, Download, ExternalLink, Receipt, Send } from "lucide-react";
 import { setPilotePaye, renvoyerLienVirement } from "@/lib/actions/pilote-paiement";
 import {
-  bilanTransactions, formatMinutes,
+  bilanTransactions, formatMinutes, ordreVols,
   type PaiementEtat, type PiloteTransaction,
 } from "@/lib/pilote/transactions-shared";
 import {
@@ -14,6 +14,7 @@ import {
   Table, TableCell, TableHeaderCell, TableRow, TableSearch,
 } from "@/components/pilote/studio";
 import { cn } from "@/lib/utils";
+import { PaiementRecuForm, type PaiementMode } from "./PaiementRecuForm";
 
 // Page « Transactions » du pilote (maquette validée le 27/09, option B) : une
 // grande carte en haut (reçu dans l'année, mini graphique par mois, puis
@@ -80,8 +81,10 @@ export function PiloteTransactionsClient({ rows, today }: { rows: PiloteTransact
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [isPending, startTransition] = useTransition();
   const [busy, setBusy] = useState<string | null>(null);
+  // « Marquer comme reçu » / « En espèces » ouvrent d'abord la confirmation du montant.
+  const [confirmMode, setConfirmMode] = useState<PaiementMode | null>(null);
 
-  const ofYear = useMemo(() => rows.filter((r) => r.date.startsWith(year)), [rows, year]);
+  const ofYear = useMemo(() => ordreVols(rows.filter((r) => r.date.startsWith(year)), today), [rows, year, today]);
   const bilan = useMemo(() => bilanTransactions(ofYear), [ofYear]);
   const counts = {
     tout: ofYear.length,
@@ -94,7 +97,7 @@ export function PiloteTransactionsClient({ rows, today }: { rows: PiloteTransact
     (!q || r.client.toLowerCase().includes(q) || r.titre.toLowerCase().includes(q)),
   );
   const open = rows.find((r) => r.id === openId) ?? null;
-  const close = useCallback(() => { setOpenId(null); setMsg(null); }, []);
+  const close = useCallback(() => { setOpenId(null); setMsg(null); setConfirmMode(null); }, []);
   const maxMois = Math.max(...bilan.parMois, 1);
   const moisCourant = year === today.slice(0, 4) ? Number(today.slice(5, 7)) - 1 : 11;
 
@@ -105,6 +108,7 @@ export function PiloteTransactionsClient({ rows, today }: { rows: PiloteTransact
       const r = await fn();
       setBusy(null);
       if (r?.error) { setMsg({ text: "Erreur : " + r.error, ok: false }); return; }
+      setConfirmMode(null);
       setMsg({ text: r?.emailError ? `${okText} · email au client non envoyé` : okText, ok: !r?.emailError });
       router.refresh();
     });
@@ -218,7 +222,7 @@ export function PiloteTransactionsClient({ rows, today }: { rows: PiloteTransact
           {shown.length === 0 ? (
             <tr><td colSpan={4} className="py-10 text-center text-sm text-st-muted">Aucun paiement ici.</td></tr>
           ) : shown.map((t) => (
-            <TableRow key={t.id} onClick={() => { setOpenId(t.id); setMsg(null); }} selected={t.id === openId}>
+            <TableRow key={t.id} onClick={() => { setOpenId(t.id); setMsg(null); setConfirmMode(null); }} selected={t.id === openId}>
               <TableCell>
                 <div className="flex min-w-0 items-center gap-3">
                   <DateTile date={t.date} today={t.date === today} className="max-sm:hidden" />
@@ -278,13 +282,26 @@ export function PiloteTransactionsClient({ rows, today }: { rows: PiloteTransact
             </SheetBody>
             <SheetFooter>
               <div className="flex flex-col gap-2">
-                {t.etat !== "recu" && t.montant != null && (
+                {t.etat !== "recu" && t.montant != null && (confirmMode ? (
+                  <PaiementRecuForm
+                    key={`${t.id}-${confirmMode}`}
+                    mode={confirmMode}
+                    montantPrevu={t.montant}
+                    loading={busy === "paye"}
+                    onCancel={() => setConfirmMode(null)}
+                    onConfirm={(montant) => run(
+                      "paye",
+                      () => setPilotePaye(t.id, true, confirmMode, montant),
+                      confirmMode === "especes" ? "Paiement en espèces enregistré" : "Paiement marqué reçu",
+                    )}
+                  />
+                ) : (
                   <>
-                    <Button size="lg" fullWidth className="sm:h-[38px] sm:text-[13px]" loading={busy === "paye"} disabled={isPending} onClick={() => run("paye", () => setPilotePaye(t.id, true, "virement"), "Paiement marqué reçu")}>
+                    <Button size="lg" fullWidth className="sm:h-[38px] sm:text-[13px]" disabled={isPending} onClick={() => { setMsg(null); setConfirmMode("virement"); }}>
                       <Check />Marquer comme reçu
                     </Button>
                     <div className="grid grid-cols-2 gap-2">
-                      <Button variant="secondary" loading={busy === "especes"} disabled={isPending} onClick={() => run("especes", () => setPilotePaye(t.id, true, "especes"), "Paiement en espèces enregistré")}>
+                      <Button variant="secondary" disabled={isPending} onClick={() => { setMsg(null); setConfirmMode("especes"); }}>
                         <Banknote />En espèces
                       </Button>
                       <Button variant="secondary" loading={busy === "lien"} disabled={isPending} onClick={() => run("lien", () => renvoyerLienVirement(t.id), "Lien de virement renvoyé")}>
@@ -292,7 +309,7 @@ export function PiloteTransactionsClient({ rows, today }: { rows: PiloteTransact
                       </Button>
                     </div>
                   </>
-                )}
+                ))}
                 {t.etat === "recu" && (
                   <Button variant="secondary" fullWidth loading={busy === "annuler"} disabled={isPending} onClick={() => run("annuler", () => setPilotePaye(t.id, false), "Paiement remis en attente")}>
                     Remettre en attente
