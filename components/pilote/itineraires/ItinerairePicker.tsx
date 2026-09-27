@@ -5,7 +5,8 @@ import Link from "next/link";
 import { Loader2, Navigation } from "lucide-react";
 import type { Itineraire } from "@/lib/actions/itineraires";
 import { Button, SheetCloseButton } from "@/components/pilote/studio";
-import { applyFilter, FilterBar, ItinerairePreview, ItineraireRows, type DureeFilter } from "./ItineraireParts";
+import { cn } from "@/lib/utils";
+import { applyFilter, aroundFilter, dureeMax, FilterBar, fullFilter, ItinerairePreview, ItineraireRows, type DureeFilter } from "./ItineraireParts";
 
 // « Charger un itinéraire » (maquette validée le 27/09) : depuis l'onglet Route
 // d'une réservation, l'éditeur plein écran, le formulaire d'annonce. Tous les
@@ -13,9 +14,8 @@ import { applyFilter, FilterBar, ItinerairePreview, ItineraireRows, type DureeFi
 // ± 15 min autour de cette durée (vidable). Aperçu avant de charger.
 // Bureau : fenêtre centrée à deux colonnes ; téléphone : feuille du bas.
 
-function initialFilter(duree?: number | null): DureeFilter {
-  if (!duree) return { min: "", max: "", q: "" };
-  return { min: String(Math.max(0, duree - 15)), max: String(duree + 15), q: "" };
+function initialFilter(max: number, duree?: number | null): DureeFilter {
+  return duree ? aroundFilter(duree, max) : fullFilter(max);
 }
 
 export function ItinerairePicker({ open, onClose, items, loading, onApply, duree, context }: {
@@ -29,12 +29,19 @@ export function ItinerairePicker({ open, onClose, items, loading, onApply, duree
   /** Ligne sous le titre (ex. « Vol de Marie D. · sam. 4 oct. · 60 min »). */
   context?: string;
 }) {
-  const [filter, setFilter] = useState<DureeFilter>(() => initialFilter(duree));
+  const max = dureeMax(items);
+  const [filter, setFilter] = useState<DureeFilter>(() => initialFilter(max, duree));
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [wasOpen, setWasOpen] = useState(open);
   if (open !== wasOpen) {
     setWasOpen(open);
-    if (open) { setFilter(initialFilter(duree)); setSelectedId(null); }
+    if (open) { setFilter(initialFilter(max, duree)); setSelectedId(null); }
+  }
+  // La liste arrive après l'ouverture : on recale la plage sur la vraie durée max.
+  const [prevMax, setPrevMax] = useState(max);
+  if (max !== prevMax) {
+    setPrevMax(max);
+    setFilter(initialFilter(max, duree));
   }
 
   useEffect(() => {
@@ -45,8 +52,8 @@ export function ItinerairePicker({ open, onClose, items, loading, onApply, duree
   }, [open, onClose]);
 
   const shown = useMemo(
-    () => [...applyFilter(items, filter)].sort((a, b) => (a.duree_estimee ?? 9999) - (b.duree_estimee ?? 9999)),
-    [items, filter],
+    () => [...applyFilter(items, filter, max)].sort((a, b) => (a.duree_estimee ?? 9999) - (b.duree_estimee ?? 9999)),
+    [items, filter, max],
   );
   const selected = shown.find((i) => i.id === selectedId) ?? shown[0] ?? null;
 
@@ -59,7 +66,7 @@ export function ItinerairePicker({ open, onClose, items, loading, onApply, duree
         aria-modal="true"
         aria-labelledby="itin-picker-title"
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[90dvh] w-full flex-col overflow-hidden rounded-t-[26px] bg-white pb-[env(safe-area-inset-bottom)] text-st-text shadow-st-panel motion-safe:animate-in motion-safe:slide-in-from-bottom-4 sm:max-w-[900px] sm:rounded-[20px] sm:pb-0"
+        className={cn("flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-[26px] bg-white pb-[env(safe-area-inset-bottom)] text-st-text shadow-st-panel motion-safe:animate-in motion-safe:slide-in-from-bottom-4 sm:rounded-[20px] sm:pb-0", items.length > 0 ? "sm:h-[min(820px,92dvh)] sm:max-w-[1180px]" : "sm:max-w-[480px]")}
       >
         <div className="mx-auto mt-2.5 h-1 w-[38px] shrink-0 rounded-full bg-st-line-strong sm:hidden" />
         <div className="flex shrink-0 items-center justify-between gap-3 px-5 pb-3 pt-3 sm:pt-5">
@@ -88,13 +95,13 @@ export function ItinerairePicker({ open, onClose, items, loading, onApply, duree
           </div>
         ) : (
           <>
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain border-t border-st-line-soft sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:grid-rows-[minmax(0,1fr)] sm:overflow-hidden">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain border-t border-st-line-soft sm:grid sm:grid-cols-[340px_minmax(0,1fr)] sm:grid-rows-[minmax(0,1fr)] sm:overflow-hidden">
               <div className="flex min-h-0 flex-col border-st-line-soft max-sm:border-b sm:border-r">
-                <FilterBar filter={filter} onChange={setFilter} total={items.length} shown={shown.length} withSearch={false} />
+                <FilterBar filter={filter} onChange={setFilter} max={max} total={items.length} shown={shown.length} />
                 {shown.length === 0 ? (
                   <div className="px-5 py-10 text-center">
                     <p className="text-sm text-st-text-2">Aucun itinéraire dans cette plage de durée.</p>
-                    <button type="button" onClick={() => setFilter({ min: "", max: "", q: "" })} className="mt-2 cursor-pointer text-[13px] font-semibold text-st-ink hover:underline">
+                    <button type="button" onClick={() => setFilter(fullFilter(max))} className="mt-2 cursor-pointer text-[13px] font-semibold text-st-ink hover:underline">
                       Voir tous les itinéraires
                     </button>
                   </div>
@@ -105,9 +112,7 @@ export function ItinerairePicker({ open, onClose, items, loading, onApply, duree
                 )}
               </div>
               {selected && (
-                <div className="min-h-0 sm:overflow-y-auto">
-                  <ItinerairePreview itin={selected} showPoints={false} mapClassName="h-[260px] sm:h-[380px]" />
-                </div>
+                <ItinerairePreview itin={selected} showUses={false} className="max-sm:h-[420px]" />
               )}
             </div>
             <div className="flex shrink-0 items-center gap-3 border-t border-st-line-soft px-5 py-3">

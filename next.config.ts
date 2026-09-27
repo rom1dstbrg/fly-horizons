@@ -36,7 +36,7 @@ const nextConfig: NextConfig = {
       // unsafe-eval requis uniquement en dev (fast refresh / stack traces React), jamais en prod
       `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
       "style-src 'self' 'unsafe-inline'",           // requis pour Leaflet et shadcn
-      `img-src 'self' data: blob: ${supabaseHost} server.arcgisonline.com *.basemaps.cartocdn.com`,
+      `img-src 'self' data: blob: ${supabaseHost} server.arcgisonline.com *.basemaps.cartocdn.com nwy-tiles-api.prod.newaydata.com`,
       `connect-src 'self' ${supabaseHost} wss://${supabaseHost} *.stripe.com nominatim.openstreetmap.org overpass-api.de`,
       "font-src 'self' data:",
       // Seule exception : la page de vérification des documents pilote affiche le

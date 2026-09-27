@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Search } from "lucide-react";
+import { Clock, Search } from "lucide-react";
 import type { Itineraire } from "@/lib/actions/itineraires";
 import type { WaypointDraft } from "@/components/admin/AdminRouteEditor";
 import { RoutePath } from "@/components/pilote/RoutePath";
@@ -33,37 +33,72 @@ export function distanceKm(itin: Itineraire): number | null {
   return s ? Math.round(s.distKm) : null;
 }
 
-export type DureeFilter = { min: string; max: string; q: string };
+// Filtre : texte + plage de durée [lo, hi] sur un curseur de 0 à `max`. Plage
+// complète = pas de filtre de durée (les itinéraires sans durée restent visibles).
+export type DureeFilter = { lo: number; hi: number; q: string };
+const STEP = 5;
 
-export function applyFilter(items: Itineraire[], f: DureeFilter): Itineraire[] {
-  const lo = parseInt(f.min, 10);
-  const hi = parseInt(f.max, 10);
+export function dureeMax(items: Itineraire[]): number {
+  const longest = Math.max(0, ...items.map((i) => i.duree_estimee ?? 0));
+  return Math.max(120, Math.ceil(longest / 15) * 15);
+}
+
+export function fullFilter(max: number): DureeFilter {
+  return { lo: 0, hi: max, q: "" };
+}
+
+/** Plage de ± 15 min autour d'une durée de vol (sélecteur ouvert depuis un vol). */
+export function aroundFilter(duree: number, max: number): DureeFilter {
+  return { lo: Math.max(0, duree - 15), hi: Math.min(max, duree + 15), q: "" };
+}
+
+export function applyFilter(items: Itineraire[], f: DureeFilter, max: number): Itineraire[] {
+  const dureeActive = f.lo > 0 || f.hi < max;
   const q = f.q.trim().toLowerCase();
   return items.filter((it) => {
     const d = it.duree_estimee;
-    // Sans durée renseignée : visible seulement quand le filtre de durée est vide.
-    if (Number.isFinite(lo) && (d == null || d < lo)) return false;
-    if (Number.isFinite(hi) && (d == null || d > hi)) return false;
+    if (dureeActive && (d == null || d < f.lo || d > f.hi)) return false;
     if (q && !`${it.nom} ${it.waypoints.map((w) => w.nom).join(" ")} ${it.notes ?? ""}`.toLowerCase().includes(q)) return false;
     return true;
   });
 }
 
-const numInput =
-  "h-9 w-[68px] rounded-[10px] border border-st-line bg-white px-2.5 text-right text-[16px] text-st-text outline-none transition-colors placeholder:text-st-muted hover:border-st-line-strong focus:border-st-ink focus:ring-4 focus:ring-st-ink-soft sm:text-[13px] st-num";
+function DureeRange({ lo, hi, max, onChange }: { lo: number; hi: number; max: number; onChange: (lo: number, hi: number) => void }) {
+  const pct = (v: number) => (v / max) * 100;
+  return (
+    <div className="st-range relative h-[22px]">
+      <div className="absolute inset-x-[11px] top-1/2 h-[5px] -translate-y-1/2 rounded-full bg-st-line-strong">
+        <div className="absolute inset-y-0 rounded-full bg-st-ink" style={{ left: `${pct(lo)}%`, right: `${100 - pct(hi)}%` }} />
+      </div>
+      <input
+        type="range" min={0} max={max} step={STEP} value={lo} aria-label="Durée minimum (minutes)"
+        onChange={(e) => onChange(Math.min(Number(e.target.value), hi - STEP), hi)}
+        // Poignées superposées au maximum : celle du minimum passe devant.
+        style={{ zIndex: lo > max - 2 * STEP ? 3 : 2 }}
+      />
+      <input
+        type="range" min={0} max={max} step={STEP} value={hi} aria-label="Durée maximum (minutes)"
+        onChange={(e) => onChange(lo, Math.max(Number(e.target.value), lo + STEP))}
+        style={{ zIndex: 2 }}
+      />
+    </div>
+  );
+}
 
-export function FilterBar({ filter, onChange, total, shown, withSearch = true }: {
+export function FilterBar({ filter, onChange, max, total, shown, withSearch = true }: {
   filter: DureeFilter;
   onChange: (f: DureeFilter) => void;
+  max: number;
   total: number;
   shown: number;
   withSearch?: boolean;
 }) {
-  const active = filter.min !== "" || filter.max !== "" || filter.q !== "";
+  const dureeActive = filter.lo > 0 || filter.hi < max;
+  const active = dureeActive || filter.q !== "";
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b border-st-line-soft px-4 py-3">
+    <div className="space-y-3 border-b border-st-line-soft px-4 pb-4 pt-3.5">
       {withSearch && (
-        <label className="relative min-w-[150px] flex-1">
+        <label className="relative block">
           <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-st-muted" />
           <input
             type="search"
@@ -71,25 +106,27 @@ export function FilterBar({ filter, onChange, total, shown, withSearch = true }:
             onChange={(e) => onChange({ ...filter, q: e.target.value })}
             placeholder="Rechercher un lieu, un nom…"
             aria-label="Rechercher un itinéraire"
-            className="h-9 w-full rounded-[10px] border border-st-line bg-white pl-9 pr-3 text-[16px] text-st-text outline-none transition-colors placeholder:text-st-muted hover:border-st-line-strong focus:border-st-ink focus:ring-4 focus:ring-st-ink-soft sm:text-[13px]"
+            className="h-10 w-full rounded-[11px] border border-st-line bg-white pl-9 pr-3 text-[16px] text-st-text outline-none transition-colors placeholder:text-st-muted hover:border-st-line-strong focus:border-st-ink focus:ring-4 focus:ring-st-ink-soft sm:text-[13px]"
           />
         </label>
       )}
-      <div className="flex items-center gap-1.5 text-[12.5px] text-st-text-2">
-        <span>Durée</span>
-        <input type="number" inputMode="numeric" min={0} value={filter.min} onChange={(e) => onChange({ ...filter, min: e.target.value })} placeholder="min" aria-label="Durée minimum (minutes)" className={numInput} />
-        <span>à</span>
-        <input type="number" inputMode="numeric" min={0} value={filter.max} onChange={(e) => onChange({ ...filter, max: e.target.value })} placeholder="max" aria-label="Durée maximum (minutes)" className={numInput} />
-        <span>min</span>
+      <div className="space-y-2">
+        <div className="flex items-baseline justify-between gap-2">
+          <span className="text-[12.5px] font-[550] text-st-text-2">Temps de vol</span>
+          <span className="text-[13px] font-semibold text-st-text st-num">
+            {dureeActive ? `${filter.lo} – ${filter.hi} min` : "Toutes les durées"}
+          </span>
+        </div>
+        <DureeRange lo={filter.lo} hi={filter.hi} max={max} onChange={(lo, hi) => onChange({ ...filter, lo, hi })} />
       </div>
-      <span className="ml-auto flex items-center gap-2 text-[12px] text-st-muted st-num">
-        {shown} sur {total}
+      <div className="flex items-center justify-between text-[12px] text-st-muted st-num">
+        <span>{shown} itinéraire{shown > 1 ? "s" : ""} sur {total}</span>
         {active && (
-          <button type="button" onClick={() => onChange({ min: "", max: "", q: "" })} className="cursor-pointer font-semibold text-st-ink hover:underline">
+          <button type="button" onClick={() => onChange(fullFilter(max))} className="cursor-pointer font-semibold text-st-ink hover:underline">
             Tout voir
           </button>
         )}
-      </span>
+      </div>
     </div>
   );
 }
@@ -139,44 +176,44 @@ export function ItineraireRows({ items, selectedId, onSelect, showUses = false }
   );
 }
 
-export function ItinerairePreview({ itin, actions, showPoints = true, mapClassName }: {
+export function ItinerairePreview({ itin, actions, showUses = true, className }: {
   itin: Itineraire;
   actions?: React.ReactNode;
-  showPoints?: boolean;
-  mapClassName?: string;
+  showUses?: boolean;
+  className?: string;
 }) {
   const km = distanceKm(itin);
+  const meta = [
+    fmtDuree(itin.duree_estimee),
+    km != null ? `${km} km` : null,
+    `${itin.waypoints.length} point${itin.waypoints.length > 1 ? "s" : ""}`,
+    showUses ? `utilisé ${itin.utilisations} fois` : null,
+  ].filter(Boolean);
   return (
-    <div className="flex min-w-0 flex-col">
-      <div className="flex flex-wrap items-center gap-2.5 border-b border-st-line-soft px-5 py-3.5">
-        <h3 className="min-w-0 flex-1 truncate text-[15px] font-semibold text-st-text">{itin.nom}</h3>
-        {actions}
-      </div>
-      <div className="flex flex-wrap gap-x-6 gap-y-2 border-b border-st-line-soft px-5 py-3">
-        <Stat label="Temps de vol" value={fmtDuree(itin.duree_estimee)} />
-        <Stat label="Distance" value={km != null ? `${km} km` : "—"} />
-        <Stat label="Points" value={String(itin.waypoints.length)} />
-        {showPoints && <Stat label="Utilisé" value={`${itin.utilisations} fois`} />}
-      </div>
-      <div className={cn("relative h-[340px]", mapClassName)}>
-        {/* key : la carte se recrée quand on change d'itinéraire. */}
-        <RouteMapReadOnlyDynamic key={itin.id} waypoints={itin.waypoints} aero height="100%" className="h-full w-full" />
-      </div>
-      {showPoints && (
-        <div className="space-y-2 px-5 py-4">
-          <RoutePath points={["EBCI", ...itin.waypoints.map((w) => w.nom || "Point"), "EBCI"]} className="text-[13px]" />
-          {itin.notes && <p className="text-[12.5px] leading-snug text-st-muted">{itin.notes}</p>}
+    <div className={cn("flex min-h-0 min-w-0 flex-col", className)}>
+      <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-st-line-soft px-5 py-3.5">
+        <div className="min-w-0 flex-1">
+          <h3 className="truncate text-[16px] font-semibold tracking-[-0.01em] text-st-text">{itin.nom}</h3>
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[12.5px] text-st-text-2 st-num">
+            <Clock size={13} className="text-st-muted" />
+            {meta.map((m, i) => (
+              <span key={i} className="inline-flex items-center gap-1.5">
+                {i > 0 && <span className="text-st-line-strong">·</span>}
+                <span className={i === 0 ? "font-semibold text-st-text" : ""}>{m}</span>
+              </span>
+            ))}
+          </p>
         </div>
-      )}
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-[11px] text-st-muted">{label}</p>
-      <p className="text-[14px] font-semibold text-st-text st-num">{value}</p>
+        {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+      </div>
+      <div className="relative min-h-[300px] flex-1">
+        {/* key : la carte se recrée quand on change d'itinéraire. */}
+        <RouteMapReadOnlyDynamic key={itin.id} waypoints={itin.waypoints} aero height="100%" className="absolute inset-0 h-full w-full" />
+      </div>
+      <div className="shrink-0 space-y-1 border-t border-st-line-soft px-5 py-3">
+        <RoutePath points={["EBCI", ...itin.waypoints.map((w) => w.nom || "Point"), "EBCI"]} className="text-[13px]" />
+        {itin.notes && <p className="text-[12.5px] leading-snug text-st-muted">{itin.notes}</p>}
+      </div>
     </div>
   );
 }

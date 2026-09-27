@@ -52,7 +52,8 @@ export default function RouteMapReadOnly({ waypoints, height = "280px", classNam
 
     const map = L.map(containerRef.current, {
       zoomControl: !compact,
-      scrollWheelZoom: false,
+      // Outils pilote (aero) : zoom à la molette ; site public : non (la page défile).
+      scrollWheelZoom: aero && !compact,
       dragging: !compact,
       doubleClickZoom: !compact,
       touchZoom: !compact,
@@ -128,7 +129,13 @@ export default function RouteMapReadOnly({ waypoints, height = "280px", classNam
     }
 
     mapRef.current = map;
+    // Conteneur qui change de taille (hauteur de l'écran, colonne du sélecteur).
+    const ro = new ResizeObserver(() => {
+      if (mapRef.current === map) map.invalidateSize({ animate: false });
+    });
+    ro.observe(containerRef.current);
     return () => {
+      ro.disconnect();
       map.stop();
       map.off();
       map.remove();

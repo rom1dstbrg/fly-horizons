@@ -6,7 +6,7 @@ import { Navigation, Pencil, Plus, Trash2 } from "lucide-react";
 import { deleteItineraire, type Itineraire } from "@/lib/actions/itineraires";
 import { Button, ButtonLabel, EmptyState, PageHeader } from "@/components/pilote/studio";
 import { ConfirmActionDialog, type PendingAction } from "@/components/admin/reservation-drawer/ConfirmActionDialog";
-import { applyFilter, FilterBar, ItinerairePreview, ItineraireRows, type DureeFilter } from "./ItineraireParts";
+import { applyFilter, dureeMax, FilterBar, fullFilter, ItinerairePreview, ItineraireRows, type DureeFilter } from "./ItineraireParts";
 import { ItineraireEditor } from "./ItineraireEditor";
 
 // Page « Itinéraires » du pilote (maquette validée le 27/09) : liste filtrable
@@ -15,7 +15,8 @@ import { ItineraireEditor } from "./ItineraireEditor";
 
 export function PiloteItinerairesClient({ items }: { items: Itineraire[] }) {
   const router = useRouter();
-  const [filter, setFilter] = useState<DureeFilter>({ min: "", max: "", q: "" });
+  const max = dureeMax(items);
+  const [filter, setFilter] = useState<DureeFilter>(() => fullFilter(max));
   const [selectedId, setSelectedId] = useState<string | null>(items[0]?.id ?? null);
   // undefined = éditeur fermé, null = nouvel itinéraire.
   const [editing, setEditing] = useState<Itineraire | null | undefined>(undefined);
@@ -23,8 +24,8 @@ export function PiloteItinerairesClient({ items }: { items: Itineraire[] }) {
   const [isPending, startTransition] = useTransition();
 
   const shown = useMemo(
-    () => [...applyFilter(items, filter)].sort((a, b) => (a.duree_estimee ?? 9999) - (b.duree_estimee ?? 9999)),
-    [items, filter],
+    () => [...applyFilter(items, filter, max)].sort((a, b) => (a.duree_estimee ?? 9999) - (b.duree_estimee ?? 9999)),
+    [items, filter, max],
   );
   const selected = shown.find((i) => i.id === selectedId) ?? shown[0] ?? null;
 
@@ -60,13 +61,15 @@ export function PiloteItinerairesClient({ items }: { items: Itineraire[] }) {
           action={newButton}
         />
       ) : (
-        <div className="overflow-hidden rounded-[20px] border border-st-line bg-white shadow-st-sm lg:grid lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)]">
-          <div className="flex min-w-0 flex-col border-st-line max-lg:border-b lg:border-r">
-            <FilterBar filter={filter} onChange={setFilter} total={items.length} shown={shown.length} />
+        // Bureau : la carte remplit la hauteur de l'écran (en-tête de page et
+        // marges du layout déduits), la liste défile dans sa colonne.
+        <div className="overflow-hidden rounded-[20px] border border-st-line bg-white shadow-st-sm lg:grid lg:h-[calc(100dvh-7.75rem)] lg:min-h-[600px] lg:grid-cols-[380px_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)]">
+          <div className="flex min-h-0 min-w-0 flex-col border-st-line max-lg:border-b lg:border-r">
+            <FilterBar filter={filter} onChange={setFilter} max={max} total={items.length} shown={shown.length} />
             {shown.length === 0 ? (
               <p className="px-4 py-10 text-center text-[13px] text-st-text-2">Aucun itinéraire ne correspond à ce filtre.</p>
             ) : (
-              <div className="max-h-[320px] overflow-y-auto lg:max-h-[640px]">
+              <div className="max-h-[320px] min-h-0 overflow-y-auto lg:max-h-none lg:flex-1">
                 <ItineraireRows items={shown} selectedId={selected?.id ?? null} onSelect={setSelectedId} showUses />
               </div>
             )}
@@ -74,6 +77,7 @@ export function PiloteItinerairesClient({ items }: { items: Itineraire[] }) {
           {selected && (
             <ItinerairePreview
               itin={selected}
+              className="max-lg:h-[560px]"
               actions={
                 <>
                   <Button variant="secondary" size="sm" onClick={() => askDelete(selected)} aria-label="Supprimer">
