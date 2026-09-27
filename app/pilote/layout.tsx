@@ -100,9 +100,23 @@ export default async function PiloteLayout({ children }: { children: React.React
     .eq("pilote_id", pilote.id)
     .in("statut", ["demande_recue", "en_attente"]);
 
+  // Pastille « Transactions » : paiements d'annonces à relancer (vol passé ou
+  // effectué, virement toujours pas marqué reçu) — même règle que etatPaiement.
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Brussels" });
+  const { count: aRelancer } = await admin
+    .from("reservations")
+    .select("id", { count: "exact", head: true })
+    .eq("pilote_id", pilote.id)
+    .in("type_resa", ["annonce_pilote", "standard"])
+    .eq("pilote_paye", false)
+    .not("acompte", "is", null)
+    .neq("statut", "annulee")
+    .or(`statut.eq.vol_effectue,date_vol.lt.${today}`);
+
   const counts = {
     "/pilote/profil": profilAlerts,
     "/pilote/vols": volsAlerts ?? 0,
+    "/pilote/transactions": aRelancer ?? 0,
   };
 
   return (
@@ -123,7 +137,7 @@ export default async function PiloteLayout({ children }: { children: React.React
       <PiloteTabBar
         pilot={pilotIdInfo}
         isAdmin={profile?.role === "admin"}
-        badges={{ "/pilote/vols": volsATraiter ?? 0, "/pilote/profil": profilAlerts }}
+        badges={{ "/pilote/vols": volsATraiter ?? 0, "/pilote/profil": profilAlerts, "/pilote/transactions": aRelancer ?? 0 }}
       />
       {charteRequise && <ChartePiloteGate updated={charteMiseAJour} />}
     </div>

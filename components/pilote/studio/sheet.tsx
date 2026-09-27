@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Tiroir de détail, un seul comportement partout : au téléphone une feuille qui
@@ -132,47 +133,54 @@ export function SheetCloseButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-// Liste de choix dans une feuille (« Plus », « Nouveau vol ») : lignes bordées,
-// icône + libellé (+ détail), lien ou bouton.
+// Liste de navigation dans une feuille (« Plus » du téléphone, maquette
+// Transactions validée le 27/09) : lignes de 50 px sans boîte, séparées par des
+// traits fins ; icône + libellé (+ détail), chevron à droite sauf si la ligne
+// porte sa propre info (pastille). Lien ou bouton.
 export function SheetList({ children }: { children: React.ReactNode }) {
-  return <div className="divide-y divide-st-line overflow-hidden rounded-[14px] border border-st-line">{children}</div>;
+  return <div className="divide-y divide-st-line-soft">{children}</div>;
 }
 
-const rowCls = "flex w-full cursor-pointer items-center gap-3 bg-white px-3 py-2.5 text-left text-sm font-[550] text-st-text transition-colors hover:bg-st-surface";
+const rowCls = "flex min-h-[50px] w-full cursor-pointer items-center gap-3 px-1.5 py-2 text-left text-[15px] font-[550] transition-colors active:bg-st-surface hover:text-st-ink";
 
 type RowContent = {
   icon: React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
   label: React.ReactNode;
   detail?: React.ReactNode;
   trailing?: React.ReactNode;
+  /** Page ouverte : libellé navy en gras. */
+  active?: boolean;
+  /** Action destructrice (Déconnexion) : texte rouge, pas de chevron. */
+  danger?: boolean;
 };
 
-function RowInner({ icon: Icon, label, detail, trailing }: RowContent) {
+function RowInner({ icon: Icon, label, detail, trailing, active, danger }: RowContent) {
   return (
     <>
-      <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[9px] bg-st-surface text-st-text">
-        <Icon size={16} strokeWidth={1.8} />
-      </span>
+      <Icon size={19} strokeWidth={active ? 2 : 1.8} className={cn("shrink-0", danger ? "text-st-bad" : active ? "text-st-ink" : "text-st-text-2")} />
       <span className="min-w-0 flex-1">
         <span className="block truncate">{label}</span>
         {detail && <span className="block text-[12px] font-normal leading-snug text-st-muted">{detail}</span>}
       </span>
-      {trailing}
+      {trailing ?? (!danger && <ChevronRight size={17} className="shrink-0 text-st-muted" />)}
     </>
   );
 }
 
+const toneCls = ({ active, danger }: RowContent) =>
+  danger ? "text-st-bad" : active ? "font-semibold text-st-ink" : "text-st-text";
+
 export function SheetListLink({ href, onClick, ...content }: RowContent & { href: string; onClick?: () => void }) {
   return (
-    <Link href={href} onClick={onClick} className={rowCls}>
+    <Link href={href} onClick={onClick} aria-current={content.active ? "page" : undefined} className={cn(rowCls, toneCls(content))}>
       <RowInner {...content} />
     </Link>
   );
 }
 
-export function SheetListButton({ onClick, ...content }: RowContent & { onClick: () => void }) {
+export function SheetListButton({ onClick, type = "button", ...content }: RowContent & { onClick?: () => void; type?: "button" | "submit" }) {
   return (
-    <button type="button" onClick={onClick} className={rowCls}>
+    <button type={type} onClick={onClick} className={cn(rowCls, toneCls(content))}>
       <RowInner {...content} />
     </button>
   );

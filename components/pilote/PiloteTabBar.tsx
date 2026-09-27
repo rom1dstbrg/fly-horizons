@@ -6,13 +6,14 @@ import { usePathname } from "next/navigation";
 import { ArrowLeftRight, BookOpen, LogOut, MoreHorizontal } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 import { cn } from "@/lib/utils";
-import { SheetCloseButton, SheetList, SheetListLink } from "@/components/pilote/studio";
+import { Badge, Button, SheetList, SheetListButton, SheetListLink } from "@/components/pilote/studio";
 import {
   PILOTE_NAV, isPiloteNavActive, PiloteAvatar, PiloteIssues, frDate, type PilotIdInfo,
 } from "@/components/pilote/PiloteSidebar";
 
 // Onglets du téléphone, choisis le 24/09 : Accueil, Vols, M&B, Annonces ; le
-// reste (Disponibilités, Profil, Vue admin, Déconnexion) vit sous « Plus ».
+// reste (Transactions, Disponibilités, Profil, Guide, Vue admin, Déconnexion)
+// vit sous « Plus ».
 const TAB_IDS = ["dashboard", "vols", "mb", "annonces"];
 const TABS = TAB_IDS.map((id) => PILOTE_NAV.find((n) => n.id === id)!);
 const MORE = PILOTE_NAV.filter((n) => !TAB_IDS.includes(n.id));
@@ -152,8 +153,10 @@ export function PiloteTabBar({ pilot, isAdmin = false, badges = {} }: {
           >
             <span className="relative">
               <MoreHorizontal size={21} strokeWidth={moreActive ? 2 : 1.8} className={cn("transition-transform duration-300", moreOpen && "rotate-90")} />
-              {(profilAlerts > 0 || (pilot && !pilot.legalOk)) && (
+              {(profilAlerts > 0 || (pilot && !pilot.legalOk)) ? (
                 <span className="absolute -right-1 -top-0.5 h-[7px] w-[7px] rounded-full bg-st-bad ring-2 ring-white" />
+              ) : (badges["/pilote/transactions"] ?? 0) > 0 && (
+                <span className="absolute -right-1 -top-0.5 h-[7px] w-[7px] rounded-full bg-st-warn ring-2 ring-white" />
               )}
             </span>
           </button>
@@ -178,51 +181,52 @@ export function PiloteTabBar({ pilot, isAdmin = false, badges = {} }: {
           )}
         >
           <div className="mx-auto mb-3.5 h-1 w-[38px] rounded-full bg-st-line-strong" />
-          <div className="flex items-center justify-between gap-3">
-            {pilot ? (
-              <div className="flex min-w-0 items-center gap-3">
-                <PiloteAvatar pilot={pilot} size={40} />
-                <div className="min-w-0">
-                  <p className="truncate font-semibold text-st-text">{pilot.nom}</p>
-                  <p className="truncate text-[12px] text-st-muted">
-                    {pilot.legalOk ? "Profil en règle" : "Profil à compléter"} · lic. {frDate(pilot.licenceExpiration)} · méd. {frDate(pilot.medicalExpiration)}
-                  </p>
-                </div>
+          {pilot && (
+            <div className="flex min-w-0 items-center gap-3 px-1.5 pb-3">
+              <PiloteAvatar pilot={pilot} size={40} />
+              <div className="min-w-0">
+                <p className="truncate font-semibold text-st-text">{pilot.nom}</p>
+                <p className="truncate text-[12px] text-st-muted">
+                  {pilot.legalOk ? "Profil en règle" : "Profil à compléter"} · lic. {frDate(pilot.licenceExpiration)} · méd. {frDate(pilot.medicalExpiration)}
+                </p>
               </div>
-            ) : (
-              <p className="text-base font-semibold text-st-text">Plus</p>
-            )}
-            <SheetCloseButton onClick={() => setMoreOpen(false)} />
-          </div>
+            </div>
+          )}
           {pilot && pilot.issues.length > 0 && (
-            <div className="mt-3 rounded-[14px] bg-st-surface p-3">
+            <div className="mb-2 rounded-[14px] bg-st-surface p-3">
               <PiloteIssues pilot={pilot} onNavigate={() => setMoreOpen(false)} />
             </div>
           )}
-          <div className="mt-4 space-y-3">
-            <SheetList>
-              {MORE.map((item) => (
+          {/* Maquette Transactions (27/09) : liste simple à chevrons, pastille
+              d'info à la place du chevron quand la page attend quelque chose. */}
+          <SheetList>
+            {MORE.map((item) => {
+              const n = item.badgeKey ? badges[item.badgeKey] ?? 0 : 0;
+              return (
                 <SheetListLink
                   key={item.id}
                   href={item.href}
                   onClick={() => setMoreOpen(false)}
                   icon={item.icon}
                   label={item.label}
-                  trailing={item.badgeKey && (badges[item.badgeKey] ?? 0) > 0 ? (
-                    <span className="st-num grid h-5 min-w-5 place-items-center rounded-full bg-st-bad px-1.5 text-[11px] font-semibold text-white">{badges[item.badgeKey]}</span>
+                  active={isPiloteNavActive(item, pathname)}
+                  trailing={n > 0 ? (
+                    item.id === "transactions"
+                      ? <Badge tone="warning">{n} à relancer</Badge>
+                      : <span className="st-num grid h-5 min-w-5 place-items-center rounded-full bg-st-bad px-1.5 text-[11px] font-semibold text-white">{n}</span>
                   ) : undefined}
                 />
-              ))}
-              {isAdmin && <SheetListLink href="/admin" onClick={() => setMoreOpen(false)} icon={ArrowLeftRight} label="Vue admin" />}
-              <SheetListLink href="/pilote/guide" onClick={() => setMoreOpen(false)} icon={BookOpen} label="Guide pilote" />
-            </SheetList>
+              );
+            })}
+            <SheetListLink href="/pilote/guide" onClick={() => setMoreOpen(false)} icon={BookOpen} label="Guide pilote" active={pathname.startsWith("/pilote/guide")} />
+            {isAdmin && <SheetListLink href="/admin" onClick={() => setMoreOpen(false)} icon={ArrowLeftRight} label="Vue admin" />}
             <form action={logout}>
-              <button type="submit" className="flex w-full cursor-pointer items-center gap-3 rounded-[14px] border border-st-line bg-white px-4 py-3 text-sm font-[550] text-st-bad transition-colors hover:bg-st-bad-soft">
-                <LogOut size={17} strokeWidth={1.8} />
-                Déconnexion
-              </button>
+              <SheetListButton type="submit" icon={LogOut} label="Déconnexion" danger />
             </form>
-          </div>
+          </SheetList>
+          <Button variant="ghost" fullWidth size="lg" onClick={() => setMoreOpen(false)} className="mt-3 bg-st-surface text-st-text-2 hover:bg-st-line">
+            Fermer
+          </Button>
         </div>
       </div>
     </>

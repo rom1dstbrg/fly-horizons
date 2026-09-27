@@ -6,7 +6,8 @@ import { PageHeader } from "@/components/pilote/studio";
 
 export const metadata = { title: "Mes vols — Espace pilote" };
 
-export default async function PiloteVolsPage() {
+export default async function PiloteVolsPage({ searchParams }: { searchParams: Promise<{ ouvrir?: string }> }) {
+  const { ouvrir } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -25,7 +26,7 @@ export default async function PiloteVolsPage() {
   return (
     <div className="space-y-5">
       <PageHeader title="Mes vols" actions={<PiloteVolsActions />} />
-      <PiloteVolsClient reservations={(reservations ?? []) as never} />
+      <PiloteVolsClient reservations={(reservations ?? []) as never} openId={ouvrir} />
     </div>
   );
 }

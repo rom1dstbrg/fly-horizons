@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   LayoutDashboard, PlaneTakeoff, Plane, CalendarRange, Scale, User,
-  ArrowLeftRight, LogOut, AlertCircle, BookOpen,
+  ArrowLeftRight, LogOut, AlertCircle, BookOpen, Receipt,
 } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 import { cn } from "@/lib/utils";
@@ -44,6 +44,8 @@ export const PILOTE_NAV: PiloteNavItem[] = [
   { id: "dashboard", icon: LayoutDashboard, label: "Tableau de bord", short: "Accueil", href: "/pilote" },
   { id: "vols", icon: Plane, label: "Mes vols", short: "Vols", href: "/pilote/vols", badgeKey: "/pilote/vols" },
   { id: "annonces", icon: PlaneTakeoff, label: "Mes annonces", short: "Annonces", href: "/pilote/annonces" },
+  // Pastille = paiements « à relancer » (vol passé, virement pas reçu).
+  { id: "transactions", icon: Receipt, label: "Transactions", short: "Transactions", href: "/pilote/transactions", badgeKey: "/pilote/transactions" },
   { id: "dispos", icon: CalendarRange, label: "Disponibilités", short: "Dispos", href: "/pilote/disponibilites" },
   { id: "mb", icon: Scale, label: "Masse & centrage", short: "M&B", href: "/pilote/mass-balance" },
   { id: "profil", icon: User, label: "Mon profil", short: "Profil", href: "/pilote/profil", badgeKey: "/pilote/profil" },
@@ -150,7 +152,8 @@ export function PiloteSidebar({ counts = {}, pilot, isAdmin = false }: {
           const active = isPiloteNavActive(item, pathname);
           const Icon = item.icon;
           const count = item.badgeKey ? counts[item.badgeKey] ?? 0 : 0;
-          const alert = item.id === "profil";
+          // Couleur de la pastille : rouge = profil bloquant, orange = paiement à relancer.
+          const dotCls = item.id === "profil" ? "bg-st-bad" : item.id === "transactions" ? "bg-st-warn" : "bg-st-ink";
           return (
             <Link
               key={item.id}
@@ -164,8 +167,8 @@ export function PiloteSidebar({ counts = {}, pilot, isAdmin = false }: {
               {count > 0 && (
                 <>
                   {/* Rail replié : un point sur l'icône ; ouvert : le compteur. */}
-                  <span className={cn("absolute left-[31px] top-[9px] h-[7px] w-[7px] rounded-full ring-2 ring-white transition-opacity", alert ? "bg-st-bad" : "bg-st-ink", open && "opacity-0")} />
-                  <span className={cn("st-num grid h-5 min-w-5 shrink-0 place-items-center rounded-full px-1.5 text-[11px] font-semibold text-white transition-opacity", alert ? "bg-st-bad" : "bg-st-ink", open ? "opacity-100" : "opacity-0")}>
+                  <span className={cn("absolute left-[31px] top-[9px] h-[7px] w-[7px] rounded-full ring-2 ring-white transition-opacity", dotCls, open && "opacity-0")} />
+                  <span className={cn("st-num grid h-5 min-w-5 shrink-0 place-items-center rounded-full px-1.5 text-[11px] font-semibold text-white transition-opacity", dotCls, open ? "opacity-100" : "opacity-0")}>
                     {count > 99 ? "99+" : count}
                   </span>
                 </>

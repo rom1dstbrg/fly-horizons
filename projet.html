@@ -260,6 +260,29 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-09-27 (7) · Onglet Transactions du pilote</p>
+      <h3>Un onglet « Transactions » dans l'espace pilote : paiements des passagers, part des frais, relevé PDF</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Le pilote n'avait aucune vue d'ensemble de l'argent de ses vols : chaque paiement se suivait vol par vol dans le tiroir de Mes vols.
+          Maquette : <code>https://claude.ai/artifact/67pnpPA1J47WdJnoPQb57d</code>, validée entièrement par Romain, version B.</dd>
+        <dt>Décision</dt>
+        <dd><code>/pilote/transactions</code>, sous « Mes annonces » dans la barre latérale et dans « Plus » au téléphone.
+          Une ligne par paiement de passager (vols gérés par le pilote, même règle que <code>isPiloteVol</code>). En haut, une carte composite
+          (reçu dans l'année, mini graphique par mois, À recevoir | Votre part des frais | Vols effectués). État du paiement : Reçu / En attente /
+          À relancer (vol passé sans virement), avec une pastille orange dans la navigation. Tiroir : partage des frais en barre, marquer reçu
+          (virement ou espèces), renvoyer le lien, ouvrir le vol. Relevé PDF annuel, une ligne par vol, avec la mention NCO.GEN.104.
+          En même temps, la feuille « Plus » du téléphone est refaite comme sur la maquette : liste simple à chevrons, bouton gris « Fermer » en bas.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Option A (4 cartes de chiffres). Export CSV seul. Montrer au pilote les vols Fly Horizons payés par Stripe : ils restent dans
+          <code>/admin/transactions</code>.</dd>
+        <dt>Conséquences</dt>
+        <dd>Aucune migration : tout vient de <code>reservations</code> (acompte, pilote_paye, pilote_paye_at) et de <code>annonces_pilote</code>
+          (prix_total, part_pilote). Les actions de paiement sont celles qui existaient déjà (<code>lib/actions/pilote-paiement.ts</code>).</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-09-27 (6) · Charte pilote, version du 27/09</p>
       <h3>Charte mise à jour et redemandée à tous les pilotes ; relisible depuis le profil</h3>
       <dl>
@@ -1362,6 +1385,20 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-09-27 (17) — Onglet Transactions du pilote + feuille « Plus » refaite</h3>
+      <ul>
+        <li><code>app/pilote/transactions</code> + <code>PiloteTransactionsClient</code> : carte composite (reçu, graphique par mois, à recevoir,
+          part des frais, vols), tableau des paiements (onglets Tout / À recevoir / Reçus, recherche), tiroir 560 px avec les actions de paiement.</li>
+        <li><code>lib/pilote/transactions.ts</code> (lecture) et <code>transactions-shared.ts</code> (états, bilan, sans accès base).</li>
+        <li>Relevé PDF : <code>/api/pilote/releve?annee=</code> → <code>lib/pdf/pilote-releve-pdf.tsx</code>, une ligne par vol, réservé au pilote connecté.</li>
+        <li>Navigation : entrée « Transactions » (icône reçu) avec pastille orange des paiements à relancer, calculée dans le layout pilote.</li>
+        <li>Feuille « Plus » : <code>SheetList</code> restylé (lignes de 50 px sans boîte, chevrons, page ouverte en navy, Déconnexion en ligne rouge),
+          « Fermer » gris pleine largeur en bas.</li>
+        <li>Mes vols : <code>?ouvrir=&lt;id&gt;</code> ouvre directement le tiroir d'un vol (lien « Ouvrir le vol » des Transactions).</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-09-27 (16) — Plaque pilote de la barre latérale</h3>

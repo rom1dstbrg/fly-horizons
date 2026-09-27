@@ -35,11 +35,18 @@ const isPast = (r: Reservation) => r.statut === "vol_effectue" || r.statut === "
 const monthLabel = (iso: string) =>
   new Date(iso + "T12:00:00Z").toLocaleDateString("fr-BE", { month: "short", year: "numeric", timeZone: "Europe/Brussels" });
 
-export function PiloteVolsClient({ reservations: initial }: { reservations: Reservation[] }) {
+export function PiloteVolsClient({ reservations: initial, openId }: {
+  reservations: Reservation[];
+  /** `?ouvrir=<id>` : ouvre le tiroir de ce vol (lien « Ouvrir le vol » des Transactions). */
+  openId?: string;
+}) {
   const router = useRouter();
   const [reservations, setReservations] = useState<Reservation[]>(initial);
-  const [drawer, setDrawer] = useState<Reservation | null>(null);
-  const [view, setView] = useState<"avenir" | "passes">("avenir");
+  const [drawer, setDrawer] = useState<Reservation | null>(() => initial.find((r) => r.id === openId) ?? null);
+  const [view, setView] = useState<"avenir" | "passes">(() => {
+    const r = initial.find((x) => x.id === openId);
+    return r && isPast(r) ? "passes" : "avenir";
+  });
   const [query, setQuery] = useState("");
 
   function handleStatusChange(id: string, newStatut: string) {
