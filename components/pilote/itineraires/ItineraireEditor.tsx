@@ -161,22 +161,19 @@ export function ItineraireEditor({ itin, onClose, onSaved }: {
             </div>
           )}
 
-          {/* Rappel (27/09) : le client voit la liste des points ; des points de
-              virage n'y ont pas de sens. Bleu doux : visible sans alarmer. */}
-          <div className="flex gap-2.5 rounded-[14px] bg-st-info-soft px-3.5 py-3">
-            <MapPin size={16} className="mt-0.5 shrink-0 text-st-info" />
-            <p className="text-[12.5px] leading-snug text-st-text-2">
-              <span className="font-semibold text-st-info">Placez seulement les lieux survolés</span> (villes, sites, lacs). Inutile
-              d&apos;ajouter un point à chaque virage : le client voit la liste des points comme le programme du vol.
-            </p>
-          </div>
-
           <div>
             <p className="mb-1 text-[12.5px] font-[550] text-st-text-2">Points</p>
             {points.length === 0 ? (
-              <p className="rounded-[12px] border border-dashed border-st-line-strong px-3 py-4 text-center text-[12.5px] text-st-muted">
-                Cliquez sur la carte pour ajouter le premier point.
-              </p>
+              // Rappel (27/09) à l'endroit où le pilote commence, puis il laisse
+              // la place à la liste : le client voit ces points comme le
+              // programme du vol, des points de virage n'y ont pas de sens.
+              <div className="flex gap-2.5 rounded-[14px] bg-st-info-soft px-3.5 py-3">
+                <MapPin size={16} className="mt-0.5 shrink-0 text-st-info" />
+                <p className="text-[12.5px] leading-snug text-st-text-2">
+                  <span className="font-semibold text-st-info">Cliquez sur la carte pour placer les lieux survolés</span> (villes,
+                  sites, lacs). Inutile d&apos;ajouter un point à chaque virage : le client voit ces points comme le programme du vol.
+                </p>
+              </div>
             ) : (
               <ol className="divide-y divide-st-line-soft">
                 {points.map((p, i) => (
@@ -196,7 +193,9 @@ export function ItineraireEditor({ itin, onClose, onSaved }: {
                 ))}
               </ol>
             )}
-            <p className="mt-1.5 text-[11.5px] text-st-muted">Départ et retour à EBCI. Clic sur la carte : ajouter un point. Glisser un point : le déplacer.</p>
+            <p className="mt-1.5 text-[11.5px] text-st-muted">
+              Départ et retour à EBCI. Seulement les lieux survolés, pas chaque virage. Clic sur la carte : ajouter un point. Glisser un point : le déplacer.
+            </p>
           </div>
 
           <FormField id="itin-notes" label="Notes (optionnel)">
