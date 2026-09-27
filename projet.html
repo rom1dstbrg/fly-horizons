@@ -260,6 +260,32 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-09-27 (12) · Disponibilités pilote en grille de blocs de 2 h</p>
+      <h3>Le pilote coche des blocs de 2 h dans une grille semaine, enregistre d'un coup ; le passager réserve un bloc entier ; rien de coché = fermé</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Les dispos pilote étaient des plages récurrentes + des jours individuels (<code>DispoPlanner</code>, partagé avec l'admin) : abstrait, le pilote ne voyait
+          pas ce qu'il avait ouvert, et un pilote sans rien de configuré était réservable n'importe quand. Le visuel du guide pilote montrait déjà une grille.</dd>
+        <dt>Décision</dt>
+        <dd>Grille 7 jours × 7 blocs fixes (07–09 … 19–21), chaque bloc ouvert ou fermé, sans état intermédiaire. Toucher un bloc, un jour (toute la journée) ou
+          une heure (toute la semaine), glisser à la souris. <b>Un seul enregistrement</b> pour tous les changements (barre « N modifications · Annuler ·
+          Enregistrer »). <b>Le passager réserve un bloc entier</b> (« 9 h – 11 h », <code>heure_vol</code> = début du bloc), l'heure exacte se cale avec le pilote ;
+          un vol de plus de 2 h prend des blocs consécutifs. <b>Rien de coché = fermé.</b> « Ajouter une récurrence » (popup : ouvrir ou fermer, jours, de/à,
+          4/8/12 semaines ou une date) <b>coche la grille</b>, ce n'est pas une règle enregistrée. Première visite guidée codée (4 bulles, vue stockée sur la fiche
+          pilote, bouton « ? »). Maquette : <code>maquette-disponibilites.html</code>.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Enregistrer à chaque clic (trop lent). Créneaux libres au choix du pilote (moins lisible, plus dur à comparer). Récurrence stockée comme règle
+          (retour aux conflits plages/exceptions). « Répéter cette semaine » qui recopie toute la grille (remplaçait tout, remplacé par la récurrence ciblée).
+          Garder « réservable n'importe quand » si rien n'est configuré.</dd>
+        <dt>Conséquences</dt>
+        <dd>Table <code>pilote_creneaux</code> (une ligne par bloc ouvert), <code>pilote_disponibilites*</code> supprimées (vides en prod, vérifié), colonne
+          <code>pilotes.visites_vues</code>. Calcul unique <code>lib/pilote-creneaux.ts</code> pour la grille et les routes <code>/api/vol-annonce/{month,slots,submit}</code>.
+          Le calendrier admin garde <code>DispoPlanner</code>. Contrepartie de la récurrence non stockée : au bout de la période, plus rien n'est ouvert
+          (rappel push proposé, pas encore décidé). La fiche guide « Disponibilités » (pas encore rédigée) devra décrire la grille, pas les plages.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-09-27 (11) · Guide pilote v2</p>
       <h3>Le guide pilote devient un accueil à onglets et cartes : une fiche par page de l'espace, des parcours, et à terme une visite guidée par page</h3>
       <dl>
@@ -1480,6 +1506,21 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-09-27 (37) — Disponibilités pilote : grille de blocs de 2 h, récurrence, première visite guidée</h3>
+      <ul>
+        <li><code>/pilote/disponibilites</code> réécrit : <code>components/pilote/dispo/DispoGrid.tsx</code> (grille, semaine par semaine, barre d'enregistrement,
+          alerte avant de quitter avec des changements) et <code>RecurrenceDialog.tsx</code> ; actions <code>lib/actions/pilote-creneaux.ts</code>
+          (<code>getPiloteCreneaux</code>, <code>savePiloteCreneaux</code> en un envoi, <code>markVisiteVue</code>). Ancien <code>lib/actions/pilote-disponibilites.ts</code> supprimé,
+          <code>DispoPlanner</code> ne sert plus que l'admin.</li>
+        <li><code>components/pilote/PageTour.tsx</code> : visite guidée générique (zone éclairée, bulles, clavier), réutilisable par les autres pages.</li>
+        <li>Réservation d'une annonce : <code>month</code>, <code>slots</code>, <code>submit</code> passent par <code>lib/pilote-creneaux.ts</code> (blocs ouverts, blocs consécutifs,
+          conflits ; en mode place, la même annonce ne se bloque pas elle-même). Le passager voit « 9 h – 11 h » (<code>AnnonceReserveClient</code>).</li>
+        <li>Guide : l'étape « Disponibilités » est cochée dès qu'un bloc à venir est ouvert.</li>
+        <li>Migration <code>supabase/migrations/20260927_pilote_creneaux.sql</code> <b>à exécuter dans Supabase avant le déploiement</b>.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-09-27 (36) — Guide pilote v2 : accueil à onglets et cartes, fiches, parcours « Une réservation de A à Z »</h3>

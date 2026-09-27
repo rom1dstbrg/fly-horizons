@@ -20,16 +20,17 @@ export default async function PiloteGuidePage() {
 
   let progress: GuideProgress = { profil: false, dispos: false, annonce: false, app: false };
   if (pilote) {
-    const [plages, jours, annonces, subs] = await Promise.all([
-      admin.from("pilote_disponibilites").select("id", { count: "exact", head: true }).eq("pilote_id", pilote.id).eq("actif", true),
-      admin.from("pilote_disponibilites_jours").select("id", { count: "exact", head: true }).eq("pilote_id", pilote.id),
+    const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Brussels" }).format(new Date());
+    const [creneaux, annonces, subs] = await Promise.all([
+      // Au moins un bloc ouvert à venir (rien de coché = pas réservable).
+      admin.from("pilote_creneaux").select("heure", { count: "exact", head: true }).eq("pilote_id", pilote.id).gte("date", today),
       admin.from("annonces_pilote").select("id", { count: "exact", head: true }).eq("pilote_id", pilote.id),
       admin.from("push_subscriptions").select("id", { count: "exact", head: true }).eq("user_id", user!.id),
     ]);
     progress = {
       // L'IBAN compte : sans lui, pas d'annonce publiable (le passager vous paie dessus).
       profil: piloteLegalStatus(pilote).ok && !!pilote.iban,
-      dispos: (plages.count ?? 0) + (jours.count ?? 0) > 0,
+      dispos: (creneaux.count ?? 0) > 0,
       annonce: (annonces.count ?? 0) > 0,
       app: (subs.count ?? 0) > 0,
     };

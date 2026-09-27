@@ -1,37 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { computeEffectiveDay } from "@/lib/dispo-utils";
+import { blocsNecessaires, departsPossibles, heureVol } from "@/lib/pilote-creneaux";
 
 const MIN_JOURS = 2;
-const DEFAULT_HEURE_DEBUT = "06:00";
-const DEFAULT_HEURE_FIN = "21:00";
 
-function calcSlots(
-  heureDebut: string,
-  heureFin: string,
-  dureeMins: number,
-  reservations: Array<{ heure_vol: string | null; duree: number }>,
-): string[] {
-  const [hD, mD] = heureDebut.split(":").map(Number);
-  const [hF, mF] = heureFin.split(":").map(Number);
-  const start = hD * 60 + mD;
-  const end = hF * 60 + mF;
-  const slots: string[] = [];
-
-  for (let t = start; t + dureeMins <= end; t += 30) {
-    const slotEnd = t + dureeMins;
-    const isFree = reservations.every((r) => {
-      if (!r.heure_vol) return true;
-      const [rh, rm] = r.heure_vol.split(":").map(Number);
-      const rStart = rh * 60 + rm;
-      const rEnd = rStart + r.duree + 30;
-      return slotEnd + 30 <= rStart || t >= rEnd;
-    });
-    if (isFree) slots.push(`${Math.floor(t / 60).toString().padStart(2, "0")}:${(t % 60).toString().padStart(2, "0")}`);
-  }
-  return slots;
-}
-
+// Blocs de 2 h réservables un jour donné chez le pilote de l'annonce
+// (lib/pilote-creneaux.ts). `slots` = heures de début ("09:00"), `blocs` = nombre
+// de blocs qu'occupe le vol (le client affiche « 9 h – 11 h »).
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const annonceId = searchParams.get("annonce_id");
@@ -44,43 +19,29 @@ export async function GET(request: NextRequest) {
 
   const { data: annonce } = await supabase
     .from("annonces_pilote")
-    .select("duree, pilote_id, statut")
+    .select("duree, pilote_id, statut, mode_vente")
     .eq("id", annonceId)
     .single();
   if (!annonce || annonce.statut !== "publiee") return NextResponse.json({ slots: [] });
+  const blocs = blocsNecessaires(annonce.duree);
 
   const todayMidnight = new Date();
   todayMidnight.setHours(0, 0, 0, 0);
   const minBookable = new Date(todayMidnight);
   minBookable.setDate(minBookable.getDate() + MIN_JOURS);
-  if (new Date(date + "T12:00:00Z") < minBookable) return NextResponse.json({ slots: [] });
+  if (new Date(date + "T12:00:00Z") < minBookable) return NextResponse.json({ slots: [], blocs });
 
-  const [{ data: reservations }, { data: jourIndiv }, { data: dispos }, { count: plageTotal }, { count: joursTotal }] = await Promise.all([
-    supabase.from("reservations").select("heure_vol, duree").eq("pilote_id", annonce.pilote_id).eq("date_vol", date).neq("statut", "annulee"),
-    supabase.from("pilote_disponibilites_jours").select("*").eq("pilote_id", annonce.pilote_id).eq("date", date).maybeSingle(),
-    supabase.from("pilote_disponibilites").select("*").eq("pilote_id", annonce.pilote_id)
-      .lte("date_debut", date).gte("date_fin", date).eq("actif", true),
-    supabase.from("pilote_disponibilites").select("id", { count: "exact", head: true }).eq("pilote_id", annonce.pilote_id).eq("actif", true),
-    supabase.from("pilote_disponibilites_jours").select("id", { count: "exact", head: true }).eq("pilote_id", annonce.pilote_id),
+  // Conflits scopés au pilote ; en mode « place », les autres passagers de la
+  // même annonce partagent le vol (même règle que submit).
+  let resasQuery = supabase.from("reservations").select("heure_vol, duree")
+    .eq("pilote_id", annonce.pilote_id).eq("date_vol", date).neq("statut", "annulee");
+  if (annonce.mode_vente === "place") resasQuery = resasQuery.neq("annonce_id", annonceId);
+
+  const [{ data: creneaux }, { data: reservations }] = await Promise.all([
+    supabase.from("pilote_creneaux").select("heure").eq("pilote_id", annonce.pilote_id).eq("date", date),
+    resasQuery,
   ]);
-  const hasAnyDispo = (plageTotal ?? 0) > 0 || (joursTotal ?? 0) > 0;
 
-  if (!hasAnyDispo) {
-    const slots = calcSlots(DEFAULT_HEURE_DEBUT, DEFAULT_HEURE_FIN, annonce.duree, reservations ?? []);
-    return NextResponse.json({ slots: [...new Set(slots)].sort() });
-  }
-
-  const effective = computeEffectiveDay(date, dispos ?? [], jourIndiv ? [jourIndiv] : []);
-
-  if (effective.type === "override") {
-    if (effective.ferme) return NextResponse.json({ slots: [] });
-    const slots = calcSlots(effective.heure_debut, effective.heure_fin, annonce.duree, reservations ?? []);
-    return NextResponse.json({ slots: [...new Set(slots)].sort() });
-  }
-  if (effective.type === "plage") {
-    const allSlots: string[] = [];
-    for (const w of effective.windows) allSlots.push(...calcSlots(w.heure_debut, w.heure_fin, annonce.duree, reservations ?? []));
-    return NextResponse.json({ slots: [...new Set(allSlots)].sort() });
-  }
-  return NextResponse.json({ slots: [] });
+  const departs = departsPossibles((creneaux ?? []).map((c) => c.heure), annonce.duree, reservations ?? []);
+  return NextResponse.json({ slots: departs.map(heureVol), blocs });
 }

@@ -1,27 +1,15 @@
-import { Info } from "lucide-react";
-import { getPiloteDisponibilites } from "@/lib/actions/pilote-disponibilites";
-import { DispoPlanner } from "@/components/dispo/DispoPlanner";
-import { PageHeader } from "@/components/pilote/studio";
+import { getPiloteCreneaux } from "@/lib/actions/pilote-creneaux";
+import { addDaysIso } from "@/lib/pilote-creneaux";
+import { DispoGrid } from "@/components/pilote/dispo/DispoGrid";
 
 export const metadata = { title: "Disponibilités — Espace pilote" };
 
 export default async function PiloteDisponibilitesPage() {
-  const { plages, exceptions } = await getPiloteDisponibilites();
-  const rienConfigure = !plages.some((p) => p.actif) && exceptions.length === 0;
+  // Aujourd'hui et le lundi de la semaine, à l'heure de Bruxelles.
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Brussels" }).format(new Date());
+  const dow = (new Date(`${today}T00:00:00Z`).getUTCDay() + 6) % 7; // lundi = 0
+  const monday = addDaysIso(today, -dow);
+  const { ouverts, reservations, visiteVue } = await getPiloteCreneaux(monday);
 
-  return (
-    <div className="space-y-5">
-      <PageHeader title="Disponibilités" />
-      <div className="flex gap-2.5 rounded-[14px] bg-st-info-soft px-4 py-3 text-[13px] leading-snug text-st-info">
-        <Info size={16} className="mt-px shrink-0" />
-        <p>
-          Un seul calendrier pour toutes vos annonces : un client ne peut réserver que dans les créneaux ouverts ici.{" "}
-          {rienConfigure
-            ? "Rien n'est configuré : vos annonces sont réservables à n'importe quelle date."
-            : "Ce que vous voyez ci-dessous est ce que vos clients peuvent réserver."}
-        </p>
-      </div>
-      <DispoPlanner scope="pilote" plages={plages} joursIndiv={exceptions} />
-    </div>
-  );
+  return <DispoGrid monday={monday} today={today} ouverts={ouverts} reservations={reservations} visiteVue={visiteVue} />;
 }

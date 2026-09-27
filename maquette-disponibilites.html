@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Disponibilités · Fly Horizons</title>
+<meta name="description" content="Maquette de la page Disponibilités de l'espace pilote : grille de blocs de 2 h à cocher, un seul enregistrement.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Tokens Studio (app/globals.css) */
+:root {
+  --bg: #f5f6f8; --surface: #f4f5f7; --surface-hover: #eceef2;
+  --line: #eceef2; --line-soft: #f2f3f6; --line-strong: #dcdfe6;
+  --text: #0f1117; --text-2: #4d5463; --muted: #626977;
+  --ink: #0b2238; --ink-hover: #16334f; --ink-soft: #e8edf3;
+  --gold: #F2B705; --gold-soft: #fdf4d6; --gold-text: #8a6400;
+  --ok: #16794a; --ok-soft: #e7f5ec; --warn: #9a4a08; --warn-soft: #fff3e6;
+  --info: #2b5cb8; --info-soft: #eaf0fb;
+  --shadow-sm: 0 1px 2px rgba(15,17,23,.03);
+  --shadow-panel: 0 30px 60px -20px rgba(15,17,23,.35);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: Poppins, system-ui, sans-serif; font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+button { font-family: inherit; cursor: pointer; }
+svg.i { width: 16px; height: 16px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.num { font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+
+/* ── Coque de l'espace pilote ──────────────────────────────────────────── */
+.rail { position: fixed; inset: 0 auto 0 0; width: 76px; background: #fff; border-right: 1px solid var(--line); padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; z-index: 20; }
+.rail img { width: 28px; height: 28px; margin: 0 0 14px 12px; }
+.rail a { width: 52px; height: 40px; border-radius: 11px; display: grid; place-items: center; color: var(--text-2); }
+.rail a.on { background: var(--ink-soft); color: var(--ink); }
+.rail .gap { flex: 1; }
+.shell { padding-left: 76px; }
+.page { max-width: 1120px; margin: 0 auto; padding: 26px 28px 120px; }
+.tabbar { display: none; }
+
+/* ── En-tête ───────────────────────────────────────────────────────────── */
+.head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.head h1 { margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.2; }
+.lead { margin: 6px 0 0; font-size: 13.5px; color: var(--text-2); max-width: 640px; }
+.lead b { color: var(--text); font-weight: 600; }
+
+.btn { height: 38px; padding: 0 14px; border-radius: 11px; border: 1px solid var(--line-strong); background: #fff; color: var(--text); font-size: 13px; font-weight: 550; display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+.btn:hover { background: var(--surface); }
+.btn.primary { background: var(--ink); border-color: var(--ink); color: #fff; }
+.btn.primary:hover { background: var(--ink-hover); }
+.btn.ghost { border-color: transparent; background: transparent; color: var(--text-2); }
+.btn.ghost:hover { background: rgba(255,255,255,.12); }
+.btn:disabled { opacity: .45; cursor: default; }
+.iconbtn { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--line-strong); background: #fff; display: grid; place-items: center; color: var(--text); }
+.iconbtn:hover:not(:disabled) { background: var(--surface); }
+.iconbtn:disabled { opacity: .35; cursor: default; }
+
+/* ── Carte calendrier ──────────────────────────────────────────────────── */
+.cal { margin-top: 22px; background: #fff; border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow-sm); padding: 18px 20px 20px; }
+.bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.week { display: flex; align-items: center; gap: 6px; }
+.week .label { min-width: 230px; text-align: center; font-weight: 600; font-size: 14.5px; }
+.today { font-size: 12.5px; font-weight: 550; color: var(--text-2); background: none; border: 0; padding: 4px 8px; border-radius: 8px; }
+.today:hover { background: var(--surface); color: var(--text); }
+.bar .sp { flex: 1; }
+.count { font-size: 12.5px; color: var(--muted); }
+.count b { color: var(--text); font-weight: 600; }
+
+.grid { margin-top: 16px; display: grid; grid-template-columns: 64px repeat(7, minmax(0, 1fr)); gap: 6px; user-select: none; -webkit-user-select: none; }
+.dh { border: 0; background: transparent; border-radius: 10px; padding: 6px 2px 8px; text-align: center; color: var(--text-2); line-height: 1.25; }
+.dh:hover { background: var(--surface); }
+.dh .d { display: block; font-size: 12px; font-weight: 550; }
+.dh .n { display: block; font-size: 17px; font-weight: 600; color: var(--text); }
+.dh .s { display: block; margin-top: 2px; font-size: 11px; color: var(--muted); }
+.dh.full .s { color: var(--gold-text); font-weight: 550; }
+.dh.we .d { color: var(--text); }
+.bh { border: 0; background: transparent; border-radius: 10px; text-align: right; padding: 0 10px 0 0; font-size: 12px; font-weight: 550; color: var(--text-2); line-height: 1.2; }
+.bh:hover { background: var(--surface); }
+.bh small { display: block; font-size: 10.5px; font-weight: 400; color: var(--muted); }
+
+.c { position: relative; height: 52px; border-radius: 10px; border: 1px solid transparent; background: var(--surface); display: grid; place-items: center; font-size: 12px; font-weight: 600; transition: background .08s, border-color .08s; }
+.c:hover { background: var(--surface-hover); }
+.c.open { background: var(--gold-soft); border-color: var(--gold); color: var(--gold-text); }
+.c.open:hover { background: #fbecb8; }
+.c.open svg { width: 15px; height: 15px; stroke-width: 2.5; }
+.c.res { background: var(--ink); border-color: var(--ink); color: #fff; cursor: default; font-size: 11.5px; }
+.c.closedday { background: repeating-linear-gradient(135deg, var(--surface) 0 6px, #e9ebef 6px 12px); }
+.c.dirty::after { content: ""; position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; border-radius: 99px; background: var(--ink); }
+.c.open.dirty::after { background: var(--gold-text); }
+
+.foot { margin-top: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; font-size: 12px; color: var(--text-2); }
+.lg { display: inline-flex; align-items: center; gap: 7px; }
+.lg i { width: 14px; height: 14px; border-radius: 4px; border: 1px solid transparent; }
+.lg .o { background: var(--gold-soft); border-color: var(--gold); }
+.lg .f { background: var(--surface); border-color: var(--line-strong); }
+.lg .r { background: var(--ink); }
+.lg .m { width: 7px; height: 7px; border-radius: 99px; background: var(--ink); }
+.foot .hint { margin-left: auto; color: var(--muted); }
+
+.note { margin-top: 14px; display: flex; gap: 10px; font-size: 13px; color: var(--text-2); padding: 0 4px; }
+.note svg { margin-top: 3px; color: var(--muted); }
+
+/* ── Barre d'enregistrement ────────────────────────────────────────────── */
+.save { position: fixed; left: calc(76px + 50vw - 38px); bottom: 24px; transform: translate(-50%, 140%); opacity: 0; transition: transform .22s cubic-bezier(.2,.8,.2,1), opacity .18s; background: var(--ink); color: #fff; border-radius: 16px; padding: 8px 8px 8px 18px; display: flex; align-items: center; gap: 14px; box-shadow: var(--shadow-panel); z-index: 30; white-space: nowrap; }
+.save.on { transform: translate(-50%, 0); opacity: 1; }
+.save .t { font-size: 13px; font-weight: 550; }
+.save .t span { color: #b9c4d2; font-weight: 400; }
+.save .btn.primary { background: var(--gold); border-color: var(--gold); color: var(--ink); font-weight: 600; }
+.save .btn.primary:hover { background: #ffc81f; }
+.save .btn.ghost { color: #d5dde7; }
+.spin { width: 14px; height: 14px; border: 2px solid rgba(11,34,56,.25); border-top-color: var(--ink); border-radius: 99px; animation: r .7s linear infinite; }
+@keyframes r { to { transform: rotate(360deg); } }
+
+.toast { position: fixed; left: calc(76px + 50vw - 38px); bottom: 24px; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; transition: .2s; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 10px 16px; font-size: 13px; font-weight: 550; display: flex; align-items: center; gap: 8px; box-shadow: 0 12px 30px -10px rgba(15,17,23,.25); z-index: 31; }
+.toast.on { opacity: 1; transform: translate(-50%, 0); }
+.toast svg { color: var(--ok); }
+
+/* ── Popup « Ajouter une récurrence » ──────────────────────────────────── */
+.veil { position: fixed; inset: 0; background: rgba(15,17,23,.34); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 40; }
+.veil.on { opacity: 1; pointer-events: auto; }
+.modal { position: fixed; left: 50%; top: 50%; width: 480px; max-width: calc(100vw - 24px); max-height: calc(100vh - 40px); background: #fff; border-radius: 20px; box-shadow: var(--shadow-panel); transform: translate(-50%, -46%) scale(.98); opacity: 0; pointer-events: none; transition: transform .2s cubic-bezier(.2,.8,.2,1), opacity .18s; z-index: 41; display: flex; flex-direction: column; }
+.modal.on { transform: translate(-50%, -50%); opacity: 1; pointer-events: auto; }
+.modal header { padding: 20px 22px 4px; display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.modal h2 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -0.02em; }
+.modal header p { margin: 2px 0 0; font-size: 13px; color: var(--text-2); }
+.modal .body { padding: 14px 22px 6px; overflow: auto; }
+.modal footer { padding: 14px 22px 18px; display: flex; justify-content: flex-end; gap: 8px; }
+.fl { font-size: 12.5px; font-weight: 600; margin: 18px 0 8px; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--surface); border-radius: 12px; padding: 3px; }
+.seg button { height: 34px; border: 0; border-radius: 9px; background: transparent; font-size: 13px; font-weight: 550; color: var(--text-2); }
+.seg button.on { background: #fff; color: var(--text); box-shadow: 0 1px 3px rgba(15,17,23,.1); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips.days { display: grid; grid-template-columns: repeat(7, 1fr); }
+.chip { height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line-strong); background: #fff; font-size: 13px; font-weight: 550; color: var(--text-2); }
+.chip:hover { background: var(--surface); }
+.chip.on, .chip.on:hover { background: var(--ink); border-color: var(--ink); color: #fff; }
+.chips.days .chip { padding: 0; }
+.hours { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--text-2); }
+.sel { height: 38px; border: 1px solid var(--line-strong); border-radius: 10px; padding: 0 30px 0 12px; font: inherit; font-size: 13.5px; font-weight: 550; color: var(--text); background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234d5463' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 11px center; appearance: none; cursor: pointer; }
+.hours .chip { margin-left: auto; }
+.date { margin-top: 8px; height: 38px; border: 1px solid var(--line-strong); border-radius: 10px; padding: 0 12px; font: inherit; font-size: 13.5px; }
+.sum { margin-top: 20px; border-radius: 12px; padding: 12px 14px; background: var(--gold-soft); color: var(--gold-text); font-size: 13px; line-height: 1.5; }
+.sum.close { background: var(--surface); color: var(--text-2); }
+.sum b { color: var(--text); font-weight: 600; }
+.sum small { display: block; margin-top: 4px; font-size: 12px; opacity: .9; }
+.sum.empty { background: var(--surface); color: var(--muted); }
+
+/* ── Visite guidée (mêmes bulles que maquette-visite-guidee.html) ───────── */
+.tour { position: fixed; inset: 0; z-index: 60; pointer-events: none; }
+.tour.on { pointer-events: auto; }
+.spot { position: fixed; left: 0; top: 0; border-radius: 14px; box-shadow: 0 0 0 9999px rgba(8,16,28,.58); opacity: 0; transition: opacity .25s, transform .3s cubic-bezier(.2,.8,.2,1); pointer-events: none; }
+.spot::after { content: ""; position: absolute; inset: -3px; border-radius: 17px; border: 2px solid var(--gold); }
+.tour.on .spot { opacity: 1; }
+.bubble { position: fixed; left: 0; top: 0; width: 320px; background: #fff; border-radius: 18px; padding: 18px 18px 14px; box-shadow: 0 24px 50px -16px rgba(0,0,0,.45); opacity: 0; transform: translateY(8px); transition: opacity .22s, transform .22s; }
+.bubble.show { opacity: 1; transform: none; }
+.bubble .tail { position: absolute; width: 18px; height: 18px; background: #fff; transform: rotate(45deg); border-radius: 3px; }
+.bubble .cnt { font-size: 11.5px; font-weight: 600; color: var(--gold-text); letter-spacing: .06em; }
+.bubble h3 { margin: 4px 0 6px; font-size: 16px; font-weight: 700; letter-spacing: -0.015em; color: var(--ink); line-height: 1.3; }
+.bubble p { margin: 0; font-size: 13.5px; color: var(--text-2); line-height: 1.55; }
+.bubble .dots { display: flex; gap: 5px; margin: 14px 0 12px; }
+.bubble .dots i { width: 6px; height: 6px; border-radius: 99px; background: var(--line-strong); }
+.bubble .dots i.on { width: 18px; background: var(--ink); }
+.bubble .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.bubble .row div { display: flex; gap: 8px; }
+.btn.sm { height: 34px; padding: 0 12px; font-size: 12.5px; border-radius: 10px; }
+.btn.sm.plain { border-color: transparent; color: var(--muted); }
+
+/* ── Téléphone ─────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .rail { display: none; }
+  .shell { padding-left: 0; }
+  .page { padding: 20px 16px 170px; }
+  .tabbar { display: flex; position: fixed; left: 14px; right: 14px; bottom: 16px; height: 62px; background: rgba(255,255,255,.92); backdrop-filter: blur(14px); border-radius: 22px; box-shadow: 0 12px 30px -10px rgba(15,17,23,.3); align-items: center; justify-content: space-between; padding: 0 8px; z-index: 20; }
+  .tabbar span { height: 46px; min-width: 46px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; color: var(--text-2); font-size: 13px; font-weight: 600; }
+  .tabbar span.on { background: var(--ink); color: #fff; padding: 0 16px; }
+  .head h1 { font-size: 24px; }
+  .head .btn .lb { display: none; }
+  .head .btn { width: 38px; padding: 0; justify-content: center; }
+  .cal { margin-top: 16px; padding: 14px 10px 14px; border-radius: 18px; }
+  .bar { gap: 6px; }
+  .week { width: 100%; justify-content: space-between; }
+  .week .label { min-width: 0; flex: 1; font-size: 13.5px; }
+  .today, .bar .sp { display: none; }
+  .count { width: 100%; text-align: center; }
+  .grid { grid-template-columns: 30px repeat(7, minmax(0, 1fr)); gap: 4px; margin-top: 10px; }
+  .dh { padding: 4px 0 6px; }
+  .dh .d { font-size: 11px; }
+  .dh .n { font-size: 15px; }
+  .dh .s { display: none; }
+  .dh.full .n::after { content: ""; display: block; width: 5px; height: 5px; border-radius: 99px; background: var(--gold); margin: 2px auto 0; }
+  .bh { padding: 0 3px 0 0; font-size: 11px; }
+  .bh small { display: none; }
+  .c { height: 46px; border-radius: 8px; font-size: 10px; }
+  .c.res { font-size: 9.5px; padding: 0 2px; overflow: hidden; }
+  .foot .hint { margin-left: 0; width: 100%; }
+  .save, .toast { left: 50%; bottom: 92px; }
+  .save { left: 16px; right: 16px; transform: translateY(140%); padding-left: 14px; gap: 6px; }
+  .save.on { transform: none; }
+  .save .t { flex: 1; font-size: 12.5px; }
+  .save .t span { display: none; }
+  .modal { left: 0; right: 0; top: auto; bottom: 0; width: auto; max-width: none; max-height: 90vh; border-radius: 22px 22px 0 0; transform: translateY(105%); opacity: 1; }
+  .modal.on { transform: none; }
+  .modal footer { padding-bottom: 24px; }
+  .modal footer .btn { flex: 1; justify-content: center; }
+  .hours .chip { margin-left: 0; }
+  .bubble { width: calc(100vw - 28px); }
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-dash" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></symbol>
+  <symbol id="i-plane" viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></symbol>
+  <symbol id="i-takeoff" viewBox="0 0 24 24"><path d="M2 22h20M6.4 17.4 3 13.9l2.1-.8 3 1.9 3.4-2-6-4.8 2.3-.9 8.1 3.1 3.2-1.6c1.1-.6 2.4-.2 2.9.9.5 1-.1 2.2-1.1 2.7l-12 5.8c-.9.4-1.9.2-2.5-.5z"/></symbol>
+  <symbol id="i-nav" viewBox="0 0 24 24"><path d="m3 11 19-9-9 19-2-8z"/></symbol>
+  <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1z"/><path d="M8 7h8M8 11h8M8 15h5"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="i-scale" viewBox="0 0 24 24"><path d="m16 16 3-8 3 8c-.9.7-1.9 1-3 1s-2.1-.3-3-1zM2 16l3-8 3 8c-.9.7-1.9 1-3 1s-2.1-.3-3-1zM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.6z"/><path d="M13 2v7h7"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.7 18-8-14a2 2 0 0 0-3.5 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+</svg>
+
+<aside class="rail" aria-label="Navigation pilote">
+  <img src="public/icone.svg" alt="">
+  <a title="Tableau de bord"><svg class="i"><use href="#i-dash"/></svg></a>
+  <a title="Mes vols"><svg class="i"><use href="#i-plane"/></svg></a>
+  <a title="Mes annonces"><svg class="i"><use href="#i-takeoff"/></svg></a>
+  <a title="Itinéraires"><svg class="i"><use href="#i-nav"/></svg></a>
+  <a title="Transactions"><svg class="i"><use href="#i-receipt"/></svg></a>
+  <a class="on" title="Disponibilités"><svg class="i"><use href="#i-cal"/></svg></a>
+  <a title="Masse & centrage"><svg class="i"><use href="#i-scale"/></svg></a>
+  <a title="Logbook"><svg class="i"><use href="#i-note"/></svg></a>
+  <a title="Mon profil"><svg class="i"><use href="#i-user"/></svg></a>
+  <span class="gap"></span>
+  <a title="Guide pilote"><svg class="i"><use href="#i-book"/></svg></a>
+  <a title="Signaler un problème"><svg class="i"><use href="#i-flag"/></svg></a>
+</aside>
+
+<div class="shell"><div class="page">
+  <div class="head">
+    <h1>Disponibilités</h1>
+    <div style="display:flex;gap:8px">
+      <button class="iconbtn" id="help" aria-label="Revoir la visite" title="Revoir la visite"><svg class="i"><use href="#i-help"/></svg></button>
+      <button class="btn" id="openRec" data-tour="rec" title="Ajouter une récurrence"><svg class="i"><use href="#i-repeat"/></svg><span class="lb">Ajouter une récurrence</span></button>
+    </div>
+  </div>
+  <p class="lead">Un seul calendrier pour toutes vos annonces. <b>Un passager ne peut réserver qu'un créneau ouvert</b>, et rien d'ouvert veut dire aucune réservation possible.</p>
+
+  <section class="cal">
+    <div class="bar">
+      <div class="week">
+        <button class="iconbtn" id="prev" aria-label="Semaine précédente"><svg class="i"><use href="#i-left"/></svg></button>
+        <span class="label" id="wlabel"></span>
+        <button class="iconbtn" id="next" aria-label="Semaine suivante"><svg class="i"><use href="#i-right"/></svg></button>
+      </div>
+      <button class="today" id="today">Cette semaine</button>
+      <span class="sp"></span>
+      <span class="count" id="count"></span>
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <div class="foot">
+      <span class="lg"><i class="o"></i>Ouvert</span>
+      <span class="lg"><i class="f"></i>Fermé</span>
+      <span class="lg"><i class="r"></i>Réservé</span>
+      <span class="lg"><i class="m"></i>Pas encore enregistré</span>
+      <span class="hint">Touchez un jour ou une heure pour tout ouvrir ou tout fermer.</span>
+    </div>
+  </section>
+
+  <div class="note"><svg class="i"><use href="#i-info"/></svg><p style="margin:0">Le passager réserve un bloc entier, par exemple samedi 9 h à 11 h. Vous calez l'heure exacte ensemble. Un vol de plus de 2 h demande deux blocs ouverts qui se suivent.</p></div>
+</div></div>
+
+<nav class="tabbar" aria-label="Navigation pilote">
+  <span><svg class="i"><use href="#i-dash"/></svg></span>
+  <span><svg class="i"><use href="#i-plane"/></svg></span>
+  <span><svg class="i"><use href="#i-scale"/></svg></span>
+  <span><svg class="i"><use href="#i-takeoff"/></svg></span>
+  <span class="on"><svg class="i"><use href="#i-more"/></svg>Plus</span>
+</nav>
+
+<div class="save" id="save" role="status">
+  <span class="t" id="saveTxt"></span>
+  <button class="btn ghost" id="discard">Annuler</button>
+  <button class="btn primary" id="doSave">Enregistrer</button>
+</div>
+<div class="toast" id="toast"><svg class="i"><use href="#i-check"/></svg><span id="toastTxt"></span></div>
+
+<div class="veil" id="veil"></div>
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+  <header>
+    <div><h2 id="mTitle">Ajouter une récurrence</h2><p>Les mêmes créneaux, sur plusieurs semaines d'un coup.</p></div>
+    <button class="iconbtn" id="mClose" aria-label="Fermer"><svg class="i"><use href="#i-x"/></svg></button>
+  </header>
+  <div class="body">
+    <div class="seg" id="mMode"><button class="on" data-v="open">Ouvrir des créneaux</button><button data-v="close">Fermer (congés…)</button></div>
+    <p class="fl">Quels jours ?</p>
+    <div class="chips days" id="mDays">
+      <button class="chip" data-d="0">Lun</button><button class="chip on" data-d="1">Mar</button><button class="chip" data-d="2">Mer</button><button class="chip" data-d="3">Jeu</button><button class="chip" data-d="4">Ven</button><button class="chip" data-d="5">Sam</button><button class="chip" data-d="6">Dim</button>
+    </div>
+    <p class="fl">Quelles heures ?</p>
+    <div class="hours">
+      De <select class="sel num" id="mFrom"></select> à <select class="sel num" id="mTo"></select>
+      <button class="chip" id="mAllDay">Toute la journée</button>
+    </div>
+    <p class="fl">Pendant combien de temps ?</p>
+    <div class="chips" id="mDur">
+      <button class="chip" data-w="4">4 semaines</button><button class="chip on" data-w="8">8 semaines</button><button class="chip" data-w="12">12 semaines</button><button class="chip" data-w="0">Jusqu'au…</button>
+    </div>
+    <input type="date" class="date" id="mUntil" hidden>
+    <div class="sum" id="mSum"></div>
+  </div>
+  <footer>
+    <button class="btn" id="mCancel">Annuler</button>
+    <button class="btn primary" id="mApply">Appliquer</button>
+  </footer>
+</div>
+
+<div class="tour" id="tour">
+  <div class="spot" id="spot"></div>
+  <div class="bubble" id="bubble" role="dialog" aria-live="polite">
+    <span class="tail" id="tail"></span>
+    <div class="cnt" id="bcnt"></div>
+    <h3 id="btitle"></h3>
+    <p id="btext"></p>
+    <div class="dots" id="bdots"></div>
+    <div class="row"><button class="btn sm plain" id="bskip">Passer</button><div id="bacts"></div></div>
+  </div>
+</div>
+
+<script>
+const BLOCKS = [7, 9, 11, 13, 15, 17, 19];
+const pad = n => String(n).padStart(2, "0");
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const key = (d, b) => `${iso(d)}|${b}`;
+const fmtD = new Intl.DateTimeFormat("fr-BE", { day: "numeric", month: "short" });
+const DAYS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+
+const MONDAY0 = new Date(2026, 8, 28); // semaine en cours (maquette : aujourd'hui = dim. 27/09)
+let week = 0;
+
+// Données de démo : week-ends matin ouverts, mercredi après-midi, deux réservations
+let open = new Set();
+const reserved = new Map();
+for (let w = 0; w < 6; w++) {
+  const m = addDays(MONDAY0, w * 7);
+  [5, 6].forEach(d => [7, 9, 11].forEach(b => open.add(key(addDays(m, d), b))));
+  [13, 15].forEach(b => open.add(key(addDays(m, 2), b)));
+}
+reserved.set(key(addDays(MONDAY0, 5), 9), "Julie");
+reserved.set(key(addDays(MONDAY0, 6), 11), "Marc");
+reserved.set(key(addDays(MONDAY0, 12), 7), "Sofia");
+let saved = new Set(open);
+
+const $ = id => document.getElementById(id);
+const monday = () => addDays(MONDAY0, week * 7);
+const dirtyCount = () => { let n = 0; for (const k of open) if (!saved.has(k)) n++; for (const k of saved) if (!open.has(k)) n++; return n; };
+
+function render() {
+  const m = monday(), end = addDays(m, 6);
+  $("wlabel").textContent = `Semaine du ${fmtD.format(m)} au ${fmtD.format(end)}`;
+  $("prev").disabled = week === 0;
+  const g = $("grid"); g.innerHTML = "<span></span>";
+  let weekOpen = 0;
+
+  for (let d = 0; d < 7; d++) {
+    const day = addDays(m, d);
+    const n = BLOCKS.filter(b => open.has(key(day, b))).length;
+    weekOpen += n;
+    const s = n === 0 ? "Fermé" : n === BLOCKS.length ? "Journée" : `${n} bloc${n > 1 ? "s" : ""}`;
+    const bt = document.createElement("button");
+    bt.className = "dh" + (d >= 5 ? " we" : "") + (n === BLOCKS.length ? " full" : "");
+    bt.dataset.col = d;
+    bt.title = n === BLOCKS.length ? "Fermer toute la journée" : "Ouvrir toute la journée";
+    bt.innerHTML = `<span class="d">${DAYS[d]}</span><span class="n num">${day.getDate()}</span><span class="s">${s}</span>`;
+    bt.onclick = () => toggleMany(BLOCKS.map(b => key(day, b)));
+    g.appendChild(bt);
+  }
+  for (const b of BLOCKS) {
+    const bh = document.createElement("button");
+    bh.className = "bh num";
+    bh.dataset.row = b;
+    bh.title = "Ouvrir ou fermer ce créneau toute la semaine";
+    bh.innerHTML = `${pad(b)} h<small>${pad(b + 2)} h</small>`;
+    bh.onclick = () => toggleMany([0,1,2,3,4,5,6].map(d => key(addDays(m, d), b)));
+    g.appendChild(bh);
+    for (let d = 0; d < 7; d++) {
+      const day = addDays(m, d), k = key(day, b);
+      const c = document.createElement("button");
+      c.className = "c";
+      c.dataset.k = k;
+      c.dataset.col = d; c.dataset.row = b;
+      const dayClosed = BLOCKS.every(x => !open.has(key(day, x)));
+      if (reserved.has(k)) { c.classList.add("res"); c.textContent = reserved.get(k); c.title = `Réservé par ${reserved.get(k)}`; }
+      else if (open.has(k)) { c.classList.add("open"); c.innerHTML = '<svg class="i"><use href="#i-check"/></svg>'; }
+      else if (dayClosed) c.classList.add("closedday");
+      if (open.has(k) !== saved.has(k)) c.classList.add("dirty");
+      c.setAttribute("aria-label", `${DAYS[d]} ${day.getDate()}, ${b} h à ${b + 2} h : ${reserved.has(k) ? "réservé" : open.has(k) ? "ouvert" : "fermé"}`);
+      g.appendChild(c);
+    }
+  }
+  $("count").innerHTML = `<b class="num">${weekOpen}</b> bloc${weekOpen > 1 ? "s" : ""} ouvert${weekOpen > 1 ? "s" : ""} cette semaine`;
+
+  const n = dirtyCount();
+  $("save").classList.toggle("on", n > 0);
+  $("saveTxt").innerHTML = `${n} modification${n > 1 ? "s" : ""} <span>non enregistrée${n > 1 ? "s" : ""}</span>`;
+}
+
+// Ouvre tout si au moins un bloc (hors réservés) est fermé, sinon ferme tout
+function toggleMany(keys) {
+  const free = keys.filter(k => !reserved.has(k));
+  const allOpen = free.every(k => open.has(k));
+  free.forEach(k => allOpen ? open.delete(k) : open.add(k));
+  render();
+}
+
+// Clic ou glisser (souris) : le premier bloc touché décide ouvrir/fermer
+// Au doigt : simple toucher (click), pour ne rien cocher en faisant défiler la page
+let paint = null, lastPointer = "";
+function flip(c) {
+  if (!c || c.classList.contains("res")) return null;
+  const k = c.dataset.k, to = open.has(k) ? "close" : "open";
+  to === "open" ? open.add(k) : open.delete(k);
+  render();
+  return to;
+}
+$("grid").addEventListener("pointerdown", e => {
+  lastPointer = e.pointerType;
+  if (e.pointerType === "mouse") paint = flip(e.target.closest(".c"));
+});
+$("grid").addEventListener("click", e => {
+  if (lastPointer !== "mouse") flip(e.target.closest(".c"));
+  lastPointer = "";
+});
+$("grid").addEventListener("pointerover", e => {
+  if (!paint) return;
+  const c = e.target.closest(".c"); if (!c || c.classList.contains("res")) return;
+  const k = c.dataset.k;
+  if ((paint === "open") !== open.has(k)) { paint === "open" ? open.add(k) : open.delete(k); render(); }
+});
+addEventListener("pointerup", () => { paint = null; });
+
+$("prev").onclick = () => { if (week > 0) { week--; render(); } };
+$("next").onclick = () => { week++; render(); };
+$("today").onclick = () => { week = 0; render(); };
+
+function toast(t) { $("toastTxt").textContent = t; $("toast").classList.add("on"); setTimeout(() => $("toast").classList.remove("on"), 2200); }
+$("discard").onclick = () => { open = new Set(saved); render(); };
+$("doSave").onclick = () => {
+  const b = $("doSave"); b.disabled = true; b.innerHTML = '<span class="spin"></span>';
+  setTimeout(() => {
+    saved = new Set(open); b.disabled = false; b.textContent = "Enregistrer";
+    render(); setTimeout(() => toast("Disponibilités enregistrées"), 150);
+  }, 700);
+};
+addEventListener("beforeunload", e => { if (dirtyCount()) { e.preventDefault(); e.returnValue = ""; } });
+
+// ── Récurrence : remplit la grille, n'enregistre pas de règle ──
+const HOURS = [...BLOCKS, 21];
+const recu = { mode: "open", days: new Set([1]), from: 13, to: 17, weeks: 8 };
+$("mFrom").innerHTML = BLOCKS.map(h => `<option value="${h}">${pad(h)} h</option>`).join("");
+$("mTo").innerHTML = HOURS.slice(1).map(h => `<option value="${h}">${pad(h)} h</option>`).join("");
+const DLONG = ["lundis", "mardis", "mercredis", "jeudis", "vendredis", "samedis", "dimanches"];
+
+function recKeys() {
+  const m = monday(), keys = [];
+  for (let w = 0; w < recu.weeks; w++) for (const d of recu.days)
+    for (const b of BLOCKS) if (b >= recu.from && b + 2 <= recu.to) keys.push(key(addDays(m, w * 7 + d), b));
+  return keys;
+}
+function renderRec() {
+  $("mFrom").value = recu.from; $("mTo").value = recu.to;
+  document.querySelectorAll("#mMode button").forEach(b => b.classList.toggle("on", b.dataset.v === recu.mode));
+  document.querySelectorAll("#mDays .chip").forEach(c => c.classList.toggle("on", recu.days.has(+c.dataset.d)));
+  $("mAllDay").classList.toggle("on", recu.from === 7 && recu.to === 21);
+  const sum = $("mSum"), keys = recKeys();
+  if (!recu.days.size) { sum.className = "sum empty"; sum.textContent = "Choisissez au moins un jour."; $("mApply").disabled = true; return; }
+  $("mApply").disabled = false;
+  const days = [...recu.days].sort().map(d => DLONG[d]);
+  const dl = days.length > 1 ? days.slice(0, -1).join(", ") + " et " + days.at(-1) : days[0];
+  const m = monday(), last = addDays(m, (recu.weeks - 1) * 7 + 6);
+  const res = keys.filter(k => reserved.has(k)).length;
+  const verb = recu.mode === "open" ? "Ouvre" : "Ferme";
+  sum.className = "sum" + (recu.mode === "close" ? " close" : "");
+  sum.innerHTML = `${verb} <b>les ${dl} de ${recu.from} h à ${recu.to} h</b>, du ${fmtD.format(m)} au ${fmtD.format(last)}, soit <b class="num">${keys.length} blocs</b>.`
+    + (recu.mode === "close" && res ? `<small>${res} bloc${res > 1 ? "s" : ""} déjà réservé${res > 1 ? "s" : ""} ne ${res > 1 ? "seront" : "sera"} pas fermé${res > 1 ? "s" : ""}.</small>` : "")
+    + `<small>Vous pourrez encore retoucher la grille avant d'enregistrer.</small>`;
+}
+function openRec(on) { $("veil").classList.toggle("on", on); $("modal").classList.toggle("on", on); if (on) renderRec(); }
+$("openRec").onclick = () => openRec(true);
+$("mClose").onclick = $("mCancel").onclick = $("veil").onclick = () => openRec(false);
+$("mMode").onclick = e => { const b = e.target.closest("button"); if (b) { recu.mode = b.dataset.v; renderRec(); } };
+$("mDays").onclick = e => { const c = e.target.closest(".chip"); if (!c) return; const d = +c.dataset.d; recu.days.has(d) ? recu.days.delete(d) : recu.days.add(d); renderRec(); };
+$("mFrom").onchange = e => { recu.from = +e.target.value; if (recu.to <= recu.from) recu.to = recu.from + 2; renderRec(); };
+$("mTo").onchange = e => { recu.to = +e.target.value; if (recu.from >= recu.to) recu.from = recu.to - 2; renderRec(); };
+$("mAllDay").onclick = () => { recu.from = 7; recu.to = 21; renderRec(); };
+$("mDur").onclick = e => {
+  const c = e.target.closest(".chip"); if (!c) return;
+  document.querySelectorAll("#mDur .chip").forEach(x => x.classList.toggle("on", x === c));
+  const w = +c.dataset.w;
+  $("mUntil").hidden = w !== 0;
+  if (w) recu.weeks = w; else $("mUntil").value = iso(addDays(monday(), recu.weeks * 7 - 1));
+  renderRec();
+};
+$("mUntil").onchange = e => {
+  const d = new Date(e.target.value + "T12:00");
+  recu.weeks = Math.max(1, Math.ceil((d - monday() + 864e5) / (7 * 864e5)));
+  renderRec();
+};
+$("mApply").onclick = () => {
+  const keys = recKeys().filter(k => !reserved.has(k));
+  keys.forEach(k => recu.mode === "open" ? open.add(k) : open.delete(k));
+  openRec(false); render();
+  setTimeout(() => toast(`${keys.length} blocs ${recu.mode === "open" ? "ouverts" : "fermés"}, pensez à enregistrer`), 200);
+};
+
+// ── Visite guidée (1re visite, puis bouton « ? ») ──
+const STEPS = [
+  { sel: '.c[data-col="2"][data-row="9"]', title: "Touchez un bloc pour l'ouvrir",
+    text: "Jaune : un passager peut réserver ce créneau de 2 h. Touchez encore pour le fermer. Rien n'est envoyé avant de cliquer sur Enregistrer." },
+  { sel: '[data-col="5"]', title: "Toute la journée en un clic",
+    text: "Touchez le jour en haut de la colonne : toute la journée s'ouvre. Touchez encore : elle se ferme." },
+  { sel: '[data-row="13"]', title: "Un créneau toute la semaine",
+    text: "Touchez l'heure à gauche : ce créneau s'ouvre du lundi au dimanche." },
+  { sel: '[data-tour="rec"]', title: "Les semaines suivantes",
+    text: "Ajoutez une récurrence : par exemple chaque mardi de 13 h à 17 h pendant 8 semaines. Même chose pour fermer vos congés." },
+];
+let step = -1;
+function unionRect(sel) {
+  const rs = [...document.querySelectorAll(sel)].map(e => e.getBoundingClientRect());
+  const l = Math.min(...rs.map(r => r.left)), t = Math.min(...rs.map(r => r.top));
+  return { left: l, top: t, width: Math.max(...rs.map(r => r.right)) - l, height: Math.max(...rs.map(r => r.bottom)) - t };
+}
+function place() {
+  if (step < 0) return;
+  const r = unionRect(STEPS[step].sel), pad = 6;
+  const x = r.left - pad, y = r.top - pad, w = r.width + pad * 2, h = r.height + pad * 2;
+  const spot = $("spot"), b = $("bubble"), tail = $("tail");
+  spot.style.transform = `translate(${x}px, ${y}px)`; spot.style.width = w + "px"; spot.style.height = h + "px";
+  const bw = b.offsetWidth, bh = b.offsetHeight, gap = 16, vw = innerWidth, vh = innerHeight;
+  let side = y + h + gap + bh < vh - 10 ? "below" : y - gap - bh > 10 ? "above" : "side";
+  let bx, by;
+  if (side === "side" && x + w + gap + bw < vw - 10) { bx = x + w + gap; by = Math.min(Math.max(10, y + h / 2 - bh / 2), vh - bh - 10); }
+  else if (side === "side") { side = "over"; bx = (vw - bw) / 2; by = vh - bh - 100; }
+  else { bx = Math.min(Math.max(14, x + w / 2 - bw / 2), vw - bw - 14); by = side === "below" ? y + h + gap : y - gap - bh; }
+  b.style.left = bx + "px"; b.style.top = by + "px";
+  tail.style.display = side === "over" ? "none" : "";
+  if (side === "side") { tail.style.left = "-7px"; tail.style.top = Math.min(Math.max(18, y + h / 2 - by - 9), bh - 36) + "px"; tail.style.bottom = ""; }
+  else { tail.style.left = Math.min(Math.max(18, x + w / 2 - bx - 9), bw - 36) + "px"; tail.style.top = side === "below" ? "-7px" : ""; tail.style.bottom = side === "below" ? "" : "-7px"; }
+}
+function showStep(i) {
+  step = i; const s = STEPS[i];
+  $("bubble").classList.remove("show"); $("tour").classList.add("on");
+  document.querySelector(s.sel).scrollIntoView({ block: "center", behavior: "smooth" });
+  setTimeout(() => {
+    $("bcnt").textContent = `${i + 1} / ${STEPS.length}`;
+    $("btitle").textContent = s.title; $("btext").textContent = s.text;
+    $("bdots").innerHTML = STEPS.map((_, k) => `<i class="${k === i ? "on" : ""}"></i>`).join("");
+    const last = i === STEPS.length - 1;
+    $("bskip").style.visibility = last ? "hidden" : "";
+    $("bacts").innerHTML = (i > 0 ? '<button class="btn sm" id="bprev">Retour</button>' : "")
+      + (last ? '<button class="btn sm primary" id="bdone">Terminer</button>' : '<button class="btn sm primary" id="bnext">Suivant<svg class="i"><use href="#i-arrow"/></svg></button>');
+    if ($("bprev")) $("bprev").onclick = () => showStep(i - 1);
+    if ($("bnext")) $("bnext").onclick = () => showStep(i + 1);
+    if ($("bdone")) $("bdone").onclick = endTour;
+    place(); $("bubble").classList.add("show");
+  }, 380);
+}
+function endTour() { step = -1; $("bubble").classList.remove("show"); $("tour").classList.remove("on"); }
+$("bskip").onclick = endTour;
+$("help").onclick = () => { week = 0; render(); showStep(0); };
+addEventListener("resize", place);
+addEventListener("scroll", place, { passive: true });
+addEventListener("keydown", e => {
+  if (e.key === "Escape") { openRec(false); endTour(); }
+  if (step < 0) return;
+  if (e.key === "ArrowRight" && step < STEPS.length - 1) showStep(step + 1);
+  if (e.key === "ArrowLeft" && step > 0) showStep(step - 1);
+});
+
+render();
+setTimeout(() => showStep(0), 700); // 1re visite : démarre toute seule
+</script>
+</body>
+</html>

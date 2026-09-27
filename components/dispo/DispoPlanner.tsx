@@ -9,12 +9,11 @@ import {
 } from "@/components/pilote/studio";
 import { computeEffectiveDay, type DispoJourIndiv, type DispoPlage, type EffectiveDay } from "@/lib/dispo-utils";
 import * as adminActions from "@/lib/actions/disponibilites";
-import * as piloteActions from "@/lib/actions/pilote-disponibilites";
 
-// Calendrier de disponibilités, style « Studio », partagé par l'admin (calendrier
-// de Fly Horizons) et l'espace pilote (calendrier du pilote, pour ses annonces).
-// Même modèle des deux côtés : plages récurrentes + exceptions d'un jour
-// (lib/dispo-utils.ts, qui calcule aussi ce que voient les clients).
+// Calendrier de disponibilités de l'admin (calendrier de Fly Horizons), style
+// « Studio » : plages récurrentes + exceptions d'un jour (lib/dispo-utils.ts, qui
+// calcule aussi ce que voient les clients). L'espace pilote a sa propre grille de
+// blocs de 2 h depuis le 27/09 (components/pilote/dispo/DispoGrid.tsx).
 //
 // Bureau et tablette : grille de la semaine, on trace un créneau en glissant,
 // on déplace ou étire un bloc (événements pointeur : souris et doigt).
@@ -31,7 +30,7 @@ type Actions = {
   deleteJour: (id: string) => Promise<Result>;
 };
 
-const ACTIONS: Record<"admin" | "pilote", Actions> = {
+const ACTIONS: Record<"admin", Actions> = {
   admin: {
     createPlage: adminActions.createPlage,
     updatePlage: adminActions.updatePlage,
@@ -40,14 +39,7 @@ const ACTIONS: Record<"admin" | "pilote", Actions> = {
     upsertJours: adminActions.upsertJoursIndivBulk,
     deleteJour: adminActions.deleteJourIndiv,
   },
-  pilote: {
-    createPlage: piloteActions.createPilotePlage,
-    updatePlage: piloteActions.updatePilotePlage,
-    togglePlageActif: piloteActions.togglePilotePlageActif,
-    deletePlage: piloteActions.deletePilotePlage,
-    upsertJours: piloteActions.upsertPiloteJoursBulk,
-    deleteJour: piloteActions.deletePiloteJour,
-  },
+
 };
 
 const errorOf = (r: Result) => (r && "error" in r ? r.error ?? null : null);
@@ -125,7 +117,7 @@ function dayDraft(date: string, plages: DispoPlage[], jours: DispoJourIndiv[], t
 // ── Composant principal ─────────────────────────────────────────
 
 export function DispoPlanner({ scope, plages, joursIndiv }: {
-  scope: "admin" | "pilote";
+  scope: "admin";
   plages: DispoPlage[];
   joursIndiv: DispoJourIndiv[];
 }) {

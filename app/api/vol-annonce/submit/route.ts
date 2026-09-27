@@ -5,45 +5,33 @@ import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { reservationConfirmationFreeEmail, annonceInscriptionPlaceEmail } from "@/lib/email-templates";
 import { finalizeAnnonceGroupPricing } from "@/lib/annonces-pilote-server";
 import { escapeHtml } from "@/lib/utils";
-import { computeEffectiveDay } from "@/lib/dispo-utils";
+import { departsPossibles, isBloc } from "@/lib/pilote-creneaux";
 import { notifyPiloteReservation } from "@/lib/push";
 
-const DEFAULT_HEURE_DEBUT = "06:00";
-const DEFAULT_HEURE_FIN = "21:00";
-
-/** Le créneau demandé tombe-t-il dans une fenêtre ouverte déclarée par le pilote ?
- * Aucune dispo configurée du tout = pas de contrainte (comportement historique). */
-async function isSlotDansDispos(
+/** Le vol demandé tient-il dans des blocs de 2 h ouverts par le pilote, et sont-ils
+ * libres ? (lib/pilote-creneaux.ts, même calcul que les routes month et slots).
+ * Rien de coché = fermé. En mode « place », les autres passagers de la même
+ * annonce partagent le vol : ils ne bloquent pas le créneau. */
+async function checkCreneau(
   supabase: ReturnType<typeof createAdminClient>,
-  piloteId: string,
+  annonce: { id: string; pilote_id: string; duree: number; mode_vente: string | null },
   dateVol: string,
-  heureVol: string,
-  dureeMin: number,
-) {
-  const [{ data: jourIndiv }, { data: dispos }, { count: plageTotal }, { count: joursTotal }] = await Promise.all([
-    supabase.from("pilote_disponibilites_jours").select("*").eq("pilote_id", piloteId).eq("date", dateVol).maybeSingle(),
-    supabase.from("pilote_disponibilites").select("*").eq("pilote_id", piloteId)
-      .lte("date_debut", dateVol).gte("date_fin", dateVol).eq("actif", true),
-    supabase.from("pilote_disponibilites").select("id", { count: "exact", head: true }).eq("pilote_id", piloteId).eq("actif", true),
-    supabase.from("pilote_disponibilites_jours").select("id", { count: "exact", head: true }).eq("pilote_id", piloteId),
+  heureVolDemandee: string,
+): Promise<"ok" | "ferme" | "pris"> {
+  const h = String(heureVolDemandee);
+  const bloc = Number(h.slice(0, 2));
+  if (!/^\d{2}:00/.test(h) || !isBloc(bloc)) return "ferme";
+
+  let resasQuery = supabase.from("reservations").select("heure_vol, duree")
+    .eq("pilote_id", annonce.pilote_id).eq("date_vol", dateVol).neq("statut", "annulee");
+  if (annonce.mode_vente === "place") resasQuery = resasQuery.neq("annonce_id", annonce.id);
+  const [{ data: creneaux }, { data: resas }] = await Promise.all([
+    supabase.from("pilote_creneaux").select("heure").eq("pilote_id", annonce.pilote_id).eq("date", dateVol),
+    resasQuery,
   ]);
-  const hasAnyDispo = (plageTotal ?? 0) > 0 || (joursTotal ?? 0) > 0;
-
-  const [h, m] = heureVol.split(":").map(Number);
-  const start = h * 60 + m;
-  const end = start + dureeMin;
-  const within = (hd: string, hf: string) => {
-    const [hdH, hdM] = hd.split(":").map(Number);
-    const [hfH, hfM] = hf.split(":").map(Number);
-    return start >= hdH * 60 + hdM && end <= hfH * 60 + hfM;
-  };
-
-  if (!hasAnyDispo) return within(DEFAULT_HEURE_DEBUT, DEFAULT_HEURE_FIN);
-
-  const effective = computeEffectiveDay(dateVol, dispos ?? [], jourIndiv ? [jourIndiv] : []);
-  if (effective.type === "override") return !effective.ferme && within(effective.heure_debut, effective.heure_fin);
-  if (effective.type === "plage") return effective.windows.some((w) => within(w.heure_debut, w.heure_fin));
-  return false;
+  const ouverts = (creneaux ?? []).map((c) => c.heure);
+  if (departsPossibles(ouverts, annonce.duree, resas ?? []).includes(bloc)) return "ok";
+  return departsPossibles(ouverts, annonce.duree, []).includes(bloc) ? "pris" : "ferme";
 }
 
 export async function POST(request: NextRequest) {
@@ -104,8 +92,12 @@ export async function POST(request: NextRequest) {
     if (passagersCount > annonce.places) {
       return NextResponse.json({ error: `Ce vol n'a que ${annonce.places} place(s) disponible(s).` }, { status: 400 });
     }
-    if (!(await isSlotDansDispos(supabase, annonce.pilote_id, date_vol, heure_vol, annonce.duree))) {
+    const creneau = await checkCreneau(supabase, annonce, date_vol, heure_vol);
+    if (creneau === "ferme") {
       return NextResponse.json({ error: "Ce créneau n'est pas disponible pour ce pilote." }, { status: 400 });
+    }
+    if (creneau === "pris") {
+      return NextResponse.json({ error: "Ce pilote a déjà un vol prévu sur ce créneau. Choisissez une autre date ou un autre créneau." }, { status: 409 });
     }
 
     const pilote = annonce.pilotes as { id: string; nom: string; email: string } | null;
@@ -132,35 +124,6 @@ export async function POST(request: NextRequest) {
         { error: `Il ne reste que ${annonce.places - (annonce.places_reservees ?? 0)} place(s) sur ce vol.` },
         { status: 409 },
       );
-    }
-
-    // Conflit d'horaire — scopé au pilote de cette annonce (deux pilotes différents
-    // peuvent voler au même moment, contrairement au flow standard mono-pilote).
-    // En mode « place », les autres demandes sur la MÊME annonce partagent le vol :
-    // on les exclut (sinon le 2ᵉ acheteur de place serait bloqué par le 1ᵉʳ).
-    let conflictQuery = supabase
-      .from("reservations")
-      .select("id, heure_vol, duree")
-      .eq("pilote_id", pilote.id)
-      .eq("date_vol", date_vol)
-      .neq("statut", "annulee");
-    if (modeVente === "place") conflictQuery = conflictQuery.neq("annonce_id", annonce_id);
-    const { data: conflicts } = await conflictQuery;
-
-    const [newH, newM] = (heure_vol as string).split(":").map(Number);
-    const newStart = newH * 60 + newM;
-    const newEnd = newStart + annonce.duree;
-
-    const taken = (conflicts ?? []).some(r => {
-      if (!r.heure_vol) return false;
-      const [rh, rm] = r.heure_vol.split(":").map(Number);
-      const rStart = rh * 60 + rm;
-      const rEnd = rStart + r.duree + 30; // +30 min de tampon, comme calcSlots
-      return newEnd + 30 > rStart && newStart < rEnd;
-    });
-
-    if (taken) {
-      return NextResponse.json({ error: "Ce pilote a déjà un vol prévu sur ce créneau. Choisissez une autre date ou heure." }, { status: 409 });
     }
 
     // Réclamation atomique — dès la demande (pas au paiement, qui vient plus tard

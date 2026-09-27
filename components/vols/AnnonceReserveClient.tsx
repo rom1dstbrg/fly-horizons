@@ -8,6 +8,7 @@ import {
   ChevronLeft, ChevronRight, Clock, AlertCircle, Loader2, CheckCircle,
 } from "lucide-react";
 import { formatDuration } from "@/lib/vouchers";
+import { blocsNecessaires, plageLabel } from "@/lib/pilote-creneaux";
 
 const MONTHS_FR = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 const DAYS_FR   = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
@@ -42,6 +43,10 @@ export function AnnonceReserveClient({ annonce }: { annonce: AnnonceReserveInfo 
   const [heure, setHeure] = useState("");
   const [slots, setSlots] = useState<string[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
+  // Le passager réserve un bloc de 2 h entier (deux pour un vol plus long) ;
+  // l'heure exacte du décollage se cale ensuite avec le pilote.
+  const nbBlocs = blocsNecessaires(annonce.duree);
+  const slotLabel = (s: string) => plageLabel(Number(s.slice(0, 2)), nbBlocs);
 
   const [prenom, setPrenom] = useState("");
   const [nom, setNom] = useState("");
@@ -166,7 +171,7 @@ export function AnnonceReserveClient({ annonce }: { annonce: AnnonceReserveInfo 
             {step === "datetime" ? "Étape 1 sur 2" : "Étape 2 sur 2"}
           </p>
           <h1 className="text-xl font-black text-foreground">
-            {step === "datetime" ? "Date & heure de vol" : "Vos informations"}
+            {step === "datetime" ? "Date & créneau de vol" : "Vos informations"}
           </h1>
           <p className="text-sm text-foreground/50 mt-1">
             {step === "datetime"
@@ -183,7 +188,7 @@ export function AnnonceReserveClient({ annonce }: { annonce: AnnonceReserveInfo 
               <>
                 <p className="flex items-start gap-1.5 text-xs text-foreground/60 mb-3">
                   <AlertCircle size={13} className="shrink-0 mt-0.5 text-primary" />
-                  Créneau souhaité, pas garanti : le pilote confirme votre demande sous peu.
+                  Créneau souhaité, pas garanti : le pilote confirme votre demande, puis fixe avec vous l&apos;heure exacte du décollage.
                 </p>
 
                 <div className="card-premium overflow-hidden">
@@ -245,7 +250,7 @@ export function AnnonceReserveClient({ annonce }: { annonce: AnnonceReserveInfo 
                           <p className="text-sm font-black text-foreground capitalize">{formattedDate}</p>
                           <span className="text-xs text-foreground/40">· {formatDuration(annonce.duree)}</span>
                         </div>
-                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                           {slots.map(s => (
                             <button key={s} type="button" onClick={() => setHeure(s)}
                               className={[
@@ -254,7 +259,7 @@ export function AnnonceReserveClient({ annonce }: { annonce: AnnonceReserveInfo 
                                   ? "border-primary bg-primary text-primary-foreground shadow-sm"
                                   : "border-border text-foreground hover:border-primary/50 hover:bg-primary/5 hover:text-primary",
                               ].join(" ")}
-                            >{s}</button>
+                            >{slotLabel(s)}</button>
                           ))}
                         </div>
                       </div>
@@ -368,7 +373,7 @@ export function AnnonceReserveClient({ annonce }: { annonce: AnnonceReserveInfo 
                   { l: "Pilote",    v: annonce.piloteNom },
                   { l: "Départ",    v: "Charleroi · EBCI" },
                   { l: "Date",      v: formattedDate ? <span className="capitalize">{formattedDate}</span> : <span className="text-muted-foreground">Non sélectionnée</span> },
-                  { l: "Heure",     v: heure || <span className="text-muted-foreground">—</span> },
+                  { l: "Créneau",   v: heure ? slotLabel(heure) : <span className="text-muted-foreground">—</span> },
                   { l: "Passagers", v: `${passagers} passager${passagers > 1 ? "s" : ""}` },
                 ].map(({ l, v }) => (
                   <div key={l} className="flex items-center justify-between gap-2">
