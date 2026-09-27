@@ -61,9 +61,9 @@ export function PiloteItinerairesClient({ items }: { items: Itineraire[] }) {
           action={newButton}
         />
       ) : (
-        // Bureau : la carte remplit la hauteur de l'écran (en-tête de page et
-        // marges du layout déduits), la liste défile dans sa colonne.
-        <div className="overflow-hidden rounded-[20px] border border-st-line bg-white shadow-st-sm lg:grid lg:h-[calc(100dvh-7.75rem)] lg:min-h-[600px] lg:grid-cols-[380px_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)]">
+        // Bureau : hauteur fixe (760 px max, moins sur un petit écran), la carte
+        // remplit sa colonne, la liste défile dans la sienne.
+        <div className="overflow-hidden rounded-[20px] border border-st-line bg-white shadow-st-sm lg:grid lg:h-[min(760px,calc(100dvh-12rem))] lg:min-h-[560px] lg:grid-cols-[380px_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)]">
           <div className="flex min-h-0 min-w-0 flex-col border-st-line max-lg:border-b lg:border-r">
             <FilterBar filter={filter} onChange={setFilter} max={max} total={items.length} shown={shown.length} />
             {shown.length === 0 ? (

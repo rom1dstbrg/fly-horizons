@@ -1,10 +1,10 @@
 import L from "leaflet";
 
-// Fonds de carte des outils pilote (27/09) : « Carte » = satellite + noms de
-// lieux (comme avant), « Aéro » = carte VFR openflightmaps (fond + espaces
-// aériens, aérodromes, fréquences ; données officielles, Belgique couverte,
-// sans clé). Remplace l'ancienne couche OpenAIP dont le serveur de tuiles ne
-// répond plus. Bascule par deux boutons en haut à droite.
+// Fonds de carte des outils pilote (27/09) : « Aéro » = carte VFR openflightmaps
+// (fond + espaces aériens, aérodromes, fréquences ; données officielles,
+// Belgique couverte, sans clé), en premier et par défaut ; « Carte » =
+// satellite + noms de lieux. Remplace l'ancienne couche OpenAIP dont le serveur
+// de tuiles ne répond plus. Bascule par deux boutons en haut à droite.
 
 export type BaseLayerKey = "carte" | "aero";
 
@@ -34,8 +34,8 @@ const BTN =
   "border:0;background:transparent;font:600 12px/1 Poppins,system-ui,sans-serif;padding:7px 11px;border-radius:8px;cursor:pointer;color:#4d5463;";
 const BTN_ON = "background:#0b2238;color:#fff;";
 
-/** Ajoute les deux fonds et le sélecteur Carte / Aéro. */
-export function addBaseLayers(map: L.Map, initial: BaseLayerKey = "carte") {
+/** Ajoute les deux fonds et le sélecteur Aéro / Carte. */
+export function addBaseLayers(map: L.Map, initial: BaseLayerKey = "aero") {
   const layers: Record<BaseLayerKey, L.LayerGroup> = { carte: carteLayer(), aero: aeroLayer() };
   let current: BaseLayerKey = initial;
   layers[current].addTo(map);
@@ -46,7 +46,7 @@ export function addBaseLayers(map: L.Map, initial: BaseLayerKey = "carte") {
       box.setAttribute("role", "group");
       box.setAttribute("aria-label", "Fond de carte");
       box.style.cssText = "display:flex;gap:2px;padding:3px;background:#fff;border-radius:11px;box-shadow:0 2px 10px rgba(11,34,56,.18);";
-      const buttons = (["carte", "aero"] as const).map((key) => {
+      const buttons = (["aero", "carte"] as const).map((key) => {
         const b = L.DomUtil.create("button", "", box) as HTMLButtonElement;
         b.type = "button";
         b.textContent = key === "carte" ? "Carte" : "Aéro";
