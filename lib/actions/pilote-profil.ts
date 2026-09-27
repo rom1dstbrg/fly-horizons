@@ -42,7 +42,7 @@ export async function updateMyPiloteProfile(input: PiloteProfilInput) {
     const db = createAdminClient();
 
     const types = new Set(QUALIF_TYPES.map((t) => t.key));
-    const qualifications = (input.qualifications ?? []).slice(0, 12).map((q) => {
+    const qualifications = (input.qualifications ?? []).filter((q) => q.type !== "SEP").slice(0, 12).map((q) => {
       if (!types.has(q.type)) throw new Error("Qualification invalide");
       return {
         type: q.type,

@@ -108,14 +108,28 @@ function Steps({ steps }: { steps: { title: string; detail: string; state: StepS
 
 // Liste des qualifications : type, obtenue le, expire le (calculée à partir du
 // type et de la date d'obtention, modifiable).
-function QualificationsEditor({ value, onChange }: { value: Qualification[]; onChange: (q: Qualification[]) => void }) {
+function QualificationsEditor({ value, onChange, sep }: {
+  value: Qualification[];
+  onChange: (q: Qualification[]) => void;
+  /** SEP relevée par Romain : première ligne, en lecture seule. */
+  sep: { date: string | null; state: LegalState; verified: boolean };
+}) {
   const today = new Date().toISOString().slice(0, 10);
   const update = (i: number, patch: Partial<Qualification>) => onChange(value.map((q, j) => (j === i ? { ...q, ...patch } : q)));
 
   return (
     <div className="space-y-2.5">
-      {value.length > 0 && (
-        <div className="divide-y divide-st-line-soft rounded-[14px] border border-st-line bg-white">
+      <div className="divide-y divide-st-line-soft rounded-[14px] border border-st-line bg-white">
+        <div className="flex items-center justify-between gap-3 px-4 py-3">
+          <div className="min-w-0">
+            <p className="text-[13.5px] font-medium text-st-text">SEP (monomoteur à pistons)</p>
+            <p className="text-[12px] text-st-muted">Relevée par Romain sur votre licence · valable 2 ans</p>
+          </div>
+          <div className="flex shrink-0 items-center gap-2 text-[13.5px] font-medium text-st-text">
+            {sep.date && <span className="st-num">jusqu&apos;au {frDate(sep.date)}</span>}
+            <StateBadge state={sep.state} empty={!sep.date} verified={sep.verified} />
+          </div>
+        </div>
           {value.map((q, i) => {
             const months = QUALIF_TYPES.find((t) => t.key === q.type)?.months ?? null;
             const expired = !!q.expire && q.expire < today;
@@ -166,9 +180,8 @@ function QualificationsEditor({ value, onChange }: { value: Qualification[]; onC
               </div>
             );
           })}
-        </div>
-      )}
-      <Button variant="secondary" size="sm" onClick={() => onChange([...value, { type: value.some((q) => q.type === "SEP") ? "MEP" : "SEP", label: null, obtenue: null, expire: null }])}>
+      </div>
+      <Button variant="secondary" size="sm" onClick={() => onChange([...value, { type: "MEP", label: null, obtenue: null, expire: null }])}>
         <Plus /> Ajouter une qualification
       </Button>
     </div>
@@ -394,13 +407,10 @@ export function PiloteProfilForm({ pilote, documentsSlot, initialTab }: {
                     {documentsSlot}
                   </SettingRow>
 
-                  <SettingRow title="Licence et SEP" desc="Relevées par Romain sur votre licence. La SEP (avion monomoteur à pistons) est valable 2 ans.">
+                  <SettingRow title="Licence" desc="Relevée par Romain sur votre licence.">
                     <ValueList
                       verified={verified}
-                      items={[
-                        { label: "Numéro de licence", value: pilote.licence_numero, state: stateOf("licence_numero") },
-                        { label: "SEP valable jusqu'au", value: pilote.licence_expiration ? frDate(pilote.licence_expiration) : null, state: stateOf("licence_expiration") },
-                      ]}
+                      items={[{ label: "Numéro de licence", value: pilote.licence_numero, state: stateOf("licence_numero") }]}
                     />
                   </SettingRow>
 
@@ -416,9 +426,13 @@ export function PiloteProfilForm({ pilote, documentsSlot, initialTab }: {
 
                   <SettingRow
                     title="Qualifications"
-                    desc="L'expiration se calcule à partir de la date d'obtention ou de prorogation (SEP : 2 ans, MEP et IR : 1 an), vous pouvez la corriger."
+                    desc="La SEP est relevée par Romain. Ajoutez vos autres qualifications : l'expiration se calcule à partir de la date d'obtention ou de prorogation (MEP et IR : 1 an), vous pouvez la corriger."
                   >
-                    <QualificationsEditor value={qualifications} onChange={(q) => { setQualifications(q); setSaved(false); }} />
+                    <QualificationsEditor
+                      value={qualifications.filter((q) => q.type !== "SEP")}
+                      onChange={(q) => { setQualifications(q); setSaved(false); }}
+                      sep={{ date: pilote.licence_expiration, state: stateOf("licence_expiration"), verified }}
+                    />
                   </SettingRow>
 
                   <SettingRow title="Expérience récente" desc="Règle FCL.060, à vérifier vous-même avant chaque vol.">
