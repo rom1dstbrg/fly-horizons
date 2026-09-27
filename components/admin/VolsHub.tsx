@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { ReservationsClient } from "@/components/admin/ReservationsClient";
 import { VolsPersoClient } from "@/components/admin/VolsPersoClient";
-import { DispoClient } from "@/components/admin/DispoClient";
+import { DispoPlanner } from "@/components/dispo/DispoPlanner";
 import { StopoversAdmin } from "@/components/admin/StopoversAdmin";
 import type { DrawerReservation } from "@/components/admin/reservation-drawer/types";
 
@@ -36,7 +36,7 @@ export function VolsHub({
           </div>
         )}
         {tab === "disponibilites" && (
-          <DispoClient plages={plages as never} joursIndiv={joursIndiv as never} />
+          <DispoPlanner scope="admin" plages={plages as never} joursIndiv={joursIndiv as never} />
         )}
       </div>
     </div>

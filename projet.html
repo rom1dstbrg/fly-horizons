@@ -260,6 +260,26 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-09-27 · Disponibilités : un seul calendrier pour l'admin et le pilote</p>
+      <h3>Composant DispoPlanner partagé, style Studio, utilisable au doigt</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Le pilote n'avait qu'une plage récurrente et une liste d'exceptions ; l'admin avait une grille hebdomadaire
+          (tracer, déplacer, étirer), en ancien style et à la souris seulement. Romain veut le système de l'admin côté pilote.</dd>
+        <dt>Décision</dt>
+        <dd><code>components/dispo/DispoPlanner.tsx</code>, un composant pour les deux (<code>scope="admin" | "pilote"</code>),
+          en style Studio. Bureau : grille avec événements pointeur (souris et doigt). Téléphone : la semaine en liste, un jour par ligne.
+          Édition dans les tiroirs Studio. Plusieurs plages par pilote (le calendrier public les gérait déjà).
+          Maquette sautée à la demande de Romain.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Réutiliser l'ancien composant tel quel côté pilote (ancien style, inutilisable au téléphone) ; garder deux composants.</dd>
+        <dt>Conséquences</dt>
+        <dd>L'onglet Disponibilités de <code>/admin/vols</code> est déjà en style Studio, avant le reste de l'admin.
+          Supprimés : <code>DispoClient</code> (admin) et <code>PiloteDisponibilitesClient</code>.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-09-27 · Emails de compte (invitation pilote, mot de passe oublié)</p>
       <h3>Supabase génère les liens, nous envoyons les emails via Resend</h3>
       <dl>
@@ -1226,6 +1246,17 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-09-27 (6) — Disponibilités : le calendrier de l'admin dans l'espace pilote</h3>
+      <ul>
+        <li><code>DispoPlanner</code> (style Studio) remplace <code>DispoClient</code> (admin) et <code>PiloteDisponibilitesClient</code> (pilote).</li>
+        <li>Bureau et tablette : grille de la semaine, tracer / déplacer / étirer un créneau à la souris ou au doigt, fermer un jour
+          d'un clic. Téléphone : un jour par ligne. Jour et plage se modifient dans un tiroir ; « Appliquer aussi à » d'autres jours.</li>
+        <li>Pilote : plusieurs plages récurrentes, activer / désactiver ; actions serveur dédiées, filtrées sur le pilote connecté
+          (<code>lib/actions/pilote-disponibilites.ts</code>).</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-09-27 (5) — Guide pilote</h3>
