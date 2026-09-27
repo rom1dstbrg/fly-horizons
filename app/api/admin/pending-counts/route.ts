@@ -16,5 +16,10 @@ export async function GET() {
     .select("*", { count: "exact", head: true })
     .eq("statut", "nouveau");
 
-  return Response.json({ contacts: contacts ?? 0 });
+  const { count: retours } = await adminSupabase
+    .from("pilote_retours")
+    .select("*", { count: "exact", head: true })
+    .eq("statut", "a_traiter");
+
+  return Response.json({ contacts: contacts ?? 0, retours: retours ?? 0 });
 }

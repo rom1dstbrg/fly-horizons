@@ -7,7 +7,7 @@ import {
   CalendarDays, Package, Ticket, Tag,
   Users, MessageSquare, Settings, ArrowRight, User,
   ShoppingBag, X, Loader2,
-  Navigation, UserCog, Star, Mails, Bot, BarChart2, Images, Mail, Receipt, LayoutGrid,
+  Navigation, UserCog, Star, Mails, Bot, BarChart2, Images, Mail, Receipt, LayoutGrid, Flag,
 } from "lucide-react";
 import { STATUT_ORDER } from "@/components/admin/ui";
 
@@ -24,6 +24,7 @@ const QUICK_LINKS = [
   { href: "/admin/boutique?tab=produits",      label: "Les vols",             icon: Package,         group: "Navigation" },
   { href: "/admin/clients",                    label: "Clients",              icon: Users,           group: "Navigation" },
   { href: "/admin/contacts",                   label: "Messages",             icon: MessageSquare,   group: "Navigation" },
+  { href: "/admin/retours",                    label: "Retours pilotes",      icon: Flag,            group: "Navigation" },
   { href: "/admin/pilotes",                    label: "Équipe",               icon: UserCog,         group: "Navigation" },
   { href: "/admin/transactions",               label: "Transactions",         icon: Receipt,         group: "Navigation" },
   { href: "/admin/settings",                   label: "Paramètres",           icon: Settings,        group: "Navigation" },

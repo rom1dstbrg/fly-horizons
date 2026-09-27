@@ -9,7 +9,7 @@ import {
   Menu, X, ExternalLink, Search,
   CalendarCheck, Clock, Navigation,
   Package, Receipt,
-  LayoutGrid, Scale, UserCog, ArrowLeftRight,
+  LayoutGrid, Scale, UserCog, ArrowLeftRight, Flag,
 } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 
@@ -29,10 +29,11 @@ type NavEntry = NavLink | NavSection;
 
 interface PendingCounts {
   contacts: number;
+  retours: number;
 }
 
 function usePendingCounts(): PendingCounts {
-  const [counts, setCounts] = useState<PendingCounts>({ contacts: 0 });
+  const [counts, setCounts] = useState<PendingCounts>({ contacts: 0, retours: 0 });
 
   useEffect(() => {
     let cancelled = false;
@@ -41,7 +42,7 @@ function usePendingCounts(): PendingCounts {
         const r = await fetch("/api/admin/pending-counts");
         if (!r.ok) return;
         const d = await r.json();
-        if (!cancelled) setCounts({ contacts: d.contacts ?? 0 });
+        if (!cancelled) setCounts({ contacts: d.contacts ?? 0, retours: d.retours ?? 0 });
       } catch { /* ignore — badge reste à sa dernière valeur connue */ }
     }
     load();
@@ -71,6 +72,7 @@ const NAVIGATION: NavEntry[] = [
   { type: "section", label: "CRM" },
   { type: "link", id: "clients",  icon: Users,         label: "Clients",  href: "/admin/clients"  },
   { type: "link", id: "contacts", icon: MessageSquare, label: "Contacts", href: "/admin/contacts", badgeKey: "contacts" },
+  { type: "link", id: "retours",  icon: Flag,          label: "Retours pilotes", href: "/admin/retours", badgeKey: "retours" },
   { type: "link", id: "pilotes",  icon: UserCog,       label: "Équipe",   href: "/admin/pilotes"  },
 
   { type: "section", label: "" },

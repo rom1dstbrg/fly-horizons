@@ -6,10 +6,11 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   LayoutDashboard, PlaneTakeoff, Plane, CalendarRange, Scale, User,
-  ArrowLeftRight, LogOut, AlertCircle, BookOpen, Receipt, Navigation, NotebookPen,
+  ArrowLeftRight, LogOut, AlertCircle, BookOpen, Receipt, Navigation, NotebookPen, Flag,
 } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 import { cn } from "@/lib/utils";
+import { RetourDialog } from "./RetourDialog";
 
 // ── Navigation de l'espace pilote (bureau) — style « Studio » (24/09) ────────
 // Rail d'icônes de 76 px au repos, qui s'ouvre à 256 px au survol PAR-DESSUS le
@@ -137,8 +138,10 @@ export function PiloteSidebar({ counts = {}, pilot, isAdmin = false }: {
 }) {
   const pathname = usePathname() ?? "";
   const [open, setOpen] = useState(false);
+  const [retourOpen, setRetourOpen] = useState(false);
 
   return (
+    <>
     <aside
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
@@ -201,6 +204,10 @@ export function PiloteSidebar({ counts = {}, pilot, isAdmin = false }: {
           <BookOpen size={18} strokeWidth={1.8} className="shrink-0 text-st-muted" />
           <span className={labelCls(open)}>Guide pilote</span>
         </Link>
+        <button type="button" onClick={() => setRetourOpen(true)} title={open ? undefined : "Signaler un problème"} className={cn(rowCls, "cursor-pointer font-medium text-st-text-2 hover:bg-st-surface hover:text-st-text")}>
+          <Flag size={18} strokeWidth={1.8} className="shrink-0 text-st-muted" />
+          <span className={labelCls(open)}>Signaler un problème</span>
+        </button>
         <form action={logout}>
           <button type="submit" title={open ? undefined : "Déconnexion"} className={cn(rowCls, "cursor-pointer font-medium text-st-text-2 hover:bg-st-bad-soft hover:text-st-bad")}>
             <LogOut size={18} strokeWidth={1.8} className="shrink-0 text-st-muted group-hover:text-st-bad" />
@@ -228,5 +235,7 @@ export function PiloteSidebar({ counts = {}, pilot, isAdmin = false }: {
         )}
       </div>
     </aside>
+    <RetourDialog open={retourOpen} onClose={() => setRetourOpen(false)} />
+    </>
   );
 }

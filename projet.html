@@ -260,6 +260,27 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-09-27 (9) · Retours des pilotes vers l'admin</p>
+      <h3>Les pilotes signalent bugs, idées et questions depuis leur espace ; Romain les suit dans /admin/retours et les exporte pour Claude</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Aucun canal pour qu'un pilote remonte un bug. Maquette : <code>https://claude.ai/artifact/NGZP2SL9QmyuCX92TKV3E6</code> (v2), validée par Romain :
+          formulaires pilote tels quels, admin en tableau + tiroir + page complète comme /admin/pilotes.</dd>
+        <dt>Décision</dt>
+        <dd>Entrée « Signaler un problème » (barre latérale sous Guide pilote, feuille « Plus » au téléphone) : type (bug / idée / question), message,
+          jusqu'à 3 captures. Joint automatiquement : page, titre, appareil, fenêtre, version déployée (commit Vercel), dernières erreurs JavaScript.
+          Admin : « Retours pilotes » dans CRM avec pastille des retours à traiter ; tiroir = infos rapides, bouton ↗ = page complète avec captures.
+          « Exporter pour Claude » : zip <code>RETOURS.md</code> + captures, rédigé pour qu'un agent de code reproduise et corrige.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Email à chaque retour (Romain veut une notification iPhone sur l'admin installé à l'écran d'accueil, à construire avec le chantier admin).
+          Réponse au pilote depuis l'admin (plus tard si besoin). Réutiliser les tickets de contact (public, sans contexte technique).</dd>
+        <dt>Conséquences</dt>
+        <dd>Migration <code>20260927d_pilote_retours.sql</code> (table + bucket privé <code>pilote-retours</code>) à passer dans Supabase avant de pousser.
+          Pas de notification pour l'instant : il faut regarder la pastille.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-09-27 (8) · Itinéraires propres à chaque pilote</p>
       <h3>Les itinéraires enregistrés passent dans l'espace pilote, un pilote ne voit que les siens</h3>
       <dl>
@@ -1411,6 +1432,18 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-09-27 (31) — Signaler un problème (pilote) et Retours pilotes (admin)</h3>
+      <ul>
+        <li><code>components/pilote/RetourDialog.tsx</code> : fenêtre (feuille au téléphone), captures envoyées une par une en WebP
+          (<code>uploadRetourCapture</code>), journal des 10 dernières erreurs JS de la session, confirmation.</li>
+        <li><code>/admin/retours</code> (tableau + tiroir, <code>RetoursClient</code>) et <code>/admin/retours/[id]</code> (captures en grand via URL signées,
+          erreurs navigateur, fichier probable). Pastille dans la navigation (<code>/api/admin/pending-counts</code>), entrée dans la palette.</li>
+        <li><code>/api/admin/retours/export</code> : zip <code>RETOURS.md</code> + <code>captures/</code>, pour un retour ou un onglet entier.</li>
+        <li>Migration <code>20260927d_pilote_retours.sql</code> : <b>pas encore passée</b> (vérifié : table et bucket absents).</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-09-27 (30) — Statut du pilote dans la feuille « Plus » du téléphone</h3>

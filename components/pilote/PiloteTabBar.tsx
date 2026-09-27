@@ -3,7 +3,8 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeftRight, BookOpen, LogOut, MoreHorizontal } from "lucide-react";
+import { ArrowLeftRight, BookOpen, Flag, LogOut, MoreHorizontal } from "lucide-react";
+import { RetourDialog } from "./RetourDialog";
 import { logout } from "@/lib/actions/auth";
 import { cn } from "@/lib/utils";
 import { Badge, Button, SheetList, SheetListButton, SheetListLink } from "@/components/pilote/studio";
@@ -38,6 +39,7 @@ export function PiloteTabBar({ pilot, isAdmin = false, badges = {} }: {
 }) {
   const pathname = usePathname() ?? "";
   const [moreOpen, setMoreOpen] = useState(false);
+  const [retourOpen, setRetourOpen] = useState(false);
   const barRef = useRef<HTMLElement>(null);
   const lastLefts = useRef<Map<string, number>>(new Map());
   const [pill, setPill] = useState<{ left: number; width: number; animate: boolean } | null>(null);
@@ -218,6 +220,7 @@ export function PiloteTabBar({ pilot, isAdmin = false, badges = {} }: {
               );
             })}
             <SheetListLink href="/pilote/guide" onClick={() => setMoreOpen(false)} icon={BookOpen} label="Guide pilote" active={pathname.startsWith("/pilote/guide")} />
+            <SheetListButton onClick={() => { setMoreOpen(false); setRetourOpen(true); }} icon={Flag} label="Signaler un problème" />
             {isAdmin && <SheetListLink href="/admin" onClick={() => setMoreOpen(false)} icon={ArrowLeftRight} label="Vue admin" />}
             <form action={logout}>
               <SheetListButton type="submit" icon={LogOut} label="Déconnexion" danger />
@@ -228,6 +231,7 @@ export function PiloteTabBar({ pilot, isAdmin = false, badges = {} }: {
           </Button>
         </div>
       </div>
+      <RetourDialog open={retourOpen} onClose={() => setRetourOpen(false)} />
     </>
   );
 }
