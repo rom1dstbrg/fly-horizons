@@ -29,7 +29,7 @@ export function SetPasswordForm({ first }: { first: boolean }) {
           description="Dernière étape avant d'entrer dans l'espace pilote. Vous l'utiliserez pour vous reconnecter."
         />
       ) : (
-        <PageHeader title="Mot de passe" back={{ href: "/pilote/profil", label: "Mon profil" }} />
+        <PageHeader title="Mot de passe" back={{ href: "/pilote/profil?onglet=compte", label: "Mon profil" }} />
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">

@@ -53,15 +53,10 @@ export async function updateMyPiloteProfile(input: PiloteProfilInput) {
       medical_classe: medicalClasse,
     };
 
-    // Une licence, une SEP ou un médical modifiés après vérification doivent être
-    // revérifiés : on repasse les documents à « aucun » (le pilote renvoie les nouveaux).
-    const { data: current } = await db
-      .from("pilotes")
-      .select("licence_numero, licence_expiration, medical_expiration, medical_classe, docs_status")
-      .eq("id", piloteId)
-      .single();
-    const changed = current && (Object.keys(next) as (keyof typeof next)[]).some((k) => (current[k] ?? null) !== next[k]);
-    const resetDocs = changed && current?.docs_status === "verifies";
+    // Déjà vérifiés : ces champs ne changent plus que par un nouveau document,
+    // que Romain valide (verifyPiloteDocuments). On les ignore ici.
+    const { data: current } = await db.from("pilotes").select("docs_verified_at").eq("id", piloteId).single();
+    const locked = !!current?.docs_verified_at;
 
     const { error } = await db
       .from("pilotes")
@@ -71,16 +66,15 @@ export async function updateMyPiloteProfile(input: PiloteProfilInput) {
         telephone: clean(input.telephone),
         signature: clean(input.signature),
         iban: clean(input.iban),
-        ...next,
+        ...(locked ? {} : next),
         ratings: clean(input.ratings),
-        ...(resetDocs ? { docs_status: "aucun", docs_verified_at: null, docs_note: "Informations modifiées : documents à renvoyer." } : {}),
       })
       .eq("id", piloteId);
 
     if (error) return { error: error.message };
     revalidatePath("/pilote/profil");
     revalidatePath("/pilote");
-    return { success: true, resetDocs: !!resetDocs };
+    return { success: true };
   } catch (e) {
     return { error: e instanceof Error && e.message === "Date invalide" ? "Date invalide" : "Erreur serveur" };
   }

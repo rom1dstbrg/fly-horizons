@@ -14,12 +14,13 @@ export type PiloteLegalFields = {
   medical_expiration: string | null; // 'YYYY-MM-DD'
   medical_classe: string | null;
   docs_status: string | null; // 'aucun' | 'envoyes' | 'verifies' | 'refuses'
+  docs_verified_at: string | null; // posé à la 1re vérification, gardé pendant un renouvellement
   conditions_accepted_at: string | null;
 };
 
 // Colonnes à sélectionner pour appeler piloteLegalStatus.
 export const PILOTE_LEGAL_SELECT =
-  "licence_numero, licence_expiration, medical_expiration, medical_classe, docs_status, conditions_accepted_at";
+  "licence_numero, licence_expiration, medical_expiration, medical_classe, docs_status, docs_verified_at, conditions_accepted_at";
 
 export type LegalIssueSeverity = "error" | "warn";
 
@@ -86,7 +87,11 @@ export function piloteLegalStatus(p: PiloteLegalFields | null | undefined): Pilo
     issues.push({ code: "medical_classe", label: "Classe du certificat médical non renseignée", severity: "error", field: "medical_classe" });
   }
 
-  if (p.docs_status === "envoyes") {
+  // Renouvellement (nouveau médical, SEP prolongée) d'un pilote déjà vérifié : il
+  // reste en règle sur ses dates vérifiées pendant que Romain regarde le nouveau document.
+  if (p.docs_status === "envoyes" && p.docs_verified_at) {
+    issues.push({ code: "docs_renewal", label: "Nouveau document en cours de vérification", severity: "warn" });
+  } else if (p.docs_status === "envoyes") {
     issues.push({ code: "docs_pending", label: "Documents en cours de vérification par Fly Horizons", severity: "error" });
   } else if (p.docs_status === "refuses") {
     issues.push({ code: "docs_refused", label: "Documents refusés : à renvoyer", severity: "error", field: "documents" });

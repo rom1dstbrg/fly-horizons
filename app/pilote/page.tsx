@@ -47,7 +47,7 @@ export default async function PiloteDashboard() {
   const admin = createAdminClient();
   const { data: pilote } = await admin
     .from("pilotes")
-    .select("id, nom, licence_numero, licence_expiration, medical_expiration, medical_classe, docs_status, conditions_accepted_at")
+    .select("id, nom, licence_numero, licence_expiration, medical_expiration, medical_classe, docs_status, docs_verified_at, conditions_accepted_at")
     .eq("user_id", user!.id)
     .maybeSingle();
   const legal = piloteLegalStatus(pilote);

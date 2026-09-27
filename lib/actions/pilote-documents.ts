@@ -114,7 +114,10 @@ export async function submitMyDocuments() {
     const db = createAdminClient();
     const { data: docs } = await db.from("pilote_documents").select("type").eq("pilote_id", piloteId);
     const types = new Set((docs ?? []).map((d) => d.type));
-    if (!types.has("licence") || !types.has("medical")) {
+    const { data: current } = await db.from("pilotes").select("docs_verified_at").eq("id", piloteId).single();
+    const renewal = !!current?.docs_verified_at;
+    if (renewal && !docs?.length) return { error: "Ajoutez le nouveau document à vérifier." };
+    if (!renewal && (!types.has("licence") || !types.has("medical"))) {
       return { error: "Ajoutez au moins votre licence (avec la page SEP) et votre certificat médical." };
     }
 
@@ -130,7 +133,7 @@ export async function submitMyDocuments() {
       .send({
         from: EMAIL_FROM,
         to: [EMAIL_REPLY_TO],
-        subject: `Documents pilote à vérifier · ${pilote?.nom ?? ""}`,
+        subject: `${renewal ? "Nouveau document" : "Documents"} pilote à vérifier · ${pilote?.nom ?? ""}`,
         html: piloteDocumentsEnvoyesAdminEmail({
           piloteNom: pilote?.nom ?? "Un pilote",
           nbDocuments: docs?.length ?? 0,
@@ -236,9 +239,16 @@ export async function refusePiloteDocuments(piloteId: string, motif: string) {
     await requireAdmin();
     if (!motif.trim()) return { error: "Indiquez le motif du refus" };
     const db = createAdminClient();
+    // Renouvellement refusé : le pilote garde sa vérification précédente (ses
+    // dates vérifiées restent valables), on trace seulement le refus.
+    const { data: before } = await db.from("pilotes").select("docs_verified_at, docs_note").eq("id", piloteId).single();
+    const renewal = !!before?.docs_verified_at;
+    const today = new Date().toLocaleDateString("fr-BE");
     const { data: pilote, error } = await db
       .from("pilotes")
-      .update({ docs_status: "refuses", docs_verified_at: null, docs_note: motif.trim() })
+      .update(renewal
+        ? { docs_status: "verifies", docs_note: `${before?.docs_note ?? ""} · Envoi du ${today} refusé : ${motif.trim()}`.replace(/^ · /, "") }
+        : { docs_status: "refuses", docs_verified_at: null, docs_note: motif.trim() })
       .eq("id", piloteId)
       .select("nom, email")
       .single();

@@ -20,7 +20,7 @@ export async function loadPiloteForAnnonces() {
   const admin = createAdminClient();
   const { data: pilote } = await admin
     .from("pilotes")
-    .select("id, nom, iban, licence_numero, licence_expiration, medical_expiration, medical_classe, docs_status, conditions_accepted_at")
+    .select("id, nom, iban, licence_numero, licence_expiration, medical_expiration, medical_classe, docs_status, docs_verified_at, conditions_accepted_at")
     .eq("user_id", user!.id)
     .single();
 
@@ -31,7 +31,7 @@ export async function loadPiloteForAnnonces() {
     publishGate = "Fiche pilote introuvable.";
   } else if (!piloteLegalStatus(pilote).ok) {
     publishGate =
-      "Complétez vos informations légales (numéro de licence, expirations, charte) dans votre profil pour publier une annonce.";
+      "Complétez votre licence, votre médical et vos documents dans votre profil pour publier une annonce.";
   } else if (!isProbablyIban(pilote.iban)) {
     publishGate =
       "Ajoutez un IBAN valide dans votre profil : c'est là que le client vous réglera par virement.";

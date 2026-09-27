@@ -12,6 +12,8 @@ import type { Pilote } from "@/types/database";
 
 // Documents du pilote (profil) : il dépose sa licence et son certificat
 // médical, les soumet, Romain vérifie puis les fichiers sont supprimés.
+// Après la 1re vérification, il peut envoyer un nouveau document (médical
+// renouvelé, SEP prolongée) : il reste en règle pendant la vérification.
 // Envoi direct au stockage privé via URL signée (lib/actions/pilote-documents.ts).
 
 const ROWS: { type: "licence" | "medical"; label: string; hint: string }[] = [
@@ -34,9 +36,10 @@ export function PiloteDocuments({ status, verifiedAt, note, documents }: {
   const [pending, startTransition] = useTransition();
   const inputs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  const editable = status !== "envoyes" && status !== "verifies";
+  const renewal = !!verifiedAt;
+  const editable = status !== "envoyes";
   const byType = (t: string) => documents.filter((d) => d.type === t);
-  const ready = ROWS.every((r) => byType(r.type).length > 0);
+  const ready = renewal ? documents.length > 0 : ROWS.every((r) => byType(r.type).length > 0);
 
   async function upload(type: string, file: File) {
     setError(null);
@@ -93,23 +96,25 @@ export function PiloteDocuments({ status, verifiedAt, note, documents }: {
         <p className="flex gap-2.5 rounded-[14px] bg-st-ok-soft px-4 py-3 text-[13px] text-st-ok">
           <ShieldCheck size={16} className="mt-px shrink-0" />
           <span>
-            Vérifiés{verifiedAt ? ` le ${frDate(verifiedAt)}` : ""}. Si vous modifiez votre licence, votre SEP ou votre médical ci-dessus,
-            il faudra renvoyer les documents.
+            Vérifiés{verifiedAt ? ` le ${frDate(verifiedAt)}` : ""}. Nouveau médical ou SEP prolongée : ajoutez le document ci-dessous
+            et envoyez-le, vous restez en règle pendant la vérification.
           </span>
         </p>
       )}
 
       {status === "envoyes" && (
         <p className="rounded-[14px] bg-st-info-soft px-4 py-3 text-[13px] text-st-info">
-          Envoyés, en cours de vérification. Vous recevrez un email dès que c&apos;est fait.
+          {renewal
+            ? "Nouveau document en cours de vérification : vous restez en règle d'ici là. Vous recevrez un email dès que c'est fait."
+            : "Envoyés, en cours de vérification. Vous recevrez un email dès que c'est fait."}
         </p>
       )}
 
-      {(status === "refuses" || (status === "aucun" && note)) && note && (
+      {status === "refuses" && note && (
         <p className="rounded-[14px] bg-st-bad-soft px-4 py-3 text-[13px] text-st-bad">{note}</p>
       )}
 
-      {status !== "verifies" && (
+      {(editable || documents.length > 0) && (
         <div className="divide-y divide-st-line overflow-hidden rounded-[14px] border border-st-line bg-white">
           {ROWS.map((row) => {
             const docs = byType(row.type);
@@ -176,7 +181,7 @@ export function PiloteDocuments({ status, verifiedAt, note, documents }: {
 
       {editable && (
         <Button variant="secondary" fullWidth disabled={!ready || !!uploading} loading={pending} onClick={submit}>
-          Envoyer pour vérification
+          {renewal ? "Envoyer le nouveau document" : "Envoyer pour vérification"}
         </Button>
       )}
     </section>

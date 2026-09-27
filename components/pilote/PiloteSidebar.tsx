@@ -94,7 +94,7 @@ export function PiloteIssues({ pilot, onNavigate }: { pilot: PilotIdInfo; onNavi
           {issue.label}
         </p>
       ))}
-      <Link href="/pilote/profil" onClick={onNavigate} className="inline-block pt-0.5 text-[12px] font-semibold text-st-ink hover:underline">
+      <Link href="/pilote/profil?onglet=licence" onClick={onNavigate} className="inline-block pt-0.5 text-[12px] font-semibold text-st-ink hover:underline">
         Corriger dans le profil →
       </Link>
     </div>

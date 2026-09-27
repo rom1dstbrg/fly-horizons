@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { PiloteProfilForm } from "@/components/pilote/PiloteProfilForm";
+import { PiloteProfilForm, PROFIL_TABS, type ProfilTab } from "@/components/pilote/PiloteProfilForm";
 import { PiloteDocuments } from "@/components/pilote/PiloteDocuments";
 import type { PiloteDocument } from "@/lib/actions/pilote-documents";
 import { PageHeader } from "@/components/pilote/studio";
@@ -8,7 +8,9 @@ import type { Pilote } from "@/types/database";
 
 export const metadata = { title: "Mon profil — Espace pilote" };
 
-export default async function PiloteProfilPage() {
+export default async function PiloteProfilPage({ searchParams }: { searchParams: Promise<{ onglet?: string }> }) {
+  const { onglet } = await searchParams;
+  const initialTab = PROFIL_TABS.includes(onglet as ProfilTab) ? (onglet as ProfilTab) : undefined;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const admin = createAdminClient();
@@ -22,12 +24,13 @@ export default async function PiloteProfilPage() {
     : { data: [] };
 
   return (
-    <div className="mx-auto w-full max-w-lg space-y-5">
+    <div className="mx-auto w-full max-w-xl space-y-5">
       <PageHeader title="Mon profil" />
 
       {pilote ? (
         <PiloteProfilForm
           pilote={pilote as Pilote}
+          initialTab={initialTab}
           documentsSlot={
             <PiloteDocuments
               status={(pilote as Pilote).docs_status}

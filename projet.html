@@ -260,6 +260,25 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-09-27 (3) · Renouvellement des documents pilote</p>
+      <h3>Après vérification, les dates ne changent que par un nouveau document validé par Romain</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Une fois vérifié, le pilote ne pouvait plus envoyer de document (nouveau médical, SEP prolongée). Et la règle
+          « modifier la licence dans le profil remet les documents à renvoyer » le rendait inéligible à chaque renouvellement.</dd>
+        <dt>Décision</dt>
+        <dd>Après la 1re vérification, licence, SEP et médical sont en lecture seule pour le pilote. Il envoie le nouveau document ;
+          Romain le vérifie pas à pas et met les dates à jour en validant. Pendant ce renouvellement, le pilote reste en règle
+          (simple avertissement) ; un renouvellement refusé lui laisse sa vérification précédente. Remplace la règle de remise à zéro
+          de la décision « Documents pilote vérifiés ».</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Laisser le pilote modifier ses dates et tout revérifier (inéligible pendant l'attente) ; ne rien bloquer (dates non vérifiées).</dd>
+        <dt>Conséquences</dt>
+        <dd>Page profil en onglets (Licence, Profil, Paiement, Emails, Compte), liens profonds <code>?onglet=</code>.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-09-27 (2) · Expérience récente : rappel, pas de date ; vérification pas à pas</p>
       <h3>Remplace le point C de la décision « Documents pilote vérifiés » pour l'expérience récente</h3>
       <dl>
@@ -1288,6 +1307,17 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-09-27 (10) — Profil pilote en onglets, renouvellement des documents</h3>
+      <ul>
+        <li><code>/pilote/profil</code> : statut légal en haut, puis onglets Licence (licence, médical, rappel expérience récente,
+          documents), Profil (photo, bio, téléphone), Paiement (IBAN), Emails (signature), Compte (email, charte, mot de passe).</li>
+        <li>Renouvellement : le pilote vérifié peut envoyer un nouveau document ; il reste en règle pendant la vérification,
+          et un refus lui laisse sa vérification précédente. Licence / SEP / médical en lecture seule après vérification.</li>
+        <li>Liens vers le bon onglet : pastille de statut (Licence), annonces (Licence ou Paiement), mot de passe (Compte).</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-09-27 (9) — Vérification des documents pas à pas, expérience récente en rappel</h3>
