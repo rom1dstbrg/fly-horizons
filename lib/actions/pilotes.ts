@@ -242,8 +242,19 @@ export async function deletePilote(id: string) {
     if (error) return { error: error.message };
 
     if (pilote.user_id) {
-      await supabase.from("profiles").update({ role: "customer" }).eq("id", pilote.user_id);
-      await supabase.auth.admin.deleteUser(pilote.user_id);
+      // On ne supprime le compte auth que s'il a été créé par l'invitation pilote
+      // (invited_at posé). Un compte promu (client existant) est rendu à son état
+      // de client, et un admin garde son rôle.
+      const { data: authData } = await supabase.auth.admin.getUserById(pilote.user_id);
+      const { data: profile } = await supabase.from("profiles").select("role").eq("id", pilote.user_id).maybeSingle();
+
+      if (profile?.role === "admin") {
+        // rien : l'admin perd juste sa fiche pilote
+      } else if (authData?.user?.invited_at) {
+        await supabase.auth.admin.deleteUser(pilote.user_id);
+      } else {
+        await supabase.from("profiles").update({ role: "customer" }).eq("id", pilote.user_id);
+      }
     }
 
     revalidatePath("/admin/pilotes");

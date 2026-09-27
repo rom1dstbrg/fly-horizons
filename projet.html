@@ -1207,6 +1207,16 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-27 — Suppression d'un pilote : le compte client n'est plus effacé</h3>
+      <ul>
+        <li><code>deletePilote</code> supprimait toujours le compte de connexion. Un client promu pilote puis retiré perdait donc
+          son compte (arrivé le 27/09 sur <code>rom.destanberg@gmail.com</code> ; la fiche client FH-0002 est intacte, le login non).</li>
+        <li>Désormais : compte créé par l'invitation (<code>invited_at</code>) → supprimé ; compte promu → repasse en client ;
+          compte admin → garde son rôle (avant, il repassait en client et perdait l'admin).</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-25 (3) — Nouvelle réservation et vol hors site en style Studio</h3>
       <ul>
         <li><code>/pilote/reservations/new</code> et <code>/new-horsite</code> : formulaires Studio (max-w-lg, sans cartes,
