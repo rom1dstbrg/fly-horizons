@@ -3,6 +3,7 @@
 import { useState, useTransition, useRef, useEffect } from "react";
 import { Send, Loader2, User } from "lucide-react";
 import { submitClientMessageReply } from "@/lib/actions/reservation-messages";
+import { StaffAvatar } from "@/components/messages/StaffAvatar";
 
 interface Message {
   id: string;
@@ -15,9 +16,13 @@ interface Message {
 interface Props {
   token: string;
   initialMessages: Message[];
+  /** Photo du pilote du vol (messages « pilote »). */
+  pilotePhotoUrl?: string | null;
+  /** Photo de Romain (messages « admin »). */
+  adminPhotoUrl?: string | null;
 }
 
-export function MessagesThread({ token, initialMessages }: Props) {
+export function MessagesThread({ token, initialMessages, pilotePhotoUrl = null, adminPhotoUrl = null }: Props) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [content, setContent] = useState("");
   const [error, setError] = useState("");
@@ -112,18 +117,13 @@ export function MessagesThread({ token, initialMessages }: Props) {
                 ].join(" ")}
               >
                 <div className="hidden sm:block w-7 shrink-0 pt-0.5">
-                  {isFirst && (
-                    <div
-                      className={[
-                        "w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-black",
-                        isClient
-                          ? "bg-secondary text-muted-foreground border border-border"
-                          : "bg-primary text-[#0b2238] shadow-gold-sm",
-                      ].join(" ")}
-                    >
-                      {isClient ? <User size={12} /> : senderLabel.charAt(0).toUpperCase()}
+                  {isFirst && (isClient ? (
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center bg-secondary text-muted-foreground border border-border">
+                      <User size={12} />
                     </div>
-                  )}
+                  ) : (
+                    <StaffAvatar photoUrl={msg.author === "admin" ? adminPhotoUrl : pilotePhotoUrl} nom={senderLabel} />
+                  ))}
                 </div>
 
                 <div

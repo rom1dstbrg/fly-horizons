@@ -3,6 +3,7 @@
 import { useState, useTransition, useRef, useEffect } from "react";
 import { Send, Loader2, User } from "lucide-react";
 import { submitClientReply } from "@/lib/actions/contacts";
+import { StaffAvatar } from "@/components/messages/StaffAvatar";
 
 interface Message {
   id: string;
@@ -14,9 +15,11 @@ interface Message {
 interface Props {
   token: string;
   initialMessages: Message[];
+  /** Photo de Romain (fiche pilote du compte admin), à la place du « R ». */
+  adminPhotoUrl?: string | null;
 }
 
-export function TicketThread({ token, initialMessages }: Props) {
+export function TicketThread({ token, initialMessages, adminPhotoUrl = null }: Props) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [content, setContent]   = useState("");
   const [error, setError]       = useState("");
@@ -109,16 +112,13 @@ export function TicketThread({ token, initialMessages }: Props) {
               >
                 {/* Avatar — masqué sur mobile */}
                 <div className="hidden sm:block w-7 shrink-0 pt-0.5">
-                  {isFirst && (
-                    <div className={[
-                      "w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-black",
-                      isAdmin
-                        ? "bg-primary text-[#0b2238] shadow-gold-sm"
-                        : "bg-secondary text-muted-foreground border border-border",
-                    ].join(" ")}>
-                      {isAdmin ? "R" : <User size={12} />}
+                  {isFirst && (isAdmin ? (
+                    <StaffAvatar photoUrl={adminPhotoUrl} nom="Romain" />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center bg-secondary text-muted-foreground border border-border">
+                      <User size={12} />
                     </div>
-                  )}
+                  ))}
                 </div>
 
                 {/* Colonne bulle */}

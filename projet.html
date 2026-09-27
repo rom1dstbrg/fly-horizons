@@ -1387,6 +1387,17 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-27 (20) — Photo du pilote dans les fils de messages publics</h3>
+      <ul>
+        <li>Ticket de contact (<code>/contact/ticket/[token]</code>, seul l'admin y répond) : la photo de Romain remplace le carré or « R ».</li>
+        <li>Échanges d'une réservation (<code>/reservation/messages/[token]</code>, page où le pilote et le client échangent) : photo du pilote
+          du vol pour ses messages, photo de Romain pour les messages « admin ». Initiale sur fond or si pas de photo. Avatars ronds.</li>
+        <li><code>components/messages/StaffAvatar.tsx</code> (une source pour les deux fils), <code>lib/pilote/admin-photo.ts</code>
+          (photo de la fiche pilote du compte admin).</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-27 (19) — Bloc « Règlement » du tiroir aligné sur Transactions</h3>
       <ul>
         <li><code>AnnoncePiloteActions</code> : même pastille d'état (Reçu / En attente / À relancer), montant du passager en bloc gris avec

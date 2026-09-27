@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { MessagesThread } from "./MessagesThread";
+import { getAdminPilotePhoto } from "@/lib/pilote/admin-photo";
 
 export const metadata: Metadata = {
   title: "Vos échanges · Fly Horizons",
@@ -30,7 +31,7 @@ export default async function ReservationMessagesPage({
 
   const { data: resa } = await supabase
     .from("reservations")
-    .select("id, date_vol, heure_vol, clients(prenom, nom), pilotes(nom)")
+    .select("id, date_vol, heure_vol, clients(prenom, nom), pilotes(nom, photo_url)")
     .eq("messages_token", token)
     .single();
 
@@ -43,7 +44,8 @@ export default async function ReservationMessagesPage({
     .order("created_at", { ascending: true });
 
   const messages: Message[] = rawMessages ?? [];
-  const pilote = pick<{ nom: string }>(resa.pilotes);
+  const pilote = pick<{ nom: string; photo_url: string | null }>(resa.pilotes);
+  const adminPhotoUrl = await getAdminPilotePhoto();
   const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
     weekday: "long",
     day: "numeric",
@@ -71,7 +73,7 @@ export default async function ReservationMessagesPage({
             )}
           </div>
 
-          <MessagesThread token={token} initialMessages={messages} />
+          <MessagesThread token={token} initialMessages={messages} pilotePhotoUrl={pilote?.photo_url ?? null} adminPhotoUrl={adminPhotoUrl} />
 
           <div className="pb-8" />
         </div>

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { TicketThread } from "./TicketThread";
+import { getAdminPilotePhoto } from "@/lib/pilote/admin-photo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -57,6 +58,7 @@ export default async function TicketPage({
     .order("created_at", { ascending: true });
 
   const messages: Message[] = rawMessages ?? [];
+  const adminPhotoUrl = await getAdminPilotePhoto();
 
   const dateStr  = new Date(contact.created_at).toLocaleDateString("fr-BE", {
     day: "numeric", month: "long", year: "numeric",
@@ -95,7 +97,7 @@ export default async function TicketPage({
             </div>
 
             {/* Thread + reply */}
-            <TicketThread token={token} initialMessages={messages} />
+            <TicketThread token={token} initialMessages={messages} adminPhotoUrl={adminPhotoUrl} />
 
             <div className="pb-8" />
 
