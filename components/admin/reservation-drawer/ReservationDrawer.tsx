@@ -33,6 +33,7 @@ import { ConfirmActionDialog, type PendingAction } from "./ConfirmActionDialog";
 // pour les annonces pilote (règlement par virement direct) via
 // AnnoncePiloteActions — voir décision 08/09 soir.
 import { AnnoncePiloteActions } from "./AnnoncePiloteActions";
+import { PreflightDeclarationBlock } from "./PreflightDeclarationBlock";
 import { PiloteAssignBlock } from "./PiloteAssignBlock";
 import { useReservationDraft } from "./hooks/useReservationDraft";
 import { useBilanVol } from "./hooks/useBilanVol";
@@ -434,6 +435,16 @@ export function ReservationDrawer({
                                 onStatusChange={onStatusChange}
                                 onFieldsChange={onFieldsChange}
                                 ask={setPendingAction}
+                              />
+                            ) : undefined
+                          }
+                          preflightSlot={
+                            r.pilote_id && r.type_resa !== "perso" && r.statut !== "annulee" && r.statut !== "vol_effectue" ? (
+                              <PreflightDeclarationBlock
+                                reservationId={r.id}
+                                declaredAt={r.pilote_declaration_at ?? null}
+                                viewerRole={viewerRole}
+                                onDeclared={(at) => onFieldsChange?.(r.id, { pilote_declaration_at: at })}
                               />
                             ) : undefined
                           }

@@ -260,6 +260,28 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-09-27 · Documents pilote vérifiés, expérience récente, déclaration avant vol</p>
+      <h3>Romain vérifie les documents puis les fichiers sont supprimés ; le pilote déclare avant chaque vol</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Tout était déclaratif (licence, dates). En cas d'incident, « il l'a coché » est une défense faible.
+          Romain juge importants les 3 décollages et atterrissages en 90 jours (FCL.060) et la SEP.</dd>
+        <dt>Décision</dt>
+        <dd>A · statut « documents vérifiés » sur la fiche, avec ce que Romain a vu ; sans lui, pas de vol.
+          B · le pilote dépose licence et médical dans un bucket privé ; fichiers supprimés dès validation ou refus.
+          C · expérience récente sur le profil + déclaration cochée avant chaque vol, refusée si les dates ne couvrent pas le jour du vol.
+          Classe médicale ajoutée ; « Licence / SEP » renommé « Validité SEP ». Modifier licence, SEP ou médical après vérification
+          remet les documents à « à renvoyer ».</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Conserver les fichiers (le médical est une donnée de santé, RGPD art. 9) ; rester purement déclaratif.
+          Sans avis d'avocat : à confirmer lors de la consultation encore ouverte.</dd>
+        <dt>Conséquences</dt>
+        <dd>Migration <code>20260927_pilote_documents.sql</code> à exécuter AVANT le déploiement. Après : tout pilote, Romain compris,
+          est « pas en règle » tant que classe médicale, expérience récente et documents ne sont pas faits.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-09-27 · Disponibilités : un seul calendrier pour l'admin et le pilote</p>
       <h3>Composant DispoPlanner partagé, style Studio, utilisable au doigt</h3>
       <dl>
@@ -1246,6 +1268,19 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-09-27 (7) — Documents pilote, expérience récente, déclaration avant vol</h3>
+      <ul>
+        <li>Profil pilote : classe médicale, validité SEP, expérience récente (valable 90 jours), section Documents
+          (envoi direct au stockage privé par URL signée, puis « Envoyer pour vérification » ; Romain prévenu par email).</li>
+        <li><code>/admin/pilotes</code> : pastille d'état des documents, panneau « Documents » (liens de 10 min, note de ce qui a été vu,
+          Valider = fichiers supprimés, Refuser avec motif envoyé au pilote). Validation possible sans fichier (visio, main propre).</li>
+        <li>Tiroir d'un vol : « Déclaration avant vol » (3 cases) côté pilote, état visible côté admin ; tracée dans l'historique.</li>
+        <li><code>piloteLegalStatus</code> exige classe médicale, expérience récente et documents vérifiés. Suppression d'un pilote :
+          ses fichiers en attente sont effacés du stockage. Guide pilote mis à jour.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-09-27 (6) — Disponibilités : le calendrier de l'admin dans l'espace pilote</h3>

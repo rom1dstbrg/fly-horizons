@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Check, AlertCircle, ShieldCheck, Upload, KeyRound } from "lucide-react";
 import { updateMyPiloteProfile, uploadPiloteProfilPhoto } from "@/lib/actions/pilote-profil";
-import { piloteLegalStatus } from "@/lib/pilote/legal";
-import { Badge, Button, FormField, Input, SectionHeader, Textarea } from "@/components/pilote/studio";
+import { piloteLegalStatus, recenceValidUntil } from "@/lib/pilote/legal";
+import { Badge, Button, FormField, Input, Select, SectionHeader, Textarea } from "@/components/pilote/studio";
 import { cn } from "@/lib/utils";
 import type { Pilote } from "@/types/database";
 
@@ -30,7 +30,7 @@ function LegalLabel({ children, state }: { children: React.ReactNode; state: Leg
 }
 
 // Formulaire Studio : pas de cartes, sections titrées, validation pleine largeur.
-export function PiloteProfilForm({ pilote }: { pilote: Pilote }) {
+export function PiloteProfilForm({ pilote, documentsSlot }: { pilote: Pilote; documentsSlot?: React.ReactNode }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
@@ -48,24 +48,31 @@ export function PiloteProfilForm({ pilote }: { pilote: Pilote }) {
     licence_numero: pilote.licence_numero ?? "",
     licence_expiration: pilote.licence_expiration ?? "",
     medical_expiration: pilote.medical_expiration ?? "",
+    medical_classe: pilote.medical_classe ?? "",
+    recence_date: pilote.recence_date ?? "",
     ratings: pilote.ratings ?? "",
   });
+  const [resetNotice, setResetNotice] = useState(false);
 
   // Statut recalculé en direct à partir des champs du formulaire.
   const legal = piloteLegalStatus({
     licence_numero: form.licence_numero || null,
     licence_expiration: form.licence_expiration || null,
     medical_expiration: form.medical_expiration || null,
+    medical_classe: form.medical_classe || null,
+    recence_date: form.recence_date || null,
+    docs_status: pilote.docs_status,
     conditions_accepted_at: pilote.conditions_accepted_at,
   });
+  const recenceUntil = recenceValidUntil(form.recence_date || null);
 
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm((f) => ({ ...f, [k]: e.target.value }));
     setSaved(false);
   };
 
   // État visuel d'un champ légal d'après le statut recalculé en direct.
-  const stateOf = (name: "licence_numero" | "licence_expiration" | "medical_expiration"): LegalState => {
+  const stateOf = (name: "licence_numero" | "licence_expiration" | "medical_expiration" | "medical_classe" | "recence_date"): LegalState => {
     const rel = legal.issues.filter((i) => i.field === name);
     if (rel.some((i) => i.severity === "error")) return "error";
     if (rel.some((i) => i.severity === "warn")) return "warn";
@@ -74,6 +81,8 @@ export function PiloteProfilForm({ pilote }: { pilote: Pilote }) {
   const licNumState = stateOf("licence_numero");
   const licExpState = stateOf("licence_expiration");
   const medExpState = stateOf("medical_expiration");
+  const medClasseState = stateOf("medical_classe");
+  const recenceState = stateOf("recence_date");
 
   async function handlePhotoFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -100,6 +109,7 @@ export function PiloteProfilForm({ pilote }: { pilote: Pilote }) {
         return;
       }
       setSaved(true);
+      setResetNotice(!!res.resetDocs);
       router.refresh();
     });
   }
@@ -129,23 +139,42 @@ export function PiloteProfilForm({ pilote }: { pilote: Pilote }) {
       <section className="space-y-3.5">
         <div>
           <SectionHeader title="Informations légales" />
-          <p className="mt-0.5 text-[12.5px] text-st-muted">Déclaratif : à remplir et à tenir à jour pour recevoir des vols.</p>
+          <p className="mt-0.5 text-[12.5px] text-st-muted">Vérifié par Romain à partir de vos documents. Modifier la licence, la SEP ou le médical demande une nouvelle vérification.</p>
         </div>
         <FormField id="p-licence" label={<LegalLabel state={licNumState}>Numéro de licence</LegalLabel>}>
           <Input id="p-licence" className={legalCls[licNumState]} value={form.licence_numero} onChange={set("licence_numero")} placeholder="BE.FCL.PPL…." />
         </FormField>
         <div className="grid grid-cols-1 gap-3.5 min-[420px]:grid-cols-2">
-          <FormField id="p-licexp" label={<LegalLabel state={licExpState}>Expiration licence / SEP</LegalLabel>}>
+          <FormField id="p-licexp" label={<LegalLabel state={licExpState}>Validité SEP</LegalLabel>}>
             <Input id="p-licexp" type="date" className={legalCls[licExpState]} value={form.licence_expiration} onChange={set("licence_expiration")} />
           </FormField>
-          <FormField id="p-medexp" label={<LegalLabel state={medExpState}>Expiration médical</LegalLabel>}>
+          <FormField id="p-medclasse" label={<LegalLabel state={medClasseState}>Certificat médical</LegalLabel>}>
+            <Select id="p-medclasse" className={legalCls[medClasseState]} value={form.medical_classe} onChange={set("medical_classe")}>
+              <option value="">Choisir la classe</option>
+              <option value="classe1">Classe 1</option>
+              <option value="classe2">Classe 2</option>
+              <option value="lapl">LAPL</option>
+            </Select>
+          </FormField>
+          <FormField id="p-medexp" label={<LegalLabel state={medExpState}>Validité médical</LegalLabel>}>
             <Input id="p-medexp" type="date" className={legalCls[medExpState]} value={form.medical_expiration} onChange={set("medical_expiration")} />
           </FormField>
         </div>
+        <FormField
+          id="p-recence"
+          label={<LegalLabel state={recenceState}>Expérience récente</LegalLabel>}
+          hint={recenceUntil
+            ? `Date de votre 3e décollage et atterrissage le plus récent. Valable jusqu'au ${recenceUntil.split("-").reverse().join("/")}.`
+            : "Date de votre 3e décollage et atterrissage le plus récent (3 en 90 jours pour emmener des passagers)."}
+        >
+          <Input id="p-recence" type="date" className={legalCls[recenceState]} value={form.recence_date} onChange={set("recence_date")} />
+        </FormField>
         <FormField id="p-ratings" label="Qualifications">
           <Input id="p-ratings" value={form.ratings} onChange={set("ratings")} placeholder="SEP(land), Night, Radio FR/EN" />
         </FormField>
       </section>
+
+      {documentsSlot}
 
       {/* Coordonnées & présentation */}
       <section className="space-y-3.5">
@@ -202,6 +231,11 @@ export function PiloteProfilForm({ pilote }: { pilote: Pilote }) {
           <p className="flex items-center gap-2 rounded-[12px] bg-st-ok-soft px-3.5 py-2.5 text-[13px] text-st-ok">
             <Check size={15} className="shrink-0" />
             Profil enregistré.
+          </p>
+        )}
+        {resetNotice && (
+          <p className="rounded-[12px] bg-st-warn-soft px-3.5 py-2.5 text-[13px] text-st-warn">
+            Vos informations légales ont changé : renvoyez vos documents pour une nouvelle vérification.
           </p>
         )}
         {error && <p className="rounded-[12px] bg-st-bad-soft px-3.5 py-2.5 text-[13px] text-st-bad">{error}</p>}

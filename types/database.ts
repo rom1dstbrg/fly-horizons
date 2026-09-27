@@ -38,10 +38,16 @@ export interface Pilote {
   iban: string | null;
   statut: "actif" | "inactif";
   created_at: string;
-  // Infos légales déclaratives (Bloc A · item 5) — pas d'upload de document en v1.
+  // Infos légales (Bloc A · item 5). licence_expiration = validité de la SEP.
+  // Documents vérifiés par Romain depuis le 27/09 (docs_status, fichiers supprimés après).
   licence_numero: string | null;
   licence_expiration: string | null;
   medical_expiration: string | null;
+  medical_classe: "classe1" | "classe2" | "lapl" | null;
+  recence_date: string | null;
+  docs_status: "aucun" | "envoyes" | "verifies" | "refuses";
+  docs_verified_at: string | null;
+  docs_note: string | null;
   ratings: string | null;
   conditions_accepted_at: string | null;
   conditions_version: string | null;

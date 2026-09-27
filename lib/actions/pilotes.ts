@@ -306,6 +306,11 @@ export async function deletePilote(id: string) {
     const { data: pilote } = await supabase.from("pilotes").select("user_id").eq("id", id).single();
     if (!pilote) return { error: "Pilote introuvable" };
 
+    // Fichiers de documents encore en attente : la base les supprime en cascade,
+    // pas le stockage.
+    const { data: docs } = await supabase.from("pilote_documents").select("path").eq("pilote_id", id);
+    if (docs?.length) await supabase.storage.from("pilote-documents").remove(docs.map((d) => d.path));
+
     const { error } = await supabase.from("pilotes").delete().eq("id", id);
     if (error) return { error: error.message };
 

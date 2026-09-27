@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { createPilote, togglePiloteActif, updatePilote, deletePilote, resendPiloteInvitation } from "@/lib/actions/pilotes";
 import { AdminRowActions } from "@/components/admin/ui/AdminRowActions";
 import { EmptyState } from "@/components/admin/ui";
 import { ConfirmActionDialog, type PendingAction } from "@/components/admin/reservation-drawer/ConfirmActionDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlus, Loader2, Check, Plane, Gauge, TriangleAlert, Mail } from "lucide-react";
+import { UserPlus, Loader2, Check, Plane, Gauge, TriangleAlert, Mail, FileCheck, ExternalLink } from "lucide-react";
+import { getPiloteDocumentsForReview, verifyPiloteDocuments, refusePiloteDocuments } from "@/lib/actions/pilote-documents";
+import { recenceValidUntil } from "@/lib/pilote/legal";
 import type { Pilote } from "@/types/database";
 import { emptyReliabilityStats, type PiloteReliabilityStats } from "@/lib/pilote-stats";
 
@@ -226,6 +228,103 @@ function EditPiloteForm({ pilote, onClose }: { pilote: Pilote; onClose: () => vo
   );
 }
 
+// ── Vérification des documents (27/09) ──────────────────────────────────
+
+const fr = (iso: string | null) => (iso ? iso.slice(0, 10).split("-").reverse().join("/") : "—");
+const CLASSE: Record<string, string> = { classe1: "Classe 1", classe2: "Classe 2", lapl: "LAPL" };
+
+function DocsBadge({ status }: { status: Pilote["docs_status"] }) {
+  const cfg = status === "verifies"
+    ? { cls: "bg-emerald-50 text-emerald-700", label: "Documents vérifiés" }
+    : status === "envoyes"
+      ? { cls: "bg-amber-50 text-amber-800", label: "Documents à vérifier" }
+      : { cls: "bg-secondary text-muted-foreground", label: status === "refuses" ? "Documents refusés" : "Sans documents" };
+  return <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold ${cfg.cls}`}>{cfg.label}</span>;
+}
+
+type ReviewDoc = { id: string; type: string; file_name: string | null; url: string | null };
+
+function DocsReviewPanel({ pilote, onDone }: { pilote: Pilote; onDone: () => void }) {
+  const [docs, setDocs] = useState<ReviewDoc[] | null>(null);
+  const [note, setNote] = useState(
+    `Vu le ${new Date().toLocaleDateString("fr-BE")} : licence ${pilote.licence_numero ?? "?"}, SEP jusqu'au ${fr(pilote.licence_expiration)}, médical ${CLASSE[pilote.medical_classe ?? ""] ?? "?"} jusqu'au ${fr(pilote.medical_expiration)}.`,
+  );
+  const [motif, setMotif] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    getPiloteDocumentsForReview(pilote.id).then((r) => setDocs("documents" in r && r.documents ? r.documents : []));
+  }, [pilote.id]);
+
+  const run = (fn: () => Promise<{ error?: string; success?: boolean }>) =>
+    startTransition(async () => {
+      const r = await fn();
+      if (r.error) setError(r.error);
+      else onDone();
+    });
+
+  const recence = recenceValidUntil(pilote.recence_date);
+  const inputCls = "w-full rounded-lg border border-input bg-background px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
+
+  return (
+    <td colSpan={5} className="px-4 py-4 bg-secondary/20">
+      <div className="grid gap-5 md:grid-cols-2">
+        <div className="space-y-2 text-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Déclaré par le pilote</p>
+          <p>Licence : <strong>{pilote.licence_numero ?? "—"}</strong></p>
+          <p>SEP valable jusqu&apos;au <strong>{fr(pilote.licence_expiration)}</strong></p>
+          <p>Médical <strong>{CLASSE[pilote.medical_classe ?? ""] ?? "—"}</strong> jusqu&apos;au <strong>{fr(pilote.medical_expiration)}</strong></p>
+          <p>Expérience récente jusqu&apos;au <strong>{fr(recence)}</strong></p>
+          {pilote.docs_status === "verifies" && (
+            <p className="text-xs text-emerald-700">Vérifiés le {fr(pilote.docs_verified_at)} · {pilote.docs_note}</p>
+          )}
+          <p className="pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Fichiers</p>
+          {docs === null ? (
+            <p className="text-xs text-muted-foreground">Chargement…</p>
+          ) : docs.length === 0 ? (
+            <p className="text-xs text-muted-foreground">Aucun fichier. Vous pouvez valider après une vérification en visio ou en main propre.</p>
+          ) : (
+            <ul className="space-y-1">
+              {docs.map((d) => (
+                <li key={d.id}>
+                  <a href={d.url ?? "#"} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline cursor-pointer">
+                    <ExternalLink size={13} />
+                    {d.type === "licence" ? "Licence" : d.type === "medical" ? "Certificat médical" : "Autre"} · {d.file_name ?? "fichier"}
+                  </a>
+                </li>
+              ))}
+              <li className="text-[11px] text-muted-foreground">Liens valables 10 minutes.</li>
+            </ul>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          {error && <p className="text-xs text-destructive">{error}</p>}
+          <div>
+            <label className="block text-xs text-muted-foreground mb-1">Ce que vous avez vérifié (gardé sur la fiche)</label>
+            <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} className={inputCls} />
+          </div>
+          <button type="button" disabled={isPending} onClick={() => run(() => verifyPiloteDocuments(pilote.id, note))}
+            className="flex items-center gap-1.5 px-3 h-9 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors cursor-pointer">
+            {isPending ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Valider et supprimer les fichiers
+          </button>
+          <div className="pt-2 border-t border-border">
+            <label className="block text-xs text-muted-foreground mb-1">Ou refuser (motif envoyé au pilote)</label>
+            <div className="flex gap-2">
+              <input value={motif} onChange={(e) => setMotif(e.target.value)} placeholder="Ex. : page SEP illisible" className={inputCls} />
+              <button type="button" disabled={isPending || !motif.trim()} onClick={() => run(() => refusePiloteDocuments(pilote.id, motif))}
+                className="px-3 h-9 shrink-0 rounded-lg border border-destructive/30 text-xs font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-50 transition-colors cursor-pointer">
+                Refuser
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </td>
+  );
+}
+
 function PiloteRow({
   pilote,
   stats,
@@ -237,6 +336,7 @@ function PiloteRow({
 }) {
   const [editing, setEditing] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [showDocs, setShowDocs] = useState(false);
   const [isActive, setIsActive] = useState(pilote.statut === "actif");
   const [cascadeMsg, setCascadeMsg] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -283,6 +383,7 @@ function PiloteRow({
         <td className="px-4 py-3">
           <div className="flex items-center gap-1.5">
             <span className="text-sm font-semibold text-foreground">{pilote.nom}</span>
+            <DocsBadge status={pilote.docs_status} />
             {stats.isAtRisk && (
               <span
                 title={stats.alertes.join(" · ")}
@@ -319,6 +420,11 @@ function PiloteRow({
               onEdit={() => setEditing(e => !e)}
               onDelete={() => deletePilote(pilote.id)}
               extra={[{
+                icon: FileCheck,
+                label: "Documents",
+                onClick: () => setShowDocs(v => !v),
+                title: "Vérifier la licence, la SEP et le médical",
+              }, {
                 icon: Mail,
                 label: "Renvoyer l'accès",
                 onClick: handleResend,
@@ -344,6 +450,11 @@ function PiloteRow({
       {editing && (
         <tr className="border-b border-border">
           <EditPiloteForm pilote={pilote} onClose={() => setEditing(false)} />
+        </tr>
+      )}
+      {showDocs && (
+        <tr className="border-b border-border">
+          <DocsReviewPanel pilote={pilote} onDone={() => setShowDocs(false)} />
         </tr>
       )}
       {showStats && (

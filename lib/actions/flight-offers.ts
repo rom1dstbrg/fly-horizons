@@ -17,7 +17,7 @@ import {
 const OFFER_TTL_HOURS = 48;
 
 const PILOTE_LEGAL_COLS =
-  "id, nom, email, statut, licence_numero, licence_expiration, medical_expiration, conditions_accepted_at";
+  "id, nom, email, statut, licence_numero, licence_expiration, medical_expiration, medical_classe, recence_date, docs_status, conditions_accepted_at";
 
 function siteUrl() {
   const raw = process.env.NEXT_PUBLIC_SITE_URL ?? "";

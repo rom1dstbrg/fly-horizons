@@ -20,7 +20,7 @@ export async function loadPiloteForAnnonces() {
   const admin = createAdminClient();
   const { data: pilote } = await admin
     .from("pilotes")
-    .select("id, nom, iban, licence_numero, licence_expiration, medical_expiration, conditions_accepted_at")
+    .select("id, nom, iban, licence_numero, licence_expiration, medical_expiration, medical_classe, recence_date, docs_status, conditions_accepted_at")
     .eq("user_id", user!.id)
     .single();
 

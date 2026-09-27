@@ -77,6 +77,7 @@ export const PAYMENT_STATUS_CONFIG: Record<string, { label: string; color: strin
 
 export const ACTION_LABELS: Record<string, string> = {
   field_changed:       "Modification",
+  pilote_declaration:  "Déclaration avant vol",
   route_proposal_sent: "Proposition envoyée",
   client_response:     "Réponse client",
   status_changed:      "Changement de statut",

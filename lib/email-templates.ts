@@ -2465,3 +2465,44 @@ export function passwordResetEmail(p: { url: string }): string {
 
   return emailBase(body, "Nouveau mot de passe · Fly Horizons");
 }
+
+// ── Documents pilote (vérification, 27/09) ───────────────────────────────────
+
+export function piloteDocumentsEnvoyesAdminEmail(p: { piloteNom: string; nbDocuments: number; url: string }): string {
+  const body = `
+    <p style="margin:0 0 16px;font-size:16px;font-weight:700;">Documents pilote à vérifier</p>
+    <p style="margin:0 0 12px;">${esc(p.piloteNom)} a envoyé ${p.nbDocuments} document${p.nbDocuments > 1 ? "s" : ""}. Il ne peut pas recevoir de vol tant qu'ils ne sont pas vérifiés.</p>
+    ${adminLink(p.url, "Vérifier les documents")}`;
+  return adminEmailBase(body, "Documents pilote à vérifier · Fly Horizons");
+}
+
+export function piloteDocumentsVerifiesEmail(p: { nom: string; url: string }): string {
+  const body = `
+    <p class="em-body" style="margin:0 0 8px;font-size:14px;color:#334155;line-height:1.7;">
+      Bonjour <strong style="color:#0b2238;">${esc(p.nom)}</strong>, vos documents sont v&eacute;rifi&eacute;s. Ils ont &eacute;t&eacute; supprim&eacute;s de nos serveurs : nous gardons seulement la date de v&eacute;rification.
+    </p>
+    ${ctaButton(p.url, "Ouvrir mon profil")}
+
+    ${separator()}
+    ${signOff(null, "Bons vols,")}`;
+  return emailBase(body, "Documents vérifiés · Fly Horizons");
+}
+
+export function piloteDocumentsRefusesEmail(p: { nom: string; motif: string; url: string }): string {
+  const body = `
+    <p class="em-body" style="margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;">
+      Bonjour <strong style="color:#0b2238;">${esc(p.nom)}</strong>, vos documents n&rsquo;ont pas pu &ecirc;tre valid&eacute;s. Ils ont &eacute;t&eacute; supprim&eacute;s de nos serveurs.
+    </p>
+    ${callout(esc(p.motif))}
+    <p class="em-body" style="margin:0 0 8px;font-size:14px;color:#334155;line-height:1.7;">
+      Vous pouvez en renvoyer depuis votre profil.
+    </p>
+    ${ctaButton(p.url, "Renvoyer mes documents")}
+
+    ${separator()}
+    ${signOff(null, "Merci,")}
+    <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
+      Une question ? R&eacute;pondez directement &agrave; cet email.
+    </p>`;
+  return emailBase(body, "Documents à renvoyer · Fly Horizons");
+}

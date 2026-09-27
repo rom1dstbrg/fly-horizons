@@ -53,6 +53,7 @@ export interface DrawerReservation {
   // Marketplace pilotes (annonces) + assignation manuelle d'un vol standard (Bloc B)
   pilote_id?: string | null;
   pilote_assigned_at?: string | null;
+  pilote_declaration_at?: string | null;
   annonce_id?: string | null;
   pilotes?: { nom: string; iban?: string | null; paylink?: string | null } | null;
 

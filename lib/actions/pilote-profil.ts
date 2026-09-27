@@ -19,8 +19,12 @@ export type PiloteProfilInput = {
   licence_numero?: string | null;
   licence_expiration?: string | null; // 'YYYY-MM-DD' ou ''
   medical_expiration?: string | null;
+  medical_classe?: string | null;
+  recence_date?: string | null;
   ratings?: string | null;
 };
+
+const MEDICAL_CLASSES = ["classe1", "classe2", "lapl"];
 
 const clean = (v: string | null | undefined) => {
   const s = (v ?? "").trim();
@@ -40,6 +44,28 @@ export async function updateMyPiloteProfile(input: PiloteProfilInput) {
     const { piloteId } = await requireSelfActivePilote();
     const db = createAdminClient();
 
+    const medicalClasse = clean(input.medical_classe);
+    if (medicalClasse && !MEDICAL_CLASSES.includes(medicalClasse)) return { error: "Classe médicale invalide" };
+    const recence = cleanDate(input.recence_date);
+    if (recence && recence > new Date().toISOString().slice(0, 10)) return { error: "La date d'expérience récente ne peut pas être dans le futur" };
+
+    const next = {
+      licence_numero: clean(input.licence_numero),
+      licence_expiration: cleanDate(input.licence_expiration),
+      medical_expiration: cleanDate(input.medical_expiration),
+      medical_classe: medicalClasse,
+    };
+
+    // Une licence, une SEP ou un médical modifiés après vérification doivent être
+    // revérifiés : on repasse les documents à « aucun » (le pilote renvoie les nouveaux).
+    const { data: current } = await db
+      .from("pilotes")
+      .select("licence_numero, licence_expiration, medical_expiration, medical_classe, docs_status")
+      .eq("id", piloteId)
+      .single();
+    const changed = current && (Object.keys(next) as (keyof typeof next)[]).some((k) => (current[k] ?? null) !== next[k]);
+    const resetDocs = changed && current?.docs_status === "verifies";
+
     const { error } = await db
       .from("pilotes")
       .update({
@@ -48,17 +74,17 @@ export async function updateMyPiloteProfile(input: PiloteProfilInput) {
         telephone: clean(input.telephone),
         signature: clean(input.signature),
         iban: clean(input.iban),
-        licence_numero: clean(input.licence_numero),
-        licence_expiration: cleanDate(input.licence_expiration),
-        medical_expiration: cleanDate(input.medical_expiration),
+        ...next,
+        recence_date: recence,
         ratings: clean(input.ratings),
+        ...(resetDocs ? { docs_status: "aucun", docs_verified_at: null, docs_note: "Informations modifiées : documents à renvoyer." } : {}),
       })
       .eq("id", piloteId);
 
     if (error) return { error: error.message };
     revalidatePath("/pilote/profil");
     revalidatePath("/pilote");
-    return { success: true };
+    return { success: true, resetDocs: !!resetDocs };
   } catch (e) {
     return { error: e instanceof Error && e.message === "Date invalide" ? "Date invalide" : "Erreur serveur" };
   }

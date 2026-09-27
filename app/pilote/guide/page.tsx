@@ -79,10 +79,16 @@ export default function PiloteGuidePage() {
           Sans profil complet, aucun vol ne peut vous être attribué. Dans <Link href="/pilote/profil" className="font-medium text-st-ink underline underline-offset-2">Mon profil</Link>, renseignez :
         </p>
         <ul className="list-disc space-y-1 pl-5">
-          <li>votre numéro de licence et sa date d&apos;expiration ;</li>
-          <li>la date d&apos;expiration de votre certificat médical ;</li>
+          <li>votre numéro de licence et la validité de votre qualification SEP ;</li>
+          <li>la classe et la validité de votre certificat médical ;</li>
+          <li>votre expérience récente : la date de votre 3e décollage et atterrissage le plus récent ;</li>
           <li>votre IBAN, si vous publiez des annonces : c&apos;est là que les passagers vous paient.</li>
         </ul>
+        <p>
+          Envoyez ensuite une photo ou un PDF de votre licence (avec la page SEP) et de votre certificat médical.
+          Romain les vérifie, puis les fichiers sont supprimés : seule la date de vérification est gardée.
+          Si vous modifiez ces informations plus tard, il faudra les renvoyer.
+        </p>
         <p>
           Une pastille vous prévient 30 jours avant une expiration. Une date dépassée vous rend inéligible jusqu&apos;à sa mise à jour.
         </p>
@@ -100,6 +106,7 @@ export default function PiloteGuidePage() {
           "Contactez le passager et convenez du créneau.",
           "Tracez la route et envoyez-la au passager, qui la valide ou demande une modification.",
           "Préparez la masse et centrage et les performances dans l'onglet M&B.",
+          "Avant le vol, faites la déclaration dans le vol : 3 décollages et atterrissages en 90 jours, SEP et médical valides, avion assuré.",
           "Le jour J : météo, décision de partir ou non, accueil du passager.",
           "Après le vol : mettez à jour son statut dans Mes vols (et le paiement pour une annonce).",
         ]} />
