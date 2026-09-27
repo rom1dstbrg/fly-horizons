@@ -2401,3 +2401,67 @@ export function pilotePaiementCheckinEmail(p: {
 
   return adminEmailBase(body, "Rappel paiement · Fly Horizons");
 }
+
+// ── Accès à l'espace pilote et mot de passe ──────────────────────────────────
+// Envoyés par nous (Resend) plutôt que par Supabase : le lien est généré côté
+// serveur avec auth.admin.generateLink, seul l'email change (décision 2026-09-27).
+
+export function piloteInvitationEmail(p: { nom: string; url: string }): string {
+  const body = `
+    <p class="em-body" style="margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;">
+      Bonjour <strong style="color:#0b2238;">${esc(p.nom)}</strong>, Romain vous ouvre un acc&egrave;s &agrave; l&rsquo;espace pilote Fly Horizons.
+    </p>
+    <p class="em-body" style="margin:0 0 8px;font-size:14px;color:#334155;line-height:1.7;">
+      Cliquez sur le bouton ci-dessous pour choisir votre mot de passe. Vous lirez ensuite la charte pilote, puis vous pourrez compl&eacute;ter votre profil.
+    </p>
+    ${ctaButton(p.url, "Activer mon accès")}
+    <p class="em-muted" style="margin:16px 0 0;font-size:12px;color:#94a3b8;text-align:center;">
+      Ce lien est valable pour une dur&eacute;e limit&eacute;e. S&rsquo;il a expir&eacute;, utilisez &laquo;&nbsp;Mot de passe oubli&eacute;&nbsp;&raquo; sur la page de connexion.
+    </p>
+
+    ${separator()}
+    ${signOff(null, "Bienvenue à bord,")}
+    <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
+      Une question ? R&eacute;pondez directement &agrave; cet email.
+    </p>`;
+
+  return emailBase(body, "Votre accès à l'espace pilote · Fly Horizons");
+}
+
+export function piloteAccesEmail(p: { nom: string; url: string }): string {
+  const body = `
+    <p class="em-body" style="margin:0 0 20px;font-size:14px;color:#334155;line-height:1.7;">
+      Bonjour <strong style="color:#0b2238;">${esc(p.nom)}</strong>, Romain vient d&rsquo;ouvrir l&rsquo;espace pilote sur votre compte Fly Horizons.
+    </p>
+    <p class="em-body" style="margin:0 0 8px;font-size:14px;color:#334155;line-height:1.7;">
+      Connectez-vous avec votre email et votre mot de passe habituels : vous arriverez directement dans l&rsquo;espace pilote.
+    </p>
+    ${ctaButton(p.url, "Me connecter")}
+
+    ${separator()}
+    ${signOff(null, "Bienvenue à bord,")}
+    <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
+      Une question ? R&eacute;pondez directement &agrave; cet email.
+    </p>`;
+
+  return emailBase(body, "Votre espace pilote est ouvert · Fly Horizons");
+}
+
+export function passwordResetEmail(p: { url: string }): string {
+  const body = `
+    <p class="em-body" style="margin:0 0 8px;font-size:14px;color:#334155;line-height:1.7;">
+      Bonjour, vous avez demand&eacute; &agrave; changer le mot de passe de votre compte Fly Horizons. Cliquez sur le bouton ci-dessous pour en choisir un nouveau.
+    </p>
+    ${ctaButton(p.url, "Choisir un nouveau mot de passe")}
+    <p class="em-muted" style="margin:16px 0 0;font-size:12px;color:#94a3b8;text-align:center;">
+      Ce lien est valable pour une dur&eacute;e limit&eacute;e. Si vous n&rsquo;avez rien demand&eacute;, ignorez cet email : votre mot de passe reste inchang&eacute;.
+    </p>
+
+    ${separator()}
+    ${signOff(null, "À bientôt,")}
+    <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
+      Une question ? R&eacute;pondez directement &agrave; cet email.
+    </p>`;
+
+  return emailBase(body, "Nouveau mot de passe · Fly Horizons");
+}

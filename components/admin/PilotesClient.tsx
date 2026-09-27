@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createPilote, togglePiloteActif, updatePilote, deletePilote } from "@/lib/actions/pilotes";
+import { createPilote, togglePiloteActif, updatePilote, deletePilote, resendPiloteInvitation } from "@/lib/actions/pilotes";
 import { AdminRowActions } from "@/components/admin/ui/AdminRowActions";
 import { EmptyState } from "@/components/admin/ui";
 import { ConfirmActionDialog, type PendingAction } from "@/components/admin/reservation-drawer/ConfirmActionDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlus, Loader2, Check, Plane, Gauge, TriangleAlert } from "lucide-react";
+import { UserPlus, Loader2, Check, Plane, Gauge, TriangleAlert, Mail } from "lucide-react";
 import type { Pilote } from "@/types/database";
 import { emptyReliabilityStats, type PiloteReliabilityStats } from "@/lib/pilote-stats";
 
@@ -32,9 +32,12 @@ function InviteForm({ onDone }: { onDone: () => void }) {
         iban: (fd.get("iban") as string) || undefined,
       });
       if (result?.error) setError(result.error);
-      else if (result?.promoted) {
+      else if (result?.mailFailed) {
         (document.getElementById("invite-form") as HTMLFormElement | null)?.reset();
-        setNotice("Ce compte existait déjà : il a été promu en pilote, sans email d'invitation. La personne se connecte avec son mot de passe habituel.");
+        setError("Pilote créé, mais l'email n'est pas parti. Utilisez « Renvoyer l'accès » sur sa ligne.");
+      } else if (result?.promoted) {
+        (document.getElementById("invite-form") as HTMLFormElement | null)?.reset();
+        setNotice("Ce compte client existait déjà : il est passé pilote et la personne a reçu un email pour se connecter avec son mot de passe habituel.");
       } else {
         (document.getElementById("invite-form") as HTMLFormElement | null)?.reset();
         onDone();
@@ -252,6 +255,13 @@ function PiloteRow({
     });
   }
 
+  function handleResend() {
+    startTransition(async () => {
+      const result = await resendPiloteInvitation(pilote.id);
+      setCascadeMsg(result.error ? `Lien non envoyé : ${result.error}.` : `Lien d'accès envoyé à ${result.email}.`);
+    });
+  }
+
   function handleToggle() {
     if (isActive) {
       // Désactivation : cascade (vols futurs désassignés, annonces retirées) → confirmation.
@@ -309,6 +319,12 @@ function PiloteRow({
               onEdit={() => setEditing(e => !e)}
               onDelete={() => deletePilote(pilote.id)}
               extra={[{
+                icon: Mail,
+                label: "Renvoyer l'accès",
+                onClick: handleResend,
+                disabled: isPending,
+                title: "Renvoie un email pour choisir (ou rechoisir) son mot de passe",
+              }, {
                 icon: Gauge,
                 label: "Fiabilité",
                 onClick: () => setShowStats(v => !v),

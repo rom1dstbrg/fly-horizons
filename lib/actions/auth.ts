@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
+import { passwordResetEmail } from "@/lib/email-templates";
 
 // -----------------------------------------------
 // LOGIN
@@ -186,6 +188,42 @@ export async function changePassword(formData: FormData) {
 
   const { error } = await supabase.auth.updateUser({ password });
   if (error) return { error: error.message };
+
+  return { success: true };
+}
+
+// -----------------------------------------------
+// MOT DE PASSE OUBLIÉ
+// Lien généré par Supabase (generateLink « recovery »), email envoyé par nous
+// via Resend. Réponse identique que le compte existe ou non, pour ne pas
+// révéler quelles adresses ont un compte.
+// -----------------------------------------------
+export async function requestPasswordReset(formData: FormData) {
+  const email = ((formData.get("email") as string) ?? "").trim().toLowerCase();
+  if (!email || !email.includes("@")) return { error: "Adresse email invalide." };
+
+  const siteUrl = process.env.NODE_ENV === "development"
+    ? `http://localhost:${process.env.PORT ?? 3000}`
+    : "https://fly-horizons.com";
+
+  const admin = createAdminClient();
+  const { data, error } = await admin.auth.admin.generateLink({
+    type: "recovery",
+    email,
+    options: { redirectTo: `${siteUrl}/auth/callback?next=/reinitialiser-mot-de-passe` },
+  });
+
+  if (!error && data?.properties?.action_link) {
+    await resend.emails
+      .send({
+        from: EMAIL_FROM,
+        to: [email],
+        replyTo: EMAIL_REPLY_TO,
+        subject: "Fly Horizons · Nouveau mot de passe",
+        html: passwordResetEmail({ url: data.properties.action_link }),
+      })
+      .catch(() => {});
+  }
 
   return { success: true };
 }

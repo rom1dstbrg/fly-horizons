@@ -50,7 +50,12 @@ function LoginForm() {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="password" className="text-sm font-semibold text-foreground">Mot de passe</Label>
+          <div className="flex items-baseline justify-between">
+            <Label htmlFor="password" className="text-sm font-semibold text-foreground">Mot de passe</Label>
+            <Link href="/mot-de-passe-oublie" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+              Mot de passe oublié ?
+            </Link>
+          </div>
           <div className="relative">
             <Input
               id="password"

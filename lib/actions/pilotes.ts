@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
-import { reservationAutoAnnuleeEmail } from "@/lib/email-templates";
+import { reservationAutoAnnuleeEmail, piloteInvitationEmail, piloteAccesEmail } from "@/lib/email-templates";
 
 async function checkAdmin() {
   const supabase = await createClient();
@@ -19,9 +19,43 @@ function siteUrl() {
   return raw.startsWith("http://localhost") || raw.startsWith("http://127") ? raw : "https://fly-horizons.com";
 }
 
+// ── Lien d'activation pilote ───────────────────────────────────────────────
+// Supabase génère le lien (generateLink), nous envoyons l'email nous-mêmes via
+// Resend : design V2, en français, sans dépendre du SMTP de Supabase.
+// « invite » crée le compte s'il n'existe pas, ou renvoie un lien à un compte
+// invité pas encore activé ; un compte déjà activé reçoit un lien « recovery ».
+// Les deux mènent au choix du mot de passe dans l'espace pilote.
+
+type AdminClient = ReturnType<typeof createAdminClient>;
+
+async function sendActivationLink(
+  supabase: AdminClient,
+  email: string,
+  nom: string,
+  mode: "invite" | "recovery",
+): Promise<{ userId?: string; error?: string }> {
+  const redirectTo = `${siteUrl()}/auth/callback?next=/pilote/mot-de-passe`;
+  const { data, error } = mode === "invite"
+    ? await supabase.auth.admin.generateLink({ type: "invite", email, options: { redirectTo, data: { full_name: nom } } })
+    : await supabase.auth.admin.generateLink({ type: "recovery", email, options: { redirectTo } });
+  if (error || !data?.properties?.action_link || !data.user) {
+    return { error: error?.message ?? "Lien non généré" };
+  }
+
+  const { error: mailErr } = await resend.emails.send({
+    from: EMAIL_FROM,
+    to: [email],
+    replyTo: EMAIL_REPLY_TO,
+    subject: "Fly Horizons · Votre accès à l'espace pilote",
+    html: piloteInvitationEmail({ nom, url: data.properties.action_link }),
+  });
+  if (mailErr) return { userId: data.user.id, error: "Email non envoyé" };
+  return { userId: data.user.id };
+}
+
 // ── Inviter un nouveau pilote ──────────────────────────────────────────────
-// Crée le compte auth (email d'invitation Supabase), la fiche pilotes, et
-// bascule le rôle du profil sur "pilote" (le profil lui-même est créé par le
+// Crée le compte auth + envoie notre email d'activation, crée la fiche pilotes,
+// et bascule le rôle du profil sur "pilote" (le profil lui-même est créé par le
 // trigger existant sur auth.users, en "customer" par défaut).
 
 export async function createPilote(data: {
@@ -35,37 +69,33 @@ export async function createPilote(data: {
     const supabase = createAdminClient();
 
     const email = data.email.trim().toLowerCase();
-    if (!data.nom.trim() || !email) return { error: "Nom et email obligatoires" };
+    const nom = data.nom.trim();
+    if (!nom || !email) return { error: "Nom et email obligatoires" };
 
     const { data: existing } = await supabase.from("pilotes").select("id").eq("email", email).maybeSingle();
     if (existing) return { error: "Un pilote existe déjà avec cet email" };
 
-    // L'email a-t-il déjà un compte ? Si oui on promeut le compte existant
-    // (inviteUserByEmail échouerait). Sinon on invite un nouveau compte.
+    // L'email a-t-il déjà un compte (client inscrit) ? Si oui on promeut ce
+    // compte et on prévient la personne ; sinon on crée le compte par invitation.
     const { data: existingUserId } = await supabase.rpc("get_auth_user_id_by_email", { email_input: email });
 
     let userId: string;
     let promoted = false;
+    let mailFailed = false;
 
     if (existingUserId) {
       userId = existingUserId as string;
       promoted = true;
     } else {
-      const { data: invited, error: inviteErr } = await supabase.auth.admin.inviteUserByEmail(email, {
-        redirectTo: `${siteUrl()}/auth/callback?next=/pilote/mot-de-passe`,
-        data: { full_name: data.nom },
-      });
-      if (inviteErr || !invited?.user) {
-        return { error: inviteErr?.message?.includes("already registered")
-          ? "Un compte existe déjà avec cet email"
-          : "Erreur lors de l'invitation" };
-      }
-      userId = invited.user.id;
+      const res = await sendActivationLink(supabase, email, nom, "invite");
+      if (!res.userId) return { error: "Erreur lors de l'invitation" };
+      userId = res.userId;
+      mailFailed = !!res.error;
     }
 
     const { error: pilError } = await supabase.from("pilotes").insert({
       user_id: userId,
-      nom: data.nom.trim(),
+      nom,
       email,
       telephone: data.telephone?.trim() || null,
       iban: data.iban?.trim() || null,
@@ -79,14 +109,52 @@ export async function createPilote(data: {
     }
 
     // Promotion : on garde le nom existant s'il y en a un, on ne l'écrase pas.
-    const { data: currentProfile } = await supabase.from("profiles").select("full_name").eq("id", userId).maybeSingle();
+    // Un admin reste admin (il accède déjà à /pilote avec ce rôle).
+    const { data: currentProfile } = await supabase.from("profiles").select("full_name, role").eq("id", userId).maybeSingle();
     await supabase
       .from("profiles")
-      .update({ role: "pilote", full_name: currentProfile?.full_name?.trim() || data.nom.trim() })
+      .update({
+        role: currentProfile?.role === "admin" ? "admin" : "pilote",
+        full_name: currentProfile?.full_name?.trim() || nom,
+      })
       .eq("id", userId);
 
+    if (promoted) {
+      const { error: mailErr } = await resend.emails.send({
+        from: EMAIL_FROM,
+        to: [email],
+        replyTo: EMAIL_REPLY_TO,
+        subject: "Fly Horizons · Votre espace pilote est ouvert",
+        html: piloteAccesEmail({ nom, url: `${siteUrl()}/login?redirectTo=/pilote` }),
+      });
+      mailFailed = !!mailErr;
+    }
+
     revalidatePath("/admin/pilotes");
-    return { success: true, promoted };
+    return { success: true, promoted, mailFailed };
+  } catch {
+    return { error: "Erreur serveur" };
+  }
+}
+
+// ── Renvoyer le lien d'activation ──────────────────────────────────────────
+// Lien expiré, email perdu, pilote qui n'a jamais choisi son mot de passe.
+
+export async function resendPiloteInvitation(id: string) {
+  try {
+    await checkAdmin();
+    const supabase = createAdminClient();
+
+    const { data: pilote } = await supabase.from("pilotes").select("nom, email, user_id").eq("id", id).single();
+    if (!pilote?.user_id) return { error: "Pilote introuvable" };
+
+    const { data: authData } = await supabase.auth.admin.getUserById(pilote.user_id);
+    const email = authData?.user?.email ?? pilote.email;
+    const mode = authData?.user?.email_confirmed_at ? "recovery" : "invite";
+
+    const res = await sendActivationLink(supabase, email, pilote.nom, mode);
+    if (res.error) return { error: res.error === "Email non envoyé" ? res.error : "Erreur lors de l'envoi du lien" };
+    return { success: true, email };
   } catch {
     return { error: "Erreur serveur" };
   }

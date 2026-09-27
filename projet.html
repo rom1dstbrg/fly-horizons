@@ -260,6 +260,27 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-09-27 · Emails de compte (invitation pilote, mot de passe oublié)</p>
+      <h3>Supabase génère les liens, nous envoyons les emails via Resend</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>L'invitation pilote partait par le modèle et le serveur d'envoi de Supabase (anglais, hors design V2, et
+          envoi non garanti sans SMTP personnalisé). Aucun « mot de passe oublié » n'existait : lien expiré ou mot de
+          passe perdu = pilote bloqué dehors.</dd>
+        <dt>Décision</dt>
+        <dd><code>auth.admin.generateLink</code> (invite / recovery) produit le lien, l'email est un modèle V2 envoyé par Resend.
+          Ajouts : « Mot de passe oublié » sur <code>/login</code>, bouton « Renvoyer l'accès » par pilote, email au client
+          promu pilote.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Brancher Resend comme SMTP dans Supabase et traduire les modèles dans le tableau de bord : modèles hors du
+          code, pas de squelette V2 partagé.</dd>
+        <dt>Conséquences</dt>
+        <dd>Les modèles d'email de Supabase ne servent plus à ces parcours. Les URL <code>/auth/callback</code> doivent
+          rester dans la liste des Redirect URLs de Supabase.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-09-25 · Après l'espace pilote : l'admin, puis l'admin au service du pilote</p>
       <h3>Admin en style Studio ensuite, et à terme des outils de l'admin repris dans l'espace pilote</h3>
       <dl>
@@ -1205,6 +1226,20 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-09-27 (2) — Invitation pilote et mot de passe oublié par nos propres emails</h3>
+      <ul>
+        <li>Invitation pilote : lien Supabase (<code>generateLink</code>), email V2 en français via Resend
+          (<code>piloteInvitationEmail</code>). Un client existant promu pilote reçoit désormais un email (<code>piloteAccesEmail</code>).</li>
+        <li><code>/admin/pilotes</code> : bouton « Renvoyer l'accès » (invite si jamais activé, sinon lien de nouveau mot de passe) ;
+          alerte si l'email n'est pas parti.</li>
+        <li>« Mot de passe oublié ? » sur <code>/login</code> → <code>/mot-de-passe-oublie</code> → email <code>passwordResetEmail</code>
+          → <code>/reinitialiser-mot-de-passe</code>. Même réponse que le compte existe ou non.</li>
+        <li>Inviter un admin comme pilote ne le rétrograde plus en « pilote » (il gardait sinon ce rôle et perdait l'admin).</li>
+        <li><code>/auth/callback</code> et les deux pages de mot de passe exemptées du mode maintenance.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-09-27 — Suppression d'un pilote : le compte client n'est plus effacé</h3>

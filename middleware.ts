@@ -56,6 +56,9 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/pilote") ||
     pathname === "/login" ||
     pathname === "/register" ||
+    pathname === "/auth/callback" ||
+    pathname === "/mot-de-passe-oublie" ||
+    pathname === "/reinitialiser-mot-de-passe" ||
     pathname.startsWith("/api") ||
     pathname === "/robots.txt" ||
     pathname === "/sitemap.xml" ||
