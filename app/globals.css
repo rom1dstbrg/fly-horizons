@@ -533,3 +533,21 @@
 @media (max-width: 379px) {
   .st-header-actions > a, .st-header-actions > button { width: 38px; padding: 0; gap: 0; }
 }
+
+/* Page en construction (repris de Nexus, 27/09) : le chariot de la grue va et
+   vient, la charge se balance, le gyrophare clignote, la brique se pose. */
+@keyframes st-crane-trolley { 0%, 100% { transform: translateX(-26px); } 50% { transform: translateX(14px); } }
+@keyframes st-crane-swing { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+@keyframes st-beacon { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+@keyframes st-brick-drop {
+  0%, 15% { opacity: 0; transform: translateY(-14px); }
+  35%, 85% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(0); }
+}
+.st-crane-trolley { animation: st-crane-trolley 7s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+.st-crane-swing { animation: st-crane-swing 2.3s ease-in-out infinite; }
+.st-beacon { animation: st-beacon 1.1s ease-in-out infinite; }
+.st-brick-drop { animation: st-brick-drop 3.5s cubic-bezier(0.2, 0, 0, 1) infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .st-crane-trolley, .st-crane-swing, .st-beacon, .st-brick-drop { animation: none; }
+}

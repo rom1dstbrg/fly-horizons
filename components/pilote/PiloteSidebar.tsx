@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   LayoutDashboard, PlaneTakeoff, Plane, CalendarRange, Scale, User,
-  ArrowLeftRight, LogOut, AlertCircle, BookOpen, Receipt, Navigation,
+  ArrowLeftRight, LogOut, AlertCircle, BookOpen, Receipt, Navigation, NotebookPen,
 } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 import { cn } from "@/lib/utils";
@@ -49,6 +49,7 @@ export const PILOTE_NAV: PiloteNavItem[] = [
   { id: "transactions", icon: Receipt, label: "Transactions", short: "Transactions", href: "/pilote/transactions", badgeKey: "/pilote/transactions" },
   { id: "dispos", icon: CalendarRange, label: "Disponibilités", short: "Dispos", href: "/pilote/disponibilites" },
   { id: "mb", icon: Scale, label: "Masse & centrage", short: "M&B", href: "/pilote/mass-balance" },
+  { id: "logbook", icon: NotebookPen, label: "Logbook", short: "Logbook", href: "/pilote/logbook" },
   { id: "profil", icon: User, label: "Mon profil", short: "Profil", href: "/pilote/profil", badgeKey: "/pilote/profil" },
 ];
 
