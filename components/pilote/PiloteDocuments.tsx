@@ -2,12 +2,12 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, Plus, ShieldCheck, X } from "lucide-react";
+import { FileText, Plus, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
   confirmMyDocumentUpload, createMyDocumentUpload, deleteMyDocument, submitMyDocuments, type PiloteDocument,
 } from "@/lib/actions/pilote-documents";
-import { Badge, Button, SectionHeader } from "@/components/pilote/studio";
+import { Button } from "@/components/pilote/studio";
 import type { Pilote } from "@/types/database";
 
 // Documents du pilote (profil) : il dépose sa licence et son certificat
@@ -20,9 +20,6 @@ const ROWS: { type: "licence" | "medical"; label: string; hint: string }[] = [
   { type: "licence", label: "Licence", hint: "Avec la page de la qualification SEP (photo ou PDF)" },
   { type: "medical", label: "Certificat médical", hint: "La page avec la classe et la date de validité" },
 ];
-
-const frDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("fr-BE", { day: "numeric", month: "long", year: "numeric" });
 
 export function PiloteDocuments({ status, verifiedAt, note, documents }: {
   status: Pilote["docs_status"];
@@ -75,43 +72,19 @@ export function PiloteDocuments({ status, verifiedAt, note, documents }: {
     });
   }
 
+  // Affiché dans la ligne « Justificatifs » de l'onglet Licence : l'état global
+  // (vérifiés, en attente…) est porté par les étapes en haut de l'onglet.
   return (
-    <section className="space-y-3.5">
-      <div>
-        <SectionHeader
-          title="Documents"
-          action={
-            status === "verifies" ? <Badge tone="success">Vérifiés</Badge>
-            : status === "envoyes" ? <Badge tone="info">En vérification</Badge>
-            : status === "refuses" ? <Badge tone="danger">Refusés</Badge>
-            : <Badge tone="danger">À envoyer</Badge>
-          }
-        />
-        <p className="mt-0.5 text-[12.5px] text-st-muted">
-          Romain vérifie votre licence et votre certificat médical, puis les fichiers sont supprimés : nous ne gardons que la date de vérification.
-        </p>
-      </div>
-
-      {status === "verifies" && (
-        <p className="flex gap-2.5 rounded-[14px] bg-st-ok-soft px-4 py-3 text-[13px] text-st-ok">
-          <ShieldCheck size={16} className="mt-px shrink-0" />
-          <span>
-            Vérifiés{verifiedAt ? ` le ${frDate(verifiedAt)}` : ""}. Nouveau médical ou SEP prolongée : ajoutez le document ci-dessous
-            et envoyez-le, vous restez en règle pendant la vérification.
-          </span>
-        </p>
+    <div className="space-y-3">
+      {status === "refuses" && note && (
+        <p className="rounded-[12px] bg-st-bad-soft px-3.5 py-2.5 text-[13px] text-st-bad">Refusés par Romain : {note}</p>
       )}
-
       {status === "envoyes" && (
-        <p className="rounded-[14px] bg-st-info-soft px-4 py-3 text-[13px] text-st-info">
+        <p className="rounded-[12px] bg-st-info-soft px-3.5 py-2.5 text-[13px] text-st-info">
           {renewal
-            ? "Nouveau document en cours de vérification : vous restez en règle d'ici là. Vous recevrez un email dès que c'est fait."
+            ? "Nouveau document envoyé, en cours de vérification. Vous restez en règle d'ici là."
             : "Envoyés, en cours de vérification. Vous recevrez un email dès que c'est fait."}
         </p>
-      )}
-
-      {status === "refuses" && note && (
-        <p className="rounded-[14px] bg-st-bad-soft px-4 py-3 text-[13px] text-st-bad">{note}</p>
       )}
 
       {(editable || documents.length > 0) && (
@@ -120,7 +93,7 @@ export function PiloteDocuments({ status, verifiedAt, note, documents }: {
             const docs = byType(row.type);
             return (
               <div key={row.type} className="space-y-2 px-4 py-3">
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-[13.5px] font-medium text-st-text">{row.label}</p>
                     <p className="text-[12px] text-st-muted">{row.hint}</p>
@@ -145,7 +118,7 @@ export function PiloteDocuments({ status, verifiedAt, note, documents }: {
                         disabled={!!uploading || pending}
                         onClick={() => inputs.current[row.type]?.click()}
                       >
-                        {uploading !== row.type && <Plus />} Ajouter
+                        {uploading !== row.type && <Plus />} {docs.length ? "Ajouter une page" : "Ajouter"}
                       </Button>
                     </>
                   )}
@@ -180,10 +153,17 @@ export function PiloteDocuments({ status, verifiedAt, note, documents }: {
       {error && <p className="rounded-[12px] bg-st-bad-soft px-3.5 py-2.5 text-[13px] text-st-bad">{error}</p>}
 
       {editable && (
-        <Button variant="secondary" fullWidth disabled={!ready || !!uploading} loading={pending} onClick={submit}>
-          {renewal ? "Envoyer le nouveau document" : "Envoyer pour vérification"}
-        </Button>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button variant={ready ? "primary" : "secondary"} disabled={!ready || !!uploading} loading={pending} onClick={submit}>
+            {renewal ? "Envoyer le nouveau document" : "Envoyer à Romain pour vérification"}
+          </Button>
+          {!ready && (
+            <span className="text-[12px] text-st-muted">
+              {renewal ? "Ajoutez d'abord le nouveau document." : "Ajoutez d'abord votre licence et votre certificat médical."}
+            </span>
+          )}
+        </div>
       )}
-    </section>
+    </div>
   );
 }
