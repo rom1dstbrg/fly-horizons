@@ -2,17 +2,10 @@ import { Suspense } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { VolsHub } from "@/components/admin/VolsHub";
 import { PageHeader } from "@/components/admin/PageHeader";
-import { VolsPageActions } from "@/components/admin/VolsPageActions";
 
 export const metadata = { title: "Activité Vols — Admin" };
 
-export default async function VolsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ tab?: string }>;
-}) {
-  const { tab } = await searchParams;
-  const activeTab = tab ?? "reservations";
+export default async function VolsPage() {
   const db = createAdminClient();
 
   const [
@@ -37,7 +30,6 @@ export default async function VolsPage({
         domain="vols"
         title="Activité Vols"
         subtitle="Pipeline, calendrier et gestion de toutes les réservations"
-        action={activeTab !== "disponibilites" ? <VolsPageActions activeTab={activeTab} /> : undefined}
       />
 
       <Suspense fallback={null}>

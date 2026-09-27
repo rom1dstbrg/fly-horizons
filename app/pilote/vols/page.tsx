@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PiloteVolsClient } from "@/components/pilote/PiloteVolsClient";
-import { PiloteVolsActions } from "@/components/pilote/PiloteVolsActions";
-import { PageHeader } from "@/components/pilote/studio";
+import { PlaneTakeoff } from "lucide-react";
+import { ButtonLabel, LinkButton, PageHeader } from "@/components/pilote/studio";
 
 export const metadata = { title: "Mes vols — Espace pilote" };
 
@@ -25,7 +25,17 @@ export default async function PiloteVolsPage({ searchParams }: { searchParams: P
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Mes vols" actions={<PiloteVolsActions />} />
+      <PageHeader
+        title="Mes vols"
+        actions={
+          // Un vol naît d'une annonce publiée, que le passager réserve (décision du 27/09) :
+          // pas de réservation créée à la main.
+          <LinkButton href="/pilote/annonces/nouvelle">
+            <PlaneTakeoff />
+            <ButtonLabel full="Publier un vol" short="Publier" />
+          </LinkButton>
+        }
+      />
       <PiloteVolsClient reservations={(reservations ?? []) as never} openId={ouvrir} />
     </div>
   );

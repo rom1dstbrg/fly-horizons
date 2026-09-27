@@ -13,8 +13,7 @@ type Choice = {
   desc: string;
 };
 
-// Un bouton qui ouvre une liste de choix décrits (« Nouveau vol » → réservation,
-// sur mesure, hors site). Bureau : petit menu ancré sous le bouton. Téléphone :
+// Un bouton qui ouvre une liste de choix décrits. Bureau : petit menu ancré sous le bouton. Téléphone :
 // feuille qui monte du bas, avec « Fermer ». Le bouton lui-même est passé par
 // l'appelant (trigger) pour rester le composant Button partagé.
 export function ChoiceMenu({ title, choices, trigger }: {

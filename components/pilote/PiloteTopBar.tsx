@@ -6,8 +6,6 @@ import { PILOTE_NAV, isPiloteNavActive, PiloteAvatar, type PilotIdInfo } from "@
 
 // Mots de l'URL qui nomment une étape, pour le fil d'Ariane.
 const STEPS: Record<string, string> = {
-  new: "Nouvelle réservation",
-  "new-horsite": "Hors site",
   "mot-de-passe": "Mot de passe",
 };
 

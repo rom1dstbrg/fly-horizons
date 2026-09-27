@@ -260,6 +260,27 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-09-27 (14) · Un vol naît toujours d'une annonce</p>
+      <h3>Plus de réservation créée à la main (« Nouvelle réservation », « Hors site ») : le pilote publie son vol, le passager le réserve</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Suite de la décision (13). Les deux créations restantes étaient dépassées : « Nouvelle réservation » créait un vol payé par Stripe à Fly Horizons
+          (incompatible avec le virement direct au pilote), et les deux pages chargeaient toute la liste des clients de Fly Horizons (visible par un pilote tiers).
+          Romain doute que les pilotes s'en servent.</dd>
+        <dt>Décision</dt>
+        <dd>Supprimer les deux créations, côté pilote et côté admin. Le seul chemin : le pilote publie une annonce, le passager réserve depuis la page publique.
+          Le bouton « Nouveau vol » de Mes vols et de l'accueil devient « Publier un vol » (création d'annonce).</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Refaire un « Ajouter un vol » Studio (clients du pilote, blocs de dispo, virement) : pas de besoin avéré. Garder les pages pour Romain seul dans l'admin.
+          « Hors site » comme historique : ce rôle reviendra au futur Logbook.</dd>
+        <dt>Conséquences</dt>
+        <dd>Supprimés : <code>app/pilote/reservations/*</code>, <code>CreateReservationForm</code>, <code>CreateHorSiteForm</code>, <code>PiloteVolsActions</code>, <code>VolsPageActions</code>,
+          actions <code>createAdminReservation</code> et <code>createHorSiteReservation</code>. Un vol qu'un passager demande par téléphone : le pilote l'oriente vers l'annonce.
+          Les vols déjà créés ainsi restent en base et s'affichent normalement.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-09-27 (13) · Plus de « vol sur mesure » à la création d'un vol</p>
       <h3>La création d'un vol sur mesure depuis l'espace pilote / admin est supprimée</h3>
       <dl>
@@ -1523,6 +1544,16 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-09-27 (41) — Plus de réservation créée à la main : « Nouvelle réservation » et « Hors site » supprimés</h3>
+      <ul>
+        <li>Supprimés : <code>app/pilote/reservations/new</code>, <code>new-horsite</code>, <code>components/admin/CreateReservationForm.tsx</code>, <code>CreateHorSiteForm.tsx</code>,
+          <code>components/pilote/PiloteVolsActions.tsx</code>, <code>components/admin/VolsPageActions.tsx</code>, <code>createAdminReservation</code>, <code>createHorSiteReservation</code>.</li>
+        <li>Mes vols : « Publier un vol » à la place du menu « Nouveau vol » ; accueil pilote : seul « Publier un vol » reste. Admin : boutons de l'accueil et de Vols,
+          et raccourcis de la palette de commandes retirés.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-09-27 (40) — Vol sur mesure retiré de la création de vol ; champs date / heure corrigés sur iPhone</h3>

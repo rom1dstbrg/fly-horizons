@@ -4,7 +4,7 @@ import Link from "next/link";
 import {
   AlertTriangle, AlertCircle, CheckCircle2,
   ArrowRight, Route, MessageSquare,
-  Plus, PlaneTakeoff, WifiOff,
+  PlaneTakeoff,
 } from "lucide-react";
 import { DashboardCalendar } from "@/components/admin/DashboardCalendar";
 import { MetarWidget } from "@/components/admin/MetarWidget";
@@ -103,24 +103,6 @@ export default async function AdminDashboardPage() {
       <PageHeader
         title={`${greeting}, Romain`}
         subtitle={dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1)}
-        action={
-          <div className="hidden sm:flex items-center gap-2">
-            <Link
-              href="/pilote/reservations/new"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-            >
-              <Plus size={15} />
-              Nouvelle réservation
-            </Link>
-            <Link
-              href="/pilote/reservations/new-horsite"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-            >
-              <WifiOff size={15} />
-              Hors site
-            </Link>
-          </div>
-        }
       />
 
       {/* ── À traiter ────────────────────────────────────────────────── */}

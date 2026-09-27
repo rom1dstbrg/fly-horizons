@@ -8,7 +8,6 @@ import {
   Card, CardSplit, Metric, PageHeader, SectionHeader, LinkButton, ButtonLabel, DateTile, Badge,
 } from "@/components/pilote/studio";
 import { ResaBadge, AnnonceTag } from "@/components/pilote/ResaBadge";
-import { PiloteVolsActions } from "@/components/pilote/PiloteVolsActions";
 import { MetarChip } from "@/components/pilote/MetarChip";
 import { RoutePath } from "@/components/pilote/RoutePath";
 import { cn } from "@/lib/utils";
@@ -104,13 +103,10 @@ export default async function PiloteDashboard() {
         title={`${greeting}${prenom ? `, ${prenom}` : ""}`}
         description={dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1)}
         actions={
-          <>
-            <div className="max-sm:hidden"><PiloteVolsActions variant="secondary" /></div>
             <LinkButton href="/pilote/annonces/nouvelle">
               <PlaneTakeoff />
               <ButtonLabel full="Publier un vol" short="Publier" />
             </LinkButton>
-          </>
         }
       />
 

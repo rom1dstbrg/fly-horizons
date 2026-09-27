@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Search, LayoutDashboard, Plane, CalendarCheck, Route,
+  Search, LayoutDashboard, CalendarCheck, Route,
   CalendarDays, Package, Ticket, Tag,
   Users, MessageSquare, Settings, ArrowRight, User,
   ShoppingBag, X, Loader2,
@@ -39,8 +39,6 @@ const QUICK_LINKS = [
   { href: "/admin/analytics",                  label: "Analytiques",          icon: BarChart2,       group: "Plus" },
   { href: "/admin/galerie",                    label: "Galerie",              icon: Images,          group: "Plus" },
   { href: "/admin/emails-preview",             label: "Emails",               icon: Mail,            group: "Plus" },
-  { href: "/pilote/reservations/new",           label: "Nouvelle réservation", icon: CalendarCheck,   group: "Actions rapides" },
-  { href: "/pilote/reservations/new-horsite",   label: "Vol hors-site",        icon: Plane,           group: "Actions rapides" },
   { href: "/admin/boutique?tab=vouchers",      label: "Nouveau voucher",      icon: Ticket,          group: "Actions rapides" },
   { href: "/admin/products/new",               label: "Nouveau vol",          icon: Package,         group: "Actions rapides" },
 ];
