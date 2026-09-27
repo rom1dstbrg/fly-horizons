@@ -19,6 +19,8 @@ import { cn } from "@/lib/utils";
 
 export interface PilotIdInfo {
   nom: string;
+  /** Photo envoyée par le pilote (profil) ; initiales à défaut. */
+  photoUrl?: string | null;
   licenceNumero: string | null;
   licenceExpiration: string | null;
   medicalExpiration: string | null;
@@ -66,14 +68,20 @@ export function initialsOf(nom: string): string {
   return ((parts[0]?.[0] ?? "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase() || "?";
 }
 
-// Avatar navy avec la pastille de statut légal (vert / orange / rouge).
+// Avatar : photo du pilote (initiales sur fond navy à défaut), avec la pastille
+// de statut légal (vert / orange / rouge).
 export function PiloteAvatar({ pilot, size = 32 }: { pilot: PilotIdInfo; size?: number }) {
   return (
     <span
       className="relative grid shrink-0 place-items-center rounded-full bg-st-ink text-[12px] font-semibold text-white"
       style={{ width: size, height: size }}
     >
-      {initialsOf(pilot.nom)}
+      {pilot.photoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={pilot.photoUrl} alt="" className="h-full w-full rounded-full object-cover" />
+      ) : (
+        initialsOf(pilot.nom)
+      )}
       <span
         className={cn(
           "absolute -bottom-px -right-px h-2.5 w-2.5 rounded-full ring-2 ring-white",
@@ -99,6 +107,14 @@ export function PiloteIssues({ pilot, onNavigate }: { pilot: PilotIdInfo; onNavi
       </Link>
     </div>
   );
+}
+
+// Statut en quelques mots, pour la plaque (pas de dates : elles se coupaient).
+function plateStatus(p: PilotIdInfo): string {
+  const errors = p.issues.filter((i) => i.severity === "error").length;
+  if (errors) return `${errors} point${errors > 1 ? "s" : ""} à régler`;
+  if (p.legalWarn) return "En règle · à surveiller";
+  return "En règle";
 }
 
 const rowCls = "group relative flex h-10 w-full shrink-0 items-center gap-3 rounded-[11px] px-[14px] text-[13.5px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-st-ink/20";
@@ -183,28 +199,39 @@ export function PiloteSidebar({ counts = {}, pilot, isAdmin = false }: {
           </button>
         </form>
 
-        {/* Plaque pilote : identité, licence, médical ; au clic, ce qui manque. */}
+        {/* Plaque pilote : photo, nom, statut en un mot (ne se coupe jamais) ;
+            au clic, les dates et ce qui manque. */}
         {pilot && (
           <div className="mt-1.5 border-t border-st-line pt-2.5">
             <button
               type="button"
-              onClick={() => pilot.issues.length > 0 && setShowIssues((v) => !v)}
-              className={cn("flex w-full items-center gap-3 rounded-[11px] px-[6px] py-1.5 text-left", pilot.issues.length > 0 && "cursor-pointer hover:bg-st-surface")}
+              onClick={() => setShowIssues((v) => !v)}
+              aria-expanded={showIssues}
+              className="flex w-full cursor-pointer items-center gap-3 rounded-[11px] px-[6px] py-1.5 text-left outline-none hover:bg-st-surface focus-visible:ring-2 focus-visible:ring-st-ink/20"
             >
-              <PiloteAvatar pilot={pilot} />
+              <PiloteAvatar pilot={pilot} size={34} />
               <span className={labelCls(open)}>
-                <span className="flex items-center gap-1">
-                  <span className="truncate text-[13px] font-semibold text-st-text">{pilot.nom}</span>
-                  {pilot.issues.length > 0 && <ChevronDown size={12} className={cn("shrink-0 text-st-muted transition-transform", showIssues && "rotate-180")} />}
-                </span>
-                <span className="block truncate text-[11px] text-st-muted">
-                  Lic. {frDate(pilot.licenceExpiration)} · Méd. {frDate(pilot.medicalExpiration)}
+                <span className="block truncate text-[13px] font-semibold text-st-text">{pilot.nom}</span>
+                <span className={cn("block truncate text-[11.5px] font-medium", !pilot.legalOk ? "text-st-bad" : pilot.legalWarn ? "text-st-warn" : "text-st-ok")}>
+                  {plateStatus(pilot)}
                 </span>
               </span>
+              <ChevronDown size={14} className={cn("shrink-0 text-st-muted transition-[transform,opacity]", showIssues && "rotate-180", open ? "opacity-100" : "opacity-0")} />
             </button>
             {showIssues && open && (
-              <div className="px-2 pb-1 pt-2">
-                <PiloteIssues pilot={pilot} />
+              <div className="space-y-2 px-2 pb-1 pt-2">
+                <p className="text-[12px] text-st-text-2">
+                  SEP jusqu&apos;au <span className="st-num font-medium text-st-text">{frDate(pilot.licenceExpiration)}</span>
+                  <br />
+                  Médical jusqu&apos;au <span className="st-num font-medium text-st-text">{frDate(pilot.medicalExpiration)}</span>
+                </p>
+                {pilot.issues.length > 0 ? (
+                  <PiloteIssues pilot={pilot} />
+                ) : (
+                  <Link href="/pilote/profil?onglet=licence" className="inline-block text-[12px] font-semibold text-st-ink hover:underline">
+                    Voir mon profil →
+                  </Link>
+                )}
               </div>
             )}
           </div>

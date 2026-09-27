@@ -37,7 +37,7 @@ export default async function PiloteLayout({ children }: { children: React.React
   const admin = createAdminClient();
   const { data: pilote } = await admin
     .from("pilotes")
-    .select("id, nom, statut, conditions_accepted_at, conditions_version, licence_numero, licence_expiration, medical_expiration, medical_classe, docs_status, docs_verified_at")
+    .select("id, nom, photo_url, statut, conditions_accepted_at, conditions_version, licence_numero, licence_expiration, medical_expiration, medical_classe, docs_status, docs_verified_at")
     .eq("user_id", user.id)
     .maybeSingle();
   if (!pilote || pilote.statut !== "actif") redirect("/");
@@ -73,6 +73,7 @@ export default async function PiloteLayout({ children }: { children: React.React
   const pilotIdInfo: PilotIdInfo = {
     // Nom de la fiche pilote d'abord : le compte de Romain s'appelle « Fly Horizons ».
     nom: pilote.nom || profile?.full_name || "Pilote",
+    photoUrl: pilote.photo_url,
     licenceNumero: pilote.licence_numero,
     licenceExpiration: pilote.licence_expiration,
     medicalExpiration: pilote.medical_expiration,
