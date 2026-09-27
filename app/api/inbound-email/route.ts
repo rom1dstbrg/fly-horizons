@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { reservationMessageClientReplyEmail } from "@/lib/email-templates";
+import { notifyPiloteReservation } from "@/lib/push";
 
 /**
  * POST /api/inbound-email
@@ -122,5 +123,6 @@ export async function POST(req: NextRequest) {
     note: "Réponse email du client (webhook inbound)",
   });
 
+  await notifyPiloteReservation(resa.id, "message_client", content);
   return NextResponse.json({ ok: true });
 }

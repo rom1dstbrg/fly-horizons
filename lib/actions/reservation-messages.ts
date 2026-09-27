@@ -10,6 +10,7 @@ import {
   reservationMessageEmail,
   reservationMessageClientReplyEmail,
 } from "@/lib/email-templates";
+import { notifyPiloteReservation } from "@/lib/push";
 
 // Fil de messages rattache a une reservation (espace pilote). Le pilote (ou
 // l'admin) ecrit au client depuis l'onglet Messages du drawer ; le client
@@ -192,5 +193,6 @@ export async function submitClientMessageReply(messagesToken: string, content: s
     note: "Réponse du client dans le fil de messages",
   });
 
+  await notifyPiloteReservation(resa.id, "message_client", body);
   return { success: true };
 }

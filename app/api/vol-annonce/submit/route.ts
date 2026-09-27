@@ -6,6 +6,7 @@ import { reservationConfirmationFreeEmail, annonceInscriptionPlaceEmail } from "
 import { finalizeAnnonceGroupPricing } from "@/lib/annonces-pilote-server";
 import { escapeHtml } from "@/lib/utils";
 import { computeEffectiveDay } from "@/lib/dispo-utils";
+import { notifyPiloteReservation } from "@/lib/push";
 
 const DEFAULT_HEURE_DEBUT = "06:00";
 const DEFAULT_HEURE_FIN = "21:00";
@@ -347,6 +348,7 @@ ${groupeEnAttente
   : `<p>Connectez-vous à votre espace pilote (Mes vols) pour confirmer le créneau, tracer la route et envoyer le lien de paiement.</p>`}`,
     }).catch(() => {});
 
+    await notifyPiloteReservation(resa.id, "nouvelle_demande");
     return NextResponse.json({ success: true, reservationId: resa.id });
   } catch (error) {
     console.error("Vol annonce submit error:", error);

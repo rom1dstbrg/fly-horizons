@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { reservationPaymentReminderEmail, reservationAutoAnnuleeEmail } from "@/lib/email-templates";
 import { brusselsTimestamp } from "@/lib/utils";
+import { notifyPiloteReservation } from "@/lib/push";
 
 /**
  * POST /api/cron/payment-deadline
@@ -66,6 +67,7 @@ export async function POST(request: NextRequest) {
 
       if (!cancelErr && cancelledRow) {
         cancelled++;
+        await notifyPiloteReservation(resa.id, "annulation");
         console.log(`[cron/payment-deadline] Annulée: ${resa.id} (vol dans ${hoursUntil.toFixed(1)}h)`);
 
         // Restituer le voucher s'il y en avait un (il est resté "reserved" jusqu'ici)

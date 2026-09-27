@@ -23,6 +23,10 @@
     {
       "path": "/api/cron/pilote-payment-checkin",
       "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/pilote-rappels",
+      "schedule": "0 7 * * *"
     }
   ]
 }

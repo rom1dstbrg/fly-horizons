@@ -9,6 +9,7 @@ import { makeRescheduleToken, parseRescheduleToken } from "@/lib/reschedule-toke
 import { buildBoardingPassAttachment } from "@/lib/pdf/boarding-pass-attachment";
 import { requireAdminOrOwningPilote as checkAdminOrOwningPilote } from "./auth-guards";
 import { releaseAnnoncePilote } from "@/lib/annonces-pilote-server";
+import { notifyPiloteReservation } from "@/lib/push";
 
 async function checkAdmin() {
   const supabase = await createClient();
@@ -35,7 +36,7 @@ export async function updateStatutReservation(
   routePayload?: { waypoints: Array<{ lat: number; lng: number; nom?: string }>; comment?: string } | null
 ) {
   try {
-    await checkAdminOrOwningPilote(id);
+    const actor = await checkAdminOrOwningPilote(id);
     if (!(VALID_STATUTS_STD as readonly string[]).includes(statut)) return { error: "Statut invalide" };
     const supabase = createAdminClient();
     const hasFreshRoute = !!routePayload?.waypoints?.length;
@@ -73,6 +74,8 @@ export async function updateStatutReservation(
     // reste bloqué en "reserved" indéfiniment alors que le vol n'aura jamais lieu.
     // Idem pour le stock d'une offre à quantité limitée : la place redevient disponible.
     if (statut === "annulee") {
+      // Le pilote est prévenu quand ce n'est pas lui qui annule (Romain, pour le client).
+      if (actor.role === "admin") await notifyPiloteReservation(id, "annulation");
       const { data: resaData } = await supabase
         .from("reservations")
         .select("voucher_code, product_id, annonce_id, passagers")
@@ -1286,6 +1289,7 @@ export async function rescheduleReservation(token: string, newDate: string, newH
       }),
     });
 
+    await notifyPiloteReservation(resa.id, "report", newDateTimeStr);
     revalidatePath("/admin/vols");
     revalidatePath("/account");
     return { success: true, newDateStr: newDateTimeStr };

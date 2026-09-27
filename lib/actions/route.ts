@@ -3,6 +3,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { routeFeedbackAdminEmail, piloteRouteFeedbackEmail } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
+import { notifyPiloteReservation } from "@/lib/push";
 
 const ADMIN_EMAIL = "info@fly-horizons.com";
 
@@ -98,5 +99,6 @@ export async function submitRouteResponse(
     console.error("Route feedback pilote email error:", err);
   }
 
+  await notifyPiloteReservation(resa.id, type === "validated" ? "route_validee" : "route_modif", feedback?.trim());
   return { success: true };
 }

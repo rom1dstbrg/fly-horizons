@@ -6,6 +6,7 @@ import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { requireAdmin, requireAdminOrOwningPilote } from "./auth-guards";
 import { piloteLegalStatus } from "@/lib/pilote/legal";
 import { piloteAssignedClientEmail, piloteAssignedPiloteEmail, piloteReleasedFlightAdminEmail, customEmail } from "@/lib/email-templates";
+import { notifyPiloteReservation } from "@/lib/push";
 
 const ADMIN_EMAIL = "info@fly-horizons.com";
 
@@ -190,6 +191,7 @@ export async function assignPilote(reservationId: string, piloteId: string) {
     revalidatePath("/admin/vols");
     revalidatePath("/pilote/vols");
     revalidatePath("/pilote");
+    await notifyPiloteReservation(reservationId, "vol_assigne");
     return { success: true, piloteNom: pilote.nom, emailError, reassigned: isReassignment };
   } catch {
     return { error: "Erreur serveur" };
@@ -305,6 +307,7 @@ export async function reassignPilote(
     revalidatePath("/admin/vols");
     revalidatePath("/pilote/vols");
     revalidatePath("/pilote");
+    await notifyPiloteReservation(reservationId, "vol_assigne");
     return { success: true, piloteNom: pilote.nom, emailError };
   } catch {
     return { error: "Erreur serveur" };

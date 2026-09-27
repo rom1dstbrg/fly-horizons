@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { reservationAutoAnnuleeEmail } from "@/lib/email-templates";
 import { releaseAnnoncePilote } from "@/lib/annonces-pilote-server";
+import { notifyPiloteReservation } from "@/lib/push";
 
 /**
  * POST /api/cron/demande-deadline
@@ -61,6 +62,7 @@ export async function POST(request: NextRequest) {
 
     if (!cancelledRow) continue; // déjà traitée entre-temps par Romain
     cancelled++;
+    await notifyPiloteReservation(resa.id, "annulation");
 
     if (resa.voucher_code) {
       await supabase.from("voucher_codes")

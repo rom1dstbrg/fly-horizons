@@ -260,6 +260,28 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-09-27 (10) · Notifications push pour les pilotes</p>
+      <h3>Web Push dans l'app « FH Pilote » ajoutée à l'écran d'accueil, invite à l'ouverture</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Les pilotes n'étaient prévenus que par email. Romain veut des notifications sur le téléphone, et demander l'activation dès l'ouverture de l'app.</dd>
+        <dt>Décision</dt>
+        <dd>Web Push standard (clés VAPID, bibliothèque <code>web-push</code>, service worker <code>/sw.js</code>), sans service tiers. Manifest propre à l'espace
+          pilote (<code>/pilote-manifest.webmanifest</code>, « FH Pilote »). À l'ouverture de l'app installée, une feuille « Activer les notifications »
+          (iOS exige un tap avant la vraie demande) ; « Plus tard » = 7 jours. Événements : nouvelle demande sur une annonce, vol assigné,
+          message du client (formulaire ou réponse email), route validée / modification demandée, annulation (par Romain ou automatique), report ;
+          rappels quotidiens : vol dans 48 h, paiement pas noté dans les 2 jours avant le vol, paiement toujours pas noté 3 jours après.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>OneSignal / Firebase (service tiers, données chez eux, inutile pour ce volume). Demande de permission automatique sans tap (refusée par iOS).
+          Notifications admin : plus tard, avec le chantier admin (l'infrastructure est prête : <code>sendPushToUser</code>).</dd>
+        <dt>Conséquences</dt>
+        <dd>Migration <code>20260927e_push_notifications.sql</code> + 3 variables d'environnement Vercel (<code>NEXT_PUBLIC_VAPID_PUBLIC_KEY</code>,
+          <code>VAPID_PRIVATE_KEY</code>, <code>VAPID_SUBJECT</code>) avant de pousser. Nouveau cron <code>/api/cron/pilote-rappels</code> (7 h UTC), en GET et POST.
+          Constat : les 6 crons existants n'exportent que POST alors que Vercel Cron appelle en GET, ils ne tournent probablement pas en production (à vérifier).</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-09-27 (9) · Retours des pilotes vers l'admin</p>
       <h3>Les pilotes signalent bugs, idées et questions depuis leur espace ; Romain les suit dans /admin/retours et les exporte pour Claude</h3>
       <dl>
@@ -1432,6 +1454,18 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-09-27 (32) — Notifications push de l'espace pilote</h3>
+      <ul>
+        <li><code>lib/push.ts</code> (<code>sendPushToUser</code>, <code>sendPushToPilote</code>, <code>notifyPiloteReservation</code>), <code>lib/actions/push.ts</code>
+          (abonnement, désabonnement, notification d'essai), <code>public/sw.js</code>, <code>components/pilote/PushPrompt.tsx</code>, manifest « FH Pilote ».</li>
+        <li>Branché dans : <code>vol-annonce/submit</code>, <code>assignPilote</code> / <code>reassignPilote</code>, <code>submitClientMessageReply</code>,
+          <code>inbound-email</code>, <code>submitRouteResponse</code>, <code>rescheduleReservation</code>, <code>updateStatutReservation</code> (annulation par l'admin),
+          crons <code>demande-deadline</code> et <code>payment-deadline</code> (annulations automatiques).</li>
+        <li>Cron <code>/api/cron/pilote-rappels</code> + table <code>push_rappels_envoyes</code> (un rappel par réservation et par type).</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-09-27 (31) — Signaler un problème (pilote) et Retours pilotes (admin)</h3>

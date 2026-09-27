@@ -8,11 +8,24 @@ import { PiloteTopBar } from "@/components/pilote/PiloteTopBar";
 import { PiloteTabBar } from "@/components/pilote/PiloteTabBar";
 import { MetarChip } from "@/components/pilote/MetarChip";
 import { ChartePiloteGate } from "@/components/pilote/ChartePiloteGate";
+import { PushPrompt } from "@/components/pilote/PushPrompt";
 import { piloteLegalStatus } from "@/lib/pilote/legal";
 import { CHARTE_VERSION } from "@/lib/pilote/charte";
 
+// App « FH Pilote » sur l'écran d'accueil (27/09) : son propre manifest,
+// indispensable aux notifications push sur iPhone.
 export const metadata: Metadata = {
   title: "Fly Horizons · Espace pilote",
+  manifest: "/pilote-manifest.webmanifest",
+  icons: {
+    icon: "/icons/icon-192.png",
+    apple: "/icons/apple-touch-icon.png",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "FH Pilote",
+  },
 };
 
 // Plein écran au téléphone : le contenu passe sous les zones de l'iPhone, les
@@ -140,6 +153,8 @@ export default async function PiloteLayout({ children }: { children: React.React
         badges={{ "/pilote/vols": volsATraiter ?? 0, "/pilote/profil": profilAlerts, "/pilote/transactions": aRelancer ?? 0 }}
       />
       {charteRequise && <ChartePiloteGate updated={charteMiseAJour} />}
+      {/* Après la charte : on ne superpose pas deux fenêtres. */}
+      {!charteRequise && <PushPrompt />}
     </div>
   );
 }
