@@ -8,6 +8,7 @@ import { PageTour, type TourStep } from "@/components/pilote/PageTour";
 import { BLOCS, BLOC_H, addDaysIso, blocsOccupes, fmtIso } from "@/lib/pilote-creneaux";
 import { markVisiteVue, savePiloteCreneaux, type CreneauResa } from "@/lib/actions/pilote-creneaux";
 import { RecurrenceDialog, type Recurrence } from "./RecurrenceDialog";
+import { GRID_COLS, cellClass, dayHeaderClass, hourLabelClass } from "./styles";
 
 // Disponibilités du pilote en grille (maquette-disponibilites.html, validée le
 // 27/09) : 7 jours × 7 blocs de 2 h, chaque bloc ouvert ou fermé. Un toucher
@@ -222,7 +223,7 @@ export function DispoGrid({ monday, today, ouverts, reservations, visiteVue }: {
         </div>
 
         <div
-          className="mt-3 grid select-none grid-cols-[30px_repeat(7,minmax(0,1fr))] gap-1 sm:mt-4 sm:grid-cols-[64px_repeat(7,minmax(0,1fr))] sm:gap-1.5"
+          className={cn(GRID_COLS, "mt-3 sm:mt-4")}
           onPointerDown={onPointerDown}
           onPointerOver={onPointerOver}
           onClick={onClick}
@@ -240,7 +241,7 @@ export function DispoGrid({ monday, today, ouverts, reservations, visiteVue }: {
                 disabled={past}
                 title={full ? "Fermer toute la journée" : "Ouvrir toute la journée"}
                 onClick={() => toggleMany(BLOCS.map((b) => key(date, b)))}
-                className="cursor-pointer rounded-[10px] px-0.5 pb-1.5 pt-1 text-center leading-tight text-st-text-2 transition-colors hover:bg-st-surface disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent sm:pb-2 sm:pt-1.5"
+                className={dayHeaderClass}
               >
                 <span className={cn("block text-[11px] font-[550] sm:text-xs", d >= 5 && "text-st-text")}>{DAYS[d]}</span>
                 <span className="st-num block text-[15px] font-semibold text-st-text sm:text-[17px]">{Number(date.slice(8))}</span>
@@ -259,7 +260,7 @@ export function DispoGrid({ monday, today, ouverts, reservations, visiteVue }: {
                 data-row={b}
                 title="Ouvrir ou fermer ce créneau toute la semaine"
                 onClick={() => toggleMany(dates.map((d) => key(d, b)))}
-                className="st-num cursor-pointer rounded-[10px] pr-0.5 text-right text-[11px] font-[550] leading-tight text-st-text-2 transition-colors hover:bg-st-surface sm:pr-2.5 sm:text-xs"
+                className={hourLabelClass}
               >
                 {String(b).padStart(2, "0")} h
                 <small className="hidden text-[10.5px] font-normal text-st-muted sm:block">{String(b + BLOC_H).padStart(2, "0")} h</small>
@@ -282,20 +283,7 @@ export function DispoGrid({ monday, today, ouverts, reservations, visiteVue }: {
                     aria-label={label}
                     title={res ? `Réservé par ${res}` : undefined}
                     disabled={past && !res}
-                    className={cn(
-                      "relative grid h-[46px] place-items-center overflow-hidden rounded-[8px] border px-0.5 text-[9.5px] font-semibold transition-colors sm:h-[52px] sm:rounded-[10px] sm:text-[11.5px]",
-                      res
-                        ? "cursor-default border-st-ink bg-st-ink text-white"
-                        : isOpen
-                          ? "cursor-pointer border-st-gold bg-st-gold-soft text-st-gold-text hover:bg-[#fbecb8]"
-                          // Hachuré = jour passé, plus modifiable ; gris uni = fermé, à toucher.
-                          : past
-                            ? "cursor-default border-transparent bg-[repeating-linear-gradient(135deg,var(--color-st-surface)_0_6px,#eceef2_6px_12px)]"
-                            : "cursor-pointer border-st-line bg-st-surface hover:bg-st-surface-hover",
-                      past && isOpen && "cursor-default opacity-50",
-                      isOpen !== saved.has(k) && "after:absolute after:right-1.5 after:top-1.5 after:size-1.5 after:rounded-full after:content-['']",
-                      isOpen !== saved.has(k) && (isOpen ? "after:bg-st-gold-text" : "after:bg-st-ink"),
-                    )}
+                    className={cellClass({ reserved: !!res, open: isOpen, past, dirty: isOpen !== saved.has(k) })}
                   >
                     {res ? <span className="truncate">{res}</span> : isOpen && <Check size={15} strokeWidth={2.5} />}
                   </button>

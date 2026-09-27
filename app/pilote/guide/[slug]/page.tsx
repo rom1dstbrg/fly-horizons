@@ -5,10 +5,12 @@ import { Badge, Card, LinkButton, PageHeader, UnderConstruction } from "@/compon
 import { guideEntry, guideNeighbours } from "@/components/pilote/guide/catalog";
 import { ReservationParcours } from "@/components/pilote/guide/ReservationParcours";
 import { GuideCharte, GuideContact, GuideInstaller } from "@/components/pilote/guide/GuideSimple";
+import { DispoGuide } from "@/components/pilote/guide/DispoGuide";
 
 // Fiche du guide pilote. Une fiche pas encore rédigée affiche « En construction ».
 const CONTENT: Record<string, () => React.ReactNode> = {
   reservation: () => <ReservationParcours />,
+  disponibilites: () => <DispoGuide />,
   installer: () => <GuideInstaller />,
   charte: () => <GuideCharte />,
   contact: () => <GuideContact />,

@@ -46,7 +46,7 @@ export const GUIDE_TABS: { key: GuideTabKey; label: string; intro: string; entri
       { slug: "tableau-de-bord", icon: LayoutDashboard, title: "Tableau de bord", desc: "Ce qui vous attend aujourd'hui, en un coup d'œil.", min: 1, href: "/pilote" },
       { slug: "mes-vols", icon: Plane, title: "Mes vols", desc: "Toutes vos réservations et le tiroir de chaque vol.", min: 4, href: "/pilote/vols" },
       { slug: "mes-annonces", icon: PlaneTakeoff, title: "Mes annonces", desc: "Publier un vol, fixer le tarif, gérer les groupes.", min: 4, href: "/pilote/annonces" },
-      { slug: "disponibilites", icon: CalendarRange, title: "Disponibilités", desc: "Les créneaux où les passagers peuvent réserver.", min: 2, href: "/pilote/disponibilites" },
+      { slug: "disponibilites", icon: CalendarRange, title: "Disponibilités", desc: "Les blocs de 2 heures où les passagers peuvent réserver.", min: 3, href: "/pilote/disponibilites", ready: true },
       { slug: "transactions", icon: Receipt, title: "Transactions", desc: "Ce que vous avez reçu et ce qui reste à recevoir.", min: 2, href: "/pilote/transactions" },
       { slug: "itineraires", icon: Navigation, title: "Itinéraires", desc: "Vos routes enregistrées, réutilisables partout.", min: 1, href: "/pilote/itineraires" },
       { slug: "masse-centrage", icon: Scale, title: "Masse & centrage", desc: "Chargement, performances et météo avant le vol.", min: 3, href: "/pilote/mass-balance" },
