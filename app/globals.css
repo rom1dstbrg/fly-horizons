@@ -464,6 +464,11 @@
   --shadow-st-ink:   0 1px 2px rgba(11,34,56,.25), 0 6px 14px -8px rgba(11,34,56,.6);
 }
 
+@keyframes st-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 @keyframes st-tab-label-in {
   from { opacity: 0; transform: translateX(-4px); }
   to   { opacity: 1; transform: none; }
