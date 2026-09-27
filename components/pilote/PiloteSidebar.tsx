@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   LayoutDashboard, PlaneTakeoff, Plane, CalendarRange, Scale, User,
-  ArrowLeftRight, LogOut, AlertCircle, ChevronDown, BookOpen,
+  ArrowLeftRight, LogOut, AlertCircle, ChevronUp, BookOpen,
 } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 import { cn } from "@/lib/utils";
@@ -200,26 +200,12 @@ export function PiloteSidebar({ counts = {}, pilot, isAdmin = false }: {
         </form>
 
         {/* Plaque pilote : photo, nom, statut en un mot (ne se coupe jamais) ;
-            au clic, les dates et ce qui manque. */}
+            au clic, les dates et ce qui manque s'ouvrent AU-DESSUS (la plaque
+            est en bas de la barre, comme un menu de compte). */}
         {pilot && (
           <div className="mt-1.5 border-t border-st-line pt-2.5">
-            <button
-              type="button"
-              onClick={() => setShowIssues((v) => !v)}
-              aria-expanded={showIssues}
-              className="flex w-full cursor-pointer items-center gap-3 rounded-[11px] px-[6px] py-1.5 text-left outline-none hover:bg-st-surface focus-visible:ring-2 focus-visible:ring-st-ink/20"
-            >
-              <PiloteAvatar pilot={pilot} size={34} />
-              <span className={labelCls(open)}>
-                <span className="block truncate text-[13px] font-semibold text-st-text">{pilot.nom}</span>
-                <span className={cn("block truncate text-[11.5px] font-medium", !pilot.legalOk ? "text-st-bad" : pilot.legalWarn ? "text-st-warn" : "text-st-ok")}>
-                  {plateStatus(pilot)}
-                </span>
-              </span>
-              <ChevronDown size={14} className={cn("shrink-0 text-st-muted transition-[transform,opacity]", showIssues && "rotate-180", open ? "opacity-100" : "opacity-0")} />
-            </button>
             {showIssues && open && (
-              <div className="space-y-2 px-2 pb-1 pt-2">
+              <div className="space-y-2 px-2 pb-2.5 pt-0.5">
                 <p className="text-[12px] text-st-text-2">
                   SEP jusqu&apos;au <span className="st-num font-medium text-st-text">{frDate(pilot.licenceExpiration)}</span>
                   <br />
@@ -234,6 +220,21 @@ export function PiloteSidebar({ counts = {}, pilot, isAdmin = false }: {
                 )}
               </div>
             )}
+            <button
+              type="button"
+              onClick={() => setShowIssues((v) => !v)}
+              aria-expanded={showIssues}
+              className="flex w-full cursor-pointer items-center gap-3 rounded-[11px] px-[6px] py-1.5 text-left outline-none hover:bg-st-surface focus-visible:ring-2 focus-visible:ring-st-ink/20"
+            >
+              <PiloteAvatar pilot={pilot} size={34} />
+              <span className={labelCls(open)}>
+                <span className="block truncate text-[13px] font-semibold text-st-text">{pilot.nom}</span>
+                <span className={cn("block truncate text-[11.5px] font-medium", !pilot.legalOk ? "text-st-bad" : pilot.legalWarn ? "text-st-warn" : "text-st-ok")}>
+                  {plateStatus(pilot)}
+                </span>
+              </span>
+              <ChevronUp size={14} className={cn("shrink-0 text-st-muted transition-[transform,opacity]", showIssues && "rotate-180", open ? "opacity-100" : "opacity-0")} />
+            </button>
           </div>
         )}
       </div>
