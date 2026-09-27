@@ -81,7 +81,6 @@ export default function PiloteGuidePage() {
         <ul className="list-disc space-y-1 pl-5">
           <li>votre numéro de licence et la validité de votre qualification SEP ;</li>
           <li>la classe et la validité de votre certificat médical ;</li>
-          <li>votre expérience récente : la date de votre 3e décollage et atterrissage le plus récent ;</li>
           <li>votre IBAN, si vous publiez des annonces : c&apos;est là que les passagers vous paient.</li>
         </ul>
         <p>
@@ -118,6 +117,7 @@ export default function PiloteGuidePage() {
           <li><strong className="text-st-text">Un vol accepté est un engagement.</strong> Vous pouvez le rendre en ligne jusqu&apos;à 3 jours avant. Plus tard, appelez Romain.</li>
           <li><strong className="text-st-text">Seul Fly Horizons annule</strong> un vol auprès du passager. Si le vol ne peut pas se faire, prévenez Romain.</li>
           <li><strong className="text-st-text">Un créneau convenu ne bouge pas</strong> pour votre seule convenance.</li>
+          <li><strong className="text-st-text">Expérience récente.</strong> Au moins 3 décollages et 3 atterrissages dans les 90 jours avant chaque vol avec passagers (FCL.060) : à vérifier vous-même, à confirmer dans la déclaration avant vol.</li>
           <li><strong className="text-st-text">Appareil autorisé et assuré</strong>, avec l&apos;assurance passagers en vigueur.</li>
           <li><strong className="text-st-text">Les coordonnées des passagers</strong> servent uniquement à organiser leur vol : ne les transmettez pas, ne les gardez pas.</li>
         </ul>

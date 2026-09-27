@@ -260,6 +260,26 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-09-27 (2) · Expérience récente : rappel, pas de date ; vérification pas à pas</p>
+      <h3>Remplace le point C de la décision « Documents pilote vérifiés » pour l'expérience récente</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Demander la date du 3e atterrissage ne tient pas : la règle des 3 décollages et atterrissages en 90 jours est plus
+          complexe (à apprécier à la date du vol). Et valider depuis le tiroir, avec de simples liens vers les fichiers,
+          laissait passer des points.</dd>
+        <dt>Décision</dt>
+        <dd>Plus de date d'expérience récente sur le profil ni dans le statut légal : un rappel au pilote, et la case dans la
+          déclaration avant vol. La vérification des documents se fait sur <code>/admin/pilotes/[id]/verification</code> :
+          document à gauche, 8 points à cocher à droite (nom, type de licence, numéro, SEP, classe, validité, limitations),
+          valeurs corrigeables, validation seulement tout coché. CSP : cadres autorisés depuis le seul domaine Supabase.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Garder la date (fausse précision) ; afficher le PDF via une route à nous (bloquée par nos propres en-têtes anti-cadre).</dd>
+        <dt>Conséquences</dt>
+        <dd>La colonne <code>pilotes.recence_date</code> reste en base, inutilisée.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-09-27 · Documents pilote vérifiés, expérience récente, déclaration avant vol</p>
       <h3>Romain vérifie les documents puis les fichiers sont supprimés ; le pilote déclare avant chaque vol</h3>
       <dl>
@@ -1268,6 +1288,17 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-09-27 (9) — Vérification des documents pas à pas, expérience récente en rappel</h3>
+      <ul>
+        <li>Nouvelle page <code>/admin/pilotes/[id]/verification</code> : le PDF ou la photo à gauche, 8 points à cocher à droite
+          regroupés par document, barre de progression, valeurs corrigeables (décochent leur point), trace générée automatiquement.
+          Le tiroir renvoie vers cette page (plus de validation rapide).</li>
+        <li><code>verifyPiloteDocuments</code> enregistre les valeurs lues sur les documents. CSP : <code>frame-src</code> limité au domaine Supabase.</li>
+        <li>Expérience récente retirée du profil et du statut légal ; rappel dans le profil et le guide, case gardée dans la déclaration avant vol.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-09-27 (8) — /admin/pilotes en style Studio</h3>

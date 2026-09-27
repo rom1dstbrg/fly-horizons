@@ -50,7 +50,7 @@ async function logHistory(params: {
   }
 }
 
-const PILOTE_LEGAL_COLS = "id, nom, email, statut, licence_numero, licence_expiration, medical_expiration, medical_classe, recence_date, docs_status, conditions_accepted_at";
+const PILOTE_LEGAL_COLS = "id, nom, email, statut, licence_numero, licence_expiration, medical_expiration, medical_classe, docs_status, conditions_accepted_at";
 
 /** Ferme toute offre « premier arrivé » encore ouverte sur ce vol (attribution manuelle prioritaire). */
 async function closeOpenOffer(db: ReturnType<typeof createAdminClient>, reservationId: string) {

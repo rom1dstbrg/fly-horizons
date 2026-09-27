@@ -3,13 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdminOrOwningPilote } from "./auth-guards";
-import { recenceValidUntil } from "@/lib/pilote/legal";
 
 // Déclaration du pilote avant un vol (décision 27/09) : expérience récente
 // (3 décollages et atterrissages en 90 jours, FCL.060), SEP et médical valides
 // à la date du vol, avion autorisé et assuré passagers. Horodatée sur la
-// réservation et tracée dans l'historique. Refusée si les dates du profil ne
-// couvrent pas le jour du vol : le pilote met d'abord son profil à jour.
+// réservation et tracée dans l'historique. Refusée si la SEP ou le médical du
+// profil ne couvrent pas le jour du vol. L'expérience récente n'est pas une
+// date du profil : seule la déclaration du pilote en fait foi.
 
 export async function declarePreflight(reservationId: string) {
   try {
@@ -23,15 +23,10 @@ export async function declarePreflight(reservationId: string) {
 
     const { data: p } = await db
       .from("pilotes")
-      .select("licence_expiration, medical_expiration, recence_date")
+      .select("licence_expiration, medical_expiration")
       .eq("id", actor.piloteId)
       .single();
     const date = resa.date_vol as string;
-    const recence = recenceValidUntil(p?.recence_date ?? null);
-    const fr = (iso: string) => iso.split("-").reverse().join("/");
-    if (!recence || recence < date) {
-      return { error: `Votre expérience récente déclarée${recence ? ` (valable jusqu'au ${fr(recence)})` : ""} ne couvre pas le jour du vol. Mettez-la à jour dans votre profil.` };
-    }
     if (!p?.licence_expiration || p.licence_expiration < date) return { error: "Votre qualification SEP n'est plus valable le jour du vol. Mettez votre profil à jour." };
     if (!p?.medical_expiration || p.medical_expiration < date) return { error: "Votre certificat médical n'est plus valable le jour du vol. Mettez votre profil à jour." };
 

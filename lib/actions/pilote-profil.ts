@@ -20,7 +20,6 @@ export type PiloteProfilInput = {
   licence_expiration?: string | null; // 'YYYY-MM-DD' ou ''
   medical_expiration?: string | null;
   medical_classe?: string | null;
-  recence_date?: string | null;
   ratings?: string | null;
 };
 
@@ -46,8 +45,6 @@ export async function updateMyPiloteProfile(input: PiloteProfilInput) {
 
     const medicalClasse = clean(input.medical_classe);
     if (medicalClasse && !MEDICAL_CLASSES.includes(medicalClasse)) return { error: "Classe médicale invalide" };
-    const recence = cleanDate(input.recence_date);
-    if (recence && recence > new Date().toISOString().slice(0, 10)) return { error: "La date d'expérience récente ne peut pas être dans le futur" };
 
     const next = {
       licence_numero: clean(input.licence_numero),
@@ -75,7 +72,6 @@ export async function updateMyPiloteProfile(input: PiloteProfilInput) {
         signature: clean(input.signature),
         iban: clean(input.iban),
         ...next,
-        recence_date: recence,
         ratings: clean(input.ratings),
         ...(resetDocs ? { docs_status: "aucun", docs_verified_at: null, docs_note: "Informations modifiées : documents à renvoyer." } : {}),
       })

@@ -3,9 +3,9 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Check, AlertCircle, ShieldCheck, Upload, KeyRound } from "lucide-react";
+import { Check, AlertCircle, ShieldCheck, Upload, KeyRound, Info } from "lucide-react";
 import { updateMyPiloteProfile, uploadPiloteProfilPhoto } from "@/lib/actions/pilote-profil";
-import { piloteLegalStatus, recenceValidUntil } from "@/lib/pilote/legal";
+import { piloteLegalStatus } from "@/lib/pilote/legal";
 import { Badge, Button, FormField, Input, Select, SectionHeader, Textarea } from "@/components/pilote/studio";
 import { cn } from "@/lib/utils";
 import type { Pilote } from "@/types/database";
@@ -49,7 +49,6 @@ export function PiloteProfilForm({ pilote, documentsSlot }: { pilote: Pilote; do
     licence_expiration: pilote.licence_expiration ?? "",
     medical_expiration: pilote.medical_expiration ?? "",
     medical_classe: pilote.medical_classe ?? "",
-    recence_date: pilote.recence_date ?? "",
     ratings: pilote.ratings ?? "",
   });
   const [resetNotice, setResetNotice] = useState(false);
@@ -60,11 +59,9 @@ export function PiloteProfilForm({ pilote, documentsSlot }: { pilote: Pilote; do
     licence_expiration: form.licence_expiration || null,
     medical_expiration: form.medical_expiration || null,
     medical_classe: form.medical_classe || null,
-    recence_date: form.recence_date || null,
     docs_status: pilote.docs_status,
     conditions_accepted_at: pilote.conditions_accepted_at,
   });
-  const recenceUntil = recenceValidUntil(form.recence_date || null);
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -72,7 +69,7 @@ export function PiloteProfilForm({ pilote, documentsSlot }: { pilote: Pilote; do
   };
 
   // État visuel d'un champ légal d'après le statut recalculé en direct.
-  const stateOf = (name: "licence_numero" | "licence_expiration" | "medical_expiration" | "medical_classe" | "recence_date"): LegalState => {
+  const stateOf = (name: "licence_numero" | "licence_expiration" | "medical_expiration" | "medical_classe"): LegalState => {
     const rel = legal.issues.filter((i) => i.field === name);
     if (rel.some((i) => i.severity === "error")) return "error";
     if (rel.some((i) => i.severity === "warn")) return "warn";
@@ -82,7 +79,6 @@ export function PiloteProfilForm({ pilote, documentsSlot }: { pilote: Pilote; do
   const licExpState = stateOf("licence_expiration");
   const medExpState = stateOf("medical_expiration");
   const medClasseState = stateOf("medical_classe");
-  const recenceState = stateOf("recence_date");
 
   async function handlePhotoFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -160,15 +156,14 @@ export function PiloteProfilForm({ pilote, documentsSlot }: { pilote: Pilote; do
             <Input id="p-medexp" type="date" className={legalCls[medExpState]} value={form.medical_expiration} onChange={set("medical_expiration")} />
           </FormField>
         </div>
-        <FormField
-          id="p-recence"
-          label={<LegalLabel state={recenceState}>Expérience récente</LegalLabel>}
-          hint={recenceUntil
-            ? `Date de votre 3e décollage et atterrissage le plus récent. Valable jusqu'au ${recenceUntil.split("-").reverse().join("/")}.`
-            : "Date de votre 3e décollage et atterrissage le plus récent (3 en 90 jours pour emmener des passagers)."}
-        >
-          <Input id="p-recence" type="date" className={legalCls[recenceState]} value={form.recence_date} onChange={set("recence_date")} />
-        </FormField>
+        <div className="flex gap-2.5 rounded-[14px] bg-st-info-soft px-4 py-3 text-[12.5px] leading-snug text-st-info">
+          <Info size={16} className="mt-px shrink-0" />
+          <p>
+            <strong className="font-semibold">Expérience récente :</strong> pour emmener des passagers, vous devez avoir fait au moins
+            3 décollages et 3 atterrissages dans les 90 jours avant le vol (FCL.060). C&apos;est à vous de le vérifier avant chaque vol :
+            vous le confirmez dans la déclaration avant vol.
+          </p>
+        </div>
         <FormField id="p-ratings" label="Qualifications">
           <Input id="p-ratings" value={form.ratings} onChange={set("ratings")} placeholder="SEP(land), Night, Radio FR/EN" />
         </FormField>

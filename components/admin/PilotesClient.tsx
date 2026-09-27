@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
-import { ExternalLink, FileText, Mail, Plane, TriangleAlert, UserPlus } from "lucide-react";
+import { useState, useTransition } from "react";
+import { FileCheck, Mail, Plane, TriangleAlert, UserPlus } from "lucide-react";
 import { createPilote, togglePiloteActif, updatePilote, deletePilote, resendPiloteInvitation } from "@/lib/actions/pilotes";
-import { getPiloteDocumentsForReview, verifyPiloteDocuments, refusePiloteDocuments } from "@/lib/actions/pilote-documents";
-import { piloteLegalStatus, recenceValidUntil } from "@/lib/pilote/legal";
+import { piloteLegalStatus } from "@/lib/pilote/legal";
 import { ConfirmActionDialog, type PendingAction } from "@/components/admin/reservation-drawer/ConfirmActionDialog";
 import {
-  Badge, Button, EmptyState, FormField, Input, PageHeader, Segmented, Sheet, SheetBody, SheetFooter,
+  Badge, Button, EmptyState, FormField, Input, LinkButton, PageHeader, Segmented, Sheet, SheetBody, SheetFooter,
   SheetHeader, SheetRow, SheetRows, StatCard, StatGrid, Table, TableCell, TableHeaderCell, TableRow,
-  TableSearch, Textarea,
+  TableSearch,
 } from "@/components/pilote/studio";
 import { cn } from "@/lib/utils";
 import type { Pilote } from "@/types/database";
@@ -228,43 +227,19 @@ function PiloteSheet({ pilote, stats, tab, onTab, onClose, onConfirm, onNotice }
           ]}
         />
       </div>
-      {tab === "documents" && <DocumentsTab pilote={pilote} onClose={onClose} onNotice={onNotice} />}
+      {tab === "documents" && <DocumentsTab pilote={pilote} />}
       {tab === "fiche" && <FicheTab pilote={pilote} onClose={onClose} onConfirm={onConfirm} onNotice={onNotice} />}
       {tab === "fiabilite" && <FiabiliteTab stats={stats} />}
     </>
   );
 }
 
-type ReviewDoc = { id: string; type: string; file_name: string | null; url: string | null };
-
-function DocumentsTab({ pilote, onClose, onNotice }: { pilote: Pilote; onClose: () => void; onNotice: (n: Notice) => void }) {
-  const [docs, setDocs] = useState<ReviewDoc[] | null>(null);
-  const [note, setNote] = useState(
-    `Vu le ${new Date().toLocaleDateString("fr-BE")} : licence ${pilote.licence_numero ?? "?"}, SEP jusqu'au ${fr(pilote.licence_expiration) ?? "?"}, médical ${CLASSE[pilote.medical_classe ?? ""] ?? "?"} jusqu'au ${fr(pilote.medical_expiration) ?? "?"}.`,
-  );
-  const [motif, setMotif] = useState("");
-  const [refusing, setRefusing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
-
-  useEffect(() => {
-    let alive = true;
-    getPiloteDocumentsForReview(pilote.id).then((r) => { if (alive) setDocs("documents" in r && r.documents ? r.documents : []); });
-    return () => { alive = false; };
-  }, [pilote.id]);
-
+// Résumé ; la vérification elle-même se fait pas à pas sur une page dédiée
+// (/admin/pilotes/[id]/verification), document à gauche, points à droite.
+function DocumentsTab({ pilote }: { pilote: Pilote }) {
   const legal = piloteLegalStatus(pilote);
   const missing = (v: string | null | undefined) => v ?? <span className="text-st-bad">Non renseigné</span>;
-
-  function run(fn: () => Promise<{ error?: string; success?: boolean }>, ok: string) {
-    setError(null);
-    startTransition(async () => {
-      const r = await fn();
-      if (r.error) { setError(r.error); return; }
-      onNotice({ tone: "ok", text: ok });
-      onClose();
-    });
-  }
+  const href = `/admin/pilotes/${pilote.id}/verification`;
 
   return (
     <>
@@ -277,7 +252,6 @@ function DocumentsTab({ pilote, onClose, onNotice }: { pilote: Pilote; onClose: 
             {missing(pilote.medical_classe ? CLASSE[pilote.medical_classe] : null)}
             {pilote.medical_expiration && <span className="text-st-muted"> · jusqu&apos;au {fr(pilote.medical_expiration)}</span>}
           </SheetRow>
-          <SheetRow label="Expérience récente jusqu'au">{missing(fr(recenceValidUntil(pilote.recence_date)))}</SheetRow>
         </SheetRows>
 
         {pilote.docs_status === "verifies" && (
@@ -290,66 +264,14 @@ function DocumentsTab({ pilote, onClose, onNotice }: { pilote: Pilote; onClose: 
             {legal.issues.filter((i) => i.severity === "error").map((i) => <li key={i.code}>{i.label}</li>)}
           </ul>
         )}
-
-        <div className="space-y-2">
-          <p className="text-[13px] font-medium text-st-text">Fichiers</p>
-          {docs === null ? (
-            <p className="text-[13px] text-st-muted">Chargement…</p>
-          ) : docs.length === 0 ? (
-            <p className="text-[13px] text-st-muted">Aucun fichier. Vous pouvez valider après une vérification en visio ou en main propre.</p>
-          ) : (
-            <div className="divide-y divide-st-line overflow-hidden rounded-[14px] border border-st-line">
-              {docs.map((d) => (
-                <a
-                  key={d.id}
-                  href={d.url ?? "#"}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex cursor-pointer items-center gap-3 px-3.5 py-3 transition-colors hover:bg-st-surface"
-                >
-                  <FileText size={17} className="shrink-0 text-st-muted" />
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[13.5px] font-medium text-st-text">{d.type === "licence" ? "Licence" : d.type === "medical" ? "Certificat médical" : "Autre"}</span>
-                    <span className="block truncate text-[12px] text-st-muted">{d.file_name ?? "Fichier"}</span>
-                  </span>
-                  <ExternalLink size={15} className="shrink-0 text-st-muted" />
-                </a>
-              ))}
-            </div>
-          )}
-          {docs && docs.length > 0 && <p className="text-[12px] text-st-muted">Liens valables 10 minutes : rouvrez le tiroir si besoin.</p>}
-        </div>
-
-        {refusing ? (
-          <FormField id="docs-motif" label="Motif du refus" hint="Envoyé au pilote par email. Les fichiers sont supprimés.">
-            <Input id="docs-motif" value={motif} onChange={(e) => setMotif(e.target.value)} placeholder="Ex. : page SEP illisible" autoFocus />
-          </FormField>
-        ) : (
-          <FormField id="docs-note" label="Ce que vous avez vérifié" hint="Gardé sur la fiche. Les fichiers sont supprimés à la validation.">
-            <Textarea id="docs-note" value={note} onChange={(e) => setNote(e.target.value)} className="min-h-20" />
-          </FormField>
-        )}
-
-        {error && <p className="rounded-[12px] bg-st-bad-soft px-3.5 py-2.5 text-[13px] text-st-bad">{error}</p>}
+        <p className="text-[12.5px] text-st-muted">
+          La vérification se fait point par point, le document sous les yeux. Vous pouvez corriger la classe et les dates lues sur le document.
+        </p>
       </SheetBody>
       <SheetFooter>
-        {refusing ? (
-          <div className="flex flex-col gap-2 sm:flex-row-reverse">
-            <Button variant="danger" size="lg" className="sm:h-[38px] sm:text-[13px]" fullWidth loading={pending} disabled={!motif.trim()}
-              onClick={() => run(() => refusePiloteDocuments(pilote.id, motif), `Documents de ${pilote.nom} refusés, pilote prévenu.`)}>
-              Refuser et prévenir le pilote
-            </Button>
-            <Button variant="secondary" size="lg" className="sm:h-[38px] sm:text-[13px]" disabled={pending} onClick={() => setRefusing(false)}>Annuler</Button>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2 sm:flex-row-reverse">
-            <Button size="lg" className="sm:h-[38px] sm:text-[13px]" fullWidth loading={pending}
-              onClick={() => run(() => verifyPiloteDocuments(pilote.id, note), `Documents de ${pilote.nom} validés, fichiers supprimés.`)}>
-              Valider et supprimer les fichiers
-            </Button>
-            <Button variant="secondary" size="lg" className="sm:h-[38px] sm:text-[13px]" disabled={pending} onClick={() => setRefusing(true)}>Refuser</Button>
-          </div>
-        )}
+        <LinkButton href={href} size="lg" fullWidth className="sm:h-[38px] sm:text-[13px]">
+          <FileCheck /> {pilote.docs_status === "verifies" ? "Revérifier" : "Vérifier étape par étape"}
+        </LinkButton>
       </SheetFooter>
     </>
   );

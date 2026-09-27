@@ -39,7 +39,9 @@ const nextConfig: NextConfig = {
       `img-src 'self' data: blob: ${supabaseHost} server.arcgisonline.com *.basemaps.cartocdn.com`,
       `connect-src 'self' ${supabaseHost} wss://${supabaseHost} *.stripe.com nominatim.openstreetmap.org overpass-api.de`,
       "font-src 'self' data:",
-      "frame-src 'none'",
+      // Seule exception : la page de vérification des documents pilote affiche le
+      // PDF (URL signée du bucket privé) dans un cadre. Aucun autre domaine.
+      `frame-src ${supabaseHost}`,
       "frame-ancestors 'none'",
       "object-src 'none'",
       "base-uri 'self'",

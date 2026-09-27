@@ -36,7 +36,7 @@ export default async function PiloteLayout({ children }: { children: React.React
   const admin = createAdminClient();
   const { data: pilote } = await admin
     .from("pilotes")
-    .select("id, nom, statut, conditions_accepted_at, licence_numero, licence_expiration, medical_expiration, medical_classe, recence_date, docs_status")
+    .select("id, nom, statut, conditions_accepted_at, licence_numero, licence_expiration, medical_expiration, medical_classe, docs_status")
     .eq("user_id", user.id)
     .maybeSingle();
   if (!pilote || pilote.statut !== "actif") redirect("/");

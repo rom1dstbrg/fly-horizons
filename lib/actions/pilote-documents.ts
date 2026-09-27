@@ -150,15 +150,15 @@ export async function submitMyDocuments() {
 
 // ── Côté admin ──────────────────────────────────────────────────
 
-/** Documents d'un pilote avec des liens de lecture valables 10 minutes. */
-export async function getPiloteDocumentsForReview(piloteId: string) {
+/** Documents d'un pilote avec des liens de lecture (10 min par défaut). */
+export async function getPiloteDocumentsForReview(piloteId: string, ttlSeconds = 600) {
   try {
     await requireAdmin();
     const db = createAdminClient();
     const { data: docs } = await db.from("pilote_documents").select("id, type, path, file_name, created_at").eq("pilote_id", piloteId).order("created_at");
     const withUrls = await Promise.all(
       (docs ?? []).map(async (d) => {
-        const { data } = await db.storage.from(BUCKET).createSignedUrl(d.path, 600);
+        const { data } = await db.storage.from(BUCKET).createSignedUrl(d.path, Math.min(ttlSeconds, 3600));
         return { id: d.id, type: d.type as DocType, file_name: d.file_name, created_at: d.created_at, url: data?.signedUrl ?? null };
       }),
     );
@@ -175,18 +175,38 @@ async function purgeDocuments(db: ReturnType<typeof createAdminClient>, piloteId
   await db.from("pilote_documents").delete().eq("pilote_id", piloteId);
 }
 
+export type VerifiedFields = {
+  licence_numero: string;
+  licence_expiration: string; // validité SEP
+  medical_classe: "classe1" | "classe2" | "lapl";
+  medical_expiration: string;
+};
+
 /**
  * Valide les documents (ou une vérification faite en visio / en main propre,
  * sans fichier) : trace de ce qui a été vu, puis suppression des fichiers.
+ * `fields` : les valeurs lues sur les documents, qui remplacent celles déclarées
+ * (la page de vérification les pré-remplit, Romain les corrige si besoin).
  */
-export async function verifyPiloteDocuments(piloteId: string, note: string) {
+export async function verifyPiloteDocuments(piloteId: string, note: string, fields?: VerifiedFields) {
   try {
     await requireAdmin();
     if (!note.trim()) return { error: "Notez ce que vous avez vérifié" };
+    if (fields) {
+      const iso = /^\d{4}-\d{2}-\d{2}$/;
+      if (!fields.licence_numero.trim()) return { error: "Numéro de licence manquant" };
+      if (!iso.test(fields.licence_expiration) || !iso.test(fields.medical_expiration)) return { error: "Date invalide" };
+      if (!["classe1", "classe2", "lapl"].includes(fields.medical_classe)) return { error: "Classe médicale invalide" };
+    }
     const db = createAdminClient();
     const { data: pilote, error } = await db
       .from("pilotes")
-      .update({ docs_status: "verifies", docs_verified_at: new Date().toISOString(), docs_note: note.trim() })
+      .update({
+        docs_status: "verifies",
+        docs_verified_at: new Date().toISOString(),
+        docs_note: note.trim(),
+        ...(fields ? { ...fields, licence_numero: fields.licence_numero.trim() } : {}),
+      })
       .eq("id", piloteId)
       .select("nom, email")
       .single();
