@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { addBaseLayers } from "@/components/maps/base-layers";
 
 const EBCI = { lat: 50.4592, lng: 4.4538 };
 
@@ -66,6 +67,9 @@ export function AdminRouteEditor({ waypoints, onChange, clientWaypoints = [], st
   const clientLineRef = useRef<L.Polyline | null>(null);
   const clientMarkersRef = useRef<L.Marker[]>([]);
   const soMarkersRef = useRef<L.Marker[]>([]);
+  // Nombre de points au dernier rendu : un saut de plusieurs points d'un coup =
+  // route chargée (itinéraire, route existante) → on recadre la carte dessus.
+  const prevCountRef = useRef(0);
 
   const waypointsRef = useRef(waypoints);
   const onChangeRef = useRef(onChange);
@@ -77,29 +81,7 @@ export function AdminRouteEditor({ waypoints, onChange, clientWaypoints = [], st
     if (!containerRef.current || mapRef.current) return;
     const map = L.map(containerRef.current, { zoomControl: true }).setView([EBCI.lat, EBCI.lng], 8);
 
-    const layerSat = L.tileLayer(
-      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-      { attribution: "Tiles © Esri", maxZoom: 19 }
-    );
-    const layerLabels = L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png",
-      { attribution: "", maxZoom: 19, pane: "overlayPane" }
-    );
-    // Carte aéronautique (VFR) — repères utiles à un pilote (zones, aérodromes,
-    // fréquences) plutôt qu'un fond satellite. Tuiles gratuites OpenAIP, sans clé.
-    const layerAero = L.tileLayer(
-      "https://{s}.tile.maps.openaip.net/geowebcache/service/tms/1.0.0/openaip_basemap@EPSG%3A900913@png/{z}/{x}/{-y}.png",
-      { attribution: "© OpenAIP", maxZoom: 14, subdomains: "12", tms: true }
-    );
-
-    layerSat.addTo(map);
-    layerLabels.addTo(map);
-
-    L.control.layers(
-      { "Satellite": layerSat, "Aéronautique (OpenAIP)": layerAero },
-      undefined,
-      { position: "topright", collapsed: true }
-    ).addTo(map);
+    addBaseLayers(map);
 
     L.marker([EBCI.lat, EBCI.lng], { icon: makeEBCIIcon(), interactive: false })
       .addTo(map)
@@ -186,7 +168,11 @@ export function AdminRouteEditor({ waypoints, onChange, clientWaypoints = [], st
       routeLineRef.current = L.polyline(pts, {
         color: "#F2B705", weight: 2.5, opacity: 0.95, dashArray: "9 5",
       }).addTo(map);
+      if (valid.length - prevCountRef.current > 1) {
+        map.fitBounds(L.latLngBounds(pts), { padding: [48, 48], animate: false, maxZoom: 11 });
+      }
     }
+    prevCountRef.current = valid.length;
   }, [waypoints]);
 
   // Sync client route (gray, read-only reference)

@@ -4,31 +4,31 @@ import { useState } from "react";
 import { getItineraires, incrementItineraireUsage } from "@/lib/actions/itineraires";
 import type { Itineraire } from "@/lib/actions/itineraires";
 import type { WaypointDraft } from "@/components/admin/AdminRouteEditor";
+import { toDraft } from "@/components/pilote/itineraires/ItineraireParts";
 
-export function useItineraires(setRouteDraft: (wps: WaypointDraft[]) => void) {
+// Ouverture du sélecteur « Charger un itinéraire » : la liste est rechargée à
+// chaque ouverture (un itinéraire vient peut-être d'être créé ailleurs).
+export function useItineraires(setRouteDraft: (wps: WaypointDraft[]) => void, onApplied?: (itin: Itineraire) => void) {
   const [showModal, setShowModal] = useState(false);
   const [items, setItems] = useState<Itineraire[]>([]);
-  const [loaded, setLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showAll, setShowAll] = useState(false);
 
   async function open() {
-    setShowAll(false);
     setShowModal(true);
-    if (!loaded) {
-      setLoading(true);
-      const data = await getItineraires();
-      setItems(data);
-      setLoaded(true);
+    setLoading(items.length === 0);
+    try {
+      setItems(await getItineraires());
+    } finally {
       setLoading(false);
     }
   }
 
   function apply(itin: Itineraire) {
-    setRouteDraft(itin.waypoints.map(wp => ({ lat: String(wp.lat), lng: String(wp.lng), nom: wp.nom })));
+    setRouteDraft(toDraft(itin));
     incrementItineraireUsage(itin.id);
+    onApplied?.(itin);
     setShowModal(false);
   }
 
-  return { showModal, setShowModal, items, loading, showAll, setShowAll, open, apply };
+  return { showModal, setShowModal, items, loading, open, apply };
 }

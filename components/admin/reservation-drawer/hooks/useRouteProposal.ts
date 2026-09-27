@@ -10,31 +10,8 @@ import {
 import { optimizeWaypoints } from "@/lib/route-optimize";
 import { toForeFlight } from "@/lib/foreflight";
 import type { WaypointDraft } from "@/components/admin/AdminRouteEditor";
+import { calcRouteStats } from "@/lib/route-stats";
 import type { DrawerReservation } from "../types";
-
-const EBCI_GEO = { lat: 50.4592, lng: 4.4538 };
-const VSM_SPEED_KMH = 185.2;
-const VSM_OBS_MIN_PP = 4;
-
-// Estimation distance/durée d'une route (vol sur mesure) — même formule que /vol-sur-mesure
-function calcRouteStats(wps: WaypointDraft[]): { distKm: number; totalMin: number } | null {
-  const valid = wps
-    .map(wp => ({ lat: parseFloat(wp.lat), lng: parseFloat(wp.lng) }))
-    .filter(wp => !isNaN(wp.lat) && !isNaN(wp.lng));
-  if (!valid.length) return null;
-  const pts = [EBCI_GEO, ...valid, EBCI_GEO];
-  let dist = 0;
-  for (let i = 0; i < pts.length - 1; i++) {
-    const a = pts[i], b = pts[i + 1];
-    const dLat = (b.lat - a.lat) * Math.PI / 180;
-    const dLng = (b.lng - a.lng) * Math.PI / 180;
-    const x = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
-    dist += 6371 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
-  }
-  const distKm = Math.round(dist * 10) / 10;
-  const transitMin = Math.round((distKm / VSM_SPEED_KMH) * 60);
-  return { distKm, totalMin: transitMin + valid.length * VSM_OBS_MIN_PP };
-}
 
 export function useRouteProposal(
   reservation: DrawerReservation | null,

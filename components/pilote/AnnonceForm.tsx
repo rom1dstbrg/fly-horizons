@@ -7,8 +7,12 @@ import { createAnnonce, updateAnnonce, uploadAnnonceImage, deleteAnnonceImageFil
 import { evaluerPartPilote } from "@/lib/annonces-pilote";
 import {
   AlertTriangle, ShieldCheck, PlaneTakeoff, ImagePlus, X,
-  ChevronLeft, ChevronRight, Loader2, Route, Clock,
+  ChevronLeft, ChevronRight, Loader2, Route, Clock, Navigation,
 } from "lucide-react";
+import { createItineraire, type Itineraire } from "@/lib/actions/itineraires";
+import { useItineraires } from "@/components/admin/reservation-drawer/hooks/useItineraires";
+import { ItinerairePicker } from "@/components/pilote/itineraires/ItinerairePicker";
+import { toDraft } from "@/components/pilote/itineraires/ItineraireParts";
 import { Button, ChoiceCard, FormField, Input, Segmented, Select, Textarea } from "@/components/pilote/studio";
 import { cn } from "@/lib/utils";
 import type { AnnonceRow } from "./AnnoncesList";
@@ -31,6 +35,8 @@ const STEPS: { key: Step; label: string }[] = [
   { key: "presentation", label: "Présentation" },
   { key: "legal", label: "Publication" },
 ];
+
+const draftKey = (w: WaypointDraft[]) => w.map(p => `${Number(p.lat).toFixed(5)},${Number(p.lng).toFixed(5)}`).join("|");
 
 const eur = (v: number) => `${v.toLocaleString("fr-BE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
 
@@ -55,6 +61,16 @@ export function AnnonceForm({ editing }: { editing?: AnnonceRow }) {
   );
   const [titre, setTitre] = useState(editing?.titre ?? "");
   const [duree, setDuree] = useState(editing ? String(editing.duree) : "60");
+  // Itinéraire chargé (27/09) : la route vient d'un itinéraire enregistré tant
+  // qu'on n'y touche pas ; sinon on propose de l'enregistrer.
+  const [loadedItin, setLoadedItin] = useState<{ nom: string; key: string } | null>(null);
+  const [saveItin, setSaveItin] = useState(false);
+  const [saveItinNom, setSaveItinNom] = useState("");
+  const itineraires = useItineraires(setRouteDraft, (itin: Itineraire) => {
+    setLoadedItin({ nom: itin.nom, key: draftKey(toDraft(itin)) });
+    setSaveItin(false);
+    if (itin.duree_estimee) setDuree(String(itin.duree_estimee));
+  });
   const [places, setPlaces] = useState(editing ? String(editing.places) : "3");
   const [modeVente, setModeVente] = useState<"avion" | "place">(editing?.mode_vente === "place" ? "place" : "avion");
   const [prixTotal, setPrixTotal] = useState(editing ? String(editing.prix_total) : "");
@@ -162,10 +178,22 @@ export function AnnonceForm({ editing }: { editing?: AnnonceRow }) {
         ? await updateAnnonce(editing.id, payload)
         : await createAnnonce(payload);
       if (result?.error) { setError(result.error); return; }
+      if (hasRoute && saveItin && payload.route_waypoints.length > 0) {
+        // L'annonce est enregistrée : un échec ici ne la bloque pas.
+        await createItineraire({
+          nom: saveItinNom.trim() || titre.trim() || "Route d'annonce",
+          waypoints: payload.route_waypoints.map(w => ({ lat: w.lat, lng: w.lng, nom: w.nom ?? "" })),
+          duree_estimee: Number(duree) || null,
+        }).catch(() => null);
+      }
       router.push("/pilote/annonces");
       router.refresh();
     });
   }
+
+  const validPoints = routeDraft.filter(w => w.lat.trim() && w.lng.trim()).length;
+  // Route encore identique à l'itinéraire chargé : rien à enregistrer.
+  const fromItin = loadedItin !== null && loadedItin.key === draftKey(routeDraft);
 
   const stepIndex = STEPS.findIndex(s => s.key === step);
   const canProceed: Record<Step, boolean> = {
@@ -280,10 +308,42 @@ export function AnnonceForm({ editing }: { editing?: AnnonceRow }) {
           {hasRoute && (
             <FormField
               label="Itinéraire : cliquez sur la carte pour placer vos points"
-              hint="Fond « Aéronautique » en haut à droite pour repérer zones et aérodromes. Tracé indicatif, affiché au client ; il ne change ni la durée ni le prix."
+              hint="Fond « Aéro » en haut à droite pour repérer zones et aérodromes. Tracé indicatif, affiché au client ; il ne change ni la durée ni le prix."
             >
-              <div className="overflow-hidden rounded-[14px] border border-st-line">
-                <AdminRouteEditorDynamic waypoints={routeDraft} onChange={setRouteDraft} height="340px" />
+              <div className="space-y-2.5">
+                <div className="flex flex-wrap items-center gap-2.5 rounded-[14px] border border-dashed border-st-line-strong px-3 py-2.5">
+                  <p className="min-w-[180px] flex-1 text-[12.5px] text-st-text-2">
+                    {fromItin && loadedItin ? (
+                      <>Chargé depuis <b className="font-semibold text-st-text">{loadedItin.nom}</b> · {validPoints} point{validPoints > 1 ? "s" : ""}</>
+                    ) : (
+                      "Reprenez une de vos routes enregistrées, ou tracez-la sur la carte."
+                    )}
+                  </p>
+                  <Button variant="secondary" size="sm" onClick={itineraires.open}>
+                    <Navigation /> {loadedItin ? "Changer d'itinéraire" : "Charger un itinéraire"}
+                  </Button>
+                </div>
+                <div className="overflow-hidden rounded-[14px] border border-st-line">
+                  <AdminRouteEditorDynamic waypoints={routeDraft} onChange={setRouteDraft} height="340px" />
+                </div>
+                {validPoints > 0 && !fromItin && (
+                  <div className="space-y-2">
+                    <label className="flex cursor-pointer items-start gap-2.5 text-[13px] text-st-text">
+                      <input
+                        type="checkbox" checked={saveItin}
+                        onChange={e => { setSaveItin(e.target.checked); if (e.target.checked && !saveItinNom) setSaveItinNom(titre); }}
+                        className="mt-0.5 h-4 w-4 cursor-pointer accent-[#0b2238]"
+                      />
+                      <span>Enregistrer cette route dans mes itinéraires</span>
+                    </label>
+                    {saveItin && (
+                      <Input
+                        aria-label="Nom de l'itinéraire" placeholder="Nom de l'itinéraire" maxLength={80}
+                        value={saveItinNom} onChange={e => setSaveItinNom(e.target.value)}
+                      />
+                    )}
+                  </div>
+                )}
               </div>
             </FormField>
           )}
@@ -466,6 +526,14 @@ export function AnnonceForm({ editing }: { editing?: AnnonceRow }) {
           {step !== "legal" && <ChevronRight />}
         </Button>
       </div>
+
+      <ItinerairePicker
+        open={itineraires.showModal}
+        onClose={() => itineraires.setShowModal(false)}
+        items={itineraires.items}
+        loading={itineraires.loading}
+        onApply={itineraires.apply}
+      />
     </div>
   );
 }

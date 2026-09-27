@@ -25,7 +25,7 @@ import { RouteTab, RouteEditorFullscreen } from "./RouteTab";
 import { MessagesTab } from "./MessagesTab";
 import { DossierTab } from "./DossierTab";
 import { EmailComposer } from "./EmailComposer";
-import { ItinerairesModal } from "./ItinerairesModal";
+import { ItinerairePicker } from "@/components/pilote/itineraires/ItinerairePicker";
 import { ConfirmActionDialog, type PendingAction } from "./ConfirmActionDialog";
 // Bloc C (mise en jeu premier-arrivé, flight_offers) reste GELÉ — pivot 08/09,
 // cf. mémoire project_marketplace_legal_risk. Bloc B (assignation manuelle
@@ -49,6 +49,15 @@ import { useItineraires } from "./hooks/useItineraires";
 // confirmation qui dit ce qu'elle déclenche. La route se trace en plein écran.
 // Téléphone : feuille qui monte du bas ; bureau : panneau flottant.
 const SM_QUERY = "(min-width: 640px)";
+// Ligne de contexte du sélecteur d'itinéraires : « Vol de Marie D. · sam. 4 oct. · 60 min ».
+function itinContext(r: DrawerReservation): string {
+  const nom = [r.clients?.prenom, r.clients?.nom ? `${r.clients.nom[0]}.` : ""].filter(Boolean).join(" ");
+  const date = r.date_vol
+    ? new Date(r.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "short", day: "numeric", month: "short" })
+    : null;
+  return [nom ? `Vol de ${nom}` : "Vol", date, r.duree ? `${r.duree} min` : null].filter(Boolean).join(" · ");
+}
+
 function useIsSmUp() {
   return useSyncExternalStore(
     (cb) => { const m = window.matchMedia(SM_QUERY); m.addEventListener("change", cb); return () => m.removeEventListener("change", cb); },
@@ -512,16 +521,14 @@ export function ReservationDrawer({
         />
       )}
 
-      <ItinerairesModal
+      <ItinerairePicker
         open={itineraires.showModal}
         onClose={() => itineraires.setShowModal(false)}
         duree={r?.duree}
+        context={r ? itinContext(r) : undefined}
         items={itineraires.items}
         loading={itineraires.loading}
-        showAll={itineraires.showAll}
-        setShowAll={itineraires.setShowAll}
         onApply={itineraires.apply}
-        canManage={isAdmin}
       />
 
       <ConfirmActionDialog

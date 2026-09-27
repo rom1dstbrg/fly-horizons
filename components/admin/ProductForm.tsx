@@ -15,7 +15,7 @@ import type { Product, ProductImage } from "@/types/database";
 import type { WaypointDraft } from "@/components/admin/AdminRouteEditor";
 import type { Itineraire } from "@/lib/actions/itineraires";
 import { useItineraires } from "@/components/admin/reservation-drawer/hooks/useItineraires";
-import { ItinerairesModal } from "@/components/admin/reservation-drawer/ItinerairesModal";
+import { ItinerairePicker } from "@/components/pilote/itineraires/ItinerairePicker";
 
 const AdminRouteEditorDynamic = dynamic(
   () => import("@/components/admin/AdminRouteEditor").then(m => ({ default: m.AdminRouteEditor })),
@@ -585,14 +585,11 @@ export function ProductForm({ product, prixHeure, stopovers = [] }: ProductFormP
 
     </form>
 
-    <ItinerairesModal
+    <ItinerairePicker
       open={itineraires.showModal}
       onClose={() => itineraires.setShowModal(false)}
-      duree={voucherDuration}
       items={itineraires.items}
       loading={itineraires.loading}
-      showAll={itineraires.showAll}
-      setShowAll={itineraires.setShowAll}
       onApply={handleApplyItineraire}
     />
     </>

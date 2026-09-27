@@ -64,7 +64,7 @@ const NAVIGATION: NavEntry[] = [
   { type: "section", label: "Vols" },
   { type: "link", id: "reservations",   icon: CalendarCheck, label: "Réservations",   href: "/admin/vols",                    tab: "reservations",   tabBase: "/admin/vols" },
   { type: "link", id: "disponibilites", icon: Clock,         label: "Disponibilités", href: "/admin/vols?tab=disponibilites", tab: "disponibilites", tabBase: "/admin/vols" },
-  { type: "link", id: "itineraires",    icon: Navigation,    label: "Itinéraires",    href: "/admin/itineraires" },
+  { type: "link", id: "itineraires",    icon: Navigation,    label: "Itinéraires",    href: "/pilote/itineraires" },
   { type: "link", id: "produits",       icon: Package,       label: "Les vols",       href: "/admin/boutique?tab=produits",   tab: "produits",       tabBase: "/admin/boutique" },
   { type: "link", id: "masse-centrage", icon: Scale,         label: "Masse & centrage", href: "/admin/mass-balance" },
 

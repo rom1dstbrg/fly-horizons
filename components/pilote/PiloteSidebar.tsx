@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   LayoutDashboard, PlaneTakeoff, Plane, CalendarRange, Scale, User,
-  ArrowLeftRight, LogOut, AlertCircle, BookOpen, Receipt,
+  ArrowLeftRight, LogOut, AlertCircle, BookOpen, Receipt, Navigation,
 } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 import { cn } from "@/lib/utils";
@@ -44,6 +44,7 @@ export const PILOTE_NAV: PiloteNavItem[] = [
   { id: "dashboard", icon: LayoutDashboard, label: "Tableau de bord", short: "Accueil", href: "/pilote" },
   { id: "vols", icon: Plane, label: "Mes vols", short: "Vols", href: "/pilote/vols", badgeKey: "/pilote/vols" },
   { id: "annonces", icon: PlaneTakeoff, label: "Mes annonces", short: "Annonces", href: "/pilote/annonces" },
+  { id: "itineraires", icon: Navigation, label: "Itinéraires", short: "Itinéraires", href: "/pilote/itineraires" },
   // Pastille = paiements « à relancer » (vol passé, virement pas reçu).
   { id: "transactions", icon: Receipt, label: "Transactions", short: "Transactions", href: "/pilote/transactions", badgeKey: "/pilote/transactions" },
   { id: "dispos", icon: CalendarRange, label: "Disponibilités", short: "Dispos", href: "/pilote/disponibilites" },

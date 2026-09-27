@@ -20,7 +20,7 @@ interface SearchResult {
 const QUICK_LINKS = [
   { href: "/admin/vols",                       label: "Réservations",         icon: CalendarCheck,   group: "Navigation" },
   { href: "/admin/vols?tab=disponibilites",    label: "Disponibilités",       icon: CalendarDays,    group: "Navigation" },
-  { href: "/admin/itineraires",                label: "Itinéraires",          icon: Navigation,      group: "Navigation" },
+  { href: "/pilote/itineraires",                label: "Itinéraires",          icon: Navigation,      group: "Navigation" },
   { href: "/admin/boutique?tab=produits",      label: "Les vols",             icon: Package,         group: "Navigation" },
   { href: "/admin/clients",                    label: "Clients",              icon: Users,           group: "Navigation" },
   { href: "/admin/contacts",                   label: "Messages",             icon: MessageSquare,   group: "Navigation" },

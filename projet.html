@@ -260,6 +260,32 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-09-27 (8) · Itinéraires propres à chaque pilote</p>
+      <h3>Les itinéraires enregistrés passent dans l'espace pilote, un pilote ne voit que les siens</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Les itinéraires étaient une liste commune gérée depuis <code>/admin/itineraires</code> (ancien style, durées 30/60/90/120),
+          lisible par tous les pilotes, sans possibilité d'en charger un dans une annonce. La couche « Aéronautique (OpenAIP) » des cartes
+          ne s'affichait plus (ancien serveur de tuiles hors service). Maquette : <code>https://claude.ai/artifact/QmLxPcn6m4pur9eh8xYyXR</code>, validée par Romain
+          avec deux corrections : tout en mode clair, et pas d'itinéraire visible par tous.</dd>
+        <dt>Décision</dt>
+        <dd><code>itineraires.pilote_id</code> (obligatoire) : chaque itinéraire appartient au pilote qui le crée, lui seul le voit, le modifie,
+          le supprime. Nouvelle page <code>/pilote/itineraires</code> (liste filtrable « durée entre X et Y min » + recherche, aperçu avec carte,
+          éditeur plein écran, temps de vol en minutes libres). Un sélecteur unique « Charger un itinéraire » (filtre min/max, aperçu) sert dans
+          l'onglet Route d'une réservation (filtre pré-rempli à ± 15 min de la durée du vol), le formulaire d'annonce et le formulaire produit.
+          Charger un itinéraire en copie les points : si le vol passe à un autre pilote, la route reste sur la réservation.
+          Fonds de carte « Carte » (satellite + noms) / « Aéro » (openflightmaps : fond + couche aéro, sans clé).</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Itinéraires partagés entre pilotes (refusé par Romain). OpenAIP avec clé API (la clé existe dans <code>.env.local</code> et fonctionne,
+          mais c'est une simple surcouche, et il faudrait la clé côté Vercel) : openflightmaps donne une vraie carte VFR, avec les données officielles belges.</dd>
+        <dt>Conséquences</dt>
+        <dd>Migration <code>20260927c_itineraires_pilote.sql</code> : les 5 itinéraires existants sont rattachés à la fiche pilote de Romain
+          (vérifié en base le 27/09 : colonne présente, remplie). <code>/admin/itineraires</code> redirige vers <code>/pilote/itineraires</code>.
+          Le flow vol sur mesure (masqué) garde son propre sélecteur pour l'instant.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-09-27 (7) · Onglet Transactions du pilote</p>
       <h3>Un onglet « Transactions » dans l'espace pilote : paiements des passagers, part des frais, relevé PDF</h3>
       <dl>
@@ -1385,6 +1411,21 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-09-27 (21) — Itinéraires dans l'espace pilote, carte aéro openflightmaps</h3>
+      <ul>
+        <li><code>/pilote/itineraires</code> (entrée « Itinéraires » dans la barre, dans « Plus » au téléphone) : liste filtrable par durée
+          (min/max) et recherche, aperçu (carte, temps de vol, distance, points), éditeur plein écran (<code>components/pilote/itineraires/</code>).</li>
+        <li>Sélecteur <code>ItinerairePicker</code> à la place de <code>ItinerairesModal</code> : tiroir de réservation (onglet Route + éditeur),
+          formulaire d'annonce (charger, ou « Enregistrer cette route dans mes itinéraires »), formulaire produit.</li>
+        <li><code>lib/actions/itineraires.ts</code> : tout filtré par la fiche pilote connectée. <code>/admin/itineraires</code> redirige ;
+          <code>ItinerairesManager</code> supprimé.</li>
+        <li><code>components/maps/base-layers.ts</code> : bouton Carte / Aéro (openflightmaps) dans l'éditeur de route et les aperçus pilote,
+          l'ancienne couche OpenAIP morte est retirée. L'éditeur recadre la carte quand une route est chargée ; l'aperçu de l'onglet Route se met à jour.</li>
+        <li><code>lib/route-stats.ts</code> : calcul distance/durée sorti de <code>useRouteProposal</code>, réutilisé par l'éditeur d'itinéraire.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-09-27 (20) — Photo du pilote dans les fils de messages publics</h3>

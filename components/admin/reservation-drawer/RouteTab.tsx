@@ -127,7 +127,7 @@ export function RouteTab({ reservation: r, route, onOpenEditor, onOpenItineraire
         <div className="h-[340px] animate-pulse rounded-[14px] bg-st-surface" />
       ) : pts.length > 0 ? (
         <div className="overflow-hidden rounded-[14px]">
-          <RouteMapReadOnlyDynamic waypoints={pts} height="340px" />
+          <RouteMapReadOnlyDynamic key={pts.map((p) => `${p.lat},${p.lng}`).join("|")} waypoints={pts} height="340px" aero />
         </div>
       ) : (
         <div className="grid h-[120px] place-items-center rounded-[14px] border border-dashed border-st-line-strong text-[13px] text-st-muted">Aucune route tracée</div>
@@ -142,7 +142,7 @@ export function RouteTab({ reservation: r, route, onOpenEditor, onOpenItineraire
         <RouteIcon /> {pts.length > 0 ? "Modifier la route" : "Tracer la route"}
       </Button>
       <div className="grid grid-cols-2 gap-2">
-        <Button variant="secondary" size="sm" onClick={onOpenItineraires}><Navigation /> Itinéraires types</Button>
+        <Button variant="secondary" size="sm" onClick={onOpenItineraires}><Navigation /> Itinéraires</Button>
         <Button variant="secondary" size="sm" onClick={route.copyForeFlight} disabled={pts.length === 0}>
           {route.foreFlightCopied ? <Check /> : <Copy />}
           {route.foreFlightCopied ? "Copié" : "Pour ForeFlight"}
@@ -238,7 +238,7 @@ export function RouteEditorFullscreen({ open, reservation: r, route, onClose, on
             </div>
           )}
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="secondary" size="sm" onClick={onOpenItineraires}><Navigation /> Itinéraires types</Button>
+            <Button variant="secondary" size="sm" onClick={onOpenItineraires}><Navigation /> Itinéraires</Button>
             <Button variant="secondary" size="sm" onClick={route.copyForeFlight} disabled={pts.length === 0}>
               {route.foreFlightCopied ? <Check /> : <Copy />}{route.foreFlightCopied ? "Copié" : "ForeFlight"}
             </Button>

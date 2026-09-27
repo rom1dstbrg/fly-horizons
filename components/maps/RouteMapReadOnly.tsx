@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { addBaseLayers } from "@/components/maps/base-layers";
 
 const EBCI = { lat: 50.4592, lng: 4.4538 };
 
@@ -20,6 +21,8 @@ interface Props {
   // Aperçu statique (petites cartes en liste) : pas de contrôles ni d'interaction,
   // juste un visuel. Par défaut true partout ailleurs (carte pleine, popup détaillée).
   compact?: boolean;
+  /** Outils pilote : fonds Carte / Aéro (carte VFR) au lieu de Satellite / Carte. */
+  aero?: boolean;
 }
 
 function makeEBCIIcon() {
@@ -40,7 +43,7 @@ function makeNumberedIcon(n: number) {
   });
 }
 
-export default function RouteMapReadOnly({ waypoints, height = "280px", className, compact = false }: Props) {
+export default function RouteMapReadOnly({ waypoints, height = "280px", className, compact = false, aero = false }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
 
@@ -58,36 +61,40 @@ export default function RouteMapReadOnly({ waypoints, height = "280px", classNam
       attributionControl: !compact,
     }).setView([EBCI.lat, EBCI.lng], 8);
 
-    const layerSat = L.tileLayer(
-      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-      { attribution: "Tiles © Esri", maxZoom: 19 }
-    );
-    const layerCarte = L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-      { attribution: "© OpenStreetMap © CARTO", maxZoom: 19 }
-    );
-    const layerLabels = L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png",
-      { attribution: "", maxZoom: 19, pane: "overlayPane" }
-    );
+    if (aero) {
+      addBaseLayers(map);
+    } else {
+      const layerSat = L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        { attribution: "Tiles © Esri", maxZoom: 19 }
+      );
+      const layerCarte = L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+        { attribution: "© OpenStreetMap © CARTO", maxZoom: 19 }
+      );
+      const layerLabels = L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png",
+        { attribution: "", maxZoom: 19, pane: "overlayPane" }
+      );
 
-    layerSat.addTo(map);
-    layerLabels.addTo(map);
+      layerSat.addTo(map);
+      layerLabels.addTo(map);
 
-    if (!compact) {
-      L.control.layers(
-        { "Satellite": layerSat, "Carte": layerCarte },
-        { "Noms": layerLabels },
-        { position: "bottomleft", collapsed: false }
-      ).addTo(map);
+      if (!compact) {
+        L.control.layers(
+          { "Satellite": layerSat, "Carte": layerCarte },
+          { "Noms": layerLabels },
+          { position: "bottomleft", collapsed: false }
+        ).addTo(map);
 
-      map.on("baselayerchange", (e: L.LayersControlEvent) => {
-        if (e.name === "Satellite") {
-          if (!map.hasLayer(layerLabels)) layerLabels.addTo(map);
-        } else {
-          if (map.hasLayer(layerLabels)) map.removeLayer(layerLabels);
-        }
-      });
+        map.on("baselayerchange", (e: L.LayersControlEvent) => {
+          if (e.name === "Satellite") {
+            if (!map.hasLayer(layerLabels)) layerLabels.addTo(map);
+          } else {
+            if (map.hasLayer(layerLabels)) map.removeLayer(layerLabels);
+          }
+        });
+      }
     }
 
     // EBCI fixed marker

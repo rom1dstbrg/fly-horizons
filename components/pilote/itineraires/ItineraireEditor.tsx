@@ -1,0 +1,139 @@
+"use client";
+
+import dynamic from "next/dynamic";
+import { createPortal } from "react-dom";
+import { useEffect, useState, useTransition } from "react";
+import { Save, Trash2, X } from "lucide-react";
+import type { WaypointDraft } from "@/components/admin/AdminRouteEditor";
+import { createItineraire, updateItineraire, type Itineraire } from "@/lib/actions/itineraires";
+import { Button, FormField, Input, Textarea } from "@/components/pilote/studio";
+import { calcRouteStats } from "@/lib/route-stats";
+import { toDraft } from "./ItineraireParts";
+
+// Éditeur plein écran d'un itinéraire (maquette validée le 27/09), même
+// disposition que l'éditeur de route du tiroir : champs et points à gauche
+// (en bas au téléphone), carte en grand. Le temps de vol se tape en minutes ;
+// la durée estimée depuis le tracé se reprend en un clic.
+
+const AdminRouteEditorDynamic = dynamic(
+  () => import("@/components/admin/AdminRouteEditor").then((m) => ({ default: m.AdminRouteEditor })),
+  { ssr: false, loading: () => <div className="h-full w-full animate-pulse bg-st-surface" /> },
+);
+
+export function ItineraireEditor({ itin, onClose, onSaved }: {
+  /** null = nouvel itinéraire. */
+  itin: Itineraire | null;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [nom, setNom] = useState(itin?.nom ?? "");
+  const [duree, setDuree] = useState(itin?.duree_estimee != null ? String(itin.duree_estimee) : "");
+  const [notes, setNotes] = useState(itin?.notes ?? "");
+  const [points, setPoints] = useState<WaypointDraft[]>(() => (itin ? toDraft(itin) : []));
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const stats = calcRouteStats(points);
+
+  function save() {
+    setError(null);
+    const waypoints = points
+      .map((p) => ({ lat: parseFloat(p.lat), lng: parseFloat(p.lng), nom: p.nom.trim() }))
+      .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+    const data = { nom, waypoints, duree_estimee: duree ? Number(duree) : null, notes };
+    startTransition(async () => {
+      const res = itin ? await updateItineraire(itin.id, data) : await createItineraire(data);
+      if ("error" in res) { setError(res.error); return; }
+      onSaved();
+    });
+  }
+
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
+    <div className="pilote-studio fixed inset-0 z-[200] flex flex-col bg-st-bg font-sans text-st-text" role="dialog" aria-modal="true" aria-label="Éditeur d'itinéraire">
+      <div className="flex h-[60px] shrink-0 items-center gap-2.5 border-b border-st-line bg-white px-4 pt-[env(safe-area-inset-top)] sm:px-5">
+        <p className="min-w-0 truncate text-[15px] font-semibold">
+          {itin ? "Itinéraire" : "Nouvel itinéraire"}
+          {nom.trim() && <span className="font-medium text-st-muted"> · {nom.trim()}</span>}
+        </p>
+        <span className="flex-1" />
+        <Button onClick={save} loading={isPending} disabled={points.length === 0 || !nom.trim()}>
+          <Save /> Enregistrer
+        </Button>
+        <button type="button" onClick={onClose} aria-label="Fermer l'éditeur" className="grid h-[38px] w-[38px] shrink-0 cursor-pointer place-items-center rounded-[11px] border border-st-line bg-white text-st-text-2 transition-colors hover:bg-st-surface">
+          <X size={17} />
+        </button>
+      </div>
+      <div className="flex min-h-0 flex-1 flex-col-reverse lg:grid lg:grid-cols-[340px_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)]">
+        <div className="min-h-0 space-y-4 overflow-y-auto border-st-line bg-white p-4 max-lg:max-h-[48dvh] max-lg:border-t lg:border-r">
+          {error && <p className="rounded-[12px] bg-st-bad-soft px-3.5 py-2.5 text-[13px] text-st-bad">{error}</p>}
+          <FormField id="itin-nom" label="Nom">
+            <Input id="itin-nom" value={nom} onChange={(e) => setNom(e.target.value)} placeholder="Ex. Lacs de l'Eau d'Heure" />
+          </FormField>
+          <FormField id="itin-duree" label="Temps de vol estimé">
+            <div className="relative">
+              <Input
+                id="itin-duree" type="number" inputMode="numeric" min={1} max={600}
+                value={duree} onChange={(e) => setDuree(e.target.value)} placeholder="45" className="pr-12 st-num"
+              />
+              <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[12.5px] text-st-muted">min</span>
+            </div>
+          </FormField>
+          {stats && (
+            <div className="flex items-center justify-between gap-2 rounded-[12px] bg-st-surface px-3 py-2 text-[12.5px] text-st-text-2">
+              <span className="st-num">Tracé : ≈ {stats.totalMin} min · {Math.round(stats.distKm)} km</span>
+              {String(stats.totalMin) !== duree && (
+                <button type="button" onClick={() => setDuree(String(stats.totalMin))} className="cursor-pointer font-semibold text-st-ink hover:underline">
+                  Utiliser {stats.totalMin}
+                </button>
+              )}
+            </div>
+          )}
+
+          <div>
+            <p className="mb-1 text-[12.5px] font-[550] text-st-text-2">Points</p>
+            {points.length === 0 ? (
+              <p className="rounded-[12px] border border-dashed border-st-line-strong px-3 py-4 text-center text-[12.5px] text-st-muted">
+                Cliquez sur la carte pour ajouter le premier point.
+              </p>
+            ) : (
+              <ol className="divide-y divide-st-line-soft">
+                {points.map((p, i) => (
+                  <li key={i} className="flex items-center gap-2.5 py-1.5">
+                    <span className="grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full bg-st-ink text-[10.5px] font-semibold text-white">{i + 1}</span>
+                    <input
+                      value={p.nom}
+                      onChange={(e) => setPoints(points.map((q, k) => (k === i ? { ...q, nom: e.target.value } : q)))}
+                      placeholder={`Point ${i + 1}`}
+                      aria-label={`Nom du point ${i + 1}`}
+                      className="h-8 min-w-0 flex-1 rounded-[8px] border border-transparent bg-transparent px-2 text-[16px] text-st-text outline-none transition-colors hover:border-st-line focus:border-st-ink sm:text-[13px]"
+                    />
+                    <button type="button" onClick={() => setPoints(points.filter((_, k) => k !== i))} aria-label={`Retirer le point ${i + 1}`} className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-[9px] text-st-muted transition-colors hover:bg-st-bad-soft hover:text-st-bad">
+                      <Trash2 size={14} />
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            )}
+            <p className="mt-1.5 text-[11.5px] text-st-muted">Départ et retour à EBCI. Clic sur la carte : ajouter un point. Glisser un point : le déplacer.</p>
+          </div>
+
+          <FormField id="itin-notes" label="Notes (optionnel)">
+            <Textarea id="itin-notes" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Altitude, zones à éviter…" className="min-h-0" />
+          </FormField>
+        </div>
+        <div className="relative min-h-[48dvh] flex-1 lg:h-full lg:min-h-0">
+          <AdminRouteEditorDynamic waypoints={points} onChange={setPoints} height="fill" />
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
