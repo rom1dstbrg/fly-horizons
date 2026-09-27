@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Visite guidée · Mes vols</title>
+<meta name="description" content="Maquette de la visite guidée de première visite sur la page Mes vols de l'espace pilote, en version ordinateur et téléphone.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Tokens Studio (app/globals.css) ; muted foncé pour la lisibilité de la maquette */
+:root {
+  --bg: #f5f6f8; --surface: #f4f5f7; --surface-hover: #eceef2;
+  --line: #eceef2; --line-soft: #f2f3f6; --line-strong: #dcdfe6;
+  --text: #0f1117; --text-2: #4d5463; --muted: #626977;
+  --ink: #0b2238; --ink-soft: #e8edf3; --gold: #F2B705; --gold-soft: #fdf4d6; --gold-text: #8a6400;
+  --ok: #16794a; --ok-soft: #e7f5ec; --warn: #9a4a08; --warn-soft: #fff3e6; --bad: #c4372c; --bad-soft: #fdecea;
+  --shadow-sm: 0 1px 2px rgba(15,17,23,.03);
+  --shadow-md: 0 4px 12px -2px rgba(15,17,23,.06), 0 2px 4px -2px rgba(15,17,23,.04);
+  --shadow-panel: 0 30px 60px -20px rgba(15,17,23,.35);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: #dfe4ec; font-family: Poppins, system-ui, sans-serif; color: var(--text); -webkit-font-smoothing: antialiased; }
+button { font-family: inherit; cursor: pointer; }
+svg.i { width: 16px; height: 16px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.num { font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+
+/* ── Barre de contrôle de la maquette (hors app) ───────────────────────── */
+.ctrl { max-width: 1240px; margin: 0 auto; padding: 28px 20px 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px 24px; }
+.ctrl h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.02em; color: var(--ink); }
+.ctrl p { margin: 2px 0 0; font-size: 13px; color: var(--text-2); max-width: 560px; line-height: 1.5; }
+.ctrl .sp { flex: 1; }
+.seg { display: inline-flex; background: #fff; border-radius: 12px; padding: 3px; gap: 2px; box-shadow: var(--shadow-sm); }
+.seg button { border: 0; background: transparent; height: 34px; padding: 0 14px; border-radius: 9px; font-size: 13px; font-weight: 550; color: var(--text-2); display: inline-flex; align-items: center; gap: 7px; }
+.seg button.on { background: var(--ink); color: #fff; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 38px; padding: 0 16px; border-radius: 11px; font-size: 13px; font-weight: 550; border: 0; white-space: nowrap; }
+.btn-p { background: var(--ink); color: #fff; box-shadow: 0 1px 2px rgba(11,34,56,.25), 0 6px 14px -8px rgba(11,34,56,.6); }
+.btn-s { background: #fff; color: var(--text); border: 1px solid var(--line-strong); }
+.btn-g { background: transparent; color: var(--muted); padding: 0 8px; }
+.btn-sm { height: 34px; padding: 0 12px; font-size: 12.5px; }
+.stagewrap { display: flex; justify-content: center; padding: 0 20px 60px; }
+
+/* ── Cadres (ordinateur / téléphone) ───────────────────────────────────── */
+.device { position: relative; background: var(--bg); overflow: hidden; }
+.device.desk { width: min(1200px, 100%); height: 760px; border-radius: 18px; box-shadow: var(--shadow-panel); }
+.device.desk::before { content: ""; display: block; height: 34px; background: #e9ecf1; border-bottom: 1px solid var(--line-strong); }
+.device.desk .wdots { position: absolute; top: 12px; left: 14px; display: flex; gap: 7px; }
+.device.desk .wdots i { width: 11px; height: 11px; border-radius: 99px; background: #cfd4dc; }
+.device.phone { width: 390px; height: 800px; border-radius: 46px; border: 12px solid #0d1520; box-shadow: var(--shadow-panel); }
+.scroller { position: absolute; inset: 34px 0 0 0; overflow: auto; scrollbar-width: thin; }
+.device.phone .scroller { inset: 0; }
+
+/* ── App Studio ────────────────────────────────────────────────────────── */
+.app { display: flex; min-height: 100%; }
+.rail { width: 76px; flex-shrink: 0; background: #fff; border-right: 1px solid var(--line); padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0; height: 726px; }
+.rail img { width: 28px; height: 28px; margin: 0 0 14px 12px; }
+.rail a { width: 52px; height: 40px; border-radius: 11px; display: grid; place-items: center; color: var(--text-2); position: relative; }
+.rail a.on { background: var(--ink-soft); color: var(--ink); }
+.rail a .pip { position: absolute; top: 7px; right: 10px; width: 8px; height: 8px; border-radius: 99px; background: var(--gold); border: 2px solid #fff; }
+.rail .gap { flex: 1; }
+.main { flex: 1; min-width: 0; padding: 26px 28px 40px; }
+.head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+.head h2 { margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.03em; }
+.head .acts { display: flex; gap: 8px; align-items: center; }
+.help { width: 38px; height: 38px; border-radius: 11px; border: 1px solid var(--line-strong); background: #fff; color: var(--text-2); display: grid; place-items: center; position: relative; }
+.help.pulse::after { content: ""; position: absolute; inset: -5px; border-radius: 15px; border: 2px solid var(--gold); animation: pulse 1.4s ease-out 3; }
+@keyframes pulse { from { opacity: 1; transform: scale(.92); } to { opacity: 0; transform: scale(1.18); } }
+
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+.stat { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 16px 20px; box-shadow: var(--shadow-sm); }
+.stat small { display: block; font-size: 12.5px; color: var(--muted); }
+.stat b { display: block; font-size: 22px; font-weight: 500; letter-spacing: -0.03em; margin-top: 4px; }
+.stat span { font-size: 12px; color: var(--muted); }
+.stat.warn b { color: var(--warn); }
+.stat.bad b { color: var(--bad); }
+
+.table { background: #fff; border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow-sm); overflow: hidden; }
+.tbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 14px 18px; }
+.tseg { display: inline-flex; background: var(--surface); border-radius: 10px; padding: 3px; }
+.tseg span { height: 30px; padding: 0 11px; border-radius: 8px; font-size: 12.5px; font-weight: 550; color: var(--text-2); display: inline-flex; align-items: center; gap: 6px; }
+.tseg span.on { background: #fff; color: var(--text); box-shadow: var(--shadow-md); }
+.tseg em { font-style: normal; font-size: 11px; color: var(--muted); }
+.search { height: 34px; width: 220px; border: 1px solid var(--line-strong); border-radius: 10px; display: flex; align-items: center; gap: 8px; padding: 0 10px; font-size: 12.5px; color: var(--muted); }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th { text-align: left; font-size: 12px; font-weight: 550; color: var(--muted); padding: 10px 18px; border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); }
+td { padding: 12px 18px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
+tr:last-child td { border-bottom: 0; }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: #fafbfc; }
+.r { text-align: right; }
+.dt { display: flex; gap: 12px; align-items: center; }
+.tile { width: 40px; height: 42px; border-radius: 11px; border: 1px solid var(--line); background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; flex-shrink: 0; }
+.tile small { font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--muted); }
+.tile b { font-size: 16px; font-weight: 600; margin-top: 3px; }
+.cell b { display: block; font-weight: 550; }
+.cell span { font-size: 12px; color: var(--muted); }
+.cell .ann { color: var(--gold-text); font-weight: 600; }
+.cell .warnt { color: var(--warn); font-weight: 600; }
+.badge { display: inline-flex; align-items: center; height: 24px; padding: 0 9px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.b-warn { background: var(--warn-soft); color: var(--warn); }
+.b-ok { background: var(--ok-soft); color: var(--ok); }
+.b-ink { background: var(--ink); color: #fff; }
+
+/* Barre d'onglets (téléphone) */
+.tabbar { display: none; }
+
+/* ── Variante téléphone ────────────────────────────────────────────────── */
+.device.phone .rail, .device.phone .wdots { display: none; }
+.device.phone .main { padding: 58px 16px 120px; }
+.device.phone .head h2 { font-size: 26px; }
+.device.phone .head .full { display: none; }
+.device.phone .stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+.device.phone .stat { padding: 12px; border-radius: 18px; }
+.device.phone .stat b { font-size: 18px; }
+.device.phone .search { width: 100%; }
+.device.phone .tbar { flex-direction: column; align-items: stretch; }
+.device.phone thead { display: none; }
+.device.phone table, .device.phone tbody, .device.phone tr, .device.phone td { display: block; width: 100%; }
+.device.phone tr { padding: 12px 16px; border-top: 1px solid var(--line-soft); position: relative; }
+.device.phone td { border: 0; padding: 3px 0; }
+.device.phone td.dur { display: none; }
+.device.phone td.mbc { position: absolute; right: 16px; top: 14px; width: auto; }
+.device.phone td.st { padding-top: 6px; }
+.device.phone .tabbar { display: flex; position: absolute; left: 14px; right: 14px; bottom: 18px; height: 62px; background: rgba(255,255,255,.92); backdrop-filter: blur(14px); border-radius: 22px; box-shadow: 0 12px 30px -10px rgba(15,17,23,.3); align-items: center; justify-content: space-between; padding: 0 8px; z-index: 5; }
+.tabbar span { height: 46px; min-width: 46px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; color: var(--text-2); font-size: 13px; font-weight: 600; position: relative; }
+.tabbar span.on { background: var(--ink); color: #fff; padding: 0 16px; }
+.tabbar .pip { position: absolute; top: 9px; right: 9px; width: 8px; height: 8px; border-radius: 99px; background: var(--gold); border: 2px solid #fff; }
+
+/* ── Visite guidée ─────────────────────────────────────────────────────── */
+.tour { position: absolute; inset: 0; z-index: 50; pointer-events: none; }
+.tour.on { pointer-events: auto; }
+.spot { position: absolute; left: 0; top: 0; border-radius: 16px; box-shadow: 0 0 0 9999px rgba(8,16,28,.58); opacity: 0; transition: opacity .25s ease; pointer-events: none; }
+.spot::after { content: ""; position: absolute; inset: -3px; border-radius: 19px; border: 2px solid var(--gold); }
+.tour.on .spot { opacity: 1; }
+.bubble { position: absolute; left: 0; top: 0; width: 320px; background: #fff; border-radius: 18px; padding: 18px 18px 14px; box-shadow: 0 24px 50px -16px rgba(0,0,0,.45); opacity: 0; transform: translateY(8px); transition: opacity .22s ease, transform .22s ease; }
+.bubble.show { opacity: 1; transform: translateY(0); }
+.bubble .tail { position: absolute; width: 18px; height: 18px; background: #fff; transform: rotate(45deg); border-radius: 3px; }
+.bubble .count { font-size: 11.5px; font-weight: 600; color: var(--gold-text); letter-spacing: .06em; }
+.bubble h3 { margin: 4px 0 6px; font-size: 16px; font-weight: 700; letter-spacing: -0.015em; color: var(--ink); line-height: 1.3; }
+.bubble p { margin: 0; font-size: 13.5px; color: var(--text-2); line-height: 1.55; }
+.bubble .dots { display: flex; gap: 5px; margin: 14px 0 12px; }
+.bubble .dots i { width: 6px; height: 6px; border-radius: 99px; background: var(--line-strong); }
+.bubble .dots i.on { width: 18px; background: var(--ink); }
+.bubble .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.bubble .row .right { display: flex; gap: 8px; }
+.bubble .row.last { flex-direction: column-reverse; align-items: stretch; }
+.bubble .row.last .right { flex-direction: column; }
+.bubble .row.last .btn { width: 100%; }
+.device.phone .bubble { width: calc(100% - 28px); }
+.hint { position: absolute; background: var(--ink); color: #fff; font-size: 12px; font-weight: 550; padding: 7px 11px; border-radius: 10px; white-space: nowrap; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 40; }
+.hint.show { opacity: 1; }
+
+/* Menu d'aide « ? » : popover sur ordinateur, feuille du bas sur téléphone */
+.scrim { position: absolute; inset: 0; background: rgba(8,16,28,.35); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 55; }
+.helpmenu { position: absolute; width: 330px; background: #fff; border-radius: 18px; box-shadow: 0 24px 50px -16px rgba(0,0,0,.4), 0 0 0 1px var(--line); padding: 8px; opacity: 0; transform: translateY(-6px); pointer-events: none; transition: opacity .18s, transform .18s; z-index: 60; }
+.helpmenu.open { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.helpmenu .hm-h { padding: 10px 12px 8px; font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+.helpmenu a { display: flex; gap: 12px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; text-decoration: none; color: var(--text); }
+.helpmenu a:hover { background: var(--surface); }
+.helpmenu a .ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; flex-shrink: 0; background: var(--ink-soft); color: var(--ink); }
+.helpmenu a.hm-main .ic { background: var(--ink); color: #fff; }
+.helpmenu a b { display: block; font-size: 13.5px; font-weight: 600; line-height: 1.3; }
+.helpmenu a span { font-size: 12px; color: var(--muted); line-height: 1.35; }
+.helpmenu hr { border: 0; border-top: 1px solid var(--line); margin: 6px 4px; }
+.helpmenu a.small { align-items: center; padding: 8px 12px; }
+.helpmenu a.small .ic { width: 28px; height: 28px; background: transparent; color: var(--text-2); }
+.helpmenu a.small b { font-weight: 550; font-size: 13px; color: var(--text-2); }
+.device.phone .helpmenu { left: 0 !important; right: 0; top: auto !important; bottom: 0; width: auto; border-radius: 26px 26px 0 0; padding: 10px 10px 34px; transform: translateY(100%); }
+.device.phone .helpmenu.open { transform: translateY(0); }
+.device.phone .helpmenu::before { content: ""; display: block; width: 40px; height: 5px; border-radius: 99px; background: var(--line-strong); margin: 2px auto 8px; }
+.device.phone .scrim.open { opacity: 1; pointer-events: auto; }
+
+.notes { max-width: 1240px; margin: 0 auto; padding: 0 20px 60px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.notes div { background: #fff; border-radius: 16px; padding: 18px; font-size: 13px; color: var(--text-2); line-height: 1.55; }
+.notes b { display: block; color: var(--ink); font-size: 14px; margin-bottom: 4px; }
+@media (max-width: 760px) { .notes { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-dash" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></symbol>
+  <symbol id="i-plane" viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></symbol>
+  <symbol id="i-takeoff" viewBox="0 0 24 24"><path d="M2 22h20M6.4 17.4 3 13.9l2.1-.8 3 1.9 3.4-2-6-4.8 2.3-.9 8.1 3.1 3.2-1.6c1.1-.6 2.4-.2 2.9.9.5 1-.1 2.2-1.1 2.7l-12 5.8c-.9.4-1.9.2-2.5-.5z"/></symbol>
+  <symbol id="i-nav" viewBox="0 0 24 24"><path d="m3 11 19-9-9 19-2-8z"/></symbol>
+  <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1z"/><path d="M8 7h8M8 11h8M8 15h5"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="i-scale" viewBox="0 0 24 24"><path d="m16 16 3-8 3 8c-.9.7-1.9 1-3 1s-2.1-.3-3-1zM2 16l3-8 3 8c-.9.7-1.9 1-3 1s-2.1-.3-3-1zM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.6z"/><path d="M13 2v7h7"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></symbol>
+  <symbol id="i-desk" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-replay" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></symbol>
+  <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+</svg>
+
+<div class="ctrl">
+  <div>
+    <h1>Visite guidée · Mes vols</h1>
+    <p>Ce que voit un pilote à sa première visite de la page. La visite démarre toute seule. Le bouton « ? » ouvre l'aide de la page : guide, parcours, et revoir la visite. Flèches du clavier pour avancer, Échap pour passer.</p>
+  </div>
+  <span class="sp"></span>
+  <div class="seg" id="mode">
+    <button type="button" class="on" data-m="desk"><svg class="i"><use href="#i-desk"/></svg>Ordinateur</button>
+    <button type="button" data-m="phone"><svg class="i"><use href="#i-phone"/></svg>Téléphone</button>
+  </div>
+  <button type="button" class="btn btn-s" id="replay"><svg class="i"><use href="#i-replay"/></svg>Relancer la visite</button>
+</div>
+
+<div class="stagewrap">
+  <div class="device desk" id="device">
+    <div class="wdots"><i></i><i></i><i></i></div>
+    <div class="scroller" id="scroller">
+      <div class="app">
+        <aside class="rail">
+          <img src="public/icone.svg" alt="">
+          <a title="Tableau de bord"><svg class="i"><use href="#i-dash"/></svg></a>
+          <a class="on" title="Mes vols"><svg class="i"><use href="#i-plane"/></svg><span class="pip"></span></a>
+          <a title="Mes annonces"><svg class="i"><use href="#i-takeoff"/></svg></a>
+          <a title="Itinéraires"><svg class="i"><use href="#i-nav"/></svg></a>
+          <a title="Transactions"><svg class="i"><use href="#i-receipt"/></svg></a>
+          <a title="Disponibilités"><svg class="i"><use href="#i-cal"/></svg></a>
+          <a title="Masse & centrage"><svg class="i"><use href="#i-scale"/></svg></a>
+          <a title="Logbook"><svg class="i"><use href="#i-note"/></svg></a>
+          <a title="Mon profil"><svg class="i"><use href="#i-user"/></svg></a>
+          <span class="gap"></span>
+          <a title="Guide pilote"><svg class="i"><use href="#i-book"/></svg></a>
+          <a title="Signaler un problème"><svg class="i"><use href="#i-flag"/></svg></a>
+        </aside>
+
+        <div class="main">
+          <div class="head">
+            <h2>Mes vols</h2>
+            <div class="acts">
+              <button type="button" class="help" id="help" title="Aide sur cette page" aria-haspopup="menu"><svg class="i"><use href="#i-help"/></svg></button>
+              <button type="button" class="btn btn-p"><svg class="i"><use href="#i-plus"/></svg><span class="full">Nouveau vol</span><span class="short" style="display:none">Ajouter</span><svg class="i full"><use href="#i-down"/></svg></button>
+            </div>
+          </div>
+
+          <div class="stats">
+            <div class="stat"><small>À venir</small><b class="num">4</b><span>dont 2 dans les 7 jours</span></div>
+            <div class="stat warn" data-tour="confirm"><small>À confirmer</small><b class="num">1</b><span>demande ou heure</span></div>
+            <div class="stat bad"><small>À régler</small><b class="num">1</b><span>par le client</span></div>
+            <div class="stat"><small>Heures ce mois</small><b class="num">3,5 h</b><span>3 vols effectués</span></div>
+          </div>
+
+          <div class="table" data-tour="table">
+            <div class="tbar">
+              <div class="tseg"><span class="on">Tout <em>6</em></span><span>À venir <em>4</em></span><span>Passés <em>2</em></span></div>
+              <div class="search"><svg class="i"><use href="#i-search"/></svg>Client, route…</div>
+            </div>
+            <table>
+              <thead><tr><th>Date</th><th>Client</th><th>Route</th><th class="r">Durée</th><th>Statut</th><th></th></tr></thead>
+              <tbody>
+                <tr data-tour="row">
+                  <td><div class="dt"><span class="tile"><small>sam</small><b>12</b></span><div class="cell"><b>oct. 2026</b><span>10:00</span></div></div></td>
+                  <td><div class="cell"><b>Julie Dupont</b><span><span class="ann">Annonce · </span>2 pax · 142 kg</span></div></td>
+                  <td><div class="cell"><span style="color:var(--muted)">À tracer</span></div></td>
+                  <td class="r dur">90 min</td>
+                  <td class="st"><span class="badge b-warn">Nouvelle demande</span></td>
+                  <td class="r mbc"><button type="button" class="btn btn-s btn-sm" data-tour="mb"><svg class="i"><use href="#i-scale"/></svg>M&amp;B</button></td>
+                </tr>
+                <tr>
+                  <td><div class="dt"><span class="tile"><small>dim</small><b>13</b></span><div class="cell"><b>oct. 2026</b><span>14:00</span></div></div></td>
+                  <td><div class="cell"><b>Marc Lemaire</b><span><span class="ann">Annonce · </span>1 pax · 81 kg</span></div></td>
+                  <td><div class="cell"><b style="font-weight:400;color:var(--text-2)">Charleroi → Dinant → Charleroi</b><span class="warnt">Le client demande une modification</span></div></td>
+                  <td class="r dur">60 min</td>
+                  <td class="st"><span class="badge b-ok">Vol confirmé</span></td>
+                  <td class="r mbc"><button type="button" class="btn btn-s btn-sm"><svg class="i"><use href="#i-scale"/></svg>M&amp;B</button></td>
+                </tr>
+                <tr>
+                  <td><div class="dt"><span class="tile"><small>sam</small><b>19</b></span><div class="cell"><b>oct. 2026</b><span>09:30</span></div></div></td>
+                  <td><div class="cell"><b>Sophie Verhaegen</b><span><span class="ann">Annonce · </span>3 pax · 205 kg</span></div></td>
+                  <td><div class="cell"><b style="font-weight:400;color:var(--text-2)">Charleroi → Ostende → Knokke → Charleroi</b><span>Route validée</span></div></td>
+                  <td class="r dur">90 min</td>
+                  <td class="st"><span class="badge b-ok">Vol confirmé</span></td>
+                  <td class="r mbc"><button type="button" class="btn btn-s btn-sm"><svg class="i"><use href="#i-scale"/></svg>M&amp;B</button></td>
+                </tr>
+                <tr>
+                  <td><div class="dt"><span class="tile"><small>sam</small><b>21</b></span><div class="cell"><b>sept. 2026</b><span>16:00</span></div></div></td>
+                  <td><div class="cell"><b>Thomas Petit</b><span><span class="ann">Annonce · </span>2 pax</span></div></td>
+                  <td><div class="cell"><b style="font-weight:400;color:var(--text-2)">Charleroi → Bruxelles → Charleroi</b><span>Route validée</span></div></td>
+                  <td class="r dur">60 min</td>
+                  <td class="st"><span class="badge b-ink">Vol effectué</span></td>
+                  <td class="r mbc"><button type="button" class="btn btn-s btn-sm"><svg class="i"><use href="#i-scale"/></svg>M&amp;B</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="tabbar">
+      <span><svg class="i"><use href="#i-dash"/></svg></span>
+      <span class="on" data-tour="tab-vols"><svg class="i"><use href="#i-plane"/></svg>Vols</span>
+      <span><svg class="i"><use href="#i-scale"/></svg></span>
+      <span><svg class="i"><use href="#i-takeoff"/></svg></span>
+      <span><svg class="i"><use href="#i-more"/></svg></span>
+    </nav>
+
+    <div class="hint" id="hint">L'aide de cette page est ici</div>
+    <div class="scrim" id="scrim"></div>
+    <div class="helpmenu" id="helpmenu" role="menu" aria-label="Aide sur la page Mes vols">
+      <div class="hm-h">Aide · Mes vols</div>
+      <a class="hm-main" href="maquette-guide-accueil.html#/vols"><span class="ic"><svg class="i"><use href="#i-book"/></svg></span><div><b>Guide de la page Mes vols</b><span>Tout ce que permet cette page, écran par écran</span></div></a>
+      <a href="maquette-guide-accueil.html#/reservation"><span class="ic"><svg class="i"><use href="#i-route"/></svg></span><div><b>Une réservation de A à Z</b><span>De la demande au vol effectué, étape par étape</span></div></a>
+      <hr>
+      <a class="small" href="#" id="hm-replay"><span class="ic"><svg class="i"><use href="#i-replay"/></svg></span><b>Revoir la visite (4 étapes)</b></a>
+      <a class="small" href="#"><span class="ic"><svg class="i"><use href="#i-flag"/></svg></span><b>Signaler un problème</b></a>
+    </div>
+    <div class="tour" id="tour">
+      <div class="spot" id="spot"></div>
+      <div class="bubble" id="bubble" role="dialog" aria-live="polite">
+        <span class="tail" id="tail"></span>
+        <div class="count" id="count"></div>
+        <h3 id="btitle"></h3>
+        <p id="btext"></p>
+        <div class="dots" id="bdots"></div>
+        <div class="row">
+          <button type="button" class="btn btn-g btn-sm" id="skip">Passer</button>
+          <div class="right" id="bacts"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="notes">
+  <div><b>Quand elle apparaît</b>La première fois que le pilote ouvre la page, une seule fois. « Passer » ou « Terminer » la marque comme vue sur sa fiche : elle ne revient pas, même sur un autre appareil.</div>
+  <div><b>Le bouton « ? »</b>Il ouvre l'aide de la page : son guide, le parcours lié, et en option « Revoir la visite ». À la fin de la visite, il clignote une fois pour qu'on sache où il est.</div>
+  <div><b>Une visite par page</b>Même format partout : 3 ou 4 bulles, un titre en gras, deux lignes, « Voir le guide complet » à la dernière. Sur téléphone, une cible trop grande pour l'écran est remplacée par un repère plus petit, ici l'onglet Vols.</div>
+</div>
+
+<script>
+const STEPS = [
+  { target: 'table', targetPhone: 'tab-vols', title: 'Tous vos vols, ici',
+    text: { desk: 'Les demandes de vos annonces arrivent dans cette liste. La pastille de chaque ligne indique où en est le vol.',
+            phone: 'Les demandes de vos annonces arrivent dans l\'onglet Vols. Une pastille indique où en est chaque vol.' } },
+  { target: 'confirm', title: 'À confirmer : répondez sous 72 h',
+    text: { desk: 'Une demande bloque le créneau 72 heures. Sans réponse de votre part, elle est annulée automatiquement.',
+            phone: 'Une demande bloque le créneau 72 heures. Sans réponse, elle est annulée automatiquement.' } },
+  { target: 'row', title: 'Ouvrez un vol',
+    text: { desk: 'Cliquez sur une ligne : créneau, route, messages et paiement se gèrent dans le tiroir du vol.',
+            phone: 'Touchez un vol : créneau, route, messages et paiement se gèrent dans sa fiche.' } },
+  { target: 'mb', title: 'Masse et centrage en un clic',
+    text: { desk: 'Le bouton M&B ouvre l\'outil avec les poids des passagers déjà remplis.',
+            phone: 'Le bouton M&B ouvre l\'outil avec les poids des passagers déjà remplis.' } },
+];
+
+const device = document.getElementById('device');
+const scroller = document.getElementById('scroller');
+const tour = document.getElementById('tour');
+const spot = document.getElementById('spot');
+const bubble = document.getElementById('bubble');
+const tail = document.getElementById('tail');
+const hint = document.getElementById('hint');
+let mode = 'desk', idx = -1;
+
+const q = t => device.querySelector(`[data-tour="${t}"]`);
+const targetOf = s => q(mode === 'phone' && s.targetPhone ? s.targetPhone : s.target);
+
+function place() {
+  const s = STEPS[idx];
+  const el = targetOf(s);
+  const d = device.getBoundingClientRect();
+  const r = el.getBoundingClientRect();
+  const pad = 6;
+  const x = r.left - d.left - pad - (mode === 'phone' ? 12 : 0);
+  const y = r.top - d.top - pad - (mode === 'phone' ? 12 : 0);
+  const w = r.width + pad * 2, h = r.height + pad * 2;
+  spot.style.transform = `translate(${x}px, ${y}px)`;
+  spot.style.width = w + 'px';
+  spot.style.height = h + 'px';
+
+  const inner = { w: device.clientWidth, h: device.clientHeight };
+  const bw = bubble.offsetWidth, bh = bubble.offsetHeight, gap = 16;
+  const below = y + h + gap + bh < inner.h - 10;
+  let by = below ? y + h + gap : y - gap - bh;
+  by = Math.max(10, by);
+  const cx = x + w / 2;
+  let bx = Math.min(Math.max(14, cx - bw / 2), inner.w - bw - 14);
+  bubble.style.left = bx + 'px';
+  bubble.style.top = by + 'px';
+  const tx = Math.min(Math.max(18, cx - bx - 9), bw - 36);
+  tail.style.left = tx + 'px';
+  tail.style.top = below ? '-7px' : '';
+  tail.style.bottom = below ? '' : '-7px';
+}
+
+function show(i) {
+  idx = i;
+  const s = STEPS[i];
+  const el = targetOf(s);
+  closeHelp();
+  bubble.classList.remove('show');
+  tour.classList.add('on');
+  // Amène l'élément au centre du défilement avant de le pointer (sauf la barre d'onglets, fixe).
+  if (scroller.contains(el)) {
+    const sr = scroller.getBoundingClientRect(), er = el.getBoundingClientRect();
+    const want = scroller.scrollTop + (er.top - sr.top) - (scroller.clientHeight - er.height) / 2;
+    scroller.scrollTo({ top: Math.max(0, want), behavior: 'smooth' });
+  }
+  setTimeout(() => {
+    document.getElementById('count').textContent = `${i + 1} / ${STEPS.length}`;
+    document.getElementById('btitle').textContent = s.title;
+    document.getElementById('btext').textContent = s.text[mode];
+    document.getElementById('bdots').innerHTML = STEPS.map((_, k) => `<i class="${k === i ? 'on' : ''}"></i>`).join('');
+    const last = i === STEPS.length - 1;
+    document.getElementById('skip').style.display = last ? 'none' : '';
+    document.querySelector('.bubble .row').classList.toggle('last', last);
+    document.getElementById('bacts').innerHTML = last
+      ? `<a class="btn btn-p btn-sm" href="maquette-guide-accueil.html#/vols" style="text-decoration:none">Voir le guide complet<svg class="i"><use href="#i-arrow"/></svg></a><button type="button" class="btn btn-g btn-sm" id="done">Terminer</button>`
+      : `${i > 0 ? '<button type="button" class="btn btn-s btn-sm" id="prev">Retour</button>' : ''}<button type="button" class="btn btn-p btn-sm" id="next">Suivant<svg class="i"><use href="#i-arrow"/></svg></button>`;
+    const nx = document.getElementById('next'), pv = document.getElementById('prev'), dn = document.getElementById('done');
+    if (nx) nx.onclick = () => show(i + 1);
+    if (pv) pv.onclick = () => show(i - 1);
+    if (dn) dn.onclick = end;
+    place();
+    bubble.classList.add('show');
+  }, 320);
+}
+
+function end() {
+  idx = -1;
+  bubble.classList.remove('show');
+  tour.classList.remove('on');
+  // Montre où relancer la visite.
+  const help = document.getElementById('help');
+  const d = device.getBoundingClientRect(), r = help.getBoundingClientRect();
+  scroller.scrollTo({ top: 0, behavior: 'smooth' });
+  setTimeout(() => {
+    const r2 = help.getBoundingClientRect();
+    hint.style.top = (r2.bottom - d.top + 8 - (mode === 'phone' ? 12 : 0)) + 'px';
+    hint.style.right = (d.right - r2.right - (mode === 'phone' ? 12 : 0)) + 'px';
+    hint.classList.add('show');
+    help.classList.remove('pulse'); void help.offsetWidth; help.classList.add('pulse');
+    setTimeout(() => hint.classList.remove('show'), 3200);
+  }, 350);
+}
+
+document.getElementById('skip').onclick = end;
+const helpBtn = document.getElementById('help'), menu = document.getElementById('helpmenu'), scrim = document.getElementById('scrim');
+function closeHelp() { menu.classList.remove('open'); scrim.classList.remove('open'); }
+helpBtn.onclick = e => {
+  e.stopPropagation();
+  if (menu.classList.contains('open')) return closeHelp();
+  if (mode === 'desk') {
+    const d = device.getBoundingClientRect(), r = helpBtn.getBoundingClientRect();
+    menu.style.top = (r.bottom - d.top + 8) + 'px';
+    menu.style.left = Math.min(r.left - d.left, device.clientWidth - 344) + 'px';
+  }
+  hint.classList.remove('show');
+  menu.classList.add('open'); scrim.classList.add('open');
+};
+scrim.onclick = closeHelp;
+document.addEventListener('click', e => { if (!menu.contains(e.target) && e.target !== helpBtn) closeHelp(); });
+document.getElementById('hm-replay').onclick = e => { e.preventDefault(); e.stopPropagation(); show(0); };
+document.getElementById('replay').onclick = () => show(0);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeHelp();
+  if (idx < 0) return;
+  if (e.key === 'Escape') end();
+  if (e.key === 'ArrowRight' && idx < STEPS.length - 1) show(idx + 1);
+  if (e.key === 'ArrowLeft' && idx > 0) show(idx - 1);
+});
+addEventListener('resize', () => { if (idx >= 0) place(); });
+document.querySelectorAll('#mode button').forEach(b => b.onclick = () => {
+  mode = b.dataset.m;
+  document.querySelectorAll('#mode button').forEach(x => x.classList.toggle('on', x === b));
+  device.className = 'device ' + mode;
+  device.querySelector('.head .short').style.display = mode === 'phone' ? '' : 'none';
+  scroller.scrollTop = 0;
+  show(0);
+});
+// Première visite : la visite démarre toute seule après un court instant.
+// ?mode=phone&step=3 ouvre directement une étape (pratique pour les captures).
+const qs = new URLSearchParams(location.search);
+if (qs.get('mode') === 'phone') document.querySelector('#mode [data-m="phone"]').click();
+else setTimeout(() => show(Math.min(STEPS.length - 1, Number(qs.get('step') || 1) - 1)), 700);
+if (qs.get('help')) setTimeout(() => { end(); setTimeout(() => helpBtn.click(), 500); }, 1200);
+if (qs.get('mode') === 'phone' && qs.get('step')) setTimeout(() => show(Number(qs.get('step')) - 1), 900);
+</script>
+</body>
+</html>

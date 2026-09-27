@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guide pilote · Fly Horizons</title>
+<meta name="description" content="Maquette du guide pilote v2 : accueil à onglets et cartes, pages détaillées par page de l'espace et par parcours.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Tokens Studio (app/globals.css) ; muted et warn un peu plus foncés : on lit du texte */
+:root {
+  --bg: #f5f6f8; --surface: #f4f5f7; --surface-hover: #eceef2;
+  --line: #eceef2; --line-soft: #f2f3f6; --line-strong: #dcdfe6;
+  --text: #0f1117; --text-2: #4d5463; --muted: #626977;
+  --ink: #0b2238; --ink-soft: #e8edf3; --gold: #F2B705; --gold-soft: #fdf4d6; --gold-text: #8a6400;
+  --ok: #16794a; --ok-soft: #e7f5ec; --warn: #9a4a08; --warn-soft: #fff3e6; --bad: #c4372c; --bad-soft: #fdecea;
+  --info: #2b5cb8; --info-soft: #eaf0fb;
+  --shadow-sm: 0 1px 2px rgba(15,17,23,.03);
+  --shadow-md: 0 4px 12px -2px rgba(15,17,23,.06), 0 2px 4px -2px rgba(15,17,23,.04);
+  --shadow-panel: 0 30px 60px -20px rgba(15,17,23,.35);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: Poppins, system-ui, sans-serif; font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+button { font-family: inherit; cursor: pointer; }
+svg.i { width: 16px; height: 16px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.num { font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+
+/* ── Coque de l'espace pilote ──────────────────────────────────────────── */
+.rail { position: fixed; inset: 0 auto 0 0; width: 76px; background: #fff; border-right: 1px solid var(--line); padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; z-index: 20; }
+.rail img { width: 28px; height: 28px; margin: 0 0 14px 12px; }
+.rail a { width: 52px; height: 40px; border-radius: 11px; display: grid; place-items: center; color: var(--text-2); }
+.rail a.on { background: var(--ink-soft); color: var(--ink); }
+.rail .gap { flex: 1; }
+.shell { padding-left: 76px; }
+.page { max-width: 1120px; margin: 0 auto; padding: 26px 28px 80px; }
+.tabbar { display: none; }
+
+/* ── En-tête ───────────────────────────────────────────────────────────── */
+.back { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; font-weight: 500; color: var(--muted); text-decoration: none; margin-bottom: 8px; }
+.back:hover { color: var(--text); }
+.head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.head h1 { margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.2; }
+.search { height: 38px; width: 280px; border: 1px solid var(--line-strong); border-radius: 11px; background: #fff; display: flex; align-items: center; gap: 8px; padding: 0 12px; }
+.search input { border: 0; outline: 0; font: inherit; font-size: 13px; width: 100%; background: transparent; color: var(--text); }
+.search:focus-within { border-color: var(--ink); box-shadow: 0 0 0 3px var(--ink-soft); }
+
+/* ── Bandeau de départ ─────────────────────────────────────────────────── */
+.start { margin-top: 20px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 20px; align-items: center; background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 20px 22px; box-shadow: var(--shadow-sm); }
+.start b { display: block; font-size: 15px; font-weight: 600; }
+.start p { margin: 2px 0 0; font-size: 13px; color: var(--text-2); }
+.progress4 { display: flex; gap: 6px; margin-top: 12px; }
+.progress4 span { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px 0 6px; border-radius: 999px; background: var(--surface); font-size: 12px; font-weight: 550; color: var(--text-2); }
+.progress4 span i { width: 18px; height: 18px; border-radius: 99px; display: grid; place-items: center; background: #fff; border: 1.5px solid var(--line-strong); }
+.progress4 span.done { background: var(--ok-soft); color: var(--ok); }
+.progress4 span.done i { background: var(--ok); border-color: var(--ok); color: #fff; }
+.progress4 span.done i svg { width: 11px; height: 11px; stroke-width: 3; }
+
+/* ── Onglets (PillTabs Studio) ─────────────────────────────────────────── */
+.tabs { margin: 26px 0 18px; display: inline-flex; gap: 2px; background: var(--surface-hover); border-radius: 11px; padding: 3px; }
+.tabs button { border: 0; background: transparent; height: 34px; padding: 0 14px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 550; color: var(--text-2); }
+.tabs button.on { background: #fff; color: var(--text); box-shadow: 0 1px 2px rgba(15,17,23,.08); }
+.tabs em { font-style: normal; font-size: 11px; font-weight: 600; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px; background: var(--line-strong); color: var(--text-2); display: inline-grid; place-items: center; }
+.tabs button.on em { background: var(--ink); color: #fff; }
+.tab-intro { font-size: 13.5px; color: var(--text-2); margin: -4px 0 16px; max-width: 640px; }
+
+/* ── Cartes ────────────────────────────────────────────────────────────── */
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.card { display: flex; gap: 14px; align-items: flex-start; background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 18px; text-decoration: none; color: var(--text); box-shadow: var(--shadow-sm); transition: border-color .2s, box-shadow .2s; position: relative; }
+.card:hover { border-color: var(--line-strong); box-shadow: var(--shadow-md); }
+.card .ic { width: 42px; height: 42px; border-radius: 12px; background: var(--surface); color: var(--ink); display: grid; place-items: center; flex-shrink: 0; }
+.card .ic svg { width: 20px; height: 20px; }
+.card.feat .ic { background: var(--ink); color: #fff; }
+.card b { display: block; font-size: 14.5px; font-weight: 600; line-height: 1.3; letter-spacing: -0.01em; }
+.card p { margin: 3px 0 0; font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+.card .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.chip { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: 999px; font-size: 11.5px; font-weight: 600; background: var(--surface); color: var(--text-2); }
+.chip svg { width: 12px; height: 12px; }
+.chip.gold { background: var(--gold-soft); color: var(--gold-text); }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+.card .arrow { position: absolute; top: 18px; right: 16px; color: var(--line-strong); transition: color .2s, transform .2s; }
+.card:hover .arrow { color: var(--ink); transform: translateX(2px); }
+.card.soon { opacity: .6; }
+.group-title { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 24px 0 10px; }
+.group-title:first-child { margin-top: 0; }
+.empty { text-align: center; padding: 50px 20px; color: var(--muted); font-size: 13.5px; }
+
+/* ── Page détaillée ────────────────────────────────────────────────────── */
+.detail { display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: 40px; margin-top: 18px; }
+.lede { font-size: 15px; color: var(--text-2); max-width: 680px; margin: 6px 0 0; }
+.facts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.otp { position: sticky; top: 24px; align-self: start; }
+.otp p { font-size: 11.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+.otp a { display: block; font-size: 13px; color: var(--text-2); text-decoration: none; padding: 6px 12px; border-left: 2px solid var(--line-strong); }
+.otp a:hover { color: var(--text); border-color: var(--ink); }
+.otp .rel { margin-top: 22px; }
+.otp .rel a { border: 0; padding: 7px 0; display: flex; gap: 8px; align-items: center; font-weight: 550; color: var(--ink); }
+.sec { padding-top: 34px; scroll-margin-top: 20px; }
+.sec h2 { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 8px; color: var(--text); }
+.sec p, .sec li { color: var(--text-2); }
+.sec p { margin: 8px 0; max-width: 680px; }
+.sec ul { padding-left: 20px; max-width: 680px; margin: 8px 0; }
+.sec li { margin: 4px 0; }
+.sec strong { color: var(--text); font-weight: 600; }
+.callout { display: flex; gap: 12px; padding: 13px 15px; border-radius: 14px; font-size: 13.5px; line-height: 1.55; margin: 14px 0; max-width: 700px; }
+.callout svg { margin-top: 3px; }
+.callout.warn { background: var(--warn-soft); color: var(--warn); }
+.callout.info { background: var(--info-soft); color: var(--info); }
+.callout b { font-weight: 600; }
+
+/* Scène d'illustration (vrais composants en démo dans la version finale) */
+.stage { background: linear-gradient(160deg, #e9edf3, #dfe5ee); border-radius: 20px; padding: 26px; margin: 16px 0 8px; position: relative; overflow: hidden; }
+.stage::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(rgba(11,34,56,.07) 1px, transparent 1px); background-size: 18px 18px; }
+.stage > * { position: relative; }
+.demo-tag { position: absolute; top: 12px; right: 14px; z-index: 2; }
+.cap { font-size: 12px; color: var(--muted); margin: 0 0 18px; }
+
+/* Tiroir du vol */
+.panel { background: #fff; border-radius: 20px; box-shadow: var(--shadow-panel); overflow: hidden; max-width: 520px; margin: 0 auto; }
+.dr-head { display: flex; gap: 14px; align-items: center; padding: 18px 20px 14px; }
+.tile { width: 44px; height: 48px; border-radius: 11px; background: var(--ink); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; flex-shrink: 0; }
+.tile small { font-size: 11px; font-weight: 600; opacity: .75; text-transform: uppercase; }
+.tile b { font-size: 18px; font-weight: 700; margin-top: 3px; }
+.dr-head b { display: block; font-size: 15px; font-weight: 600; }
+.dr-head span { font-size: 12.5px; color: var(--muted); }
+.pills { display: flex; gap: 4px; padding: 0 16px 12px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.pills span { height: 30px; padding: 0 11px; border-radius: 999px; font-size: 12px; font-weight: 550; display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); white-space: nowrap; }
+.pills span.on { background: var(--surface); color: var(--text); }
+.pills svg { width: 14px; height: 14px; }
+.dr-body { padding: 18px 20px 20px; }
+.journey { display: flex; margin: 4px 0 20px; }
+.journey button { flex: 1; min-width: 0; border: 0; background: none; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 7px; position: relative; font-size: 11.5px; font-weight: 550; color: var(--muted); }
+.journey button::before { content: ""; position: absolute; top: 5px; right: 50%; width: 100%; height: 2px; background: var(--line-strong); }
+.journey button:first-child::before { display: none; }
+.journey button.done::before, .journey button.now::before { background: var(--ok); }
+.journey i { width: 12px; height: 12px; border-radius: 999px; border: 2px solid var(--line-strong); background: #fff; position: relative; z-index: 1; }
+.journey button.done i { background: var(--ok); border-color: var(--ok); }
+.journey button.now i { border-color: var(--ink); box-shadow: 0 0 0 4px var(--ink-soft); }
+.journey button.done, .journey button.now { color: var(--text); }
+.journey button.sel { color: var(--ink); font-weight: 700; }
+.next { border: 1px solid var(--line); border-radius: 16px; padding: 14px; }
+.next .lbl { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.next b { display: block; font-size: 14.5px; font-weight: 600; margin: 4px 0 2px; }
+.next p { font-size: 12.5px; color: var(--text-2); margin: 0 0 12px; line-height: 1.5; }
+.next .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 36px; padding: 0 14px; border-radius: 11px; font-size: 12.5px; font-weight: 550; border: 0; white-space: nowrap; text-decoration: none; }
+.btn-p { background: var(--ink); color: #fff; }
+.btn-s { background: #fff; color: var(--text); border: 1px solid var(--line-strong); }
+.badge { display: inline-flex; align-items: center; height: 24px; padding: 0 9px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.b-warn { background: var(--warn-soft); color: var(--warn); }
+.b-gold { background: var(--gold-soft); color: var(--gold-text); }
+.side { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+.side > div { background: #fff; border-radius: 16px; padding: 16px; border: 1px solid var(--line); }
+.side h4 { margin: 0 0 8px; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; display: flex; gap: 8px; align-items: center; }
+.side ul { margin: 0; padding-left: 18px; font-size: 13px; }
+.side li { margin: 4px 0; color: var(--text-2); }
+.mail { display: flex; gap: 10px; align-items: flex-start; padding: 7px 0; border-top: 1px solid var(--line-soft); }
+.mail:first-of-type { border-top: 0; }
+.mail img { width: 26px; height: 26px; border-radius: 7px; }
+.mail b { display: block; font-weight: 600; font-size: 12.5px; line-height: 1.35; }
+.mail span { font-size: 12px; color: var(--muted); }
+
+/* Étapes numérotées du parcours */
+.steps { counter-reset: st; list-style: none; padding: 0 !important; margin: 14px 0; max-width: 700px; }
+.steps li { counter-increment: st; display: grid; grid-template-columns: 30px 1fr; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); margin: 0 !important; }
+.steps li::before { content: counter(st); width: 26px; height: 26px; border-radius: 99px; background: var(--ink); color: #fff; font-size: 12px; font-weight: 700; display: grid; place-items: center; }
+.steps b { display: block; color: var(--text); font-weight: 600; }
+
+.nextpage { margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.nextpage a { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; text-decoration: none; }
+.nextpage a:hover { border-color: var(--line-strong); box-shadow: var(--shadow-md); }
+.nextpage small { font-size: 12px; color: var(--muted); display: block; }
+.nextpage b { font-size: 14.5px; font-weight: 600; color: var(--ink); }
+.nextpage a:last-child { text-align: right; }
+.soonbox { margin-top: 24px; background: #fff; border: 1px dashed var(--line-strong); border-radius: 20px; padding: 40px; text-align: center; color: var(--text-2); }
+.soonbox b { display: block; font-size: 16px; color: var(--text); margin-bottom: 6px; }
+
+/* ── Téléphone ─────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .rail { display: none; }
+  .shell { padding-left: 0; }
+  .page { padding: 20px 16px 120px; }
+  .tabbar { display: flex; position: fixed; left: 14px; right: 14px; bottom: 16px; height: 62px; background: rgba(255,255,255,.92); backdrop-filter: blur(14px); border-radius: 22px; box-shadow: 0 12px 30px -10px rgba(15,17,23,.3); align-items: center; justify-content: space-between; padding: 0 8px; z-index: 20; }
+  .tabbar span { height: 46px; min-width: 46px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; color: var(--text-2); font-size: 13px; font-weight: 600; }
+  .tabbar span.on { background: var(--ink); color: #fff; padding: 0 16px; }
+  .cards { grid-template-columns: 1fr; }
+  .search { display: none; }
+  .start { grid-template-columns: 1fr; }
+  .tabs { display: flex; width: 100%; }
+  .tabs button { flex: 1; justify-content: center; padding: 0 6px; }
+  .tabs button:not(.on) .lb { display: none; }
+  .detail { grid-template-columns: 1fr; gap: 0; }
+  .otp { display: none; }
+  .side, .nextpage { grid-template-columns: 1fr; }
+  .stage { padding: 14px; }
+  .progress4 { flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-dash" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></symbol>
+  <symbol id="i-plane" viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></symbol>
+  <symbol id="i-takeoff" viewBox="0 0 24 24"><path d="M2 22h20M6.4 17.4 3 13.9l2.1-.8 3 1.9 3.4-2-6-4.8 2.3-.9 8.1 3.1 3.2-1.6c1.1-.6 2.4-.2 2.9.9.5 1-.1 2.2-1.1 2.7l-12 5.8c-.9.4-1.9.2-2.5-.5z"/></symbol>
+  <symbol id="i-nav" viewBox="0 0 24 24"><path d="m3 11 19-9-9 19-2-8z"/></symbol>
+  <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1z"/><path d="M8 7h8M8 11h8M8 15h5"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="i-scale" viewBox="0 0 24 24"><path d="m16 16 3-8 3 8c-.9.7-1.9 1-3 1s-2.1-.3-3-1zM2 16l3-8 3 8c-.9.7-1.9 1-3 1s-2.1-.3-3-1zM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.6z"/><path d="M13 2v7h7"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></symbol>
+  <symbol id="i-rocket" viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.3-2 5-2 5s3.7-.5 5-2c.7-.8.7-2.1-.1-2.9a2.2 2.2 0 0 0-2.9-.1zM12 15l-3-3a22 22 0 0 1 2-3.9A12.9 12.9 0 0 1 22 2c0 2.7-.8 7.5-6 11a22.4 22.4 0 0 1-4 2z"/><path d="M9 12H4s.6-3 2-4c1.6-1.1 5 0 5 0M12 15v5s3-.6 4-2c1.1-1.6 0-5 0-5"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></symbol>
+  <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></symbol>
+  <symbol id="i-msg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.7 18-8-14a2 2 0 0 0-3.5 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m10 8 6 4-6 4z"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+  <symbol id="i-land" viewBox="0 0 24 24"><path d="M2 22h20M3.8 11.9l-1.3-4a1 1 0 0 1 1.2-1.3l.8.2 3.6 3.5 7.4 1.9a2.3 2.3 0 0 1-1.1 4.5z"/></symbol>
+  <symbol id="i-cash" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/></symbol>
+  <symbol id="i-dl" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+  <symbol id="i-cal2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M12 14v3l2 1"/></symbol>
+</svg>
+
+<aside class="rail" aria-label="Navigation pilote">
+  <img src="public/icone.svg" alt="">
+  <a title="Tableau de bord"><svg class="i"><use href="#i-dash"/></svg></a>
+  <a title="Mes vols"><svg class="i"><use href="#i-plane"/></svg></a>
+  <a title="Mes annonces"><svg class="i"><use href="#i-takeoff"/></svg></a>
+  <a title="Itinéraires"><svg class="i"><use href="#i-nav"/></svg></a>
+  <a title="Transactions"><svg class="i"><use href="#i-receipt"/></svg></a>
+  <a title="Disponibilités"><svg class="i"><use href="#i-cal"/></svg></a>
+  <a title="Masse & centrage"><svg class="i"><use href="#i-scale"/></svg></a>
+  <a title="Logbook"><svg class="i"><use href="#i-note"/></svg></a>
+  <a title="Mon profil"><svg class="i"><use href="#i-user"/></svg></a>
+  <span class="gap"></span>
+  <a class="on" title="Guide pilote"><svg class="i"><use href="#i-book"/></svg></a>
+  <a title="Signaler un problème"><svg class="i"><use href="#i-flag"/></svg></a>
+</aside>
+
+<div class="shell"><div class="page" id="app"></div></div>
+
+<nav class="tabbar" aria-label="Navigation pilote">
+  <span><svg class="i"><use href="#i-dash"/></svg></span>
+  <span><svg class="i"><use href="#i-plane"/></svg></span>
+  <span><svg class="i"><use href="#i-scale"/></svg></span>
+  <span><svg class="i"><use href="#i-takeoff"/></svg></span>
+  <span class="on"><svg class="i"><use href="#i-more"/></svg>Plus</span>
+</nav>
+
+<script>
+const I = n => `<svg class="i"><use href="#i-${n}"/></svg>`;
+
+// ── Contenu de l'accueil ──────────────────────────────────────────────────
+// visite: la page a une visite guidée ; min: temps de lecture
+const TABS = [
+  { key: 'demarrer', label: 'Démarrer', icon: 'rocket',
+    intro: 'Les bases, à lire une fois avant votre premier passager.',
+    cards: [
+      { id: 'principe', icon: 'info', title: 'Le principe', desc: 'Mise en relation, partage de frais, vous êtes seul commandant de bord.', min: 2, feat: true },
+      { id: 'premiers-pas', icon: 'rocket', title: 'Premiers pas', desc: 'Les 4 choses à faire avant votre premier passager.', min: 2, feat: true },
+      { id: 'installer', icon: 'phone', title: 'Installer l\'app', desc: 'L\'espace sur l\'écran d\'accueil, pour recevoir les notifications.', min: 1 },
+    ] },
+  { key: 'pages', label: 'Les pages', icon: 'layers',
+    intro: 'Une fiche par page de votre espace : à quoi elle sert et comment l\'utiliser.',
+    cards: [
+      { id: 'dashboard', icon: 'dash', title: 'Tableau de bord', desc: 'Ce qui vous attend aujourd\'hui, en un coup d\'œil.', min: 1, visite: true },
+      { id: 'vols', icon: 'plane', title: 'Mes vols', desc: 'Toutes vos réservations et le tiroir de chaque vol.', min: 4, visite: true },
+      { id: 'annonces', icon: 'takeoff', title: 'Mes annonces', desc: 'Publier un vol, fixer le tarif, gérer les groupes.', min: 4, visite: true },
+      { id: 'dispos', icon: 'cal', title: 'Disponibilités', desc: 'Les créneaux où les passagers peuvent réserver.', min: 2, visite: true },
+      { id: 'transactions', icon: 'receipt', title: 'Transactions', desc: 'Ce que vous avez reçu et ce qui reste à recevoir.', min: 2, visite: true },
+      { id: 'itineraires', icon: 'nav', title: 'Itinéraires', desc: 'Vos routes enregistrées, réutilisables partout.', min: 1, visite: true },
+      { id: 'mb', icon: 'scale', title: 'Masse & centrage', desc: 'Chargement, performances et météo avant le vol.', min: 3, visite: true },
+      { id: 'profil', icon: 'user', title: 'Mon profil', desc: 'Licence, médical, IBAN et justificatifs.', min: 2, visite: true },
+      { id: 'logbook', icon: 'note', title: 'Logbook', desc: 'Votre carnet de vol arrive bientôt.', soon: true },
+    ] },
+  { key: 'parcours', label: 'Les parcours', icon: 'route',
+    intro: 'Ce qui traverse plusieurs pages, étape par étape.',
+    cards: [
+      { id: 'reservation', icon: 'route', title: 'Une réservation de A à Z', desc: 'De la demande du passager au vol effectué.', min: 5, feat: true, ready: true },
+      { id: 'paiement', icon: 'cash', title: 'Le paiement', desc: 'Virement direct, QR code, reçu, relances.', min: 3 },
+      { id: 'groupe', icon: 'users', title: 'Vendre à la place', desc: 'Plusieurs passagers, un groupe, un prix figé à la clôture.', min: 2 },
+      { id: 'notifs', icon: 'bell', title: 'Emails et notifications', desc: 'Qui reçoit quoi, et quand.', min: 2 },
+      { id: 'imprevu', icon: 'alert', title: 'En cas d\'imprévu', desc: 'Autre créneau, report, et en dernier recours.', min: 2 },
+    ] },
+  { key: 'aide', label: 'Règles et aide', icon: 'shield',
+    intro: 'Le cadre à respecter, et où trouver de l\'aide.',
+    cards: [
+      { id: 'charte', icon: 'shield', title: 'La charte en clair', desc: 'Les 8 règles qui ne se négocient pas.', min: 3, feat: true },
+      { id: 'faq', icon: 'help', title: 'Questions fréquentes', desc: 'Paiement, notifications, annulation, documents.', min: 3 },
+      { id: 'contact', icon: 'msg', title: 'Nous contacter', desc: 'WhatsApp, email, ou signaler un problème.', min: 1 },
+    ] },
+];
+const ALL = TABS.flatMap(t => t.cards.map(c => ({ ...c, tab: t.key })));
+
+function card(c) {
+  const meta = c.soon ? `<span class="chip">Bientôt</span>`
+    : `<span class="chip">${I('clock')}${c.min} min</span>${c.visite ? `<span class="chip gold">${I('play')}Visite guidée</span>` : ''}`;
+  return `<a class="card${c.feat ? ' feat' : ''}${c.soon ? ' soon' : ''}" href="#/${c.id}">
+    <span class="ic">${I(c.icon)}</span>
+    <div><b>${c.title}</b><p>${c.desc}</p><div class="meta">${meta}</div></div>
+    ${c.soon ? '' : `<span class="arrow">${I('right')}</span>`}
+  </a>`;
+}
+
+let currentTab = 'demarrer', query = '';
+function renderHome() {
+  const tab = TABS.find(t => t.key === currentTab);
+  const list = query
+    ? ALL.filter(c => (c.title + ' ' + c.desc).toLowerCase().includes(query.toLowerCase()))
+    : tab.cards;
+  document.getElementById('app').innerHTML = `
+    <div class="head">
+      <h1>Guide pilote</h1>
+      <label class="search">${I('search')}<input id="q" type="search" placeholder="Chercher : paiement, route, IBAN…" value="${query}"></label>
+    </div>
+    <div class="start">
+      <div>
+        <b>Bienvenue dans votre espace</b>
+        <p>Suivez les premiers pas, puis gardez ce guide sous la main. Chaque page a aussi son bouton « ? ».</p>
+        <div class="progress4">
+          <span class="done"><i>${I('check')}</i>Profil</span>
+          <span class="done"><i>${I('check')}</i>Disponibilités</span>
+          <span><i></i>Première annonce</span>
+          <span><i></i>App installée</span>
+        </div>
+      </div>
+      <a class="btn btn-p" href="#/premiers-pas">Continuer les premiers pas ${I('right')}</a>
+    </div>
+    <div class="tabs" role="tablist">
+      ${TABS.map(t => `<button type="button" role="tab" class="${!query && t.key === currentTab ? 'on' : ''}" data-t="${t.key}">${I(t.icon)}<span class="lb">${t.label}</span><em>${t.cards.length}</em></button>`).join('')}
+    </div>
+    ${query ? `<p class="tab-intro">${list.length} résultat${list.length > 1 ? 's' : ''} pour « ${query} »</p>` : `<p class="tab-intro">${tab.intro}</p>`}
+    ${list.length ? `<div class="cards">${list.map(card).join('')}</div>` : `<div class="empty">Aucune fiche ne correspond. Essayez « paiement », « route » ou « IBAN ».</div>`}
+  `;
+  document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { currentTab = b.dataset.t; query = ''; renderHome(); });
+  const q = document.getElementById('q');
+  q.oninput = () => { query = q.value; const pos = q.selectionStart; renderHome(); const n = document.getElementById('q'); n.focus(); n.setSelectionRange(pos, pos); };
+}
+
+// ── Page parcours : une réservation de A à Z ─────────────────────────────
+const MAIL = (t, s) => `<div class="mail"><img src="public/icone.svg" alt=""><div><b>${t}</b><span>${s}</span></div></div>`;
+const JOURNEY = [
+  { label: 'Demande',
+    next: { lbl: 'Prochaine étape', t: 'Confirmer sam. 12 oct. à 10:00', p: 'Julie demande sam. 12 oct. Tracez d\'abord la route : elle part avec la confirmation.', acts: `<span class="btn btn-p">${I('route')}Tracer la route</span><span class="btn btn-s">${I('cal2')}Autre créneau</span>` },
+    you: ['Vous recevez l\'email « Nouvelle demande » et une notification.', 'Vous tracez la route (vol avec itinéraire), puis vous confirmez. Ou vous proposez un autre créneau.', 'Vous avez 72 h avant l\'annulation automatique.'],
+    mails: [['Demande de vol reçue', 'au passager, dès sa réservation'], ['[Nouvelle demande] Julie D. · 12/10 à 10:00', 'à vous']] },
+  { label: 'Créneau',
+    next: { lbl: 'Confirmation', t: 'Confirmer sam. 12 oct. à 10:00 ?', p: 'Julie reçoit un email avec la date, l\'heure et votre route. Le vol passe en « Vol confirmé ».', acts: `<span class="btn btn-p">${I('send')}Confirmer et envoyer</span>` },
+    you: ['Vous confirmez : l\'heure est fixée, la route part avec.', 'Si vous aviez proposé un autre créneau, c\'est le passager qui accepte.'],
+    mails: [['Votre itinéraire pour le 12 octobre', 'au passager, avec la route à valider']] },
+  { label: 'Route',
+    next: { lbl: 'En attente du passager', t: 'Route envoyée', p: 'Julie valide la route ou demande une modification. Vous recevez sa réponse par email et par notification.', acts: `<span class="badge b-warn">Route envoyée, en attente</span>` },
+    you: ['S\'il valide : rien à faire, le lien de paiement lui part.', 'S\'il demande une modification : ajustez le tracé dans l\'onglet Route et renvoyez-le.'],
+    mails: [['Itinéraire validé', 'à vous'], ['Modification demandée', 'à vous, avec son commentaire']] },
+  { label: 'Paiement',
+    next: { lbl: 'Règlement', t: 'En attente du virement', p: 'Julie a reçu votre IBAN et un QR code. Quand l\'argent est sur votre compte, marquez-le reçu.', acts: `<span class="btn btn-p">${I('check')}Marquer comme reçu</span><span class="btn btn-s">${I('cash')}En espèces</span>` },
+    you: ['Vous vérifiez votre compte, puis « Marquer comme reçu » (montant modifiable).', 'Vol à durée fixe : envoyez le lien avec « Renvoyer le lien ».'],
+    mails: [['Réglez votre vol partagé', 'au passager, avec IBAN et QR code'], ['Paiement confirmé', 'au passager : son reçu se débloque']] },
+  { label: 'Effectué',
+    next: { lbl: 'Après le vol', t: 'Vol confirmé · sam. 12 oct. à 10:00', p: 'Préparez la masse et centrage. « Vol effectué » est disponible 8 h après l\'heure du décollage.', acts: `<span class="btn btn-s">${I('land')}Marquer le vol effectué</span><span class="btn btn-s">${I('dl')}Reçu client</span>` },
+    you: ['48 h avant : notification de rappel (météo, M&B).', 'Après le vol : « Marquer le vol effectué ».'],
+    mails: [['Vol dans 48 h', 'notification pour vous']] },
+];
+let jSel = 0;
+function renderJourney() {
+  const s = JOURNEY[jSel];
+  document.getElementById('journey').innerHTML = JOURNEY.map((x, i) =>
+    `<button type="button" class="${i < jSel ? 'done' : i === jSel ? 'now sel' : ''}" data-i="${i}"><i></i>${x.label}</button>`).join('');
+  document.getElementById('next').innerHTML = `<div class="lbl">${s.next.lbl}</div><b>${s.next.t}</b><p>${s.next.p}</p><div class="acts">${s.next.acts}</div>`;
+  document.getElementById('side').innerHTML =
+    `<div><h4>${I('user')}Ce que vous faites</h4><ul>${s.you.map(x => `<li>${x}</li>`).join('')}</ul></div>` +
+    `<div><h4>${I('send')}Emails envoyés</h4>${s.mails.map(m => MAIL(m[0], m[1])).join('')}</div>`;
+  document.querySelectorAll('#journey button').forEach(b => b.onclick = () => { jSel = Number(b.dataset.i); renderJourney(); });
+}
+
+function renderReservation() {
+  document.getElementById('app').innerHTML = `
+    <a class="back" href="#/">${I('left')}Guide pilote</a>
+    <div class="head"><h1>Une réservation de A à Z</h1></div>
+    <p class="lede">Ce qui se passe entre la demande d'un passager et le vol effectué : ce que vous faites, ce que le système envoie tout seul, et ce que reçoit le passager.</p>
+    <div class="facts"><span class="chip">${I('clock')}5 min</span><span class="chip">${I('route')}Parcours</span><span class="chip">Pages : Mes vols, Transactions</span></div>
+
+    <div class="detail">
+      <div>
+        <div class="sec" id="s-vue">
+          <h2>La vue d'ensemble</h2>
+          <p>Chaque réservation s'ouvre dans <strong>Mes vols</strong>, sous forme de tiroir à quatre onglets : <strong>Aperçu</strong>, <strong>Route</strong>, <strong>Messages</strong> et <strong>Dossier</strong>. En haut de l'aperçu, une frise suit le vol en cinq étapes. Cliquez sur une étape pour voir ce qui s'y passe.</p>
+          <div class="stage">
+            <span class="demo-tag badge b-gold">Démo</span>
+            <div class="panel">
+              <div class="dr-head"><div class="tile"><small>sam</small><b>12</b></div><div><b>Julie Dupont · 2 passagers</b><span>Tour de la côte belge · 1 h 30</span></div></div>
+              <div class="pills"><span class="on">${I('info')}Aperçu</span><span>${I('route')}Route</span><span>${I('msg')}Messages</span><span>${I('folder')}Dossier</span></div>
+              <div class="dr-body"><div class="journey" id="journey"></div><div class="next" id="next"></div></div>
+            </div>
+          </div>
+          <p class="cap">Dans la version finale, ce tiroir est le vrai composant de l'espace pilote, avec des données fictives.</p>
+          <div class="side" id="side"></div>
+        </div>
+
+        <div class="sec" id="s-etapes">
+          <h2>Étape par étape</h2>
+          <ol class="steps">
+            <li><div><b>Un passager réserve</b>Il choisit un créneau dans vos disponibilités. Il reçoit « Demande de vol reçue », vous recevez « Nouvelle demande » et une notification.</div></li>
+            <li><div><b>Vous confirmez le créneau (sous 72 h)</b>Vol avec itinéraire : tracez d'abord la route, elle part avec la confirmation. Le créneau ne convient pas ? « Autre créneau ».</div></li>
+            <li><div><b>Le passager valide la route</b>Ou demande une modification : vous ajustez dans l'onglet Route et renvoyez.</div></li>
+            <li><div><b>Il paie par virement</b>La validation de la route lui envoie votre IBAN et un QR code. Vous marquez « reçu » quand l'argent est arrivé.</div></li>
+            <li><div><b>Vous volez, puis clôturez</b>« Vol effectué » est disponible 8 h après le décollage.</div></li>
+          </ol>
+          <div class="callout warn">${I('clock')}<span><b>Une demande bloque le créneau 72 heures.</b> Sans confirmation ni autre créneau proposé, elle est annulée automatiquement.</span></div>
+        </div>
+
+        <div class="sec" id="s-annuler">
+          <h2>Annuler une demande</h2>
+          <p>Avant paiement, « Annuler la demande » (en rouge, en bas du bloc Règlement) remet les places en vente. <strong>Aucun email n'est envoyé</strong> : prévenez le passager dans l'onglet Messages. Un vol confirmé, lui, ne s'annule que par Fly Horizons.</p>
+          <div class="callout info">${I('info')}<span>Pour un contretemps après confirmation, voir le parcours <a href="#/imprevu"><b>En cas d'imprévu</b></a>.</span></div>
+        </div>
+
+        <div class="nextpage">
+          <a href="#/principe"><small>Précédent</small><b>Le principe</b></a>
+          <a href="#/paiement"><small>Suivant</small><b>Le paiement</b></a>
+        </div>
+      </div>
+
+      <aside class="otp">
+        <p>Sur cette page</p>
+        <a href="#/reservation" data-s="s-vue">La vue d'ensemble</a>
+        <a href="#/reservation" data-s="s-etapes">Étape par étape</a>
+        <a href="#/reservation" data-s="s-annuler">Annuler une demande</a>
+        <div class="rel">
+          <p>Pages liées</p>
+          <a href="#/vols">${I('plane')}Mes vols</a>
+          <a href="#/transactions">${I('receipt')}Transactions</a>
+        </div>
+      </aside>
+    </div>`;
+  document.querySelectorAll('.otp a[data-s]').forEach(a => a.onclick = e => { e.preventDefault(); document.getElementById(a.dataset.s).scrollIntoView({ behavior: 'smooth' }); });
+  jSel = 0; renderJourney();
+}
+
+function renderSoon(c) {
+  document.getElementById('app').innerHTML = `
+    <a class="back" href="#/">${I('left')}Guide pilote</a>
+    <div class="head"><h1>${c.title}</h1></div>
+    <p class="lede">${c.desc}</p>
+    <div class="soonbox"><b>Fiche à maquetter</b>Même format que <a href="#/reservation">Une réservation de A à Z</a> : vue d'ensemble illustrée, étape par étape, pages liées. Le contenu est déjà prêt dans la première version du guide.</div>`;
+}
+
+function route() {
+  const id = (location.hash.replace(/^#\/?/, '') || '').split('?')[0];
+  window.scrollTo(0, 0);
+  if (!id) return renderHome();
+  if (id === 'reservation') return renderReservation();
+  const c = ALL.find(x => x.id === id);
+  if (c) { currentTab = c.tab; return renderSoon(c); }
+  renderHome();
+}
+addEventListener('hashchange', route);
+route();
+</script>
+</body>
+</html>

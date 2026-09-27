@@ -1,0 +1,897 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guide pilote · Fly Horizons</title>
+<meta name="description" content="Maquette du guide complet de l'espace pilote : principe, annonces, suivi des réservations, paiement, préparation, règles.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ── Tokens Studio (repris de app/globals.css, préfixe st-) ───────────────── */
+:root {
+  --bg: #f5f6f8; --surface: #f4f5f7; --surface-hover: #eceef2;
+  --line: #eceef2; --line-soft: #f2f3f6; --line-strong: #dcdfe6;
+  /* muted et warn un peu plus foncés que dans l'app : ici on lit du texte long (AA) */
+  --text: #0f1117; --text-2: #4d5463; --muted: #626977;
+  --ink: #0b2238; --ink-hover: #16334f; --ink-soft: #e8edf3;
+  --gold: #F2B705; --gold-soft: #fdf4d6; --gold-text: #8a6400;
+  --ok: #16794a; --ok-soft: #e7f5ec; --warn: #9a4a08; --warn-soft: #fff3e6;
+  --bad: #c4372c; --bad-soft: #fdecea; --info: #2b5cb8; --info-soft: #eaf0fb;
+  --shadow-sm: 0 1px 2px rgba(15,17,23,.03);
+  --shadow-md: 0 4px 12px -2px rgba(15,17,23,.06), 0 2px 4px -2px rgba(15,17,23,.04);
+  --shadow-lg: 0 14px 34px -10px rgba(15,17,23,.22);
+  --shadow-panel: 0 30px 60px -20px rgba(15,17,23,.35);
+  --r: 14px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: Poppins, system-ui, sans-serif; font-size: 15px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+a { color: var(--ink); }
+button { font-family: inherit; cursor: pointer; }
+.num { font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+svg.i { width: 16px; height: 16px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ── Mise en page ──────────────────────────────────────────────────────── */
+.top { position: sticky; top: 0; z-index: 30; background: rgba(245,246,248,.86); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+.top-in { max-width: 1240px; margin: 0 auto; display: flex; align-items: center; gap: 12px; padding: 12px 20px; }
+.top-in img { width: 28px; height: 28px; }
+.top-in b { font-size: 15px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em; }
+.top-in span { color: var(--muted); font-size: 13px; }
+.progress { height: 2px; background: var(--ink); transform-origin: left; transform: scaleX(0); }
+
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 20px 80px; display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 56px; }
+.toc { position: sticky; top: 74px; align-self: start; padding-top: 44px; }
+.toc p { font-size: 11.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px 12px; }
+.toc a { display: flex; gap: 12px; align-items: baseline; padding: 7px 12px; border-radius: 10px; text-decoration: none; color: var(--text-2); font-size: 13.5px; font-weight: 500; line-height: 1.35; }
+.toc a:hover { background: var(--surface-hover); color: var(--text); }
+.toc a.on { background: #fff; color: var(--ink); box-shadow: var(--shadow-md); font-weight: 600; }
+.toc a em { font-style: normal; font-size: 11.5px; font-weight: 700; color: var(--gold-text); min-width: 18px; }
+main { min-width: 0; }
+
+/* ── Hero ──────────────────────────────────────────────────────────────── */
+.hero { padding: 64px 0 40px; }
+.kicker { display: inline-flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-text); }
+.kicker::before { content: ""; width: 26px; height: 2px; background: var(--gold); }
+h1 { font-size: clamp(38px, 6vw, 64px); line-height: 1.02; letter-spacing: -0.035em; font-weight: 800; color: var(--ink); margin: 18px 0 18px; }
+h1 .dot, h2 .dot { color: var(--gold); }
+.lead { font-size: 18px; color: var(--text-2); max-width: 680px; margin: 0; }
+.quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 36px; }
+.quick a { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 16px; text-decoration: none; color: var(--text); box-shadow: var(--shadow-sm); transition: box-shadow .2s, transform .2s; }
+.quick a:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.quick b { display: block; font-size: 14px; font-weight: 600; margin: 10px 0 2px; }
+.quick span { font-size: 12.5px; color: var(--muted); line-height: 1.4; display: block; }
+.quick .ic { width: 34px; height: 34px; border-radius: 10px; background: var(--ink-soft); color: var(--ink); display: grid; place-items: center; }
+
+/* ── Chapitres ─────────────────────────────────────────────────────────── */
+section.ch { padding: 56px 0 8px; border-top: 1px solid var(--line-strong); scroll-margin-top: 60px; }
+.ch-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 8px; }
+.ch-n { font-size: 13px; font-weight: 800; color: var(--gold-text); }
+h2 { font-size: clamp(28px, 3.6vw, 38px); line-height: 1.1; letter-spacing: -0.03em; font-weight: 700; color: var(--ink); margin: 0; }
+h3 { font-size: 18px; letter-spacing: -0.015em; font-weight: 600; color: var(--text); margin: 34px 0 8px; }
+.ch p, .ch li { color: var(--text-2); }
+.ch p { margin: 10px 0; max-width: 720px; }
+.ch strong { color: var(--text); font-weight: 600; }
+.ch ul { padding-left: 20px; max-width: 720px; }
+.ch li { margin: 5px 0; }
+.intro { font-size: 16.5px; }
+
+.callout { display: flex; gap: 12px; padding: 14px 16px; border-radius: var(--r); font-size: 14px; line-height: 1.55; margin: 18px 0; max-width: 760px; }
+.callout svg { margin-top: 3px; }
+.callout.info { background: var(--info-soft); color: var(--info); }
+.callout.warn { background: var(--warn-soft); color: var(--warn); }
+.callout.ok { background: var(--ok-soft); color: var(--ok); }
+.callout.gold { background: var(--gold-soft); color: var(--gold-text); }
+.callout b { font-weight: 600; }
+
+/* Figure = écran reconstitué de l'espace pilote */
+figure { margin: 26px 0 30px; }
+figcaption { font-size: 12.5px; color: var(--muted); margin-top: 10px; display: flex; gap: 8px; align-items: center; }
+figcaption::before { content: ""; width: 14px; height: 1px; background: var(--muted); }
+.stage { background: linear-gradient(160deg, #e9edf3 0%, #dfe5ee 100%); border-radius: 22px; padding: 32px; position: relative; overflow: hidden; }
+.stage::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(rgba(11,34,56,.07) 1px, transparent 1px); background-size: 18px 18px; }
+.stage > * { position: relative; }
+.stage.center { display: flex; justify-content: center; }
+.panel { background: #fff; border-radius: 20px; box-shadow: var(--shadow-panel); overflow: hidden; }
+
+/* Éléments Studio */
+.badge { display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.badge svg { width: 12px; height: 12px; }
+.b-neutral { background: var(--surface); color: var(--text-2); }
+.b-ok { background: var(--ok-soft); color: var(--ok); }
+.b-warn { background: var(--warn-soft); color: var(--warn); }
+.b-bad { background: var(--bad-soft); color: var(--bad); }
+.b-info { background: var(--info-soft); color: var(--info); }
+.b-gold { background: var(--gold-soft); color: var(--gold-text); }
+.b-ink { background: var(--ink); color: #fff; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 38px; padding: 0 16px; border-radius: 11px; font-size: 13px; font-weight: 550; border: 0; white-space: nowrap; }
+.btn svg { width: 16px; height: 16px; }
+.btn-p { background: var(--ink); color: #fff; box-shadow: 0 1px 2px rgba(11,34,56,.25), 0 6px 14px -8px rgba(11,34,56,.6); }
+.btn-s { background: #fff; color: var(--text); border: 1px solid var(--line-strong); }
+.btn-full { width: 100%; }
+.field label { display: block; font-size: 12px; font-weight: 550; color: var(--text-2); margin-bottom: 6px; }
+.input { height: 40px; border: 1px solid var(--line-strong); border-radius: 11px; padding: 0 12px; display: flex; align-items: center; font-size: 13.5px; color: var(--text); background: #fff; width: 100%; font-family: inherit; }
+input.input:focus, select.input:focus { outline: none; border-color: var(--ink); box-shadow: 0 0 0 3px var(--ink-soft); }
+.hint { font-size: 11.5px; color: var(--muted); margin-top: 5px; line-height: 1.4; }
+.choice { border: 1.5px solid var(--line-strong); border-radius: 14px; padding: 12px 14px; background: #fff; text-align: left; width: 100%; }
+.choice b { display: block; font-size: 13px; font-weight: 600; color: var(--text); }
+.choice span { font-size: 12px; color: var(--muted); line-height: 1.4; }
+.choice.on { border-color: var(--ink); box-shadow: 0 0 0 3px var(--ink-soft); }
+.seg { display: inline-flex; background: var(--surface); border-radius: 10px; padding: 3px; gap: 2px; }
+.seg button { border: 0; background: transparent; height: 32px; min-width: 38px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--text-2); }
+.seg button.on { background: #fff; color: var(--ink); box-shadow: var(--shadow-md); }
+
+/* ── Schéma principe ───────────────────────────────────────────────────── */
+.actors { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 16px 8px 6px; }
+.actor { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 150px; text-align: center; }
+.actor .disc { width: 96px; height: 96px; border-radius: 999px; background: linear-gradient(160deg, #fff, #eef2f8); box-shadow: 0 20px 40px -20px rgba(11,34,56,.5); display: grid; place-items: center; color: var(--ink); border: 3px solid #fff; }
+.actor .disc svg { width: 40px; height: 40px; stroke-width: 1.7; }
+.actor.fh .disc { border-color: var(--gold); box-shadow: 0 20px 40px -18px rgba(242,183,5,.7), 0 0 0 8px rgba(242,183,5,.12); }
+.actor b { font-size: 14px; color: var(--ink); line-height: 1.2; }
+.actor small { font-size: 12px; color: var(--text-2); line-height: 1.35; }
+.link { flex: 1; height: 3px; background: var(--ink); border-radius: 2px; margin-top: -60px; position: relative; }
+.link span { position: absolute; left: 50%; top: -30px; transform: translateX(-50%); font-size: 11.5px; font-weight: 600; color: var(--text-2); background: rgba(255,255,255,.8); padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.paybar { margin: 26px auto 0; max-width: 560px; display: flex; align-items: center; gap: 12px; background: #fff; border-radius: 14px; padding: 12px 16px; box-shadow: var(--shadow-md); font-size: 13.5px; color: var(--text-2); }
+.paybar .coin { width: 34px; height: 34px; border-radius: 999px; background: radial-gradient(circle at 35% 30%, #ffd84d, var(--gold) 60%, #c99400); display: grid; place-items: center; font-weight: 800; color: var(--ink); flex-shrink: 0; }
+.paybar strong { color: var(--ink); }
+
+/* ── Premiers pas ──────────────────────────────────────────────────────── */
+.steps4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 22px 0; counter-reset: s; }
+.step4 { background: #fff; border-radius: 16px; padding: 18px; border: 1px solid var(--line); position: relative; }
+.step4::before { counter-increment: s; content: counter(s); position: absolute; top: 16px; right: 16px; width: 24px; height: 24px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 12px; font-weight: 700; display: grid; place-items: center; }
+.step4 .ic { width: 36px; height: 36px; border-radius: 10px; background: var(--gold-soft); color: var(--gold-text); display: grid; place-items: center; }
+.step4 b { display: block; margin: 12px 0 4px; font-size: 14.5px; font-weight: 600; }
+.step4 span { font-size: 13px; color: var(--text-2); line-height: 1.5; display: block; }
+.step4 a { display: inline-block; margin-top: 10px; font-size: 12.5px; font-weight: 600; text-decoration: none; }
+
+/* ── Profil ────────────────────────────────────────────────────────────── */
+.prof { max-width: 560px; margin: 0 auto; }
+.prof-head { padding: 18px 22px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+.prof-head b { font-size: 15px; font-weight: 600; }
+.tabs { display: flex; gap: 4px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.tabs span { height: 30px; padding: 0 12px; border-radius: 999px; font-size: 12.5px; font-weight: 550; display: inline-flex; align-items: center; color: var(--text-2); }
+.tabs span.on { background: var(--ink); color: #fff; }
+.row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 13px 22px; border-bottom: 1px solid var(--line-soft); font-size: 13.5px; }
+.row:last-child { border-bottom: 0; }
+.row .l b { display: block; font-weight: 550; color: var(--text); }
+.row .l span { font-size: 12px; color: var(--muted); }
+
+/* ── Assistant d'annonce (interactif) ──────────────────────────────────── */
+.wiz { max-width: 540px; margin: 0 auto; padding: 22px; }
+.wiz-bars { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+.wiz-bars i { height: 4px; border-radius: 99px; background: var(--line); }
+.wiz-bars i.on { background: var(--ink); }
+.wiz-step { font-size: 12.5px; color: var(--muted); margin: 8px 0 16px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sum { background: var(--surface); border-radius: 14px; padding: 12px 16px; margin-top: 14px; }
+.sum div { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; padding: 5px 0; color: var(--text-2); }
+.sum div b { color: var(--text); font-weight: 500; }
+.sum div.strong b { font-size: 15px; font-weight: 600; }
+.sum p { font-size: 11.5px; color: var(--muted); margin: 6px 0 0; line-height: 1.4; }
+.check { display: flex; gap: 10px; border-radius: 14px; padding: 12px 14px; font-size: 13px; margin-top: 12px; }
+.check.ok { background: var(--ok-soft); color: var(--ok); }
+.check.warn { background: var(--warn-soft); color: var(--warn); }
+.check b { font-weight: 600; display: block; line-height: 1.4; }
+.check small { font-size: 11.5px; opacity: .85; }
+.mins { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13.5px; max-width: 720px; }
+.mins th, .mins td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.mins th { font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.mins td:last-child { font-weight: 600; color: var(--ink); }
+.five { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 18px 0 8px; }
+.five div { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px; }
+.five em { font-style: normal; font-size: 11px; font-weight: 700; color: var(--gold-text); }
+.five b { display: block; font-size: 13.5px; margin: 2px 0 3px; }
+.five span { font-size: 12px; color: var(--text-2); line-height: 1.45; display: block; }
+
+/* ── Disponibilités ────────────────────────────────────────────────────── */
+.dispo { max-width: 620px; margin: 0 auto; padding: 20px 22px; }
+.dispo-h { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
+.dispo-h b { font-size: 15px; font-weight: 600; }
+.dispo-h span { font-size: 12px; color: var(--muted); }
+.week { display: grid; grid-template-columns: 44px repeat(7, 1fr); gap: 6px; }
+.week .d { text-align: center; font-size: 11.5px; font-weight: 600; color: var(--muted); }
+.week .h { font-size: 11px; color: var(--muted); align-self: center; }
+.week .c { height: 34px; border-radius: 8px; background: var(--surface); }
+.week .c.o { background: var(--gold-soft); border: 1.5px solid var(--gold); }
+.week .c.x { background: repeating-linear-gradient(45deg, var(--surface), var(--surface) 5px, #e6e8ee 5px, #e6e8ee 10px); }
+.week .c.b { background: var(--ink); color: #fff; font-size: 10.5px; font-weight: 600; display: grid; place-items: center; }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: var(--text-2); }
+.legend i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 6px; }
+
+/* ── Tiroir du vol (interactif) ────────────────────────────────────────── */
+.drawer { max-width: 520px; margin: 0 auto; }
+.dr-head { display: flex; gap: 14px; align-items: center; padding: 18px 20px 14px; }
+.datetile { width: 52px; height: 56px; border-radius: 12px; background: var(--ink); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; flex-shrink: 0; }
+.datetile small { font-size: 10px; font-weight: 600; opacity: .7; text-transform: uppercase; }
+.datetile b { font-size: 20px; font-weight: 700; margin-top: 3px; }
+.dr-head .t b { display: block; font-size: 15.5px; font-weight: 600; }
+.dr-head .t span { font-size: 12.5px; color: var(--muted); }
+.pills { display: flex; gap: 4px; padding: 0 16px 12px; border-bottom: 1px solid var(--line); }
+.pills span { height: 30px; padding: 0 11px; border-radius: 999px; font-size: 12px; font-weight: 550; display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); }
+.pills span.on { background: var(--surface); color: var(--text); }
+.pills svg { width: 14px; height: 14px; }
+.dr-body { padding: 18px 20px 20px; }
+.journey { display: flex; margin: 4px 0 20px; }
+.journey button { flex: 1; min-width: 0; border: 0; background: none; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 7px; position: relative; font-size: 11.5px; font-weight: 550; color: var(--muted); }
+.journey button::before { content: ""; position: absolute; top: 5px; right: 50%; width: 100%; height: 2px; background: var(--line-strong); }
+.journey button:first-child::before { display: none; }
+.journey button.done::before, .journey button.now::before { background: var(--ok); }
+.journey i { width: 12px; height: 12px; border-radius: 999px; border: 2px solid var(--line-strong); background: #fff; position: relative; z-index: 1; }
+.journey button.done i { background: var(--ok); border-color: var(--ok); }
+.journey button.now i { border-color: var(--ink); box-shadow: 0 0 0 4px var(--ink-soft); }
+.journey button.done, .journey button.now { color: var(--text); }
+.journey button.sel { color: var(--ink); font-weight: 700; }
+.next { border: 1px solid var(--line); border-radius: 16px; padding: 14px; }
+.next .lbl { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.next b { display: block; font-size: 14.5px; font-weight: 600; margin: 4px 0 2px; }
+.next p { font-size: 12.5px; color: var(--text-2); margin: 0 0 12px; line-height: 1.5; }
+.next .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.side { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; }
+.side > div { background: #fff; border-radius: 16px; padding: 16px; border: 1px solid var(--line); }
+.side h4 { margin: 0 0 8px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; display: flex; gap: 8px; align-items: center; }
+.side ul { margin: 0; padding-left: 18px; font-size: 13.5px; }
+.side li { margin: 4px 0; }
+.mail { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; padding: 7px 0; border-top: 1px solid var(--line-soft); }
+.mail:first-of-type { border-top: 0; }
+.mail img { width: 26px; height: 26px; border-radius: 7px; }
+.mail b { display: block; font-weight: 600; color: var(--text); font-size: 13px; line-height: 1.35; }
+.mail span { font-size: 12px; color: var(--muted); }
+
+/* ── Règlement ─────────────────────────────────────────────────────────── */
+.regl { max-width: 440px; margin: 0 auto; padding: 16px; }
+.regl-box { border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: grid; gap: 12px; }
+.regl-top { display: flex; justify-content: space-between; align-items: center; }
+.regl-top b { font-size: 13px; font-weight: 600; }
+.amount { background: var(--surface); border-radius: 14px; padding: 14px; }
+.amount small { font-size: 12.5px; color: var(--muted); }
+.amount .v { font-size: 28px; font-weight: 500; letter-spacing: -0.03em; line-height: 1.2; }
+.amount p { margin: 2px 0 0; font-size: 12px; color: var(--muted); line-height: 1.4; }
+.split small { font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; }
+.split .bar { height: 10px; border-radius: 99px; background: var(--ink); overflow: hidden; display: flex; margin: 6px 0; }
+.split .bar i { background: var(--gold); display: block; }
+.lnk { font-size: 12.5px; font-weight: 600; color: var(--ink); display: inline-flex; gap: 6px; align-items: center; text-decoration: none; }
+.danger { text-align: center; font-size: 12.5px; font-weight: 550; color: var(--bad); }
+
+/* ── Notifications ─────────────────────────────────────────────────────── */
+.phone { width: 320px; border-radius: 42px; padding: 14px; background: #0d1520; box-shadow: var(--shadow-panel); }
+.screen { border-radius: 30px; min-height: 520px; padding: 50px 12px 16px; background: linear-gradient(180deg, #2a4b73 0%, #0b2238 55%, #07131f 100%); color: #fff; }
+.clock { text-align: center; font-size: 58px; font-weight: 300; letter-spacing: -2px; line-height: 1; }
+.dateline { text-align: center; font-size: 13px; opacity: .8; margin-bottom: 26px; }
+.notif { display: flex; gap: 10px; background: rgba(255,255,255,.16); backdrop-filter: blur(10px); border-radius: 18px; padding: 10px 12px; margin-bottom: 8px; font-size: 12.5px; line-height: 1.35; }
+.notif img { width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0; }
+.notif b { display: block; font-weight: 600; font-size: 12.5px; }
+.notif small { opacity: .75; font-size: 11px; float: right; }
+.events { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 16px 0; }
+.events th { text-align: left; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--line-strong); }
+.events td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--text-2); }
+.events td:first-child { color: var(--text); font-weight: 550; white-space: nowrap; }
+.notif-wrap { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 32px; align-items: start; }
+
+/* ── M&B ───────────────────────────────────────────────────────────────── */
+.mb { max-width: 560px; margin: 0 auto; padding: 18px 20px; }
+.go { display: flex; align-items: center; gap: 16px; background: var(--ok-soft); border-radius: 16px; padding: 14px 18px; }
+.go .big { font-size: 34px; font-weight: 800; color: var(--ok); letter-spacing: -0.03em; }
+.go p { margin: 0; font-size: 12.5px; color: var(--ok); line-height: 1.45; }
+.kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
+.kpis div { background: var(--surface); border-radius: 12px; padding: 10px 12px; }
+.kpis small { display: block; font-size: 11px; color: var(--muted); }
+.kpis b { font-size: 16px; font-weight: 600; }
+.metar { margin-top: 12px; font-family: ui-monospace, monospace; font-size: 11.5px; background: #0f1117; color: #cfe3ff; border-radius: 10px; padding: 10px 12px; }
+
+/* ── Transactions ──────────────────────────────────────────────────────── */
+.tx { max-width: 620px; margin: 0 auto; padding: 18px 20px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+.stats div { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+.stats small { font-size: 11.5px; color: var(--muted); display: block; }
+.stats b { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; }
+.txrow { display: grid; grid-template-columns: 1fr auto auto; gap: 14px; align-items: center; padding: 11px 0; border-top: 1px solid var(--line-soft); font-size: 13.5px; }
+.txrow span { font-size: 12px; color: var(--muted); display: block; }
+
+/* ── Règles ────────────────────────────────────────────────────────────── */
+.rules { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 22px 0; }
+.rule { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 18px; }
+.rule em { font-style: normal; font-size: 30px; font-weight: 800; color: transparent; -webkit-text-stroke: 1.5px var(--gold-text); line-height: 1; }
+.rule b { display: block; font-size: 15px; margin: 8px 0 4px; color: var(--ink); }
+.rule span { font-size: 13.5px; color: var(--text-2); line-height: 1.55; display: block; }
+
+/* ── Aide & FAQ ────────────────────────────────────────────────────────── */
+details { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 0 18px; margin: 8px 0; max-width: 760px; }
+summary { list-style: none; padding: 15px 0; font-weight: 600; font-size: 14.5px; display: flex; justify-content: space-between; gap: 12px; cursor: pointer; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: "+"; font-weight: 400; font-size: 20px; line-height: 1; color: var(--muted); }
+details[open] summary::after { content: "−"; }
+details p { margin: 0 0 16px; font-size: 14px; }
+.contact { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0; }
+.contact a { background: var(--ink); color: #fff; border-radius: 16px; padding: 18px; text-decoration: none; }
+.contact a:nth-child(n+2) { background: #fff; color: var(--text); border: 1px solid var(--line); }
+.contact b { display: block; font-size: 15px; margin-top: 10px; }
+.contact span { font-size: 12.5px; opacity: .75; }
+.foot { margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--line-strong); font-size: 12.5px; color: var(--muted); }
+
+/* ── Responsive ────────────────────────────────────────────────────────── */
+@media (max-width: 980px) {
+  .wrap { grid-template-columns: 1fr; gap: 0; }
+  .toc { position: sticky; top: 53px; z-index: 20; padding: 10px 0; margin: 0 -20px; background: rgba(245,246,248,.94); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; gap: 4px; scrollbar-width: none; }
+  .toc::-webkit-scrollbar { display: none; }
+  .toc p { display: none; }
+  .toc a { white-space: nowrap; font-size: 12.5px; padding: 6px 12px; border: 1px solid var(--line); background: #fff; }
+  .toc a:first-of-type { margin-left: 20px; }
+  .toc a:last-of-type { margin-right: 20px; }
+  .quick, .steps4 { grid-template-columns: 1fr 1fr; }
+  .five { grid-template-columns: 1fr 1fr; }
+  .notif-wrap { grid-template-columns: 1fr; }
+  .phone { margin: 0 auto; }
+}
+@media (max-width: 640px) {
+  body { font-size: 14.5px; }
+  .hero { padding-top: 40px; }
+  .quick, .steps4, .rules, .contact, .side, .stats, .kpis { grid-template-columns: 1fr; }
+  .stage { padding: 16px; border-radius: 18px; }
+  .actors { flex-direction: column; gap: 0; }
+  .link { width: 3px; height: 40px; flex: none; margin: 8px 0; }
+  .link span { top: 50%; left: 14px; transform: translateY(-50%); }
+  .grid2 { grid-template-columns: 1fr; }
+  .events td:first-child { white-space: normal; }
+  .phone { width: 100%; max-width: 320px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Icônes (tracés lucide) -->
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-plane" viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></symbol>
+  <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></symbol>
+  <symbol id="i-msg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.7 18-8-14a2 2 0 0 0-3.5 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-scale" viewBox="0 0 24 24"><path d="m16 16 3-8 3 8c-.9.7-1.9 1-3 1s-2.1-.3-3-1zM2 16l3-8 3 8c-.9.7-1.9 1-3 1s-2.1-.3-3-1zM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></symbol>
+  <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1z"/><path d="M8 7h8M8 11h8M8 15h5"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></symbol>
+  <symbol id="i-dl" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+  <symbol id="i-cash" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></symbol>
+  <symbol id="i-nav" viewBox="0 0 24 24"><path d="m3 11 19-9-9 19-2-8z"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-land" viewBox="0 0 24 24"><path d="M2 22h20M3.8 11.9l-1.3-4a1 1 0 0 1 1.2-1.3l.8.2 3.6 3.5 7.4 1.9a2.3 2.3 0 0 1-1.1 4.5z"/></symbol>
+  <symbol id="i-cal2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M12 14v3l2 1"/></symbol>
+</svg>
+
+<header class="top">
+  <div class="top-in">
+    <img src="public/icone.svg" alt="">
+    <b>Fly Horizons</b><span>· Guide pilote</span>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="wrap">
+  <nav class="toc" id="toc" aria-label="Sommaire">
+    <p>Sommaire</p>
+    <a href="#principe"><em>01</em>Le principe</a>
+    <a href="#premiers-pas"><em>02</em>Premiers pas</a>
+    <a href="#profil"><em>03</em>Votre profil</a>
+    <a href="#annonce"><em>04</em>Publier une annonce</a>
+    <a href="#dispos"><em>05</em>Disponibilités</a>
+    <a href="#suivi"><em>06</em>Suivre une réservation</a>
+    <a href="#paiement"><em>07</em>Le paiement</a>
+    <a href="#notifs"><em>08</em>Emails et notifications</a>
+    <a href="#voler"><em>09</em>Préparer et voler</a>
+    <a href="#imprevu"><em>10</em>En cas d'imprévu</a>
+    <a href="#regles"><em>11</em>Les règles</a>
+    <a href="#aide"><em>12</em>Aide</a>
+  </nav>
+
+  <main>
+    <!-- ═══ HERO ═══════════════════════════════════════════════════════ -->
+    <div class="hero">
+      <span class="kicker">Guide pilote</span>
+      <h1>Tout pour voler<br>avec Fly Horizons<span class="dot">.</span></h1>
+      <p class="lead">Le principe, vos annonces, le suivi de chaque passager jusqu'au paiement, la préparation du vol et les règles du jeu. Chaque écran est expliqué tel que vous le verrez dans votre espace.</p>
+      <div class="quick">
+        <a href="#annonce"><span class="ic"><svg class="i"><use href="#i-plane"/></svg></span><b>Publier un vol</b><span>Les 5 étapes et le calcul du prix</span></a>
+        <a href="#suivi"><span class="ic"><svg class="i"><use href="#i-route"/></svg></span><b>Suivre un passager</b><span>De la demande au vol effectué</span></a>
+        <a href="#paiement"><span class="ic"><svg class="i"><use href="#i-receipt"/></svg></span><b>Être payé</b><span>Virement direct, QR code, reçu</span></a>
+        <a href="#regles"><span class="ic"><svg class="i"><use href="#i-shield"/></svg></span><b>Les règles</b><span>Ce qui ne se négocie pas</span></a>
+      </div>
+    </div>
+
+    <!-- ═══ 01 PRINCIPE ════════════════════════════════════════════════ -->
+    <section class="ch" id="principe">
+      <div class="ch-head"><h2>Le principe<span class="dot">.</span></h2></div>
+      <p class="intro">Fly Horizons met en relation des passagers et des pilotes pour des <strong>vols en partage de frais</strong>. Nous ne sommes pas l'exploitant des vols et n'assurons aucune fonction de transporteur aérien.</p>
+
+      <figure>
+        <div class="stage">
+          <div class="actors">
+            <div class="actor"><div class="disc"><svg class="i"><use href="#i-user"/></svg></div><b>Passagers</b><small>réservent sur le site</small></div>
+            <div class="link"><span>mise en relation</span></div>
+            <div class="actor fh"><div class="disc"><img src="public/icone.svg" alt="" style="width:52px"></div><b>Fly Horizons</b><small>la plateforme et les outils</small></div>
+            <div class="link"><span>vos annonces</span></div>
+            <div class="actor"><div class="disc"><svg class="i"><use href="#i-plane"/></svg></div><b>Vous, pilote</b><small>seul commandant de bord</small></div>
+          </div>
+          <div class="paybar"><span class="coin">€</span><span>Le passager vous paie <strong>directement</strong>, par virement. Fly Horizons ne prend <strong>aucune commission</strong> et n'encaisse rien.</span></div>
+        </div>
+        <figcaption>Qui fait quoi</figcaption>
+      </figure>
+
+      <h3>Ce que cela veut dire pour vous</h3>
+      <ul>
+        <li><strong>Vous êtes seul commandant de bord.</strong> Préparation, décision de partir ou non, sécurité : tout vous revient, comme pour vos vols habituels.</li>
+        <li><strong>Vous partagez des frais, vous ne vendez pas un vol.</strong> Le passager participe à une partie des coûts directs du vol, jamais plus, et votre part reste à votre charge.</li>
+        <li><strong>L'argent circule entre vous et le passager.</strong> L'espace pilote suit simplement « payé » ou « pas encore payé ».</li>
+        <li><strong>Fly Horizons fournit les outils</strong> : la vitrine sur le site, les emails automatiques, le suivi des réservations, la masse et centrage, vos itinéraires.</li>
+      </ul>
+    </section>
+
+    <!-- ═══ 02 PREMIERS PAS ═══════════════════════════════════════════ -->
+    <section class="ch" id="premiers-pas">
+      <div class="ch-head"><h2>Premiers pas<span class="dot">.</span></h2></div>
+      <p class="intro">Quatre choses à faire une fois, dans cet ordre, avant votre premier passager.</p>
+      <div class="steps4">
+        <div class="step4"><span class="ic"><svg class="i"><use href="#i-user"/></svg></span><b>Compléter le profil</b><span>Licence, SEP, médical, IBAN, et vos justificatifs à envoyer.</span><a href="#profil">Voir le détail →</a></div>
+        <div class="step4"><span class="ic"><svg class="i"><use href="#i-cal"/></svg></span><b>Ouvrir des disponibilités</b><span>Les créneaux où les passagers peuvent réserver.</span><a href="#dispos">Voir le détail →</a></div>
+        <div class="step4"><span class="ic"><svg class="i"><use href="#i-plane"/></svg></span><b>Publier une annonce</b><span>Un vol, une durée, un prix partagé, des photos.</span><a href="#annonce">Voir le détail →</a></div>
+        <div class="step4"><span class="ic"><svg class="i"><use href="#i-phone"/></svg></span><b>Installer l'app</b><span>Sur l'écran d'accueil, pour recevoir les notifications.</span><a href="#notifs">Voir le détail →</a></div>
+      </div>
+      <div class="callout info"><svg class="i"><use href="#i-info"/></svg><span>À votre premier accès, l'espace vous demande d'accepter la <b>charte du pilote</b>. Si la charte évolue, elle vous est redemandée : c'est normal.</span></div>
+    </section>
+
+    <!-- ═══ 03 PROFIL ═════════════════════════════════════════════════ -->
+    <section class="ch" id="profil">
+      <div class="ch-head"><h2>Votre profil<span class="dot">.</span></h2></div>
+      <p class="intro">Sans profil en règle, vous ne pouvez pas voler avec Fly Horizons. Tout se passe dans <strong>Mon profil</strong>, organisé en quatre onglets.</p>
+
+      <figure>
+        <div class="stage center">
+          <div class="panel prof" style="width:100%">
+            <div class="prof-head"><b>Mon profil</b><span class="badge b-ok"><svg class="i"><use href="#i-check"/></svg>Profil complet</span></div>
+            <div class="tabs"><span class="on">Licence</span><span>Profil</span><span>Emails</span><span>Compte</span></div>
+            <div class="row"><div class="l"><b>Qualification SEP</b><span>Valable jusqu'au 31/03/2027</span></div><span class="badge b-ok">Valide</span></div>
+            <div class="row"><div class="l"><b>Certificat médical</b><span>Classe 2 · jusqu'au 14/10/2026</span></div><span class="badge b-warn"><svg class="i"><use href="#i-alert"/></svg>Expire bientôt</span></div>
+            <div class="row"><div class="l"><b>Justificatifs</b><span>Licence et médical envoyés</span></div><span class="badge b-neutral">Après vérification</span></div>
+            <div class="row"><div class="l"><b>Expérience récente</b><span>À vérifier vous-même avant chaque vol</span></div><span class="badge b-info">3 / 90 j</span></div>
+          </div>
+        </div>
+        <figcaption>Onglet Licence : chaque validité a sa pastille</figcaption>
+      </figure>
+
+      <h3>Les quatre onglets</h3>
+      <ul>
+        <li><strong>Licence</strong> : numéro de licence, qualification SEP, certificat médical, autres qualifications, et l'envoi de vos justificatifs.</li>
+        <li><strong>Profil</strong> : photo, présentation, téléphone, et <strong>IBAN</strong>. L'IBAN est indispensable pour publier : c'est là que les passagers vous paient.</li>
+        <li><strong>Emails</strong> : la signature ajoutée à vos messages aux passagers.</li>
+        <li><strong>Compte</strong> : email de connexion, mot de passe, et la charte que vous avez acceptée.</li>
+      </ul>
+
+      <h3>Les justificatifs</h3>
+      <p>Envoyez une photo ou un PDF de votre <strong>licence (page de la qualification SEP comprise)</strong> et de votre <strong>certificat médical</strong>. Fly Horizons les vérifie, relève les dates, puis <strong>supprime les fichiers</strong> : seule la date de vérification est conservée. Vous recevez un email quand c'est validé, ou le motif si un document est refusé.</p>
+      <div class="callout warn"><svg class="i"><use href="#i-alert"/></svg><span><b>30 jours avant une expiration</b>, une pastille « Expire bientôt » vous prévient. <b>Une date dépassée vous rend inéligible</b> jusqu'à l'envoi du nouveau document. Si vous modifiez une date, il faut renvoyer le justificatif.</span></div>
+    </section>
+
+    <!-- ═══ 04 ANNONCE ════════════════════════════════════════════════ -->
+    <section class="ch" id="annonce">
+      <div class="ch-head"><h2>Publier une annonce<span class="dot">.</span></h2></div>
+      <p class="intro">Tout part de vos annonces. Une annonce, c'est un vol que vous proposez sur le site : les passagers la voient, choisissent un créneau dans vos disponibilités, et vous envoient une demande. Dans <strong>Mes annonces</strong>, le bouton « Nouvelle annonce » ouvre un assistant en cinq étapes.</p>
+
+      <div class="five">
+        <div><em>Étape 1</em><b>Type</b><span>Vol avec itinéraire (route tracée sur la carte) ou vol à durée fixe.</span></div>
+        <div><em>Étape 2</em><b>Le vol</b><span>Titre (facultatif), durée, passagers max (1 à 6), et la route si besoin.</span></div>
+        <div><em>Étape 3</em><b>Tarif</b><span>Mode de vente, coût total du vol, votre part.</span></div>
+        <div><em>Étape 4</em><b>Présentation</b><span>Description et jusqu'à 6 photos. La première sert de couverture.</span></div>
+        <div><em>Étape 5</em><b>Publication</b><span>Vous confirmez le partage de frais réel, puis « Publier ce vol ».</span></div>
+      </div>
+
+      <div class="callout gold"><svg class="i"><use href="#i-cal"/></svg><span><b>Une annonce n'a pas de date.</b> Les passagers réservent sur les créneaux ouverts dans vos <a href="#dispos">disponibilités</a>, un seul calendrier valable pour toutes vos annonces.</span></div>
+
+      <h3>Le tarif, pas à pas (essayez)</h3>
+      <p>Vous indiquez le <strong>coût total du vol</strong> (location de l'avion, carburant, taxes d'aérodrome). Ce total se partage entre vous et vos passagers. Deux modes de vente :</p>
+      <ul>
+        <li><strong>Avion entier</strong> : un seul client réserve et règle le vol entier. Vous fixez votre part, en euros ou en pourcentage.</li>
+        <li><strong>À la place</strong> : plusieurs clients, chacun règle sa place. Votre part est calculée automatiquement, à parts égales entre vous et les passagers.</li>
+      </ul>
+
+      <figure>
+        <div class="stage center">
+          <div class="panel wiz" style="width:100%" id="calc">
+            <div class="wiz-bars"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div>
+            <div class="wiz-step">Étape 3 sur 5 · Tarif</div>
+            <div class="field"><label>Mode de vente</label>
+              <div class="grid2">
+                <button type="button" class="choice on" data-mode="avion"><b>Avion entier</b><span>Un seul client réserve et règle le vol entier.</span></button>
+                <button type="button" class="choice" data-mode="place"><b>À la place</b><span>Plusieurs clients, chacun règle sa place. Part égale automatique.</span></button>
+              </div>
+            </div>
+            <div class="grid2" style="margin-top:14px">
+              <div class="field"><label for="c-total">Coût total du vol (€)</label><input class="input num" id="c-total" type="number" min="0" step="1" value="300"></div>
+              <div class="field"><label for="c-places">Passagers max</label>
+                <select class="input" id="c-places"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option></select></div>
+            </div>
+            <div class="field" id="c-part-wrap" style="margin-top:14px"><label for="c-part">Votre part</label>
+              <div style="display:flex;gap:8px"><input class="input num" id="c-part" type="number" min="0" step="1" value="75">
+                <div class="seg" id="c-unit"><button type="button" data-u="pct">%</button><button type="button" class="on" data-u="eur">€</button></div></div>
+              <div class="hint">Ce que vous payez vous-même, indépendant du nombre de passagers.</div>
+            </div>
+            <div class="sum" id="c-sum"></div>
+            <div id="c-check"></div>
+          </div>
+        </div>
+        <figcaption>Étape Tarif : même calcul que dans l'espace pilote, modifiez les valeurs</figcaption>
+      </figure>
+
+      <h3>Votre part minimum</h3>
+      <p>En partage de frais, chaque personne à bord porte au moins une part égale du coût, <strong>vous compris</strong>. Le minimum dépend donc du nombre de passagers :</p>
+      <table class="mins">
+        <thead><tr><th>Passagers</th><th>Personnes à bord</th><th>Votre part minimum</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>2</td><td>50 %</td></tr>
+          <tr><td>2</td><td>3</td><td>33,3 %</td></tr>
+          <tr><td>3</td><td>4</td><td>25 %</td></tr>
+          <tr><td>4</td><td>5</td><td>20 %</td></tr>
+          <tr><td>5</td><td>6</td><td>16,7 %</td></tr>
+          <tr><td>6</td><td>7</td><td>14,3 %</td></tr>
+        </tbody>
+      </table>
+      <div class="callout warn"><svg class="i"><use href="#i-alert"/></svg><span>En dessous du minimum, l'assistant affiche un avertissement orange. La publication n'est pas bloquée, mais <b>vous restez seul responsable</b> du respect du partage de frais réel (NCO.GEN.104). Avec une part à zéro, ce n'est plus du partage de frais mais du transport payant, interdit sans certificat de transporteur aérien.</span></div>
+
+      <h3>Le vol avec itinéraire</h3>
+      <p>Cliquez sur la carte pour placer vos points. Le fond « Aéro » (en haut à droite de la carte) affiche zones et aérodromes. Vous pouvez aussi <strong>charger un itinéraire</strong> déjà enregistré, ou cocher « Enregistrer cette route dans mes itinéraires » pour la réutiliser. Le tracé est indicatif et affiché au client : il ne change ni la durée ni le prix.</p>
+
+      <h3>Vente « à la place » : le groupe</h3>
+      <p>Le prix affiché est celui « si complet ». Le prix de chaque passager se fige à la <strong>clôture du groupe</strong>, à parts égales entre les occupants réels : si le groupe part avant d'être complet, chacun paie un peu plus. Vous clôturez le groupe depuis <strong>Mes annonces</strong>, bouton « Clôturer le groupe ». Tant qu'il n'est pas clôturé, le montant de chaque passager reste « à fixer ».</p>
+    </section>
+
+    <!-- ═══ 05 DISPOS ═════════════════════════════════════════════════ -->
+    <section class="ch" id="dispos">
+      <div class="ch-head"><h2>Vos disponibilités<span class="dot">.</span></h2></div>
+      <p class="intro">Un seul calendrier pour toutes vos annonces : <strong>un passager ne peut réserver que dans les créneaux ouverts ici</strong>. Ce que vous voyez est exactement ce que vos clients peuvent réserver.</p>
+
+      <figure>
+        <div class="stage center">
+          <div class="panel dispo" style="width:100%">
+            <div class="dispo-h"><b>Disponibilités</b><span>Semaine du 7 octobre</span></div>
+            <div class="week" id="week"></div>
+            <div class="legend"><span><i style="background:var(--gold-soft);border:1.5px solid var(--gold)"></i>Ouvert à la réservation</span><span><i style="background:var(--ink)"></i>Réservé</span><span><i style="background:repeating-linear-gradient(45deg,#f4f5f7,#f4f5f7 3px,#e6e8ee 3px,#e6e8ee 6px)"></i>Jour fermé</span></div>
+          </div>
+        </div>
+        <figcaption>Plages récurrentes (samedi et dimanche matin) plus quelques jours ajoutés à la main</figcaption>
+      </figure>
+
+      <h3>Deux façons d'ouvrir des créneaux</h3>
+      <ul>
+        <li><strong>Les plages</strong> : un même créneau répété certains jours de la semaine, sur une période. Par exemple, tous les samedis de 9 h à 12 h jusqu'à fin novembre.</li>
+        <li><strong>Les jours individuels</strong> : un jour précis, ajouté un par un, en plus des plages (ou à la place si vous n'en avez aucune).</li>
+      </ul>
+      <div class="callout warn"><svg class="i"><use href="#i-alert"/></svg><span><b>Attention : si rien n'est configuré, vos annonces sont réservables à n'importe quelle date.</b> Ouvrez au moins une plage avant de publier, et tenez le calendrier à jour : un créneau ouvert est un créneau où vous vous engagez à pouvoir voler.</span></div>
+      <p>Deux passagers ne peuvent pas réserver le même créneau chez vous : dès qu'une demande arrive, le créneau est bloqué.</p>
+    </section>
+
+    <!-- ═══ 06 SUIVI ══════════════════════════════════════════════════ -->
+    <section class="ch" id="suivi">
+      <div class="ch-head"><h2>Suivre une réservation<span class="dot">.</span></h2></div>
+      <p class="intro">Chaque réservation s'ouvre dans <strong>Mes vols</strong> sous forme de tiroir, avec quatre onglets : <strong>Aperçu</strong> (la prochaine étape et le règlement), <strong>Route</strong>, <strong>Messages</strong> (le fil avec le passager) et <strong>Dossier</strong>. En haut de l'aperçu, une frise suit le vol en cinq étapes. <strong>Cliquez sur une étape</strong> pour voir ce qui s'y passe.</p>
+
+      <figure>
+        <div class="stage center">
+          <div class="panel drawer" style="width:100%">
+            <div class="dr-head">
+              <div class="datetile"><small>sam.</small><b>12</b></div>
+              <div class="t"><b>Julie Dupont · 2 passagers</b><span>Tour de la côte belge · 1 h 30 · <span class="badge b-gold" style="height:20px;font-size:11px">Annonce</span></span></div>
+            </div>
+            <div class="pills"><span class="on"><svg class="i"><use href="#i-info"/></svg>Aperçu</span><span><svg class="i"><use href="#i-route"/></svg>Route</span><span><svg class="i"><use href="#i-msg"/></svg>Messages</span><span><svg class="i"><use href="#i-folder"/></svg>Dossier</span></div>
+            <div class="dr-body">
+              <div class="journey" id="journey"></div>
+              <div class="next" id="next"></div>
+            </div>
+          </div>
+        </div>
+        <figcaption>Le tiroir d'un vol, onglet Aperçu (exemple fictif)</figcaption>
+      </figure>
+
+      <div class="side" id="side"></div>
+
+      <div class="callout warn"><svg class="i"><use href="#i-clock"/></svg><span><b>Une demande bloque le créneau pendant 72 heures.</b> Sans action de votre part (confirmation ou autre créneau proposé), elle est annulée automatiquement et le créneau se libère. Répondez vite : le passager attend.</span></div>
+    </section>
+
+    <!-- ═══ 07 PAIEMENT ═══════════════════════════════════════════════ -->
+    <section class="ch" id="paiement">
+      <div class="ch-head"><h2>Le paiement<span class="dot">.</span></h2></div>
+      <p class="intro">Le passager vous règle <strong>directement par virement</strong> sur votre IBAN. Fly Horizons n'encaisse rien et ne prend aucune commission. L'espace pilote vous aide juste à suivre qui a payé.</p>
+
+      <figure>
+        <div class="stage center">
+          <div class="panel regl" style="width:100%">
+            <div class="regl-box">
+              <div class="regl-top"><b>Règlement</b><span class="badge b-neutral"><svg class="i"><use href="#i-clock"/></svg>En attente</span></div>
+              <div class="amount"><small>Montant du passager</small><div class="v num">225 €</div><p>virement direct sur votre IBAN, Fly Horizons n'encaisse rien</p></div>
+              <div class="split"><small><span>Partage des frais · coût 300 €</span><span>votre part 75 € (25 %)</span></small><div class="bar"><i style="width:75%"></i></div><small><span style="color:var(--gold-text)">Passagers 225 €</span><span style="color:var(--ink)">Vous 75 €</span></small></div>
+              <button class="btn btn-p btn-full" type="button"><svg class="i"><use href="#i-check"/></svg>Marquer comme reçu</button>
+              <div class="grid2"><button class="btn btn-s" type="button"><svg class="i"><use href="#i-cash"/></svg>En espèces</button><button class="btn btn-s" type="button"><svg class="i"><use href="#i-send"/></svg>Renvoyer le lien</button></div>
+              <a class="lnk" href="#paiement"><svg class="i"><use href="#i-receipt"/></svg>Mes transactions</a>
+              <div class="danger">Annuler la demande</div>
+            </div>
+          </div>
+        </div>
+        <figcaption>Bloc « Règlement » de l'onglet Aperçu, pour un vol issu d'une annonce</figcaption>
+      </figure>
+
+      <h3>Comment ça se passe</h3>
+      <ul>
+        <li><strong>Le lien de paiement</strong> part automatiquement quand le passager <strong>valide la route</strong>. Il mène à une page avec votre IBAN et un <strong>QR code</strong> à scanner depuis son app bancaire.</li>
+        <li><strong>Vol à durée fixe</strong> (sans route à valider) : envoyez-lui le lien vous-même avec « Renvoyer le lien ».</li>
+        <li><strong>Quand l'argent est arrivé</strong>, cliquez « Marquer comme reçu ». Vous confirmez le montant réellement reçu (modifiable s'il diffère). Le passager reçoit un email « Paiement confirmé » et <strong>son reçu se débloque</strong>.</li>
+        <li><strong>Payé en liquide ?</strong> Utilisez « En espèces » : même principe.</li>
+        <li><strong>Une erreur ?</strong> « Remettre en attente » annule le marquage.</li>
+        <li>Une fois payé, le <strong>reçu client (PDF)</strong> est téléchargeable depuis le tiroir.</li>
+      </ul>
+
+      <h3>La page Transactions</h3>
+      <figure>
+        <div class="stage center">
+          <div class="panel tx" style="width:100%">
+            <div class="stats"><div><small>Reçu cette année</small><b class="num">1 240 €</b></div><div><small>À recevoir</small><b class="num">225 €</b></div><div><small>À relancer</small><b class="num" style="color:var(--warn)">1</b></div></div>
+            <div class="txrow"><div><b>Julie D.</b><span>sam. 12 oct. · Tour de la côte</span></div><b class="num">225 €</b><span class="badge b-neutral">En attente</span></div>
+            <div class="txrow"><div><b>Marc L.</b><span>dim. 29 sept. · Meuse au couchant</span></div><b class="num">160 €</b><span class="badge b-warn">À relancer</span></div>
+            <div class="txrow"><div><b>Sophie V.</b><span>sam. 21 sept. · Survol de Bruxelles</span></div><b class="num">195 €</b><span class="badge b-ok">Reçu</span></div>
+          </div>
+        </div>
+        <figcaption>Transactions : tout ce que vous avez reçu et ce qui reste à recevoir</figcaption>
+      </figure>
+      <p>Trois états possibles : <span class="badge b-ok">Reçu</span> <span class="badge b-neutral">En attente</span> <span class="badge b-warn">À relancer</span>. Un paiement passe « À relancer » quand <strong>le vol a eu lieu et que rien n'est encore noté</strong>. Dans ce cas, une notification vous le rappelle, puis un email quelques jours après le vol. Pensez à marquer vos paiements au fil de l'eau.</p>
+      <div class="callout info"><svg class="i"><use href="#i-info"/></svg><span><b>En cas d'annulation</b>, un éventuel remboursement est de votre ressort, puisque c'est vous qui avez reçu la somme.</span></div>
+    </section>
+
+    <!-- ═══ 08 NOTIFS ═════════════════════════════════════════════════ -->
+    <section class="ch" id="notifs">
+      <div class="ch-head"><h2>Emails et notifications<span class="dot">.</span></h2></div>
+      <p class="intro"><strong>Vous n'écrivez aucun email vous-même.</strong> À chaque étape, le passager est prévenu automatiquement, et vous aussi : par email et par notification sur votre téléphone.</p>
+
+      <div class="notif-wrap">
+        <figure style="margin:0">
+          <div class="phone"><div class="screen">
+            <div class="clock num">9:41</div><div class="dateline">samedi 5 octobre</div>
+            <div class="notif"><img src="public/icone.svg" alt=""><div><small>maintenant</small><b>Nouvelle demande de vol</b>Julie D. · sam. 12 oct. à 10:00 · 2 pers.</div></div>
+            <div class="notif"><img src="public/icone.svg" alt=""><div><small>il y a 2 h</small><b>Route validée</b>Julie D. a validé la route du vol du sam. 12 oct.</div></div>
+            <div class="notif"><img src="public/icone.svg" alt=""><div><small>hier</small><b>Vol dans 48 h</b>Marc L. · lun. 7 oct. à 14:00. Pensez à la météo et au M&amp;B.</div></div>
+          </div></div>
+          <figcaption>Les notifications de l'app</figcaption>
+        </figure>
+        <div>
+          <table class="events">
+            <thead><tr><th>Notification</th><th>Quand</th></tr></thead>
+            <tbody>
+              <tr><td>Nouvelle demande de vol</td><td>Un passager réserve sur une de vos annonces (vous recevez aussi l'email « Nouvelle demande »).</td></tr>
+              <tr><td>Message de…</td><td>Le passager vous écrit dans le fil du vol.</td></tr>
+              <tr><td>Route validée</td><td>Le passager accepte votre route : le lien de paiement lui part.</td></tr>
+              <tr><td>Modification de route demandée</td><td>Le passager demande un changement, avec son commentaire.</td></tr>
+              <tr><td>Vol dans 48 h</td><td>Rappel météo et masse et centrage.</td></tr>
+              <tr><td>Paiement pas encore noté</td><td>Avant le vol, si rien n'est marqué.</td></tr>
+              <tr><td>Paiement à vérifier</td><td>Après le vol, si rien n'est toujours marqué.</td></tr>
+              <tr><td>Vol reporté · Vol annulé</td><td>Le vol change de date ou est annulé.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h3>Installer l'app sur votre téléphone</h3>
+      <p>L'espace pilote s'utilise comme une application : une icône sur l'écran d'accueil, en plein écran. C'est indispensable pour les notifications. Ouvrez <strong>fly-horizons.com/pilote</strong> sur votre téléphone, puis :</p>
+      <div class="grid2" style="max-width:720px">
+        <div class="step4" style="counter-reset:none"><b style="margin-top:0">iPhone (Safari uniquement)</b><span>Touchez <b>Partager</b> en bas de l'écran, choisissez <b>Sur l'écran d'accueil</b>, puis <b>Ajouter</b>. Ouvrez l'app depuis l'icône et acceptez les notifications.</span></div>
+        <div class="step4" style="counter-reset:none"><b style="margin-top:0">Android (Chrome)</b><span>Touchez le menu <b>⋮</b> en haut à droite, puis <b>Installer l'application</b> (ou Ajouter à l'écran d'accueil), et confirmez.</span></div>
+      </div>
+
+      <h3>Les messages</h3>
+      <p>L'onglet <strong>Messages</strong> du tiroir est le fil de conversation avec le passager. C'est là que vous convenez des détails (heure de rendez-vous, parking, poids des passagers) : tout reste attaché au vol.</p>
+    </section>
+
+    <!-- ═══ 09 VOLER ══════════════════════════════════════════════════ -->
+    <section class="ch" id="voler">
+      <div class="ch-head"><h2>Préparer et voler<span class="dot">.</span></h2></div>
+      <p class="intro">Les outils de préparation sont dans l'espace, à côté de vos vols.</p>
+
+      <h3>Itinéraires</h3>
+      <p>Dans <strong>Itinéraires</strong>, enregistrez vos routes habituelles. Elles sont <strong>privées</strong> (personne d'autre ne les voit) et se rechargent en un clic dans une annonce ou dans la route d'un vol. La carte propose un fond « Aéro » avec les espaces aériens et les aérodromes.</p>
+
+      <h3>Masse et centrage</h3>
+      <figure>
+        <div class="stage center">
+          <div class="panel mb" style="width:100%">
+            <div class="go"><span class="big">GO</span><p><b>Masse et centrage dans l'enveloppe.</b><br>Performances décollage et atterrissage compatibles avec la piste.</p></div>
+            <div class="kpis"><div><small>Masse au décollage</small><b class="num">1 108 kg</b></div><div><small>Centrage</small><b class="num">2,47 m</b></div><div><small>Carburant</small><b class="num">28 gal</b></div></div>
+            <div class="metar">EBCI 121020Z 24008KT 9999 FEW030 14/08 Q1021</div>
+          </div>
+        </div>
+        <figcaption>Masse et centrage (DA40) : le verdict GO / NO-GO en premier</figcaption>
+      </figure>
+      <p>Depuis <strong>Mes vols</strong>, l'icône balance ouvre l'outil avec les <strong>poids des passagers préremplis</strong>. L'outil calcule le chargement et les performances, affiche la météo de l'aérodrome (METAR), et produit un PDF à garder avec vous.</p>
+
+      <h3>Avant chaque vol</h3>
+      <ul>
+        <li><strong>Expérience récente</strong> : au moins 3 décollages et 3 atterrissages dans les 90 jours (FCL.060). À vérifier vous-même, avant chaque vol avec passagers.</li>
+        <li><strong>Appareil</strong> : autorisé pour vous, et assuré, avec l'assurance passagers en vigueur.</li>
+        <li><strong>Le jour J</strong> : météo, décision de partir ou non, accueil du passager. La décision vous appartient entièrement.</li>
+      </ul>
+
+      <h3>Après le vol</h3>
+      <p>Marquez le vol <strong>effectué</strong> depuis le bloc Règlement (disponible 8 heures après l'heure du décollage), en indiquant si vous le souhaitez les minutes réellement volées. Si le paiement n'est pas encore noté, faites-le au même moment.</p>
+    </section>
+
+    <!-- ═══ 10 IMPRÉVU ════════════════════════════════════════════════ -->
+    <section class="ch" id="imprevu">
+      <div class="ch-head"><h2>En cas d'imprévu<span class="dot">.</span></h2></div>
+      <p class="intro">Météo, avion indisponible, contretemps personnel : ça arrive. L'important est de prévenir tôt.</p>
+      <ul>
+        <li><strong>Avant de confirmer une demande</strong> : si le créneau ne vous convient pas, utilisez « <strong>Autre créneau</strong> » dans le tiroir pour proposer une autre date au passager.</li>
+        <li><strong>Après confirmation</strong> : proposez d'abord un <strong>report</strong> au passager, dans l'onglet Messages. Si ce n'est pas possible, <strong>contactez Fly Horizons</strong>.</li>
+        <li><strong>En dernier recours</strong>, Fly Horizons peut proposer le vol aux autres pilotes, pour ne pas laisser le passager sans solution.</li>
+      </ul>
+      <div class="callout warn"><svg class="i"><use href="#i-alert"/></svg><span><b>Seul Fly Horizons annule un vol confirmé auprès d'un passager.</b> Avant paiement, vous pouvez annuler une simple demande (« Annuler la demande ») : les places sont remises en vente, mais aucun email n'est envoyé, prévenez le passager par message.</span></div>
+      <p>Un créneau convenu ne se modifie pas pour votre seule convenance : un vol accepté est un engagement.</p>
+    </section>
+
+    <!-- ═══ 11 RÈGLES ═════════════════════════════════════════════════ -->
+    <section class="ch" id="regles">
+      <div class="ch-head"><h2>Les règles<span class="dot">.</span></h2></div>
+      <p class="intro">Le résumé de la charte que vous avez acceptée. Le texte complet reste consultable dans Mon profil, onglet Compte.</p>
+      <div class="rules">
+        <div class="rule"><em>01</em><b>Une partie des coûts, jamais plus</b><span>Le passager participe aux coûts directs du vol. Aucune marge, et votre part ne descend pas sous le minimum.</span></div>
+        <div class="rule"><em>02</em><b>Seul commandant de bord</b><span>Préparation, conduite, sécurité et décision de partir sont sous votre entière responsabilité.</span></div>
+        <div class="rule"><em>03</em><b>Licence, médical, expérience</b><span>Documents valides et envoyés. 3 décollages et atterrissages en 90 jours avant chaque vol avec passagers.</span></div>
+        <div class="rule"><em>04</em><b>Appareil autorisé et assuré</b><span>Uniquement des avions pour lesquels vous êtes autorisé, avec l'assurance passagers en vigueur.</span></div>
+        <div class="rule"><em>05</em><b>Un vol accepté est un engagement</b><span>Pas de changement de créneau pour votre seule convenance. En cas de problème, prévenez tôt.</span></div>
+        <div class="rule"><em>06</em><b>Seul Fly Horizons annule</b><span>Un vol qui ne peut pas se tenir : vous en faites la demande à Fly Horizons.</span></div>
+        <div class="rule"><em>07</em><b>Coordonnées protégées</b><span>Celles du passager servent uniquement à organiser son vol. Ni transmises, ni conservées au-delà.</span></div>
+        <div class="rule"><em>08</em><b>Courtoisie et transparence</b><span>Ponctuel, clair sur le déroulement, et les échanges passent par les outils de l'espace.</span></div>
+      </div>
+    </section>
+
+    <!-- ═══ 12 AIDE ═══════════════════════════════════════════════════ -->
+    <section class="ch" id="aide">
+      <div class="ch-head"><h2>Besoin d'aide<span class="dot">?</span></h2></div>
+      <div class="contact">
+        <a href="https://wa.me/32472324135"><svg class="i" style="width:22px;height:22px"><use href="#i-msg"/></svg><b>WhatsApp</b><span>Une question, un imprévu</span></a>
+        <a href="mailto:info@fly-horizons.com"><svg class="i" style="width:22px;height:22px"><use href="#i-send"/></svg><b>info@fly-horizons.com</b><span>Par email</span></a>
+        <a href="#aide"><svg class="i" style="width:22px;height:22px"><use href="#i-alert"/></svg><b>Signaler un problème</b><span>Dans le menu de l'espace pilote</span></a>
+      </div>
+
+      <h3>Questions fréquentes</h3>
+      <details><summary>Mon annonce n'apparaît à aucune date sur le site</summary><p>Vérifiez vos disponibilités : si des plages existent mais sont toutes passées ou désactivées, et qu'aucun jour n'est ajouté, il n'y a aucun créneau réservable.</p></details>
+      <details><summary>Le passager dit avoir payé, mais je ne vois rien</summary><p>Un virement peut prendre un à deux jours ouvrables. Ne marquez « reçu » qu'une fois l'argent visible sur votre compte. En attendant, le paiement reste « En attente », sans conséquence.</p></details>
+      <details><summary>Le passager demande une modification de la route</summary><p>Vous recevez son commentaire par notification et par email. Ajustez le tracé dans l'onglet Route du vol et renvoyez-le : il la valide ensuite, et le lien de paiement part à ce moment-là.</p></details>
+      <details><summary>Je ne peux plus assurer un vol confirmé</summary><p>Proposez d'abord un report au passager dans l'onglet Messages. Si ce n'est pas possible, contactez Fly Horizons au plus vite. Ne l'annulez pas vous-même.</p></details>
+      <details><summary>Mon certificat médical expire bientôt</summary><p>Renouvelez-le, puis mettez à jour la date et renvoyez le justificatif depuis Mon profil, onglet Licence. Tant que la date est dépassée, vous ne pouvez pas voler avec Fly Horizons.</p></details>
+      <details><summary>Je n'ai pas de notification sur iPhone</summary><p>L'app doit être ajoutée à l'écran d'accueil depuis Safari, puis ouverte depuis son icône, et les notifications acceptées. Depuis Chrome ou un autre navigateur, ça ne fonctionne pas sur iPhone.</p></details>
+
+      <p style="margin-top:28px">Tout ce qui précède est aussi présenté sur la page publique <a href="https://www.fly-horizons.com/devenir-pilote">fly-horizons.com/devenir-pilote</a>.</p>
+      <div class="foot">Maquette du guide pilote · écrans reconstitués, données fictives · version du 27/09/2026</div>
+    </section>
+  </main>
+</div>
+
+<script>
+// ── Barre de lecture + sommaire actif ─────────────────────────────────────
+const bar = document.getElementById('progress');
+const links = [...document.querySelectorAll('#toc a')];
+const sections = links.map(a => document.querySelector(a.getAttribute('href')));
+function onScroll() {
+  const h = document.documentElement;
+  bar.style.transform = `scaleX(${h.scrollTop / (h.scrollHeight - h.clientHeight)})`;
+  let cur = 0;
+  sections.forEach((s, i) => { if (s.getBoundingClientRect().top < 140) cur = i; });
+  links.forEach((a, i) => a.classList.toggle('on', i === cur));
+  const on = links[cur];
+  if (window.innerWidth <= 980 && on) {
+    const toc = document.getElementById('toc');
+    const x = on.offsetLeft - toc.clientWidth / 2 + on.clientWidth / 2;
+    if (Math.abs(toc.scrollLeft - x) > 40) toc.scrollTo({ left: x, behavior: 'smooth' });
+  }
+}
+addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+// ── Calculateur de tarif (même règle que lib/annonces-pilote.ts) ──────────
+const eur = v => v.toLocaleString('fr-BE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+const st = { mode: 'avion', unit: 'eur' };
+const $ = id => document.getElementById(id);
+function minPct(p) { const n = Math.min(Math.max(Math.round(p) || 0, 1), 6); return Math.round(100 / (n + 1) * 10) / 10; }
+function calc() {
+  const total = parseFloat($('c-total').value) || 0;
+  const places = Math.max(1, Number($('c-places').value) || 1);
+  const partVal = parseFloat($('c-part').value);
+  const partAuto = total > 0 ? Math.round(total / (places + 1) * 100) / 100 : 0;
+  const partMan = isNaN(partVal) ? 0 : (st.unit === 'pct' ? Math.round(total * partVal / 100 * 100) / 100 : partVal);
+  const part = st.mode === 'place' ? partAuto : partMan;
+  const client = Math.max(0, total - Math.max(0, part));
+  $('c-part-wrap').style.display = st.mode === 'place' ? 'none' : '';
+  $('c-sum').innerHTML = st.mode === 'avion'
+    ? `<div><span>Vous payez</span><b class="num">${eur(Math.max(0, part))}</b></div><div class="strong"><span>Prix affiché au client</span><b class="num">${eur(client)}</b></div>`
+    : `<div><span>Votre part (${places + 1} parts égales)</span><b class="num">${eur(partAuto)}</b></div><div><span>Solde à partager entre les passagers</span><b class="num">${eur(client)}</b></div><div class="strong"><span>Prix par passager si complet</span><b class="num">${eur(Math.round(client / places * 100) / 100)}</b></div><p>Recalculé sur les occupants réels à la clôture du groupe : plus cher par passager si le groupe part avant d'être complet.</p>`;
+  const m = minPct(places);
+  const pct = total > 0 ? Math.round(part / total * 1000) / 10 : 0;
+  let html = '';
+  if (st.mode === 'avion' && total > 0 && !isNaN(partVal)) {
+    if (part <= 0) html = `<div class="check warn"><svg class="i"><use href="#i-alert"/></svg><div><b>Aucune part à votre charge : ce n'est plus du partage de frais mais du transport payant.</b><small>Vous restez seul responsable de ce choix.</small></div></div>`;
+    else if (pct + 0.1 < m) html = `<div class="check warn"><svg class="i"><use href="#i-alert"/></svg><div><b>Votre part (${pct.toLocaleString('fr-BE')} %) est sous le minimum recommandé de ${m.toLocaleString('fr-BE')} % pour ${places} passager${places > 1 ? 's' : ''}.</b><small>Publication possible, mais vous restez seul responsable du partage de frais réel.</small></div></div>`;
+    else html = `<div class="check ok"><svg class="i"><use href="#i-shield"/></svg><div><b>Votre part : ${pct.toLocaleString('fr-BE')} % (minimum recommandé ${m.toLocaleString('fr-BE')} % pour ${places} passager${places > 1 ? 's' : ''})</b></div></div>`;
+  }
+  $('c-check').innerHTML = html;
+}
+document.querySelectorAll('#calc .choice').forEach(b => b.addEventListener('click', () => {
+  st.mode = b.dataset.mode;
+  document.querySelectorAll('#calc .choice').forEach(x => x.classList.toggle('on', x === b));
+  calc();
+}));
+document.querySelectorAll('#c-unit button').forEach(b => b.addEventListener('click', () => {
+  st.unit = b.dataset.u;
+  document.querySelectorAll('#c-unit button').forEach(x => x.classList.toggle('on', x === b));
+  const total = parseFloat($('c-total').value) || 0, v = parseFloat($('c-part').value) || 0;
+  if (total > 0) $('c-part').value = st.unit === 'pct' ? Math.round(v / total * 1000) / 10 : Math.round(total * v / 100 * 100) / 100;
+  calc();
+}));
+['c-total', 'c-places', 'c-part'].forEach(id => $(id).addEventListener('input', calc));
+calc();
+
+// ── Semaine de disponibilités ─────────────────────────────────────────────
+(function () {
+  const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+  const hours = ['9 h', '11 h', '14 h', '16 h'];
+  const open = new Set(['5-0', '5-1', '6-0', '6-1', '2-2', '2-3', '4-2']);
+  const closed = new Set(['0', '1', '3']);
+  let html = '<div></div>' + days.map(d => `<div class="d">${d}</div>`).join('');
+  hours.forEach((h, r) => {
+    html += `<div class="h">${h}</div>`;
+    days.forEach((_, c) => {
+      const k = `${c}-${r}`;
+      const cls = k === '5-1' ? 'c b' : open.has(k) ? 'c o' : closed.has(String(c)) ? 'c x' : 'c';
+      html += `<div class="${cls}">${k === '5-1' ? 'Julie' : ''}</div>`;
+    });
+  });
+  document.getElementById('week').innerHTML = html;
+})();
+
+// ── Frise d'un vol (interactive) ──────────────────────────────────────────
+const ICON = n => `<svg class="i"><use href="#i-${n}"/></svg>`;
+const MAIL = (t, s) => `<div class="mail"><img src="public/icone.svg" alt=""><div><b>${t}</b><span>${s}</span></div></div>`;
+const JOURNEY = [
+  { label: 'Demande',
+    next: { lbl: 'Prochaine étape', t: 'Confirmer sam. 12 oct. à 10:00', p: 'Julie demande sam. 12 oct. Tracez d\'abord la route : elle part avec la confirmation.', acts: `<span class="btn btn-p">${ICON('route')}Tracer la route</span><span class="btn btn-s">${ICON('cal2')}Autre créneau</span>` },
+    you: ['Vous recevez l\'email « Nouvelle demande » et une notification.', 'Vous prenez contact si besoin (onglet Messages).', 'Vous tracez la route (vol avec itinéraire), puis vous confirmez le créneau. Ou vous proposez un autre créneau.', 'Vous avez 72 h avant l\'annulation automatique.'],
+    mails: [['Demande de vol reçue', 'au passager, dès sa réservation'], ['[Nouvelle demande] Julie D. · 12/10 à 10:00', 'à vous']] },
+  { label: 'Créneau',
+    next: { lbl: 'Confirmation', t: 'Confirmer sam. 12 oct. à 10:00 ?', p: 'Julie reçoit un email avec la date, l\'heure et votre route. Le vol passe en « Vol confirmé ». Quand il valide la route, il reçoit le lien pour vous payer par virement.', acts: `<span class="btn btn-p">${ICON('send')}Confirmer et envoyer</span>` },
+    you: ['Vous confirmez : l\'heure est fixée, la route part avec la confirmation.', 'Si vous aviez proposé un autre créneau, c\'est le passager qui accepte.'],
+    mails: [['Votre itinéraire personnalisé pour le 12 octobre', 'au passager, avec la route à valider']] },
+  { label: 'Route',
+    next: { lbl: 'En attente du passager', t: 'Route envoyée', p: 'Julie valide la route ou demande une modification. Vous recevez sa réponse par email et par notification.', acts: `<span class="badge b-warn">Route envoyée, en attente</span>` },
+    you: ['Si le passager valide : rien à faire, le lien de paiement lui part.', 'S\'il demande une modification : ajustez le tracé dans l\'onglet Route et renvoyez-le.'],
+    mails: [['Itinéraire validé', 'à vous, quand le passager accepte'], ['Modification demandée', 'à vous, avec son commentaire']] },
+  { label: 'Paiement',
+    next: { lbl: 'Règlement', t: 'En attente du virement', p: 'Julie a reçu votre IBAN et un QR code. Quand l\'argent est sur votre compte, marquez-le reçu.', acts: `<span class="btn btn-p">${ICON('check')}Marquer comme reçu</span><span class="btn btn-s">${ICON('cash')}En espèces</span>` },
+    you: ['Vous vérifiez votre compte, puis « Marquer comme reçu » (montant modifiable).', 'Vol à durée fixe : envoyez le lien avec « Renvoyer le lien ».', 'Oubli ? Rappels par notification, puis par email après le vol.'],
+    mails: [['Réglez votre vol partagé', 'au passager, avec IBAN et QR code'], ['Paiement confirmé', 'au passager, quand vous marquez reçu : son reçu se débloque']] },
+  { label: 'Effectué',
+    next: { lbl: 'Après le vol', t: 'Vol confirmé · sam. 12 oct. à 10:00', p: 'Préparez la masse et centrage avant le vol. « Vol effectué » est disponible 8 h après l\'heure du décollage.', acts: `<span class="btn btn-s">${ICON('land')}Marquer le vol effectué</span><span class="lnk">${ICON('dl')}Reçu client (PDF)</span>` },
+    you: ['48 h avant : notification de rappel (météo, M&B).', 'Après le vol : « Marquer le vol effectué », avec les minutes réellement volées si vous voulez.'],
+    mails: [['Vol dans 48 h', 'notification pour vous']] },
+];
+let jSel = 0;
+function renderJourney() {
+  document.getElementById('journey').innerHTML = JOURNEY.map((s, i) =>
+    `<button type="button" class="${i < jSel ? 'done' : i === jSel ? 'now sel' : ''}" data-i="${i}"><i></i>${s.label}</button>`).join('');
+  const s = JOURNEY[jSel];
+  document.getElementById('next').innerHTML = `<div class="lbl">${s.next.lbl}</div><b>${s.next.t}</b><p>${s.next.p}</p><div class="acts">${s.next.acts}</div>`;
+  document.getElementById('side').innerHTML =
+    `<div><h4>${ICON('user')}Ce que vous faites</h4><ul>${s.you.map(x => `<li>${x}</li>`).join('')}</ul></div>` +
+    `<div><h4>${ICON('send')}Emails envoyés</h4>${s.mails.map(m => MAIL(m[0], m[1])).join('')}</div>`;
+  document.querySelectorAll('#journey button').forEach(b => b.addEventListener('click', () => { jSel = Number(b.dataset.i); renderJourney(); }));
+}
+renderJourney();
+</script>
+</body>
+</html>

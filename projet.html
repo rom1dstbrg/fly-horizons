@@ -260,6 +260,32 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-09-27 (11) · Guide pilote v2</p>
+      <h3>Le guide pilote devient un accueil à onglets et cartes : une fiche par page de l'espace, des parcours, et à terme une visite guidée par page</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>L'ancien <code>/pilote/guide</code> était une page de texte statique, jugée « pas très poussée ». Une première maquette en longue page unique
+          (<code>maquette-guide-pilote.html</code>) a servi à rassembler et vérifier le contenu dans le code, mais Romain préfère un rangement par blocs.</dd>
+        <dt>Décision</dt>
+        <dd>Accueil <code>/pilote/guide</code> : bandeau « premiers pas » calculé sur le compte (profil en règle + IBAN, disponibilités, première annonce,
+          notifications), onglets Démarrer · Pages · Parcours · Règles et aide, cartes (icône, titre, une ligne, temps de lecture), recherche.
+          Une fiche par page du menu, plus des <b>parcours</b> pour ce qui traverse plusieurs pages (réservation de A à Z, paiement, vente à la place,
+          notifications, imprévu). Fiches non rédigées = « En construction ». Illustrations : <b>les vrais composants Studio</b> en démo, jamais du HTML
+          copié qui vieillirait. Prévu ensuite (maquette <code>maquette-visite-guidee.html</code> validée) : une visite guidée de 3–4 bulles façon BD à la
+          première ouverture de chaque page, vue enregistrée sur la fiche pilote, et un bouton « ? » par page qui ouvre l'aide de la page
+          (guide, parcours lié, revoir la visite en option).</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Une seule longue page (difficile à parcourir). Des captures d'écran ou du HTML recopié (faux dès que l'espace évolue). Un « ? » qui relance
+          seulement la visite (Romain : ce n'est pas ce qu'on cherche en cliquant « ? »). Mémoriser la visite dans le navigateur (reviendrait sur chaque appareil).</dd>
+        <dt>Conséquences</dt>
+        <dd>Catalogue unique <code>components/pilote/guide/catalog.ts</code> (<code>ready</code> par fiche). La démo du tiroir
+          (<code>ReservationParcours.tsx</code>) recopie le rendu de la frise d'<code>OverviewTab</code> : à relire si le tiroir change.
+          Écarts produit relevés en rédigeant : lien de paiement jamais envoyé automatiquement pour une annonce à durée fixe ; « Annuler la demande »
+          côté pilote alors que la charte dit « seul Fly Horizons annule » ; pas de bouton « proposer un report » côté pilote.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-09-27 (10) · Notifications push pour les pilotes</p>
       <h3>Web Push dans l'app « FH Pilote » ajoutée à l'écran d'accueil, invite à l'ouverture</h3>
       <dl>
@@ -1454,6 +1480,19 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-09-27 (36) — Guide pilote v2 : accueil à onglets et cartes, fiches, parcours « Une réservation de A à Z »</h3>
+      <ul>
+        <li><code>/pilote/guide</code> réécrit : bandeau des premiers pas calculé sur le compte (profil légal + IBAN, disponibilités, annonce, abonnement push),
+          onglets <code>Segmented</code> (Démarrer · Pages · Parcours · Règles et aide), recherche, cartes Studio (<code>components/pilote/guide/GuideHome.tsx</code>).</li>
+        <li><code>/pilote/guide/[slug]</code> : fiche avec retour, « Ouvrir la page », Précédent / Suivant. Rédigées : réservation de A à Z (démo interactive
+          du tiroir avec les vrais composants), installer l'app (reprise de l'ancien guide), charte (texte réel versionné), nous contacter.
+          Les autres affichent <code>UnderConstruction</code>. Catalogue : <code>components/pilote/guide/catalog.ts</code>.</li>
+        <li>Maquettes à la racine : <code>maquette-guide-accueil.html</code>, <code>maquette-visite-guidee.html</code> (visite + menu « ? », pas encore codés),
+          <code>maquette-guide-pilote.html</code> (1re version, sert de réserve de contenu).</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-09-27 (35) — Route : sauvegarde au chargement, retour au tiroir ; feuilles : glisser pour fermer, page figée</h3>
