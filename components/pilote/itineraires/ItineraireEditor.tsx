@@ -3,11 +3,11 @@
 import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { MapPin, Save, Trash2, X } from "lucide-react";
+import { AlertTriangle, MapPin, Save, Trash2, X } from "lucide-react";
 import type { WaypointDraft } from "@/components/admin/AdminRouteEditor";
 import { createItineraire, updateItineraire, type Itineraire } from "@/lib/actions/itineraires";
 import { Button, FormField, Input, Segmented, Textarea } from "@/components/pilote/studio";
-import { calcRouteStats } from "@/lib/route-stats";
+import { calcRouteStats, suspectPoints } from "@/lib/route-stats";
 import { optimizeWaypoints } from "@/lib/route-optimize";
 import { toDraft } from "./ItineraireParts";
 
@@ -83,6 +83,9 @@ export function ItineraireEditor({ itin, onClose, onSaved }: {
 
   const stats = calcRouteStats(points);
   const statsAjout = ordre === "optimise" ? calcRouteStats(added) : stats;
+  const suspects = suspectPoints(points);
+  const suspectIdx = new Set(suspects.map((x) => x.index));
+  const label = (i: number) => `${i + 1}${points[i]?.nom.trim() ? ` (${points[i].nom.trim()})` : ""}`;
   const gainKm = stats && statsAjout ? Math.round(statsAjout.distKm - stats.distKm) : 0;
 
   function save() {
@@ -175,10 +178,32 @@ export function ItineraireEditor({ itin, onClose, onSaved }: {
                 </p>
               </div>
             ) : (
+              <>
+              {suspects.length > 0 && (
+                <div role="alert" className="mb-2 flex gap-2.5 rounded-[14px] bg-st-bad-soft px-3.5 py-3">
+                  <AlertTriangle size={16} className="mt-0.5 shrink-0 text-st-bad" />
+                  <div className="space-y-1 text-[12.5px] leading-snug text-st-text-2">
+                    <p className="font-semibold text-st-bad">
+                      {suspects.length > 1 ? "Ces points ressemblent" : "Ce point ressemble"} à des points de navigation, pas à des lieux survolés
+                    </p>
+                    <ul className="space-y-0.5">
+                      {suspects.map((x) => (
+                        <li key={x.index}>
+                          Point {label(x.index)} :{" "}
+                          {x.reason === "ebci"
+                            ? `à ${x.km} km d'EBCI, sans doute un point de sortie ou d'entrée de la CTR.`
+                            : `à ${String(x.km).replace(".", ",")} km du point ${x.prev + 1}, sans doute un point pour contourner une zone.`}
+                        </li>
+                      ))}
+                    </ul>
+                    <p>Le client voit ces points comme le programme du vol : retirez-les si ce ne sont pas des lieux à voir.</p>
+                  </div>
+                </div>
+              )}
               <ol className="divide-y divide-st-line-soft">
                 {points.map((p, i) => (
                   <li key={i} className="flex items-center gap-2.5 py-1.5">
-                    <span className="grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full bg-st-ink text-[10.5px] font-semibold text-white">{i + 1}</span>
+                    <span className={`grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full text-[10.5px] font-semibold text-white ${suspectIdx.has(i) ? "bg-st-bad" : "bg-st-ink"}`}>{i + 1}</span>
                     <input
                       value={p.nom}
                       onChange={(e) => setPoints(points.map((q, k) => (k === i ? { ...q, nom: e.target.value } : q)))}
@@ -192,6 +217,7 @@ export function ItineraireEditor({ itin, onClose, onSaved }: {
                   </li>
                 ))}
               </ol>
+              </>
             )}
             <p className="mt-1.5 text-[11.5px] text-st-muted">
               Départ et retour à EBCI. Seulement les lieux survolés, pas chaque virage. Clic sur la carte : ajouter un point. Glisser un point : le déplacer.

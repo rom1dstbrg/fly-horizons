@@ -1413,6 +1413,16 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-27 (28) — Alerte « points de navigation » dans l'éditeur d'itinéraire</h3>
+      <ul>
+        <li><code>suspectPoints</code> (<code>lib/route-stats.ts</code>) : premier ou dernier point à moins de 15 km d'EBCI (point de sortie /
+          d'entrée de la CTR), ou tronçon de moins de 8 km (point de contournement).</li>
+        <li>Éditeur : encadré rouge au-dessus de la liste qui nomme chaque point en cause et pourquoi, numéro du point en rouge.
+          N'empêche pas d'enregistrer. Testé sur une route type (S et NW signalés, Genappe non).</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-27 (27) — Rappel « lieux survolés » déplacé</h3>
       <ul>
         <li>L'encadré au-dessus de la liste cassait le flux de l'éditeur : il remplace maintenant le cadre vide « aucun point » (visible au
