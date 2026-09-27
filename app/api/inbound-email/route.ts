@@ -5,16 +5,16 @@ import { reservationMessageClientReplyEmail } from "@/lib/email-templates";
 import { notifyPiloteReservation } from "@/lib/push";
 
 /**
- * POST /api/inbound-email
+ * POST /api/inbound-email : webhook Resend « email.received » (27/09).
  *
- * ⚠️ NON BRANCHÉ EN PROD (2026-09-11). Requiert :
- *  1. un sous-domaine `reply.fly-horizons.com` avec des enregistrements MX,
- *  2. Resend Inbound configuré pour POSTer les emails reçus sur cette route,
- *  3. côté `sendReservationMessage` : `replyTo` passé à
- *     `thread+<messages_token>@reply.fly-horizons.com` (au lieu de info@).
+ * Un client répond à l'email d'un message de sa réservation : l'adresse de
+ * réponse est `thread+<messages_token>@<INBOUND_REPLY_DOMAIN>` (voir
+ * `threadReplyTo`). Resend reçoit l'email sur ce sous-domaine (MX), appelle ce
+ * webhook avec les métadonnées, et on récupère le texte par l'API. La réponse
+ * est recousue au fil de la réservation (même effet que `submitClientMessageReply`).
  *
- * Une fois branché : capte la réponse email directe d'un client et la recoud au
- * fil de messages de sa réservation (même effet que `submitClientMessageReply`).
+ * Variables : INBOUND_REPLY_DOMAIN (ex. reply.fly-horizons.com) et
+ * RESEND_INBOUND_WEBHOOK_SECRET (le « signing secret » whsec_… du webhook Resend).
  */
 
 // Coupe l'historique cité d'une réponse email (heuristique simple).
@@ -28,6 +28,15 @@ function stripQuoted(text: string): string {
     out.push(line);
   }
   return out.join("\n").trim();
+}
+
+// Secours quand l'email n'a pas de partie texte.
+function htmlToText(html: string): string {
+  return html
+    .replace(/<(br|\/p|\/div)\s*\/?>/gi, "\n")
+    .replace(/<blockquote[\s\S]*$/i, "")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&#39;/g, "'").replace(/&quot;/g, '"');
 }
 
 function extractToken(to: unknown): string | null {
@@ -48,27 +57,35 @@ function extractToken(to: unknown): string | null {
 }
 
 export async function POST(req: NextRequest) {
-  // Secret obligatoire : sans lui, n'importe qui connaissant un messages_token
-  // pourrait injecter un message dans un fil. Tant que INBOUND_EMAIL_SECRET
-  // n'est pas configuré (webhook pas encore branché côté Resend), la route
-  // refuse tout.
-  const secret = process.env.INBOUND_EMAIL_SECRET;
+  // Signature obligatoire : sans elle, n'importe qui connaissant un
+  // messages_token pourrait injecter un message dans un fil.
+  const secret = process.env.RESEND_INBOUND_WEBHOOK_SECRET;
   if (!secret) {
-    return NextResponse.json({ error: "INBOUND_EMAIL_SECRET non configuré" }, { status: 400 });
+    return NextResponse.json({ error: "RESEND_INBOUND_WEBHOOK_SECRET non configuré" }, { status: 400 });
   }
-  const provided = req.headers.get("x-webhook-secret") ?? req.nextUrl.searchParams.get("secret");
-  if (provided !== secret) return NextResponse.json({ ok: true }); // silencieux
-
-  let payload: Record<string, unknown>;
+  const raw = await req.text();
+  let event: ReturnType<typeof resend.webhooks.verify>;
   try {
-    payload = await req.json();
+    event = resend.webhooks.verify({
+      payload: raw,
+      headers: {
+        id: req.headers.get("svix-id") ?? "",
+        timestamp: req.headers.get("svix-timestamp") ?? "",
+        signature: req.headers.get("svix-signature") ?? "",
+      },
+      webhookSecret: secret,
+    });
   } catch {
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ error: "Signature invalide" }, { status: 401 });
   }
+  if (event.type !== "email.received") return NextResponse.json({ ok: true });
 
-  const data = (payload.data ?? payload) as Record<string, unknown>;
-  const token = extractToken(data.to);
-  const rawText = typeof data.text === "string" ? data.text : "";
+  const token = extractToken(event.data.to);
+  if (!token) return NextResponse.json({ ok: true });
+
+  // Le webhook ne porte que les métadonnées : le texte se lit par l'API.
+  const { data: email } = await resend.emails.receiving.get(event.data.email_id);
+  const rawText = email?.text ?? (email?.html ? htmlToText(email.html) : "");
   const content = stripQuoted(rawText).slice(0, 5000);
 
   if (!token || !content) return NextResponse.json({ ok: true });

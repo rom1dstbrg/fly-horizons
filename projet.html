@@ -1456,6 +1456,19 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-27 (34) — Réponses email des clients recousues au fil (prêt, pas encore branché)</h3>
+      <ul>
+        <li><code>/api/inbound-email</code> réécrit pour Resend actuel : signature du webhook vérifiée (<code>resend.webhooks.verify</code>,
+          <code>RESEND_INBOUND_WEBHOOK_SECRET</code>), événement <code>email.received</code>, texte lu via <code>resend.emails.receiving.get</code>.
+          Remplace <code>INBOUND_EMAIL_SECRET</code>.</li>
+        <li><code>threadReplyTo()</code> (<code>lib/resend.ts</code>) : adresse de réponse <code>thread+&lt;token&gt;@INBOUND_REPLY_DOMAIN</code> sur les messages
+          d'une réservation ; reste <code>info@</code> tant que la variable n'existe pas.</li>
+        <li>Reste à faire côté comptes : sous-domaine <code>reply.fly-horizons.com</code> (MX chez Namecheap, la racine garde Private Email),
+          réception activée dans Resend, webhook <code>email.received</code>, puis les deux variables dans Vercel.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-27 (33) — Les 6 crons répondent enfin en GET</h3>
       <ul>
         <li><code>flight-reminder</code>, <code>payment-deadline</code>, <code>demande-deadline</code>, <code>flight-offer-deadline</code>, <code>purge-analytics</code>,

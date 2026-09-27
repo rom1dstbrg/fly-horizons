@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdminOrOwningPilote } from "./auth-guards";
 import { rateLimit } from "@/lib/rate-limit";
-import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
+import { resend, EMAIL_FROM, EMAIL_REPLY_TO, threadReplyTo } from "@/lib/resend";
 import {
   reservationMessageEmail,
   reservationMessageClientReplyEmail,
@@ -88,12 +88,12 @@ export async function sendReservationMessage(reservationId: string, content: str
     });
     if (insErr) return { error: insErr.message };
 
-    // Phase 1 : le client repond via la page publique. Quand l'email entrant
-    // sera branche : replyTo = `thread+${resa.messages_token}@reply.fly-horizons.com`.
+    // Le client peut répondre à cet email : sa réponse revient dans le fil
+    // (sous-domaine de réception Resend, voir threadReplyTo).
     await resend.emails.send({
       from: EMAIL_FROM,
       to: [client.email],
-      replyTo: EMAIL_REPLY_TO,
+      replyTo: threadReplyTo(resa.messages_token),
       subject: `Message ${isPilote ? `de ${expediteurNom} ` : ""}· votre vol Fly Horizons`,
       html: reservationMessageEmail({
         prenom: client.prenom,
