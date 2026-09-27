@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { PiloteProfilForm, PROFIL_TABS, type ProfilTab } from "@/components/pilote/PiloteProfilForm";
+import { PiloteProfilForm } from "@/components/pilote/PiloteProfilForm";
+import { PROFIL_TABS, type ProfilTab } from "@/lib/pilote/profil-tabs";
 import { PiloteDocuments } from "@/components/pilote/PiloteDocuments";
 import type { PiloteDocument } from "@/lib/actions/pilote-documents";
 import { PageHeader } from "@/components/pilote/studio";

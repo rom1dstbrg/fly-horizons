@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Check, AlertCircle, ShieldCheck, Upload, KeyRound, Info, IdCard, User, Landmark, Mail, Settings } from "lucide-react";
 import { updateMyPiloteProfile, uploadPiloteProfilPhoto } from "@/lib/actions/pilote-profil";
 import { piloteLegalStatus } from "@/lib/pilote/legal";
+import type { ProfilTab } from "@/lib/pilote/profil-tabs";
 import { Badge, Button, FormField, Input, PillTabs, SectionHeader, Select, SheetRow, SheetRows, Textarea } from "@/components/pilote/studio";
 import { cn } from "@/lib/utils";
 import type { Pilote } from "@/types/database";
@@ -16,8 +17,6 @@ import type { Pilote } from "@/types/database";
 // Une fois vérifiés par Romain, licence / SEP / médical ne se modifient plus ici :
 // le pilote envoie le nouveau document, Romain met les dates à jour en validant.
 
-export type ProfilTab = "licence" | "profil" | "paiement" | "emails" | "compte";
-export const PROFIL_TABS: ProfilTab[] = ["licence", "profil", "paiement", "emails", "compte"];
 
 type LegalState = "error" | "warn" | "ok";
 
