@@ -1508,6 +1508,17 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-27 (39) — Fiche guide « Disponibilités » : reproduction de la page, vue téléphone et ordinateur ; texte des fiches en pleine largeur</h3>
+      <ul>
+        <li>Démo de la fiche : la page reproduite dans un cadre de téléphone (barre d'onglets) ou d'ordinateur (rail, barre d'adresse), au choix par onglets,
+          téléphone d'office sur un petit écran ; cadre réduit s'il ne tient pas. Grille interactive, barre d'enregistrement.</li>
+        <li>Grille sortie dans <code>components/pilote/dispo/WeekGrid.tsx</code> (gestes compris), utilisée par la vraie page et la démo. Elle s'adapte à la largeur
+          de son conteneur (<code>@container</code>, seuil <code>@xl</code> = 576 px) et plus à celle de l'écran.</li>
+        <li>Guide pilote : plus de <code>max-w-2xl</code> sur le texte des fiches (demande de Romain : texte à la largeur de la section).</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-27 (38) — Guide pilote : fiche « Disponibilités »</h3>
       <ul>
         <li><code>/pilote/guide/disponibilites</code> rédigée (<code>components/pilote/guide/DispoGuide.tsx</code>) : vue d'ensemble avec démo interactive de la grille,

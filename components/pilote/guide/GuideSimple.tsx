@@ -30,7 +30,7 @@ function Key({ icon: Icon, label }: { icon: React.ComponentType<{ size?: number;
 export function GuideInstaller() {
   return (
     <div className="space-y-6">
-      <p className="max-w-2xl text-[14px] leading-relaxed text-st-text-2">
+      <p className="text-[14px] leading-relaxed text-st-text-2">
         L&apos;espace pilote s&apos;utilise comme une application : une icône sur votre écran d&apos;accueil, en plein écran,
         sans barre d&apos;adresse. C&apos;est indispensable pour recevoir les notifications (nouvelle demande, route validée,
         rappels). Ouvrez d&apos;abord <strong className="font-semibold text-st-text">fly-horizons.com/pilote</strong> sur votre téléphone.
@@ -54,7 +54,7 @@ export function GuideInstaller() {
           ]} />
         </Card>
       </div>
-      <p className="max-w-2xl text-[13px] text-st-muted">
+      <p className="text-[13px] text-st-muted">
         Sur iPhone, l&apos;ajout ne marche que depuis Safari, pas depuis Chrome ou une autre application.
       </p>
     </div>
@@ -106,7 +106,7 @@ export function GuideContact() {
       </div>
       <section className="space-y-2">
         <SectionHeader title="Un bug, une idée ?" />
-        <p className="flex max-w-2xl items-start gap-2 text-[14px] leading-relaxed text-st-text-2">
+        <p className="flex items-start gap-2 text-[14px] leading-relaxed text-st-text-2">
           <Flag size={16} className="mt-1 shrink-0" />
           <span>« Signaler un problème », dans le menu de l&apos;espace pilote (sous « Plus » sur téléphone), nous envoie votre message. Vous pouvez y joindre des captures d&apos;écran.</span>
         </p>

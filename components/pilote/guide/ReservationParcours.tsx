@@ -220,7 +220,7 @@ export function ReservationParcours() {
     <div className="space-y-8">
       <section className="space-y-3">
         <SectionHeader title="La vue d'ensemble" />
-        <p className="max-w-2xl text-[14px] leading-relaxed text-st-text-2">
+        <p className="text-[14px] leading-relaxed text-st-text-2">
           Chaque réservation s&apos;ouvre dans <Link href="/pilote/vols" className="font-semibold text-st-ink hover:underline">Mes vols</Link>, dans un tiroir à quatre onglets :
           Aperçu, Route, Messages et Dossier. En haut de l&apos;aperçu, une frise suit le vol en cinq étapes.
         </p>
@@ -241,7 +241,7 @@ export function ReservationParcours() {
 
       <section className="space-y-3">
         <SectionHeader title="Étape par étape" />
-        <ol className="max-w-2xl">
+        <ol>
           {ETAPES.map((e, i) => (
             <li key={e.t} className="grid grid-cols-[28px_1fr] gap-3 border-t border-st-line py-3 first:border-t-0">
               <span className="st-num grid h-[26px] w-[26px] place-items-center rounded-full bg-st-ink text-[12px] font-semibold text-white">{i + 1}</span>
@@ -252,7 +252,7 @@ export function ReservationParcours() {
             </li>
           ))}
         </ol>
-        <div className="flex max-w-2xl gap-2.5 rounded-[14px] bg-st-warn-soft px-4 py-3 text-[13px] leading-snug text-st-warn">
+        <div className="flex gap-2.5 rounded-[14px] bg-st-warn-soft px-4 py-3 text-[13px] leading-snug text-st-warn">
           <Clock size={16} className="mt-px shrink-0" />
           <p><b className="font-semibold">Une demande bloque le créneau 72 heures.</b> Sans confirmation ni autre créneau proposé, elle est annulée automatiquement.</p>
         </div>
@@ -260,7 +260,7 @@ export function ReservationParcours() {
 
       <section className="space-y-3">
         <SectionHeader title="Annuler une demande" />
-        <p className="max-w-2xl text-[14px] leading-relaxed text-st-text-2">
+        <p className="text-[14px] leading-relaxed text-st-text-2">
           Avant paiement, « Annuler la demande », en rouge en bas du bloc Règlement, remet les places en vente.
           Aucun email n&apos;est envoyé : prévenez le passager dans l&apos;onglet Messages. Un vol confirmé, lui,
           ne s&apos;annule que par Fly Horizons.

@@ -42,7 +42,7 @@ export default async function GuideFichePage({ params }: { params: Promise<{ slu
         ) : undefined}
       />
       <div className="-mt-2 space-y-3">
-        <p className="max-w-2xl text-[14.5px] leading-relaxed text-st-text-2">{entry.desc}</p>
+        <p className="text-[14.5px] leading-relaxed text-st-text-2">{entry.desc}</p>
         <div className="flex flex-wrap gap-1.5">
           <Badge><Clock className="size-3" />{entry.min} min</Badge>
         </div>
