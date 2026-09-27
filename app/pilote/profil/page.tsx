@@ -25,7 +25,7 @@ export default async function PiloteProfilPage({ searchParams }: { searchParams:
     : { data: [] };
 
   return (
-    <div className="mx-auto w-full max-w-xl space-y-5">
+    <div className="space-y-5">
       <PageHeader title="Mon profil" />
 
       {pilote ? (

@@ -1309,6 +1309,17 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-27 (11) — Profil pilote : mise en page de « Mes vols »</h3>
+      <ul>
+        <li>Pleine largeur : 4 chiffres clés (statut, SEP, médical, documents), puis une carte. Bureau : menu des sections à gauche,
+          contenu à droite, champs sur deux colonnes, onglet Licence en deux colonnes (infos | documents) sur grand écran.
+          Téléphone : onglets à pastille, bouton Enregistrer pleine largeur.</li>
+        <li>Correctif : la liste des onglets vit dans <code>lib/pilote/profil-tabs.ts</code> (une valeur exportée d'un fichier client
+          n'est qu'une référence côté serveur).</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-27 (10) — Profil pilote en onglets, renouvellement des documents</h3>
       <ul>
         <li><code>/pilote/profil</code> : statut légal en haut, puis onglets Licence (licence, médical, rappel expérience récente,
