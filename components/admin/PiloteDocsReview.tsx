@@ -232,7 +232,7 @@ export function PiloteDocsReview({ pilote, documents }: { pilote: Pilote; docume
               {error && <p className="rounded-[12px] bg-st-bad-soft px-3.5 py-2.5 text-[13px] text-st-bad">{error}</p>}
               <div className="flex gap-2">
                 <Button variant="secondary" disabled={pending} onClick={() => setRefusing(false)}>Annuler</Button>
-                <Button variant="danger" fullWidth loading={pending} disabled={!motif.trim()} onClick={refuse}>Refuser et prévenir le pilote</Button>
+                <Button variant="danger" className="min-w-0 flex-1" loading={pending} disabled={!motif.trim()} onClick={refuse}>Refuser et prévenir le pilote</Button>
               </div>
             </div>
           ) : (
@@ -244,7 +244,7 @@ export function PiloteDocsReview({ pilote, documents }: { pilote: Pilote; docume
               {error && <p className="rounded-[12px] bg-st-bad-soft px-3.5 py-2.5 text-[13px] text-st-bad">{error}</p>}
               <div className="flex gap-2">
                 <Button variant="secondary" disabled={pending} onClick={() => setRefusing(true)}>Refuser</Button>
-                <Button fullWidth loading={pending} disabled={!complete} onClick={validate}>
+                <Button className="min-w-0 flex-1" loading={pending} disabled={!complete} onClick={validate}>
                   {complete ? "Valider et supprimer les fichiers" : `Encore ${all.length - done} point${all.length - done > 1 ? "s" : ""}`}
                 </Button>
               </div>
