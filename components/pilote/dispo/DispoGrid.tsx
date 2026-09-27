@@ -199,12 +199,7 @@ export function DispoGrid({ monday, today, ouverts, reservations, visiteVue }: {
         </>}
       />
 
-      {futureOpen ? (
-        <div className="flex gap-2.5 rounded-[14px] bg-st-info-soft px-4 py-3 text-[13px] leading-snug text-st-info">
-          <Info size={16} className="mt-px shrink-0" />
-          <p>Un seul calendrier pour toutes vos annonces : un passager ne peut réserver qu&apos;un créneau ouvert, un bloc de 2 h entier. Vous calez ensuite l&apos;heure exacte ensemble.</p>
-        </div>
-      ) : (
+      {!futureOpen && (
         <div className="flex gap-2.5 rounded-[14px] bg-st-warn-soft px-4 py-3 text-[13px] leading-snug text-st-warn">
           <TriangleAlert size={16} className="mt-px shrink-0" />
           <p><b className="font-semibold">Aucun créneau ouvert : vos annonces ne sont pas réservables.</b> Touchez les blocs où vous pouvez voler, puis enregistrez.</p>
@@ -318,6 +313,11 @@ export function DispoGrid({ monday, today, ouverts, reservations, visiteVue }: {
           <span className="w-full text-st-muted sm:ml-auto sm:w-auto">Touchez un jour ou une heure pour tout ouvrir ou tout fermer.</span>
         </div>
       </section>
+
+      <div className="flex gap-2.5 rounded-[14px] bg-st-info-soft px-4 py-3 text-[13px] leading-snug text-st-info">
+        <Info size={16} className="mt-px shrink-0" />
+        <p>Un seul calendrier pour toutes vos annonces : un passager ne peut réserver qu&apos;un créneau ouvert, un bloc de 2 h entier. Vous calez ensuite l&apos;heure exacte ensemble.</p>
+      </div>
 
       <p className="flex gap-2.5 px-1 text-[13px] leading-relaxed text-st-text-2">
         <Info size={15} className="mt-[3px] shrink-0 text-st-muted" />
