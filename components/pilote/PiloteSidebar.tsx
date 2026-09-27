@@ -114,11 +114,16 @@ export function PiloteIssues({ pilot, onNavigate }: { pilot: PilotIdInfo; onNavi
 }
 
 // Statut en quelques mots, pour la plaque (pas de dates : elles se coupaient).
-function plateStatus(p: PilotIdInfo): string {
+export function plateStatus(p: PilotIdInfo): string {
   const errors = p.issues.filter((i) => i.severity === "error").length;
   if (errors) return `${errors} point${errors > 1 ? "s" : ""} à régler`;
   if (p.legalWarn) return "En règle · à surveiller";
   return "En règle";
+}
+
+/** Couleur du statut : rouge = à régler, orange = à surveiller, vert = en règle. */
+export function plateStatusCls(p: PilotIdInfo): string {
+  return !p.legalOk ? "text-st-bad" : p.legalWarn ? "text-st-warn" : "text-st-ok";
 }
 
 const rowCls = "group relative flex h-10 w-full shrink-0 items-center gap-3 rounded-[11px] px-[14px] text-[13.5px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-st-ink/20";
@@ -214,7 +219,7 @@ export function PiloteSidebar({ counts = {}, pilot, isAdmin = false }: {
               <PiloteAvatar pilot={pilot} size={34} />
               <span className={labelCls(open)}>
                 <span className="block truncate text-[13px] font-semibold text-st-text">{pilot.nom}</span>
-                <span className={cn("block truncate text-[11.5px] font-medium", !pilot.legalOk ? "text-st-bad" : pilot.legalWarn ? "text-st-warn" : "text-st-ok")}>
+                <span className={cn("block truncate text-[11.5px] font-semibold", plateStatusCls(pilot))}>
                   {plateStatus(pilot)}
                 </span>
               </span>

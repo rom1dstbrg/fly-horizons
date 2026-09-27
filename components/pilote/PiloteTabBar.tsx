@@ -8,7 +8,7 @@ import { logout } from "@/lib/actions/auth";
 import { cn } from "@/lib/utils";
 import { Badge, Button, SheetList, SheetListButton, SheetListLink } from "@/components/pilote/studio";
 import {
-  PILOTE_NAV, isPiloteNavActive, PiloteAvatar, PiloteIssues, frDate, type PilotIdInfo,
+  PILOTE_NAV, isPiloteNavActive, PiloteAvatar, PiloteIssues, plateStatus, plateStatusCls, type PilotIdInfo,
 } from "@/components/pilote/PiloteSidebar";
 
 // Onglets du téléphone, choisis le 24/09 : Accueil, Vols, M&B, Annonces ; le
@@ -186,9 +186,8 @@ export function PiloteTabBar({ pilot, isAdmin = false, badges = {} }: {
               <PiloteAvatar pilot={pilot} size={40} />
               <div className="min-w-0">
                 <p className="truncate font-semibold text-st-text">{pilot.nom}</p>
-                <p className="truncate text-[12px] text-st-muted">
-                  {pilot.legalOk ? "Profil en règle" : "Profil à compléter"} · lic. {frDate(pilot.licenceExpiration)} · méd. {frDate(pilot.medicalExpiration)}
-                </p>
+                {/* Même statut que la plaque du bureau (27/09). */}
+                <p className={cn("truncate text-[12.5px] font-semibold", plateStatusCls(pilot))}>{plateStatus(pilot)}</p>
               </div>
             </div>
           )}
