@@ -11,7 +11,9 @@ export const metadata = { title: "Mon profil — Espace pilote" };
 
 export default async function PiloteProfilPage({ searchParams }: { searchParams: Promise<{ onglet?: string }> }) {
   const { onglet } = await searchParams;
-  const initialTab = PROFIL_TABS.includes(onglet as ProfilTab) ? (onglet as ProfilTab) : undefined;
+  // Ancien onglet « paiement » : l'IBAN vit désormais dans « profil ».
+  const tabParam = onglet === "paiement" ? "profil" : onglet;
+  const initialTab = PROFIL_TABS.includes(tabParam as ProfilTab) ? (tabParam as ProfilTab) : undefined;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const admin = createAdminClient();

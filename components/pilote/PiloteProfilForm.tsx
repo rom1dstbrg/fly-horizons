@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Check, AlertCircle, Upload, KeyRound, Info, IdCard, User, Landmark, Mail, Settings } from "lucide-react";
+import { Check, AlertCircle, Upload, KeyRound, Info, IdCard, User, Mail, Settings } from "lucide-react";
 import { updateMyPiloteProfile, uploadPiloteProfilPhoto } from "@/lib/actions/pilote-profil";
 import { piloteLegalStatus } from "@/lib/pilote/legal";
 import type { ProfilTab } from "@/lib/pilote/profil-tabs";
@@ -35,8 +35,7 @@ const toneOf = (s: LegalState) => (s === "error" ? "bad" as const : s === "warn"
 
 const TABS: { key: ProfilTab; label: string; desc: string; icon: React.ComponentType<{ size?: number; className?: string }> }[] = [
   { key: "licence", label: "Licence", desc: "Licence, médical, documents", icon: IdCard },
-  { key: "profil", label: "Profil", desc: "Ce que voient les clients", icon: User },
-  { key: "paiement", label: "Paiement", desc: "IBAN des annonces", icon: Landmark },
+  { key: "profil", label: "Profil", desc: "Photo, bio, contact, IBAN", icon: User },
   { key: "emails", label: "Emails", desc: "Signature des messages", icon: Mail },
   { key: "compte", label: "Compte", desc: "Connexion et charte", icon: Settings },
 ];
@@ -285,7 +284,7 @@ export function PiloteProfilForm({ pilote, documentsSlot, initialTab }: {
             )}
 
             {tab === "profil" && (
-              <Panel title="Ce que voient les clients" desc="Affiché sur vos annonces et sur la page du vol du client.">
+              <Panel title="Profil" desc="Photo et bio : affichées sur vos annonces et sur la page du vol du client.">
                 <FormField id="p-photo" label="Photo" error={photoError || undefined}>
                   <div className="flex items-center gap-3">
                     {form.photo_url ? (
@@ -306,19 +305,14 @@ export function PiloteProfilForm({ pilote, documentsSlot, initialTab }: {
                   <FormField id="p-bio" label="Bio courte">
                     <Textarea id="p-bio" className="min-h-32 resize-y" value={form.bio} onChange={set("bio")} placeholder="Pilote en formation ATPL, basé à Charleroi…" />
                   </FormField>
-                  <FormField id="p-tel" label="Téléphone" hint="Pour que Romain et vos clients puissent vous joindre.">
-                    <Input id="p-tel" type="tel" value={form.telephone} onChange={set("telephone")} placeholder="+32 4xx xx xx xx" />
-                  </FormField>
-                </div>
-              </Panel>
-            )}
-
-            {tab === "paiement" && (
-              <Panel title="Paiement de vos annonces" desc="Le client vous règle directement sur cet IBAN : un QR de virement est généré pour lui.">
-                <div className="max-w-md">
-                  <FormField id="p-iban" label="IBAN">
-                    <Input id="p-iban" value={form.iban} onChange={set("iban")} placeholder="BE.. .... .... ...." />
-                  </FormField>
+                  <div className="space-y-3.5">
+                    <FormField id="p-tel" label="Téléphone" hint="Pour que Romain et vos clients puissent vous joindre.">
+                      <Input id="p-tel" type="tel" value={form.telephone} onChange={set("telephone")} placeholder="+32 4xx xx xx xx" />
+                    </FormField>
+                    <FormField id="p-iban" label="IBAN" hint="Vos clients d'annonces vous paient dessus : un QR de virement est généré pour eux.">
+                      <Input id="p-iban" value={form.iban} onChange={set("iban")} placeholder="BE.. .... .... ...." />
+                    </FormField>
+                  </div>
                 </div>
               </Panel>
             )}

@@ -55,7 +55,7 @@ export default async function PiloteAnnoncesPage() {
           <AlertTriangle size={16} className="mt-px shrink-0" />
           <p>
             {publishGate}{" "}
-            <Link href={`/pilote/profil?onglet=${publishGate.includes("IBAN") ? "paiement" : "licence"}`} className="font-semibold underline underline-offset-2">Ouvrir mon profil</Link>
+            <Link href={`/pilote/profil?onglet=${publishGate.includes("IBAN") ? "profil" : "licence"}`} className="font-semibold underline underline-offset-2">Ouvrir mon profil</Link>
           </p>
         </div>
       )}
