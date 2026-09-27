@@ -138,6 +138,17 @@ export async function middleware(request: NextRequest) {
       url.pathname = "/";
       return NextResponse.redirect(url);
     }
+
+    // Compte créé par invitation qui n'a pas encore choisi de mot de passe :
+    // l'espace reste fermé tant que ce n'est pas fait (sinon, session expirée =
+    // pilote bloqué dehors). La charte s'affiche par-dessus cette page d'abord.
+    const mustSetPassword = !!user.invited_at && !user.user_metadata?.password_set;
+    if (mustSetPassword && pathname !== "/pilote/mot-de-passe") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/pilote/mot-de-passe";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
   }
 
   // -------------------------------------------------

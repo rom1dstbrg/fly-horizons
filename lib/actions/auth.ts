@@ -186,7 +186,9 @@ export async function changePassword(formData: FormData) {
     return { error: "Les mots de passe ne correspondent pas." };
   }
 
-  const { error } = await supabase.auth.updateUser({ password });
+  // password_set : marque qu'un compte invité a choisi son mot de passe
+  // (le middleware bloque l'espace pilote tant que ce n'est pas fait).
+  const { error } = await supabase.auth.updateUser({ password, data: { password_set: true } });
   if (error) return { error: error.message };
 
   return { success: true };

@@ -44,6 +44,20 @@ export default async function PiloteLayout({ children }: { children: React.React
   // Charte pilote non encore acceptée : on bloque l'espace derrière le popup.
   const charteRequise = !pilote.conditions_accepted_at;
 
+  // Compte invité sans mot de passe : le middleware le garde sur
+  // /pilote/mot-de-passe ; on retire la navigation, qui ne mènerait nulle part.
+  const mustSetPassword = !!user.invited_at && !user.user_metadata?.password_set;
+  if (mustSetPassword) {
+    return (
+      <div className="pilote-studio flex min-h-screen bg-st-bg font-sans text-st-text">
+        <main className="flex-1 px-4 pb-10 pt-[calc(2.5rem+env(safe-area-inset-top))] sm:px-6">
+          {children}
+        </main>
+        {charteRequise && <ChartePiloteGate />}
+      </div>
+    );
+  }
+
   // Nombre d'items bloquants sur le profil, pour la pastille de la nav.
   const legal = piloteLegalStatus(pilote);
   const profilAlerts = legal.issues.filter(

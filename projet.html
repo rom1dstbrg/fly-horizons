@@ -1228,6 +1228,18 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-27 (4) — Mot de passe obligatoire pour un pilote invité</h3>
+      <ul>
+        <li>Un compte créé par invitation (<code>invited_at</code>) sans mot de passe choisi est gardé sur
+          <code>/pilote/mot-de-passe</code> par le middleware, sans navigation autour ; la charte s'affiche d'abord par-dessus.</li>
+        <li><code>changePassword</code> pose <code>user_metadata.password_set</code>. Les comptes invités avant ce changement
+          devront choisir leur mot de passe une fois de plus.</li>
+        <li>Indicateur de chargement des pages pilote : fondu via <code>tw-animate-css</code> (le <code>@keyframes</code> maison
+          était retiré à la compilation, l'indicateur restait invisible).</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-27 (3) — Barre d'onglets du téléphone : réaction immédiate</h3>
       <ul>
         <li><code>PiloteTabBar</code> : la pastille part vers l'onglet dès le toucher (état optimiste, sans attendre le serveur).
