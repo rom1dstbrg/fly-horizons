@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Bell } from "lucide-react";
 import { savePushSubscription, sendTestPush } from "@/lib/actions/push";
 import { Button } from "@/components/pilote/studio";
+import { useScrollLock, useSwipeToClose } from "@/components/pilote/studio/sheet-gestures";
 
 // Notifications push de l'espace pilote (27/09). Seulement dans l'app ajoutée
 // à l'écran d'accueil (iPhone : obligatoire pour le push). À l'ouverture, si le
@@ -65,6 +66,9 @@ export function PushPrompt() {
     }
   }, []);
 
+  useScrollLock(show);
+  const swipeRef = useSwipeToClose(() => later(), { enabled: show && !busy });
+
   if (!show) return null;
 
   function later() {
@@ -93,6 +97,7 @@ export function PushPrompt() {
   return (
     <div className="pilote-studio fixed inset-0 z-[2100] flex items-end justify-center bg-st-ink/30 font-sans backdrop-blur-[1.5px] motion-safe:animate-in motion-safe:fade-in" onClick={later}>
       <div
+        ref={swipeRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="push-title"

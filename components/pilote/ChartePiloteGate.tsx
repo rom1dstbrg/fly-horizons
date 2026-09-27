@@ -6,6 +6,7 @@ import { Check } from "lucide-react";
 import { Button } from "@/components/pilote/studio";
 import { acceptCharte } from "@/lib/actions/pilote-profil";
 import { CHARTE_PILOTE_TITRE, CHARTE_PILOTE_TEXTE } from "@/lib/pilote/charte";
+import { useScrollLock, useSwipeToClose } from "@/components/pilote/studio/sheet-gestures";
 
 // Bloc A · item 6 — popup obligatoire au premier accès, et à chaque nouvelle
 // version de la charte (`updated`). Le bouton d'acceptation ne s'active qu'une
@@ -17,6 +18,9 @@ export function ChartePiloteGate({ updated = false, onClose }: { updated?: boole
   const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [reachedEnd, setReachedEnd] = useState(false);
+  useScrollLock(true);
+  // Charte à accepter : pas de fermeture par geste (étape obligatoire).
+  const swipeRef = useSwipeToClose(() => onClose?.(), { enabled: readOnly });
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
 
@@ -44,6 +48,7 @@ export function ChartePiloteGate({ updated = false, onClose }: { updated?: boole
       onClick={readOnly ? onClose : undefined}
     >
       <div
+        ref={swipeRef}
         role="dialog"
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}

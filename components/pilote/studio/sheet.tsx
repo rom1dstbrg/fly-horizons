@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useScrollLock, useSwipeToClose } from "./sheet-gestures";
 
 // Tiroir de détail, un seul comportement partout : au téléphone une feuille qui
 // monte du bas (poignée, un tap à l'extérieur la ferme, bouton gris « Fermer »),
@@ -27,6 +28,8 @@ export function Sheet<T>({ value, onClose, children }: {
     if (value !== null) setShown(value);
   }
   const open = value !== null;
+  useScrollLock(open);
+  const swipeRef = useSwipeToClose(onClose, { enabled: open });
 
   useEffect(() => {
     if (!open) return;
@@ -42,6 +45,7 @@ export function Sheet<T>({ value, onClose, children }: {
         onClick={onClose}
       />
       <div
+        ref={swipeRef}
         role="dialog"
         aria-modal="true"
         className={cn(

@@ -79,8 +79,8 @@ export function useRouteProposal(
     });
   }, [reservation?.id, proposalLoaded, isPerso, reservation?.final_waypoints, reservation?.waypoints, reservation?.stopovers]);
 
-  function parsedWaypoints() {
-    return routeDraft
+  function parsedWaypoints(wps: WaypointDraft[] = routeDraft) {
+    return wps
       .map(wp => ({ lat: parseFloat(wp.lat), lng: parseFloat(wp.lng), nom: wp.nom || undefined }))
       .filter(wp => !isNaN(wp.lat) && !isNaN(wp.lng));
   }
@@ -97,14 +97,17 @@ export function useRouteProposal(
     return JSON.stringify(current) !== JSON.stringify(sentParsed);
   }
 
-  function saveRoute() {
+  // `wps` : points à enregistrer tout de suite (itinéraire qu'on vient de
+  // charger, pas encore dans l'état). `onSaved` : après succès (ferme l'éditeur).
+  function saveRoute(wps?: WaypointDraft[], onSaved?: () => void) {
     if (!reservation) return;
-    const parsed = parsedWaypoints();
+    const parsed = parsedWaypoints(wps);
     if (parsed.length === 0) { showFeedback("Aucun point à sauvegarder", false); return; }
     startTransition(async () => {
       const result = await saveFinalWaypoints(reservation.id, parsed);
       if (result.error) { showFeedback("Erreur : " + result.error, false); return; }
       showFeedback("Route sauvegardée ✓");
+      onSaved?.();
     });
   }
 

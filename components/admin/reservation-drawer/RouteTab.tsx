@@ -44,7 +44,7 @@ type RouteApi = {
   routeStats: { distKm: number; totalMin: number } | null;
   isPending: boolean;
   foreFlightCopied: boolean;
-  saveRoute: () => void;
+  saveRoute: (wps?: WaypointDraft[], onSaved?: () => void) => void;
   sendRoute: () => void;
   copyForeFlight: () => void;
 };
@@ -164,11 +164,13 @@ export function RouteTab({ reservation: r, route, onOpenEditor, onOpenItineraire
 }
 
 // Éditeur plein écran : liste des points à gauche (en bas au téléphone), carte en grand.
-export function RouteEditorFullscreen({ open, reservation: r, route, onClose, onOpenItineraires, ask }: {
+export function RouteEditorFullscreen({ open, reservation: r, route, onClose, onSaved, onOpenItineraires, ask }: {
   open: boolean;
   reservation: DrawerReservation;
   route: RouteApi;
   onClose: () => void;
+  /** Après un enregistrement réussi : retour au tiroir, onglet Route. */
+  onSaved: () => void;
   onOpenItineraires: () => void;
   ask: (a: PendingAction) => void;
 }) {
@@ -207,7 +209,7 @@ export function RouteEditorFullscreen({ open, reservation: r, route, onClose, on
           Route <span className="font-medium text-st-muted">· {r.clients?.prenom} {r.clients?.nom} · {dateLabel} · {r.duree} min</span>
         </p>
         <span className="flex-1" />
-        <Button onClick={route.saveRoute} loading={route.isPending} disabled={pts.length === 0}>
+        <Button onClick={() => route.saveRoute(undefined, onSaved)} loading={route.isPending} disabled={pts.length === 0}>
           <Save /> Enregistrer
         </Button>
         <button type="button" onClick={onClose} aria-label="Fermer l'éditeur" className="grid h-[38px] w-[38px] shrink-0 cursor-pointer place-items-center rounded-[11px] border border-st-line bg-white text-st-text-2 transition-colors hover:bg-st-surface">

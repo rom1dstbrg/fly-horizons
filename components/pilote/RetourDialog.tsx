@@ -7,6 +7,7 @@ import { createRetour, uploadRetourCapture } from "@/lib/actions/pilote-retours"
 import { appareil, MAX_CAPTURES, type ClientError, type RetourType } from "@/lib/pilote-retours";
 import { Button, SheetCloseButton } from "@/components/pilote/studio";
 import { cn } from "@/lib/utils";
+import { useScrollLock, useSwipeToClose } from "@/components/pilote/studio/sheet-gestures";
 
 // « Signaler un problème » (maquette validée le 27/09) : bug, idée ou question
 // envoyés à Romain depuis n'importe quelle page de l'espace pilote. La page,
@@ -65,6 +66,9 @@ export function RetourDialog({ open, onClose }: { open: boolean; onClose: () => 
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose, sending]);
 
+  useScrollLock(open);
+  const swipeRef = useSwipeToClose(onClose, { enabled: open && !sending });
+
   if (!open) return null;
 
   function addFiles(files: FileList | null) {
@@ -114,6 +118,7 @@ export function RetourDialog({ open, onClose }: { open: boolean; onClose: () => 
   return (
     <div className="pilote-studio fixed inset-0 z-[2000] flex items-end justify-center bg-st-ink/30 font-sans backdrop-blur-[1.5px] motion-safe:animate-in motion-safe:fade-in sm:items-center sm:p-4" onClick={() => !sending && onClose()}>
       <div
+        ref={swipeRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="retour-title"

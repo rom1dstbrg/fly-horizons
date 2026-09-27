@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { SheetCloseButton } from "./sheet";
+import { useScrollLock, useSwipeToClose } from "./sheet-gestures";
 
 type Choice = {
   href: string;
@@ -22,6 +23,8 @@ export function ChoiceMenu({ title, choices, trigger }: {
   trigger: (props: { onClick: () => void; "aria-expanded": boolean; "aria-haspopup": "menu" }) => React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  useScrollLock(open);
+  const swipeRef = useSwipeToClose(() => setOpen(false), { enabled: open });
 
   useEffect(() => {
     if (!open) return;
@@ -74,6 +77,7 @@ export function ChoiceMenu({ title, choices, trigger }: {
           className={cn("absolute inset-0 bg-st-ink/25 backdrop-blur-[1.5px] transition-opacity duration-300", open ? "opacity-100" : "opacity-0")}
         />
         <div
+          ref={swipeRef}
           role="dialog"
           aria-label={title}
           className={cn(

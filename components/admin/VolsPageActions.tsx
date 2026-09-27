@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Plus, Route, WifiOff, X } from "lucide-react";
+import { useScrollLock, useSwipeToClose } from "@/components/pilote/studio/sheet-gestures";
 
 const OPTIONS = [
   { href: "/pilote/reservations/new",         icon: Plus,    label: "Nouvelle réservation", desc: "Vol standard payé en ligne" },
@@ -12,6 +13,8 @@ const OPTIONS = [
 
 export function VolsPageActions({ activeTab }: { activeTab: string }) {
   const [open, setOpen] = useState(false);
+  useScrollLock(open);
+  const swipeRef = useSwipeToClose(() => setOpen(false), { enabled: open });
 
   return (
     <>
@@ -61,7 +64,7 @@ export function VolsPageActions({ activeTab }: { activeTab: string }) {
       {open && (
         <div className="sm:hidden fixed inset-0 z-[100] flex items-end justify-center">
           <div className="absolute inset-0 bg-foreground/30 backdrop-blur-[2px]" onClick={() => setOpen(false)} />
-          <div className="relative w-full bg-white rounded-t-2xl shadow-2xl border border-border pb-[calc(1rem+env(safe-area-inset-bottom))]">
+          <div ref={swipeRef} className="relative w-full bg-white rounded-t-2xl shadow-2xl border border-border pb-[calc(1rem+env(safe-area-inset-bottom))]">
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <p className="text-sm font-black text-foreground">Nouvelle réservation</p>
               <button onClick={() => setOpen(false)} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer" aria-label="Fermer">

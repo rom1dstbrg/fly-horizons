@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition, useEffect, useSyncExternalStore } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, animate, useMotionValue } from "framer-motion";
+import { useScrollLock, useSwipeToClose } from "@/components/pilote/studio/sheet-gestures";
 import { Check, AlertTriangle, Info, Route as RouteIcon, MessageSquare, FolderOpen } from "lucide-react";
 import {
   updateStatutReservation,
@@ -26,6 +27,7 @@ import { MessagesTab } from "./MessagesTab";
 import { DossierTab } from "./DossierTab";
 import { EmailComposer } from "./EmailComposer";
 import { ItinerairePicker } from "@/components/pilote/itineraires/ItinerairePicker";
+import { toDraft } from "@/components/pilote/itineraires/ItineraireParts";
 import { ConfirmActionDialog, type PendingAction } from "./ConfirmActionDialog";
 // Bloc C (mise en jeu premier-arrivé, flight_offers) reste GELÉ — pivot 08/09,
 // cf. mémoire project_marketplace_legal_risk. Bloc B (assignation manuelle
@@ -120,7 +122,8 @@ export function ReservationDrawer({
   // L'historique se charge à l'ouverture de Dossier (il y vit depuis la refonte).
   const history = useReservationHistory(reservation, activeTab === "dossier" ? "historique" : activeTab);
   const messages = useReservationMessages(reservation, activeTab);
-  const itineraires = useItineraires(route.setRouteDraft);
+  // Charger un itinéraire l'enregistre aussitôt sur la réservation (27/09).
+  const itineraires = useItineraires(route.setRouteDraft, (itin) => route.saveRoute(toDraft(itin)));
 
   useEffect(() => {
     if (!reservation) return;
@@ -335,6 +338,21 @@ export function ReservationDrawer({
       ].join(" · ")
     : "";
 
+  // Téléphone : glisser vers le bas ferme le tiroir (27/09). Il est animé par
+  // framer-motion : le geste pilote la même valeur `y`, sans saut à la sortie.
+  const sheetY = useMotionValue<number | string>(0);
+  const swipeRef = useSwipeToClose<HTMLElement>(onClose, {
+    enabled: !!r && !isSmUp,
+    adapter: {
+      move: (px) => sheetY.set(px),
+      release: (close, done) => {
+        if (close) animate(sheetY, window.innerHeight, { duration: 0.2, ease: [0.2, 0, 0, 1] }).then(done);
+        else animate(sheetY, 0, { duration: 0.2, ease: [0.2, 0, 0, 1] });
+      },
+    },
+  });
+  useScrollLock(!!r);
+
   return (
     <>
       <AnimatePresence>
@@ -347,6 +365,8 @@ export function ReservationDrawer({
             />
 
             <motion.aside
+              ref={swipeRef}
+              style={isSmUp ? undefined : { y: sheetY }}
               role="dialog"
               aria-modal="true"
               aria-label={`Vol de ${r.clients?.prenom ?? ""} ${r.clients?.nom ?? ""}`}
@@ -516,6 +536,7 @@ export function ReservationDrawer({
           reservation={r}
           route={route}
           onClose={() => setEditorOpen(false)}
+          onSaved={() => { setEditorOpen(false); setActiveTab("route"); }}
           onOpenItineraires={itineraires.open}
           ask={setPendingAction}
         />

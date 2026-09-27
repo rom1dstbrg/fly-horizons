@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Check, AlertTriangle } from "lucide-react";
 import { Button, Input } from "@/components/pilote/studio";
+import { useScrollLock, useSwipeToClose } from "@/components/pilote/studio/sheet-gestures";
 
 // Fenêtre de confirmation avant toute action qui écrit au client (maquette v2
 // validée le 24/09) : ce que l'action déclenche, en liste, et un avertissement
@@ -47,12 +48,16 @@ export function ConfirmActionDialog({
     return () => window.removeEventListener("keydown", onKey);
   }, [action, onCancel]);
 
+  useScrollLock(!!action);
+  const swipeRef = useSwipeToClose(onCancel, { enabled: !!action });
+
   if (!action) return null;
   const needsTime = action.askTime !== undefined;
 
   return (
     <div className="fixed inset-0 z-[300] flex items-end justify-center bg-st-ink/30 backdrop-blur-[1.5px] motion-safe:animate-in motion-safe:fade-in sm:items-center sm:p-4" onClick={onCancel}>
       <div
+        ref={swipeRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="confirm-title"

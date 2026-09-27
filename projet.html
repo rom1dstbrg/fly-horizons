@@ -1456,6 +1456,18 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-27 (35) — Route : sauvegarde au chargement, retour au tiroir ; feuilles : glisser pour fermer, page figée</h3>
+      <ul>
+        <li>Tiroir d'un vol : charger un itinéraire l'enregistre aussitôt sur la réservation ; « Enregistrer » dans l'éditeur plein écran
+          ferme l'éditeur et revient au tiroir, onglet Route (<code>saveRoute(wps?, onSaved?)</code>).</li>
+        <li><code>components/pilote/studio/sheet-gestures.ts</code> : <code>useSwipeToClose</code> (téléphone, geste vers le bas quand le contenu est en haut,
+          ignoré sur les cartes et curseurs) et <code>useScrollLock</code> (page derrière figée, compteur partagé).</li>
+        <li>Branché sur : <code>Sheet</code> Studio, tiroir des vols (framer-motion, même valeur <code>y</code>), feuille « Plus », sélecteur d'itinéraire,
+          Signaler un problème, invite notifications, confirmation d'action, menu de choix, actions de vols admin ; charte : page figée, geste seulement en lecture.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-27 (34) — Réponses email des clients recousues au fil (prêt, pas encore branché)</h3>
       <ul>
         <li><code>/api/inbound-email</code> réécrit pour Resend actuel : signature du webhook vérifiée (<code>resend.webhooks.verify</code>,

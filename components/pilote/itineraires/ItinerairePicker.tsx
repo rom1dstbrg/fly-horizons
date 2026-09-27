@@ -7,6 +7,7 @@ import type { Itineraire } from "@/lib/actions/itineraires";
 import { Button, SheetCloseButton } from "@/components/pilote/studio";
 import { cn } from "@/lib/utils";
 import { applyFilter, aroundFilter, dureeMax, FilterBar, fullFilter, ItinerairePreview, ItineraireRows, type DureeFilter } from "./ItineraireParts";
+import { useScrollLock, useSwipeToClose } from "@/components/pilote/studio/sheet-gestures";
 
 // « Charger un itinéraire » (maquette validée le 27/09) : depuis l'onglet Route
 // d'une réservation, l'éditeur plein écran, le formulaire d'annonce. Tous les
@@ -57,11 +58,15 @@ export function ItinerairePicker({ open, onClose, items, loading, onApply, duree
   );
   const selected = shown.find((i) => i.id === selectedId) ?? shown[0] ?? null;
 
+  useScrollLock(open);
+  const swipeRef = useSwipeToClose(onClose, { enabled: open });
+
   if (!open) return null;
 
   return (
     <div className="pilote-studio fixed inset-0 z-[2000] flex items-end justify-center bg-st-ink/30 font-sans backdrop-blur-[1.5px] motion-safe:animate-in motion-safe:fade-in sm:items-center sm:p-4" onClick={onClose}>
       <div
+        ref={swipeRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="itin-picker-title"

@@ -11,6 +11,7 @@ import { Badge, Button, SheetList, SheetListButton, SheetListLink } from "@/comp
 import {
   PILOTE_NAV, isPiloteNavActive, PiloteAvatar, PiloteIssues, plateStatus, plateStatusCls, type PilotIdInfo,
 } from "@/components/pilote/PiloteSidebar";
+import { useScrollLock, useSwipeToClose } from "@/components/pilote/studio/sheet-gestures";
 
 // Onglets du téléphone, choisis le 24/09 : Accueil, Vols, M&B, Annonces ; le
 // reste (Transactions, Disponibilités, Profil, Guide, Vue admin, Déconnexion)
@@ -40,6 +41,8 @@ export function PiloteTabBar({ pilot, isAdmin = false, badges = {} }: {
   const pathname = usePathname() ?? "";
   const [moreOpen, setMoreOpen] = useState(false);
   const [retourOpen, setRetourOpen] = useState(false);
+  useScrollLock(moreOpen);
+  const moreSwipeRef = useSwipeToClose(() => setMoreOpen(false), { enabled: moreOpen });
   const barRef = useRef<HTMLElement>(null);
   const lastLefts = useRef<Map<string, number>>(new Map());
   const [pill, setPill] = useState<{ left: number; width: number; animate: boolean } | null>(null);
@@ -175,6 +178,7 @@ export function PiloteTabBar({ pilot, isAdmin = false, badges = {} }: {
           className={cn("absolute inset-0 bg-st-ink/25 backdrop-blur-[1.5px] transition-opacity duration-300", moreOpen ? "opacity-100" : "opacity-0")}
         />
         <div
+          ref={moreSwipeRef}
           role="dialog"
           aria-label="Plus"
           className={cn(
