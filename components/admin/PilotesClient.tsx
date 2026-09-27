@@ -1,485 +1,194 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { ExternalLink, FileText, Mail, Plane, TriangleAlert, UserPlus } from "lucide-react";
 import { createPilote, togglePiloteActif, updatePilote, deletePilote, resendPiloteInvitation } from "@/lib/actions/pilotes";
-import { AdminRowActions } from "@/components/admin/ui/AdminRowActions";
-import { EmptyState } from "@/components/admin/ui";
-import { ConfirmActionDialog, type PendingAction } from "@/components/admin/reservation-drawer/ConfirmActionDialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { UserPlus, Loader2, Check, Plane, Gauge, TriangleAlert, Mail, FileCheck, ExternalLink } from "lucide-react";
 import { getPiloteDocumentsForReview, verifyPiloteDocuments, refusePiloteDocuments } from "@/lib/actions/pilote-documents";
-import { recenceValidUntil } from "@/lib/pilote/legal";
+import { piloteLegalStatus, recenceValidUntil } from "@/lib/pilote/legal";
+import { ConfirmActionDialog, type PendingAction } from "@/components/admin/reservation-drawer/ConfirmActionDialog";
+import {
+  Badge, Button, EmptyState, FormField, Input, PageHeader, Segmented, Sheet, SheetBody, SheetFooter,
+  SheetHeader, SheetRow, SheetRows, StatCard, StatGrid, Table, TableCell, TableHeaderCell, TableRow,
+  TableSearch, Textarea,
+} from "@/components/pilote/studio";
+import { cn } from "@/lib/utils";
 import type { Pilote } from "@/types/database";
 import { emptyReliabilityStats, type PiloteReliabilityStats } from "@/lib/pilote-stats";
 
-// ── Formulaire d'invitation ─────────────────────────────────────────────
+// Page /admin/pilotes en style Studio (27/09) : chiffres clés, tableau filtrable,
+// un tiroir par pilote (Documents · Fiche · Fiabilité). Les documents à vérifier
+// ouvrent directement l'onglet Documents.
 
-function InviteForm({ onDone }: { onDone: () => void }) {
-  const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+type Filter = "tous" | "a_verifier" | "pas_en_regle" | "inactifs";
+type Tab = "documents" | "fiche" | "fiabilite";
+type Notice = { tone: "ok" | "warn" | "bad"; text: string } | null;
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setError(null);
-    setNotice(null);
-    const fd = new FormData(e.currentTarget);
-
-    startTransition(async () => {
-      const result = await createPilote({
-        nom: fd.get("nom") as string,
-        email: fd.get("email") as string,
-        telephone: (fd.get("telephone") as string) || undefined,
-        iban: (fd.get("iban") as string) || undefined,
-      });
-      if (result?.error) setError(result.error);
-      else if (result?.mailFailed) {
-        (document.getElementById("invite-form") as HTMLFormElement | null)?.reset();
-        setError("Pilote créé, mais l'email n'est pas parti. Utilisez « Renvoyer l'accès » sur sa ligne.");
-      } else if (result?.promoted) {
-        (document.getElementById("invite-form") as HTMLFormElement | null)?.reset();
-        setNotice("Ce compte client existait déjà : il est passé pilote et la personne a reçu un email pour se connecter avec son mot de passe habituel.");
-      } else {
-        (document.getElementById("invite-form") as HTMLFormElement | null)?.reset();
-        onDone();
-      }
-    });
-  }
-
-  return (
-    <form id="invite-form" onSubmit={handleSubmit} className="bg-card rounded-xl border border-border p-5 space-y-4">
-      {error && (
-        <div className="bg-destructive/10 border border-destructive/30 text-destructive text-sm rounded-md px-4 py-3">
-          {error}
-        </div>
-      )}
-      {notice && (
-        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm rounded-md px-4 py-3">
-          {notice}
-        </div>
-      )}
-      <div className="grid sm:grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <Label className="text-sm text-muted-foreground">Nom complet *</Label>
-          <Input name="nom" required placeholder="Jean Dupont" className="bg-input border-border" />
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-sm text-muted-foreground">Email *</Label>
-          <Input name="email" type="email" required placeholder="jean@exemple.com" className="bg-input border-border" />
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-sm text-muted-foreground">Téléphone</Label>
-          <Input name="telephone" placeholder="+32 4xx xx xx xx" className="bg-input border-border" />
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-sm text-muted-foreground">IBAN</Label>
-          <Input name="iban" placeholder="BE xx xxxx xxxx xxxx" className="bg-input border-border" />
-        </div>
-      </div>
-      <button
-        type="submit"
-        disabled={isPending}
-        className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-[#e6a800] transition-colors disabled:opacity-60 cursor-pointer"
-      >
-        {isPending ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
-        {isPending ? "Envoi de l'invitation..." : "Envoyer l'invitation"}
-      </button>
-    </form>
-  );
-}
-
-// ── Panneau de fiabilité ─────────────────────────────────────────────────
-
-function pct(rate: number | null): string | undefined {
-  return rate != null ? `${Math.round(rate * 100)}%` : undefined;
-}
-
-function ReliabilityPanel({ stats }: { stats: PiloteReliabilityStats }) {
-  const items: { label: string; value: number; pctBadge?: string; warn?: boolean; sub?: string }[] = [
-    { label: "Vols effectués", value: stats.volsEffectues },
-    {
-      label: "Vols rendus / retirés",
-      value: stats.volsRendus,
-      pctBadge: pct(stats.tauxVolsRendus),
-      warn: stats.volsRendusProchesDuVol > 0,
-      sub: stats.volsRendusProchesDuVol > 0
-        ? `dont ${stats.volsRendusProchesDuVol} à moins de 3 j du vol`
-        : stats.tauxVolsRendus != null ? "des vols attribués" : undefined,
-    },
-    {
-      label: "Demandes d'annonce annulées",
-      value: stats.demandesAnnonceAnnulees,
-      pctBadge: pct(stats.tauxAnnonceAnnulees),
-      warn: stats.demandesAnnonceAnnuleesProchesDuVol > 0,
-      sub: stats.demandesAnnonceAnnuleesProchesDuVol > 0
-        ? `dont ${stats.demandesAnnonceAnnuleesProchesDuVol} à moins de 3 j du vol`
-        : stats.tauxAnnonceAnnulees != null ? "des demandes reçues" : undefined,
-    },
-    { label: "Créneaux renégociés", value: stats.creneauxRenegocies },
-    {
-      label: "Annonces publiées",
-      value: stats.annoncesPubliees,
-      sub: stats.annoncesPubliees > 0 ? `${stats.vuesAnnonces} vue${stats.vuesAnnonces > 1 ? "s" : ""} cumulées` : undefined,
-    },
-    {
-      label: "Messages clients en attente",
-      value: stats.messagesEnAttente,
-      pctBadge: pct(stats.tauxMessagesEnAttente),
-      warn: stats.messagesEnAttente > 0,
-      sub: stats.plusVieuxMessageEnAttenteJours != null
-        ? `le plus ancien depuis ${Math.floor(stats.plusVieuxMessageEnAttenteJours)} j`
-        : stats.tauxMessagesEnAttente != null ? "des vols en cours" : undefined,
-    },
-  ];
-
-  return (
-    <td colSpan={5} className="px-4 py-4 bg-secondary/20">
-      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] mb-2.5">
-        Fiabilité
-      </p>
-
-      {stats.isAtRisk && (
-        <div className="mb-3 rounded-lg border border-red-300 bg-red-50 px-3 py-2.5">
-          <p className="flex items-center gap-1.5 text-xs font-bold text-red-700">
-            <TriangleAlert size={13} /> Pilote à surveiller
-          </p>
-          <ul className="mt-1 space-y-0.5 text-xs text-red-700 list-disc list-inside">
-            {stats.alertes.map((a) => <li key={a}>{a}</li>)}
-          </ul>
-        </div>
-      )}
-
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-        {items.map((it) => (
-          <div
-            key={it.label}
-            className={`rounded-lg border p-3 ${it.warn ? "border-amber-300 bg-amber-50" : "border-border bg-card"}`}
-          >
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">{it.label}</p>
-            <div className="flex items-baseline gap-1.5">
-              <p className={`text-xl font-bold ${it.warn ? "text-amber-700" : "text-foreground"}`}>{it.value}</p>
-              {it.pctBadge && (
-                <span className={`text-xs font-semibold ${it.warn ? "text-amber-700" : "text-muted-foreground"}`}>
-                  ({it.pctBadge})
-                </span>
-              )}
-            </div>
-            {it.sub && <p className="text-[11px] text-muted-foreground mt-0.5">{it.sub}</p>}
-          </div>
-        ))}
-      </div>
-    </td>
-  );
-}
-
-// ── Ligne éditable ────────────────────────────────────────────────────────
-
-function EditPiloteForm({ pilote, onClose }: { pilote: Pilote; onClose: () => void }) {
-  const [error, setError] = useState("");
-  const [isPending, startTransition] = useTransition();
-
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setError("");
-    const fd = new FormData(e.currentTarget);
-    startTransition(async () => {
-      const r = await updatePilote(pilote.id, {
-        nom: fd.get("nom") as string,
-        telephone: (fd.get("telephone") as string) || undefined,
-        iban: (fd.get("iban") as string) || undefined,
-      });
-      if (r.error) { setError(r.error); return; }
-      onClose();
-    });
-  }
-
-  return (
-    <td colSpan={5} className="px-4 py-3 bg-secondary/20">
-      <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3">
-        {error && <p className="w-full text-xs text-destructive">{error}</p>}
-        <div>
-          <label className="block text-xs text-muted-foreground mb-1">Nom</label>
-          <input name="nom" required defaultValue={pilote.nom}
-            className="h-8 px-2 w-40 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-        </div>
-        <div>
-          <label className="block text-xs text-muted-foreground mb-1">Téléphone</label>
-          <input name="telephone" defaultValue={pilote.telephone ?? ""}
-            className="h-8 px-2 w-36 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-        </div>
-        <div>
-          <label className="block text-xs text-muted-foreground mb-1">IBAN</label>
-          <input name="iban" defaultValue={pilote.iban ?? ""}
-            className="h-8 px-2 w-52 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-        </div>
-        <div className="flex gap-2">
-          <button type="submit" disabled={isPending}
-            className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors cursor-pointer">
-            {isPending ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Sauvegarder
-          </button>
-          <button type="button" onClick={onClose}
-            className="px-3 h-8 rounded-lg border border-border text-xs text-muted-foreground hover:bg-secondary transition-colors cursor-pointer">
-            Annuler
-          </button>
-        </div>
-      </form>
-    </td>
-  );
-}
-
-// ── Vérification des documents (27/09) ──────────────────────────────────
-
-const fr = (iso: string | null) => (iso ? iso.slice(0, 10).split("-").reverse().join("/") : "—");
 const CLASSE: Record<string, string> = { classe1: "Classe 1", classe2: "Classe 2", lapl: "LAPL" };
+const fr = (iso: string | null | undefined) => (iso ? iso.slice(0, 10).split("-").reverse().join("/") : null);
+const initials = (nom: string) => nom.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+
+function Avatar({ pilote, size = 34 }: { pilote: Pilote; size?: number }) {
+  return pilote.photo_url ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={pilote.photo_url} alt="" style={{ width: size, height: size }} className="shrink-0 rounded-full border border-st-line object-cover" />
+  ) : (
+    <span style={{ width: size, height: size }} className="grid shrink-0 place-items-center rounded-full bg-st-ink text-[12px] font-semibold text-white">
+      {initials(pilote.nom)}
+    </span>
+  );
+}
 
 function DocsBadge({ status }: { status: Pilote["docs_status"] }) {
-  const cfg = status === "verifies"
-    ? { cls: "bg-emerald-50 text-emerald-700", label: "Documents vérifiés" }
-    : status === "envoyes"
-      ? { cls: "bg-amber-50 text-amber-800", label: "Documents à vérifier" }
-      : { cls: "bg-secondary text-muted-foreground", label: status === "refuses" ? "Documents refusés" : "Sans documents" };
-  return <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold ${cfg.cls}`}>{cfg.label}</span>;
+  if (status === "verifies") return <Badge tone="success">Vérifiés</Badge>;
+  if (status === "envoyes") return <Badge tone="warning" dot>À vérifier</Badge>;
+  if (status === "refuses") return <Badge tone="danger">Refusés</Badge>;
+  return <Badge>Aucun</Badge>;
 }
 
-type ReviewDoc = { id: string; type: string; file_name: string | null; url: string | null };
-
-function DocsReviewPanel({ pilote, onDone }: { pilote: Pilote; onDone: () => void }) {
-  const [docs, setDocs] = useState<ReviewDoc[] | null>(null);
-  const [note, setNote] = useState(
-    `Vu le ${new Date().toLocaleDateString("fr-BE")} : licence ${pilote.licence_numero ?? "?"}, SEP jusqu'au ${fr(pilote.licence_expiration)}, médical ${CLASSE[pilote.medical_classe ?? ""] ?? "?"} jusqu'au ${fr(pilote.medical_expiration)}.`,
-  );
-  const [motif, setMotif] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
-
-  useEffect(() => {
-    getPiloteDocumentsForReview(pilote.id).then((r) => setDocs("documents" in r && r.documents ? r.documents : []));
-  }, [pilote.id]);
-
-  const run = (fn: () => Promise<{ error?: string; success?: boolean }>) =>
-    startTransition(async () => {
-      const r = await fn();
-      if (r.error) setError(r.error);
-      else onDone();
-    });
-
-  const recence = recenceValidUntil(pilote.recence_date);
-  const inputCls = "w-full rounded-lg border border-input bg-background px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
-
+function NoticeBar({ notice, onClose }: { notice: NonNullable<Notice>; onClose: () => void }) {
+  const cls = notice.tone === "ok" ? "bg-st-ok-soft text-st-ok" : notice.tone === "warn" ? "bg-st-warn-soft text-st-warn" : "bg-st-bad-soft text-st-bad";
   return (
-    <td colSpan={5} className="px-4 py-4 bg-secondary/20">
-      <div className="grid gap-5 md:grid-cols-2">
-        <div className="space-y-2 text-sm">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Déclaré par le pilote</p>
-          <p>Licence : <strong>{pilote.licence_numero ?? "—"}</strong></p>
-          <p>SEP valable jusqu&apos;au <strong>{fr(pilote.licence_expiration)}</strong></p>
-          <p>Médical <strong>{CLASSE[pilote.medical_classe ?? ""] ?? "—"}</strong> jusqu&apos;au <strong>{fr(pilote.medical_expiration)}</strong></p>
-          <p>Expérience récente jusqu&apos;au <strong>{fr(recence)}</strong></p>
-          {pilote.docs_status === "verifies" && (
-            <p className="text-xs text-emerald-700">Vérifiés le {fr(pilote.docs_verified_at)} · {pilote.docs_note}</p>
-          )}
-          <p className="pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Fichiers</p>
-          {docs === null ? (
-            <p className="text-xs text-muted-foreground">Chargement…</p>
-          ) : docs.length === 0 ? (
-            <p className="text-xs text-muted-foreground">Aucun fichier. Vous pouvez valider après une vérification en visio ou en main propre.</p>
-          ) : (
-            <ul className="space-y-1">
-              {docs.map((d) => (
-                <li key={d.id}>
-                  <a href={d.url ?? "#"} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline cursor-pointer">
-                    <ExternalLink size={13} />
-                    {d.type === "licence" ? "Licence" : d.type === "medical" ? "Certificat médical" : "Autre"} · {d.file_name ?? "fichier"}
-                  </a>
-                </li>
-              ))}
-              <li className="text-[11px] text-muted-foreground">Liens valables 10 minutes.</li>
-            </ul>
-          )}
-        </div>
-
-        <div className="space-y-3">
-          {error && <p className="text-xs text-destructive">{error}</p>}
-          <div>
-            <label className="block text-xs text-muted-foreground mb-1">Ce que vous avez vérifié (gardé sur la fiche)</label>
-            <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} className={inputCls} />
-          </div>
-          <button type="button" disabled={isPending} onClick={() => run(() => verifyPiloteDocuments(pilote.id, note))}
-            className="flex items-center gap-1.5 px-3 h-9 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors cursor-pointer">
-            {isPending ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Valider et supprimer les fichiers
-          </button>
-          <div className="pt-2 border-t border-border">
-            <label className="block text-xs text-muted-foreground mb-1">Ou refuser (motif envoyé au pilote)</label>
-            <div className="flex gap-2">
-              <input value={motif} onChange={(e) => setMotif(e.target.value)} placeholder="Ex. : page SEP illisible" className={inputCls} />
-              <button type="button" disabled={isPending || !motif.trim()} onClick={() => run(() => refusePiloteDocuments(pilote.id, motif))}
-                className="px-3 h-9 shrink-0 rounded-lg border border-destructive/30 text-xs font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-50 transition-colors cursor-pointer">
-                Refuser
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </td>
+    <div className={cn("flex items-start justify-between gap-3 rounded-[14px] px-4 py-3 text-[13px]", cls)}>
+      <p>{notice.text}</p>
+      <button type="button" onClick={onClose} className="shrink-0 cursor-pointer text-[12px] font-semibold opacity-70 hover:opacity-100">Fermer</button>
+    </div>
   );
 }
 
-function PiloteRow({
-  pilote,
-  stats,
-  onConfirm,
-}: {
-  pilote: Pilote;
-  stats: PiloteReliabilityStats;
-  onConfirm: (a: PendingAction) => void;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [showStats, setShowStats] = useState(false);
-  const [showDocs, setShowDocs] = useState(false);
-  const [isActive, setIsActive] = useState(pilote.statut === "actif");
-  const [cascadeMsg, setCascadeMsg] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+// ── Page ────────────────────────────────────────────────────────
 
-  function runToggle(next: boolean) {
-    startTransition(async () => {
-      const result = await togglePiloteActif(pilote.id, next);
-      if (result.error) return;
-      setIsActive(next);
-      const parts: string[] = [];
-      if (result.releasedFlights) parts.push(`${result.releasedFlights} vol${result.releasedFlights > 1 ? "s" : ""} à réassigner`);
-      if (result.unpublishedAnnonces) parts.push(`${result.unpublishedAnnonces} annonce${result.unpublishedAnnonces > 1 ? "s" : ""} retirée${result.unpublishedAnnonces > 1 ? "s" : ""}`);
-      if (result.cancelledAnnonceResas) parts.push(`${result.cancelledAnnonceResas} vol${result.cancelledAnnonceResas > 1 ? "s" : ""} d'annonce annulé${result.cancelledAnnonceResas > 1 ? "s" : ""} (client prévenu)`);
-      if (result.paidOrphans) parts.push(`⚠ ${result.paidOrphans} vol${result.paidOrphans > 1 ? "s" : ""} déjà réglé${result.paidOrphans > 1 ? "s" : ""} à traiter à la main`);
-      setCascadeMsg(parts.length ? `Pilote désactivé · ${parts.join(", ")}.` : null);
-    });
-  }
-
-  function handleResend() {
-    startTransition(async () => {
-      const result = await resendPiloteInvitation(pilote.id);
-      setCascadeMsg(result.error ? `Lien non envoyé : ${result.error}.` : `Lien d'accès envoyé à ${result.email}.`);
-    });
-  }
-
-  function handleToggle() {
-    if (isActive) {
-      // Désactivation : cascade (vols futurs désassignés, annonces retirées) → confirmation.
-      onConfirm({
-        title: `Désactiver ${pilote.nom} ?`,
-        description: "Ses vols standard assignés repasseront en demandes à réassigner ; ses annonces et leurs demandes non réglées seront annulées (clients prévenus) ; les vols déjà réglés vous seront signalés. Réversible en le réactivant.",
-        confirmLabel: "Désactiver",
-        danger: true,
-        run: () => runToggle(false),
-      });
-      return;
-    }
-    runToggle(true);
-  }
-
-  return (
-    <>
-      <tr className="border-b border-border last:border-0 hover:bg-secondary/20 transition-colors">
-        <td className="px-4 py-3">
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm font-semibold text-foreground">{pilote.nom}</span>
-            <DocsBadge status={pilote.docs_status} />
-            {stats.isAtRisk && (
-              <span
-                title={stats.alertes.join(" · ")}
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-red-50 text-red-700 text-[10px] font-bold cursor-help"
-              >
-                <TriangleAlert size={10} /> À surveiller
-              </span>
-            )}
-          </div>
-          <div className="text-xs text-muted-foreground">{pilote.email}</div>
-        </td>
-        <td className="px-4 py-3 hidden sm:table-cell">
-          <span className="text-sm text-muted-foreground">{pilote.telephone ?? "—"}</span>
-        </td>
-        <td className="px-4 py-3 hidden md:table-cell">
-          <span className="text-sm text-muted-foreground font-mono">{pilote.iban ?? "—"}</span>
-        </td>
-        <td className="px-4 py-3 text-center">
-          <button
-            onClick={handleToggle}
-            disabled={isPending}
-            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${
-              isActive ? "bg-primary" : "bg-border"
-            } ${isPending ? "opacity-50" : ""}`}
-          >
-            <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
-              isActive ? "translate-x-4" : "translate-x-1"
-            }`} />
-          </button>
-        </td>
-        <td className="px-4 py-3">
-          <div className="flex justify-end">
-            <AdminRowActions
-              onEdit={() => setEditing(e => !e)}
-              onDelete={() => deletePilote(pilote.id)}
-              extra={[{
-                icon: FileCheck,
-                label: "Documents",
-                onClick: () => setShowDocs(v => !v),
-                title: "Vérifier la licence, la SEP et le médical",
-              }, {
-                icon: Mail,
-                label: "Renvoyer l'accès",
-                onClick: handleResend,
-                disabled: isPending,
-                title: "Renvoie un email pour choisir (ou rechoisir) son mot de passe",
-              }, {
-                icon: Gauge,
-                label: "Fiabilité",
-                onClick: () => setShowStats(v => !v),
-                title: "Vols rendus, annonces annulées, messages en attente…",
-              }]}
-            />
-          </div>
-        </td>
-      </tr>
-      {cascadeMsg && (
-        <tr className="border-b border-border">
-          <td colSpan={5} className="px-4 py-2 bg-amber-50 text-xs text-amber-800">
-            {cascadeMsg}
-          </td>
-        </tr>
-      )}
-      {editing && (
-        <tr className="border-b border-border">
-          <EditPiloteForm pilote={pilote} onClose={() => setEditing(false)} />
-        </tr>
-      )}
-      {showDocs && (
-        <tr className="border-b border-border">
-          <DocsReviewPanel pilote={pilote} onDone={() => setShowDocs(false)} />
-        </tr>
-      )}
-      {showStats && (
-        <tr className="border-b border-border">
-          <ReliabilityPanel stats={stats} />
-        </tr>
-      )}
-    </>
-  );
-}
-
-// ── Composant principal ─────────────────────────────────────────────────
-
-export function PilotesClient({
-  pilotes,
-  reliability,
-}: {
+export function PilotesClient({ pilotes, reliability }: {
   pilotes: Pilote[];
   reliability: Record<string, PiloteReliabilityStats>;
 }) {
-  const [showInvite, setShowInvite] = useState(false);
+  const [filter, setFilter] = useState<Filter>("tous");
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState<{ id: string; tab: Tab } | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
+  const [notice, setNotice] = useState<Notice>(null);
+
+  const statsOf = (id: string) => reliability[id] ?? emptyReliabilityStats();
+  const legalOf = (p: Pilote) => piloteLegalStatus(p);
+
+  const actifs = pilotes.filter((p) => p.statut === "actif");
+  const aVerifier = pilotes.filter((p) => p.docs_status === "envoyes");
+  const pasEnRegle = actifs.filter((p) => !legalOf(p).ok);
+  const aSurveiller = pilotes.filter((p) => statsOf(p.id).isAtRisk);
+
+  const q = search.trim().toLowerCase();
+  const rows = pilotes
+    .filter((p) =>
+      filter === "a_verifier" ? p.docs_status === "envoyes"
+      : filter === "pas_en_regle" ? p.statut === "actif" && !legalOf(p).ok
+      : filter === "inactifs" ? p.statut !== "actif"
+      : true)
+    .filter((p) => !q || p.nom.toLowerCase().includes(q) || p.email.toLowerCase().includes(q));
+
+  const selected = open ? pilotes.find((p) => p.id === open.id) ?? null : null;
+  const openPilote = (p: Pilote) => setOpen({ id: p.id, tab: p.docs_status === "envoyes" ? "documents" : "fiche" });
 
   return (
-    <div className="space-y-4">
+    <div className="pilote-studio space-y-5">
+      <PageHeader
+        title="Pilotes"
+        actions={<Button onClick={() => setInviteOpen(true)}><UserPlus /> Inviter un pilote</Button>}
+      />
+
+      <StatGrid>
+        <StatCard label="Pilotes actifs" value={actifs.length} hint={`${pilotes.length} au total`} />
+        <StatCard label="Documents à vérifier" value={aVerifier.length} tone={aVerifier.length ? "warn" : undefined} hint={aVerifier.length ? "En attente de vous" : "Rien en attente"} />
+        <StatCard label="Pas en règle" value={pasEnRegle.length} tone={pasEnRegle.length ? "bad" : undefined} hint="Ne reçoivent aucun vol" />
+        <StatCard label="À surveiller" value={aSurveiller.length} tone={aSurveiller.length ? "bad" : undefined} hint="Fiabilité" />
+      </StatGrid>
+
+      {notice && <NoticeBar notice={notice} onClose={() => setNotice(null)} />}
+
+      {pilotes.length === 0 ? (
+        <EmptyState icon={Plane} title="Aucun pilote pour l'instant" description="Invitez un premier pilote pour lui ouvrir son espace." />
+      ) : (
+        <Table
+          toolbar={
+            <>
+              <Segmented
+                value={filter}
+                onChange={setFilter}
+                items={[
+                  { key: "tous", label: "Tous", count: pilotes.length },
+                  { key: "a_verifier", label: "À vérifier", count: aVerifier.length },
+                  { key: "pas_en_regle", label: "Pas en règle", count: pasEnRegle.length },
+                  { key: "inactifs", label: "Inactifs", count: pilotes.length - actifs.length },
+                ]}
+              />
+              <TableSearch value={search} onChange={setSearch} placeholder="Nom ou email" />
+            </>
+          }
+        >
+          <thead>
+            <tr>
+              <TableHeaderCell>Pilote</TableHeaderCell>
+              <TableHeaderCell>Documents</TableHeaderCell>
+              <TableHeaderCell>Statut</TableHeaderCell>
+              <TableHeaderCell align="right">Vols effectués</TableHeaderCell>
+              <TableHeaderCell>Compte</TableHeaderCell>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((p) => {
+              const legal = legalOf(p);
+              const errors = legal.issues.filter((i) => i.severity === "error");
+              const st = statsOf(p.id);
+              return (
+                <TableRow key={p.id} onClick={() => openPilote(p)} selected={open?.id === p.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Avatar pilote={p} />
+                      <div className="min-w-0">
+                        <p className="flex items-center gap-1.5 truncate font-medium text-st-text">
+                          {p.nom}
+                          {st.isAtRisk && <TriangleAlert size={13} className="shrink-0 text-st-bad" aria-label="À surveiller" />}
+                        </p>
+                        <p className="truncate text-[12px] text-st-muted">{p.email}</p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell><DocsBadge status={p.docs_status} /></TableCell>
+                  <TableCell>
+                    {legal.ok
+                      ? <Badge tone="success" dot>En règle</Badge>
+                      : <span title={errors.map((e) => e.label).join("\n")}><Badge tone="danger" dot>{errors.length} point{errors.length > 1 ? "s" : ""} à régler</Badge></span>}
+                  </TableCell>
+                  <TableCell align="right">{st.volsEffectues}</TableCell>
+                  <TableCell>{p.statut === "actif" ? <Badge tone="ink">Actif</Badge> : <Badge>Inactif</Badge>}</TableCell>
+                </TableRow>
+              );
+            })}
+            {rows.length === 0 && (
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-[13px] text-st-muted">Aucun pilote ne correspond.</td></tr>
+            )}
+          </tbody>
+        </Table>
+      )}
+
+      <Sheet value={selected} onClose={() => setOpen(null)}>
+        {(p) => (
+          <PiloteSheet
+            key={p.id}
+            pilote={p}
+            stats={statsOf(p.id)}
+            tab={open?.tab ?? "fiche"}
+            onTab={(tab) => setOpen((o) => (o ? { ...o, tab } : o))}
+            onClose={() => setOpen(null)}
+            onConfirm={setPendingAction}
+            onNotice={setNotice}
+          />
+        )}
+      </Sheet>
+
+      <Sheet value={inviteOpen ? true : null} onClose={() => setInviteOpen(false)}>
+        {() => <InviteSheet onClose={() => setInviteOpen(false)} onNotice={setNotice} />}
+      </Sheet>
+
       <ConfirmActionDialog
         action={pendingAction}
         isPending={false}
@@ -489,51 +198,381 @@ export function PilotesClient({
           setPendingAction(null);
         }}
       />
-      <div className="flex justify-end">
-        <button
-          onClick={() => setShowInvite(v => !v)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-[#e6a800] transition-colors cursor-pointer"
-        >
-          <UserPlus size={14} />
-          {showInvite ? "Fermer" : "Inviter un pilote"}
-        </button>
-      </div>
+    </div>
+  );
+}
 
-      {showInvite && <InviteForm onDone={() => setShowInvite(false)} />}
+// ── Tiroir d'un pilote ──────────────────────────────────────────
 
-      {pilotes.length === 0 ? (
-        <EmptyState
-          icon={Plane}
-          title="Aucun pilote pour l'instant"
-          description="Invitez un premier pilote pour lui donner accès à son espace."
+function PiloteSheet({ pilote, stats, tab, onTab, onClose, onConfirm, onNotice }: {
+  pilote: Pilote;
+  stats: PiloteReliabilityStats;
+  tab: Tab;
+  onTab: (t: Tab) => void;
+  onClose: () => void;
+  onConfirm: (a: PendingAction) => void;
+  onNotice: (n: Notice) => void;
+}) {
+  return (
+    <>
+      <SheetHeader title={pilote.nom} subtitle={pilote.email} leading={<Avatar pilote={pilote} size={40} />} onClose={onClose} />
+      <div className="px-[22px] pb-3">
+        <Segmented
+          fill
+          value={tab}
+          onChange={onTab}
+          items={[
+            { key: "documents", label: pilote.docs_status === "envoyes" ? "Documents •" : "Documents" },
+            { key: "fiche", label: "Fiche" },
+            { key: "fiabilite", label: "Fiabilité" },
+          ]}
         />
-      ) : (
-        <div className="card-premium overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Pilote</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">Téléphone</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">IBAN</th>
-                  <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Actif</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pilotes.map((p) => (
-                  <PiloteRow
-                    key={p.id}
-                    pilote={p}
-                    stats={reliability[p.id] ?? emptyReliabilityStats()}
-                    onConfirm={setPendingAction}
-                  />
-                ))}
-              </tbody>
-            </table>
+      </div>
+      {tab === "documents" && <DocumentsTab pilote={pilote} onClose={onClose} onNotice={onNotice} />}
+      {tab === "fiche" && <FicheTab pilote={pilote} onClose={onClose} onConfirm={onConfirm} onNotice={onNotice} />}
+      {tab === "fiabilite" && <FiabiliteTab stats={stats} />}
+    </>
+  );
+}
+
+type ReviewDoc = { id: string; type: string; file_name: string | null; url: string | null };
+
+function DocumentsTab({ pilote, onClose, onNotice }: { pilote: Pilote; onClose: () => void; onNotice: (n: Notice) => void }) {
+  const [docs, setDocs] = useState<ReviewDoc[] | null>(null);
+  const [note, setNote] = useState(
+    `Vu le ${new Date().toLocaleDateString("fr-BE")} : licence ${pilote.licence_numero ?? "?"}, SEP jusqu'au ${fr(pilote.licence_expiration) ?? "?"}, médical ${CLASSE[pilote.medical_classe ?? ""] ?? "?"} jusqu'au ${fr(pilote.medical_expiration) ?? "?"}.`,
+  );
+  const [motif, setMotif] = useState("");
+  const [refusing, setRefusing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    let alive = true;
+    getPiloteDocumentsForReview(pilote.id).then((r) => { if (alive) setDocs("documents" in r && r.documents ? r.documents : []); });
+    return () => { alive = false; };
+  }, [pilote.id]);
+
+  const legal = piloteLegalStatus(pilote);
+  const missing = (v: string | null | undefined) => v ?? <span className="text-st-bad">Non renseigné</span>;
+
+  function run(fn: () => Promise<{ error?: string; success?: boolean }>, ok: string) {
+    setError(null);
+    startTransition(async () => {
+      const r = await fn();
+      if (r.error) { setError(r.error); return; }
+      onNotice({ tone: "ok", text: ok });
+      onClose();
+    });
+  }
+
+  return (
+    <>
+      <SheetBody>
+        <SheetRows>
+          <SheetRow label="Documents"><DocsBadge status={pilote.docs_status} /></SheetRow>
+          <SheetRow label="Licence">{missing(pilote.licence_numero)}</SheetRow>
+          <SheetRow label="SEP valable jusqu'au">{missing(fr(pilote.licence_expiration))}</SheetRow>
+          <SheetRow label="Médical">
+            {missing(pilote.medical_classe ? CLASSE[pilote.medical_classe] : null)}
+            {pilote.medical_expiration && <span className="text-st-muted"> · jusqu&apos;au {fr(pilote.medical_expiration)}</span>}
+          </SheetRow>
+          <SheetRow label="Expérience récente jusqu'au">{missing(fr(recenceValidUntil(pilote.recence_date)))}</SheetRow>
+        </SheetRows>
+
+        {pilote.docs_status === "verifies" && (
+          <p className="rounded-[12px] bg-st-ok-soft px-3.5 py-2.5 text-[13px] text-st-ok">
+            Vérifiés le {fr(pilote.docs_verified_at)}{pilote.docs_note ? ` · ${pilote.docs_note}` : ""}
+          </p>
+        )}
+        {!legal.ok && (
+          <ul className="space-y-1 rounded-[12px] bg-st-bad-soft px-3.5 py-2.5 text-[12.5px] text-st-bad">
+            {legal.issues.filter((i) => i.severity === "error").map((i) => <li key={i.code}>{i.label}</li>)}
+          </ul>
+        )}
+
+        <div className="space-y-2">
+          <p className="text-[13px] font-medium text-st-text">Fichiers</p>
+          {docs === null ? (
+            <p className="text-[13px] text-st-muted">Chargement…</p>
+          ) : docs.length === 0 ? (
+            <p className="text-[13px] text-st-muted">Aucun fichier. Vous pouvez valider après une vérification en visio ou en main propre.</p>
+          ) : (
+            <div className="divide-y divide-st-line overflow-hidden rounded-[14px] border border-st-line">
+              {docs.map((d) => (
+                <a
+                  key={d.id}
+                  href={d.url ?? "#"}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex cursor-pointer items-center gap-3 px-3.5 py-3 transition-colors hover:bg-st-surface"
+                >
+                  <FileText size={17} className="shrink-0 text-st-muted" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[13.5px] font-medium text-st-text">{d.type === "licence" ? "Licence" : d.type === "medical" ? "Certificat médical" : "Autre"}</span>
+                    <span className="block truncate text-[12px] text-st-muted">{d.file_name ?? "Fichier"}</span>
+                  </span>
+                  <ExternalLink size={15} className="shrink-0 text-st-muted" />
+                </a>
+              ))}
+            </div>
+          )}
+          {docs && docs.length > 0 && <p className="text-[12px] text-st-muted">Liens valables 10 minutes : rouvrez le tiroir si besoin.</p>}
+        </div>
+
+        {refusing ? (
+          <FormField id="docs-motif" label="Motif du refus" hint="Envoyé au pilote par email. Les fichiers sont supprimés.">
+            <Input id="docs-motif" value={motif} onChange={(e) => setMotif(e.target.value)} placeholder="Ex. : page SEP illisible" autoFocus />
+          </FormField>
+        ) : (
+          <FormField id="docs-note" label="Ce que vous avez vérifié" hint="Gardé sur la fiche. Les fichiers sont supprimés à la validation.">
+            <Textarea id="docs-note" value={note} onChange={(e) => setNote(e.target.value)} className="min-h-20" />
+          </FormField>
+        )}
+
+        {error && <p className="rounded-[12px] bg-st-bad-soft px-3.5 py-2.5 text-[13px] text-st-bad">{error}</p>}
+      </SheetBody>
+      <SheetFooter>
+        {refusing ? (
+          <div className="flex flex-col gap-2 sm:flex-row-reverse">
+            <Button variant="danger" size="lg" className="sm:h-[38px] sm:text-[13px]" fullWidth loading={pending} disabled={!motif.trim()}
+              onClick={() => run(() => refusePiloteDocuments(pilote.id, motif), `Documents de ${pilote.nom} refusés, pilote prévenu.`)}>
+              Refuser et prévenir le pilote
+            </Button>
+            <Button variant="secondary" size="lg" className="sm:h-[38px] sm:text-[13px]" disabled={pending} onClick={() => setRefusing(false)}>Annuler</Button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2 sm:flex-row-reverse">
+            <Button size="lg" className="sm:h-[38px] sm:text-[13px]" fullWidth loading={pending}
+              onClick={() => run(() => verifyPiloteDocuments(pilote.id, note), `Documents de ${pilote.nom} validés, fichiers supprimés.`)}>
+              Valider et supprimer les fichiers
+            </Button>
+            <Button variant="secondary" size="lg" className="sm:h-[38px] sm:text-[13px]" disabled={pending} onClick={() => setRefusing(true)}>Refuser</Button>
+          </div>
+        )}
+      </SheetFooter>
+    </>
+  );
+}
+
+function FicheTab({ pilote, onClose, onConfirm, onNotice }: {
+  pilote: Pilote;
+  onClose: () => void;
+  onConfirm: (a: PendingAction) => void;
+  onNotice: (n: Notice) => void;
+}) {
+  const [form, setForm] = useState({ nom: pilote.nom, telephone: pilote.telephone ?? "", iban: pilote.iban ?? "" });
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+  const actif = pilote.statut === "actif";
+
+  function save(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    startTransition(async () => {
+      const r = await updatePilote(pilote.id, { nom: form.nom, telephone: form.telephone || undefined, iban: form.iban || undefined });
+      if (r.error) setError(r.error);
+      else onNotice({ tone: "ok", text: `Fiche de ${form.nom} enregistrée.` });
+    });
+  }
+
+  function resend() {
+    startTransition(async () => {
+      const r = await resendPiloteInvitation(pilote.id);
+      onNotice(r.error ? { tone: "bad", text: `Lien non envoyé : ${r.error}.` } : { tone: "ok", text: `Lien d'accès envoyé à ${r.email}.` });
+    });
+  }
+
+  function toggle(next: boolean) {
+    startTransition(async () => {
+      const r = await togglePiloteActif(pilote.id, next);
+      if (r.error) { setError(r.error); return; }
+      const parts: string[] = [];
+      if (r.releasedFlights) parts.push(`${r.releasedFlights} vol${r.releasedFlights > 1 ? "s" : ""} à réassigner`);
+      if (r.unpublishedAnnonces) parts.push(`${r.unpublishedAnnonces} annonce${r.unpublishedAnnonces > 1 ? "s" : ""} retirée${r.unpublishedAnnonces > 1 ? "s" : ""}`);
+      if (r.cancelledAnnonceResas) parts.push(`${r.cancelledAnnonceResas} vol${r.cancelledAnnonceResas > 1 ? "s" : ""} d'annonce annulé${r.cancelledAnnonceResas > 1 ? "s" : ""} (clients prévenus)`);
+      if (r.paidOrphans) parts.push(`${r.paidOrphans} vol${r.paidOrphans > 1 ? "s" : ""} déjà réglé${r.paidOrphans > 1 ? "s" : ""} à traiter à la main`);
+      onNotice({
+        tone: r.paidOrphans ? "warn" : "ok",
+        text: next ? `${pilote.nom} réactivé.` : `${pilote.nom} désactivé${parts.length ? ` · ${parts.join(", ")}` : ""}.`,
+      });
+      onClose();
+    });
+  }
+
+  function askToggle() {
+    if (!actif) { toggle(true); return; }
+    onConfirm({
+      title: `Désactiver ${pilote.nom} ?`,
+      consequences: [
+        "Ses vols standard attribués repassent en demandes à réassigner.",
+        "Ses annonces et leurs demandes non réglées sont annulées, clients prévenus.",
+        "Les vols déjà réglés vous sont signalés.",
+      ],
+      warning: "Réversible en le réactivant.",
+      confirmLabel: "Désactiver",
+      danger: true,
+      run: () => toggle(false),
+    });
+  }
+
+  function remove() {
+    if (!confirmDelete) { setConfirmDelete(true); return; }
+    startTransition(async () => {
+      const r = await deletePilote(pilote.id);
+      if (r.error) { setError(r.error); return; }
+      onNotice({ tone: "ok", text: `${pilote.nom} supprimé.` });
+      onClose();
+    });
+  }
+
+  return (
+    <form onSubmit={save} className="flex min-h-0 flex-1 flex-col">
+      <SheetBody>
+        <FormField id="pf-nom" label="Nom">
+          <Input id="pf-nom" required value={form.nom} onChange={(e) => setForm((f) => ({ ...f, nom: e.target.value }))} />
+        </FormField>
+        <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
+          <FormField id="pf-tel" label="Téléphone">
+            <Input id="pf-tel" type="tel" value={form.telephone} onChange={(e) => setForm((f) => ({ ...f, telephone: e.target.value }))} />
+          </FormField>
+          <FormField id="pf-iban" label="IBAN">
+            <Input id="pf-iban" value={form.iban} onChange={(e) => setForm((f) => ({ ...f, iban: e.target.value }))} />
+          </FormField>
+        </div>
+
+        <div className="space-y-2 pt-1">
+          <p className="text-[13px] font-medium text-st-text">Compte</p>
+          <div className="divide-y divide-st-line overflow-hidden rounded-[14px] border border-st-line">
+            <button type="button" disabled={pending} onClick={resend} className="flex w-full cursor-pointer items-center gap-3 px-3.5 py-3 text-left transition-colors hover:bg-st-surface disabled:opacity-50">
+              <Mail size={17} className="shrink-0 text-st-muted" />
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13.5px] font-medium text-st-text">Renvoyer l&apos;accès</span>
+                <span className="block text-[12px] text-st-muted">Email pour choisir ou rechoisir son mot de passe</span>
+              </span>
+            </button>
+            <button type="button" disabled={pending} onClick={askToggle} className="flex w-full cursor-pointer items-center gap-3 px-3.5 py-3 text-left transition-colors hover:bg-st-surface disabled:opacity-50">
+              <Plane size={17} className="shrink-0 text-st-muted" />
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13.5px] font-medium text-st-text">{actif ? "Désactiver le pilote" : "Réactiver le pilote"}</span>
+                <span className="block text-[12px] text-st-muted">{actif ? "Retire l'accès à l'espace pilote et libère ses vols" : "Lui rend l'accès à l'espace pilote"}</span>
+              </span>
+              {actif ? <Badge tone="ink">Actif</Badge> : <Badge>Inactif</Badge>}
+            </button>
           </div>
         </div>
+
+        {error && <p className="rounded-[12px] bg-st-bad-soft px-3.5 py-2.5 text-[13px] text-st-bad">{error}</p>}
+      </SheetBody>
+      <SheetFooter>
+        <div className="flex flex-col gap-2 sm:flex-row-reverse">
+          <Button type="submit" size="lg" className="sm:h-[38px] sm:text-[13px]" fullWidth loading={pending}>Enregistrer</Button>
+          <Button variant="danger" size="lg" className="sm:h-[38px] sm:text-[13px]" disabled={pending} onClick={remove}>
+            {confirmDelete ? "Confirmer la suppression" : "Supprimer"}
+          </Button>
+        </div>
+      </SheetFooter>
+    </form>
+  );
+}
+
+function FiabiliteTab({ stats }: { stats: PiloteReliabilityStats }) {
+  const pct = (r: number | null) => (r != null ? ` (${Math.round(r * 100)} %)` : "");
+  const items: { label: string; value: string; hint?: string; warn?: boolean }[] = [
+    { label: "Vols effectués", value: String(stats.volsEffectues) },
+    {
+      label: "Vols rendus ou retirés",
+      value: `${stats.volsRendus}${pct(stats.tauxVolsRendus)}`,
+      warn: stats.volsRendusProchesDuVol > 0,
+      hint: stats.volsRendusProchesDuVol > 0 ? `dont ${stats.volsRendusProchesDuVol} à moins de 3 j du vol` : undefined,
+    },
+    {
+      label: "Demandes d'annonce annulées",
+      value: `${stats.demandesAnnonceAnnulees}${pct(stats.tauxAnnonceAnnulees)}`,
+      warn: stats.demandesAnnonceAnnuleesProchesDuVol > 0,
+      hint: stats.demandesAnnonceAnnuleesProchesDuVol > 0 ? `dont ${stats.demandesAnnonceAnnuleesProchesDuVol} à moins de 3 j du vol` : undefined,
+    },
+    { label: "Créneaux renégociés", value: String(stats.creneauxRenegocies) },
+    { label: "Annonces publiées", value: String(stats.annoncesPubliees), hint: stats.annoncesPubliees > 0 ? `${stats.vuesAnnonces} vue${stats.vuesAnnonces > 1 ? "s" : ""}` : undefined },
+    {
+      label: "Messages clients en attente",
+      value: `${stats.messagesEnAttente}${pct(stats.tauxMessagesEnAttente)}`,
+      warn: stats.messagesEnAttente > 0,
+      hint: stats.plusVieuxMessageEnAttenteJours != null ? `le plus ancien depuis ${Math.floor(stats.plusVieuxMessageEnAttenteJours)} j` : undefined,
+    },
+  ];
+
+  return (
+    <SheetBody>
+      {stats.isAtRisk && (
+        <div className="rounded-[12px] bg-st-bad-soft px-3.5 py-2.5 text-[13px] text-st-bad">
+          <p className="flex items-center gap-1.5 font-semibold"><TriangleAlert size={14} /> Pilote à surveiller</p>
+          <ul className="mt-1 list-inside list-disc space-y-0.5 text-[12.5px]">
+            {stats.alertes.map((a) => <li key={a}>{a}</li>)}
+          </ul>
+        </div>
       )}
-    </div>
+      <SheetRows>
+        {items.map((it) => (
+          <SheetRow key={it.label} label={it.label} className={it.warn ? "font-semibold text-st-warn" : "st-num"}>
+            {it.value}
+            {it.hint && <span className="block text-[12px] font-normal text-st-muted">{it.hint}</span>}
+          </SheetRow>
+        ))}
+      </SheetRows>
+    </SheetBody>
+  );
+}
+
+// ── Tiroir d'invitation ─────────────────────────────────────────
+
+function InviteSheet({ onClose, onNotice }: { onClose: () => void; onNotice: (n: Notice) => void }) {
+  const [form, setForm] = useState({ nom: "", email: "", telephone: "", iban: "" });
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    startTransition(async () => {
+      const r = await createPilote({ nom: form.nom, email: form.email, telephone: form.telephone || undefined, iban: form.iban || undefined });
+      if (r?.error) { setError(r.error); return; }
+      onNotice(
+        r?.mailFailed ? { tone: "bad", text: `${form.nom} créé, mais l'email n'est pas parti : ouvrez sa fiche et « Renvoyer l'accès ».` }
+        : r?.promoted ? { tone: "ok", text: `${form.email} avait déjà un compte client : il est passé pilote et a reçu un email pour se connecter.` }
+        : { tone: "ok", text: `Invitation envoyée à ${form.email}.` },
+      );
+      onClose();
+    });
+  }
+
+  return (
+    <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
+      <SheetHeader title="Inviter un pilote" subtitle="Il reçoit un email pour choisir son mot de passe" onClose={onClose} />
+      <SheetBody>
+        <FormField id="inv-nom" label="Nom complet">
+          <Input id="inv-nom" required value={form.nom} onChange={set("nom")} placeholder="Jean Dupont" autoFocus />
+        </FormField>
+        <FormField id="inv-email" label="Email">
+          <Input id="inv-email" type="email" required value={form.email} onChange={set("email")} placeholder="jean@exemple.com" />
+        </FormField>
+        <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
+          <FormField id="inv-tel" label="Téléphone">
+            <Input id="inv-tel" type="tel" value={form.telephone} onChange={set("telephone")} placeholder="+32 4xx xx xx xx" />
+          </FormField>
+          <FormField id="inv-iban" label="IBAN">
+            <Input id="inv-iban" value={form.iban} onChange={set("iban")} placeholder="BE.. .... .... ...." />
+          </FormField>
+        </div>
+        {error && <p className="rounded-[12px] bg-st-bad-soft px-3.5 py-2.5 text-[13px] text-st-bad">{error}</p>}
+      </SheetBody>
+      <SheetFooter>
+        <Button type="submit" size="lg" className="sm:h-[38px] sm:text-[13px]" fullWidth loading={pending}>
+          <UserPlus /> Envoyer l&apos;invitation
+        </Button>
+      </SheetFooter>
+    </form>
   );
 }
