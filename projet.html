@@ -1456,6 +1456,16 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-27 (33) — Les 6 crons répondent enfin en GET</h3>
+      <ul>
+        <li><code>flight-reminder</code>, <code>payment-deadline</code>, <code>demande-deadline</code>, <code>flight-offer-deadline</code>, <code>purge-analytics</code>,
+          <code>pilote-payment-checkin</code> n'exportaient que POST alors que Vercel Cron appelle en GET : ils ne tournaient pas en production.
+          Ajout de <code>export const GET = POST</code> (même contrôle <code>CRON_SECRET</code>).</li>
+        <li>Vérifié avant : premier passage quasi sans effet (une seule demande de test sans réponse depuis 72 h, « Julie Maes », sera annulée).</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-27 (32) — Notifications push de l'espace pilote</h3>
       <ul>
         <li><code>lib/push.ts</code> (<code>sendPushToUser</code>, <code>sendPushToPilote</code>, <code>notifyPiloteReservation</code>), <code>lib/actions/push.ts</code>

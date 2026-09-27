@@ -187,3 +187,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ cancelled, reminded, errors: errors.length ? errors : undefined });
 }
 
+
+// Vercel Cron appelle en GET (avec « Authorization: Bearer CRON_SECRET ») :
+// sans cet export, le cron ne tournait jamais en production (constat du 27/09).
+export const GET = POST;
