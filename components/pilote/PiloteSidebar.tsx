@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   LayoutDashboard, PlaneTakeoff, Plane, CalendarRange, Scale, User,
-  ArrowLeftRight, LogOut, AlertCircle, ChevronDown,
+  ArrowLeftRight, LogOut, AlertCircle, ChevronDown, BookOpen,
 } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 import { cn } from "@/lib/utils";
@@ -167,6 +167,15 @@ export function PiloteSidebar({ counts = {}, pilot, isAdmin = false }: {
             <span className={labelCls(open)}>Vue admin</span>
           </Link>
         )}
+        <Link
+          href="/pilote/guide"
+          title={open ? undefined : "Guide pilote"}
+          aria-current={pathname.startsWith("/pilote/guide") ? "page" : undefined}
+          className={cn(rowCls, "font-medium", pathname.startsWith("/pilote/guide") ? "bg-st-surface text-st-ink" : "text-st-text-2 hover:bg-st-surface hover:text-st-text")}
+        >
+          <BookOpen size={18} strokeWidth={1.8} className="shrink-0 text-st-muted" />
+          <span className={labelCls(open)}>Guide pilote</span>
+        </Link>
         <form action={logout}>
           <button type="submit" title={open ? undefined : "Déconnexion"} className={cn(rowCls, "cursor-pointer font-medium text-st-text-2 hover:bg-st-bad-soft hover:text-st-bad")}>
             <LogOut size={18} strokeWidth={1.8} className="shrink-0 text-st-muted group-hover:text-st-bad" />

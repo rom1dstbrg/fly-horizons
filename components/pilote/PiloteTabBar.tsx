@@ -3,7 +3,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeftRight, LogOut, MoreHorizontal } from "lucide-react";
+import { ArrowLeftRight, BookOpen, LogOut, MoreHorizontal } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 import { cn } from "@/lib/utils";
 import { SheetCloseButton, SheetList, SheetListLink } from "@/components/pilote/studio";
@@ -50,7 +50,7 @@ export function PiloteTabBar({ pilot, isAdmin = false, badges = {} }: {
 
   const routeTab = TABS.find((t) => isPiloteNavActive(t, pathname));
   const activeTab = pendingId ? TABS.find((t) => t.id === pendingId) : routeTab;
-  const moreActive = !activeTab && MORE.some((n) => isPiloteNavActive(n, pathname));
+  const moreActive = !activeTab && (MORE.some((n) => isPiloteNavActive(n, pathname)) || pathname.startsWith("/pilote/guide"));
   const activeKey = activeTab?.id ?? (moreActive ? "more" : null);
   const profilAlerts = badges["/pilote/profil"] ?? 0;
 
@@ -214,6 +214,7 @@ export function PiloteTabBar({ pilot, isAdmin = false, badges = {} }: {
                 />
               ))}
               {isAdmin && <SheetListLink href="/admin" onClick={() => setMoreOpen(false)} icon={ArrowLeftRight} label="Vue admin" />}
+              <SheetListLink href="/pilote/guide" onClick={() => setMoreOpen(false)} icon={BookOpen} label="Guide pilote" />
             </SheetList>
             <form action={logout}>
               <button type="submit" className="flex w-full cursor-pointer items-center gap-3 rounded-[14px] border border-st-line bg-white px-4 py-3 text-sm font-[550] text-st-bad transition-colors hover:bg-st-bad-soft">
