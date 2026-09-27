@@ -316,13 +316,11 @@ export function DispoGrid({ monday, today, ouverts, reservations, visiteVue }: {
 
       <div className="flex gap-2.5 rounded-[14px] bg-st-info-soft px-4 py-3 text-[13px] leading-snug text-st-info">
         <Info size={16} className="mt-px shrink-0" />
-        <p>Un seul calendrier pour toutes vos annonces : un passager ne peut réserver qu&apos;un créneau ouvert, un bloc de 2 h entier. Vous calez ensuite l&apos;heure exacte ensemble.</p>
+        <p>
+          Un seul calendrier pour toutes vos annonces. Le passager réserve un bloc de 2 h entier, vous calez ensuite l&apos;heure exacte ensemble ;
+          un vol plus long demande deux blocs qui se suivent. Un bloc réservé se gère depuis le vol.
+        </p>
       </div>
-
-      <p className="flex gap-2.5 px-1 text-[13px] leading-relaxed text-st-text-2">
-        <Info size={15} className="mt-[3px] shrink-0 text-st-muted" />
-        Un vol de plus de 2 h demande deux blocs ouverts qui se suivent. Un bloc réservé ne peut plus être fermé d&apos;ici : passez par le vol.
-      </p>
 
       {/* Barre d'enregistrement : au-dessus de la barre d'onglets au téléphone. */}
       <div
