@@ -42,9 +42,9 @@ export function PiloteTabBar({ pilot, isAdmin = false, badges = {} }: {
   const [pill, setPill] = useState<{ left: number; width: number; animate: boolean } | null>(null);
 
   // Onglet touché mais page pas encore affichée : la pastille part tout de suite
-  // vers lui (sans attendre le serveur) et son icône devient un indicateur de
-  // chargement. Valable tant que l'URL n'a pas changé ; dès qu'elle change,
-  // l'onglet réel reprend la main.
+  // vers lui, sans attendre le serveur (l'indicateur de chargement est sur la
+  // page, cf. loading.tsx). Valable tant que l'URL n'a pas changé ; dès qu'elle
+  // change, l'onglet réel reprend la main.
   const [pending, setPending] = useState<{ id: string; from: string } | null>(null);
   const pendingId = pending && pending.from === pathname ? pending.id : null;
 
@@ -116,7 +116,6 @@ export function PiloteTabBar({ pilot, isAdmin = false, badges = {} }: {
             const active = tab.id === activeTab?.id;
             const Icon = tab.icon;
             const dot = (badges[tab.href] ?? 0) > 0;
-            const loading = tab.id === pendingId;
             return (
               <Link
                 key={tab.id}
@@ -124,7 +123,6 @@ export function PiloteTabBar({ pilot, isAdmin = false, badges = {} }: {
                 data-tab={tab.id}
                 aria-label={tab.label}
                 aria-current={active ? "page" : undefined}
-                aria-busy={loading || undefined}
                 className={itemCls(active)}
                 onClick={(e) => {
                   // Nouvel onglet ou ouverture d'une autre fenêtre : on ne bouge rien.
@@ -133,15 +131,8 @@ export function PiloteTabBar({ pilot, isAdmin = false, badges = {} }: {
                   if (pathname !== tab.href) setPending({ id: tab.id, from: pathname });
                 }}
               >
-                <span className="relative grid place-items-center">
-                  <Icon size={21} strokeWidth={active ? 2 : 1.8} className={cn("transition-opacity duration-150", loading && "opacity-0")} />
-                  <span
-                    aria-hidden="true"
-                    className={cn(
-                      "absolute h-[17px] w-[17px] animate-spin rounded-full border-2 border-white/30 border-t-white transition-opacity duration-150",
-                      loading ? "opacity-100" : "opacity-0",
-                    )}
-                  />
+                <span className="relative">
+                  <Icon size={21} strokeWidth={active ? 2 : 1.8} />
                   {dot && !active && <span className="absolute -right-1 -top-0.5 h-[7px] w-[7px] rounded-full bg-st-gold ring-2 ring-white" />}
                 </span>
                 {active && (

@@ -1230,8 +1230,8 @@
     <div class="log">
       <h3>2026-09-27 (3) — Barre d'onglets du téléphone : réaction immédiate</h3>
       <ul>
-        <li><code>PiloteTabBar</code> : la pastille part vers l'onglet dès le toucher (état optimiste, sans attendre le serveur) ;
-          l'icône de l'onglet devient un petit indicateur de chargement tant que la page n'est pas là.</li>
+        <li><code>PiloteTabBar</code> : la pastille part vers l'onglet dès le toucher (état optimiste, sans attendre le serveur).
+          L'indicateur de chargement est sur la page, pas dans l'onglet (demande de Romain).</li>
         <li><code>loading.tsx</code> dans <code>/pilote</code>, <code>/pilote/annonces</code> et <code>/pilote/reservations</code>
           (<code>PiloteRouteLoading</code>) : la navigation est instantanée, un indicateur discret s'affiche à la place du contenu
           (fondu après 150 ms, pour éviter un flash) au lieu de figer l'ancienne page.</li>
