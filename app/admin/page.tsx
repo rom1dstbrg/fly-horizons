@@ -113,13 +113,6 @@ export default async function AdminDashboardPage() {
               Nouvelle réservation
             </Link>
             <Link
-              href="/pilote/reservations/new-mesure"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-            >
-              <Route size={15} />
-              Nouveau vol sur mesure
-            </Link>
-            <Link
               href="/pilote/reservations/new-horsite"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
             >

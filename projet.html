@@ -260,6 +260,23 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-09-27 (13) · Plus de « vol sur mesure » à la création d'un vol</p>
+      <h3>La création d'un vol sur mesure depuis l'espace pilote / admin est supprimée</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Le vol sur mesure public est masqué depuis le 29/07 ; il restait une création « Vol sur mesure » côté pilote (<code>/pilote/reservations/new-mesure</code>),
+          la seule page non passée en Studio, que Romain juge dépassée.</dd>
+        <dt>Décision</dt>
+        <dd>Supprimer la page, le formulaire <code>AdminVolMesureFlow</code>, l'action <code>createAdminVolMesure</code> et les liens (menu « Nouveau vol », actions admin).
+          Le parcours public masqué (<code>/vol-sur-mesure</code>, <code>/configurer</code>, routes de paiement) n'est pas touché : d'anciens liens de paiement peuvent exister.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>La redessiner en Studio (personne ne s'en sert, et l'annonce avec itinéraire couvre le besoin).</dd>
+        <dt>Conséquences</dt>
+        <dd>« Nouvelle réservation » et « Hors site » restent, à repenser : Romain doute que les pilotes s'en servent (question ouverte au 27/09).</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-09-27 (12) · Disponibilités pilote en grille de blocs de 2 h</p>
       <h3>Le pilote coche des blocs de 2 h dans une grille semaine, enregistre d'un coup ; le passager réserve un bloc entier ; rien de coché = fermé</h3>
       <dl>
@@ -1506,6 +1523,16 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-09-27 (40) — Vol sur mesure retiré de la création de vol ; champs date / heure corrigés sur iPhone</h3>
+      <ul>
+        <li>Supprimés : <code>app/pilote/reservations/new-mesure</code>, <code>components/admin/AdminVolMesureFlow.tsx</code>, <code>createAdminVolMesure</code> ; liens retirés
+          (<code>PiloteVolsActions</code>, <code>VolsPageActions</code>, accueil admin, fil d'Ariane).</li>
+        <li><code>app/globals.css</code> : champs date / heure / mois ramenés à la largeur de leur colonne (Safari iOS leur imposait une largeur minimale :
+          Date et Heure se chevauchaient et sortaient de l'écran dans « Nouvelle réservation » et « Hors site »). Vaut pour toute l'app, tiroirs compris.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-09-27 (39) — Fiche guide « Disponibilités » : reproduction de la page, vue téléphone et ordinateur ; texte des fiches en pleine largeur</h3>

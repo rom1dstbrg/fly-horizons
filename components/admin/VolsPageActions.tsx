@@ -2,12 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plus, Route, WifiOff, X } from "lucide-react";
+import { Plus, WifiOff, X } from "lucide-react";
 import { useScrollLock, useSwipeToClose } from "@/components/pilote/studio/sheet-gestures";
 
 const OPTIONS = [
   { href: "/pilote/reservations/new",         icon: Plus,    label: "Nouvelle réservation", desc: "Vol standard payé en ligne" },
-  { href: "/pilote/reservations/new-mesure",  icon: Route,   label: "Vol sur mesure",        desc: "Itinéraire personnalisé" },
   { href: "/pilote/reservations/new-horsite", icon: WifiOff, label: "Hors site",             desc: "Vol déjà effectué, enregistrement rétroactif" },
 ] as const;
 
@@ -30,17 +29,6 @@ export function VolsPageActions({ activeTab }: { activeTab: string }) {
         >
           <Plus size={15} />
           Nouvelle réservation
-        </Link>
-        <Link
-          href="/pilote/reservations/new-mesure"
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
-            activeTab === "sur-mesure"
-              ? "bg-primary text-primary-foreground hover:bg-primary/90"
-              : "border border-border text-muted-foreground hover:text-foreground hover:bg-secondary"
-          }`}
-        >
-          <Route size={15} />
-          Nouveau vol sur mesure
         </Link>
         <Link
           href="/pilote/reservations/new-horsite"

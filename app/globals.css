@@ -249,6 +249,23 @@
     @apply font-semibold tracking-tight;
   }
 
+  /* Safari iOS donne aux champs date / heure une largeur minimale propre qui
+     ignore leur colonne : deux champs côte à côte se chevauchent et sortent de
+     l'écran. On les ramène à la largeur de leur conteneur, texte à gauche. */
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  input[type="month"] {
+    min-width: 0;
+    max-width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  input::-webkit-date-and-time-value {
+    text-align: left;
+    min-height: 1.5em;
+  }
+
   ::-webkit-scrollbar       { width: 6px; }
   ::-webkit-scrollbar-track { background: #f6f8fc; }
   ::-webkit-scrollbar-thumb {
