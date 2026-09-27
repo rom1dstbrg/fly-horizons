@@ -2,12 +2,13 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
+import { uuid } from "@/lib/uuid";
 
 function getVisitorId(): string {
   const KEY = "fh_vid";
   let id = localStorage.getItem(KEY);
   if (!id) {
-    id = crypto.randomUUID();
+    id = uuid();
     localStorage.setItem(KEY, id);
   }
   return id;

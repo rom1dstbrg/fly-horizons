@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect } from "react";
 import { createStopover, updateStopover, deleteStopover } from "@/lib/actions/stopovers";
 import { createClient } from "@/lib/supabase/client";
 import { Plane, Plus, Pencil, Trash2, Check, X, ToggleLeft, ToggleRight, Loader2, Search, MapPin, AlertCircle, ChevronDown } from "lucide-react";
+import { uuid } from "@/lib/uuid";
 
 interface Stopover {
   id: string;
@@ -280,7 +281,7 @@ export function StopoversAdmin({ initialData }: Props) {
           lat, lng,
         });
         setStops(prev => [...prev, {
-          id: crypto.randomUUID(),
+          id: uuid(),
           icao: newIcao.toUpperCase().trim(),
           nom:  newNom.trim(),
           taxe: parseInt(newTaxe) || 0,

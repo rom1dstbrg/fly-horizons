@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["@react-pdf/renderer", "canvas", "sharp"],
+  // Dev uniquement : ouvrir le serveur local depuis un téléphone du réseau
+  // (sinon Next bloque le JS de dev et les formulaires ne répondent pas).
+  allowedDevOrigins: ["192.168.*.*"],
   experimental: {
     serverActions: {
       bodySizeLimit: "10mb",

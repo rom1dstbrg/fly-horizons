@@ -238,10 +238,10 @@ export async function renvoyerLienVirement(reservationId: string) {
   }
 }
 
-/** Le pilote marque le vol effectué : minutes réelles + déclenche l'enquête satisfaction. */
+/** Le pilote marque le vol effectué : minutes réelles (obligatoires) + déclenche l'enquête satisfaction. */
 export async function marquerVolEffectue(
   reservationId: string,
-  dureeReelle?: number,
+  dureeReelle: number,
   commentaire?: string,
 ) {
   try {
@@ -263,10 +263,10 @@ export async function marquerVolEffectue(
       }
     }
 
-    const dr =
-      typeof dureeReelle === "number" && dureeReelle > 0 && dureeReelle <= 600
-        ? Math.round(dureeReelle)
-        : resa.duree;
+    if (!Number.isFinite(dureeReelle) || dureeReelle < 1 || dureeReelle > 600) {
+      return { error: "Indiquez les minutes réellement volées (entre 1 et 600)." };
+    }
+    const dr = Math.round(dureeReelle);
 
     const { error } = await db
       .from("reservations")

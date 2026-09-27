@@ -52,6 +52,14 @@ export function PiloteTabBar({ pilot, isAdmin = false, badges = {} }: {
   // page, cf. loading.tsx). Valable tant que l'URL n'a pas changé ; dès qu'elle
   // change, l'onglet réel reprend la main.
   const [pending, setPending] = useState<{ id: string; from: string } | null>(null);
+  // Oubliée dès que l'URL change : sinon, revenir plus tard sur la page de départ
+  // (ex. Vols → Accueil, puis un lien de l'accueil vers Vols) la ferait revivre
+  // et la pastille resterait collée sur l'ancien onglet visé.
+  const [lastPath, setLastPath] = useState(pathname);
+  if (lastPath !== pathname) {
+    setLastPath(pathname);
+    setPending(null);
+  }
   const pendingId = pending && pending.from === pathname ? pending.id : null;
 
   const routeTab = TABS.find((t) => isPiloteNavActive(t, pathname));

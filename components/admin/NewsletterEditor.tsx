@@ -14,6 +14,7 @@ import {
   type SendResult, type TemplateResult, type NewsletterTemplate,
 } from "@/lib/actions/newsletter";
 import { newsletterFromBlocksEmail, type NewsletterBlock } from "@/lib/email-templates";
+import { uuid } from "@/lib/uuid";
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
@@ -29,7 +30,7 @@ const BLOCK_META = [
 ] as const;
 
 function newBlock(type: NewsletterBlock["type"]): NewsletterBlock {
-  const id = crypto.randomUUID();
+  const id = uuid();
   switch (type) {
     case "text":      return { id, type, content: "" };
     case "heading":   return { id, type, level: 1, text: "" };
@@ -459,7 +460,7 @@ export function NewsletterEditor({
   }
   function loadTemplate(t: NewsletterTemplate) {
     setSubject(t.subject);
-    setBlocks(t.blocks.map(b => ({ ...b, id: crypto.randomUUID() })));
+    setBlocks(t.blocks.map(b => ({ ...b, id: uuid() })));
   }
 
   const canSend = subject.trim().length > 0 && blocks.length > 0 && activeCount > 0;

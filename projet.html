@@ -260,6 +260,26 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-09-27 (15) · Bilan de vol obligatoire, avec rappels</p>
+      <h3>Le pilote clôture chaque vol avec les minutes réellement volées ; rappel push à +8 h puis relance 24 h plus tard</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Le bilan de vol compte (logbook, transactions, relevé). Les minutes étaient optionnelles, et « Marquer le vol effectué » n'apparaissait qu'une fois le paiement reçu :
+          un vol fait mais pas encore réglé ne pouvait pas être clôturé.</dd>
+        <dt>Décision</dt>
+        <dd>Minutes réelles obligatoires (1 à 600), vérifiées dans le tiroir et côté serveur. Clôture possible pour tout vol accepté, payé ou non (8 h après le décollage prévu, comme avant).
+          Notification push au pilote dès que la clôture est possible (+8 h), relance 24 h après ce premier rappel si le vol n'est toujours pas clôturé.
+          Appel horaire par Supabase (pg_cron + pg_net), pas par Vercel.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Cron Vercel : l'offre Hobby ne passe qu'une fois par jour, trop lâche pour « 8 h après ». Relance 24 h après le vol (et non après le 1er rappel) : possible en changeant un chiffre.
+          Garder la clôture réservée aux vols payés : rendait les rappels impossibles à satisfaire.</dd>
+        <dt>Conséquences</dt>
+        <dd>Route <code>/api/cron/bilan-vol</code>, événements push <code>bilan_vol</code> / <code>bilan_vol_relance</code>, tâche Supabase <code>bilan-vol</code> (migration
+          <code>20260927f_cron_bilan_vol.sql</code>, exécutée le 27/09 avec le vrai secret). Un vol fait et pas payé passe « à relancer » dans Transactions.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-09-27 (14) · Un vol naît toujours d'une annonce</p>
       <h3>Plus de réservation créée à la main (« Nouvelle réservation », « Hors site ») : le pilote publie son vol, le passager le réserve</h3>
       <dl>
@@ -1544,6 +1564,20 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-09-27 (42) — Bilan de vol obligatoire avec rappels ; liens de l'accueil vers le tiroir ; test local sur téléphone</h3>
+      <ul>
+        <li>Bilan de vol : minutes réelles obligatoires (<code>AnnoncePiloteActions</code>, <code>marquerVolEffectue</code>), clôture possible payé ou non ;
+          rappels push via <code>app/api/cron/bilan-vol</code> + tâche pg_cron horaire (<code>20260927f_cron_bilan_vol.sql</code>).</li>
+        <li>Accueil pilote : « Ensuite », « Ouvrir le vol » et la liste « À faire » ouvrent Mes vols sur le tiroir de la réservation (<code>?ouvrir=</code>).</li>
+        <li>Barre d'onglets téléphone : la pastille ne reste plus collée sur Accueil après un lien de l'accueil vers Vols.</li>
+        <li>Nouvelle annonce : le sélecteur % / € de « Votre part » n'est plus écrasé par le champ (« € » coupé).</li>
+        <li>Dev sur téléphone : <code>allowedDevOrigins</code> pour <code>192.168.*.*</code> ; <code>lib/uuid.ts</code> remplace <code>crypto.randomUUID()</code> côté navigateur
+          (absent en HTTP hors localhost, faisait planter le traceur analytics).</li>
+        <li><code>scripts/test-data.mjs seed|clean</code> : jeu de données TEST (clients, annonces réservées, vols) dans la base, supprimable d'un coup.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-09-27 (41) — Plus de réservation créée à la main : « Nouvelle réservation » et « Hors site » supprimés</h3>

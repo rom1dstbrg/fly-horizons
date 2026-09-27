@@ -60,6 +60,7 @@ export function AnnoncePiloteActions({
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [dureeReelle, setDureeReelle] = useState("");
   const [showEffectue, setShowEffectue] = useState(false);
+  const dureeValide = /^\d+$/.test(dureeReelle) && Number(dureeReelle) >= 1 && Number(dureeReelle) <= 600;
   // Le paiement se confirme avec le montant reçu, modifiable (27/09).
   const [confirmMode, setConfirmMode] = useState<PaiementMode | null>(null);
 
@@ -173,7 +174,10 @@ export function AnnoncePiloteActions({
         </Button>
       )}
 
-      {piloteePaye && !done && !cancelled && (
+      {/* Bilan de vol : possible dès la demande acceptée, payé ou non (un vol
+          fait mais pas réglé passe « à relancer » dans Transactions). Les
+          minutes réellement volées sont obligatoires (27/09). */}
+      {!done && !cancelled && statut !== "demande_recue" && statut !== "en_attente" && (
         effectueBloque ? (
           <p className="flex items-center gap-1.5 text-[12.5px] text-st-muted"><Clock size={14} /> « Vol effectué » disponible 8 h après l&apos;heure du décollage.</p>
         ) : !showEffectue ? (
@@ -181,15 +185,16 @@ export function AnnoncePiloteActions({
         ) : (
           <div className="space-y-2 rounded-[12px] bg-st-surface p-3">
             <label className="block">
-              <span className="mb-1 block text-[12px] font-[550] text-st-text-2">Minutes réellement volées (optionnel)</span>
-              <Input type="number" min={1} max={600} value={dureeReelle} onChange={(e) => setDureeReelle(e.target.value)} placeholder="ex. 55" />
+              <span className="mb-1 block text-[12px] font-[550] text-st-text-2">Minutes réellement volées</span>
+              <Input type="number" inputMode="numeric" min={1} max={600} required autoFocus value={dureeReelle} onChange={(e) => setDureeReelle(e.target.value)} placeholder="ex. 55" />
             </label>
             <div className="grid grid-cols-[auto_1fr] gap-2">
               <Button variant="secondary" size="sm" onClick={() => setShowEffectue(false)}>Annuler</Button>
               <Button
                 size="sm"
                 loading={isPending}
-                onClick={() => run(() => marquerVolEffectue(reservationId, dureeReelle ? Number(dureeReelle) : undefined), "Vol marqué effectué ✓", () => onStatusChange?.(reservationId, "vol_effectue"))}
+                disabled={!dureeValide}
+                onClick={() => run(() => marquerVolEffectue(reservationId, Number(dureeReelle)), "Vol marqué effectué ✓", () => onStatusChange?.(reservationId, "vol_effectue"))}
               >
                 <PlaneLanding /> Confirmer
               </Button>

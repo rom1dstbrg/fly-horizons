@@ -9,6 +9,7 @@ import { AdminRowActions } from "@/components/admin/ui/AdminRowActions";
 import { AdminSheet, SheetSection } from "@/components/admin/ui/AdminSheet";
 import { PageToolbar, FilterChip, EmptyState } from "@/components/admin/ui";
 import { Send, Loader2, User, MessageSquare } from "lucide-react";
+import { uuid } from "@/lib/uuid";
 
 const FILTERS = ["Tous", "Nouveaux", "Lus", "Répondus", "Archivés"] as const;
 const FILTER_VALUES: Record<string, string | null> = {
@@ -75,7 +76,7 @@ function DrawerBody({
       const r = await replyContact(contact.id, reponse, contact.email, contact.nom, contact.sujet);
       if (r?.error) { setFeedback(r.error); return; }
       const newMsg: ContactMessage = {
-        id: crypto.randomUUID(),
+        id: uuid(),
         author: "admin",
         content: reponse,
         created_at: new Date().toISOString(),

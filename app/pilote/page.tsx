@@ -83,9 +83,9 @@ export default async function PiloteDashboard() {
       tone: "warn" as const,
       label: r.statut === "demande_recue" ? "Nouvelle demande à confirmer" : "Heure à confirmer",
       detail: `${nameOf(r)} · ${dateOf(r.date_vol)}`,
-      href: "/pilote/vols",
+      href: `/pilote/vols?ouvrir=${r.id}`,
     })),
-    ...((nonPayes ?? []) as unknown as Row[]).map((r) => ({ tone: "bad" as const, label: "Vol à régler par le client", detail: `${nameOf(r)} · ${dateOf(r.date_vol)}`, href: "/pilote/vols" })),
+    ...((nonPayes ?? []) as unknown as Row[]).map((r) => ({ tone: "bad" as const, label: "Vol à régler par le client", detail: `${nameOf(r)} · ${dateOf(r.date_vol)}`, href: `/pilote/vols?ouvrir=${r.id}` })),
     ...legal.issues.filter((i) => i.severity !== "error").map((i) => ({ tone: "warn" as const, label: i.label, href: "/pilote/profil" })),
   ];
 
@@ -146,7 +146,7 @@ export default async function PiloteDashboard() {
                     Appeler
                   </LinkButton>
                 )}
-                <LinkButton href="/pilote/vols" variant="secondary" size="sm">
+                <LinkButton href={`/pilote/vols?ouvrir=${next.id}`} variant="secondary" size="sm">
                   Ouvrir le vol
                 </LinkButton>
               </div>
@@ -224,7 +224,7 @@ export default async function PiloteDashboard() {
           <ul className="mt-2 divide-y divide-st-line-soft">
             {vols.slice(1).map((v) => (
               <li key={v.id}>
-                <Link href="/pilote/vols" className="flex items-center gap-3 py-2.5">
+                <Link href={`/pilote/vols?ouvrir=${v.id}`} className="flex items-center gap-3 py-2.5">
                   <DateTile date={v.date_vol} today={v.date_vol === today} />
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-1.5 text-[13.5px] font-[550] text-st-text">

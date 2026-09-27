@@ -373,8 +373,11 @@ export function AnnonceForm({ editing }: { editing?: AnnonceRow }) {
                 <Input
                   id="annonce-part" type="number" inputMode="decimal" min="0" step="0.01" required placeholder={partMode === "pct" ? "25" : "75"}
                   value={partValue} onChange={e => setPartValue(e.target.value)}
+                  className="min-w-0 flex-1"
                 />
+                {/* shrink-0 : sinon le champ le compresse et « € » est coupé. */}
                 <Segmented
+                  className="shrink-0"
                   value={partMode}
                   onChange={setPartMode}
                   items={[{ key: "pct", label: "%" }, { key: "eur", label: "€" }]}

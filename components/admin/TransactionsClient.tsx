@@ -7,6 +7,7 @@ import { getReservationForDrawer } from "@/lib/actions/reservation-edit";
 import { ReservationDrawer } from "@/components/admin/reservation-drawer/ReservationDrawer";
 import type { DrawerReservation } from "@/components/admin/reservation-drawer/types";
 import { StatGrid, PageToolbar, FilterChip, EmptyState, AdminSheet } from "@/components/admin/ui";
+import { uuid } from "@/lib/uuid";
 
 export type LigneVol = {
   id: string;
@@ -406,7 +407,7 @@ export function TransactionsClient({
     startTransition(async () => {
       const r = await addDepense(m, description, date);
       if (r.error) { setFormError(r.error); return; }
-      setDepenses(prev => [{ id: crypto.randomUUID(), montant: m, description: description.trim(), date }, ...prev]);
+      setDepenses(prev => [{ id: uuid(), montant: m, description: description.trim(), date }, ...prev]);
       setMontant(""); setDescription("");
       setDate(new Date().toISOString().slice(0, 10));
       setFormOpen(false);

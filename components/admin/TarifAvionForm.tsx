@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Trash2, Plus } from "lucide-react";
 import { addTarifAvion, deleteTarifAvion } from "@/lib/actions/settings";
+import { uuid } from "@/lib/uuid";
 
 export type TarifAvion = {
   id: string;
@@ -41,7 +42,7 @@ export function TarifAvionForm({ tarifs: initial }: { tarifs: TarifAvion[] }) {
       const r = await addTarifAvion(p, date, note || undefined);
       if (r.error) { setError(r.error); return; }
       setTarifs(prev => [...prev, {
-        id: crypto.randomUUID(),
+        id: uuid(),
         prix_heure: p,
         actif_depuis: date,
         note: note || null,

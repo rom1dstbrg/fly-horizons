@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { Star, Send, CheckCircle, AlertCircle, ImagePlus, X, Loader2 } from "lucide-react";
 import { MAX_PHOTOS, RECO_OPTIONS, SOURCE_OPTIONS } from "@/lib/satisfaction";
+import { uuid } from "@/lib/uuid";
 
 interface Props {
   reservationId: string;
@@ -231,7 +232,7 @@ export default function SatisfactionForm({ reservationId, prenom, dateStr, duree
         setPhotoError("Une photo dépasse 12 Mo et a été ignorée.");
         continue;
       }
-      const localId = crypto.randomUUID();
+      const localId = uuid();
       const localUrl = URL.createObjectURL(file);
       setPhotos((prev) => [...prev, { localId, localUrl, status: "uploading" }]);
       uploadPhoto(localId, file);
