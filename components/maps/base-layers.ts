@@ -74,3 +74,15 @@ export function addBaseLayers(map: L.Map, initial: BaseLayerKey = "aero") {
   });
   new Switch({ position: "topright" }).addTo(map);
 }
+
+// Trait de la route sur les cartes pilote : magenta (convention aviation, se
+// détache du beige, de l'orange et du bleu de la carte VFR) sur un liseré
+// blanc qui le garde lisible dans les CTR roses et sur le satellite.
+export const ROUTE_COLOR = "#E0138C";
+
+export function routeLine(pts: L.LatLngExpression[]): L.LayerGroup {
+  return L.layerGroup([
+    L.polyline(pts, { color: "#fff", weight: 7, opacity: 0.95, lineJoin: "round", lineCap: "round", interactive: false }),
+    L.polyline(pts, { color: ROUTE_COLOR, weight: 3.5, opacity: 1, lineJoin: "round", lineCap: "round", interactive: false }),
+  ]);
+}

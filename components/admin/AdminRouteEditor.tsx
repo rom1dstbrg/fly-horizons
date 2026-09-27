@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { addBaseLayers } from "@/components/maps/base-layers";
+import { addBaseLayers, routeLine } from "@/components/maps/base-layers";
 
 const EBCI = { lat: 50.4592, lng: 4.4538 };
 
@@ -63,7 +63,7 @@ export function AdminRouteEditor({ waypoints, onChange, clientWaypoints = [], st
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
-  const routeLineRef = useRef<L.Polyline | null>(null);
+  const routeLineRef = useRef<L.LayerGroup | null>(null);
   const clientLineRef = useRef<L.Polyline | null>(null);
   const clientMarkersRef = useRef<L.Marker[]>([]);
   const soMarkersRef = useRef<L.Marker[]>([]);
@@ -165,9 +165,7 @@ export function AdminRouteEditor({ waypoints, onChange, clientWaypoints = [], st
         ...valid.map(wp => [wp.lat, wp.lng] as [number, number]),
         [EBCI.lat, EBCI.lng],
       ];
-      routeLineRef.current = L.polyline(pts, {
-        color: "#F2B705", weight: 2.5, opacity: 0.95, dashArray: "9 5",
-      }).addTo(map);
+      routeLineRef.current = routeLine(pts).addTo(map);
       if (valid.length - prevCountRef.current > 1) {
         map.fitBounds(L.latLngBounds(pts), { padding: [48, 48], animate: false, maxZoom: 11 });
       }

@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { addBaseLayers } from "@/components/maps/base-layers";
+import { addBaseLayers, routeLine } from "@/components/maps/base-layers";
 
 const EBCI = { lat: 50.4592, lng: 4.4538 };
 
@@ -116,7 +116,9 @@ export default function RouteMapReadOnly({ waypoints, height = "280px", classNam
         ...waypoints.map(wp => [wp.lat, wp.lng] as [number, number]),
         [EBCI.lat, EBCI.lng],
       ];
-      L.polyline(pts, { color: "#F2B705", weight: 2.5, opacity: 0.95, dashArray: "9 5" }).addTo(map);
+      // Outils pilote : trait magenta ; site public : pointillés or (inchangé).
+      if (aero) routeLine(pts).addTo(map);
+      else L.polyline(pts, { color: "#F2B705", weight: 2.5, opacity: 0.95, dashArray: "9 5" }).addTo(map);
 
       // Auto-fit bounds to show all points
       const bounds = L.latLngBounds([
