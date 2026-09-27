@@ -10,7 +10,7 @@ export default async function PiloteDisponibilitesPage() {
   const rienConfigure = !plages.some((p) => p.actif) && exceptions.length === 0;
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-5">
+    <div className="space-y-5">
       <PageHeader title="Disponibilités" />
       <div className="flex gap-2.5 rounded-[14px] bg-st-info-soft px-4 py-3 text-[13px] leading-snug text-st-info">
         <Info size={16} className="mt-px shrink-0" />
