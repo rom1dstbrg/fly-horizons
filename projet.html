@@ -260,6 +260,26 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-09-28 (19) · Cadrage de la refonte de l'admin</p>
+      <h3>Réservations admin = vue de supervision des vols gérés par les autres pilotes ; l'admin se conçoit comme une app iPhone</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Les vols sont désormais gérés par plusieurs pilotes (annonces, disponibilités, confirmation, vol effectué). La page Réservations de l'admin
+          est encore pensée pour un seul opérateur, Romain, qui traite lui-même chaque demande. Suite de la vue admin des disponibilités des pilotes (changelog 56).</dd>
+        <dt>Décision</dt>
+        <dd>Deux principes pour la refonte de l'admin (en Studio, prochaine étape après /pilote) :
+          <b>1.</b> la page Réservations sert d'abord à superviser : voir tous les vols de tous les pilotes, qui gère quoi, où ça en est, ce qui traîne ou pose problème.
+          Traiter une réservation reste le rôle du pilote ; l'admin intervient au besoin.
+          <b>2.</b> l'admin est conçu comme une app iPhone dès les maquettes (téléphone d'abord, puis bureau), pas comme un site de bureau réduit.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Garder Réservations comme file de traitement de Romain. Faire le bureau d'abord et adapter au téléphone ensuite.</dd>
+        <dt>Conséquences</dt>
+        <dd>Maquettes de l'admin : iPhone d'abord. Réservations : filtre et regroupement par pilote, signaux (demande sans réponse, vol passé non marqué effectué, paiement en attente…) à définir avec Romain.
+          Reste à trancher : app installée depuis Safari (PWA, déjà en place pour l'admin, suite de l'approche A du 23/09) ou vraie app native App Store.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-09-28 (18) · Vol déjà payé à Fly Horizons, attribuable à un pilote</p>
       <h3>Un vol standard réglé à Fly Horizons (paiement ou bon) peut être attribué à un pilote ; pas de remboursement, Romain vire le pilote après le vol</h3>
       <dl>
