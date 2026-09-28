@@ -38,6 +38,15 @@
         ],
         "createdAt": "2026-09-28T07:13:38.941Z",
         "reason": "Charte FH figée (STYLE-STATUS.html, mémoire project_design_identity) : eyebrow doré au-dessus des H1/H2 du site public, même exception que maquette-page-produit.html"
+      },
+      {
+        "rule": "kicker-above-heading",
+        "value": "*",
+        "files": [
+          "maquette-faq.html"
+        ],
+        "createdAt": "2026-09-28T07:31:21.344Z",
+        "reason": "Charte FH figée (STYLE-STATUS.html, mémoire project_design_identity) : eyebrow doré au-dessus des H1/H2 du site public, même exception que les autres maquettes"
       }
     ]
   }

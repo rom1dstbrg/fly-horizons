@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maquette FAQ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<!--
+  Maquette /faq (28/09), nouvelle DA, composition PROPRE à la FAQ : c'est un outil de consultation,
+  pas une page de lecture.
+
+  RÈGLE DE COMPOSITION :
+  - En-tête : titre à gauche, recherche à droite (ordinateur) ; titre puis recherche (téléphone).
+  - Corps ordinateur : sommaire des thèmes à gauche (240 px, collant) | questions à droite (760 px max).
+    Téléphone : les thèmes deviennent une rangée de pastilles collée sous le header.
+  - Questions = lignes séparées par des filets, sans aucune boîte. Réponse en prose sous la question.
+  - Fin : « Vous ne trouvez pas ? » en simple texte sous un filet, deux actions. Plus de bloc navy.
+-->
+<style>
+:root{
+  --navy:#0b2238; --gold:#F2B705; --gold-h:#e6a800; --bg:#f5f5f7; --sec:#edf0f7;
+  --fg:#1e2535; --muted:#64748b; --border:#e0e5ef;
+  --sh:0 2px 14px rgba(11,34,56,.07); --sh-gold:0 6px 24px rgba(242,183,5,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Poppins,system-ui,sans-serif;background:#dfe3ea;color:var(--fg);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+[data-lucide]{width:16px;height:16px;stroke-width:2}
+
+.tool{position:sticky;top:0;z-index:2000;background:#fff;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:10px 16px;font-size:12px}
+.tool b{font-weight:800;font-size:13px}
+.seg{display:inline-flex;background:var(--sec);border-radius:9px;padding:3px}
+.seg button{border:0;background:transparent;padding:6px 11px;border-radius:7px;font-size:12px;font-weight:600;color:var(--muted)}
+.seg button.on{background:#fff;color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.tool .sp{flex:1}
+.btn-notes{border:1px solid var(--border);background:#fff;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700}
+.notes{display:none;background:#fffbea;border-bottom:1px solid #f3e3a1;padding:16px 20px;font-size:13px;line-height:1.6}
+.notes.open{display:block}
+.notes ol{margin:0;padding-left:20px;max-width:920px}
+.stage.phone{padding:28px 0 48px;display:flex;justify-content:center}
+.frame{container-type:inline-size;background:#fff;position:relative}
+.stage.phone .frame{width:390px;height:844px;overflow-y:auto;border-radius:46px;border:11px solid #0f1115;box-shadow:0 30px 80px rgba(0,0,0,.25);scrollbar-width:none}
+.stage.phone .frame::-webkit-scrollbar{display:none}
+
+/* Header actuel */
+.wrap{max-width:1400px;margin:0 auto;padding:0 16px}
+.hdr{position:sticky;top:0;z-index:500;padding:8px 12px 0;background:linear-gradient(#fff 70%,rgba(255,255,255,0))}
+.pill{max-width:1400px;margin:0 auto;background:#fff;border:1px solid var(--border);border-radius:16px;height:64px;display:flex;align-items:center;padding:0 16px;box-shadow:var(--sh)}
+.pill .logo{height:32px}
+.pill .fill{flex:1}
+.nav{display:none;align-items:center;gap:4px;margin-right:8px}
+.nav a{padding:8px 12px;font-size:14px;font-weight:500;color:var(--muted);border-radius:8px}
+.vsep{display:none;width:1px;height:20px;background:var(--border);margin:0 4px}
+.login{display:none;align-items:center;gap:6px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--fg);border:1px solid var(--border);background:var(--sec);border-radius:8px}
+.login [data-lucide]{width:13px;height:13px}
+.burger{border:0;background:transparent;padding:8px;color:var(--muted)}
+.burger [data-lucide]{width:20px;height:20px}
+
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin:0 0 12px}
+h1{font-size:34px;font-weight:900;line-height:1.05;letter-spacing:-.02em;margin:0}
+
+/* En-tête */
+.top{padding-top:24px}
+.tgrid{display:grid;gap:20px}
+.sub{font-size:15px;line-height:1.7;color:rgba(30,37,53,.72);margin:12px 0 0;max-width:460px}
+.search{position:relative}
+.search input{width:100%;height:52px;border:1px solid var(--border);background:var(--sec);border-radius:12px;padding:0 44px 0 46px;font:inherit;font-size:15px;color:var(--fg);outline:none;transition:.15s}
+.search input:focus{background:#fff;border-color:var(--fg)}
+.search .ic{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.search .clr{position:absolute;right:10px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:var(--muted);padding:6px;display:none}
+.search.has .clr{display:block}
+.search input::-webkit-search-cancel-button{display:none}
+.sr{margin-top:20px}
+.hint{font-size:12px;color:var(--muted);margin:8px 0 0}
+
+/* Thèmes : pastilles (téléphone) */
+.chips{position:sticky;top:72px;z-index:40;background:#fff;margin:24px -16px 0;padding:10px 16px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--border)}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--border);background:#fff;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap}
+.chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+
+/* Corps */
+.bodyg{display:block;padding:8px 0 0}
+.toc{display:none}
+.theme{padding-top:32px;scroll-margin-top:130px}
+.theme h2{font-size:22px;font-weight:900;letter-spacing:-.01em;margin:0 0 8px;display:flex;align-items:baseline;gap:10px}
+.theme h2 small{font-size:12px;font-weight:600;color:var(--muted)}
+.qa{border-bottom:1px solid var(--border)}
+.qa button{width:100%;border:0;background:transparent;text-align:left;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:18px 0;font-size:16px;font-weight:700;color:var(--fg);line-height:1.4}
+.qa button:hover{color:var(--navy)}
+.qa .pm{flex:none;width:28px;height:28px;border-radius:50%;border:1px solid var(--border);display:grid;place-items:center;color:var(--navy);transition:transform .2s, background .2s;margin-top:-2px}
+.qa .pm [data-lucide]{width:14px;height:14px}
+.qa.open .pm{transform:rotate(45deg);background:var(--gold);border-color:var(--gold)}
+.qa .ans{display:none;padding:0 44px 20px 0;font-size:15px;line-height:1.75;color:rgba(30,37,53,.75)}
+.qa.open .ans{display:block}
+.qa mark{background:rgba(242,183,5,.3);color:inherit;border-radius:3px;padding:0 2px}
+.empty{padding:40px 0;font-size:15px;color:var(--muted)}
+
+/* Fin */
+.more{margin-top:56px;padding:32px 0 72px;border-top:1px solid var(--border)}
+.more h2{font-size:24px;font-weight:900;margin:0}
+.more p{font-size:15px;line-height:1.7;color:rgba(30,37,53,.72);margin:8px 0 20px;max-width:460px}
+.acts{display:flex;flex-wrap:wrap;gap:10px}
+.cta{display:inline-flex;align-items:center;gap:8px;background:var(--gold);color:var(--navy);border-radius:10px;padding:13px 22px;font-size:14px;font-weight:900;box-shadow:var(--sh-gold)}
+.cta:hover{background:var(--gold-h)}
+.ghost{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:#fff;color:var(--fg);border-radius:10px;padding:12px 20px;font-size:14px;font-weight:700}
+.ghost:hover{border-color:var(--fg)}
+.cta [data-lucide],.ghost [data-lucide]{width:15px;height:15px}
+
+.foot{background:var(--navy);color:rgba(255,255,255,.45);padding:40px 0;font-size:13px}
+.foot img{height:28px;margin-bottom:12px}
+
+@container (min-width: 900px){
+  .wrap{padding:0 40px}
+  .hdr{padding:14px 16px 0}
+  .pill{height:60px;padding:0 24px}
+  .nav,.login{display:flex}
+  .vsep{display:block}
+  .burger{display:none}
+  h1{font-size:52px;line-height:1.02}
+  /* UNE grille pour toute la page : sommaire 260 px | colonne questions.
+     Le titre couvre les 2 colonnes ; la recherche est posée sur la colonne des questions,
+     qu'elle filtre (même bord gauche, même bord droit). */
+  .top{padding-top:38px}
+  .faqg{display:grid;grid-template-columns:260px minmax(0,1fr);column-gap:96px}
+  .hd{grid-column:1/-1}
+  .sr{grid-column:2;margin-top:40px}
+  .chips{display:none}
+  .bodyg{display:contents}
+  .toc{display:block;grid-column:1;grid-row:3;position:sticky;top:110px;align-self:start;margin-top:56px}
+  #list{grid-column:2;grid-row:3;padding-top:56px}
+  .qa .ans{max-width:720px}
+  .toc p{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+  .toc a{display:flex;justify-content:space-between;padding:9px 0 9px 14px;font-size:14px;font-weight:600;color:var(--muted);border-left:2px solid var(--border)}
+  .toc a span{font-size:12px;font-weight:500}
+  .toc a:hover{color:var(--fg)}
+  .toc a.on{color:var(--fg);border-left-color:var(--gold)}
+  .theme{padding-top:0;margin-bottom:48px}
+  .theme h2{font-size:26px}
+  .qa button{font-size:17px;padding:20px 0}
+  .qa .ans{font-size:16px;padding-right:60px}
+  .more{grid-column:2;margin-top:24px;padding-bottom:96px}
+  .more h2{font-size:28px}
+}
+</style>
+</head>
+<body>
+
+<div class="tool">
+  <b>Maquette · FAQ</b>
+  <div class="seg" id="vw"><button data-v="desk" class="on">Ordinateur</button><button data-v="phone">Téléphone</button></div>
+  <span class="sp"></span>
+  <button class="btn-notes" id="nb">Règle de composition ▾</button>
+</div>
+<div class="notes" id="notes">
+  <ol>
+    <li><b>La FAQ est un outil</b>, pas une page à lire de haut en bas : on cherche, on saute à un thème, on ouvre une question.</li>
+    <li><b>En-tête</b> : le titre à gauche, la recherche à droite, bien visible (elle était perdue au milieu de la page).</li>
+    <li><b>Ordinateur</b> : un sommaire des thèmes à gauche, qui reste visible et s'allume au fil du défilement, et les questions à droite sur une largeur de lecture confortable.</li>
+    <li><b>Téléphone</b> : les thèmes deviennent une rangée de pastilles qui reste collée sous le header.</li>
+    <li><b>Plus aucune boîte</b> : les questions sont des lignes séparées par des filets (avant, chaque thème était une carte blanche). Un « + » qui tourne en « × » doré à l'ouverture.</li>
+    <li><b>Fin de page</b> : « Vous ne trouvez pas ? » en texte simple avec deux actions (écrire, demander à l'assistant), à la place des deux blocs (dont un navy).</li>
+    <li>Contenu : les vraies questions et réponses actuelles. La recherche fonctionne dans la maquette.</li>
+  </ol>
+</div>
+
+<div class="stage" id="stage">
+<div class="frame" id="frame">
+  <header class="hdr">
+    <div class="pill">
+      <img class="logo" src="public/fly-horizons-logo-navy.svg" alt="Fly Horizons">
+      <span class="fill"></span>
+      <nav class="nav"><a href="#">Les vols</a><a href="#">Galerie</a><a href="#">À propos</a><a href="#">FAQ</a><a href="#">Contact</a></nav>
+      <span class="vsep"></span>
+      <a class="login" href="#"><i data-lucide="user"></i>Connexion</a>
+      <button class="burger" aria-label="Menu"><i data-lucide="menu"></i></button>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap top faqg">
+        <div class="hd">
+          <p class="eyebrow">Questions fréquentes</p>
+          <h1>Vos questions, nos réponses.</h1>
+          <p class="sub">Réserver, payer, se préparer, voler : tout ce qu'on nous demande le plus souvent.</p>
+        </div>
+        <div class="sr">
+          <div class="search" id="sbox">
+            <i data-lucide="search" class="ic"></i>
+            <input id="q" type="search" placeholder="Rechercher : paiement, météo, annulation…" autocomplete="off">
+            <button class="clr" id="clr" aria-label="Effacer"><i data-lucide="x"></i></button>
+          </div>
+          <p class="hint" id="hint">30 questions en 5 thèmes.</p>
+        </div>
+
+      <nav class="chips" id="chips"></nav>
+
+      <div class="bodyg">
+        <aside class="toc" id="toc"><p>Thèmes</p></aside>
+        <div id="list"></div>
+        <section class="more">
+          <h2>Vous ne trouvez pas votre réponse ?</h2>
+          <p>Écrivez-nous : une personne vous répond sous 24 h. Pour une question simple, l'assistant répond tout de suite.</p>
+          <div class="acts">
+            <a class="cta" href="#">Nous écrire <i data-lucide="arrow-right"></i></a>
+            <a class="ghost" href="#"><i data-lucide="message-circle"></i>Demander à l'assistant</a>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="foot"><div class="wrap"><img src="public/fly-horizons-logo-white.svg" alt="Fly Horizons"><div>Footer actuel, inchangé.</div></div></footer>
+</div>
+</div>
+
+<script>
+const DATA = [{"id": "reservation", "title": "Participer à un vol", "items": [{"q": "Comment participer à un vol partagé ?", "a": "Sur la page Les vols, choisissez un vol publié par un pilote. Sa fiche présente les photos, la durée, l'itinéraire et la participation aux frais. Cliquez sur Réserver, choisissez une date parmi les disponibilités du pilote, indiquez le nombre de passagers et vos coordonnées, puis envoyez votre demande. Aucun paiement n'est demandé à ce stade."}, {"q": "Qui sont les pilotes ?", "a": "Des pilotes privés licenciés, qui partagent les frais d'un vol qu'ils effectuent. Avant de publier un vol, chaque pilote nous transmet sa licence et son certificat médical, que nous vérifions. Le pilote reste seul commandant de bord et seul responsable de son vol. Son profil est accessible depuis la fiche du vol."}, {"q": "Le pilote peut-il refuser ma demande ?", "a": "Oui. Le pilote accepte ou décline chaque demande selon ses disponibilités, la météo et la faisabilité du vol. Une demande envoyée ne garantit donc pas votre place : vous rejoignez le vol une fois la demande acceptée."}, {"q": "Combien coûte un vol ?", "a": "Chaque vol affiche sa participation aux frais : votre part des frais réels du vol (avion, carburant, taxes d'aérodrome), sans marge commerciale. Le pilote paie aussi sa part. Selon le vol, le prix est donné pour l'avion entier (jusqu'à 3 passagers) ou par place. Tous les vols disponibles et leurs montants sont sur la page Les vols."}, {"q": "D'où partent les vols ?", "a": "De l'aérodrome de Charleroi (EBCI). Le plan d'accès (parking, point de rendez-vous) est sur notre page Accès à l'aérodrome."}, {"q": "À quelles heures les vols ont-ils lieu ?", "a": "Les créneaux proposés sont ceux du pilote : vous les voyez au moment de choisir votre date. Les vols ont lieu de jour, en général entre 7 h et 21 h."}, {"q": "Puis-je réserver pour quelqu'un d'autre ou offrir un vol ?", "a": "Oui. Faites la demande avec les coordonnées de la personne qui volera, ou à votre nom en le précisant dans le message pour le pilote. Nous ne proposons pas de bons cadeaux."}, {"q": "Combien de temps à l'avance faut-il faire sa demande ?", "a": "Au moins 48 heures avant le vol : en dessous, le calendrier ne propose plus de créneaux. Au printemps et en été, mieux vaut s'y prendre plusieurs semaines à l'avance pour avoir le choix des dates."}]}, {"id": "paiement", "title": "Paiement", "items": [{"q": "Quand et comment dois-je payer ?", "a": "Uniquement une fois votre demande confirmée par le pilote. Vous recevez alors par email un lien vers une page de paiement avec le montant, l'IBAN du pilote et un QR code à scanner depuis votre app bancaire. Le virement va directement au pilote : Fly Horizons n'encaisse rien. Le pilote vous remet ensuite un reçu."}, {"q": "Puis-je payer en espèces ?", "a": "Oui, si le pilote l'accepte : convenez-en avec lui après la confirmation. Le virement reste le moyen de paiement par défaut. Le paiement par carte n'est pas proposé."}, {"q": "Pour un vol vendu à la place, pourquoi le prix n'est-il pas définitif ?", "a": "Parce que les frais sont partagés à parts égales entre les passagers réellement à bord. Le prix affiché correspond à un vol complet. Si toutes les places ne sont pas prises, le pilote clôture le groupe et la part de chacun est recalculée. Vous connaissez le montant définitif avant tout paiement."}, {"q": "Y a-t-il des frais supplémentaires après le vol ?", "a": "Non. Le montant confirmé couvre tout le vol prévu, taxes d'aérodrome comprises. Il n'y a rien à régler après le vol."}]}, {"id": "avant-le-vol", "title": "Avant le vol", "items": [{"q": "Dans quel délai ma demande est-elle confirmée ?", "a": "Le pilote répond dans un délai maximum de 72 heures, souvent bien plus vite. Vous recevez un email de confirmation, puis les informations de paiement. L'heure précise de décollage peut être ajustée dans les jours qui précèdent, selon la météo."}, {"q": "Que se passe-t-il en cas de mauvaise météo ?", "a": "Le pilote décide, parfois le jour même. Si la météo ne permet pas de voler en sécurité, le vol est reporté sans frais : le pilote vous propose un nouveau créneau par email."}, {"q": "Puis-je annuler ou reporter mon vol ?", "a": "Reporter est gratuit jusqu'à 48 heures avant le vol : contactez-nous ou répondez à l'email de confirmation. Pour annuler, prévenez le plus tôt possible. Le paiement ayant été fait directement au pilote, un éventuel remboursement se règle avec lui, et nous restons votre interlocuteur pour l'organiser. À moins de 48 heures, ou en cas d'absence sans prévenir, aucune compensation n'est garantie. Les conditions complètes sont dans nos conditions générales."}, {"q": "Combien de temps avant le vol dois-je arriver ?", "a": "15 minutes avant l'heure prévue, pour l'accueil, le briefing sécurité et l'embarquement. Le plan d'accès complet est sur notre page Accès à l'aérodrome."}, {"q": "Que dois-je porter et apporter ?", "a": "Des chaussures fermées, indispensables pour monter à bord. Une veste ou un pull selon la saison. Pas de bagage volumineux : la place est limitée. Téléphone et appareil photo sont les bienvenus. Pas d'alcool dans les 8 heures qui précèdent le vol. Les casques audio sont fournis."}, {"q": "Je suis enceinte ou j'ai une condition médicale, puis-je voler ?", "a": "En cas de grossesse, demandez l'avis de votre médecin avant de réserver. Pour toute condition particulière (problème cardiaque, épilepsie, claustrophobie, mobilité réduite), signalez-le dans le message au pilote ou contactez-nous avant : nous regarderons ensemble ce qui est possible."}]}, {"id": "a-bord", "title": "À bord", "items": [{"q": "Combien de passagers peuvent monter à bord ?", "a": "Jusqu'à 3 passagers en plus du pilote, dans un avion léger de 4 places. Le nombre de places est indiqué sur chaque vol."}, {"q": "Y a-t-il une limite de poids ?", "a": "Oui, comme dans tout avion léger. Avant chaque vol, le pilote calcule la masse et le centrage de l'avion : il peut vous demander le poids approximatif des passagers. Ce n'est pas un jugement, c'est une question de sécurité."}, {"q": "Y a-t-il un âge minimum ?", "a": "Non. Un enfant peut voler, accompagné d'un parent ou d'un tuteur présent. Un mineur ne peut pas embarquer seul."}, {"q": "Le vol est-il bruyant ?", "a": "Des casques antibruit sont fournis à chaque passager. Ils permettent aussi de parler avec le pilote pendant tout le vol."}, {"q": "À quelle altitude vole-t-on ?", "a": "En général entre 2 000 et 3 000 pieds, soit 600 à 1 000 mètres, à environ 200 km/h. Un avion de ligne vole dix fois plus haut : ici, le paysage défile vraiment sous vous. Le pilote commente le trajet et peut adapter l'altitude si vous le souhaitez."}, {"q": "J'ai peur de voler, est-ce fait pour moi ?", "a": "C'est une appréhension très courante, et la plupart des passagers sont surpris de se sentir à l'aise dès les premières minutes. Vous êtes assis à côté du pilote, vous voyez ce qu'il fait et il vous explique ce qui se passe. On vole bas et doucement, loin des turbulences des altitudes de croisière. Si vous ressentez un inconfort, vous le dites et on s'adapte. Un doute avant de réserver ? Contactez-nous."}, {"q": "Les passagers sont-ils assurés ?", "a": "Chaque avion vole sous sa propre assurance aviation, qui couvre la responsabilité civile envers les passagers. Votre pilote vous en donne le détail sur demande. Nous vous conseillons aussi une assurance individuelle accident. Il s'agit d'un vol privé en partage de frais, pas d'un transport aérien commercial."}, {"q": "Vais-je recevoir une demande d'avis après mon vol ?", "a": "Oui. Un email vous invite à répondre à une courte enquête. Cela prend moins d'une minute et aide les pilotes à s'améliorer."}, {"q": "Puis-je recevoir un certificat de vol ?", "a": "Oui, sans frais. Demandez-le à votre pilote ou contactez-nous après le vol."}]}, {"id": "compte", "title": "Suivre ma demande", "items": [{"q": "Dois-je créer un compte ?", "a": "Non. Tout se passe par email. Si vous créez un compte avec la même adresse email, vous y retrouvez toutes vos demandes."}, {"q": "Comment suivre l'état de ma demande ?", "a": "Chaque étape vous est envoyée par email : demande reçue, confirmation, paiement, rappel avant le vol. Avec un compte, vous voyez aussi le statut dans Mes réservations."}, {"q": "Je n'ai pas reçu d'email, que faire ?", "a": "Vérifiez vos spams. Si l'email n'y est pas, contactez-nous : nous vérifions votre demande et vous la renvoyons."}]}];
+const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+const esc = s => s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])).replace(/ ([?!:;])/g, ' $1');
+const list = document.getElementById('list'), toc = document.getElementById('toc'), chips = document.getElementById('chips');
+
+function hl(text, words){
+  let t = esc(text); if(!words.length) return t;
+  // surlignage simple, insensible aux accents
+  const n = norm(t); let out = '', i = 0;
+  const hits = [];
+  words.forEach(w => { let k = n.indexOf(w); while(k >= 0){ hits.push([k, k + w.length]); k = n.indexOf(w, k + 1); } });
+  hits.sort((a,b)=>a[0]-b[0]);
+  for(const [a,b] of hits){ if(a < i) continue; out += t.slice(i,a) + '<mark>' + t.slice(a,b) + '</mark>'; i = b; }
+  return out + t.slice(i);
+}
+
+function render(){
+  const q = document.getElementById('q').value.trim();
+  const words = norm(q).split(/\s+/).filter(w => w.length >= 2);
+  document.getElementById('sbox').classList.toggle('has', !!q);
+  let html = '', total = 0;
+  DATA.forEach(th => {
+    const items = th.items.filter(it => !words.length || words.every(w => norm(it.q + ' ' + it.a).includes(w)));
+    if(!items.length) return;
+    total += items.length;
+    html += `<section class="theme" id="t-${th.id}"><h2>${th.title}<small>${items.length}</small></h2>` +
+      items.map(it => `<div class="qa${words.length ? ' open' : ''}"><button><span>${hl(it.q, words)}</span><span class="pm"><i data-lucide="plus"></i></span></button><div class="ans">${hl(it.a, words)}</div></div>`).join('') +
+      `</section>`;
+  });
+  list.innerHTML = html || `<p class="empty">Aucune question ne correspond à « ${esc(q)} ». Essayez un autre mot, ou écrivez-nous.</p>`;
+  document.getElementById('hint').textContent = q ? `${total} résultat${total > 1 ? 's' : ''}` : '30 questions en 5 thèmes.';
+  lucide.createIcons();
+  spy();
+}
+
+toc.innerHTML += DATA.map((th,i) => `<a href="#t-${th.id}" data-id="${th.id}"${i===0?' class="on"':''}>${th.title}<span>${th.items.length}</span></a>`).join('');
+chips.innerHTML = DATA.map((th,i) => `<a class="chip${i===0?' on':''}" href="#t-${th.id}" data-id="${th.id}">${th.title}</a>`).join('');
+
+// Clic sur un thème (sommaire ou pastille) : défilement fluide jusqu'à la section,
+// en tenant compte du header collant (scroll-margin-top sur .theme). Pas d'animation si
+// l'utilisateur a demandé moins de mouvement.
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let lockSpy = false;
+function goTo(id){
+  const sec = document.getElementById('t-' + id); if(!sec) return;
+  document.querySelectorAll('#toc a, #chips a').forEach(a => a.classList.toggle('on', a.dataset.id === id));
+  const chip = chips.querySelector(`[data-id="${id}"]`);
+  chip?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', inline: 'center', block: 'nearest' });
+  lockSpy = true; clearTimeout(goTo.t); goTo.t = setTimeout(() => { lockSpy = false; }, 900);
+  sec.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+}
+document.addEventListener('click', e => {
+  const a = e.target.closest('#toc a, #chips a'); if(!a) return;
+  e.preventDefault(); goTo(a.dataset.id);
+});
+
+list.addEventListener('click', e => { const b = e.target.closest('.qa button'); if(b) b.parentElement.classList.toggle('open'); });
+document.getElementById('q').addEventListener('input', render);
+document.getElementById('clr').addEventListener('click', () => { document.getElementById('q').value = ''; render(); });
+
+// thème actif selon le défilement
+const frame = document.getElementById('frame');
+function spy(){
+  if (lockSpy) return;
+  const secs = [...document.querySelectorAll('.theme')];
+  let cur = secs[0]?.id;
+  for(const s of secs){ if(s.getBoundingClientRect().top < 180) cur = s.id; }
+  document.querySelectorAll('#toc a, #chips a').forEach(a => a.classList.toggle('on', 't-' + a.dataset.id === cur));
+}
+window.addEventListener('scroll', spy); frame.addEventListener('scroll', spy);
+
+function seg(id, fn){ const el=document.getElementById(id); el.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
+  el.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); fn(b); }); }
+seg('vw', b => document.getElementById('stage').classList.toggle('phone', b.dataset.v==='phone'));
+document.getElementById('nb').addEventListener('click',()=>document.getElementById('notes').classList.toggle('open'));
+
+render();
+// maquette : ouvrir la première question pour montrer l'état ouvert
+document.querySelector('.qa')?.classList.add('open');
+</script>
+</body>
+</html>
