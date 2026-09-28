@@ -29,6 +29,15 @@
         ],
         "createdAt": "2026-09-28T06:52:56.792Z",
         "reason": "Charte FH : eyebrows courts en capitales (libellés, pas du corps de texte)"
+      },
+      {
+        "rule": "kicker-above-heading",
+        "value": "*",
+        "files": [
+          "maquette-about.html"
+        ],
+        "createdAt": "2026-09-28T07:13:38.941Z",
+        "reason": "Charte FH figée (STYLE-STATUS.html, mémoire project_design_identity) : eyebrow doré au-dessus des H1/H2 du site public, même exception que maquette-page-produit.html"
       }
     ]
   }
