@@ -1607,7 +1607,19 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
-      <h3>2026-09-28 (44) — Page À propos refaite dans la nouvelle DA, centrée sur la plateforme</h3>
+      <h3>2026-09-28 (45) — Page FAQ refaite dans la nouvelle DA</h3>
+      <ul>
+        <li><code>app/(public)/faq/page.tsx</code> (d'après <code>maquette-faq.html</code>, ajustée par Romain) : une grille sommaire 260 px | questions ; titre sur les deux colonnes,
+          recherche posée sur la colonne des questions, sommaire collant qui démarre à hauteur de la recherche ; pastilles collées sous le header sur téléphone.
+          Plus aucune carte (questions séparées par des filets, « + » qui tourne en « × » doré), plus de blocs chat / navy en bas : une fin « Vous ne trouvez pas ? » avec deux actions.</li>
+        <li>Clic sur un thème : défilement fluide jusqu'à la section (<code>scrollIntoView</code> + <code>scroll-margin</code>, sans animation si « réduire les animations »),
+          thème actif suivi au défilement. Plusieurs questions ouvrables en même temps ; en recherche, tous les résultats s'ouvrent. Moteur de recherche (synonymes, score) inchangé.</li>
+        <li>Écart header : <code>.pt-page</code>. Liens des réponses en navy souligné (le doré sur blanc était illisible).</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-09-28 (44) —Page À propos refaite dans la nouvelle DA, centrée sur la plateforme</h3>
       <ul>
         <li><code>app/(public)/about/page.tsx</code> réécrite d'après <code>maquette-about.html</code> v3 : ce qu'est Fly Horizons (photo cockpit) · « Quatre places,
           des frais partagés » (photo des sièges, 4 principes) · « Qui vous emmène » en frise avant de publier / avant chaque vol / en vol · voler ou piloter.
