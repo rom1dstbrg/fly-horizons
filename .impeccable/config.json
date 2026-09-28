@@ -56,6 +56,15 @@
         ],
         "createdAt": "2026-09-28T07:39:56.352Z",
         "reason": "Charte FH figée (STYLE-STATUS.html) : eyebrow doré au-dessus des H1 du site public, même exception que les autres maquettes"
+      },
+      {
+        "rule": "kicker-above-heading",
+        "value": "*",
+        "files": [
+          "maquette-accueil.html"
+        ],
+        "createdAt": "2026-09-28T07:56:43.974Z",
+        "reason": "Charte FH figée (STYLE-STATUS.html) : eyebrow doré au-dessus des H1/H2 du site public, même exception que les autres maquettes"
       }
     ]
   }

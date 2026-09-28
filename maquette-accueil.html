@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maquette Accueil</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<!--
+  Maquette accueil (28/09). Le hero est GARDÉ (vidéo plein écran, dégradés, titre centré) : on corrige
+  seulement ses textes et son 2e bouton. Le reste suit la nouvelle DA.
+  Écarts unifiés : sections 64 px (téléphone) / 112 px (ordinateur) ; H2 28 / 40 px ; eyebrow 11 px.
+  Ordre : hero · bandeau de confiance · les vols · le principe · galerie · avis.
+-->
+<style>
+:root{--navy:#0b2238;--gold:#F2B705;--gold-h:#e6a800;--bg:#f5f5f7;--sec:#edf0f7;--fg:#1e2535;--muted:#64748b;--border:#e0e5ef;--sh:0 2px 14px rgba(11,34,56,.07);--sh-gold:0 6px 24px rgba(242,183,5,.35)}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Poppins,system-ui,sans-serif;background:#dfe3ea;color:var(--fg);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button,input{font-family:inherit}
+button{cursor:pointer}
+img{display:block;max-width:100%}
+[data-lucide]{width:16px;height:16px;stroke-width:2}
+.tool{position:sticky;top:0;z-index:2000;background:#fff;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:10px 16px;font-size:12px}
+.tool b{font-weight:800;font-size:13px}
+.tool .lbl{color:var(--muted);font-weight:600}
+.seg{display:inline-flex;background:var(--sec);border-radius:9px;padding:3px}
+.seg button{border:0;background:transparent;padding:6px 11px;border-radius:7px;font-size:12px;font-weight:600;color:var(--muted)}
+.seg button.on{background:#fff;color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.tool .sp{flex:1}
+.btn-notes{border:1px solid var(--border);background:#fff;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700}
+.notes{display:none;background:#fffbea;border-bottom:1px solid #f3e3a1;padding:16px 20px;font-size:13px;line-height:1.6}
+.notes.open{display:block}
+.notes ol{margin:0;padding-left:20px;max-width:960px}
+.notes li{margin:3px 0}
+.stage.phone{padding:28px 0 48px;display:flex;justify-content:center}
+.frame{container-type:inline-size;background:#fff;position:relative}
+.stage.phone .frame{width:390px;height:844px;overflow-y:auto;border-radius:46px;border:11px solid #0f1115;box-shadow:0 30px 80px rgba(0,0,0,.25);scrollbar-width:none}
+.stage.phone .frame::-webkit-scrollbar{display:none}
+
+.wrap{max-width:1400px;margin:0 auto;padding:0 16px}
+.hdr{position:absolute;top:0;left:0;right:0;z-index:500;padding:8px 12px 0}
+.pill{max-width:1400px;margin:0 auto;background:#fff;border:1px solid var(--border);border-radius:16px;height:64px;display:flex;align-items:center;padding:0 16px;box-shadow:var(--sh)}
+.pill .logo{height:32px}
+.pill .fill{flex:1}
+.nav{display:none;align-items:center;gap:4px;margin-right:8px}
+.nav a{padding:8px 12px;font-size:14px;font-weight:500;color:var(--muted);border-radius:8px}
+.vsep{display:none;width:1px;height:20px;background:var(--border);margin:0 4px}
+.login{display:none;align-items:center;gap:6px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--fg);border:1px solid var(--border);background:var(--sec);border-radius:8px}
+.login [data-lucide]{width:13px;height:13px}
+.burger{border:0;background:transparent;padding:8px;color:var(--muted)}
+.burger [data-lucide]{width:20px;height:20px}
+
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin:0 0 12px}
+h2{font-size:28px;font-weight:900;line-height:1.06;letter-spacing:-.02em;margin:0}
+.lnk{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:var(--navy);white-space:nowrap}
+.lnk:hover{color:var(--gold-h)}
+.sec{padding:64px 0}
+.shead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:28px}
+
+/* ── HERO (gardé) ── */
+.hero{position:relative;height:100svh;min-height:580px;max-height:980px;overflow:hidden;background:#0b2238}
+.stage.phone .hero{height:844px}
+.hero video,.hero .poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hero .g1{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.5),rgba(0,0,0,.35),rgba(0,0,0,.65))}
+.hero .g2{position:absolute;inset:0;background:linear-gradient(to right,rgba(0,0,0,.4),transparent)}
+.hc{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:48px 16px 64px}
+.hc .k{font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin:0 0 20px}
+.hc h1{font-size:44px;font-weight:900;line-height:1;letter-spacing:-.02em;color:#fff;margin:0 0 24px;text-shadow:0 4px 24px rgba(0,0,0,.25)}
+.hc h1 span{display:block}
+.hc h1 .g{color:var(--gold)}
+.hc .s{font-size:16px;font-weight:300;line-height:1.6;color:rgba(255,255,255,.8);max-width:560px;margin:0 0 36px}
+.hc .b{display:flex;flex-direction:column;gap:12px;width:100%;max-width:320px}
+.hbtn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 28px;border-radius:10px;font-size:14px;font-weight:800}
+.hbtn.p{background:var(--gold);color:var(--navy);box-shadow:0 8px 30px rgba(242,183,5,.35)}
+.hbtn.p:hover{background:var(--gold-h)}
+.hbtn.g{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.3);backdrop-filter:blur(6px)}
+.hbtn.g:hover{background:rgba(255,255,255,.2)}
+.scroll{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);z-index:2;display:flex;flex-direction:column;align-items:center;gap:6px;color:rgba(255,255,255,.55);font-size:11px;font-weight:600;letter-spacing:3px;text-transform:uppercase}
+
+/* ── Bandeau de confiance ── */
+.trust{border-bottom:1px solid var(--border)}
+.tgrid{display:grid;grid-template-columns:1fr 1fr}
+.ti{display:flex;gap:10px;align-items:flex-start;padding:18px 12px 18px 0}
+.ti:nth-child(odd){border-right:1px solid var(--border)}
+.ti:nth-child(even){padding-left:14px}
+.ti:nth-child(-n+2){border-bottom:1px solid var(--border)}
+.ti [data-lucide]{color:var(--gold-h);flex:none;width:18px;height:18px;margin-top:1px}
+.ti p{margin:0;font-size:13px;font-weight:700;line-height:1.35}
+.ti p small{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-top:2px}
+
+/* ── Vols ── */
+.cards{display:grid;grid-template-columns:1fr;gap:12px}
+.card{display:block;position:relative;border-radius:10px;overflow:hidden;aspect-ratio:4/3;background:var(--navy)}
+.card img{width:100%;height:100%;object-fit:cover;transition:transform .7s}
+.card:hover img{transform:scale(1.05)}
+.card::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.9),rgba(0,0,0,.15) 55%,transparent)}
+.card .dur{position:absolute;left:14px;top:14px;z-index:2;background:rgba(0,0,0,.4);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 14px;color:var(--gold);font-weight:900;font-size:14px;line-height:1}
+.card .in{position:absolute;inset:auto 0 0 0;padding:18px;z-index:2;color:#fff}
+.card .ct{font-size:19px;font-weight:700;line-height:1.2;margin:0 0 4px}
+.card .cp{font-size:12px;color:rgba(255,255,255,.7);margin:0 0 12px}
+.card .row{display:flex;justify-content:space-between;align-items:center}
+.card .pr{font-size:22px;font-weight:900}
+.card .pr small{font-size:12px;font-weight:500;color:rgba(255,255,255,.7)}
+.card .go{font-size:12px;font-weight:600;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);border-radius:8px;padding:6px 10px;display:inline-flex;gap:5px;align-items:center;transition:.3s}
+.card:hover .go{background:var(--gold);color:var(--navy);border-color:transparent}
+.card .go [data-lucide]{width:12px;height:12px}
+.empty{display:none;padding:8px 0 0;max-width:620px}
+.empty .t{font-size:20px;font-weight:800;margin:0 0 8px}
+.empty .d{font-size:15px;line-height:1.7;color:rgba(30,37,53,.72);margin:0 0 18px}
+.nl{display:flex;flex-direction:column;gap:10px}
+.nl input{height:52px;border:1px solid var(--border);background:var(--sec);border-radius:12px;padding:0 16px;font-size:15px;outline:none}
+.nl input:focus{background:#fff;border-color:var(--fg)}
+.cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--gold);color:var(--navy);border:0;border-radius:10px;padding:15px 24px;font-size:14px;font-weight:900;box-shadow:var(--sh-gold)}
+.frame.nov .cards,.frame.nov .vols .lnk{display:none}
+.frame.nov .empty{display:block}
+
+/* ── Le principe : frise horizontale ── */
+.principe{background:var(--bg)}
+.ptop{display:grid;gap:14px;margin-bottom:36px}
+.ptop p{font-size:15px;line-height:1.7;color:rgba(30,37,53,.72);margin:0;max-width:520px}
+.flow{list-style:none;margin:0;padding:0;display:grid;gap:0;position:relative}
+.flow li{position:relative;padding:0 0 28px 36px}
+.flow li::before{content:"";position:absolute;left:7px;top:22px;bottom:0;width:2px;background:rgba(11,34,56,.12)}
+.flow li:last-child::before{display:none}
+.flow .dot{position:absolute;left:0;top:4px;width:16px;height:16px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 4px var(--bg)}
+.flow .t{font-size:17px;font-weight:900;margin:0 0 6px}
+.flow .d{font-size:14px;line-height:1.65;color:rgba(30,37,53,.68);margin:0}
+
+/* ── Galerie ── */
+.gal{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.gal a{position:relative;border-radius:10px;overflow:hidden;aspect-ratio:16/10;background:var(--navy)}
+.gal a:first-child{grid-column:span 2}
+.gal a:nth-child(n+4){display:none}
+.gal img{width:100%;height:100%;object-fit:cover;transition:transform .5s}
+.gal a:hover img{transform:scale(1.05)}
+
+/* ── Avis ── */
+.avis{border-top:1px solid var(--border)}
+.quotes{display:grid;gap:36px}
+.q blockquote{margin:0;font-size:18px;line-height:1.6;font-weight:500;color:var(--fg)}
+.q blockquote::before{content:"“";display:block;font-size:56px;line-height:.6;font-weight:900;color:var(--gold);margin-bottom:10px}
+.q p{margin:14px 0 0;font-size:14px;font-weight:700}
+.q p span{font-weight:500;color:var(--muted)}
+.warn{margin-top:28px;font-size:12px;color:#8a6d00;background:#fffbea;border:1px dashed #f3e3a1;border-radius:8px;padding:8px 12px;display:inline-block}
+
+.foot{background:var(--navy);color:rgba(255,255,255,.45);padding:40px 0;font-size:13px}
+.foot img{height:28px;margin-bottom:12px}
+
+@container (min-width: 900px){
+  .wrap{padding:0 40px}
+  .hdr{padding:14px 16px 0}
+  .pill{height:60px;padding:0 24px}
+  .nav,.login{display:flex}
+  .vsep{display:block}
+  .burger{display:none}
+  h2{font-size:40px;line-height:1.04}
+  .sec{padding:112px 0}
+  .shead{margin-bottom:40px}
+
+  .hc{padding:76px 16px 64px}
+  .hc .k{font-size:14px}
+  .hc h1{font-size:80px}
+  .hc .s{font-size:20px}
+  .hc .b{flex-direction:row;width:auto;max-width:none}
+
+  .tgrid{grid-template-columns:repeat(4,1fr)}
+  .ti{padding:24px 24px 24px 0;border-bottom:0!important;border-right:1px solid var(--border)}
+  .ti + .ti{padding-left:24px}
+  .ti:last-child{border-right:0}
+  .ti p{font-size:14px}
+
+  .cards{grid-template-columns:repeat(4,1fr);gap:16px}
+  .card{aspect-ratio:3/4}
+  .nl{flex-direction:row}
+  .nl input{flex:1}
+
+  .ptop{grid-template-columns:1fr 1fr;column-gap:72px;align-items:end;margin-bottom:56px}
+  .flow{grid-template-columns:repeat(3,1fr);gap:40px}
+  .flow li{padding:36px 0 0 0}
+  .flow li::before{left:16px;right:-40px;top:7px;bottom:auto;width:auto;height:2px}
+  .flow .dot{top:0}
+  .flow .t{font-size:20px}
+  .flow .d{font-size:15px}
+
+  .gal{grid-template-columns:2fr 1fr 1fr;grid-template-rows:260px 260px;gap:12px}
+  .gal a{aspect-ratio:auto}
+  .gal a:first-child{grid-column:auto;grid-row:span 2}
+  .gal a:nth-child(n+4){display:block}
+
+  .quotes{grid-template-columns:1fr 1fr;gap:72px}
+  .q blockquote{font-size:20px}
+}
+</style>
+</head>
+<body>
+<div class="tool">
+  <b>Maquette · Accueil</b>
+  <div class="seg" id="vw"><button data-v="desk" class="on">Ordinateur</button><button data-v="phone">Téléphone</button></div>
+  <span class="lbl">Titre du hero</span>
+  <div class="seg" id="ti"><button data-t="0">Actuel</button><button data-t="1" class="on">Proposition 1</button><button data-t="2">Proposition 2</button></div>
+  <span class="lbl">Vols</span>
+  <div class="seg" id="vo"><button data-o="avec" class="on">Vols publiés</button><button data-o="sans">Aucun vol</button></div>
+  <span class="sp"></span>
+  <button class="btn-notes" id="nb">Ce qui change ▾</button>
+</div>
+<div class="notes" id="notes">
+  <ol>
+    <li><b>Hero gardé</b> (vidéo, dégradés, animation). Seuls les textes changent : « Volez où vous voulez. À votre façon. » laisse croire que le passager choisit sa route, alors que c'est le pilote qui publie son vol et décide (c'est le cœur du partage de frais). Deux propositions à comparer avec la bascule en haut.</li>
+    <li><b>Sous-titre</b> : « Itinéraire libre ou destination fixée » devient « Des pilotes privés partagent leurs vols au départ de Charleroi. Vous ne payez que votre part des frais. »</li>
+    <li><b>2e bouton</b> : « Voir les itinéraires » pointait vers une section qui n'existe que s'il y a des vols à itinéraire (sinon le bouton ne fait rien). Il devient « Comment ça marche », qui descend vers la nouvelle section « Le principe ».</li>
+    <li><b>Bandeau de confiance</b> corrigé : plus de « Paiement sécurisé via Stripe », « Annulation gratuite » ni « Itinéraire libre », qui sont faux aujourd'hui. À la place : rien à payer avant confirmation · pilotes vérifiés · frais partagés sans marge · jusqu'à 3 passagers. Plus de petites icônes dans des carrés : des filets.</li>
+    <li><b>Les vols</b> : « Les vols » et « Itinéraires sélectionnés » ne font plus qu'une section « Les prochains vols » (4 cartes max, style des cartes gardé, lien « Tous les vols »). Sans vol publié : plus de « Nous sommes en pause sur les réservations », mais « Aucun vol publié pour le moment » avec l'inscription à l'alerte email (la newsletter existe déjà). Bascule « Aucun vol » en haut.</li>
+    <li><b>Le principe</b> (nouveau, vers À propos) : une frise horizontale en 3 temps, différente des listes numérotées des autres pages.</li>
+    <li><b>Galerie</b> : même mosaïque, titres aux tailles communes.</li>
+    <li><b>Avis</b> : plus de cartes, de simples citations. Ils parlent de Romain : à garder uniquement si ce sont de vrais retours de passagers.</li>
+    <li><b>Écarts unifiés</b> : toutes les sections ont le même espacement (64 / 112 px) et les mêmes tailles de titres (28 / 40 px).</li>
+  </ol>
+</div>
+
+<div class="stage" id="stage">
+<div class="frame" id="frame">
+  <header class="hdr"><div class="pill">
+    <img class="logo" src="public/fly-horizons-logo-navy.svg" alt="Fly Horizons"><span class="fill"></span>
+    <nav class="nav"><a href="#">Les vols</a><a href="#">Galerie</a><a href="#">À propos</a><a href="#">FAQ</a><a href="#">Contact</a></nav>
+    <span class="vsep"></span><a class="login" href="#"><i data-lucide="user"></i>Connexion</a>
+    <button class="burger" aria-label="Menu"><i data-lucide="menu"></i></button>
+  </div></header>
+
+  <!-- HERO (gardé) -->
+  <section class="hero">
+    <img class="poster" src="public/hero-section.png" alt="">
+    <video autoplay loop muted playsinline poster="public/hero-section.png"><source src="public/vol-rev%202.2.mp4" type="video/mp4"></video>
+    <div class="g1"></div><div class="g2"></div>
+    <div class="hc">
+      <p class="k">Vol partagé en Belgique</p>
+      <h1 id="h1"></h1>
+      <p class="s">Des pilotes privés partagent leurs vols au départ de Charleroi. Vous ne payez que votre part des frais.</p>
+      <div class="b">
+        <a class="hbtn p" href="#"><i data-lucide="plane-takeoff"></i>Voir les vols</a>
+        <a class="hbtn g" href="#principe"><i data-lucide="circle-help"></i>Comment ça marche</a>
+      </div>
+    </div>
+    <div class="scroll">Découvrir<i data-lucide="chevron-down"></i></div>
+  </section>
+
+  <!-- BANDEAU DE CONFIANCE -->
+  <section class="trust"><div class="wrap tgrid">
+    <div class="ti"><i data-lucide="hand-coins"></i><p>Rien à payer d'avance<small>Seulement après confirmation</small></p></div>
+    <div class="ti"><i data-lucide="badge-check"></i><p>Pilotes vérifiés<small>Licence et médical contrôlés</small></p></div>
+    <div class="ti"><i data-lucide="scale"></i><p>Frais partagés<small>Sans marge commerciale</small></p></div>
+    <div class="ti"><i data-lucide="users"></i><p>Jusqu'à 3 passagers<small>Au départ de Charleroi</small></p></div>
+  </div></section>
+
+  <!-- LES VOLS -->
+  <section class="sec vols"><div class="wrap">
+    <div class="shead">
+      <div><p class="eyebrow">Au départ de Charleroi</p><h2>Les prochains vols</h2></div>
+      <a class="lnk" href="#">Tous les vols <i data-lucide="arrow-right"></i></a>
+    </div>
+    <div class="cards">
+      <a class="card" href="#"><img src="public/gallery/7.png" alt=""><span class="dur">1 h</span><div class="in"><p class="ct">Les lacs de l'Eau d'Heure</p><p class="cp">Avec Romain D.</p><div class="row"><span class="pr">89 € <small>/ pers.</small></span><span class="go">Voir <i data-lucide="arrow-right"></i></span></div></div></a>
+      <a class="card" href="#"><img src="public/gallery/6.png" alt=""><span class="dur">30 min</span><div class="in"><p class="ct">Charleroi vu d'en haut</p><p class="cp">Avec Romain D.</p><div class="row"><span class="pr">145 € <small>/ avion</small></span><span class="go">Voir <i data-lucide="arrow-right"></i></span></div></div></a>
+      <a class="card" href="#"><img src="public/gallery/8.png" alt=""><span class="dur">1 h 30</span><div class="in"><p class="ct">La côte belge</p><p class="cp">Avec Julie M.</p><div class="row"><span class="pr">119 € <small>/ pers.</small></span><span class="go">Voir <i data-lucide="arrow-right"></i></span></div></div></a>
+      <a class="card" href="#"><img src="public/gallery/5.png" alt=""><span class="dur">45 min</span><div class="in"><p class="ct">Vol découverte</p><p class="cp">Avec Romain D.</p><div class="row"><span class="pr">69 € <small>/ pers.</small></span><span class="go">Voir <i data-lucide="arrow-right"></i></span></div></div></a>
+    </div>
+    <div class="empty">
+      <p class="t">Aucun vol publié pour le moment.</p>
+      <p class="d">Les pilotes publient leurs vols au fil de la saison. Laissez votre email : nous vous prévenons dès qu'un vol est en ligne.</p>
+      <form class="nl" onsubmit="event.preventDefault()"><input type="email" placeholder="Votre adresse email"><button class="cta" type="submit">Me prévenir</button></form>
+    </div>
+  </div></section>
+
+  <!-- LE PRINCIPE -->
+  <section class="sec principe" id="principe"><div class="wrap">
+    <div class="ptop">
+      <div><p class="eyebrow">Le principe</p><h2>Un vol partagé, comment ça marche&nbsp;?</h2></div>
+      <div>
+        <p>Un pilote privé vole de toute façon. Il partage les places libres de son avion et les frais réels du vol avec ses passagers.</p>
+        <p style="margin-top:12px"><a class="lnk" href="#">En savoir plus sur Fly Horizons <i data-lucide="arrow-right"></i></a></p>
+      </div>
+    </div>
+    <ol class="flow">
+      <li><span class="dot"></span><p class="t">Un pilote publie son vol</p><p class="d">Durée, itinéraire, date possible et participation aux frais : tout est affiché sur la fiche du vol.</p></li>
+      <li><span class="dot"></span><p class="t">Vous demandez à le rejoindre</p><p class="d">Vous choisissez une date parmi ses disponibilités. Le pilote confirme sous 72&nbsp;h, rien à payer avant.</p></li>
+      <li><span class="dot"></span><p class="t">Vous partagez les frais, et vous volez</p><p class="d">Vous réglez votre part au pilote, puis rendez-vous à l'aérodrome de Charleroi pour le décollage.</p></li>
+    </ol>
+  </div></section>
+
+  <!-- GALERIE -->
+  <section class="sec"><div class="wrap">
+    <div class="shead">
+      <div><p class="eyebrow">Galerie</p><h2>Vols en images</h2></div>
+      <a class="lnk" href="#">Voir la galerie <i data-lucide="arrow-right"></i></a>
+    </div>
+    <div class="gal">
+      <a href="#"><img src="public/gallery/1.png" alt=""></a>
+      <a href="#"><img src="public/gallery/2.png" alt=""></a>
+      <a href="#"><img src="public/gallery/3.png" alt=""></a>
+      <a href="#"><img src="public/gallery/4.png" alt=""></a>
+      <a href="#"><img src="public/gallery/9.png" alt=""></a>
+    </div>
+  </div></section>
+
+  <!-- AVIS -->
+  <section class="sec avis"><div class="wrap">
+    <div class="shead"><div><p class="eyebrow">Ils ont volé avec nous</p><h2>Ce qu'ils en disent</h2></div></div>
+    <div class="quotes">
+      <div class="q"><blockquote>J'avais un peu le trac avant de monter. Romain a pris le temps d'expliquer chaque étape, on s'est senti en confiance dès le départ. La vue sur la vallée de la Sambre était à couper le souffle.</blockquote><p>Sophie M. <span>· Namur</span></p></div>
+      <div class="q"><blockquote>Offert à notre fils pour ses 18 ans. Il en parle encore. Le briefing était sérieux sans être intimidant, et une expérience vraiment unique.</blockquote><p>Laurent &amp; Valérie <span>· Liège</span></p></div>
+    </div>
+    <p class="warn">À garder uniquement si ce sont de vrais retours de passagers.</p>
+  </div></section>
+
+  <footer class="foot"><div class="wrap"><img src="public/fly-horizons-logo-white.svg" alt="Fly Horizons"><div>Footer actuel, inchangé.</div></div></footer>
+</div>
+</div>
+
+<script>
+const TITLES = [
+  ['Volez où vous voulez.', 'À votre façon.'],
+  ['Prenez place à00a0bord.', 'Partagez le ciel.'],
+  ['Un siège libre à00a0bord.', 'Il est pour vous.'],
+];
+const h1 = document.getElementById('h1');
+function setTitle(i){ h1.innerHTML = `<span>${TITLES[i][0]}</span><span class="g">${TITLES[i][1]}</span>`; }
+setTitle(1);
+lucide.createIcons();
+function seg(id, fn){ const el = document.getElementById(id); el.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return;
+  el.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); fn(b); }); }
+seg('vw', b => document.getElementById('stage').classList.toggle('phone', b.dataset.v === 'phone'));
+seg('ti', b => setTitle(+b.dataset.t));
+seg('vo', b => document.getElementById('frame').classList.toggle('nov', b.dataset.o === 'sans'));
+document.getElementById('nb').addEventListener('click', () => document.getElementById('notes').classList.toggle('open'));
+</script>
+</body>
+</html>
