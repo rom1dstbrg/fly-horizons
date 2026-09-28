@@ -99,20 +99,20 @@
     <div class="col">
       <h3><span class="tag t-amber">À faire</span> prêt à démarrer</h3>
       <ol>
-        <li><b>Refonte nouvelle DA : pages de flow restantes (28/09).</b> Après page produit,
-          réservation, succès, report, compte, nos-offres, paiement annonce, suivi de résa : reste les pages atteintes seulement en
-          continuation d'un flow (lien email, redirection), jamais depuis la nav. Dans l'ordre proposé :
-          <s><b>1.</b> <code>/vol/annonce/paiement/[token]</code></s> fait (64) ·
-          <s><b>2.</b> <code>/account/reservations/[id]</code></s> fait (65) ·
-          <b>3.</b> <code>/vol/proposition/[token]</code> (itinéraire proposé par le pilote) — prochaine ·
-          <b>4.</b> <code>/reservation/creneau-propose/[token]</code> (autre créneau proposé) ·
-          <b>5.</b> <code>/reservation/messages/[token]</code> (fil pilote ↔ client) ·
-          <b>6.</b> <code>/contact/ticket/[token]</code> (fil client/admin).
+        <li><b>Refonte nouvelle DA : pages restantes (28/09, périmètre élargi à tout le site public le 28/09 soir).</b>
+          Après page produit, réservation, succès, report, compte, nos-offres, paiement annonce, suivi de résa :
+          <b>1.</b> <code>/access-ebci</code> (statique mais très liée) ·
+          <b>2.</b> <code>/vol/proposition/[token]</code> (itinéraire proposé par le pilote) — prochaine ·
+          <b>3.</b> <code>/reservation/creneau-propose/[token]</code> (autre créneau proposé) ·
+          <b>4.</b> <code>/reservation/messages/[token]</code> (fil pilote ↔ client) ·
+          <b>5.</b> <code>/contact/ticket/[token]</code> (fil client/admin) ·
+          <b>6.</b> <code>/cgp</code> et <code>/politique-de-confidentialite</code> (légal, liés depuis le footer partout).
           Secondaire, moins vu : <code>/nos-pilotes/[id]</code>, <code>/account/reservations/[id]/carte</code>,
-          <code>/newsletter/unsubscribe</code>. <b>Ne pas retravailler</b> (ancien flow produits/Stripe, cf. Décisions) :
-          <code>/checkout</code>, <code>/orders</code>, <code>/orders/success</code>, <code>/cart</code>, <code>/vols/[slug]</code>.
-          <code>/devenir-pilote/candidature</code> déjà en nouvelle DA. Détail : Changelog du 28/09, réponse de Claude à
-          « quelles pages sont concernées ».</li>
+          <code>/newsletter/unsubscribe</code>, <code>/vol/itineraire/[token]</code> (ancien système, vieilles résas seulement).
+          En pause, pas de priorité : <code>/vol-sur-mesure</code> + <code>/vol-sur-mesure/success</code> (masquées du Header depuis juillet).
+          <b>Ne pas retravailler</b> (flow Stripe « commande classique » toujours câblé — panier Header, webhook, sitemap priority 0.9, cf. Décisions) :
+          <code>/checkout</code>, <code>/orders</code>, <code>/orders/success</code>, <code>/cart</code>, <code>/vols/[slug]</code>, <code>/configurer</code> (dépendance interne de <code>/vol-sur-mesure</code>, gardé tant qu'elle reste en pause plutôt que supprimée).
+          <code>/devenir-pilote/candidature</code> déjà en nouvelle DA. Détail : Changelog du 28/09 (entrée 66, audit + suppression des pages mortes).</li>
         <li><b>Tester en conditions réelles la fusion admin/pilote</b> — Romain n'a pas encore eu
           l'occasion. Se connecter avec <code>info@fly-horizons.com</code>, vérifier
           <code>/pilote</code>, <code>/pilote/annonces</code>, <code>/pilote/profil</code>, et créer
@@ -1658,6 +1658,18 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-09-28 (66) — Audit complet du site public + suppression des pages mortes</h3>
+      <ul>
+        <li>Demande de Romain : la liste des pages restant à refaire (entrée 65) ne couvrait que les pages « de flow » (lien email/redirection). Audit élargi à tout <code>app/(public)</code> + <code>app/account</code> + auth pour lister vraiment tout ce qui reste — voir Board pour la liste à jour.</li>
+        <li>En creusant, question de Romain : peut-on supprimer les pages sans plus aucun lien interne ? Vérification approfondie avant de toucher à quoi que ce soit (routes API, webhook Stripe, templates email, sitemap, composants partagés) — <b>corrigé une erreur de mon 1er passage</b> : <code>/cart</code>, <code>/checkout</code>, <code>/orders</code>, <code>/orders/success</code>, <code>/vols/[slug]</code> ne sont PAS mortes (panier actif dans le Header, webhook Stripe qui écrit encore dans <code>orders</code>, <code>PackCard</code> sur l'accueil et <code>/nos-offres</code>, indexées dans <code>sitemap.ts</code> priority 0.9) — gardées.</li>
+        <li><b>Supprimées</b> (0 référence trouvée nulle part après vérification) : <code>app/account/bons</code>, <code>app/account/newsletter</code> (+ son <code>NewsletterSection.tsx</code> local, différent de celui utilisé par <code>ProfileSection</code>), <code>app/account/securite</code>, <code>app/account/adresses</code> + <code>components/account/AddressBook.tsx</code> (le lien « Gérer mes adresses » de <code>/checkout</code> pointe déjà vers <code>/account</code>, pas vers cette page — la note de l'entrée 63 disant « encore utilisées par l'ancien /checkout » était fausse, corrigée ici), l'ancien wizard <code>app/(public)/reservation/page.tsx</code> (993 lignes), et l'ancienne liste <code>app/account/reservations/page.tsx</code> (310 lignes, remplacée par l'onglet Réservations d'<code>/account</code>).</li>
+        <li><b>Bug évité avant suppression</b> : <code>app/api/reservation/resume/[id]/route.ts</code> (encore appelé par <code>ReservationsSection.tsx</code> pour les vieilles résas « standard » impayées) avait un <code>cancel_url</code> Stripe pointant vers <code>/account/reservations</code> — corrigé vers <code>/account#reservations</code> avant de supprimer la page, sinon annulation Stripe cassée pour ces résas.</li>
+        <li><b>Gardée volontairement</b> : <code>/configurer</code> (1328 lignes), bien que non liée depuis la nav — <code>/vol-sur-mesure</code> (en pause, pas supprimée) y redirige encore activement après le choix des étapes (<code>router.push(configuratorUrl(...))</code>). La supprimer casserait ce flow interne si jamais Romain le réactive un jour.</li>
+        <li>Vérifié après coup : <code>tsc --noEmit</code> propre (une fois le cache <code>.next/types</code> vidé), <code>eslint</code> propre sur le fichier modifié, routes vivantes testées en curl (aucun 500).</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-09-28 (65) — Suivi de réservation (/account/reservations/[id]) dans la nouvelle DA</h3>

@@ -17,7 +17,8 @@ import { formatDuration } from "@/lib/vouchers";
 //   pas assez structurée), mais 3 au lieu de 6 : Réservations, Profil (infos +
 //   notifications + sécurité regroupées), Bons de vol (seulement s'il y en a
 //   un — 0 en base au 28/09). « Adresses » retirée (liée aux anciens bons
-//   physiques, 0 en base ; la page /account/adresses reste, juste plus liée).
+//   physiques, 0 en base ; la page /account/adresses a été supprimée le 28/09,
+//   plus aucune référence nulle part — voir Changelog).
 // - Le prochain vol reste affiché au-dessus des onglets, quel que soit l'onglet ouvert.
 // - Ordinateur : sidebar d'onglets + contenu large. Téléphone : bandeau scrollable.
 // - Tous les boutons d'action ont un texte à côté de l'icône (retour de Romain

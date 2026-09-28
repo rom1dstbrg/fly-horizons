@@ -134,7 +134,7 @@ export async function GET(
       couponCode: resa.coupon_code || "",
     },
     success_url: `${siteUrl}/reservation/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${siteUrl}/account/reservations`,
+    cancel_url: `${siteUrl}/account#reservations`,
   });
 
   return NextResponse.redirect(session.url!);
