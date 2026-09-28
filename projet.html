@@ -1626,6 +1626,16 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-28 (56) — Disponibilités des pilotes visibles dans l'admin</h3>
+      <ul>
+        <li><code>/admin/vols?tab=disponibilites</code> : nouvelle vue « Pilotes » par défaut (<code>components/admin/PilotesDispo.tsx</code>), lecture seule.
+          Une ligne par pilote actif, une colonne par jour, les 7 blocs de 2 h empilés (ouvert / fermé / réservé) + la plage en clair (« 13–19 h »),
+          nombre de pilotes ouverts par jour et par semaine, navigation sur 12 semaines. Lit <code>pilote_creneaux</code> + réservations du pilote, même calcul que la grille pilote.</li>
+        <li>L'ancien calendrier global reste sous « Calendrier du site » : encore lu par <code>/reservation</code>, <code>/configurer</code> et le report client.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-28 (55) — Création de compte dans la nouvelle DA ; cadre commun avec la connexion</h3>
       <ul>
         <li><code>components/auth/AuthShell.tsx</code> : cadre partagé (logo, « Retour au site », colonne 420 px), titre, message d'erreur, champ mot de passe avec œil, classes de champ et de bouton.
