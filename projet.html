@@ -100,12 +100,11 @@
       <h3><span class="tag t-amber">À faire</span> prêt à démarrer</h3>
       <ol>
         <li><b>Refonte nouvelle DA : pages de flow restantes (28/09).</b> Après page produit,
-          réservation, succès, report, compte, nos-offres : reste les pages atteintes seulement en
+          réservation, succès, report, compte, nos-offres, paiement annonce, suivi de résa : reste les pages atteintes seulement en
           continuation d'un flow (lien email, redirection), jamais depuis la nav. Dans l'ordre proposé :
-          <b>1.</b> <code>/vol/annonce/paiement/[token]</code> (« Régler votre vol », QR/virement — le paiement lui-même) ·
-          <b>2.</b> <code>/account/reservations/[id]</code> (<code>ReservationTracker.tsx</code>, 849 lignes — très sollicitée
-          depuis le nouveau bouton « Suivre la réservation » du compte) ·
-          <b>3.</b> <code>/vol/proposition/[token]</code> (itinéraire proposé par le pilote) ·
+          <s><b>1.</b> <code>/vol/annonce/paiement/[token]</code></s> fait (64) ·
+          <s><b>2.</b> <code>/account/reservations/[id]</code></s> fait (65) ·
+          <b>3.</b> <code>/vol/proposition/[token]</code> (itinéraire proposé par le pilote) — prochaine ·
           <b>4.</b> <code>/reservation/creneau-propose/[token]</code> (autre créneau proposé) ·
           <b>5.</b> <code>/reservation/messages/[token]</code> (fil pilote ↔ client) ·
           <b>6.</b> <code>/contact/ticket/[token]</code> (fil client/admin).
@@ -1659,6 +1658,29 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-09-28 (65) — Suivi de réservation (/account/reservations/[id]) dans la nouvelle DA</h3>
+      <ul>
+        <li><code>ReservationTracker.tsx</code> (849 lignes) refaite : fond blanc, <code>.pt-page</code>, sans <code>card-premium</code>/<code>bg-gradient-navy</code>. Même composition que les autres pages de flow : en-tête pleine largeur (statut + type + puce « En direct » + chips durée/passagers/heure/distance), puis ordinateur = timeline (7/12, narration principale : suivi + itinéraire/proposition/waypoints en dessous, filets entre sections) et colonne « Votre vol » collante à droite (5/12, filet vertical : récap en <code>dl</code>, puis lignes d'action — paiement, accès EBCI, boarding pass, reporter — chacune icône + texte + action, plus contact en bas) ; téléphone, une seule colonne empilée. Annulée : simple message, plus de grille à deux colonnes.</li>
+        <li>Les 3 blocs de waypoints quasi identiques (proposition d'itinéraire, ancien système, vol sur mesure sans proposition) factorisés en un seul <code>WaypointsList</code> — aucun changement de comportement, juste la duplication en moins.</li>
+        <li>Palette resserrée sur navy/or (plus de vert/rouge décoratifs pour les statuts) : étape terminée = cercle navy + coche or, étape en cours = cercle or + point navy pulsant, à venir = cercle gris. Pastilles de statut d'itinéraire (« À valider »/« Confirmé »/« Révision en cours ») sur le même principe.</li>
+        <li><b>2 bugs corrigés au passage</b> (préexistants, remarqués en testant les 3 états réels) : (1) la dernière étape de la timeline (« Vol effectué ») restait affichée « en cours » indéfiniment même une fois le vol effectué, faute de rang suivant pour basculer en « terminé » — <code>isCompleted</code> utilise maintenant <code>&lt;=</code> au lieu de <code>&lt;</code> pour la dernière étape seulement. (2) la classe <code>capitalize</code> appliquée à toutes les descriptions d'étape mettait une majuscule à CHAQUE mot des phrases complètes (« Votre Pilote Vérifie La Disponibilité ») au lieu de la première lettre seulement — remplacée par <code>first-letter:uppercase</code> (déjà l'idiome utilisé ailleurs dans le repo pour ce cas).</li>
+        <li>Testé en réel (3 états : demande reçue, créneau confirmé non payé, vol effectué payé) : <code>scripts/test-data.mjs seed</code> + 3 comptes auth temporaires créés/supprimés (mot de passe jetable) pour se connecter comme chaque client TEST et voir <code>/account/reservations/[id]</code> avec la vraie vérification de session ; captures Playwright desktop/mobile ; comptes auth et données TEST supprimés ensuite.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-09-28 (64) — Page de paiement d'une annonce (/vol/annonce/paiement/[token]) dans la nouvelle DA</h3>
+      <ul>
+        <li><code>page.tsx</code> + <code>PaiementStatus.tsx</code> refaites : fond blanc, <code>.pt-page</code>, sans boîte (ancien fond <code>#f5f8ff</code> + cartes <code>bg-white rounded-2xl border</code> retirés).
+          Même composition que la page de succès : titre + intro pleine largeur, puis ordinateur = colonne principale (7/12, moyen de paiement : montant, QR EPC, IBAN/bénéficiaire/communication copiables, statut « en attente / confirmé »)
+          et colonne « Votre vol » collante à droite (5/12, filet vertical : pilote + lien profil, date/heure/durée, encart légal NCO.GEN.104) ; téléphone, une seule colonne empilée dans le même ordre.</li>
+        <li>Lien « Voir le profil » du pilote ajouté (absent avant) : la requête sélectionne maintenant <code>pilotes(id, …)</code> en plus de nom/iban/photo.</li>
+        <li>État « annulée » simplifié : titre + un paragraphe, plus de carte à bordure rouge à part.</li>
+        <li>Testé en réel (page la plus stressante si ratée) : données <code>scripts/test-data.mjs seed</code>, <code>payment_token</code> posé à la main sur une résa <code>heure_confirmee</code> et une résa déjà <code>pilote_paye</code>, capture Playwright des deux états en 1440×900 et 390×844, puis <code>clean</code>. Aucune donnée de test restée en base.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-09-28 (63) — Page « Mon compte » dans la nouvelle DA, 3 onglets au lieu de 6 (maquette validée)</h3>
