@@ -1,12 +1,19 @@
 "use client";
 
 import { useState, useTransition, Suspense } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { login } from "@/lib/actions/auth";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Loader2, LogIn } from "lucide-react";
+
+// Nouvelle DA (28/09) : fond blanc, une colonne étroite, mêmes champs et même bouton
+// que ContactForm. Page hors du layout public (pas de header ni de footer) : le logo
+// et « Retour au site » ramènent à l'accueil.
+
+const FIELD = "w-full h-[52px] rounded-xl border border-border bg-secondary px-4 text-[15px] text-foreground placeholder:text-[#8a94a6] outline-none transition-colors focus:bg-white focus:border-foreground";
+const LABEL = "block text-[13px] font-bold text-foreground mb-2";
+const LINK = "font-semibold text-[#0b2238] underline decoration-[#0b2238]/25 underline-offset-[3px] hover:decoration-primary transition-colors";
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -28,97 +35,94 @@ function LoginForm() {
   }
 
   return (
-    <div className="card-premium p-8">
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
-            {error}
-          </div>
-        )}
+    <form onSubmit={handleSubmit}>
+      {error && (
+        <p role="alert" className="mb-[18px] rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          {error}
+        </p>
+      )}
 
-        <div className="space-y-1.5">
-          <Label htmlFor="email" className="text-sm font-semibold text-foreground">Email</Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            placeholder="vous@exemple.com"
+      <label className="block mb-[18px]">
+        <span className={LABEL}>Email</span>
+        <input name="email" type="email" required autoComplete="email" placeholder="vous@exemple.com" className={FIELD} />
+      </label>
+
+      <div className="mb-6">
+        <div className="flex items-baseline justify-between mb-2">
+          <label htmlFor="password" className="text-[13px] font-bold text-foreground">Mot de passe</label>
+          <Link href="/mot-de-passe-oublie" className="text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors">
+            Mot de passe oublié ?
+          </Link>
+        </div>
+        <div className="relative">
+          <input
+            id="password"
+            name="password"
+            type={showPassword ? "text" : "password"}
             required
-            autoComplete="email"
-            className="bg-input border-border text-foreground placeholder:text-muted-foreground/40 focus:border-foreground focus:bg-card transition-colors"
+            autoComplete="current-password"
+            placeholder="••••••••"
+            className={`${FIELD} pr-12`}
           />
+          <button
+            type="button"
+            onClick={() => setShowPassword(v => !v)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 grid h-9 w-9 place-items-center rounded-lg text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+          >
+            {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+          </button>
         </div>
+      </div>
 
-        <div className="space-y-1.5">
-          <div className="flex items-baseline justify-between">
-            <Label htmlFor="password" className="text-sm font-semibold text-foreground">Mot de passe</Label>
-            <Link href="/mot-de-passe-oublie" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-              Mot de passe oublié ?
-            </Link>
-          </div>
-          <div className="relative">
-            <Input
-              id="password"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              placeholder="••••••••"
-              required
-              autoComplete="current-password"
-              className="bg-input border-border text-foreground pr-10 focus:border-foreground focus:bg-card transition-colors"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(v => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-              tabIndex={-1}
-              aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
-            >
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          disabled={isPending}
-          className="w-full py-3.5 bg-primary text-primary-foreground font-black text-sm rounded-lg hover:bg-[#e6a800] transition-colors shadow-gold disabled:opacity-60 cursor-pointer"
-        >
-          {isPending ? "Connexion..." : "Se connecter"}
-        </button>
-      </form>
-
-      <p className="text-center text-sm text-muted-foreground mt-6">
-        Pas encore de compte ?{" "}
-        <Link href="/register" className="text-foreground font-semibold hover:text-primary transition-colors">
-          Créer un compte
-        </Link>
-      </p>
-    </div>
+      <button
+        type="submit"
+        disabled={isPending}
+        className="w-full inline-flex items-center justify-center gap-2 px-[26px] py-[15px] bg-primary text-[#0b2238] rounded-[10px] text-[15px] font-black hover:bg-[#e6a800] disabled:opacity-50 transition-colors shadow-gold cursor-pointer"
+      >
+        {isPending
+          ? <><Loader2 size={16} className="animate-spin" /> Connexion…</>
+          : <><LogIn size={16} /> Se connecter</>}
+      </button>
+    </form>
   );
 }
 
 export default function LoginPage() {
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-navy px-4 py-16">
-      <div className="w-full max-w-md">
+    <main className="min-h-screen bg-white flex flex-col">
+      <div className="max-w-[1400px] w-full mx-auto px-4 sm:px-6 xl:px-10 pt-5 sm:pt-7 flex items-center justify-between">
+        <Link href="/" aria-label="Fly Horizons, accueil">
+          <Image src="/fly-horizons-logo-navy.svg" alt="Fly Horizons" width={160} height={32} priority className="h-8 w-auto" />
+        </Link>
+        <Link href="/" className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft size={14} /> Retour au site
+        </Link>
+      </div>
 
-        <h1 className="text-4xl font-black text-foreground text-center leading-none tracking-tight mb-8">
-          Connexion
-        </h1>
+      <div className="flex-1 flex items-start sm:items-center justify-center px-4 pt-12 pb-16 sm:py-16">
+        <div className="w-full max-w-[420px]">
+          <p className="text-[11px] font-bold text-primary uppercase tracking-[3px] mb-3">Mon compte</p>
+          <h1 className="text-[34px] lg:text-[40px] font-black text-foreground leading-[1.03] tracking-[-0.02em]">
+            Connexion.
+          </h1>
+          <p className="mt-3 mb-7 text-[15px] leading-[1.7] text-foreground/75">
+            Retrouvez vos demandes de vol, vos messages et vos paiements.
+          </p>
 
-        <Suspense fallback={
-          <div className="card-premium p-8 text-center text-muted-foreground text-sm">
-            Chargement...
+          <Suspense fallback={<div className="h-[260px]" aria-hidden />}>
+            <LoginForm />
+          </Suspense>
+
+          <div className="mt-8 pt-6 border-t border-border space-y-2 text-sm leading-relaxed text-foreground/70">
+            <p>
+              Pas encore de compte ? <Link href="/register" className={LINK}>Créer un compte</Link>
+            </p>
+            <p>
+              Vous êtes pilote ? Connectez-vous avec l&apos;email de votre invitation.
+            </p>
           </div>
-        }>
-          <LoginForm />
-        </Suspense>
-
-        <div className="flex items-center justify-center gap-1.5 mt-6 text-[11px] text-muted-foreground/70">
-          <ShieldCheck size={12} />
-          <span>Connexion sécurisée · Données chiffrées</span>
         </div>
-
       </div>
     </main>
   );
