@@ -101,19 +101,28 @@ h2{font-size:28px;font-weight:900;line-height:1.08;letter-spacing:-.02em;margin:
 .sign .n{font-size:15px;font-weight:800;margin:0 0 8px}
 .sign p.t{font-size:15px;line-height:1.7;color:rgba(30,37,53,.72);margin:0 auto;max-width:620px}
 
-/* Deux portes (section 5) */
-.doors{background:var(--navy);padding:56px 0 64px;color:#fff}
+/* Deux portes (section 5) : version v1 conservée */
+.doors{background:var(--bg);padding:56px 0 64px}
 .dgrid{display:grid}
 .door{padding:28px 0}
-.door + .door{border-top:1px solid rgba(255,255,255,.12)}
-.door h2{font-size:26px;color:#fff}
-.door p{font-size:15px;line-height:1.7;color:rgba(255,255,255,.65);margin:10px 0 22px;max-width:440px}
+.door + .door{border-top:1px solid rgba(11,34,56,.1)}
+.door h2{font-size:26px}
+.door p{font-size:15px;line-height:1.75;color:rgba(30,37,53,.75);margin:10px 0 20px;max-width:440px}
 .cta{display:inline-flex;align-items:center;gap:8px;background:var(--gold);color:var(--navy);border-radius:10px;padding:13px 22px;font-size:14px;font-weight:900;box-shadow:var(--sh-gold);transition:background .15s,transform .15s}
 .cta:hover{background:var(--gold-h);transform:translateY(-1px)}
-.doors .cta{box-shadow:none}
-.ghost{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#fff;border-radius:10px;padding:12px 20px;font-size:14px;font-weight:700}
-.ghost:hover{background:rgba(255,255,255,.14)}
+.ghost{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:#fff;color:var(--fg);border-radius:10px;padding:12px 20px;font-size:14px;font-weight:700}
+.ghost:hover{border-color:var(--fg)}
 .cta [data-lucide],.ghost [data-lucide]{width:15px;height:15px}
+
+/* Pilotes (section 3) : sans photo, frise « avant de publier / avant chaque vol / en vol » */
+.crew-top{display:grid;gap:18px}
+.crew-top > p{font-size:15px;line-height:1.75;color:rgba(30,37,53,.75);margin:0}
+.crew{display:grid;margin-top:36px}
+.step{padding:24px 0;border-top:1px solid var(--border)}
+.step .when{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--navy);background:var(--sec);border-radius:999px;padding:6px 12px;margin:0 0 14px}
+.step .when [data-lucide]{width:14px;height:14px}
+.step h3{font-size:19px;font-weight:900;margin:0 0 8px;letter-spacing:-.01em}
+.step p{font-size:14px;line-height:1.7;color:rgba(30,37,53,.7);margin:0}
 
 /* Footer actuel (sans WhatsApp) */
 .foot{background:var(--navy);border-top:1px solid rgba(255,255,255,.06)}
@@ -153,12 +162,19 @@ h2{font-size:28px;font-weight:900;line-height:1.08;letter-spacing:-.02em;margin:
 
   .pr{grid-template-columns:1fr 1fr;gap:22px 32px}
 
-  .sign{padding:80px 0}
+  .sign{padding:24px 0 88px}
 
-  .doors{padding:88px 0}
+  .doors{padding:96px 0}
+  .crew-top{grid-template-columns:1fr 1fr;column-gap:72px;align-items:end}
+  .crew-top > p{font-size:16px}
+  .crew{grid-template-columns:repeat(3,1fr);margin-top:56px}
+  .step{padding:28px 40px 4px 0}
+  .step + .step{padding-left:40px;border-left:1px solid var(--border)}
+  .step h3{font-size:21px}
+  .step p{font-size:15px}
   .dgrid{grid-template-columns:1fr 1fr}
   .door{padding:4px 56px 4px 0}
-  .door + .door{border-top:0;border-left:1px solid rgba(255,255,255,.12);padding:4px 0 4px 56px}
+  .door + .door{border-top:0;border-left:1px solid rgba(11,34,56,.1);padding:4px 0 4px 56px}
   .door h2{font-size:34px}
 
   .fm{display:none}
@@ -186,9 +202,10 @@ h2{font-size:28px;font-weight:900;line-height:1.08;letter-spacing:-.02em;margin:
     <li><b>Sur ordinateur</b>, deux colonnes égales. La photo prend exactement la hauteur du texte : plus de vide à côté du texte, plus de photo géante.</li>
     <li><b>Les côtés alternent</b> (photo à droite, puis à gauche, puis à droite). C'est ce qui distingue cette page de la page produit : pas de grande galerie, pas de titre collant.</li>
     <li><b>Sur téléphone</b> : titre, puis photo, puis texte.</li>
-    <li><b>Les photos</b> : cockpit au coucher du soleil (on vole à côté du pilote) · les quatre sièges (on partage l'avion) · tableau de bord en vol (le pilote prépare et décide).</li>
+    <li><b>Les photos</b> : cockpit au coucher du soleil (on vole à côté du pilote) · les quatre sièges (on partage l'avion).</li>
+    <li><b>« Qui vous emmène »</b> (v3) : plus de photo, composition différente de la section 1 : titre et intro côte à côte, puis une frise en trois temps (avant de publier · avant chaque vol · en vol).</li>
     <li><b>Romain</b> : trois lignes centrées avant la fin de page.</li>
-    <li><b>Fin de page en navy</b>, pour la distinguer de la page produit : deux choix, voler ou piloter.</li>
+    <li><b>Fin de page</b> : version v1 gardée (fond gris clair, deux choix séparés par un filet).</li>
   </ol>
   <p>Photos tirées de public/ et public/gallery. Textes à relire.</p>
 </div>
@@ -244,22 +261,32 @@ h2{font-size:28px;font-weight:900;line-height:1.08;letter-spacing:-.02em;margin:
       </div>
     </section>
 
-    <!-- 3 · LES PILOTES — photo à droite -->
+    <!-- 3 · LES PILOTES — sans photo : titre + intro côte à côte, puis frise en 3 temps -->
     <section class="s">
-      <div class="wrap split">
-        <div class="head">
-          <p class="eyebrow">Les pilotes</p>
-          <h2>Qui vous emmène.</h2>
+      <div class="wrap">
+        <div class="crew-top">
+          <div>
+            <p class="eyebrow">Les pilotes</p>
+            <h2>Qui vous emmène.</h2>
+          </div>
+          <p>Des pilotes privés licenciés, qui volent pour le plaisir et partagent leurs places. Ils ne sont pas payés pour piloter et restent seuls commandants de bord. Leur profil est visible sur chaque vol qu'ils publient.</p>
         </div>
-        <div class="img"><img src="public/hero-section.png" alt="Le tableau de bord en vol au-dessus de la campagne"></div>
-        <div class="body">
-          <p>Les pilotes de Fly Horizons sont des pilotes privés licenciés. Avant de publier un vol, chacun nous transmet sa licence et son certificat médical, que nous vérifions un par un, et accepte notre charte : sécurité d'abord, frais partagés honnêtement, passagers informés.</p>
-          <p>Une fois en l'air, le pilote reste seul commandant de bord. C'est lui qui prépare le vol, vérifie la météo, calcule la masse de l'avion et décide de partir ou non. Son profil est visible sur chaque vol qu'il publie.</p>
-          <ul class="checks">
-            <li><i data-lucide="check"></i>Licence et certificat médical vérifiés</li>
-            <li><i data-lucide="check"></i>Charte Fly Horizons acceptée</li>
-            <li><i data-lucide="check"></i>Seul responsable de son vol</li>
-          </ul>
+        <div class="crew">
+          <div class="step">
+            <p class="when"><i data-lucide="file-check"></i>Avant de publier</p>
+            <h3>Nous vérifions</h3>
+            <p>Chaque pilote nous transmet sa licence et son certificat médical, que nous vérifions un par un, et accepte notre charte : sécurité d'abord, frais partagés honnêtement, passagers informés.</p>
+          </div>
+          <div class="step">
+            <p class="when"><i data-lucide="cloud-sun"></i>Avant chaque vol</p>
+            <h3>Le pilote prépare</h3>
+            <p>Météo, route, masse et centrage de l'avion : le pilote prépare son vol comme tout vol privé, et confirme qu'il est en règle pour l'effectuer.</p>
+          </div>
+          <div class="step">
+            <p class="when"><i data-lucide="plane"></i>En vol</p>
+            <h3>Le pilote décide</h3>
+            <p>Seul commandant de bord, il décide de partir, d'adapter la route ou de rentrer plus tôt. Vous êtes assis à côté de lui et il vous explique chaque étape.</p>
+          </div>
         </div>
       </div>
     </section>
