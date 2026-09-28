@@ -1626,6 +1626,16 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-28 (53) — Suivi des virements aux pilotes dans /admin/transactions (suite décision 18)</h3>
+      <ul>
+        <li>Migration <code>20260928_reversement_pilote.sql</code> : <code>reservations.reversement_pilote</code> (montant viré) et <code>reversement_pilote_at</code>. <b>À exécuter sur Supabase.</b></li>
+        <li><code>lib/actions/reversement-pilote.ts</code> : <code>setReversementPilote</code> (admin, vol réglé à FH et confié à un pilote uniquement ; <code>null</code> annule ; tracé dans l'historique).</li>
+        <li>Transactions : section « À reverser aux pilotes » (encaissé, IBAN copiable, montant + « Marquer viré », compteur « à faire » pour les vols effectués non virés).
+          Pour ces vols, plus de coût avion : le résultat = net − virement au pilote ; le solde net déduit les virements. Colonnes lues à part : si la migration manque, seule cette section l'indique.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-28 (52) — Attribuer à un pilote un vol déjà payé à Fly Horizons (décision 18)</h3>
       <ul>
         <li><code>lib/pilote/payment.ts</code> : <code>isRegleFlyHorizons</code> (standard payé ou bon) et <code>piloteEncaisse</code> (le pilote encaisse lui-même), à côté de <code>isPiloteVol</code> (le pilote gère le vol).</li>

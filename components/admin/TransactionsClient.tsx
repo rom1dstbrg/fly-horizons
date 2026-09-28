@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { TrendingUp, TrendingDown, Minus, Plus, Trash2, Pencil, X, Check, Loader2, Receipt, Download } from "lucide-react";
 import { addDepense, deleteDepense, updateDepense } from "@/lib/actions/depenses";
+import { setReversementPilote } from "@/lib/actions/reversement-pilote";
 import { getReservationForDrawer } from "@/lib/actions/reservation-edit";
 import { ReservationDrawer } from "@/components/admin/reservation-drawer/ReservationDrawer";
 import type { DrawerReservation } from "@/components/admin/reservation-drawer/types";
@@ -53,6 +54,20 @@ export type LignePiloteVol = {
   paye: boolean;
 };
 
+// Vol réglé à Fly Horizons puis confié à un pilote (décision 18) : Romain vire
+// le pilote après le vol, hors de l'app ; on trace le montant et la date.
+export type LigneReversement = {
+  id: string;
+  date: string;
+  client: string;
+  pilote: string;
+  iban: string | null;
+  encaisse: number;
+  effectue: boolean;
+  montant: number | null;
+  faitLe: string | null;
+};
+
 export type Depense = {
   id: string;
   montant: number;
@@ -69,6 +84,7 @@ export type SoldeStats = {
   stripe_fees: number;
   part_pilote_moyenne_pct: number | null;
   vols_avec_cout: number;
+  reversements: number;
 };
 
 type FilterType = "tout" | "vols" | "vouchers" | "depenses";
@@ -356,15 +372,106 @@ function DepenseEditRow({
   );
 }
 
+function ReversementRow({ r }: { r: LigneReversement }) {
+  const [montant, setMontant] = useState<number | null>(r.montant);
+  const [faitLe, setFaitLe] = useState<string | null>(r.faitLe);
+  const [saisie, setSaisie] = useState("");
+  const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const rawDate = r.date.length === 10 ? r.date + "T12:00:00Z" : r.date;
+
+  function save(value: number | null) {
+    setError("");
+    startTransition(async () => {
+      const res = await setReversementPilote(r.id, value);
+      if (res.error) { setError(res.error); return; }
+      setMontant(res.montant ?? null);
+      setFaitLe(res.le ?? null);
+      setSaisie("");
+    });
+  }
+
+  function copyIban(iban: string) {
+    navigator.clipboard?.writeText(iban.replace(/\s+/g, ""));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+
+  return (
+    <tr className="hover:bg-secondary/30 transition-colors align-top">
+      <td className="px-3 py-3 text-xs text-muted-foreground whitespace-nowrap">
+        {new Date(rawDate).toLocaleDateString("fr-BE", { day: "numeric", month: "short", year: "2-digit" })}
+      </td>
+      <td className="px-3 py-3 text-sm text-foreground">{r.client}</td>
+      <td className="px-3 py-3 text-sm text-foreground">
+        {r.pilote}
+        {r.iban ? (
+          <button
+            type="button"
+            onClick={() => copyIban(r.iban!)}
+            className="block mt-0.5 font-mono text-[11px] text-muted-foreground hover:text-foreground cursor-pointer"
+            title="Copier l'IBAN"
+          >
+            {copied ? "IBAN copié" : r.iban}
+          </button>
+        ) : (
+          <span className="block mt-0.5 text-[11px] text-amber-600">IBAN non renseigné</span>
+        )}
+      </td>
+      <td className="px-3 py-3 text-sm text-right text-foreground whitespace-nowrap">{fmt(r.encaisse)}</td>
+      <td className="px-3 py-3 text-right">
+        {montant != null ? (
+          <div className="flex flex-col items-end gap-0.5">
+            <span className="text-sm font-semibold text-emerald-600 whitespace-nowrap">
+              <Check size={12} className="inline -mt-0.5 mr-1" />
+              {fmt(montant)} viré{faitLe ? ` le ${new Date(faitLe).toLocaleDateString("fr-BE", { day: "numeric", month: "short" })}` : ""}
+            </span>
+            <button type="button" disabled={isPending} onClick={() => save(null)} className="text-[11px] text-muted-foreground hover:text-foreground cursor-pointer disabled:opacity-50">
+              annuler
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col items-end gap-1">
+            {!r.effectue && <span className="text-[11px] text-muted-foreground">Vol pas encore effectué</span>}
+            <div className="flex items-center justify-end gap-1.5">
+              <input
+                type="number" step="0.01" min="0.01" inputMode="decimal"
+                value={saisie} onChange={e => setSaisie(e.target.value)}
+                placeholder="Montant €"
+                aria-label={`Montant viré à ${r.pilote}`}
+                className="w-24 h-8 px-2 rounded-md border border-input bg-background text-sm text-right focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+              <button
+                type="button"
+                disabled={isPending || !(parseFloat(saisie) > 0)}
+                onClick={() => save(parseFloat(saisie))}
+                className="inline-flex items-center gap-1 h-8 px-3 rounded-md bg-navy text-white text-xs font-semibold hover:brightness-90 disabled:opacity-50 transition-colors cursor-pointer whitespace-nowrap"
+              >
+                {isPending ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Marquer viré
+              </button>
+            </div>
+            {error && <span className="text-[11px] text-destructive">{error}</span>}
+          </div>
+        )}
+      </td>
+    </tr>
+  );
+}
+
 export function TransactionsClient({
   vols,
   piloteVols = [],
+  reversements = [],
+  reversementsDisponibles = true,
   vouchers,
   depenses: initialDepenses,
   soldeGlobal,
 }: {
   vols: LigneVol[];
   piloteVols?: LignePiloteVol[];
+  reversements?: LigneReversement[];
+  reversementsDisponibles?: boolean;
   vouchers: LigneVoucher[];
   depenses: Depense[];
   soldeGlobal: SoldeStats;
@@ -387,7 +494,8 @@ export function TransactionsClient({
 
   // Solde global mis à jour en temps réel avec les dépenses locales
   const totalDepenses = depenses.reduce((s, d) => s + d.montant, 0);
-  const soldeNet = Math.round((soldeGlobal.encaisse - soldeGlobal.rembourse - soldeGlobal.stripe_fees - soldeGlobal.cout_avion - totalDepenses) * 100) / 100;
+  const soldeNet = Math.round((soldeGlobal.encaisse - soldeGlobal.rembourse - soldeGlobal.stripe_fees - soldeGlobal.cout_avion - soldeGlobal.reversements - totalDepenses) * 100) / 100;
+  const aReverser = reversements.filter(r => r.effectue && r.montant == null).length;
 
   async function openVolDrawer(vol: LigneVol) {
     if (loadingVolId) return;
@@ -493,9 +601,46 @@ export function TransactionsClient({
               label="Solde net"
               value={`${soldeNet >= 0 ? "+" : ""}${fmt(soldeNet)}`}
               cls={soldeNet >= 0 ? "text-emerald-600" : "text-red-500"}
+              sub={soldeGlobal.reversements > 0 ? `après −${fmt(soldeGlobal.reversements)} virés aux pilotes` : undefined}
             />
           </StatGrid>
         </div>
+
+        {(reversements.length > 0 || !reversementsDisponibles) && (
+          <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-border">
+              <p className="text-sm font-bold text-foreground">
+                À reverser aux pilotes
+                {aReverser > 0 && <span className="ml-2 text-xs font-semibold text-amber-600">{aReverser} à faire</span>}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Vols réglés à Fly Horizons puis confiés à un pilote. Fais le virement une fois le vol effectué, puis indique le montant viré.
+              </p>
+            </div>
+            {!reversementsDisponibles ? (
+              <p className="px-4 py-3 text-xs text-amber-600">
+                Suivi indisponible : la migration <code>20260928_reversement_pilote.sql</code> n&apos;a pas encore été exécutée sur Supabase.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm min-w-[640px]">
+                  <thead>
+                    <tr className="border-b border-border bg-secondary">
+                      <th className="text-left px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Date</th>
+                      <th className="text-left px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Client</th>
+                      <th className="text-left px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Pilote</th>
+                      <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Encaissé</th>
+                      <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Virement au pilote</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/60">
+                    {reversements.map(r => <ReversementRow key={r.id} r={r} />)}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
 
         <PageToolbar
           filters={
