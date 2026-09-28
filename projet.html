@@ -1646,6 +1646,16 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-28 (60) — Page « Tous les vols » (/nos-offres) dans la nouvelle DA</h3>
+      <ul>
+        <li><code>/nos-offres</code> refaite : fond blanc, écart <code>.pt-page</code>, en-tête aligné à gauche (eyebrow + h1 34/52) comme Galerie/Contact, au lieu de l'ancien bandeau navy centré.
+          Cards <code>AnnonceCard</code>/<code>PackCard</code> inchangées (décision du 28/09 de les garder partout). Différence assumée avec la section « Les prochains vols » de l'accueil :
+          ici tout le catalogue s'affiche (pas de limite à 4, pas de lien « Tous les vols »), les groupes (durée fixe / itinéraires / places) séparés par un filet plutôt que dans un bandeau navy séparé.</li>
+        <li>Retiré de ce fichier : le bloc « Vol sur mesure » mort (<code>{false &amp;&amp;</code> …), masqué depuis le 29/07 en attendant l'avis de l'avocat — la fonctionnalité reste en pause, seul le code mort inatteignable a été enlevé (récupérable dans l'historique git si besoin).</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-28 (59) — Page de report dans la nouvelle DA, confirmation sur place</h3>
       <ul>
         <li><code>/reservation/reporter/[token]</code> refaite : fond blanc, sans boîte, <code>.pt-page</code>. Une seule colonne de 600 px dans l'ordre des gestes : titre, le vol reporté en une ligne,

@@ -1,12 +1,6 @@
-import Link from "next/link";
-import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ChatWidget } from "@/components/chat/ChatWidget";
-import {
-  Clock, Route, Zap, PlaneTakeoff, ArrowRight, MousePointerClick,
-  EuroIcon, Users,
-} from "lucide-react";
 import { PackCard } from "@/components/shop/PackCard";
 import { AnnonceCard } from "@/components/vols/AnnonceCard";
 import { NoFlightsNotice } from "@/components/shop/NoFlightsNotice";
@@ -26,6 +20,27 @@ export const metadata = {
     images: [{ url: `${siteUrl}/da-40.webp`, width: 1600, height: 1068, alt: "Vol partagé, Fly Horizons Charleroi" }],
   },
 };
+
+// Nouvelle DA (28/09) : même vocabulaire que l'accueil (cards AnnonceCard/PackCard
+// inchangées, écart header .pt-page, eyebrow + h1 34/52) mais composition propre à
+// cette page — voir feedback_page_composition_distincte. Différence avec la
+// section « Les prochains vols » de l'accueil : ici on affiche TOUT le catalogue
+// disponible (pas de limite à 4, pas de lien "Tous les vols" puisqu'on y est déjà),
+// en plusieurs groupes selon ce qui est publié (durée fixe / itinéraires / places).
+
+const EYEBROW = "text-[11px] font-bold text-primary uppercase tracking-[3px] mb-3";
+const GROUP_TITLE = "text-[22px] lg:text-[28px] font-black text-foreground leading-[1.1] tracking-[-0.01em]";
+const GRID = "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4";
+
+function Group({ eyebrow, title, children }: { eyebrow: string; title: string; children: React.ReactNode }) {
+  return (
+    <section className="mt-12 lg:mt-16 pt-10 lg:pt-12 border-t border-border first:mt-0 first:pt-0 first:border-t-0">
+      <p className={EYEBROW}>{eyebrow}</p>
+      <h2 className={GROUP_TITLE}>{title}</h2>
+      <div className={`${GRID} mt-6`}>{children}</div>
+    </section>
+  );
+}
 
 export default async function NosOffresPage() {
   const supabase = await createClient();
@@ -81,265 +96,64 @@ export default async function NosOffresPage() {
   const annoncesFixes = annonces.filter(a => !a.has_route);
   const annoncesItineraire = annonces.filter(a => a.has_route);
 
+  const nothingAtAll = catalogueSource === "annonces"
+    ? annonces.length === 0
+    : packsFixes.length === 0 && packsItineraire.length === 0 && annonces.length === 0;
+
   return (
-    <main className="bg-gradient-navy">
+    <main className="bg-white">
+      <section className="pt-page pb-24 sm:pb-20">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
-      {/* ══════════════════════════════════════════
-          HERO — Vols à durée fixe
-      ══════════════════════════════════════════ */}
-      <div className="bg-[#f5f5f7] pt-[98px] pb-0">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-2 sm:pt-12 pb-10">
-
-          {/* En-tête */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl sm:text-4xl font-black text-foreground leading-none tracking-tight">
-              Les vols
+          {/* En-tête aligné sur les pages refaites (galerie, contact…) */}
+          <div className="mb-10 lg:mb-14 max-w-[620px]">
+            <p className={EYEBROW}>Au départ de Charleroi</p>
+            <h1 className="text-[34px] lg:text-[52px] font-black text-foreground leading-[1.03] tracking-[-0.02em]">
+              Tous les vols disponibles.
             </h1>
+            <p className="mt-3 text-[15px] leading-[1.7] text-foreground/70">
+              Vols partagés en avion léger, de 30 à 120 minutes. Vous ne payez que votre part des frais,
+              jusqu&apos;à 3 passagers.
+            </p>
           </div>
 
-          {catalogueSource === "annonces" ? (
+          {nothingAtAll ? (
+            <NoFlightsNotice />
+          ) : catalogueSource === "annonces" ? (
             <>
-              {/* Vols à durée fixe — annonces pilote sans itinéraire tracé */}
-              {annoncesFixes.length === 0 && annoncesItineraire.length === 0 ? (
-                <NoFlightsNotice />
-              ) : annoncesFixes.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-                  {annoncesFixes.map((a) => (
-                    <AnnonceCard key={a.id} annonce={a} />
-                  ))}
+              {annoncesFixes.length > 0 && (
+                <div className={GRID}>
+                  {annoncesFixes.map((a) => <AnnonceCard key={a.id} annonce={a} />)}
                 </div>
               )}
-
-              {/* Itinéraires — annonces pilote avec un tracé */}
               {annoncesItineraire.length > 0 && (
-                <div className="mt-14">
-                  <div className="text-center mb-8">
-                    <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">
-                      Routes préparées par votre pilote
-                    </p>
-                    <h2 className="text-2xl sm:text-3xl font-black text-foreground leading-tight">
-                      Itinéraires sélectionnés
-                    </h2>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-                    {annoncesItineraire.map((a) => (
-                      <AnnonceCard key={a.id} annonce={a} />
-                    ))}
-                  </div>
-                </div>
+                <Group eyebrow="Routes préparées par votre pilote" title="Itinéraires sélectionnés">
+                  {annoncesItineraire.map((a) => <AnnonceCard key={a.id} annonce={a} />)}
+                </Group>
               )}
             </>
           ) : (
             <>
-              {/* Grille packs — durée fixe */}
-              {packsFixes.length === 0 && packsItineraire.length === 0 && annonces.length === 0 ? (
-                <NoFlightsNotice />
-              ) : packsFixes.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-                  {packsFixes.map((pack) => (
-                    <PackCard key={pack.id} pack={pack} />
-                  ))}
+              {packsFixes.length > 0 && (
+                <div className={GRID}>
+                  {packsFixes.map((pack) => <PackCard key={pack.id} pack={pack} />)}
                 </div>
               )}
-
-              {/* Itinéraires sélectionnés — route fixée à l'avance */}
               {packsItineraire.length > 0 && (
-                <div className="mt-14">
-                  <div className="text-center mb-8">
-                    <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">
-                      Routes préparées par votre pilote
-                    </p>
-                    <h2 className="text-2xl sm:text-3xl font-black text-foreground leading-tight">
-                      Itinéraires sélectionnés
-                    </h2>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-                    {packsItineraire.map((pack) => (
-                      <PackCard key={pack.id} pack={pack} />
-                    ))}
-                  </div>
-                </div>
+                <Group eyebrow="Routes préparées par votre pilote" title="Itinéraires sélectionnés">
+                  {packsItineraire.map((pack) => <PackCard key={pack.id} pack={pack} />)}
+                </Group>
               )}
-
-              {/* Vols publiés par les pilotes — n'apparaît que s'il y en a au moins un */}
               {annonces.length > 0 && (
-                <div className="mt-14">
-                  <div className="text-center mb-8">
-                    <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-3">
-                      Places disponibles
-                    </p>
-                    <h2 className="text-2xl sm:text-3xl font-black text-foreground leading-tight">
-                      Vols proposés par nos pilotes
-                    </h2>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-                    {annonces.map((a) => (
-                      <AnnonceCard key={a.id} annonce={a} />
-                    ))}
-                  </div>
-                </div>
+                <Group eyebrow="Places disponibles" title="Vols proposés par nos pilotes">
+                  {annonces.map((a) => <AnnonceCard key={a.id} annonce={a} />)}
+                </Group>
               )}
             </>
           )}
 
-          {/* Masqué 29/07/2026 en attendant confirmation légale — voir audit-legal-fly-horizons.html
-          <div className="mt-12 text-center">
-            <p className="text-sm text-muted-foreground">
-              Vous voulez voler sur votre propre route ?{" "}
-              <Link href="/vol-sur-mesure" className="text-foreground font-semibold hover:underline">
-                Créez un vol sur mesure →
-              </Link>
-            </p>
-          </div>
-          */}
-
         </div>
-      </div>
-
-      {/* ══════════════════════════════════════════
-          SECTION — Vol sur mesure — masquée 29/07/2026 en attendant confirmation légale,
-          voir audit-legal-fly-horizons.html
-      ══════════════════════════════════════════ */}
-      {false && (
-      <div className="bg-[#0b2238] pb-0 relative overflow-hidden">
-
-        <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 py-14">
-
-          {/* Eyebrow label */}
-          <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-6">
-            Vol sur mesure
-          </p>
-
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
-
-            {/* Texte gauche */}
-            <div>
-              <h2 className="text-4xl sm:text-5xl font-black text-white leading-none mb-4">
-                Volez où vous voulez.<br />
-                <span className="text-[#F2B705]">Payez ce que vous volez.</span>
-              </h2>
-              <p className="text-white/60 text-sm leading-relaxed mb-6 max-w-md">
-                Un assistant pas à pas vous guide, villes, monuments, lieux qui vous tiennent
-                à cœur. Tracez votre route sur la carte : durée et prix s&apos;affichent en direct,
-                à la minute de vol réelle.
-              </p>
-
-              {/* Différenciation vs packs */}
-              <div className="bg-white/5 border border-white/10 rounded-lg px-4 py-3.5 mb-7 flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-[#F2B705]/20 border border-[#F2B705]/30 flex items-center justify-center shrink-0 mt-0.5">
-                  <Zap size={11} className="text-[#F2B705]" />
-                </div>
-                <p className="text-white/70 text-xs leading-relaxed">
-                  <span className="text-white font-semibold">Pas de forfait. Pas de tranche fixe.</span>{" "}
-                  Vous volez 52 minutes ? Vous payez 52 minutes. Le prix s&apos;ajuste à la seconde
-                  de vol réelle, aucune surprise au moment de payer.
-                </p>
-              </div>
-
-              {/* 3 étapes */}
-              <div className="space-y-3 mb-8">
-                {[
-                  {
-                    n: "1",
-                    icon: <MousePointerClick size={13} />,
-                    title: "Choisissez vos destinations, guidé étape par étape",
-                    desc: "Villes belges, châteaux, lieux qui vous tiennent à cœur ou adresse précise, l'assistant vous propose des idées, puis la carte finalise l'itinéraire.",
-                  },
-                  {
-                    n: "2",
-                    icon: <Zap size={13} />,
-                    title: "Durée et prix s'affichent en temps réel sur la carte",
-                    desc: "À chaque lieu ajouté, le prix se recalcule instantanément. Vous voyez le coût évoluer avant de confirmer quoi que ce soit.",
-                  },
-                  {
-                    n: "3",
-                    icon: <PlaneTakeoff size={13} />,
-                    title: "Romain confirme sous 24 h, l'acompte vient ensuite",
-                    desc: "Il vérifie la faisabilité (espaces aériens, restrictions) et vous envoie la confirmation. Le lien de paiement n'arrive qu'après votre accord.",
-                  },
-                ].map(({ n, icon, title, desc }) => (
-                  <div key={n} className="flex gap-3.5">
-                    <div className="flex flex-col items-center shrink-0">
-                      <div className="w-8 h-8 rounded-full bg-[#F2B705]/15 border border-[#F2B705]/30 flex items-center justify-center text-[#F2B705]">
-                        {icon}
-                      </div>
-                      {n !== "3" && <div className="w-px flex-1 bg-white/10 mt-1.5 min-h-[20px]" />}
-                    </div>
-                    <div className="pb-3">
-                      <p className="text-white text-sm font-semibold leading-snug mb-0.5">{title}</p>
-                      <p className="text-white/45 text-[11px] leading-relaxed">{desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Image mobile */}
-              <div className="block lg:hidden rounded-lg overflow-hidden border border-white/12 shadow-[0_8px_32px_rgba(0,0,0,0.4)] mb-7">
-                <Image
-                  src="/vol-sur-mesure.png"
-                  alt="Aperçu de l'outil de planification vol sur mesure"
-                  width={900}
-                  height={600}
-                  className="w-full h-auto"
-                />
-              </div>
-
-              {/* Tags */}
-              <div className="flex flex-wrap gap-2 mb-7">
-                {[
-                  { icon: <Users size={10} />, label: "Jusqu'à 3 passagers" },
-                  { icon: <EuroIcon size={10} />, label: "Prix au km, sans surprise" },
-                  { icon: <PlaneTakeoff size={10} />, label: "Escales possibles" },
-                  { icon: <Clock size={10} />, label: "Annulation gratuite 48 h avant" },
-                ].map(({ icon, label }) => (
-                  <span key={label} className="inline-flex items-center gap-1.5 bg-white/6 border border-white/10 text-white/60 text-[11px] font-medium px-2.5 py-1 rounded-full">
-                    {icon}{label}
-                  </span>
-                ))}
-              </div>
-
-              {/* CTA */}
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Link
-                  href="/vol-sur-mesure"
-                  className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 bg-[#F2B705] text-[#0b2238] rounded-lg text-sm font-black hover:bg-[#e6a800] transition-colors shadow-lg shadow-[#F2B705]/20"
-                >
-                  <Route size={16} />
-                  Créer mon vol sur mesure
-                  <ArrowRight size={15} />
-                </Link>
-                <p className="flex items-center gap-1.5 text-white/35 text-xs self-center">
-                  <Clock size={12} />
-                  Aucun paiement immédiat
-                </p>
-              </div>
-            </div>
-
-            {/* Visuel droite */}
-            <div className="hidden lg:flex flex-col self-start pt-2">
-              <div className="rounded-lg overflow-hidden border border-white/12 shadow-[0_24px_64px_rgba(0,0,0,0.55)]">
-                <Image
-                  src="/vol-sur-mesure.png"
-                  alt="Aperçu de l'outil de planification vol sur mesure"
-                  width={900}
-                  height={600}
-                  className="w-full h-auto"
-                />
-              </div>
-              <p className="text-center text-white/15 text-[9px] mt-2.5">Aperçu de l&apos;outil de planification</p>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Vague de transition navy → clair */}
-        <div className="relative h-12 overflow-hidden">
-          <svg viewBox="0 0 1440 48" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0,48 L0,24 Q360,0 720,24 Q1080,48 1440,24 L1440,48 Z" fill="#f5f5f7"/>
-          </svg>
-        </div>
-      </div>
-      )}
+      </section>
 
       <ChatWidget />
     </main>
