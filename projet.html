@@ -99,6 +99,21 @@
     <div class="col">
       <h3><span class="tag t-amber">À faire</span> prêt à démarrer</h3>
       <ol>
+        <li><b>Refonte nouvelle DA : pages de flow restantes (28/09).</b> Après page produit,
+          réservation, succès, report, compte, nos-offres : reste les pages atteintes seulement en
+          continuation d'un flow (lien email, redirection), jamais depuis la nav. Dans l'ordre proposé :
+          <b>1.</b> <code>/vol/annonce/paiement/[token]</code> (« Régler votre vol », QR/virement — le paiement lui-même) ·
+          <b>2.</b> <code>/account/reservations/[id]</code> (<code>ReservationTracker.tsx</code>, 849 lignes — très sollicitée
+          depuis le nouveau bouton « Suivre la réservation » du compte) ·
+          <b>3.</b> <code>/vol/proposition/[token]</code> (itinéraire proposé par le pilote) ·
+          <b>4.</b> <code>/reservation/creneau-propose/[token]</code> (autre créneau proposé) ·
+          <b>5.</b> <code>/reservation/messages/[token]</code> (fil pilote ↔ client) ·
+          <b>6.</b> <code>/contact/ticket/[token]</code> (fil client/admin).
+          Secondaire, moins vu : <code>/nos-pilotes/[id]</code>, <code>/account/reservations/[id]/carte</code>,
+          <code>/newsletter/unsubscribe</code>. <b>Ne pas retravailler</b> (ancien flow produits/Stripe, cf. Décisions) :
+          <code>/checkout</code>, <code>/orders</code>, <code>/orders/success</code>, <code>/cart</code>, <code>/vols/[slug]</code>.
+          <code>/devenir-pilote/candidature</code> déjà en nouvelle DA. Détail : Changelog du 28/09, réponse de Claude à
+          « quelles pages sont concernées ».</li>
         <li><b>Tester en conditions réelles la fusion admin/pilote</b> — Romain n'a pas encore eu
           l'occasion. Se connecter avec <code>info@fly-horizons.com</code>, vérifier
           <code>/pilote</code>, <code>/pilote/annonces</code>, <code>/pilote/profil</code>, et créer
