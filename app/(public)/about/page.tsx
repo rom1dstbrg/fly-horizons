@@ -1,210 +1,201 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowRight, FileCheck, CloudSun, Plane } from "lucide-react";
 import { ChatWidget } from "@/components/chat/ChatWidget";
-import { ArrowRight, Mail } from "lucide-react";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fly-horizons.com";
 
 export const metadata: Metadata = {
   title: "À propos · Fly Horizons",
   description:
-    "Découvrez Romain DESTANBERG, fondateur et pilote de Fly Horizons. Vols en avion léger depuis Charleroi, dans un cadre de partage de frais accessible à tous.",
+    "Fly Horizons met en relation des passagers et des pilotes privés pour des vols en avion léger en partage de frais, au départ de Charleroi. Pilotes vérifiés, frais réels, sans marge.",
   alternates: { canonical: `${siteUrl}/about` },
 };
+
+// Nouvelle DA (maquette-about.html v3, 28/09). Règle de composition des sections 1 et 2 :
+// texte + UNE photo qui l'illustre ; en lg, 2 colonnes égales et la photo couvre la hauteur du
+// texte (row-span-2 + object-cover, plancher 420 px), côtés alternés. Téléphone : titre → photo → texte.
+
+const WRAP = "max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10";
+const EYEBROW = "text-[11px] font-bold text-primary uppercase tracking-[3px] mb-3";
+const H2 = "text-[28px] lg:text-[40px] font-black text-foreground leading-[1.06] tracking-[-0.02em]";
+const P = "text-[15px] lg:text-base leading-[1.75] text-foreground/75";
+const PHOTO = "relative -mx-4 sm:-mx-6 lg:mx-0 mt-6 lg:mt-0 aspect-[4/3] lg:aspect-auto lg:min-h-[420px] lg:row-span-2 lg:rounded-[14px] overflow-hidden bg-[#0b2238]";
+
+const PRINCIPES = [
+  { t: "Le pilote décide", d: "Vous demandez à rejoindre un vol publié. Le pilote accepte ou décline, à sa seule discrétion." },
+  { t: "Des frais réels, sans marge", d: "Avion, carburant et taxes d'aérodrome sont répartis entre les occupants, pilote compris." },
+  { t: "Aucun créneau garanti", d: "La météo et les disponibilités du pilote décident de chaque vol, jusqu'au jour même." },
+  { t: "Un cadre non commercial", d: "Un partage de coûts entre particuliers : le paiement va au pilote, Fly Horizons n'encaisse rien." },
+];
+
+const TEMPS = [
+  {
+    Icon: FileCheck,
+    quand: "Avant de publier",
+    titre: "Nous vérifions",
+    texte: "Chaque pilote nous transmet sa licence et son certificat médical, que nous vérifions un par un, et accepte notre charte : sécurité d'abord, frais partagés honnêtement, passagers informés.",
+  },
+  {
+    Icon: CloudSun,
+    quand: "Avant chaque vol",
+    titre: "Le pilote prépare",
+    texte: "Météo, route, masse et centrage de l'avion : le pilote prépare son vol comme tout vol privé, et confirme qu'il est en règle pour l'effectuer.",
+  },
+  {
+    Icon: Plane,
+    quand: "En vol",
+    titre: "Le pilote décide",
+    texte: "Seul commandant de bord, il décide de partir, d'adapter la route ou de rentrer plus tôt. Vous êtes assis à côté de lui et il vous explique chaque étape.",
+  },
+];
 
 export default function AboutPage() {
   return (
     <main className="min-h-screen bg-white">
 
-      {/* ══ 1 · CE QU'EST FLY HORIZONS ══ */}
-      <section className="bg-white pt-[98px]">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-10 sm:pt-20 pb-20 sm:pb-28 flex flex-col items-center text-center">
-          <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-4">
-            Fly Horizons
-          </p>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-foreground leading-[1.02] tracking-tight mb-8">
-            Qu&apos;est-ce que Fly Horizons ?
-          </h1>
-          <div className="space-y-5 text-foreground/65 text-[15px] sm:text-base leading-relaxed">
-            <p>
-              Fly Horizons vous permet de monter à bord d&apos;un avion léger avec moi, au départ
-              de l&apos;aérodrome de Charleroi (EBCI). Ce n&apos;est pas une compagnie aérienne ni
-              une agence de vols touristiques : je vole pour entretenir mes heures de pilote, et je
-              partage ce vol avec des passionnés qui souhaitent se joindre à moi. En échange, vous
-              contribuez aux frais réels du vol (avion, carburant, taxes d&apos;aérodrome), sans
-              marge commerciale ni tarif touristique.
+      {/* ══ 1 · CE QU'EST FLY HORIZONS (photo à droite) ══ */}
+      <section className="pt-page pb-10 lg:pb-24">
+        <div className={`${WRAP} grid lg:grid-cols-2 lg:grid-rows-[auto_1fr] lg:gap-x-[72px]`}>
+          <div className="lg:col-start-1 lg:row-start-1">
+            <p className={EYEBROW}>À propos</p>
+            <h1 className="text-[34px] lg:text-[52px] font-black text-foreground leading-[1.03] tracking-[-0.02em]">
+              Des pilotes privés partagent leurs vols avec vous.
+            </h1>
+          </div>
+          <div className={`${PHOTO} lg:col-start-2 lg:row-start-1`}>
+            <Image
+              src="/gallery/2.png"
+              alt="Dans le cockpit, à côté du pilote, au coucher du soleil"
+              fill
+              priority
+              className="object-cover"
+              sizes="(min-width: 1024px) 50vw, 100vw"
+            />
+          </div>
+          <div className="mt-6 space-y-4 lg:col-start-1 lg:row-start-2">
+            <p className="text-[17px] lg:text-lg leading-[1.7] text-foreground/85">
+              Fly Horizons met en relation des passagers qui veulent voir la Belgique d&apos;en haut et
+              des pilotes privés qui volent de toute façon. Le pilote publie son vol, vous le rejoignez,
+              et les frais réels sont partagés entre les occupants.
             </p>
-            <p>
-              Concrètement, les vols durent de 30 minutes à 2 heures, jusqu&apos;à 3 passagers
-              peuvent m&apos;accompagner, et l&apos;itinéraire se construit ensemble selon vos
-              envies et la météo du jour. Casques audio et briefing sécurité sont inclus à chaque vol.
+            <p className={P}>
+              Ce n&apos;est ni une compagnie aérienne, ni une agence de baptêmes de l&apos;air. Les pilotes
+              ne sont pas payés pour voler : ils entretiennent leurs heures, partent explorer, et
+              préfèrent le faire à plusieurs.
+            </p>
+            <p className={P}>
+              Les vols partent de l&apos;aérodrome de Charleroi et durent de trente minutes à deux heures,
+              avec jusqu&apos;à trois passagers à bord. Chaque vol a sa propre page : durée, itinéraire,
+              pilote et participation aux frais.
             </p>
           </div>
         </div>
       </section>
 
-      {/* ══ 2 · LE PRINCIPE DU VOL PARTAGÉ ══ */}
-      <div className="bg-[#0b2238] overflow-hidden relative">
-
-        <div className="relative h-12 overflow-hidden">
-          <svg viewBox="0 0 1440 48" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0,0 L1440,0 L1440,24 Q720,48 0,24 Z" fill="#ffffff" />
-          </svg>
-        </div>
-
-        <section className="py-20 sm:py-28">
-          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
-            <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-4">
-              Vol partagé
+      {/* ══ 2 · LE PARTAGE DE FRAIS (photo à gauche) ══ */}
+      <section className="bg-[#f5f5f7] py-10 lg:py-24">
+        <div className={`${WRAP} grid lg:grid-cols-2 lg:grid-rows-[auto_1fr] lg:gap-x-[72px]`}>
+          <div className="lg:col-start-2 lg:row-start-1">
+            <p className={EYEBROW}>Vol partagé</p>
+            <h2 className={H2}>Quatre places, des frais partagés.</h2>
+          </div>
+          <div className={`${PHOTO} lg:col-start-1 lg:row-start-1`}>
+            <Image
+              src="/da-40-seats.webp"
+              alt="Les quatre sièges d'un avion léger"
+              fill
+              className="object-cover"
+              sizes="(min-width: 1024px) 50vw, 100vw"
+            />
+          </div>
+          <div className="mt-6 lg:col-start-2 lg:row-start-2">
+            <p className={P}>
+              Le vol partagé répond à un cadre précis, distinct du transport aérien commercial.
+              Il repose sur quatre principes.
             </p>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-[1.05] tracking-tight mb-6 max-w-2xl">
-              Le principe du vol partagé.
+            <ul className="mt-6 grid gap-[18px] lg:grid-cols-2 lg:gap-x-8 lg:gap-y-[22px]">
+              {PRINCIPES.map(({ t, d }) => (
+                <li key={t} className="pl-4 border-l-2 border-primary">
+                  <p className="text-[15px] font-extrabold text-foreground mb-1">{t}</p>
+                  <p className="text-sm leading-relaxed text-foreground/70">{d}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* ══ 3 · LES PILOTES (sans photo : intro côte à côte, puis frise en 3 temps) ══ */}
+      <section className="py-10 lg:py-24">
+        <div className={WRAP}>
+          <div className="grid gap-[18px] lg:grid-cols-2 lg:gap-x-[72px] lg:items-end">
+            <div>
+              <p className={EYEBROW}>Les pilotes</p>
+              <h2 className={H2}>Qui vous emmène.</h2>
+            </div>
+            <p className={P}>
+              Des pilotes privés licenciés, qui volent pour le plaisir et partagent leurs places. Ils ne
+              sont pas payés pour piloter et restent seuls commandants de bord. Leur profil est visible
+              sur chaque vol qu&apos;ils publient.
+            </p>
+          </div>
+
+          <div className="mt-9 lg:mt-14 grid lg:grid-cols-3">
+            {TEMPS.map(({ Icon, quand, titre, texte }, i) => (
+              <div
+                key={quand}
+                className={`py-6 border-t border-border lg:pt-7 lg:pb-1 ${
+                  i > 0 ? "lg:pl-10 lg:border-l" : ""
+                } ${i < TEMPS.length - 1 ? "lg:pr-10" : ""}`}
+              >
+                <p className="inline-flex items-center gap-2 text-xs font-bold text-[#0b2238] bg-secondary rounded-full px-3 py-1.5 mb-3.5">
+                  <Icon size={14} />
+                  {quand}
+                </p>
+                <h3 className="text-[19px] lg:text-[21px] font-black text-foreground tracking-[-0.01em] mb-2">{titre}</h3>
+                <p className="text-sm lg:text-[15px] leading-[1.7] text-foreground/70">{texte}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══ 4 · DEUX PORTES ══ */}
+      <section className="bg-[#f5f5f7] py-14 lg:py-24">
+        <div className={`${WRAP} grid lg:grid-cols-2`}>
+          <div className="py-7 lg:py-1 lg:pr-14">
+            <h2 className="text-[26px] lg:text-[34px] font-black text-foreground leading-tight tracking-[-0.02em]">
+              Envie de voler ?
             </h2>
-            <p className="text-white/60 text-[15px] sm:text-base leading-relaxed max-w-2xl mb-14">
-              Le vol partagé répond à un cadre précis, distinct d&apos;un transport aérien
-              commercial classique. Il repose sur quatre principes essentiels.
+            <p className={`${P} mt-2.5 mb-5 max-w-[440px]`}>
+              Parcourez les vols publiés par nos pilotes et envoyez votre demande. Rien à payer avant la
+              confirmation.
             </p>
-
-            <div className="grid sm:grid-cols-2 gap-x-16 gap-y-10">
-              <div className="border-t border-white/10 pt-6">
-                <p className="text-white font-black text-[17px] leading-snug mb-2">
-                  Le pilote décide, vous ne commandez pas un vol
-                </p>
-                <p className="text-white/50 text-[14px] leading-relaxed">
-                  Vous envoyez une demande pour vous joindre à un vol ; le pilote l&apos;accepte ou la décline selon ses disponibilités, à sa seule discrétion.
-                </p>
-              </div>
-              <div className="border-t border-white/10 pt-6">
-                <p className="text-white font-black text-[17px] leading-snug mb-2">
-                  Partage des frais réels, sans marge commerciale
-                </p>
-                <p className="text-white/50 text-[14px] leading-relaxed">
-                  Avion, carburant et taxes d&apos;aérodrome sont répartis entre les occupants.
-                </p>
-              </div>
-              <div className="border-t border-white/10 pt-6">
-                <p className="text-white font-black text-[17px] leading-snug mb-2">
-                  Aucun créneau garanti
-                </p>
-                <p className="text-white/50 text-[14px] leading-relaxed">
-                  La météo et mes disponibilités déterminent chaque vol, comme pour tout vol privé.
-                </p>
-              </div>
-              <div className="border-t border-white/10 pt-6">
-                <p className="text-white font-black text-[17px] leading-snug mb-2">
-                  Un cadre non commercial
-                </p>
-                <p className="text-white/50 text-[14px] leading-relaxed">
-                  Ce n&apos;est pas un service de transport aérien, mais une activité de partage
-                  de coûts entre particuliers.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div className="relative h-12 overflow-hidden">
-          <svg viewBox="0 0 1440 48" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0,48 L0,24 Q360,0 720,24 Q1080,48 1440,24 L1440,48 Z" fill="#f5f5f7"/>
-          </svg>
-        </div>
-
-      </div>
-
-      {/* ══ 3 · VOTRE PILOTE ══ */}
-      {/*
-        Mobile (< lg) : la photo (déclarée une fois, dupliquée dans le markup) s'affiche entre
-        l'identité et la citation. Desktop (lg+) : colonne texte (identité + citation + bio, empilées
-        normalement, sans écart) à gauche, photo carrée dans sa propre colonne à droite — pas de
-        row-span partagé entre les deux, pour éviter que la hauteur de la photo n'étire la grille
-        et ne crée un vide entre l'identité et la citation.
-      */}
-      <section className="bg-[#f5f5f7]">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 py-20 sm:py-28">
-          <div className="grid lg:grid-cols-12 gap-10 lg:gap-16">
-
-            {/* Colonne texte */}
-            <div className="lg:col-span-7">
-              <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-4">
-                Votre pilote
-              </p>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-foreground leading-none tracking-tight mb-3">
-                Romain Destanberg
-              </h2>
-              <p className="text-foreground/45 text-[13px] font-medium uppercase tracking-wide">
-                Pilote et fondateur de Fly Horizons
-              </p>
-
-              {/* Photo — visible uniquement sur mobile/tablette, entre l'identité et la citation */}
-              <div className="relative aspect-square rounded-2xl overflow-hidden shadow-premium-xl my-7 lg:hidden">
-                <Image
-                  src="/photo-pilote.png"
-                  alt="Romain, pilote et fondateur de Fly Horizons"
-                  fill
-                  className="object-cover object-top"
-                  sizes="100vw"
-                />
-              </div>
-
-              <div className="border-l-[3px] border-[#F2B705] pl-5 mb-6 mt-7">
-                <p className="text-foreground/65 text-[15px] italic leading-relaxed">
-                  &ldquo;Depuis que j&apos;ai découvert ce que c&apos;était de voir le sol
-                  s&apos;éloigner à sept ans, je n&apos;ai jamais vraiment atterri.&rdquo;
-                </p>
-              </div>
-
-              <p className="text-foreground/60 text-[15px] leading-relaxed">
-                Cette passion, je l&apos;ai construite année après année. Depuis 4 ans, je la vis
-                pleinement, et depuis Fly Horizons, je la partage. La sécurité n&apos;est pas un
-                argument de vente : c&apos;est simplement la façon dont je travaille.
-              </p>
-            </div>
-
-            {/* Photo — visible uniquement sur desktop, colonne indépendante */}
-            <div className="hidden lg:block lg:col-span-5 lg:self-start">
-              <div className="relative aspect-square rounded-2xl overflow-hidden shadow-premium-xl">
-                <Image
-                  src="/photo-pilote.png"
-                  alt="Romain, pilote et fondateur de Fly Horizons"
-                  fill
-                  className="object-cover object-top"
-                  sizes="42vw"
-                />
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* ══ 4 · FINAL CTA ══ */}
-      <section className="bg-white">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 py-20 flex flex-col items-center text-center">
-
-          <p className="text-xs font-bold text-[#F2B705] uppercase tracking-[3px] mb-4">Envie d&apos;essayer ?</p>
-          <h2 className="text-3xl sm:text-5xl font-black text-foreground leading-tight tracking-tight mb-3 max-w-2xl">
-            Prêt à embarquer ?
-          </h2>
-          <p className="text-foreground/50 text-sm mb-10">Romain vous répond sous 24 heures.</p>
-
-          <div className="flex flex-wrap gap-3 justify-center">
             <Link
               href="/nos-offres"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#F2B705] text-[#0b2238] rounded-lg text-sm font-black hover:bg-[#e6a800] transition-colors shadow-gold-sm"
+              className="inline-flex items-center gap-2 px-[22px] py-[13px] bg-primary text-[#0b2238] rounded-[10px] text-sm font-black hover:bg-[#e6a800] hover:-translate-y-px transition-all shadow-gold"
             >
               Voir les vols
               <ArrowRight size={15} />
             </Link>
+          </div>
+          <div className="py-7 border-t border-[#0b2238]/10 lg:py-1 lg:border-t-0 lg:border-l lg:pl-14">
+            <h2 className="text-[26px] lg:text-[34px] font-black text-foreground leading-tight tracking-[-0.02em]">
+              Vous êtes pilote ?
+            </h2>
+            <p className={`${P} mt-2.5 mb-5 max-w-[440px]`}>
+              Partagez les frais de vos vols avec des passagers, en restant seul maître à bord.
+            </p>
             <Link
-              href="/contact"
-              className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 border border-border text-foreground/70 rounded-lg text-sm font-semibold hover:border-foreground hover:text-foreground transition-colors"
+              href="/devenir-pilote"
+              className="inline-flex items-center gap-2 px-5 py-3 bg-white border border-border text-foreground rounded-[10px] text-sm font-bold hover:border-foreground transition-colors"
             >
-              <Mail size={15} />
-              Nous contacter
+              Devenir pilote partenaire
+              <ArrowRight size={15} />
             </Link>
           </div>
-
         </div>
       </section>
 

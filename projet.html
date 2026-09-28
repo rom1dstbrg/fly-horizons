@@ -1607,7 +1607,18 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
-      <h3>2026-09-28 (43) — WhatsApp retiré partout ; FAQ et chatbot remis à jour sur le vrai fonctionnement ; maquettes page produit et À propos</h3>
+      <h3>2026-09-28 (44) — Page À propos refaite dans la nouvelle DA, centrée sur la plateforme</h3>
+      <ul>
+        <li><code>app/(public)/about/page.tsx</code> réécrite d'après <code>maquette-about.html</code> v3 : ce qu'est Fly Horizons (photo cockpit) · « Quatre places,
+          des frais partagés » (photo des sièges, 4 principes) · « Qui vous emmène » en frise avant de publier / avant chaque vol / en vol · voler ou piloter.
+          Section sur Romain retirée à sa demande ; plus de bloc navy à vagues.</li>
+        <li>Nouvelle classe <code>.pt-page</code> (<code>globals.css</code>) : écart unique header → premier élément (96 px / 112 px dès md), à réutiliser sur
+          chaque page refaite au lieu de <code>pt-[98px]</code> + <code>pt-*</code>. (Un <code>@utility pt-page</code> n'était pas généré par Tailwind : conflit avec le préfixe <code>pt-</code>.)</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-09-28 (43) —WhatsApp retiré partout ; FAQ et chatbot remis à jour sur le vrai fonctionnement ; maquettes page produit et À propos</h3>
       <ul>
         <li>WhatsApp supprimé : footer, contact, FAQ, CGP, confidentialité, page maintenance, <code>NoFlightsNotice</code>, bouton du chatbot, ~25 emails
           (<code>lib/email-templates.ts</code>, pied de page compris), guide pilote (<code>GuideContact</code>, fiche « bientôt »). Le contact passe par

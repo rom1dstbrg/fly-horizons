@@ -278,10 +278,22 @@
 
 }
 
+/* Écart unique header fixe → premier élément, pour toutes les pages publiques
+   refaites (nouvelle DA, 28/09) : header = 72 px (mobile) / 74 px (md+),
+   + 24 px / 38 px d'air. Ne pas recombiner pt-[98px] + pt-* page par page. Classe .pt-page ci-dessous. */
 /* ==============================================
    UTILITAIRES CUSTOM
    ============================================== */
 @layer utilities {
+
+  .pt-page {
+    padding-top: 96px;
+  }
+  @media (width >= 48rem) {
+    .pt-page {
+      padding-top: 112px;
+    }
+  }
 
   .text-gold-gradient {
     color: var(--gold);
