@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maquette Devenir pilote</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<!-- Maquette /devenir-pilote + /devenir-pilote/candidature (28/09), nouvelle DA. Règle de composition : voir le bouton « Règle de composition ». -->
+<style>
+:root{
+  --navy:#0b2238; --gold:#F2B705; --gold-h:#e6a800; --bg:#f5f5f7; --sec:#edf0f7;
+  --fg:#1e2535; --muted:#64748b; --border:#e0e5ef;
+  --sh:0 2px 14px rgba(11,34,56,.07); --sh-gold:0 6px 24px rgba(242,183,5,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Poppins,system-ui,sans-serif;background:#dfe3ea;color:var(--fg);-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+[data-lucide]{width:16px;height:16px;stroke-width:2}
+
+/* Barre d'outils (hors design) */
+.tool{position:sticky;top:0;z-index:2000;background:#fff;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:10px 16px;font-size:12px}
+.tool b{font-weight:800;font-size:13px}
+.seg{display:inline-flex;background:var(--sec);border-radius:9px;padding:3px}
+.seg button{border:0;background:transparent;padding:6px 11px;border-radius:7px;font-size:12px;font-weight:600;color:var(--muted)}
+.seg button.on{background:#fff;color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.tool .sp{flex:1}
+.btn-notes{border:1px solid var(--border);background:#fff;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700}
+.notes{display:none;background:#fffbea;border-bottom:1px solid #f3e3a1;padding:16px 20px;font-size:13px;line-height:1.6}
+.notes.open{display:block}
+.notes ol{margin:0;padding-left:20px;max-width:920px}
+.notes p{margin:10px 0 0;max-width:920px;color:#6b5a14}
+.stage.phone{padding:28px 0 48px;display:flex;justify-content:center}
+.frame{container-type:inline-size;background:#fff;position:relative}
+.stage.phone .frame{width:390px;height:844px;overflow-y:auto;border-radius:46px;border:11px solid #0f1115;box-shadow:0 30px 80px rgba(0,0,0,.25);scrollbar-width:none}
+.stage.phone .frame::-webkit-scrollbar{display:none}
+
+/* Header actuel */
+.wrap{max-width:1400px;margin:0 auto;padding:0 16px}
+.hdr{position:sticky;top:0;z-index:500;padding:8px 12px 0}
+.pill{max-width:1400px;margin:0 auto;background:#fff;border:1px solid var(--border);border-radius:16px;height:64px;display:flex;align-items:center;padding:0 16px;box-shadow:var(--sh)}
+.pill .logo{height:32px}
+.pill .fill{flex:1}
+.nav{display:none;align-items:center;gap:4px;margin-right:8px}
+.nav a{padding:8px 12px;font-size:14px;font-weight:500;color:var(--muted);border-radius:8px}
+.nav a:hover{color:var(--fg);background:var(--sec)}
+.vsep{display:none;width:1px;height:20px;background:var(--border);margin:0 4px}
+.login{display:none;align-items:center;gap:6px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--fg);border:1px solid var(--border);background:var(--sec);border-radius:8px}
+.login [data-lucide]{width:13px;height:13px}
+.burger{border:0;background:transparent;padding:8px;color:var(--muted)}
+.burger [data-lucide]{width:20px;height:20px}
+
+/* Typo */
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin:0 0 12px}
+h1{font-size:34px;font-weight:900;line-height:1.05;letter-spacing:-.02em;margin:0}
+h2{font-size:28px;font-weight:900;line-height:1.08;letter-spacing:-.02em;margin:0}
+.body > p{font-size:15px;line-height:1.75;color:rgba(30,37,53,.75);margin:0}
+.body > p + p{margin-top:16px}
+.body > .lead{font-size:17px;color:rgba(30,37,53,.85)}
+
+/* ── Section type : titre / photo / texte ── */
+.s{padding:40px 0}
+.s.first{padding-top:22px}
+.s.alt{background:var(--bg)}
+.split{display:grid;grid-template-columns:1fr;grid-template-areas:"head" "img" "body"}
+.head{grid-area:head}
+.img{grid-area:img;margin:24px -16px 0;aspect-ratio:4/3;overflow:hidden;background:var(--navy)}
+.img img{width:100%;height:100%;object-fit:cover}
+.body{grid-area:body;margin-top:24px}
+
+/* Principes (section 2) */
+.pr{list-style:none;margin:24px 0 0;padding:0;display:grid;gap:18px}
+.pr li{padding-left:16px;border-left:2px solid var(--gold)}
+.pr .t{font-size:15px;font-weight:800;margin:0 0 4px;color:var(--fg)}
+.pr .d{font-size:14px;line-height:1.6;color:rgba(30,37,53,.68);margin:0}
+
+/* Vérifications (section 3) */
+.checks{list-style:none;margin:22px 0 0;padding:0;display:grid;gap:10px}
+.checks li{display:flex;gap:10px;font-size:14px;line-height:1.55;color:var(--fg)}
+.checks [data-lucide]{color:var(--gold-h);flex:none;margin-top:2px;width:18px;height:18px}
+
+/* Signature (section 4) */
+.sign{padding:48px 0;text-align:center}
+.sign img{width:64px;height:64px;border-radius:50%;object-fit:cover;object-position:top;margin:0 auto 14px}
+.sign .n{font-size:15px;font-weight:800;margin:0 0 8px}
+.sign p.t{font-size:15px;line-height:1.7;color:rgba(30,37,53,.72);margin:0 auto;max-width:620px}
+
+/* Deux portes (section 5) : version v1 conservée */
+.doors{background:var(--bg);padding:56px 0 64px}
+.dgrid{display:grid}
+.door{padding:28px 0}
+.door + .door{border-top:1px solid rgba(11,34,56,.1)}
+.door h2{font-size:26px}
+.door p{font-size:15px;line-height:1.75;color:rgba(30,37,53,.75);margin:10px 0 20px;max-width:440px}
+.cta{display:inline-flex;align-items:center;gap:8px;background:var(--gold);color:var(--navy);border-radius:10px;padding:13px 22px;font-size:14px;font-weight:900;box-shadow:var(--sh-gold);transition:background .15s,transform .15s}
+.cta:hover{background:var(--gold-h);transform:translateY(-1px)}
+.ghost{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:#fff;color:var(--fg);border-radius:10px;padding:12px 20px;font-size:14px;font-weight:700}
+.ghost:hover{border-color:var(--fg)}
+.cta [data-lucide],.ghost [data-lucide]{width:15px;height:15px}
+
+/* Pilotes (section 3) : sans photo, frise « avant de publier / avant chaque vol / en vol » */
+.crew-top{display:grid;gap:18px}
+.crew-top > p{font-size:15px;line-height:1.75;color:rgba(30,37,53,.75);margin:0}
+.crew{display:grid;margin-top:36px}
+.step{padding:24px 0;border-top:1px solid var(--border)}
+.step .when{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--navy);background:var(--sec);border-radius:999px;padding:6px 12px;margin:0 0 14px}
+.step .when [data-lucide]{width:14px;height:14px}
+.step h3{font-size:19px;font-weight:900;margin:0 0 8px;letter-spacing:-.01em}
+.step p{font-size:14px;line-height:1.7;color:rgba(30,37,53,.7);margin:0}
+
+/* Footer actuel (sans WhatsApp) */
+.foot{background:var(--navy);border-top:1px solid rgba(255,255,255,.06)}
+.fm{padding:32px 0 40px;display:flex;flex-direction:column;gap:24px}
+.fd{display:none}
+.foot .flogo{height:28px;margin-bottom:16px}
+.foot .tag{color:rgba(255,255,255,.4);font-size:14px;line-height:1.6;margin:0 0 16px;max-width:320px}
+.soc{display:flex;gap:16px;color:rgba(255,255,255,.4)}
+.soc [data-lucide]{width:15px;height:15px}
+.fh{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(242,183,5,.8);margin:0 0 12px}
+.fcol ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.fcol li{font-size:14px;color:rgba(255,255,255,.5)}
+.fbot{font-size:11px;color:rgba(255,255,255,.35);text-align:center}
+
+/* ─────────── Ordinateur ─────────── */
+@container (min-width: 900px){
+  .wrap{padding:0 40px}
+  .hdr{padding:14px 16px 0}
+  .pill{height:60px;padding:0 24px}
+  .nav,.login{display:flex}
+  .vsep{display:block}
+  .burger{display:none}
+  h1{font-size:52px;line-height:1.02}
+  h2{font-size:40px;line-height:1.04}
+  .body > p{font-size:16px}
+  .body > .lead{font-size:18px}
+
+  .s{padding:96px 0}
+  .s.first{padding-top:36px}
+
+  /* 2 colonnes égales ; la photo couvre la hauteur du texte (2 lignes de grille) */
+  .split{grid-template-columns:1fr 1fr;column-gap:72px;
+    grid-template-areas:"head img" "body img";grid-template-rows:auto 1fr}
+  .split.rev{grid-template-areas:"img head" "img body"}
+  .img{margin:0;aspect-ratio:auto;min-height:420px;border-radius:14px}
+  .body{margin-top:24px}
+
+  .pr{grid-template-columns:1fr 1fr;gap:22px 32px}
+
+  .sign{padding:24px 0 88px}
+
+  .doors{padding:96px 0}
+  .crew-top{grid-template-columns:1fr 1fr;column-gap:72px;align-items:end}
+  .crew-top > p{font-size:16px}
+  .crew{grid-template-columns:repeat(3,1fr);margin-top:56px}
+  .step{padding:28px 40px 4px 0}
+  .step + .step{padding-left:40px;border-left:1px solid var(--border)}
+  .step h3{font-size:21px}
+  .step p{font-size:15px}
+  .dgrid{grid-template-columns:1fr 1fr}
+  .door{padding:4px 56px 4px 0}
+  .door + .door{border-top:0;border-left:1px solid rgba(11,34,56,.1);padding:4px 0 4px 56px}
+  .door h2{font-size:34px}
+
+  .fm{display:none}
+  .fd{display:block}
+  .fgrid{display:grid;grid-template-columns:1.6fr .9fr .9fr .9fr 1.3fr;gap:32px;padding:48px 0}
+  .fd .flogo{height:32px}
+  .fdb{padding:20px 0;border-top:1px solid rgba(255,255,255,.05);display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.3)}
+}
+
+/* ═════════ Devenir pilote ═════════ */
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin:0 0 12px}
+h1{font-size:34px;font-weight:900;line-height:1.05;letter-spacing:-.02em;margin:0}
+h2{font-size:28px;font-weight:900;line-height:1.08;letter-spacing:-.02em;margin:0}
+.lead{font-size:16px;line-height:1.7;color:rgba(30,37,53,.8);margin:14px 0 0;max-width:520px}
+.p{font-size:15px;line-height:1.75;color:rgba(30,37,53,.75);margin:0}
+.cta{display:inline-flex;align-items:center;gap:8px;background:var(--gold);color:var(--navy);border-radius:10px;padding:14px 24px;font-size:15px;font-weight:900;box-shadow:var(--sh-gold);border:0}
+.cta:hover{background:var(--gold-h)}
+.ghost{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:#fff;color:var(--fg);border-radius:10px;padding:12px 20px;font-size:14px;font-weight:700}
+.cta [data-lucide],.ghost [data-lucide]{width:15px;height:15px}
+.note{font-size:13px;color:var(--muted);margin:12px 0 0}
+
+/* 1 · Intro : texte | ce qu'il faut */
+.intro{padding:22px 0 40px}
+.intro-g{display:grid;gap:36px}
+.intro .actions{margin-top:26px}
+.req h2{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--navy);margin:0 0 4px;line-height:1.4}
+.req ul{list-style:none;margin:0;padding:0}
+.req li{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--border);font-size:14px;line-height:1.55;color:rgba(30,37,53,.75)}
+.req li:last-child{border-bottom:0}
+.req li b{display:block;color:var(--fg);font-weight:800;margin-bottom:2px}
+.req [data-lucide]{flex:none;width:18px;height:18px;margin-top:2px;color:var(--gold-h)}
+
+/* 2 · Bandeau photo légendé */
+.band{margin:0 -16px}
+.band img{width:100%;aspect-ratio:4/3;object-fit:cover}
+.band p{font-size:13px;color:var(--muted);margin:10px 16px 0}
+
+/* 3 · Déroulé : moment | étape (tableau à filets) */
+.flow{padding:48px 0}
+.flow .top{display:grid;gap:14px;margin-bottom:26px}
+.rows{list-style:none;margin:0;padding:0;border-top:1px solid var(--border)}
+.row{display:grid;gap:6px;padding:20px 0;border-bottom:1px solid var(--border)}
+.row .when{font-size:12px;font-weight:700;color:var(--gold-h);text-transform:uppercase;letter-spacing:1.5px}
+.row h3{font-size:18px;font-weight:900;letter-spacing:-.01em;margin:0 0 4px}
+.row p{font-size:14px;line-height:1.7;color:rgba(30,37,53,.72);margin:0;max-width:640px}
+
+/* 4 · Espace pilote : 6 outils, filets, pas de boîtes */
+.tools{background:var(--bg);padding:48px 0}
+.tools .top{display:grid;gap:14px}
+.tg{display:grid;margin-top:26px}
+.tool-i{padding:18px 0;border-top:1px solid rgba(11,34,56,.1);display:flex;gap:14px}
+.tool-i .ic{width:38px;height:38px;flex:none;border-radius:10px;background:#fff;display:grid;place-items:center;color:var(--navy)}
+.tool-i h3{font-size:15px;font-weight:800;margin:0 0 3px}
+.tool-i p{font-size:14px;line-height:1.6;color:rgba(30,37,53,.7);margin:0}
+
+/* 5 · Le cadre : texte | qui fait quoi */
+.frame-s{padding:48px 0}
+.fr-g{display:grid;gap:28px}
+.fr-g .p{margin-top:16px}
+.who{display:grid;gap:26px}
+.who h3{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--navy);margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--gold)}
+.who ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.who li{font-size:14px;line-height:1.6;color:rgba(30,37,53,.78);padding-left:16px;position:relative}
+.who li::before{content:"";position:absolute;left:0;top:9px;width:6px;height:6px;border-radius:50%;background:var(--navy)}
+.legal{font-size:13px;line-height:1.6;color:var(--muted);margin:16px 0 0}
+.legal a,.lk{font-weight:600;color:var(--navy);text-decoration:underline;text-decoration-color:rgba(11,34,56,.25);text-underline-offset:3px}
+
+/* 6 · Fin */
+.end{border-top:1px solid var(--border);padding:44px 0 56px}
+.end-g{display:flex;flex-direction:column;gap:20px}
+.end h2{font-size:26px}
+.end .p{margin-top:8px}
+
+/* ═════════ Candidature ═════════ */
+.cand{padding:22px 0 64px}
+.back{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:18px}
+.back [data-lucide]{width:14px;height:14px}
+.cand-g{display:grid}
+.form{margin-top:28px;max-width:720px}
+.f{display:block;margin-bottom:18px}
+.f>span,.lab{display:block;font-size:13px;font-weight:700;color:var(--fg);margin:0 0 8px}
+.f>span i,.lab i{font-style:normal;font-weight:500;color:var(--muted)}
+.f input,.f textarea{width:100%;border:1px solid var(--border);background:var(--sec);border-radius:12px;padding:0 16px;font-size:15px;color:var(--fg);outline:none;font-family:inherit}
+.f input{height:52px}
+.f textarea{padding:14px 16px;min-height:150px;line-height:1.6;resize:vertical}
+.f input::placeholder,.f textarea::placeholder{color:#8a94a6}
+.two{display:grid;gap:0 18px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:10px 16px;border-radius:999px;border:1px solid var(--border);background:#fff;font-size:14px;font-weight:600;color:var(--muted)}
+.chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.submit{display:flex;flex-direction:column;align-items:flex-start;gap:14px;margin-top:6px}
+.submit .cta{white-space:nowrap;flex:none}
+.submit p{font-size:12px;line-height:1.6;color:var(--muted);margin:0}
+.aside{margin-top:44px;padding-top:28px;border-top:1px solid var(--border)}
+.aside h2{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--navy);margin:0 0 6px;line-height:1.4}
+.nx{list-style:none;margin:0;padding:0;counter-reset:n}
+.nx li{counter-increment:n;display:grid;grid-template-columns:28px 1fr;gap:14px;padding:14px 0;border-bottom:1px solid var(--border)}
+.nx li::before{content:counter(n);width:28px;height:28px;border-radius:50%;background:var(--sec);color:var(--navy);font-size:13px;font-weight:800;display:grid;place-items:center}
+.nx b{display:block;font-size:14px;font-weight:800;margin-bottom:2px}
+.nx span{font-size:14px;line-height:1.6;color:rgba(30,37,53,.72)}
+.aside .q{font-size:14px;line-height:1.6;color:rgba(30,37,53,.72);margin:18px 0 0}
+.done .ok{width:48px;height:48px;border-radius:50%;background:var(--gold);color:var(--navy);display:grid;place-items:center;margin-bottom:18px}
+.done .ok [data-lucide]{width:22px;height:22px;stroke-width:2.5}
+.done h2{font-size:26px;margin:0 0 10px}
+.done p{font-size:15px;line-height:1.7;color:rgba(30,37,53,.75);margin:0 0 8px;max-width:540px}
+.done .acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+[data-page]{display:none}
+[data-page].on{display:block}
+.form-wrap.sent .form{display:none}
+.form-wrap:not(.sent) .done{display:none}
+.form-wrap.sent .done{margin-top:28px}
+
+@container (min-width: 900px){
+  h1{font-size:52px;line-height:1.02}
+  h2{font-size:40px;line-height:1.04}
+  .lead{font-size:17px}
+  .p{font-size:16px}
+  .intro{padding:36px 0 72px}
+  .intro-g{grid-template-columns:7fr 5fr;column-gap:88px;align-items:end}
+  .band{margin:0}
+  .band img{aspect-ratio:21/8;border-radius:14px}
+  .band p{margin:12px 0 0}
+  .flow{padding:96px 0}
+  .flow .top{grid-template-columns:1fr 1fr;column-gap:72px;align-items:end;margin-bottom:44px}
+  .row{grid-template-columns:240px 1fr;column-gap:40px;padding:26px 0}
+  .row .when{padding-top:6px}
+  .row h3{font-size:21px}
+  .row p{font-size:15px}
+  .tools{padding:96px 0}
+  .tools .top{grid-template-columns:1fr 1fr;column-gap:72px;align-items:end}
+  .tg{grid-template-columns:repeat(3,1fr);column-gap:48px;margin-top:48px}
+  .tool-i{padding:24px 0}
+  .frame-s{padding:96px 0}
+  .fr-g{grid-template-columns:5fr 7fr;column-gap:88px}
+  .who{grid-template-columns:1fr 1fr;column-gap:48px}
+  .end{padding:72px 0 96px}
+  .end-g{flex-direction:row;align-items:center;justify-content:space-between}
+  .end h2{font-size:34px}
+
+  .cand{padding:36px 0 112px}
+  .cand-g{grid-template-columns:7fr 5fr;grid-template-rows:auto 1fr;column-gap:80px}
+  .cand-head{grid-column:1;grid-row:1}
+  .form-wrap{grid-column:1;grid-row:2}
+  .aside{grid-column:2;grid-row:1/span 2;align-self:start;margin-top:0;border-top:0;padding-top:40px}
+  .two{grid-template-columns:1fr 1fr}
+  .submit{flex-direction:row;align-items:center;gap:24px}
+}
+</style></head><body>
+<div class="tool">
+  <b>Maquette · Devenir pilote</b>
+  <div class="seg" id="pg">
+    <button data-p="pres" class="on">Présentation</button>
+    <button data-p="cand">Candidature</button>
+    <button data-p="sent">Candidature envoyée</button>
+  </div>
+  <div class="seg" id="vw">
+    <button data-v="desk" class="on">Ordinateur</button>
+    <button data-v="phone">Téléphone</button>
+  </div>
+  <span class="sp"></span>
+  <button class="btn-notes" id="nb">Règle de composition ▾</button>
+</div>
+<div class="notes" id="notes">
+  <ol>
+    <li><b>Présentation, une règle :</b> la page suit les questions d'un pilote, dans l'ordre. Est-ce que je peux (conditions) ? Comment ça se passe ? Avec quels outils ? Dans quel cadre ? Chaque section a donc sa forme, dictée par son contenu.</li>
+    <li><b>Ouverture</b> : titre et bouton à gauche (7), conditions à droite (5), alignées en bas. Pas de photo à côté du titre, contrairement à À propos.</li>
+    <li><b>Une seule photo</b>, en bandeau large (21:8) : la vue du pilote en vol, légendée « vous restez seul commandant de bord ». Sur téléphone, 4:3 bord à bord.</li>
+    <li><b>Le déroulé</b> est un tableau à filets : le moment à gauche (240 px), l'étape à droite. Six lignes, de la demande au jour du vol.</li>
+    <li><b>L'espace pilote</b> sur fond gris clair : six outils réels (annonces, disponibilités, itinéraires, masse et centrage, carnet de vol, paiements), en 3 colonnes à filets, sans boîtes.</li>
+    <li><b>Le cadre</b> : NCO.GEN.104 à gauche, « qui fait quoi » à droite (vous / Fly Horizons). Remplace l'encadré jaune actuel.</li>
+    <li><b>Candidature</b> : même système que Contact (champs, pastilles, confirmation sur place). À droite, « ce qui se passe ensuite » ; sur téléphone, il passe sous le formulaire.</li>
+    <li><b>Écart header</b> : même <code>.pt-page</code> que les autres pages refaites.</li>
+  </ol>
+  <p>Textes tirés de la charte pilote (lib/pilote/charte.ts) et de l'espace pilote réel. À relire.</p>
+</div>
+
+<div class="stage" id="stage">
+<div class="frame">
+
+  <header class="hdr">
+    <div class="pill">
+      <img class="logo" src="public/fly-horizons-logo-navy.svg" alt="Fly Horizons">
+      <span class="fill"></span>
+      <nav class="nav"><a href="#">Les vols</a><a href="#">Galerie</a><a href="#">À propos</a><a href="#">FAQ</a><a href="#">Contact</a></nav>
+      <span class="vsep"></span>
+      <a class="login" href="#"><i data-lucide="user"></i>Connexion</a>
+      <button class="burger" aria-label="Menu"><i data-lucide="menu"></i></button>
+    </div>
+  </header>
+
+  <!-- ═════════ PRÉSENTATION ═════════ -->
+  <main data-page="pres" class="on">
+
+    <section class="intro">
+      <div class="wrap intro-g">
+        <div>
+          <p class="eyebrow">Pilotes</p>
+          <h1>Vous volez de toute façon. Partagez les frais.</h1>
+          <p class="lead">Publiez les vols que vous comptez faire, des passagers demandent à vous rejoindre, et les frais réels se partagent entre les occupants. Vous restez seul maître à bord ; nous nous occupons de la mise en relation.</p>
+          <div class="actions">
+            <a class="cta" href="#" data-go="cand">Faire une demande <i data-lucide="arrow-right"></i></a>
+            <p class="note">Deux minutes, sans engagement.</p>
+          </div>
+        </div>
+        <div class="req">
+          <h2>Ce qu'il vous faut</h2>
+          <ul>
+            <li><i data-lucide="check"></i><span><b>Une licence valide</b>PPL ou supérieure, avec la qualification SEP.</span></li>
+            <li><i data-lucide="check"></i><span><b>Un certificat médical à jour</b>Nous relevons sa date de validité.</span></li>
+            <li><i data-lucide="check"></i><span><b>Une expérience récente</b>Au moins 3 décollages et 3 atterrissages dans les 90 jours avant un vol avec passagers.</span></li>
+            <li><i data-lucide="check"></i><span><b>Un avion autorisé et assuré</b>Un appareil que vous pouvez utiliser, assurance passagers comprise.</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap">
+      <figure class="band" style="margin-block:0">
+        <img src="public/hero-section.png" alt="Vue depuis le siège du pilote, en vol au-dessus de la campagne">
+        <p>Préparation, décision de partir, conduite du vol : vous restez seul commandant de bord.</p>
+      </figure>
+    </div>
+
+    <section class="flow">
+      <div class="wrap">
+        <div class="top">
+          <div>
+            <p class="eyebrow">Le déroulé</p>
+            <h2>De la demande au premier vol.</h2>
+          </div>
+          <p class="p">Rien n'est automatique : chaque pilote est vu, vérifié et accompagné avant de publier son premier vol.</p>
+        </div>
+        <ol class="rows">
+          <li class="row"><span class="when">Aujourd'hui</span><div><h3>Vous faites une demande</h3><p>Vos coordonnées, votre licence et votre expérience. Rien ne vous engage à ce stade.</p></div></li>
+          <li class="row"><span class="when">Dans les jours qui suivent</span><div><h3>Nous en discutons</h3><p>Nous vous contactons pour faire connaissance et répondre à vos questions, avant d'ouvrir votre espace pilote.</p></div></li>
+          <li class="row"><span class="when">Avant de publier</span><div><h3>Vos documents sont vérifiés</h3><p>Vous envoyez licence et certificat médical depuis votre profil. Nous vérifions les dates, puis supprimons les fichiers. Vous acceptez la charte pilote.</p></div></li>
+          <li class="row"><span class="when">Quand vous voulez</span><div><h3>Vous publiez un vol</h3><p>Date, durée, itinéraire, nombre de places et participation aux frais. Il apparaît sur le site avec votre profil.</p></div></li>
+          <li class="row"><span class="when">À chaque demande</span><div><h3>Vous acceptez ou déclinez</h3><p>Le choix vous revient. Le passager ne paie rien avant votre accord.</p></div></li>
+          <li class="row"><span class="when">Le jour du vol</span><div><h3>Vous volez ensemble</h3><p>Vous accueillez le passager. Il règle sa part directement avec vous, par virement ou en espèces.</p></div></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="tools">
+      <div class="wrap">
+        <div class="top">
+          <div>
+            <p class="eyebrow">L'espace pilote</p>
+            <h2>Tout se gère au même endroit.</h2>
+          </div>
+          <p class="p">Un espace réservé aux pilotes, sur ordinateur comme sur téléphone, pour publier, organiser et suivre vos vols.</p>
+        </div>
+        <div class="tg">
+          <div class="tool-i"><span class="ic"><i data-lucide="megaphone"></i></span><div><h3>Vos annonces</h3><p>Publier un vol, suivre les places restantes et les demandes.</p></div></div>
+          <div class="tool-i"><span class="ic"><i data-lucide="calendar-days"></i></span><div><h3>Vos disponibilités</h3><p>Vos créneaux de la semaine, par blocs de deux heures.</p></div></div>
+          <div class="tool-i"><span class="ic"><i data-lucide="route"></i></span><div><h3>Vos itinéraires</h3><p>Des routes tracées sur carte aéronautique, à réutiliser d'un vol à l'autre.</p></div></div>
+          <div class="tool-i"><span class="ic"><i data-lucide="scale"></i></span><div><h3>Masse et centrage</h3><p>Calcul et performances pour le DA40, météo de l'aérodrome et fiche PDF.</p></div></div>
+          <div class="tool-i"><span class="ic"><i data-lucide="book-open"></i></span><div><h3>Carnet de vol</h3><p>Vos vols passés, avec les heures et les passagers.</p></div></div>
+          <div class="tool-i"><span class="ic"><i data-lucide="wallet"></i></span><div><h3>Participations</h3><p>Ce que chaque passager vous doit, avec un QR code de virement prêt à scanner.</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="frame-s">
+      <div class="wrap fr-g">
+        <div>
+          <p class="eyebrow">Le cadre</p>
+          <h2>Un partage de frais, pas un service commercial.</h2>
+          <p class="p">Les vols relèvent du partage de coûts entre personnes non professionnelles, au sens du règlement européen NCO.GEN.104. Le passager règle uniquement sa part des coûts directs du vol : avion, carburant, redevances. Vous gardez votre propre part et n'êtes pas rémunéré pour piloter.</p>
+          <p class="legal">Le détail figure dans les <a href="#">conditions générales</a> et dans la charte que vous acceptez avant de publier.</p>
+        </div>
+        <div class="who">
+          <div>
+            <h3>Vous</h3>
+            <ul>
+              <li>Restez seul commandant de bord, de la préparation à l'atterrissage.</li>
+              <li>Demandez uniquement les coûts directs, votre part comprise, sans marge.</li>
+              <li>Encaissez directement la part de chaque passager.</li>
+              <li>Contactez et accueillez vos passagers.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Fly Horizons</h3>
+            <ul>
+              <li>Vérifie les licences et certificats médicaux.</li>
+              <li>Publie vos vols et vous transmet les demandes.</li>
+              <li>Ne perçoit aucune commission et n'encaisse rien.</li>
+              <li>N'exploite pas les vols et ne pilote pas.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="end">
+      <div class="wrap end-g">
+        <div>
+          <h2>Prêt à partager vos vols ?</h2>
+          <p class="p">Laissez-nous vos coordonnées, nous revenons vers vous pour en discuter.</p>
+        </div>
+        <a class="cta" href="#" data-go="cand">Faire une demande <i data-lucide="arrow-right"></i></a>
+      </div>
+    </section>
+  </main>
+
+  <!-- ═════════ CANDIDATURE ═════════ -->
+  <main data-page="cand">
+    <section class="cand">
+      <div class="wrap">
+        <a class="back" href="#" data-go="pres"><i data-lucide="arrow-left"></i>Devenir pilote</a>
+        <div class="cand-g">
+          <div class="cand-head">
+            <p class="eyebrow">Candidature pilote</p>
+            <h1>Faites une demande.</h1>
+            <p class="lead">Elle ne vous engage à rien : nous revenons vers vous pour en discuter avant d'ouvrir votre espace pilote.</p>
+          </div>
+
+          <div class="form-wrap" id="fw">
+            <form class="form" onsubmit="return false">
+              <div class="two">
+                <label class="f"><span>Nom</span><input placeholder="Jean Dupont"></label>
+                <label class="f"><span>Email</span><input placeholder="jean@exemple.com"></label>
+              </div>
+              <div class="two">
+                <label class="f"><span>Téléphone <i>(facultatif)</i></span><input placeholder="+32 4xx xx xx xx"></label>
+                <label class="f"><span>Heures de vol totales <i>(facultatif)</i></span><input placeholder="Ex. : 250"></label>
+              </div>
+              <div class="f">
+                <p class="lab">Licence</p>
+                <div class="chips" role="group"><button type="button" class="chip on">PPL</button><button type="button" class="chip">CPL</button><button type="button" class="chip">ATPL</button><button type="button" class="chip">Autre</button></div>
+              </div>
+              <label class="f"><span>Avion et aérodrome habituels <i>(facultatif)</i></span><input placeholder="Ex. : DA40, Charleroi (EBCI)"></label>
+              <label class="f"><span>Message <i>(facultatif)</i></span><textarea placeholder="Votre expérience, le type de vols que vous aimeriez partager, vos questions…"></textarea></label>
+              <div class="submit">
+                <button class="cta" data-go="sent"><i data-lucide="send"></i>Envoyer ma demande</button>
+                <p>Vos coordonnées servent uniquement à traiter votre demande. <a class="lk" href="#">Confidentialité</a></p>
+              </div>
+            </form>
+
+            <div class="done" role="status">
+              <div class="ok"><i data-lucide="check"></i></div>
+              <h2>Demande envoyée.</h2>
+              <p>Merci ! Vous recevez une copie par email, avec un lien pour suivre la conversation. Nous revenons vers vous dans les jours qui suivent.</p>
+              <p>Pensez à vérifier vos spams si rien n'arrive.</p>
+              <div class="acts">
+                <a class="ghost" href="#"><i data-lucide="plane"></i>Voir les vols publiés</a>
+                <a class="ghost" href="#"><i data-lucide="arrow-left"></i>Retour à l'accueil</a>
+              </div>
+            </div>
+          </div>
+
+          <aside class="aside">
+            <h2>Ce qui se passe ensuite</h2>
+            <ol class="nx">
+              <li><div><b>Nous lisons votre demande</b><span>Une personne de l'équipe, pas un robot.</span></div></li>
+              <li><div><b>Nous en discutons</b><span>Par téléphone ou par email, selon votre préférence.</span></div></li>
+              <li><div><b>Nous ouvrons votre espace pilote</b><span>Vous y envoyez licence et certificat médical, puis vous publiez.</span></div></li>
+            </ol>
+            <p class="q">Une question avant de vous lancer ? <a class="lk" href="#">Écrivez-nous</a>.</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="foot">
+    <div class="wrap">
+      <div class="fm">
+        <div><img class="flogo" src="public/fly-horizons-logo-white.svg" alt="Fly Horizons"><p class="tag">Vols partagés en avion léger avec Romain, pilote et fondateur, au départ de l'aérodrome de Charleroi (EBCI).</p><div class="soc"><i data-lucide="mail"></i><i data-lucide="facebook"></i><i data-lucide="instagram"></i></div></div>
+        <div class="fcol"><p class="fh">Informations</p><ul><li>Les vols</li><li>À propos</li><li>FAQ</li><li>Galerie</li></ul></div>
+        <div class="fcol"><p class="fh">Contact</p><ul><li>info@fly-horizons.com</li><li>Formulaire de contact</li></ul></div>
+        <div class="fbot">© 2026 Fly Horizons, Rue des Fusillés, 6040 Charleroi.</div>
+      </div>
+      <div class="fd">
+        <div class="fgrid">
+          <div><img class="flogo" src="public/fly-horizons-logo-white.svg" alt="Fly Horizons"><p class="tag">Vols partagés en avion léger avec Romain, pilote et fondateur, au départ de l'aérodrome de Charleroi (EBCI).</p><div class="soc"><i data-lucide="mail"></i><i data-lucide="facebook"></i><i data-lucide="instagram"></i></div></div>
+          <div class="fcol"><p class="fh">Informations</p><ul><li>Les vols</li><li>À propos</li><li>FAQ</li><li>Galerie</li></ul></div>
+          <div class="fcol"><p class="fh">Pratique</p><ul><li>Plan d'accès · EBCI</li><li>Faire une demande</li><li>Mon compte</li><li>Vous êtes pilote ?</li></ul></div>
+          <div class="fcol"><p class="fh">Contact</p><ul><li>info@fly-horizons.com</li><li>Formulaire de contact</li></ul></div>
+          <div class="fcol"><p class="fh">Newsletter</p><ul><li>Recevez un email dès qu'un vol est organisé.</li></ul></div>
+        </div>
+        <div class="fdb"><span>© 2026 Fly Horizons, Rue des Fusillés, 6040 Charleroi. Tous droits réservés.</span><span>Conditions générales · Confidentialité · Contact</span></div>
+      </div>
+    </div>
+  </footer>
+</div></div>
+<script>
+lucide.createIcons();
+function seg(id, fn){ const el=document.getElementById(id); el.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
+  el.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); fn(b); }); }
+function show(p){
+  document.querySelectorAll('[data-page]').forEach(m=>m.classList.toggle('on', m.dataset.page===(p==='sent'?'cand':p)));
+  document.getElementById('fw').classList.toggle('sent', p==='sent');
+  document.querySelectorAll('#pg button').forEach(x=>x.classList.toggle('on', x.dataset.p===p));
+  document.querySelector('.frame').scrollTop=0; window.scrollTo(0,0);
+}
+seg('pg', b => show(b.dataset.p));
+seg('vw', b => document.getElementById('stage').classList.toggle('phone', b.dataset.v==='phone'));
+document.querySelectorAll('[data-go]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault(); show(a.dataset.go);}));
+document.querySelectorAll('.chips').forEach(g=>g.addEventListener('click',e=>{const b=e.target.closest('.chip'); if(!b) return; g.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===b));}));
+document.getElementById('nb').addEventListener('click',()=>document.getElementById('notes').classList.toggle('open'));
+const q=new URLSearchParams(location.search); if(q.get('p')) show(q.get('p')); if(q.get('v')==='phone'){document.getElementById('stage').classList.add('phone');}
+</script>
+</body>
+</html>
