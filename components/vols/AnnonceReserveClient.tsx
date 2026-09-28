@@ -172,7 +172,7 @@ export function AnnonceReserveClient({ annonce }: { annonce: AnnonceReserveInfo 
       });
       const d = await r.json();
       if (!r.ok) { setSubmitError(d.error || "Erreur."); setSubmitting(false); return; }
-      router.push("/reservation/success");
+      router.push("/reservation/success?type=annonce");
     } catch {
       setSubmitError("Erreur réseau, veuillez réessayer.");
       setSubmitting(false);

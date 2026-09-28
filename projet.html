@@ -1646,6 +1646,17 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-28 (62) — Page de succès de réservation (/reservation/success) dans la nouvelle DA, contenu corrigé par flow</h3>
+      <ul>
+        <li>Fond blanc, sans boîte, <code>.pt-page</code>, pastille de confirmation dorée (même schéma que Contact/report). Étapes numérotées et bloc « Informations pratiques » réutilisent le style
+          <code>InfoRow</code> de la page Contact (icône + filet).</li>
+        <li><b>Bug de contenu corrigé au passage</b> : cette page est le point d'arrivée de deux flows différents (l'ancien <code>/reservation</code> payé par Stripe, et <code>AnnonceReserveClient</code> pour les vols publiés par les pilotes),
+          mais affichait toujours les mêmes étapes — dont « votre pilote vous propose un itinéraire », qui n'existe pas pour une annonce pilote (pas d'itinéraire, paiement par virement après confirmation, pas avant). Distinction ajoutée via
+          <code>?type=annonce</code> sur la redirection d'<code>AnnonceReserveClient</code> : étapes et bloc « Paiement » propres à ce flow ; l'ancien flow (sans le paramètre) garde son texte d'origine.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-28 (61) — Page de réservation d'une annonce pilote (/vol/annonce/[id]/reserver) dans la nouvelle DA</h3>
       <ul>
         <li><code>AnnonceReserveClient</code> refaite : fond blanc, <code>.pt-page</code>, sans boîte (ancien <code>card-premium</code> sur fond navy retiré). Deux étapes dans une colonne (7/12) ;
