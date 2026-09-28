@@ -1,6 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { stripeNetInfo } from "@/lib/stripe-fee";
-import { isPiloteVol } from "@/lib/pilote/payment";
+import { piloteEncaisse } from "@/lib/pilote/payment";
 import type { LigneVol, LigneVoucher, LignePiloteVol, Depense, SoldeStats } from "@/components/admin/TransactionsClient";
 
 type TarifAvion = { prix_heure: number; actif_depuis: string };
@@ -66,8 +66,9 @@ export async function getTransactionsData(): Promise<{
   // ne transite par le Stripe / la compta de Fly Horizons → ces vols sont sortis
   // du CA (`vols`) et listés à part, à titre informatif. L'assignation Bloc B
   // reste gelée (pivot 08/09).
-  const ownResas = (resas ?? []).filter(r => !isPiloteVol(r));
-  const piloteResas = (resas ?? []).filter(r => isPiloteVol(r));
+  // Un vol déjà réglé à Fly Horizons puis attribué à un pilote reste dans le CA.
+  const ownResas = (resas ?? []).filter(r => !piloteEncaisse(r));
+  const piloteResas = (resas ?? []).filter(r => piloteEncaisse(r));
 
   const piloteVols: LignePiloteVol[] = piloteResas.map(r => {
     const cRaw = r.clients as unknown;

@@ -121,6 +121,8 @@ export default async function PiloteLayout({ children }: { children: React.React
     .select("id", { count: "exact", head: true })
     .eq("pilote_id", pilote.id)
     .in("type_resa", ["annonce_pilote", "standard"])
+    // Vol standard déjà réglé à Fly Horizons : rien à encaisser pour le pilote.
+    .or("type_resa.eq.annonce_pilote,and(voucher_code.is.null,or(paye.is.null,paye.eq.0))")
     .eq("pilote_paye", false)
     .not("acompte", "is", null)
     .neq("statut", "annulee")

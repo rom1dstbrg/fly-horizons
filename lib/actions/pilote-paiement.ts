@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdminOrOwningPilote } from "./auth-guards";
-import { isPiloteVol } from "@/lib/pilote/payment";
+import { isPiloteVol, piloteEncaisse } from "@/lib/pilote/payment";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import {
   annoncePaiementVirementEmail,
@@ -34,7 +34,7 @@ async function loadPiloteVol(reservationId: string) {
   const { data } = await db
     .from("reservations")
     .select(
-      "id, type_resa, pilote_id, annonce_id, statut, pre_payment_statut, payment_token, acompte, duree, date_vol, heure_vol, pilote_paye, clients(prenom, nom, email), pilotes(nom)",
+      "id, type_resa, pilote_id, annonce_id, statut, paye, voucher_code, pre_payment_statut, payment_token, acompte, duree, date_vol, heure_vol, pilote_paye, clients(prenom, nom, email), pilotes(nom)",
     )
     .eq("id", reservationId)
     .single();
@@ -62,6 +62,7 @@ export async function setPilotePaye(
     const { db, resa } = await loadPiloteVol(reservationId);
     if (!resa) return { error: "Réservation introuvable" };
     if (!isPiloteVol(resa)) return { error: "Ce vol n'est pas géré par un pilote" };
+    if (!piloteEncaisse(resa)) return { error: "Ce vol est déjà réglé à Fly Horizons, rien à encaisser" };
 
     let nouveauMontant: number | null = null;
     if (paye && montant !== undefined) {

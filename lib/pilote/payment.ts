@@ -9,6 +9,21 @@ export function isPiloteVol(r: { pilote_id?: string | null; type_resa?: string |
   return !!r.pilote_id && (r.type_resa === "annonce_pilote" || r.type_resa === "standard");
 }
 
+/**
+ * Vol standard déjà réglé à Fly Horizons (payé à l'admin ou couvert par un bon).
+ * Il reste attribuable à un pilote (décision 28/09) : le passager n'est pas
+ * remboursé, Romain fait lui-même le virement au pilote une fois le vol effectué.
+ * Le pilote gère donc le vol, mais n'a rien à encaisser.
+ */
+export function isRegleFlyHorizons(r: { type_resa?: string | null; paye?: number | null; voucher_code?: string | null }): boolean {
+  return r.type_resa === "standard" && ((r.paye ?? 0) > 0 || !!r.voucher_code);
+}
+
+/** Le pilote encaisse lui-même le passager (virement, QR SEPA, espèces). */
+export function piloteEncaisse(r: { pilote_id?: string | null; type_resa?: string | null; paye?: number | null; voucher_code?: string | null }): boolean {
+  return isPiloteVol(r) && !isRegleFlyHorizons(r);
+}
+
 /** Communication de virement (max ~140 car., on reste court). */
 export function piloteVirementCommunication(dateVol: string, clientNom: string): string {
   const d = new Date(dateVol + "T12:00:00Z").toLocaleDateString("fr-BE", {

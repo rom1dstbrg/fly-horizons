@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import QRCode from "qrcode";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { buildEpcPayload, isPiloteVol, piloteVirementCommunication } from "@/lib/pilote/payment";
+import { buildEpcPayload, piloteEncaisse, piloteVirementCommunication } from "@/lib/pilote/payment";
 
 /**
  * GET /api/pay-qr/[id]
@@ -20,11 +20,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
   const { data: resa } = await admin
     .from("reservations")
-    .select("id, date_vol, type_resa, pilote_id, acompte, clients(nom), pilotes(nom, iban)")
+    .select("id, date_vol, type_resa, pilote_id, acompte, paye, voucher_code, clients(nom), pilotes(nom, iban)")
     .eq("id", id)
     .maybeSingle();
 
-  if (!resa || !isPiloteVol(resa)) return new NextResponse("Not found", { status: 404 });
+  if (!resa || !piloteEncaisse(resa)) return new NextResponse("Not found", { status: 404 });
 
   const pilote = (Array.isArray(resa.pilotes) ? resa.pilotes[0] : resa.pilotes) as
     | { nom: string; iban: string | null }

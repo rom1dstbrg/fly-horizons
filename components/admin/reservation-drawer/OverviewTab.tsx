@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { Button, Input } from "@/components/pilote/studio";
 import { cn } from "@/lib/utils";
-import { isPiloteVol } from "@/lib/pilote/payment";
+import { isPiloteVol, isRegleFlyHorizons } from "@/lib/pilote/payment";
 import { stripeNetInfo } from "@/lib/stripe-fee";
 import type { DrawerReservation } from "./types";
 import type { PendingAction } from "./ConfirmActionDialog";
@@ -163,6 +163,9 @@ export function OverviewTab({
   const isPerso = r.type_resa === "perso";
   const isStandard = !isPerso;
   const piloteVol = isPiloteVol(r);
+  // Vol déjà réglé à Fly Horizons puis attribué : le pilote gère le vol, l'admin garde le paiement.
+  const regleFH = isRegleFlyHorizons(r);
+  const piloteEncaisse = piloteVol && !regleFH;
   const st = r.statut;
   const prenom = r.clients?.prenom?.trim() || "Le client";
   const heure = r.heure_vol?.slice(0, 5) ?? null;
@@ -204,7 +207,7 @@ export function OverviewTab({
   } else if (st === "payment_pending") {
     title = "En attente du paiement";
     text = `${prenom} a reçu le lien de paiement.`;
-    if (isAdmin && !piloteVol) {
+    if (isAdmin && !piloteEncaisse) {
       primary = (
         <Button onClick={() => ask({ title: "Marquer le paiement reçu ?", consequences: [`${prenom} reçoit un email confirmant son paiement.`, "La réservation passe en « Payé »."], confirmLabel: "Marquer reçu et envoyer", run: () => onChangeStatut("acompte_recu") })} loading={isPending}>
           <Check /> Marquer paiement reçu
@@ -233,7 +236,7 @@ export function OverviewTab({
     if (st === "demande_recue" && !r.slot_proposal_token) {
       secondary.push(<Button key="slot" variant="secondary" onClick={() => setProposing(true)}><CalendarClock /> Autre créneau</Button>);
     }
-    if (isStandard && isAdmin && !piloteVol && (st === "en_attente" || st === "demande_recue")) {
+    if (isStandard && isAdmin && !piloteEncaisse && (st === "en_attente" || st === "demande_recue")) {
       secondary.push(
         <Button key="pay" variant="secondary" onClick={() => ask({ title: "Envoyer le lien de paiement ?", consequences: [`${prenom} reçoit un email avec son lien de paiement Stripe.`, "La réservation passe en « Paiement en attente »."], confirmLabel: "Envoyer", run: onSendPaymentLink })}>
           <Send /> Lien de paiement
@@ -269,7 +272,7 @@ export function OverviewTab({
     cashPayment,
     coveredByVoucher: !!r.voucher_code && (r.paye ?? 0) === 0,
   });
-  const showCash = isAdmin && !piloteVol && !["vol_effectue", "annulee"].includes(st) && r.acompte != null && (r.paye ?? 0) < r.acompte;
+  const showCash = isAdmin && !piloteEncaisse && !["vol_effectue", "annulee"].includes(st) && r.acompte != null && (r.paye ?? 0) < r.acompte;
   const terminal = st === "vol_effectue" || st === "annulee";
   const mbHref = isAdmin ? `/admin/mass-balance?resa=${r.id}` : `/pilote/mass-balance?resa=${r.id}`;
 
@@ -334,7 +337,9 @@ export function OverviewTab({
         {isPerso && r.taxes_escales != null && r.taxes_escales > 0 && <Row label="Taxes escales">{r.taxes_escales} €</Row>}
         {r.voucher_code && <Row label="Voucher"><span className="font-mono text-[12px]">{r.voucher_code}</span></Row>}
         {r.coupon_code && <Row label="Code promo"><span className="font-mono text-[12px]">{r.coupon_code}</span></Row>}
-        {!piloteVol && r.acompte != null && (
+        {!isAdmin && regleFH ? (
+          <Row label="Paiement"><span className="font-semibold text-st-ok">Réglé à Fly Horizons, rien à encaisser</span></Row>
+        ) : !piloteEncaisse && r.acompte != null && (
           <Row label="Paiement">
             {r.paye != null && r.paye > 0 ? (
               <span className="font-semibold text-st-ok">
@@ -349,7 +354,7 @@ export function OverviewTab({
       </div>
 
       {/* Paiement admin : lien, espèces, encaissement */}
-      {isAdmin && !piloteVol && r.acompte != null && !terminal && (
+      {isAdmin && !piloteEncaisse && r.acompte != null && !terminal && (
         <div className="space-y-2.5">
           {st === "payment_pending" && r.payment_token && (
             <div className="flex items-center gap-2 rounded-[12px] border border-st-line px-3 py-2">

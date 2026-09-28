@@ -260,6 +260,25 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-09-28 (18) · Vol déjà payé à Fly Horizons, attribuable à un pilote</p>
+      <h3>Un vol standard réglé à Fly Horizons (paiement ou bon) peut être attribué à un pilote ; pas de remboursement, Romain vire le pilote après le vol</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Un passager a payé à Fly Horizons un vol que l'admin avait mis en vente, puis l'a reporté plusieurs fois. Romain veut le confier au nouveau pilote.
+          Le code refusait toute attribution d'un vol payé ou couvert par un bon (« il reste opéré par Romain »).</dd>
+        <dt>Décision</dt>
+        <dd>Blocage levé à l'attribution et à la réattribution. Le passager n'est pas remboursé. Le pilote gère le vol (il le voit, le confirme, le marque effectué),
+          mais n'a rien à encaisser. Romain lui fait un virement une fois le vol effectué, en dehors de l'app. Le vol reste dans le chiffre d'affaires de Fly Horizons.
+          Le pilote doit toujours être en règle (documents vérifiés, charte acceptée).</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Garder le vol pour Romain. Rembourser le passager et le faire repasser par une annonce du pilote.</dd>
+        <dt>Conséquences</dt>
+        <dd>L'argent transite par Fly Horizons avant d'aller au pilote, contrairement à « Fly Horizons n'encaisse rien » : à couvrir dans l'échange avec l'avocat (point « part de coûts du pilote »).
+          Le virement au pilote n'est pas suivi dans l'app pour l'instant.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-09-28 (17) · Canaux de contact et offre, remis à plat</p>
       <h3>Plus de WhatsApp, plus de bons cadeaux ; espèces seulement si le pilote accepte ; À propos parle de la plateforme ; réservation PC en colonne à droite (A)</h3>
       <dl>
@@ -1605,6 +1624,15 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-09-28 (52) — Attribuer à un pilote un vol déjà payé à Fly Horizons (décision 18)</h3>
+      <ul>
+        <li><code>lib/pilote/payment.ts</code> : <code>isRegleFlyHorizons</code> (standard payé ou bon) et <code>piloteEncaisse</code> (le pilote encaisse lui-même), à côté de <code>isPiloteVol</code> (le pilote gère le vol).</li>
+        <li><code>assignPilote</code> / <code>reassignPilote</code> : plus de refus « payé ou voucher ». Encaissement côté pilote basé sur <code>piloteEncaisse</code> : transactions pilote et admin (le vol reste dans le CA),
+          QR de virement, « le client m'a payé » refusé, pastille Transactions. Tiroir : le pilote voit « Réglé à Fly Horizons, rien à encaisser », l'admin garde sa ligne de paiement.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-09-28 (51) — Devenir pilote : sans photo ; candidature avec heures, avion et aérodrome obligatoires</h3>

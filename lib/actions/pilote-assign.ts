@@ -13,6 +13,9 @@ const ADMIN_EMAIL = "info@fly-horizons.com";
 // Bloc B · assignation manuelle d'un vol standard à un pilote.
 // Seul l'admin (Romain) assigne. Un pilote sur mesure (type_resa = 'perso')
 // n'est pas concerné (questionnaire Q25).
+// Depuis le 28/09, un vol déjà payé à Fly Horizons (ou couvert par un bon) est
+// attribuable : pas de remboursement, Romain vire le pilote après le vol, et le
+// pilote n'a rien à encaisser (isRegleFlyHorizons / piloteEncaisse).
 
 function siteUrl() {
   const raw = process.env.NEXT_PUBLIC_SITE_URL ?? "";
@@ -92,7 +95,6 @@ export async function assignPilote(reservationId: string, piloteId: string) {
     if (!resa) return { error: "Réservation introuvable" };
     if (resa.type_resa === "perso") return { error: "Les vols sur mesure ne sont pas attribuables à un pilote" };
     if (["annulee", "vol_effectue"].includes(resa.statut)) return { error: "Ce vol ne peut plus être attribué" };
-    if (resa.voucher_code || (resa.paye ?? 0) > 0) return { error: "Ce vol est couvert par un voucher ou déjà payé à Fly Horizons — il reste opéré par Romain, pas attribuable à un pilote tiers" };
     if (resa.pilote_id === piloteId) return { error: "Ce vol est déjà attribué à ce pilote" };
 
     // Réassignation = le vol avait déjà un pilote. Dans ce cas, pas d'email
@@ -221,7 +223,6 @@ export async function reassignPilote(
     if (!resa) return { error: "Réservation introuvable" };
     if (resa.type_resa === "perso") return { error: "Les vols sur mesure ne sont pas attribuables à un pilote" };
     if (["annulee", "vol_effectue"].includes(resa.statut)) return { error: "Ce vol ne peut plus être attribué" };
-    if (resa.voucher_code || (resa.paye ?? 0) > 0) return { error: "Ce vol est couvert par un voucher ou déjà payé à Fly Horizons — il reste opéré par Romain" };
     if (!resa.pilote_id) return { error: "Ce vol n'a pas encore de pilote — utilisez « Assigner »" };
     if (resa.pilote_id === piloteId) return { error: "Ce vol est déjà attribué à ce pilote" };
 

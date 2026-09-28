@@ -1,5 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { isPiloteVol } from "@/lib/pilote/payment";
+import { piloteEncaisse } from "@/lib/pilote/payment";
 import { etatPaiement, todayBrussels, type PiloteTransaction } from "./transactions-shared";
 
 // Onglet « Transactions » de l'espace pilote (maquette validée le 27/09,
@@ -18,14 +18,14 @@ export async function getPiloteTransactions(piloteId: string): Promise<PiloteTra
   const { data } = await db
     .from("reservations")
     .select(
-      "id, type_resa, pilote_id, annonce_id, statut, date_vol, heure_vol, duree, duree_reelle, passagers, acompte, pilote_paye, pilote_paye_at, clients(prenom, nom), annonces_pilote(titre, prix_total, part_pilote, mode_vente)",
+      "id, type_resa, pilote_id, annonce_id, statut, paye, voucher_code, date_vol, heure_vol, duree, duree_reelle, passagers, acompte, pilote_paye, pilote_paye_at, clients(prenom, nom), annonces_pilote(titre, prix_total, part_pilote, mode_vente)",
     )
     .eq("pilote_id", piloteId)
     .neq("statut", "annulee")
     .order("date_vol", { ascending: false });
 
   const today = todayBrussels();
-  return (data ?? []).filter(isPiloteVol).map((r) => {
+  return (data ?? []).filter(piloteEncaisse).map((r) => {
     const c = pick(r.clients as unknown as { prenom: string; nom: string } | null);
     const a = pick(r.annonces_pilote as unknown as { titre: string | null; prix_total: number; part_pilote: number; mode_vente: "avion" | "place" } | null);
     const client = c ? `${c.prenom} ${c.nom}`.trim() : "—";
