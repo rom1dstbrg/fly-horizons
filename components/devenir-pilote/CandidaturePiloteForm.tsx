@@ -4,46 +4,49 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { submitContact } from "@/lib/actions/contacts";
-import { Send, Loader2, CheckCircle2 } from "lucide-react";
-
-const inputCls = "w-full h-10 px-3 rounded-lg border border-border bg-input text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all placeholder:text-muted-foreground";
-const labelCls = "block text-sm font-medium text-foreground mb-1.5";
-
-const LICENCES = ["PPL", "CPL", "ATPL", "Autre"];
+import { Send, Loader2, Check, Plane, ArrowLeft } from "lucide-react";
 
 // Réutilise l'infrastructure /contact existante (table contacts + contact_messages,
 // rate limiting, email de notif admin + accusé de réception client) plutôt que de
 // créer une nouvelle table/page admin : une candidature reste, jusqu'à décision de
 // Romain, un simple message qu'il traite manuellement — jamais une création de
 // compte pilote automatique.
+// Nouvelle DA (maquette-devenir-pilote.html, 28/09) : mêmes champs, pastilles et
+// confirmation sur place que ContactForm. L'aérodrome est obligatoire (critère interne,
+// jamais affiché comme condition sur le site).
+
+const FIELD = "w-full rounded-xl border border-border bg-secondary px-4 text-[15px] text-foreground placeholder:text-[#8a94a6] outline-none transition-colors focus:bg-white focus:border-foreground";
+const LABEL = "block text-[13px] font-bold text-foreground mb-2";
+const OPT = <span className="font-medium text-muted-foreground"> (facultatif)</span>;
+const LICENCES = ["PPL", "CPL", "ATPL", "Autre"];
+
 export function CandidaturePiloteForm() {
   const [isPending, startTransition] = useTransition();
-  const [submitted, setSubmitted] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [licence, setLicence] = useState("");
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!licence) {
+      toast.error("Indiquez votre licence.");
+      return;
+    }
     const raw = new FormData(e.currentTarget);
-
-    const nom = (raw.get("nom") as string)?.trim();
-    const email = (raw.get("email") as string)?.trim();
-    const telephone = (raw.get("telephone") as string)?.trim();
-    const licence = (raw.get("licence") as string)?.trim();
-    const heures = (raw.get("heures") as string)?.trim();
-    const aeronef = (raw.get("aeronef") as string)?.trim();
-    const motivation = (raw.get("motivation") as string)?.trim();
+    const get = (k: string) => ((raw.get(k) as string) ?? "").trim();
 
     const message = [
-      `Licence : ${licence || "—"}`,
-      `Heures de vol totales : ${heures || "—"}`,
-      `Téléphone : ${telephone || "—"}`,
-      `Aéronef(s) / aérodrome habituel : ${aeronef || "—"}`,
+      `Licence : ${licence}`,
+      `Aérodrome de départ : ${get("aerodrome") || "—"}`,
+      `Avion(s) : ${get("aeronef") || "—"}`,
+      `Heures de vol totales : ${get("heures") || "—"}`,
+      `Téléphone : ${get("telephone") || "—"}`,
       "",
-      motivation || "(pas de message complémentaire)",
+      get("motivation") || "(pas de message complémentaire)",
     ].join("\n");
 
     const fd = new FormData();
-    fd.set("nom", nom);
-    fd.set("email", email);
+    fd.set("nom", get("nom"));
+    fd.set("email", get("email"));
     fd.set("sujet", "Candidature pilote");
     fd.set("message", message);
 
@@ -53,105 +56,115 @@ export function CandidaturePiloteForm() {
         toast.error(r.error);
         return;
       }
-      setSubmitted(true);
+      setSent(true);
     });
   }
 
-  return (
-    <>
-    <form onSubmit={handleSubmit} className="space-y-5">
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        <div>
-          <label className={labelCls}>
-            Nom complet <span className="text-foreground/40 font-normal">*</span>
-          </label>
-          <input name="nom" required placeholder="Jean Dupont" className={inputCls} />
+  if (sent) {
+    return (
+      <div role="status">
+        <div className="w-12 h-12 rounded-full bg-primary text-[#0b2238] grid place-items-center mb-[18px]">
+          <Check size={22} strokeWidth={2.5} />
         </div>
-        <div>
-          <label className={labelCls}>
-            Adresse email <span className="text-foreground/40 font-normal">*</span>
-          </label>
-          <input name="email" type="email" required placeholder="jean@exemple.com" className={inputCls} />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        <div>
-          <label className={labelCls}>Téléphone</label>
-          <input name="telephone" type="tel" placeholder="+32 4xx xx xx xx" className={inputCls} />
-        </div>
-        <div>
-          <label className={labelCls}>
-            Licence <span className="text-foreground/40 font-normal">*</span>
-          </label>
-          <select name="licence" required defaultValue="" className={inputCls}>
-            <option value="" disabled>Choisissez…</option>
-            {LICENCES.map((l) => <option key={l} value={l}>{l}</option>)}
-          </select>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        <div>
-          <label className={labelCls}>Heures de vol totales</label>
-          <input name="heures" type="number" min={0} placeholder="Ex. : 250" className={inputCls} />
-        </div>
-        <div>
-          <label className={labelCls}>Aéronef(s) / aérodrome habituel</label>
-          <input name="aeronef" placeholder="Ex. : DA40, EBCI" className={inputCls} />
-        </div>
-      </div>
-
-      <div>
-        <label className={labelCls}>Message</label>
-        <textarea
-          name="motivation"
-          rows={5}
-          placeholder="Parlez-nous de votre expérience, de vos disponibilités, de ce qui vous intéresse dans la démarche…"
-          className="w-full px-3 py-2.5 rounded-lg border border-border bg-input text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all resize-none placeholder:text-muted-foreground"
-        />
-      </div>
-
-      <button
-        type="submit"
-        disabled={isPending}
-        className="w-full h-11 flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-lg font-black text-sm hover:bg-[#e6a800] disabled:opacity-40 transition-all shadow-gold cursor-pointer"
-      >
-        {isPending
-          ? <><Loader2 size={15} className="animate-spin" /> Envoi en cours…</>
-          : <><Send size={15} /> Envoyer ma candidature</>
-        }
-      </button>
-
-      <p className="text-xs text-muted-foreground leading-relaxed">
-        Cette candidature est une prise de contact, pas une inscription automatique : nous
-        revenons vers vous pour vérifier ensemble votre éligibilité (licence, certificat
-        médical, appareil) avant toute activation d&apos;un compte pilote.
-      </p>
-
-    </form>
-
-    {submitted && (
-      <div className="fixed inset-0 z-[300] bg-black/50 flex items-center justify-center p-4">
-        <div className="bg-card rounded-2xl w-full max-w-sm p-8 shadow-xl flex flex-col items-center text-center">
-          <div className="w-14 h-14 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mb-5">
-            <CheckCircle2 size={26} className="text-emerald-600" />
-          </div>
-          <h2 className="text-xl font-black text-foreground mb-2">Candidature bien reçue</h2>
-          <p className="text-sm text-muted-foreground leading-relaxed mb-8">
-            Merci ! Nous revenons vers vous rapidement pour en discuter, avant toute activation
-            d&apos;un compte pilote.
-          </p>
-          <Link
-            href="/"
-            className="inline-flex items-center justify-center w-full h-11 px-6 bg-primary text-primary-foreground rounded-lg font-black text-sm hover:bg-[#e6a800] transition-all shadow-gold"
-          >
-            Retour à l&apos;accueil
+        <h2 className="text-[26px] font-black text-foreground mb-2.5">Demande envoyée.</h2>
+        <p className="max-w-[540px] text-[15px] leading-[1.7] text-foreground/75 mb-2">
+          Merci ! Vous recevez une copie par email, avec un lien pour suivre la conversation. Nous
+          vérifions votre demande, puis nous vous envoyons l&apos;accès à votre espace pilote.
+        </p>
+        <p className="text-[15px] leading-[1.7] text-foreground/75">Pensez à vérifier vos spams si rien n&apos;arrive.</p>
+        <div className="flex flex-wrap gap-2.5 mt-[22px]">
+          <Link href="/nos-offres" className="inline-flex items-center gap-2 px-5 py-3 bg-white border border-border text-foreground rounded-[10px] text-sm font-bold hover:border-foreground transition-colors">
+            <Plane size={15} /> Voir les vols publiés
+          </Link>
+          <Link href="/" className="inline-flex items-center gap-2 px-5 py-3 bg-white border border-border text-foreground rounded-[10px] text-sm font-bold hover:border-foreground transition-colors">
+            <ArrowLeft size={15} /> Retour à l&apos;accueil
           </Link>
         </div>
       </div>
-    )}
-    </>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div className="grid sm:grid-cols-2 gap-x-[18px]">
+        <label className="block mb-[18px]">
+          <span className={LABEL}>Nom</span>
+          <input name="nom" required autoComplete="name" placeholder="Jean Dupont" className={`${FIELD} h-[52px]`} />
+        </label>
+        <label className="block mb-[18px]">
+          <span className={LABEL}>Email</span>
+          <input name="email" type="email" required autoComplete="email" placeholder="jean@exemple.com" className={`${FIELD} h-[52px]`} />
+        </label>
+        <label className="block mb-[18px]">
+          <span className={LABEL}>Téléphone{OPT}</span>
+          <input name="telephone" type="tel" autoComplete="tel" placeholder="+32 4xx xx xx xx" className={`${FIELD} h-[52px]`} />
+        </label>
+        <label className="block mb-[18px]">
+          <span className={LABEL}>Heures de vol totales{OPT}</span>
+          <input name="heures" type="number" min={0} inputMode="numeric" placeholder="Ex. : 250" className={`${FIELD} h-[52px]`} />
+        </label>
+      </div>
+
+      <div className="mb-[18px]">
+        <p className={LABEL} id="licence-label">Licence</p>
+        <div className="flex flex-wrap gap-2" role="group" aria-labelledby="licence-label">
+          {LICENCES.map((l) => {
+            const on = licence === l;
+            return (
+              <button
+                key={l}
+                type="button"
+                aria-pressed={on}
+                onClick={() => setLicence(l)}
+                className={`px-4 py-2.5 rounded-full border text-sm font-semibold transition-colors cursor-pointer ${
+                  on ? "bg-[#0b2238] border-[#0b2238] text-white" : "bg-white border-border text-muted-foreground hover:text-foreground hover:border-foreground"
+                }`}
+              >
+                {l}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-x-[18px]">
+        <label className="block mb-[18px]">
+          <span className={LABEL}>Aérodrome d&apos;où vous volez</span>
+          <input name="aerodrome" required placeholder="Nom ou code OACI" className={`${FIELD} h-[52px]`} />
+        </label>
+        <label className="block mb-[18px]">
+          <span className={LABEL}>Avion(s) utilisé(s){OPT}</span>
+          <input name="aeronef" placeholder="Ex. : DA40, C172" className={`${FIELD} h-[52px]`} />
+        </label>
+      </div>
+
+      <label className="block mb-[18px]">
+        <span className={LABEL}>Message{OPT}</span>
+        <textarea
+          name="motivation"
+          rows={6}
+          placeholder="Votre expérience, le type de vols que vous aimeriez partager, vos questions…"
+          className={`${FIELD} py-3.5 leading-[1.6] resize-y min-h-[150px]`}
+        />
+      </label>
+
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3.5 sm:gap-6 mt-1.5">
+        <button
+          type="submit"
+          disabled={isPending}
+          className="self-start shrink-0 whitespace-nowrap inline-flex items-center justify-center gap-2 px-[26px] py-[15px] bg-primary text-[#0b2238] rounded-[10px] text-[15px] font-black hover:bg-[#e6a800] disabled:opacity-50 transition-colors shadow-gold cursor-pointer"
+        >
+          {isPending
+            ? <><Loader2 size={16} className="animate-spin" /> Envoi en cours…</>
+            : <><Send size={16} /> Envoyer ma demande</>}
+        </button>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          Vos coordonnées servent uniquement à traiter votre demande.{" "}
+          <Link href="/politique-de-confidentialite" className="font-semibold text-[#0b2238] underline decoration-[#0b2238]/25 underline-offset-[3px] hover:decoration-primary">
+            Confidentialité
+          </Link>
+        </p>
+      </div>
+    </form>
   );
 }

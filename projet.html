@@ -1607,6 +1607,17 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-28 (50) — Devenir pilote et candidature refaites dans la nouvelle DA</h3>
+      <ul>
+        <li><code>app/(public)/devenir-pilote/page.tsx</code> (maquette <code>maquette-devenir-pilote.html</code>) : intro 7/5 (titre + bouton | « Ce qu'il vous faut »), une photo en bandeau 21:8
+          (vue pilote), déroulé en tableau à filets (demande → création du compte → envoi licence, qualification, médical → validation → publication → vol), 6 outils de l'espace pilote,
+          cadre NCO.GEN.104 + « qui fait quoi » (remplace l'encadré jaune), fin sans bloc navy. Plus de « nous en discutons » : le parcours décrit est celui réellement suivi.</li>
+        <li><code>candidature/page.tsx</code> + <code>CandidaturePiloteForm</code> : même système que Contact (champs, licence en pastilles, confirmation sur place « Demande envoyée. »),
+          « Ce qui se passe ensuite » à droite (sous le formulaire sur téléphone). Nouveau champ obligatoire « Aérodrome d'où vous volez », ajouté au message ; l'exigence EBCI reste interne, jamais écrite sur le site.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-28 (49) — Pages produit (annonce et ancien produit) sur un gabarit commun, selon la maquette validée</h3>
       <ul>
         <li><code>components/vols/VolProductLayout.tsx</code> : gabarit unique de <code>/vol/annonce/[id]</code> et <code>/vols/[slug]</code>, qui ne lui passent plus que leurs données.

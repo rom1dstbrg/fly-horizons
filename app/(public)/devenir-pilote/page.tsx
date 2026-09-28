@@ -1,118 +1,233 @@
+import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
-import { ShieldCheck, PlaneTakeoff, Users, FileCheck, ArrowRight } from "lucide-react";
+import { ArrowRight, Check, Megaphone, CalendarDays, Route, Scale, BookOpen, Wallet } from "lucide-react";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Devenir pilote partenaire · Fly Horizons",
-  description: "Pilote licencié ? Proposez vos vols en partage de frais avec Fly Horizons, dans le cadre du règlement EASA NCO.GEN.104.",
+  description: "Pilote licencié ? Publiez vos vols en partage de frais avec Fly Horizons, dans le cadre du règlement EASA NCO.GEN.104.",
 };
 
-const ETAPES = [
+// Nouvelle DA (maquette-devenir-pilote.html, 28/09). La page suit les questions d'un pilote,
+// dans l'ordre : est-ce que je peux (conditions) → comment ça se passe → avec quels outils →
+// dans quel cadre. Chaque section a sa forme propre : intro 7/5 alignée en bas, une seule photo
+// en bandeau 21:8, déroulé en tableau à filets (moment | étape), outils en 3 colonnes à filets.
+// L'aérodrome de départ est demandé dans la candidature mais jamais imposé sur la page.
+
+const WRAP = "max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10";
+const EYEBROW = "text-[11px] font-bold text-primary uppercase tracking-[3px] mb-3";
+const H2 = "text-[28px] lg:text-[40px] font-black text-foreground leading-[1.06] tracking-[-0.02em]";
+const P = "text-[15px] lg:text-base leading-[1.75] text-foreground/75";
+const KICKER = "text-[13px] font-extrabold uppercase tracking-[1.5px] text-[#0b2238]";
+const LINK = "font-semibold text-[#0b2238] underline decoration-[#0b2238]/25 underline-offset-[3px] hover:decoration-primary transition-colors";
+const CTA = "inline-flex items-center gap-2 px-6 py-3.5 bg-primary text-[#0b2238] rounded-[10px] text-[15px] font-black hover:bg-[#e6a800] hover:-translate-y-px transition-all shadow-gold";
+
+const CONDITIONS = [
+  { t: "Une licence valide", d: "PPL ou supérieure, avec la qualification SEP." },
+  { t: "Un certificat médical à jour", d: "Nous relevons sa date de validité." },
+  { t: "Une expérience récente", d: "Au moins 3 décollages et 3 atterrissages dans les 90 jours avant un vol avec passagers." },
+  { t: "Un avion autorisé et assuré", d: "Un appareil que vous pouvez utiliser, assurance passagers comprise." },
+];
+
+const DEROULE = [
+  { quand: "Aujourd'hui", titre: "Vous faites une demande", texte: "Vos coordonnées, votre licence, votre expérience et l'aérodrome d'où vous volez. Rien ne vous engage à ce stade." },
+  { quand: "Sous quelques jours", titre: "Nous créons votre compte", texte: "Nous vérifions votre demande, puis vous recevez par email l'accès à votre espace pilote." },
+  { quand: "Avant de publier", titre: "Vous envoyez vos documents", texte: "Licence, qualification et certificat médical, depuis votre profil, et vous acceptez la charte pilote. Nous vérifions les documents, relevons leurs dates de validité, puis supprimons les fichiers." },
+  { quand: "Une fois validé", titre: "Vous publiez un vol", texte: "Date, durée, itinéraire, nombre de places et participation aux frais. Il apparaît sur le site avec votre profil." },
+  { quand: "À chaque demande", titre: "Vous acceptez ou déclinez", texte: "Le choix vous revient. Le passager ne paie rien avant votre accord." },
+  { quand: "Le jour du vol", titre: "Vous volez ensemble", texte: "Vous accueillez le passager. Il règle sa part directement avec vous, par virement ou en espèces." },
+];
+
+const OUTILS = [
+  { Icon: Megaphone, t: "Vos annonces", d: "Publier un vol, suivre les places restantes et les demandes." },
+  { Icon: CalendarDays, t: "Vos disponibilités", d: "Vos créneaux de la semaine, par blocs de deux heures." },
+  { Icon: Route, t: "Vos itinéraires", d: "Des routes tracées sur carte aéronautique, à réutiliser d'un vol à l'autre." },
+  { Icon: Scale, t: "Masse et centrage", d: "Calcul et performances pour le DA40, météo de l'aérodrome et fiche PDF." },
+  { Icon: BookOpen, t: "Carnet de vol", d: "Vos vols passés, avec les heures et les passagers." },
+  { Icon: Wallet, t: "Participations", d: "Ce que chaque passager vous doit, avec un QR code de virement prêt à scanner." },
+];
+
+const QUI = [
   {
-    icon: FileCheck,
-    titre: "Vous êtes en règle",
-    texte: "Licence de pilote valide (PPL minimum), certificat médical à jour et qualifications nécessaires à l'appareil que vous comptez utiliser.",
+    qui: "Vous",
+    items: [
+      "Restez seul commandant de bord, de la préparation à l'atterrissage.",
+      "Demandez uniquement les coûts directs, votre part comprise, sans marge.",
+      "Encaissez directement la part de chaque passager.",
+      "Contactez et accueillez vos passagers.",
+    ],
   },
   {
-    icon: PlaneTakeoff,
-    titre: "Vous publiez un vol",
-    texte: "Depuis un espace pilote dédié, vous décrivez le vol que vous comptez effectuer : date, itinéraire, nombre de places.",
-  },
-  {
-    icon: Users,
-    titre: "Des passagers réservent",
-    texte: "Fly Horizons met votre annonce en visibilité et gère la prise de contact avec les passagers intéressés.",
-  },
-  {
-    icon: ShieldCheck,
-    titre: "Vous restez seul responsable du vol",
-    texte: "Préparation, décision de partir, sécurité : vous êtes commandant de bord. Fly Horizons ne pilote pas et n'exploite pas le vol.",
+    qui: "Fly Horizons",
+    items: [
+      "Vérifie les licences, qualifications et certificats médicaux.",
+      "Publie vos vols et vous transmet les demandes.",
+      "Ne perçoit aucune commission et n'encaisse rien.",
+      "N'exploite pas les vols et ne pilote pas.",
+    ],
   },
 ];
 
 export default function DevenirPilotePage() {
   return (
-    <main className="min-h-screen bg-[#f5f5f7]">
+    <main className="min-h-screen bg-white">
 
-      <section className="pt-[98px] pb-24 sm:pb-32">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-2 sm:pt-12">
-
-          {/* ── En-tête ── */}
-          <div className="mb-14 max-w-2xl">
-            <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-4">Pilotes</p>
-            <h1 className="text-5xl sm:text-6xl font-black text-foreground leading-none tracking-tight mb-4">
-              Vous êtes pilote ?<br />
-              <span className="text-primary">Proposez vos vols.</span>
+      {/* ══ 1 · INTRO : texte | conditions ══ */}
+      <section className="pt-page pb-10 lg:pb-[72px]">
+        <div className={`${WRAP} grid gap-9 lg:grid-cols-[7fr_5fr] lg:gap-x-[88px] lg:items-end`}>
+          <div>
+            <p className={EYEBROW}>Pilotes</p>
+            <h1 className="text-[34px] lg:text-[52px] font-black text-foreground leading-[1.03] tracking-[-0.02em]">
+              Vous volez de toute façon. Partagez les frais.
             </h1>
-            <p className="text-muted-foreground text-sm leading-relaxed max-w-lg mb-8">
-              Fly Horizons met en relation des pilotes privés et des passagers pour des vols en
-              partage de frais. Vous restez seul responsable de votre vol ; nous nous occupons de
-              la mise en relation.
+            <p className="mt-3.5 max-w-[520px] text-base lg:text-[17px] leading-[1.7] text-foreground/80">
+              Publiez les vols que vous comptez faire, des passagers demandent à vous rejoindre, et les
+              frais réels se partagent entre les occupants. Vous restez seul maître à bord ; nous nous
+              occupons de la mise en relation.
             </p>
-            <Link
-              href="/devenir-pilote/candidature"
-              className="inline-flex items-center gap-2 h-11 px-6 bg-primary text-primary-foreground rounded-lg font-black text-sm hover:bg-[#e6a800] transition-all shadow-gold"
-            >
-              Faire une demande <ArrowRight size={15} />
-            </Link>
-          </div>
-
-          <div className="space-y-6">
-
-            {/* Étapes */}
-            <div className="bg-card border border-border rounded-lg p-8 sm:p-10 shadow-premium">
-              <h2 className="text-xl font-black text-foreground mb-8">Comment ça marche</h2>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                {ETAPES.map(({ icon: Icon, titre, texte }, i) => (
-                  <div key={titre}>
-                    <div className="w-9 h-9 rounded-lg bg-secondary border border-border flex items-center justify-center text-[#0b2238] mb-3.5">
-                      <Icon size={16} />
-                    </div>
-                    <p className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wide mb-0.5">
-                      Étape {i + 1}
-                    </p>
-                    <p className="font-black text-foreground text-sm mb-1.5">{titre}</p>
-                    <p className="text-muted-foreground text-xs leading-relaxed">{texte}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Cadre légal — même formulation que /cgp */}
-            <div className="p-5 bg-primary/10 border border-primary/30 rounded-lg">
-              <p className="text-xs font-bold text-foreground uppercase tracking-[2px] mb-1.5">
-                Activité de partage de coûts · NCO.GEN.104
-              </p>
-              <p className="text-sm text-muted-foreground leading-relaxed max-w-3xl">
-                Les vols Fly Horizons sont des vols en partage de coûts au sens du règlement
-                EASA NCO.GEN.104, entre personnes non professionnelles. Ce n&apos;est pas un
-                service de transport aérien commercial : le passager règle uniquement sa
-                quote-part des frais directs du vol (carburant, aéronef, redevances). En tant
-                que pilote, vous assumez votre propre part de ces coûts et ne percevez aucune
-                rémunération pour vos services de pilotage. Fly Horizons ne perçoit aucune
-                commission et n&apos;intervient jamais dans l&apos;encaissement, qui se règle
-                directement entre vous et le passager.{" "}
-                <Link href="/cgp" target="_blank" rel="noopener noreferrer" className="text-foreground font-semibold hover:text-primary transition-colors underline underline-offset-2">
-                  Conditions générales
-                </Link>.
-              </p>
-            </div>
-
-            {/* CTA de fin */}
-            <div className="bg-navy rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <div className="flex-1">
-                <p className="text-white font-black text-lg mb-1">Prêt à vous lancer ?</p>
-                <p className="text-white/50 text-sm">Deux minutes suffisent pour nous laisser vos coordonnées.</p>
-              </div>
-              <Link
-                href="/devenir-pilote/candidature"
-                className="inline-flex items-center gap-2 h-11 px-6 bg-primary text-primary-foreground rounded-lg font-black text-sm hover:bg-[#e6a800] transition-all shadow-gold shrink-0"
-              >
+            <div className="mt-[26px]">
+              <Link href="/devenir-pilote/candidature" className={CTA}>
                 Faire une demande <ArrowRight size={15} />
               </Link>
+              <p className="mt-3 text-[13px] text-muted-foreground">Deux minutes, sans engagement.</p>
             </div>
-
           </div>
 
+          <div>
+            <h2 className={`${KICKER} mb-1`}>Ce qu&apos;il vous faut</h2>
+            <ul>
+              {CONDITIONS.map(({ t, d }) => (
+                <li key={t} className="flex gap-3 py-3.5 border-b border-border last:border-b-0 text-sm leading-[1.55] text-foreground/75">
+                  <Check size={18} className="shrink-0 mt-0.5 text-[#e6a800]" />
+                  <span><b className="block font-extrabold text-foreground mb-0.5">{t}</b>{d}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* ══ 2 · BANDEAU PHOTO ══ */}
+      <div className={WRAP}>
+        <figure>
+          <div className="relative -mx-4 sm:-mx-6 lg:mx-0 aspect-[4/3] lg:aspect-[21/8] lg:rounded-[14px] overflow-hidden bg-[#0b2238]">
+            <Image
+              src="/hero-section.png"
+              alt="Vue depuis le siège du pilote, en vol au-dessus de la campagne"
+              fill
+              priority
+              className="object-cover"
+              sizes="(min-width: 1400px) 1320px, 100vw"
+            />
+          </div>
+          <figcaption className="mt-2.5 lg:mt-3 text-[13px] text-muted-foreground">
+            Préparation, décision de partir, conduite du vol : vous restez seul commandant de bord.
+          </figcaption>
+        </figure>
+      </div>
+
+      {/* ══ 3 · DÉROULÉ : moment | étape ══ */}
+      <section className="py-12 lg:py-24">
+        <div className={WRAP}>
+          <div className="grid gap-3.5 mb-[26px] lg:grid-cols-2 lg:gap-x-[72px] lg:items-end lg:mb-11">
+            <div>
+              <p className={EYEBROW}>Le déroulé</p>
+              <h2 className={H2}>De la demande au premier vol.</h2>
+            </div>
+            <p className={P}>
+              Chaque compte est vérifié et chaque pilote validé avant de pouvoir publier un premier vol.
+            </p>
+          </div>
+          <ol className="border-t border-border">
+            {DEROULE.map(({ quand, titre, texte }) => (
+              <li key={titre} className="grid gap-1.5 py-5 border-b border-border lg:grid-cols-[240px_1fr] lg:gap-x-10 lg:py-[26px]">
+                <span className="text-xs font-bold uppercase tracking-[1.5px] text-[#e6a800] lg:pt-1.5">{quand}</span>
+                <div>
+                  <h3 className="text-lg lg:text-[21px] font-black text-foreground tracking-[-0.01em] mb-1">{titre}</h3>
+                  <p className="max-w-[640px] text-sm lg:text-[15px] leading-[1.7] text-foreground/70">{texte}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* ══ 4 · ESPACE PILOTE : 6 outils ══ */}
+      <section className="bg-[#f5f5f7] py-12 lg:py-24">
+        <div className={WRAP}>
+          <div className="grid gap-3.5 lg:grid-cols-2 lg:gap-x-[72px] lg:items-end">
+            <div>
+              <p className={EYEBROW}>L&apos;espace pilote</p>
+              <h2 className={H2}>Tout se gère au même endroit.</h2>
+            </div>
+            <p className={P}>
+              Un espace réservé aux pilotes, sur ordinateur comme sur téléphone, pour publier, organiser
+              et suivre vos vols.
+            </p>
+          </div>
+          <div className="mt-[26px] grid lg:grid-cols-3 lg:gap-x-12 lg:mt-12">
+            {OUTILS.map(({ Icon, t, d }) => (
+              <div key={t} className="flex gap-3.5 py-[18px] lg:py-6 border-t border-[#0b2238]/10">
+                <span className="w-[38px] h-[38px] shrink-0 rounded-[10px] bg-white grid place-items-center text-[#0b2238]">
+                  <Icon size={16} />
+                </span>
+                <div>
+                  <h3 className="text-[15px] font-extrabold text-foreground mb-0.5">{t}</h3>
+                  <p className="text-sm leading-relaxed text-foreground/70">{d}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══ 5 · LE CADRE : texte | qui fait quoi ══ */}
+      <section className="py-12 lg:py-24">
+        <div className={`${WRAP} grid gap-7 lg:grid-cols-[5fr_7fr] lg:gap-x-[88px]`}>
+          <div>
+            <p className={EYEBROW}>Le cadre</p>
+            <h2 className={H2}>Un partage de frais, pas un service commercial.</h2>
+            <p className={`${P} mt-4`}>
+              Les vols relèvent du partage de coûts entre personnes non professionnelles, au sens du
+              règlement européen NCO.GEN.104. Le passager règle uniquement sa part des coûts directs du
+              vol : avion, carburant, redevances. Vous gardez votre propre part et n&apos;êtes pas
+              rémunéré pour piloter.
+            </p>
+            <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground">
+              Le détail figure dans les{" "}
+              <Link href="/cgp" className={LINK}>conditions générales</Link>{" "}
+              et dans la charte que vous acceptez avant de publier.
+            </p>
+          </div>
+          <div className="grid gap-[26px] sm:grid-cols-2 sm:gap-x-12">
+            {QUI.map(({ qui, items }) => (
+              <div key={qui}>
+                <h3 className={`${KICKER} mb-3 pb-2.5 border-b-2 border-primary`}>{qui}</h3>
+                <ul className="grid gap-2.5">
+                  {items.map((it) => (
+                    <li key={it} className="relative pl-4 text-sm leading-relaxed text-foreground/80 before:absolute before:left-0 before:top-[9px] before:w-1.5 before:h-1.5 before:rounded-full before:bg-[#0b2238]">
+                      {it}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══ 6 · FIN ══ */}
+      <section className="border-t border-border pt-11 pb-14 lg:pt-[72px] lg:pb-24">
+        <div className={`${WRAP} flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between`}>
+          <div>
+            <h2 className="text-[26px] lg:text-[34px] font-black text-foreground leading-tight tracking-[-0.02em]">
+              Prêt à partager vos vols ?
+            </h2>
+            <p className={`${P} mt-2`}>Laissez-nous vos coordonnées, nous vérifions votre demande et créons votre compte.</p>
+          </div>
+          <Link href="/devenir-pilote/candidature" className={`${CTA} self-start lg:self-auto shrink-0`}>
+            Faire une demande <ArrowRight size={15} />
+          </Link>
         </div>
       </section>
 
