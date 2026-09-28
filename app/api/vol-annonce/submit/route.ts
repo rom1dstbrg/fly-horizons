@@ -24,7 +24,8 @@ async function checkCreneau(
 
   let resasQuery = supabase.from("reservations").select("heure_vol, duree")
     .eq("pilote_id", annonce.pilote_id).eq("date_vol", dateVol).neq("statut", "annulee");
-  if (annonce.mode_vente === "place") resasQuery = resasQuery.neq("annonce_id", annonce.id);
+  // (un vol sans annonce, attribué depuis l'admin, bloque toujours : neq seul écarterait les null)
+  if (annonce.mode_vente === "place") resasQuery = resasQuery.or(`annonce_id.is.null,annonce_id.neq.${annonce.id}`);
   const [{ data: creneaux }, { data: resas }] = await Promise.all([
     supabase.from("pilote_creneaux").select("heure").eq("pilote_id", annonce.pilote_id).eq("date", dateVol),
     resasQuery,

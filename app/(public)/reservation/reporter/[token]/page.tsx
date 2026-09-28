@@ -17,7 +17,7 @@ export default async function ReporterPage({ params }: PageProps) {
   const { data: resa } = parsed && !isExpired
     ? await supabase
         .from("reservations")
-        .select("id, date_vol, duree, statut, passagers, poids_total, clients(prenom, nom, email)")
+        .select("id, date_vol, duree, statut, passagers, poids_total, pilote_id, clients(prenom, nom, email), pilotes(nom)")
         .eq("reschedule_token", parsed.t)
         .maybeSingle()
     : { data: null };
@@ -75,6 +75,7 @@ export default async function ReporterPage({ params }: PageProps) {
       email={clientRaw?.email ?? ""}
       passagers={resa.passagers ?? 1}
       poids_total={resa.poids_total ?? null}
+      piloteNom={resa.pilote_id ? ((Array.isArray(resa.pilotes) ? resa.pilotes[0] : resa.pilotes) as { nom: string } | null)?.nom ?? "votre pilote" : null}
     />
   );
 }

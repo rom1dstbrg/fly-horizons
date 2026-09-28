@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Calendar, Clock, Loader2, AlertCircle } from "lucide-react";
 import { rescheduleReservation } from "@/lib/actions/reservations";
+import { plageLabel } from "@/lib/pilote-creneaux";
 
 const MONTHS_FR = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 const DAYS_FR   = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
@@ -17,9 +18,12 @@ interface Props {
   email: string;
   passagers: number;
   poids_total: number | null;
+  /** Vol attribué à un pilote : on propose ses blocs de 2 h (sa grille de
+   * disponibilités), sinon l'ancien calendrier du site. */
+  piloteNom: string | null;
 }
 
-export function RescheduleClient({ token, currentDate, duree, prenom, nom, email, passagers, poids_total }: Props) {
+export function RescheduleClient({ token, currentDate, duree, prenom, nom, email, passagers, poids_total, piloteNom }: Props) {
   const router = useRouter();
 
   const today = new Date();
@@ -36,6 +40,10 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
   const [slots,         setSlots]         = useState<string[]>([]);
   const [slotsLoading,  setSlotsLoading]  = useState(false);
   const [selectedHeure, setSelectedHeure] = useState("");
+  const [nbBlocs,       setNbBlocs]       = useState(1);
+  // Pilote : « 9 h – 11 h » (bloc de 2 h, l'heure exacte se cale avec lui). Sinon « 09:30 ».
+  const slotLabel = (s: string) => (piloteNom ? plageLabel(Number(s.slice(0, 2)), nbBlocs) : s);
+  const q = `token=${encodeURIComponent(token)}`;
 
   const [step, setStep] = useState<"pick" | "confirm">("pick");
   const [submitting, setSubmitting] = useState(false);
@@ -54,21 +62,25 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
   const loadMonth = useCallback(async (y: number, m: number) => {
     setCalLoading(true);
     try {
-      const r = await fetch(`/api/reservation/month?year=${y}&month=${m}&duree=${duree}`);
+      const r = await fetch(piloteNom
+        ? `/api/reservation/reporter/month?${q}&year=${y}&month=${m}`
+        : `/api/reservation/month?year=${y}&month=${m}&duree=${duree}`);
       setAvailDays((await r.json()).available ?? []);
     } finally { setCalLoading(false); }
-  }, [duree]);
+  }, [duree, piloteNom, q]);
 
   useEffect(() => { loadMonth(calYear, calMonth); }, [calYear, calMonth, loadMonth]);
 
   useEffect(() => {
     if (!selectedDate) { setSlots([]); setSelectedHeure(""); return; }
     setSlotsLoading(true);
-    fetch(`/api/reservation/slots?date=${selectedDate}&duree=${duree}`)
+    fetch(piloteNom
+      ? `/api/reservation/reporter/slots?${q}&date=${selectedDate}`
+      : `/api/reservation/slots?date=${selectedDate}&duree=${duree}`)
       .then(r => r.json())
-      .then(d => setSlots(d.slots ?? []))
+      .then(d => { setSlots(d.slots ?? []); setNbBlocs(d.blocs ?? 1); })
       .finally(() => setSlotsLoading(false));
-  }, [selectedDate, duree]);
+  }, [selectedDate, duree, piloteNom, q]);
 
   function renderCalendar() {
     const firstDay = new Date(calYear, calMonth - 1, 1).getDay();
@@ -131,7 +143,7 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
                 <h2 className="text-white text-base font-black leading-snug">Report de vol</h2>
                 <div className="mt-2 space-y-0.5">
                   <p className="text-white/40 text-xs line-through capitalize">{currentDateFormatted}</p>
-                  <p className="text-primary text-sm font-bold capitalize">{selectedFormatted} à {selectedHeure}</p>
+                  <p className="text-primary text-sm font-bold capitalize">{selectedFormatted}, {slotLabel(selectedHeure)}</p>
                 </div>
               </div>
               <div className="shrink-0">
@@ -213,6 +225,11 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
             <span className="font-semibold text-foreground capitalize">{currentDateFormatted}</span>{" "}
             est reporté. Sélectionnez une nouvelle date et un créneau horaire.
           </p>
+          {piloteNom && (
+            <p className="text-sm text-muted-foreground mt-2">
+              Les dates proposées sont celles où {piloteNom} est disponible. Vous choisissez un créneau de 2 h ; l&apos;heure exacte du décollage se fixe ensuite avec votre pilote.
+            </p>
+          )}
         </div>
 
         <div className="card-premium overflow-hidden divide-y divide-border">
@@ -287,7 +304,7 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
                           ? "border-primary bg-primary text-primary-foreground shadow-sm"
                           : "border-border text-foreground hover:border-primary/50 hover:bg-primary/5 hover:text-primary",
                       ].join(" ")}
-                    >{s}</button>
+                    >{slotLabel(s)}</button>
                   ))}
                 </div>
               </div>
@@ -300,7 +317,7 @@ export function RescheduleClient({ token, currentDate, duree, prenom, nom, email
             <div className="rounded-lg border border-primary/40 bg-primary/5 px-4 py-3 flex items-center gap-3">
               <Calendar size={14} className="text-primary shrink-0" />
               <p className="text-sm font-semibold text-foreground capitalize">
-                {selectedFormatted} à {selectedHeure}
+                {selectedFormatted}, {slotLabel(selectedHeure)}
               </p>
             </div>
           )}

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationReportConfirmeeEmail, boardingPassEmail, reservationPaymentInvitationEmail, reservationPaymentConfirmationEmail, volSurMesureAcompteEmail, postVolEmail, customEmail, rescheduleInviteEmail, rescheduleConfirmationEmail, reservationAutoAnnuleeEmail, slotProposalEmail } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { makeRescheduleToken, parseRescheduleToken } from "@/lib/reschedule-token";
+import { rescheduleScope, piloteDeparts } from "@/lib/pilote-dispo";
 import { buildBoardingPassAttachment } from "@/lib/pdf/boarding-pass-attachment";
 import { requireAdminOrOwningPilote as checkAdminOrOwningPilote } from "./auth-guards";
 import { releaseAnnoncePilote } from "@/lib/annonces-pilote-server";
@@ -841,26 +842,36 @@ export async function rescheduleReservation(token: string, newDate: string, newH
     if (!newHeure) return { error: "Veuillez sélectionner un créneau horaire" };
 
     // ── Vérification de disponibilité du nouveau créneau ────────────────────
-    const { data: conflicts } = await supabase
-      .from("reservations")
-      .select("id, heure_vol, duree")
-      .eq("date_vol", newDate)
-      .neq("statut", "annulee")
-      .neq("id", resa.id);
+    // Vol attribué à un pilote : un bloc ouvert et libre de sa grille (même
+    // calcul que la page de report). Sinon : l'ancien calendrier du site.
+    const scope = resa.pilote_id ? await rescheduleScope(supabase, token) : null;
+    if (scope) {
+      const bloc = Number(newHeure.slice(0, 2));
+      if (!/^\d{2}:00/.test(newHeure) || !(await piloteDeparts(supabase, scope, newDate)).includes(bloc)) {
+        return { error: "Ce créneau n'est plus disponible. Veuillez en choisir un autre." };
+      }
+    } else {
+      const { data: conflicts } = await supabase
+        .from("reservations")
+        .select("id, heure_vol, duree")
+        .eq("date_vol", newDate)
+        .neq("statut", "annulee")
+        .neq("id", resa.id);
 
-    const [nh, nm] = newHeure.split(":").map(Number);
-    const newStart = nh * 60 + nm;
-    const newEnd   = newStart + resa.duree;
+      const [nh, nm] = newHeure.split(":").map(Number);
+      const newStart = nh * 60 + nm;
+      const newEnd   = newStart + resa.duree;
 
-    const taken = (conflicts ?? []).some(r => {
-      if (!r.heure_vol) return false;
-      const [rh, rm] = r.heure_vol.split(":").map(Number);
-      const rStart = rh * 60 + rm;
-      const rEnd   = rStart + r.duree + 30;
-      return newEnd + 30 > rStart && newStart < rEnd;
-    });
+      const taken = (conflicts ?? []).some(r => {
+        if (!r.heure_vol) return false;
+        const [rh, rm] = r.heure_vol.split(":").map(Number);
+        const rStart = rh * 60 + rm;
+        const rEnd   = rStart + r.duree + 30;
+        return newEnd + 30 > rStart && newStart < rEnd;
+      });
 
-    if (taken) return { error: "Ce créneau est déjà pris. Veuillez en choisir un autre." };
+      if (taken) return { error: "Ce créneau est déjà pris. Veuillez en choisir un autre." };
+    }
 
     const client = resa.clients as { prenom: string; nom: string; email: string } | null;
     if (!client?.email) return { error: "Email client introuvable" };
