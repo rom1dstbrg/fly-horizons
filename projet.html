@@ -260,6 +260,28 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-09-28 (16) · Nouvelle direction artistique du site public</p>
+      <h3>Le site public adopte la DA de <code>maquette-page-produit.html</code> : éditorial, sans boîtes, ordre téléphone pensé d'abord ; le style Studio reste réservé à l'admin et à l'espace pilote</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>L'espace pilote est terminé ; le site public, lui, a vieilli : pages en texte brut (À propos), pages « back-office » à cards empilées (contact, devenir pilote),
+          mise en page téléphone qui empile bêtement les colonnes (page produit : photos avant le titre, bloc légal entre les deux), écart header → contenu différent sur chaque page.
+          Romain a validé la maquette de la page produit (v2) : « ça diverge pas mal du style de Fly Horizons mais c'est ça la nouvelle DA ».</dd>
+        <dt>Décision</dt>
+        <dd>La maquette page produit sert de référence pour refaire les pages publiques. Principes : HTML dans l'ordre de lecture téléphone (titre, photos, prix, texte), titre et photos en pleine largeur sur ordinateur ;
+          aucune boîte hormis les cartes de vols (sections séparées par filets ou fonds alternés) ; carte d'itinéraire figée (ni glisser ni zoomer) ;
+          « Comment ça se passe » en liste numérotée datée (plus d'icônes dorées ni de gros chiffres en fond) ; un seul écart header → premier élément sur toutes les pages.
+          <b>Gardés tels quels :</b> header, footer, cartes de vols photo (style actuel, 3 max dans « Autres vols »), palette navy/or, Poppins.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Appliquer le style Studio au site public (réservé aux outils internes). Retoucher page par page sans référence commune. Carrousel horizontal pour les autres vols sur téléphone (Romain préfère l'affichage actuel).</dd>
+        <dt>Conséquences</dt>
+        <dd>Ordre proposé : page produit (annonce, puis <code>vols/[slug]</code> si le catalogue voucher reste) → À propos → contact / devenir pilote → fiche pilote → reste.
+          À trancher avant le code : placement de la réservation sur ordinateur (A colonne à droite / B à côté du titre). Contenus à revoir en parallèle (modèle multi-pilotes, mentions Stripe, témoignages).
+          Remplace pour le site public la décision « identité visuelle figée » de juillet (mémoire <code>project_design_identity</code>).</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-09-27 (15) · Bilan de vol obligatoire, avec rappels</p>
       <h3>Le pilote clôture chaque vol avec les minutes réellement volées ; rappel push à +8 h puis relance 24 h plus tard</h3>
       <dl>

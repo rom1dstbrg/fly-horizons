@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maquette page produit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<!--
+  PRINCIPE DE COMPOSITION (v2, 28/09) :
+  - Le HTML est dans l'ordre de lecture téléphone : titre (+ pilote) → photos → prix → texte → itinéraire.
+  - Sur ordinateur, titre et photos restent PLEINE LARGEUR ; seule la zone sous les photos se découpe.
+    Aucun order-* : l'ordre téléphone est l'ordre du DOM.
+  - Aucune boîte (card) à part les cartes de vols : sections séparées par des filets ou des fonds alternés.
+  - Carte d'itinéraire = image : ni glisser, ni zoomer, le doigt / la molette font défiler la page.
+  - Réservation sur ordinateur : deux placements à comparer (A colonne à droite, B à côté du titre).
+-->
+<style>
+:root{
+  --navy:#0b2238; --gold:#F2B705; --gold-h:#e6a800; --bg:#f5f5f7; --sec:#edf0f7;
+  --fg:#1e2535; --muted:#64748b; --border:#e0e5ef;
+  --sh:0 2px 14px rgba(11,34,56,.07); --sh-lg:0 8px 32px rgba(11,34,56,.11); --sh-gold:0 6px 24px rgba(242,183,5,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Poppins,system-ui,sans-serif;background:#dfe3ea;color:var(--fg);-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+[data-lucide]{width:16px;height:16px;stroke-width:2}
+
+/* ─────────── Barre d'outils de la maquette (hors design) ─────────── */
+.tool{position:sticky;top:0;z-index:2000;background:#fff;border-bottom:1px solid var(--border);
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:10px 16px;font-size:12px}
+.tool b{font-weight:800;font-size:13px}
+.seg{display:inline-flex;background:var(--sec);border-radius:9px;padding:3px}
+.seg button{border:0;background:transparent;padding:6px 11px;border-radius:7px;font-size:12px;font-weight:600;color:var(--muted)}
+.seg button.on{background:#fff;color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.tool .lbl{color:var(--muted);font-weight:600}
+.tool .sp{flex:1}
+.btn-notes{border:1px solid var(--border);background:#fff;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700}
+.notes{display:none;background:#fffbea;border-bottom:1px solid #f3e3a1;padding:16px 20px;font-size:13px;line-height:1.6}
+.notes.open{display:block}
+.notes ol{margin:0;padding-left:20px;max-width:920px}
+.notes li{margin:3px 0}
+.notes p{margin:10px 0 0;max-width:920px;color:#6b5a14}
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);opacity:0;background:var(--navy);color:#fff;font-size:13px;font-weight:600;
+  padding:10px 16px;border-radius:10px;z-index:3000;transition:.25s;pointer-events:none}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+.stage.phone{padding:28px 0 48px;display:flex;justify-content:center}
+.frame{container-type:inline-size;background:#fff;position:relative}
+.stage.phone .frame{width:390px;height:844px;overflow-y:auto;border-radius:46px;border:11px solid #0f1115;
+  box-shadow:0 30px 80px rgba(0,0,0,.25);scrollbar-width:none}
+.stage.phone .frame::-webkit-scrollbar{display:none}
+
+/* ─────────── Page (mobile d'abord) ─────────── */
+.wrap{max-width:1400px;margin:0 auto;padding:0 16px}
+
+/* Header : copie du Header.tsx actuel */
+.hdr{position:sticky;top:0;z-index:500;padding:8px 12px 0}
+.pill{max-width:1400px;margin:0 auto;background:#fff;border:1px solid var(--border);border-radius:16px;height:64px;display:flex;align-items:center;
+  padding:0 16px;box-shadow:var(--sh)}
+.pill .logo{height:32px}
+.pill .fill{flex:1}
+.nav{display:none;align-items:center;gap:4px;margin-right:8px}
+.nav a{padding:8px 12px;font-size:14px;font-weight:500;color:var(--muted);border-radius:8px}
+.nav a:hover{color:var(--fg);background:var(--sec)}
+.vsep{display:none;width:1px;height:20px;background:var(--border);margin:0 4px}
+.login{display:none;align-items:center;gap:6px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--fg);border:1px solid var(--border);background:var(--sec);border-radius:8px}
+.login:hover{background:var(--gold);border-color:var(--gold);color:var(--navy)}
+.login [data-lucide]{width:13px;height:13px}
+.burger{border:0;background:transparent;padding:8px;color:var(--muted);border-radius:8px}
+.burger [data-lucide]{width:20px;height:20px}
+
+.back{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--muted);margin:22px 0 14px}
+.back:hover{color:var(--fg)}
+
+/* Titre */
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin:0 0 10px}
+h1{font-size:32px;font-weight:900;line-height:1.04;letter-spacing:-.02em;margin:0}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin-top:14px;font-size:13px;color:var(--muted)}
+.meta > span{display:inline-flex;align-items:center;gap:6px}
+.meta [data-lucide]{width:15px;height:15px;color:var(--navy);opacity:.7}
+.who{color:var(--fg);font-weight:600}
+.who img{width:28px;height:28px;border-radius:50%;object-fit:cover;object-position:top}
+.who a{color:var(--navy);font-weight:700;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(11,34,56,.25)}
+.who a:hover{text-decoration-color:var(--gold)}
+.meta .w100{flex-basis:100%;height:0}
+
+/* Galerie */
+.galwrap{position:relative;margin:20px -16px 0}
+.gal{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+.gal::-webkit-scrollbar{display:none}
+.gi{flex:0 0 100%;aspect-ratio:4/3;scroll-snap-align:start;background:var(--navy)}
+.gi img{width:100%;height:100%;object-fit:cover}
+.count{position:absolute;right:14px;bottom:14px;background:rgba(0,0,0,.45);backdrop-filter:blur(8px);color:#fff;
+  font-size:12px;font-weight:700;border-radius:999px;padding:5px 11px}
+.dur{position:absolute;left:14px;top:14px;background:rgba(0,0,0,.4);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.2);
+  border-radius:8px;padding:8px 14px;color:var(--gold);font-weight:900;font-size:15px;line-height:1}
+.allph{display:none}
+
+/* Sièges */
+.seats{display:inline-flex;gap:3px}
+.seat{width:22px;height:22px;color:var(--navy)}
+.seat.taken{color:#cdd3de}
+.seatlbl{font-size:12px;font-weight:600;color:rgba(30,37,53,.7)}
+
+/* Prix (téléphone, sous les photos) */
+.pricebar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 0;border-bottom:1px solid var(--border)}
+.pricebar .p{font-size:28px;font-weight:900;line-height:1}
+.pricebar .u{font-size:13px;color:var(--muted);font-weight:500;margin-left:4px}
+.pricebar .pl{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.pricebar .r{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+
+/* Corps */
+.sec{padding:28px 0;border-top:1px solid var(--border)}
+.main > .sec:first-child{border-top:0}
+h3{font-size:22px;font-weight:900;margin:0 0 12px;letter-spacing:-.01em}
+.txt{font-size:15px;line-height:1.7;color:rgba(30,37,53,.75);margin:0}
+.txt + .txt{margin-top:12px}
+.route{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font-size:13px;font-weight:600;margin:0 0 14px}
+.route .pt{display:inline-flex;align-items:center;gap:6px}
+.route .dot{width:8px;height:8px;border-radius:50%;background:var(--navy)}
+.route .dot.g{background:var(--gold)}
+.route .ar{color:var(--muted);opacity:.6}
+#map{height:240px;border-radius:10px;overflow:hidden;pointer-events:none;background:var(--sec)}
+#map .leaflet-control-attribution{font-size:9px;background:rgba(255,255,255,.7)}
+.maphint{font-size:12px;color:var(--muted);margin:10px 0 0;display:flex;gap:6px;align-items:center}
+.freeroute{display:none}
+.legal{padding:24px 0 36px;border-top:1px solid var(--border)}
+.legal .eyebrow{letter-spacing:2px;margin-bottom:6px}
+.legal p{font-size:12px;line-height:1.6;color:var(--muted);margin:0}
+
+/* Blocs de réservation ordinateur : cachés sur téléphone */
+.bookA,.bookB,.dbar{display:none}
+
+/* Déroulement (refait) */
+.how{background:var(--bg);padding:56px 0 60px}
+h2{font-size:30px;font-weight:900;line-height:1.05;letter-spacing:-.02em;margin:0}
+.howhead .txt{margin-top:14px;max-width:420px}
+.howlist{list-style:none;margin:28px 0 0;padding:0}
+.howlist li{display:grid;grid-template-columns:44px 1fr;gap:4px 12px;padding:22px 0;border-top:1px solid rgba(11,34,56,.1)}
+.howlist .n{font-size:30px;font-weight:900;color:var(--navy);line-height:1;font-variant-numeric:tabular-nums}
+.howlist .when{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.howlist .t{font-size:17px;font-weight:900;margin:0 0 6px;line-height:1.3}
+.howlist .d{font-size:14px;line-height:1.65;color:rgba(30,37,53,.68);margin:0}
+.howlist .d a{color:var(--navy);font-weight:700;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(11,34,56,.25)}
+
+/* Autres vols */
+.more{padding:56px 0 64px;background:#fff}
+.mhead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px}
+.lnk{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--navy);white-space:nowrap}
+.lnk:hover{color:var(--gold-h)}
+/* Affichage actuel : 1 colonne (4/3) → 2 colonnes (3/4) dès 640 px → 3 colonnes. Toujours 3 vols max. */
+.cards{display:grid;grid-template-columns:1fr;gap:12px;margin:28px 0 0}
+.card{display:block;position:relative;border-radius:10px;overflow:hidden;aspect-ratio:4/3;background:var(--navy)}
+@container (min-width: 640px){ .cards{grid-template-columns:repeat(2,1fr);gap:16px} .card{aspect-ratio:3/4} }
+.card img{width:100%;height:100%;object-fit:cover;transition:transform .7s}
+.card:hover img{transform:scale(1.05)}
+.card::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.9),rgba(0,0,0,.15) 55%,transparent)}
+.card .dur{z-index:2;font-size:14px}
+.card .in{position:absolute;inset:auto 0 0 0;padding:18px;z-index:2;color:#fff}
+.card .ct{font-size:19px;font-weight:700;line-height:1.2;margin:0 0 4px}
+.card .cp{font-size:12px;color:rgba(255,255,255,.7);margin:0 0 12px}
+.card .row{display:flex;justify-content:space-between;align-items:center}
+.card .pr{font-size:22px;font-weight:900}
+.card .pr small{font-size:12px;font-weight:500;color:rgba(255,255,255,.7)}
+.card .go{font-size:12px;font-weight:600;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);border-radius:8px;padding:6px 10px;display:inline-flex;gap:5px;align-items:center;transition:.3s}
+.card:hover .go{background:var(--gold);color:var(--navy);border-color:transparent}
+.card .go [data-lucide]{width:12px;height:12px}
+
+/* Footer : copie du Footer.tsx actuel */
+.foot{background:var(--navy);border-top:1px solid rgba(255,255,255,.05)}
+.fm{padding:32px 0 100px;display:flex;flex-direction:column;gap:28px}
+.fd{display:none}
+.foot .flogo{height:28px;margin-bottom:16px}
+.foot .tag{color:rgba(255,255,255,.4);font-size:14px;line-height:1.6;margin:0 0 16px;max-width:320px}
+.soc{display:flex;gap:16px;color:rgba(255,255,255,.4)}
+.soc [data-lucide]{width:15px;height:15px}
+.fsep{height:1px;background:rgba(255,255,255,.05)}
+.fh{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(242,183,5,.7);margin:0 0 12px}
+.fcol ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.fcol li{font-size:14px;color:rgba(255,255,255,.5)}
+.fnl p{font-size:14px;color:rgba(255,255,255,.4);margin:0 0 16px;line-height:1.6}
+.fnl .f{display:flex;gap:8px}
+.fnl input{flex:1;min-width:0;padding:10px 16px;font:inherit;font-size:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;color:#fff}
+.fnl input::placeholder{color:rgba(255,255,255,.3)}
+.fnl button{background:var(--gold);color:var(--navy);border:0;border-radius:12px;padding:10px 18px;display:flex;align-items:center}
+.fbot{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;font-size:11px;color:rgba(255,255,255,.3)}
+.fbot .l{display:flex;gap:10px}
+.fbot .s{display:flex;align-items:center;gap:6px}
+.fbot .s b{color:rgba(242,183,5,.7);font-weight:600}
+.fbot [data-lucide]{width:10px;height:10px}
+
+/* Barre collante téléphone */
+.sbar{position:sticky;bottom:0;z-index:600;background:#fff;border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
+.sbar .p{font-size:20px;font-weight:900;line-height:1}
+.sbar .u{font-size:13px;color:var(--muted);font-weight:500}
+.cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--gold);color:var(--navy);border:0;border-radius:10px;
+  padding:13px 24px;font-size:14px;font-weight:900;box-shadow:var(--sh-gold);transition:background .15s,transform .15s;cursor:pointer}
+.cta:hover{background:var(--gold-h);transform:translateY(-1px)}
+.cta [data-lucide]{width:15px;height:15px}
+
+/* ─────────── Ordinateur ─────────── */
+@container (min-width: 900px){
+  .wrap{padding:0 40px}
+  .hdr{padding:14px 16px 0}
+  .pill{height:60px;padding:0 24px}
+  .nav,.vsep,.login{display:flex}
+  .vsep{display:block}
+  .burger{display:none}
+  .back{margin:36px 0 18px}
+  h1{font-size:56px;line-height:1}
+  .meta{font-size:14px;margin-top:18px;gap:10px 22px}
+  .meta .w100{display:none}
+  .pricebar{display:none}
+
+  .galwrap{margin:32px 0 0;border-radius:14px;overflow:hidden}
+  .gal{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;height:520px;overflow:visible}
+  .gi{aspect-ratio:auto;min-height:0}
+  .gi:first-child{grid-row:span 2}
+  .gi:nth-child(n+6){display:none}
+  .gi img{transition:filter .2s}
+  .gi:hover img{filter:brightness(.92)}
+  .count{display:none}
+  .dur{left:18px;top:18px;font-size:17px}
+  .allph{display:inline-flex;position:absolute;right:16px;bottom:16px;align-items:center;gap:8px;background:#fff;border:0;
+    border-radius:10px;padding:9px 14px;font-size:13px;font-weight:700;color:var(--fg);box-shadow:var(--sh)}
+
+  .sec{padding:40px 0}
+  h3{font-size:24px}
+  #map{height:360px}
+  .legal{padding:28px 0 72px}
+
+  .seat{width:26px;height:26px}
+
+  /* ── Variante A : colonne à droite, sans boîte ── */
+  .frame.A .body{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:64px;align-items:start}
+  .frame.A .bookA{display:block;position:sticky;top:100px;margin-top:40px;padding-left:40px;border-left:1px solid var(--border)}
+  .bookA .l,.bookB .l{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+  .bookA .p,.bookB .p{font-size:44px;font-weight:900;line-height:1}
+  .bookA .u,.bookB .u{font-size:14px;color:var(--muted);margin-left:6px}
+  .bookA .sl{display:flex;align-items:center;gap:10px;margin:18px 0 22px}
+  .bookA .cta{width:100%;padding:15px}
+  .bookA ul{list-style:none;margin:20px 0 0;padding:0;display:grid;gap:10px}
+  .bookA li{display:flex;gap:8px;font-size:13px;line-height:1.5;color:rgba(30,37,53,.7)}
+  .bookA li [data-lucide]{width:15px;height:15px;flex:none;margin-top:2px;color:var(--navy);opacity:.55}
+
+  /* ── Variante B : à côté du titre + barre collante ── */
+  .frame.B .titlerow{display:flex;align-items:flex-end;justify-content:space-between;gap:56px}
+  .frame.B .bookB{display:flex;flex-direction:column;align-items:flex-end;gap:12px;flex:none;padding-bottom:2px}
+  .bookB .sl{display:flex;align-items:center;gap:10px}
+  .bookB .pr{text-align:right}
+  .frame.B .main{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:0 64px}
+  .frame.B .main > .sec{border-top:0}
+  .frame.B .legal{grid-column:1/-1}
+  .frame.B .dbar{display:block;position:sticky;bottom:0;height:0;z-index:900}
+  .dbar .in{position:absolute;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-top:1px solid var(--border);
+    padding:12px max(40px,calc((100% - 1320px)/2));display:flex;align-items:center;gap:24px;transform:translateY(100%);opacity:0;transition:transform .25s,opacity .25s}
+  .dbar.show .in{transform:none;opacity:1}
+  .dbar .t{flex:1;font-weight:800;font-size:15px}
+  .dbar .t span{display:block;font-size:12px;font-weight:500;color:var(--muted)}
+  .dbar .p{font-size:22px;font-weight:900}
+  .dbar .p small{font-size:13px;font-weight:500;color:var(--muted)}
+
+  .how{padding:112px 0}
+  h2{font-size:48px;line-height:1}
+  .howgrid{display:grid;grid-template-columns:5fr 7fr;gap:80px;align-items:start}
+  .howhead{position:sticky;top:110px}
+  .howlist{margin:0}
+  .howlist li{grid-template-columns:72px 1fr;padding:30px 0}
+  .howlist li:first-child{border-top:0;padding-top:0}
+  .howlist .n{font-size:40px}
+  .howlist .t{font-size:20px}
+  .howlist .d{font-size:15px}
+
+  .more{padding:112px 0}
+  .cards{grid-template-columns:repeat(3,1fr);margin-top:40px}
+
+  .fm{display:none}
+  .fd{display:block}
+  .fgrid{display:grid;grid-template-columns:1.6fr .9fr .9fr .9fr 1.3fr;gap:32px;padding:48px 0}
+  .fd .flogo{height:32px}
+  .fd .fh{color:var(--gold)}
+  .fd .fcol li{color:rgba(255,255,255,.45)}
+  .fdb{padding:20px 0;border-top:1px solid rgba(255,255,255,.05);display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.25)}
+  .fdb .r{display:flex;gap:16px;align-items:center}
+  .fdb .r b{color:var(--gold);font-weight:600}
+  .fdb [data-lucide]{width:10px;height:10px}
+  .sbar{display:none}
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="seat" viewBox="0 0 24 24">
+    <!-- siège d'avion vu de profil : appui-tête, dossier incliné, assise, pied -->
+    <path fill="currentColor" d="M6.2 2.2c1.1-.3 2.2.4 2.4 1.5l1.9 8.3h6.2c1.3 0 2.3 1 2.3 2.3v.9c0 .6-.5 1.1-1.1 1.1H9.6c-1.2 0-2.2-.8-2.5-2L4.7 4.8c-.3-1.1.4-2.3 1.5-2.6z"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M11 16.3v4.2M16.5 16.3v4.2M9 20.5h9.5"/>
+  </symbol>
+</svg>
+
+<div class="tool">
+  <b>Maquette · page produit v2</b>
+  <div class="seg" id="vw">
+    <button data-v="desk" class="on">Ordinateur</button>
+    <button data-v="phone">Téléphone</button>
+  </div>
+  <span class="lbl">Réservation PC</span>
+  <div class="seg" id="bk">
+    <button data-b="A" class="on">A · colonne à droite</button>
+    <button data-b="B">B · à côté du titre</button>
+  </div>
+  <span class="lbl">Vente</span>
+  <div class="seg" id="mode">
+    <button data-m="place" class="on">À la place</button>
+    <button data-m="avion">Avion entier</button>
+  </div>
+  <span class="lbl">Type</span>
+  <div class="seg" id="type">
+    <button data-t="iti" class="on">Itinéraire</button>
+    <button data-t="duree">Durée fixe</button>
+  </div>
+  <span class="sp"></span>
+  <button class="btn-notes" id="nb">Ce qui a changé ▾</button>
+</div>
+<div class="notes" id="notes">
+  <ol>
+    <li><b>Téléphone :</b> le prix descend sous les photos, avec les sièges. La barre collante en bas garde le prix et le bouton Réserver.</li>
+    <li><b>Carte de l'itinéraire figée</b> (téléphone et ordinateur) : ni glisser ni zoomer. Le doigt ou la molette font défiler la page, jamais la carte.</li>
+    <li><b>Une seule mention du pilote</b> : sous le titre, avec son nom et « Voir le profil ». La section « Votre pilote » est supprimée.</li>
+    <li><b>« Comment ça se passe » refait</b> : plus d'icônes dorées ni de gros chiffres en fond. Une liste numérotée qui colle au vrai parcours : créneau choisi dans les dispos, confirmation sous 72 h, virement avec QR code, rendez-vous à EBCI. « Compris dans le vol » est intégré à l'étape 4.</li>
+    <li><b>Plus aucune boîte</b> en dehors des cartes de vols : la réservation n'est plus encadrée. Elle est séparée par un filet (A) ou placée à côté du titre (B).</li>
+    <li><b>Vraie icône de siège</b> : foncé = libre, gris = déjà réservé.</li>
+    <li><b>Autres vols</b> : affichage actuel gardé (empilés sur téléphone, grille sur ordinateur), 3 vols maximum.</li>
+    <li><b>Le bouton « Réserver »</b> mène à <code>/vol/annonce/[id]/reserver</code>.</li>
+    <li><b>Variante B</b> : quand le prix sort de l'écran, une barre fine apparaît en bas (ordinateur).</li>
+    <li>Header et footer : copies des composants actuels (y compris la mention « Paiement sécurisé Stripe » du footer, à revoir plus tard puisque les annonces se paient par virement).</li>
+  </ol>
+  <p>Textes, photos, noms et prix = exemples.</p>
+</div>
+
+<div class="stage" id="stage">
+<div class="frame A" id="frame">
+
+  <header class="hdr">
+    <div class="pill">
+      <img class="logo" src="public/fly-horizons-logo-navy.svg" alt="Fly Horizons">
+      <span class="fill"></span>
+      <nav class="nav"><a href="#">Les vols</a><a href="#">Galerie</a><a href="#">À propos</a><a href="#">FAQ</a><a href="#">Contact</a></nav>
+      <span class="vsep"></span>
+      <a class="login" href="#"><i data-lucide="user"></i>Connexion</a>
+      <button class="burger" aria-label="Menu"><i data-lucide="menu"></i></button>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <a class="back" href="#"><i data-lucide="arrow-left"></i> Tous les vols</a>
+
+      <!-- 1 · TITRE + PILOTE -->
+      <div class="titlerow">
+        <div>
+          <p class="eyebrow">Vol partagé · Au départ de Charleroi</p>
+          <h1 id="h1">Les lacs de l'Eau d'Heure vus du ciel</h1>
+          <div class="meta">
+            <span class="who"><img src="public/photo-pilote.jpg" alt="">Avec Romain Destanberg · <a href="#">Voir le profil</a></span>
+            <span class="w100"></span>
+            <span><i data-lucide="clock"></i>1 h de vol</span>
+            <span><i data-lucide="users"></i>3 places</span>
+            <span><i data-lucide="plane"></i>Diamond DA40</span>
+          </div>
+        </div>
+        <!-- Variante B -->
+        <div class="bookB">
+          <div class="pr"><p class="l">Participation aux frais</p><span class="p js-price">89 €</span><span class="u js-unit">/ personne</span></div>
+          <div class="sl"><span class="seats js-seats"></span><span class="seatlbl js-seatlbl"></span></div>
+          <a class="cta js-reserve" href="/vol/annonce/[id]/reserver">Réserver <i data-lucide="arrow-right"></i></a>
+        </div>
+      </div>
+
+      <!-- 2 · PHOTOS -->
+      <div class="galwrap">
+        <div class="gal" id="gal">
+          <div class="gi"><img src="public/gallery/10.jpg" alt=""></div>
+          <div class="gi"><img src="public/gallery/1.png" alt=""></div>
+          <div class="gi"><img src="public/gallery/2.png" alt=""></div>
+          <div class="gi"><img src="public/gallery/3.png" alt=""></div>
+          <div class="gi"><img src="public/gallery/11.jpg" alt=""></div>
+          <div class="gi"><img src="public/gallery/4.png" alt=""></div>
+          <div class="gi"><img src="public/gallery/5.png" alt=""></div>
+        </div>
+        <span class="dur">1 h</span>
+        <span class="count" id="count">1 / 7</span>
+        <button class="allph"><i data-lucide="images"></i>Voir les 7 photos</button>
+      </div>
+
+      <!-- 3 · PRIX (téléphone) -->
+      <div class="pricebar">
+        <div><p class="pl">Participation aux frais</p><span class="p js-price">89 €</span><span class="u js-unit">/ personne</span></div>
+        <div class="r"><span class="seats js-seats"></span><span class="seatlbl js-seatlbl"></span></div>
+      </div>
+
+      <!-- 4 · CORPS -->
+      <div class="body">
+        <div class="main">
+          <section class="sec">
+            <h3>Le vol</h3>
+            <p class="txt">On décolle de Charleroi cap au sud-ouest, on longe la Sambre jusqu'à l'abbaye d'Aulne, puis on descend vers les lacs de l'Eau d'Heure. Le barrage de la Plate Taille et ses presqu'îles se lisent parfaitement depuis 2 000 pieds.</p>
+            <p class="txt">Retour par Walcourt et sa basilique. Le pilote commente les repères tout au long du trajet et répond à vos questions au casque.</p>
+          </section>
+
+          <section class="sec">
+            <h3 id="routeh">Itinéraire</h3>
+            <div class="iti">
+              <div class="route">
+                <span class="pt"><span class="dot g"></span>Charleroi (EBCI)</span><span class="ar">›</span>
+                <span class="pt"><span class="dot"></span>Abbaye d'Aulne</span><span class="ar">›</span>
+                <span class="pt"><span class="dot"></span>Lacs de l'Eau d'Heure</span><span class="ar">›</span>
+                <span class="pt"><span class="dot"></span>Walcourt</span><span class="ar">›</span>
+                <span class="pt"><span class="dot g"></span>Charleroi</span>
+              </div>
+              <div id="map" aria-label="Carte de l'itinéraire"></div>
+              <p class="maphint"><i data-lucide="cloud-sun"></i>La route peut être ajustée le jour même selon la météo.</p>
+            </div>
+            <div class="freeroute">
+              <p class="txt">La route se décide avec le pilote selon vos envies et la météo du jour : lacs de l'Eau d'Heure, vallée de la Meuse, Charleroi vu d'en haut. Vous en parlez ensemble après confirmation.</p>
+            </div>
+          </section>
+
+          <div class="legal">
+            <p class="eyebrow">Vol en partage de coûts · NCO.GEN.104</p>
+            <p>Fly Horizons n'est pas un service de transport aérien commercial. Le pilote partage un vol qu'il organise déjà : votre participation couvre une quote-part des frais réels (avion, carburant, taxes d'aérodrome), sans marge commerciale. Le pilote est seul responsable de son vol.</p>
+          </div>
+        </div>
+
+        <!-- Variante A -->
+        <aside class="bookA" id="bookA">
+          <p class="l">Participation aux frais</p>
+          <div><span class="p js-price">89 €</span><span class="u js-unit">/ personne</span></div>
+          <div class="sl"><span class="seats js-seats"></span><span class="seatlbl js-seatlbl"></span></div>
+          <a class="cta js-reserve" href="/vol/annonce/[id]/reserver">Réserver <i data-lucide="arrow-right"></i></a>
+          <ul>
+            <li><i data-lucide="shield-check"></i>Aucun paiement avant que le pilote confirme.</li>
+            <li><i data-lucide="landmark"></i>Paiement par virement au pilote, après confirmation.</li>
+            <li><i data-lucide="calendar-clock"></i>Demande possible jusqu'à 48 h avant le vol.</li>
+          </ul>
+        </aside>
+      </div>
+    </div>
+
+    <!-- 5 · DÉROULEMENT -->
+    <section class="how">
+      <div class="wrap howgrid">
+        <div class="howhead">
+          <p class="eyebrow">Déroulement</p>
+          <h2>Comment ça se passe</h2>
+          <p class="txt">De la demande au décollage. Vous ne payez qu'une fois le vol confirmé par le pilote.</p>
+        </div>
+        <ol class="howlist">
+          <li><span class="n">1</span><div>
+            <p class="when">Aujourd'hui</p>
+            <p class="t">Vous choisissez un créneau</p>
+            <p class="d">Parmi les disponibilités du pilote, puis vous envoyez votre demande. Rien à payer à ce stade.</p></div></li>
+          <li><span class="n">2</span><div>
+            <p class="when">Sous 72 h</p>
+            <p class="t">Le pilote confirme</p>
+            <p class="d">Il vérifie le créneau et la météo prévue, puis vous confirme le vol par email.</p></div></li>
+          <li><span class="n">3</span><div>
+            <p class="when">Après confirmation</p>
+            <p class="t">Vous réglez votre part</p>
+            <p class="d">Par virement au pilote, avec un QR code à scanner depuis votre app bancaire. Vous recevez ensuite votre reçu.</p></div></li>
+          <li><span class="n">4</span><div>
+            <p class="when">Le jour du vol</p>
+            <p class="t">Rendez-vous à Charleroi</p>
+            <p class="d">Accueil à l'aérodrome (EBCI), briefing sécurité, casque audio pour chaque passager. Si la météo ne permet pas de voler, on cherche une autre date ensemble. <a href="#">Plan d'accès</a></p></div></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 6 · AUTRES VOLS -->
+    <section class="more">
+      <div class="wrap">
+        <div class="mhead">
+          <div><p class="eyebrow">Autres vols disponibles</p><h2>Et aussi</h2></div>
+          <a class="lnk" href="#" style="margin:0 0 6px">Tous les vols <i data-lucide="arrow-right"></i></a>
+        </div>
+        <div class="cards">
+          <a class="card" href="#"><img src="public/gallery/6.png" alt=""><span class="dur">30 min</span>
+            <div class="in"><p class="ct">Charleroi vu d'en haut</p><p class="cp">Avec Romain D.</p><div class="row"><span class="pr">145 € <small>/ avion</small></span><span class="go">Voir <i data-lucide="arrow-right"></i></span></div></div></a>
+          <a class="card" href="#"><img src="public/gallery/7.png" alt=""><span class="dur">1 h 30</span>
+            <div class="in"><p class="ct">La vallée de la Meuse</p><p class="cp">Avec Julie M.</p><div class="row"><span class="pr">119 € <small>/ pers.</small></span><span class="go">Voir <i data-lucide="arrow-right"></i></span></div></div></a>
+          <a class="card" href="#"><img src="public/gallery/8.png" alt=""><span class="dur">45 min</span>
+            <div class="in"><p class="ct">Vol découverte</p><p class="cp">Avec Romain D.</p><div class="row"><span class="pr">69 € <small>/ pers.</small></span><span class="go">Voir <i data-lucide="arrow-right"></i></span></div></div></a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer actuel -->
+  <footer class="foot">
+    <div class="wrap">
+      <div class="fm">
+        <div>
+          <img class="flogo" src="public/fly-horizons-logo-white.svg" alt="Fly Horizons">
+          <p class="tag">Vols partagés en avion léger avec Romain, pilote et fondateur, au départ de l'aérodrome de Charleroi (EBCI).</p>
+          <div class="soc"><i data-lucide="mail"></i><i data-lucide="facebook"></i><i data-lucide="instagram"></i><i data-lucide="message-circle"></i></div>
+        </div>
+        <div class="fsep"></div>
+        <div class="fcol"><p class="fh">Informations</p><ul><li>Les vols</li><li>À propos</li><li>FAQ</li><li>Galerie</li></ul></div>
+        <div class="fcol"><p class="fh">Pratique</p><ul><li>Plan d'accès · EBCI</li><li>Faire une demande</li><li>Mon compte</li><li>Vous êtes pilote ?</li></ul></div>
+        <div class="fcol"><p class="fh">Contact</p><ul><li>info@fly-horizons.com</li><li>Formulaire de contact</li><li>WhatsApp</li></ul></div>
+        <div class="fsep"></div>
+        <div class="fnl"><p class="fh">Newsletter</p><p>Recevez un email dès qu'un vol est organisé.</p><div class="f"><input placeholder="Votre email"><button><i data-lucide="arrow-right"></i></button></div></div>
+        <div class="fsep"></div>
+        <div class="fbot">
+          <span>© 2026 Fly Horizons, Rue des Fusillés, 6040 Charleroi. Tous droits réservés.</span>
+          <span class="l"><span>Conditions générales</span>·<span>Confidentialité</span>·<span>Contact</span></span>
+          <span class="s"><i data-lucide="lock"></i>Paiement sécurisé <b>Stripe</b></span>
+        </div>
+      </div>
+      <div class="fd">
+        <div class="fgrid">
+          <div>
+            <img class="flogo" src="public/fly-horizons-logo-white.svg" alt="Fly Horizons">
+            <p class="tag">Vols partagés en avion léger avec Romain, pilote et fondateur, au départ de l'aérodrome de Charleroi (EBCI).</p>
+            <div class="soc"><i data-lucide="mail"></i><i data-lucide="facebook"></i><i data-lucide="instagram"></i><i data-lucide="message-circle"></i></div>
+          </div>
+          <div class="fcol"><p class="fh">Informations</p><ul><li>Les vols</li><li>À propos</li><li>FAQ</li><li>Galerie</li></ul></div>
+          <div class="fcol"><p class="fh">Pratique</p><ul><li>Plan d'accès · EBCI</li><li>Faire une demande</li><li>Mon compte</li><li>Vous êtes pilote ?</li></ul></div>
+          <div class="fcol"><p class="fh">Contact</p><ul><li>info@fly-horizons.com</li><li>Formulaire de contact</li><li>WhatsApp</li></ul></div>
+          <div class="fnl"><p class="fh">Newsletter</p><p>Recevez un email dès qu'un vol est organisé.</p><div class="f"><input placeholder="Votre email"><button><i data-lucide="arrow-right"></i></button></div></div>
+        </div>
+        <div class="fdb">
+          <span>© 2026 Fly Horizons, Rue des Fusillés, 6040 Charleroi. Tous droits réservés.</span>
+          <span class="r"><span>Conditions générales · Confidentialité · Contact</span><span style="display:flex;gap:6px;align-items:center"><i data-lucide="lock"></i>Paiement sécurisé <b>Stripe</b></span></span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Barre collante téléphone -->
+  <div class="sbar">
+    <div><span class="p js-price">89 €</span> <span class="u js-unit">/ personne</span></div>
+    <a class="cta js-reserve" href="/vol/annonce/[id]/reserver">Réserver <i data-lucide="arrow-right"></i></a>
+  </div>
+
+  <!-- Barre collante ordinateur (variante B) -->
+  <div class="dbar" id="dbar"><div class="in">
+    <div class="t">Les lacs de l'Eau d'Heure vus du ciel<span>Avec Romain Destanberg · 1 h de vol</span></div>
+    <div class="p"><span class="js-price">89 €</span> <small class="js-unit">/ personne</small></div>
+    <a class="cta js-reserve" href="/vol/annonce/[id]/reserver">Réserver <i data-lucide="arrow-right"></i></a>
+  </div></div>
+
+</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* Carte figée : aucune interaction, la page défile au travers */
+const pts = [[50.4592,4.4538],[50.3906,4.3264],[50.1880,4.3790],[50.2536,4.4336],[50.4592,4.4538]];
+const map = L.map('map',{zoomControl:false,dragging:false,touchZoom:false,scrollWheelZoom:false,doubleClickZoom:false,
+  boxZoom:false,keyboard:false,tap:false,zoomSnap:0.25});
+L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap · © CARTO',maxZoom:14}).addTo(map);
+L.polyline(pts,{color:'#0b2238',weight:3,opacity:.85}).addTo(map);
+pts.slice(0,4).forEach((p,i)=>L.circleMarker(p,{radius:i===0?8:6,color:'#fff',weight:2.5,fillColor:i===0?'#F2B705':'#0b2238',fillOpacity:1}).addTo(map));
+const fit = () => { map.invalidateSize(); map.fitBounds(L.latLngBounds(pts),{padding:[28,28]}); };
+fit();
+
+/* Sièges */
+const seatSvg = cls => `<svg class="seat ${cls}"><use href="#seat"/></svg>`;
+let mode = 'place';
+function renderSeats(){
+  const place = mode==='place';
+  document.querySelectorAll('.js-seats').forEach(e=>e.innerHTML = place ? seatSvg('taken')+seatSvg('')+seatSvg('') : seatSvg('')+seatSvg('')+seatSvg(''));
+  document.querySelectorAll('.js-seatlbl').forEach(e=>e.textContent = place ? '2 places libres sur 3' : "jusqu'à 3 passagers");
+  document.querySelectorAll('.js-price').forEach(e=>e.textContent = place?'89 €':'267 €');
+  document.querySelectorAll('.js-unit').forEach(e=>e.textContent = place?'/ personne':'/ avion');
+}
+renderSeats();
+lucide.createIcons();
+
+/* Compteur carrousel */
+const gal = document.getElementById('gal'), count = document.getElementById('count');
+gal.addEventListener('scroll',()=>{ count.textContent = (Math.round(gal.scrollLeft/gal.clientWidth)+1)+' / 7'; });
+
+/* Réserver → page réservation */
+const toast = document.getElementById('toast');
+document.querySelectorAll('.js-reserve').forEach(a=>a.addEventListener('click',e=>{ e.preventDefault();
+  toast.textContent='→ /vol/annonce/[id]/reserver'; toast.classList.add('on'); setTimeout(()=>toast.classList.remove('on'),1600); }));
+
+/* Barre collante ordinateur (B) : visible quand le bloc prix à côté du titre sort de l'écran */
+const dbar = document.getElementById('dbar');
+new IntersectionObserver(([en])=>dbar.classList.toggle('show', !en.isIntersecting && en.boundingClientRect.top < 0))
+  .observe(document.querySelector('.bookB'));
+
+/* Bascules */
+function seg(id, fn){ const el=document.getElementById(id); el.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
+  el.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); fn(b); }); }
+const stage = document.getElementById('stage'), frame = document.getElementById('frame');
+seg('vw', b => { stage.classList.toggle('phone', b.dataset.v==='phone'); gal.scrollLeft=0; count.textContent='1 / 7'; setTimeout(fit,60); });
+seg('bk', b => { frame.classList.remove('A','B'); frame.classList.add(b.dataset.b); setTimeout(fit,60); });
+seg('mode', b => { mode=b.dataset.m; renderSeats(); });
+seg('type', b => {
+  const iti = b.dataset.t==='iti';
+  document.querySelector('.iti').style.display = iti?'':'none';
+  document.querySelector('.freeroute').style.display = iti?'none':'block';
+  document.getElementById('routeh').textContent = iti?'Itinéraire':'La route';
+  document.getElementById('h1').textContent = iti?"Les lacs de l'Eau d'Heure vus du ciel":"Une heure au-dessus de la Wallonie";
+  if(iti) setTimeout(fit,60);
+});
+document.getElementById('nb').addEventListener('click',()=>document.getElementById('notes').classList.toggle('open'));
+</script>
+</body>
+</html>

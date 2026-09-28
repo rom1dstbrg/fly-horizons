@@ -11,6 +11,24 @@
         ],
         "createdAt": "2026-09-19T09:31:18.991Z",
         "reason": "internal dev-only pilotage doc (projet.html), pre-existing contrast pattern reused verbatim from rest of file, not a shipped product surface"
+      },
+      {
+        "rule": "kicker-above-heading",
+        "value": "*",
+        "files": [
+          "maquette-page-produit.html"
+        ],
+        "createdAt": "2026-09-28T06:52:56.644Z",
+        "reason": "Charte FH figée (STYLE-STATUS.html, mémoire project_design_identity) : eyebrow doré au-dessus de chaque H1/H2 du site public"
+      },
+      {
+        "rule": "all-caps-body",
+        "value": "*",
+        "files": [
+          "maquette-page-produit.html"
+        ],
+        "createdAt": "2026-09-28T06:52:56.792Z",
+        "reason": "Charte FH : eyebrows courts en capitales (libellés, pas du corps de texte)"
       }
     ]
   }
