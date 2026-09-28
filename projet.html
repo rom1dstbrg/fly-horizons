@@ -1607,7 +1607,20 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
-      <h3>2026-09-28 (45) — Page FAQ refaite dans la nouvelle DA</h3>
+      <h3>2026-09-28 (46) — Page Contact refaite ; confirmation sur place après envoi ; cartes Google Maps débloquées</h3>
+      <ul>
+        <li><code>app/(public)/contact/page.tsx</code> (maquette-contact.html, variante C) : titre + formulaire à gauche, colonne d'infos à droite sur ordinateur
+          (carte du point de rendez-vous, adresse EBCI + itinéraire GPS + plan d'accès, email, délai de réponse, assistant / FAQ) ; sur téléphone, uniquement le formulaire.</li>
+        <li><code>ContactForm</code> : champs sans carte, sujets en pastilles (Ma demande de vol, Paiement, Report ou annulation, Autre) qui remplissent le champ sujet ;
+          après l'envoi, <b>confirmation sur la page</b> au lieu du toast + redirection vers l'accueil (modèle pour les autres formulaires publics).
+          <code>ChatSidebarRow</code> remplacé par <code>AskAssistantLink</code>.</li>
+        <li><code>next.config.ts</code> : <code>frame-src</code> autorise <code>www.google.com</code> et <code>maps.google.com</code>. La carte Google de
+          <code>/access-ebci</code> était vide en prod à cause de la CSP ; elle s'affiche maintenant, comme celle de /contact.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-09-28 (45) —Page FAQ refaite dans la nouvelle DA</h3>
       <ul>
         <li><code>app/(public)/faq/page.tsx</code> (d'après <code>maquette-faq.html</code>, ajustée par Romain) : une grille sommaire 260 px | questions ; titre sur les deux colonnes,
           recherche posée sur la colonne des questions, sommaire collant qui démarre à hauteur de la recherche ; pastilles collées sous le header sur téléphone.

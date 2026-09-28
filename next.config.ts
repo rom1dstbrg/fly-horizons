@@ -42,9 +42,10 @@ const nextConfig: NextConfig = {
       `img-src 'self' data: blob: ${supabaseHost} server.arcgisonline.com *.basemaps.cartocdn.com nwy-tiles-api.prod.newaydata.com`,
       `connect-src 'self' ${supabaseHost} wss://${supabaseHost} *.stripe.com nominatim.openstreetmap.org overpass-api.de`,
       "font-src 'self' data:",
-      // Seule exception : la page de vérification des documents pilote affiche le
-      // PDF (URL signée du bucket privé) dans un cadre. Aucun autre domaine.
-      `frame-src ${supabaseHost}`,
+      // Cadres autorisés : Supabase (PDF des documents pilote, URL signée du bucket privé)
+      // et Google Maps (carte du point de rendez-vous sur /contact et /access-ebci,
+      // bloquée jusqu'au 28/09 faute de ces deux domaines). Aucun autre domaine.
+      `frame-src ${supabaseHost} https://www.google.com https://maps.google.com`,
       "frame-ancestors 'none'",
       "object-src 'none'",
       "base-uri 'self'",
