@@ -7,6 +7,7 @@ import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservat
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { makeRescheduleToken, parseRescheduleToken } from "@/lib/reschedule-token";
 import { rescheduleScope, piloteDeparts } from "@/lib/pilote-dispo";
+import { BLOC_H, blocsNecessaires } from "@/lib/pilote-creneaux";
 import { buildBoardingPassAttachment } from "@/lib/pdf/boarding-pass-attachment";
 import { requireAdminOrOwningPilote as checkAdminOrOwningPilote } from "./auth-guards";
 import { releaseAnnoncePilote } from "@/lib/annonces-pilote-server";
@@ -886,7 +887,12 @@ export async function rescheduleReservation(token: string, newDate: string, newH
     const newDateStr = new Date(newDate + "T12:00:00Z").toLocaleDateString("fr-BE", {
       weekday: "long", day: "numeric", month: "long", year: "numeric",
     });
-    const newDateTimeStr = `${newDateStr} à ${newHeure}`;
+    // Vol d'un pilote : le client a choisi un bloc de 2 h, l'heure exacte se fixe
+    // avec le pilote (il la choisit dans le bloc en confirmant) → « entre 13 h et 15 h ».
+    const nbBlocs = blocsNecessaires(resa.duree ?? 60);
+    const newDateTimeStr = scope
+      ? `${newDateStr}, entre ${Number(newHeure.slice(0, 2))} h et ${Number(newHeure.slice(0, 2)) + nbBlocs * BLOC_H} h`
+      : `${newDateStr} à ${newHeure}`;
 
     const newStatut = resa.type_resa === "perso"
       ? (["acompte_recu", "solde", "vol_effectue"].includes(resa.statut) ? "acompte_recu" : "en_attente")

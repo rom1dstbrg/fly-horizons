@@ -1,7 +1,8 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { parseRescheduleToken } from "@/lib/reschedule-token";
 import { RescheduleClient } from "./RescheduleClient";
-import { XCircle, AlertCircle } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 interface PageProps {
   params: Promise<{ token: string }>;
@@ -24,42 +25,18 @@ export default async function ReporterPage({ params }: PageProps) {
 
   if (!resa) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-gradient-navy px-4 pt-[98px] pb-16">
-        <div className="max-w-md w-full text-center space-y-4">
-          <div className="w-14 h-14 rounded-lg bg-secondary border border-border flex items-center justify-center mx-auto">
-            <XCircle size={24} className="text-foreground/30" />
-          </div>
-          <h1 className="text-xl font-black text-foreground">Lien invalide</h1>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Ce lien de report n&apos;est plus valide. Il a peut-être déjà été utilisé ou il a expiré.
-            Contactez-nous à{" "}
-            <a href="mailto:info@fly-horizons.com" className="text-primary hover:brightness-90 transition-all font-semibold">
-              info@fly-horizons.com
-            </a>{" "}
-            si vous avez besoin d&apos;aide.
-          </p>
-        </div>
-      </div>
+      <Notice title="Ce lien n'est plus valide.">
+        Il a peut-être déjà servi ou il a expiré (un lien de report est valable 30 jours).
+        Écrivez-nous depuis la <Link href="/contact" className={LINK}>page contact</Link> et nous vous en renvoyons un.
+      </Notice>
     );
   }
 
   if (["annulee", "vol_effectue"].includes(resa.statut)) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-gradient-navy px-4 pt-[98px] pb-16">
-        <div className="max-w-md w-full text-center space-y-4">
-          <div className="w-14 h-14 rounded-lg bg-secondary border border-border flex items-center justify-center mx-auto">
-            <AlertCircle size={24} className="text-foreground/30" />
-          </div>
-          <h1 className="text-xl font-black text-foreground">Report non disponible</h1>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Ce vol ne peut plus être reporté.{" "}
-            <a href="mailto:info@fly-horizons.com" className="text-primary hover:brightness-90 transition-all font-semibold">
-              Contactez-nous
-            </a>{" "}
-            si vous avez une question.
-          </p>
-        </div>
-      </div>
+      <Notice title="Ce vol ne peut plus être reporté.">
+        Il est déjà effectué ou annulé. Une question ? <Link href="/contact" className={LINK}>Contactez-nous</Link>.
+      </Notice>
     );
   }
 
@@ -77,5 +54,23 @@ export default async function ReporterPage({ params }: PageProps) {
       poids_total={resa.poids_total ?? null}
       piloteNom={resa.pilote_id ? ((Array.isArray(resa.pilotes) ? resa.pilotes[0] : resa.pilotes) as { nom: string } | null)?.nom ?? "votre pilote" : null}
     />
+  );
+}
+
+const LINK = "font-semibold text-[#0b2238] underline decoration-[#0b2238]/25 underline-offset-[3px] hover:decoration-primary transition-colors";
+
+// Lien invalide ou vol clos : même colonne que la confirmation sur place.
+function Notice({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <main className="bg-white pt-page pb-24">
+      <div className="max-w-[640px] mx-auto px-4 sm:px-6">
+        <p className="text-[11px] font-bold text-primary uppercase tracking-[3px] mb-3">Report de vol</p>
+        <h1 className="text-[34px] lg:text-[40px] font-black text-foreground leading-[1.03] tracking-[-0.02em] mb-3">{title}</h1>
+        <p className="text-[15px] leading-[1.7] text-foreground/75">{children}</p>
+        <Link href="/" className="mt-[22px] inline-flex items-center gap-2 px-5 py-3 bg-white border border-border text-foreground rounded-[10px] text-sm font-bold hover:border-foreground transition-colors">
+          <ArrowLeft size={15} /> Retour à l&apos;accueil
+        </Link>
+      </div>
+    </main>
   );
 }

@@ -1646,6 +1646,17 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-28 (59) — Page de report dans la nouvelle DA, confirmation sur place</h3>
+      <ul>
+        <li><code>/reservation/reporter/[token]</code> refaite : fond blanc, sans boîte, <code>.pt-page</code>. Ordinateur : titre, calendrier et créneaux à gauche (7 col.),
+          récapitulatif collant à droite (ancienne date barrée, nouvelle date, pilote, durée, passagers) + « Confirmer le report » ; il remplace l'étape « Vérifiez votre nouvelle date ».
+          Téléphone : même ordre. Lien invalide / vol clos dans la même colonne.</li>
+        <li>Confirmation sur place (pastille dorée, « Report enregistré. », comme Contact) ; page <code>/reservation/reporter/confirme</code> supprimée (plus aucun lien).</li>
+        <li>Vol d'un pilote : la nouvelle date s'écrit « dimanche 4 octobre 2026, entre 13 h et 15 h » (au lieu de « à 13:00 ») dans l'email de confirmation au client, l'email admin, la notification du pilote et la page.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-28 (58) — Le pilote choisit l'heure de décollage dans le créneau de 2 h en confirmant</h3>
       <ul>
         <li>Fenêtre « Confirmer » du tiroir (<code>OverviewTab</code> + <code>ConfirmActionDialog</code>) : pour un vol de pilote dont l'heure est un début de bloc (annonce ou report),
