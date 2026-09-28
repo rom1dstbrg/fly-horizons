@@ -9,6 +9,7 @@ import {
 import { Button, Input } from "@/components/pilote/studio";
 import { cn } from "@/lib/utils";
 import { isPiloteVol, isRegleFlyHorizons } from "@/lib/pilote/payment";
+import { BLOC_H, isBloc, plageLabel } from "@/lib/pilote-creneaux";
 import { stripeNetInfo } from "@/lib/stripe-fee";
 import type { DrawerReservation } from "./types";
 import type { PendingAction } from "./ConfirmActionDialog";
@@ -178,10 +179,18 @@ export function OverviewTab({
   const dureeNewCAG = isPerso ? Math.ceil(r.duree / 15) * 15 + 45 : r.duree + 60;
   const dureeLabel = `${Math.floor(dureeNewCAG / 60)} h ${String(dureeNewCAG % 60).padStart(2, "0")}`;
 
+  // Vol d'un pilote réservé sur un bloc de 2 h (annonce ou report) : l'heure
+  // enregistrée est le début du bloc ; le pilote choisit le décollage dans le bloc.
+  const bloc = piloteVol && heure?.endsWith(":00") && isBloc(Number(heure.slice(0, 2))) ? Number(heure.slice(0, 2)) : null;
   const confirmSlot = () =>
     ask({
-      title: heure ? `Confirmer ${dateCourte} à ${heure} ?` : `Confirmer ${dateCourte} ?`,
-      askTime: heure ? undefined : "",
+      title: heure && bloc === null ? `Confirmer ${dateCourte} à ${heure} ?` : `Confirmer ${dateCourte} ?`,
+      askTime: bloc !== null ? heure! : heure ? undefined : "",
+      ...(bloc !== null && {
+        timeMin: heure!,
+        timeMax: `${String(bloc + BLOC_H - 1).padStart(2, "0")}:59`,
+        timeHint: `${prenom} a choisi le créneau ${plageLabel(bloc)}. Choisissez l'heure de décollage dans ce créneau.`,
+      }),
       consequences: [
         `${prenom} reçoit un email avec la date, l'heure${needsRoute ? " et votre route" : ""}.`,
         "Le vol passe en « Vol confirmé ».",

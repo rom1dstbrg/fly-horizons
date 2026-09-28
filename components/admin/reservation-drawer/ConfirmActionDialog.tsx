@@ -20,6 +20,10 @@ export interface PendingAction {
   danger?: boolean;
   /** Heure à choisir avant de confirmer (valeur de départ, "" si aucune). */
   askTime?: string;
+  /** Plage autorisée pour l'heure ("13:00"–"14:59") et phrase d'aide sous le champ. */
+  timeMin?: string;
+  timeMax?: string;
+  timeHint?: string;
   run: (time?: string) => void;
 }
 
@@ -53,6 +57,8 @@ export function ConfirmActionDialog({
 
   if (!action) return null;
   const needsTime = action.askTime !== undefined;
+  const timeOk = /^\d{2}:\d{2}$/.test(time)
+    && (!action.timeMin || time >= action.timeMin) && (!action.timeMax || time <= action.timeMax);
 
   return (
     <div className="fixed inset-0 z-[300] flex items-end justify-center bg-st-ink/30 backdrop-blur-[1.5px] motion-safe:animate-in motion-safe:fade-in sm:items-center sm:p-4" onClick={onCancel}>
@@ -69,7 +75,8 @@ export function ConfirmActionDialog({
         {needsTime && (
           <label className="block">
             <span className="mb-1.5 block text-[12.5px] font-[550] text-st-text-2">Heure du vol</span>
-            <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} autoFocus />
+            <Input type="time" value={time} min={action.timeMin} max={action.timeMax} step={300} onChange={(e) => setTime(e.target.value)} autoFocus />
+            {action.timeHint && <span className="mt-1.5 block text-[12px] leading-snug text-st-muted">{action.timeHint}</span>}
           </label>
         )}
 
@@ -97,7 +104,7 @@ export function ConfirmActionDialog({
             variant={action.danger ? "danger" : "primary"}
             onClick={() => onConfirm(needsTime ? time : undefined)}
             loading={isPending}
-            disabled={needsTime && !/^\d{2}:\d{2}$/.test(time)}
+            disabled={needsTime && !timeOk}
           >
             {action.confirmLabel ?? "Confirmer"}
           </Button>

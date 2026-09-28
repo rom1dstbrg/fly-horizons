@@ -1646,6 +1646,14 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-28 (58) — Le pilote choisit l'heure de décollage dans le créneau de 2 h en confirmant</h3>
+      <ul>
+        <li>Fenêtre « Confirmer » du tiroir (<code>OverviewTab</code> + <code>ConfirmActionDialog</code>) : pour un vol de pilote dont l'heure est un début de bloc (annonce ou report),
+          champ « Heure du vol » prérempli (ex. 13:00), limité au créneau (13:00–14:59), avec « Laura a choisi le créneau 13 h – 15 h ». Avant : l'heure n'était demandée que si elle était vide.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-28 (57) — Report d'un vol attribué à un pilote : le client choisit dans les disponibilités de ce pilote</h3>
       <ul>
         <li><code>/reservation/reporter/[token]</code> : si le vol a un pilote, le calendrier propose ses blocs ouverts et libres (routes <code>/api/reservation/reporter/month|slots</code>, clé = le lien de report),
