@@ -1646,6 +1646,17 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-28 (61) — Page de réservation d'une annonce pilote (/vol/annonce/[id]/reserver) dans la nouvelle DA</h3>
+      <ul>
+        <li><code>AnnonceReserveClient</code> refaite : fond blanc, <code>.pt-page</code>, sans boîte (ancien <code>card-premium</code> sur fond navy retiré). Deux étapes dans une colonne (7/12) ;
+          à droite sur ordinateur (5/12, filet vertical), un résumé collant qui se complète au fil des choix (photo, prix, pilote, date, créneau, passagers) — même composition que la colonne prix de la page produit.
+          Calendrier et créneaux repris du même langage que la page de report (blocs de 2 h, <code>plageLabel</code>).</li>
+        <li>Téléphone : le résumé passe en ligne compacte sous le titre (pilote + prix) ; un seul bouton d'action à la fois (celui du bas de l'étape) — la 1re version dupliquait une barre de prix collante en plus, retirée.</li>
+        <li>Logique et endpoints inchangés (<code>/api/vol-annonce/month|slots|submit</code>, <code>/reservation/success</code>).</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-28 (60) — Page « Tous les vols » (/nos-offres) dans la nouvelle DA</h3>
       <ul>
         <li><code>/nos-offres</code> refaite : fond blanc, écart <code>.pt-page</code>, en-tête aligné à gauche (eyebrow + h1 34/52) comme Galerie/Contact, au lieu de l'ancien bandeau navy centré.

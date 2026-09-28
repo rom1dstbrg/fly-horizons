@@ -5,13 +5,27 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  ChevronLeft, ChevronRight, Clock, AlertCircle, Loader2, CheckCircle,
+  ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, AlertCircle, Loader2, CheckCircle,
 } from "lucide-react";
 import { formatDuration } from "@/lib/vouchers";
 import { blocsNecessaires, plageLabel } from "@/lib/pilote-creneaux";
 
+// Réservation d'une annonce pilote, dans la nouvelle DA (même vocabulaire que
+// /vol/annonce/[id] et la page de report : fond blanc, sans boîte, filets entre
+// sections). Deux étapes dans une seule colonne (7/12) ; à droite (5/12,
+// ordinateur), un résumé collant qui se complète au fil des choix — même
+// composition que la colonne prix de la page produit. Téléphone : le résumé
+// passe en ligne compacte sous le titre ; un seul bouton d'action, celui du
+// bas de l'étape (pas de barre de prix dupliquée).
+
 const MONTHS_FR = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 const DAYS_FR   = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
+
+const EYEBROW = "text-[11px] font-bold text-primary uppercase tracking-[3px]";
+const NAV_BTN = "grid h-10 w-10 place-items-center rounded-xl border border-border text-foreground hover:border-foreground transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-default disabled:hover:border-border";
+const FIELD = "w-full h-[52px] rounded-xl border border-border bg-secondary px-4 text-[15px] text-foreground placeholder:text-[#8a94a6] outline-none transition-colors focus:bg-white focus:border-foreground";
+const LABEL = "block text-[13px] font-bold text-foreground mb-2";
+const CTA = "inline-flex items-center justify-center gap-2 rounded-[10px] bg-primary px-6 py-[15px] text-sm font-black text-[#0b2238] shadow-gold hover:bg-[#e6a800] hover:-translate-y-px transition-all disabled:opacity-40 disabled:hover:translate-y-0 disabled:cursor-default cursor-pointer";
 
 type Step = "datetime" | "infos";
 
@@ -25,6 +39,9 @@ export interface AnnonceReserveInfo {
   piloteNom: string;
   coverImage: string | null;
 }
+
+const fmtLong = (iso: string) =>
+  new Date(iso + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
 
 export function AnnonceReserveClient({ annonce }: { annonce: AnnonceReserveInfo }) {
   const router = useRouter();
@@ -99,35 +116,41 @@ export function AnnonceReserveClient({ annonce }: { annonce: AnnonceReserveInfo 
       .then(r => r.json()).then(d => setSlots(d.slots ?? [])).finally(() => setSlotsLoading(false));
   }, [date, annonce.id]);
 
-  function renderCalendar() {
-    const firstDay = new Date(calYear, calMonth - 1, 1).getDay();
-    const offset = firstDay === 0 ? 6 : firstDay - 1;
-    const total = new Date(calYear, calMonth, 0).getDate();
-    const cells: React.ReactNode[] = [];
-    for (let i = 0; i < offset; i++) cells.push(<div key={`e${i}`} />);
-    for (let d = 1; d <= total; d++) {
-      const ds = `${calYear}-${String(calMonth).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-      const isAvail = availDays.includes(ds);
-      const isSel = date === ds;
-      const isPast = new Date(ds + "T12:00:00Z") < minBookableDate;
-      cells.push(
-        <button key={d} type="button" disabled={!isAvail || isPast}
-          onClick={() => { setDate(ds); setHeure(""); }}
-          className={[
-            "h-10 w-full rounded-lg text-sm font-medium transition-all duration-150 select-none flex items-center justify-center",
-            isSel              ? "bg-primary text-primary-foreground font-bold shadow-sm scale-105" :
-            isAvail && !isPast ? "text-foreground/70 cursor-pointer font-semibold hover:bg-primary/10 hover:text-primary" :
-                                 "text-foreground/20 cursor-not-allowed text-xs",
-          ].join(" ")}
-        >{d}</button>
-      );
-    }
-    return cells;
-  }
+  const moveMonth = (delta: number) => {
+    const d = new Date(calYear, calMonth - 1 + delta, 1);
+    setCalYear(d.getFullYear());
+    setCalMonth(d.getMonth() + 1);
+    loadMonth(d.getFullYear(), d.getMonth() + 1);
+  };
+  const atFirstMonth = calYear < today.getFullYear() || (calYear === today.getFullYear() && calMonth <= today.getMonth() + 1);
 
-  const formattedDate = date
-    ? new Date(date + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long" })
-    : null;
+  const firstDay = new Date(calYear, calMonth - 1, 1).getDay();
+  const offset = firstDay === 0 ? 6 : firstDay - 1;
+  const total = new Date(calYear, calMonth, 0).getDate();
+  const cells: React.ReactNode[] = [];
+  for (let i = 0; i < offset; i++) cells.push(<span key={`e${i}`} />);
+  for (let d = 1; d <= total; d++) {
+    const ds = `${calYear}-${String(calMonth).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    const isPast = new Date(ds + "T12:00:00Z") < minBookableDate;
+    const isAvail = availDays.includes(ds) && !isPast;
+    const isSel = date === ds;
+    cells.push(
+      <button
+        key={d}
+        type="button"
+        disabled={!isAvail}
+        aria-pressed={isSel}
+        aria-label={`${d} ${MONTHS_FR[calMonth - 1]}${isAvail ? "" : ", indisponible"}`}
+        onClick={() => { setDate(ds); setHeure(""); }}
+        className={[
+          "h-11 sm:h-[52px] w-full rounded-xl text-[15px] tabular-nums transition-colors",
+          isSel   ? "bg-primary text-[#0b2238] font-black cursor-pointer" :
+          isAvail ? "bg-secondary text-foreground font-bold hover:bg-[#fdf4d6] cursor-pointer" :
+                    "text-foreground/25 cursor-default",
+        ].join(" ")}
+      >{d}</button>,
+    );
+  }
 
   const ctaDisabled =
     step === "datetime"
@@ -157,259 +180,209 @@ export function AnnonceReserveClient({ annonce }: { annonce: AnnonceReserveInfo 
   }
 
   function handleCTA() {
-    if (step === "datetime") { setStep("infos"); return; }
+    if (step === "datetime") { setStep("infos"); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
     handleSubmit();
   }
 
+  const unit = annonce.modeVente === "place" ? "/ personne" : "/ avion";
+  const prefix = annonce.modeVente === "place" ? "dès " : "";
+  const dateChoisie = date ? `${fmtLong(date)}, ${slotLabel(heure)}` : null;
+
   return (
-    <div className="flex-1 bg-gradient-navy pb-16">
-      <div className="h-[98px]" />
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6">
+    <main className="bg-white pb-16 lg:pb-24">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-page">
 
-        <div className="mb-4">
-          <p className="text-[10px] font-black text-primary uppercase tracking-[3px] mb-1">
-            {step === "datetime" ? "Étape 1 sur 2" : "Étape 2 sur 2"}
-          </p>
-          <h1 className="text-xl font-black text-foreground">
-            {step === "datetime" ? "Date & créneau de vol" : "Vos informations"}
-          </h1>
-          <p className="text-sm text-foreground/50 mt-1">
-            {step === "datetime"
-              ? `Sélectionnez un créneau libre chez ${annonce.piloteNom}, pour un vol de ${formatDuration(annonce.duree)}.`
-              : "Ces informations servent à confirmer et préparer votre vol avec le pilote."}
-          </p>
-        </div>
+        <Link href={`/vol/annonce/${annonce.id}`} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground hover:text-foreground transition-colors mb-3.5 lg:mb-[18px]">
+          <ArrowLeft size={15} /> Retour à l&apos;annonce
+        </Link>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 items-start">
+        <p className={`${EYEBROW} mb-2.5`}>{step === "datetime" ? "Étape 1 sur 2" : "Étape 2 sur 2"}</p>
+        <h1 className="text-[28px] lg:text-[40px] font-black text-foreground leading-[1.05] tracking-[-0.02em]">
+          {step === "datetime" ? "Choisissez un créneau." : "Vos informations."}
+        </h1>
+        <p className="mt-2.5 max-w-[620px] text-[15px] leading-[1.7] text-foreground/70">
+          {step === "datetime"
+            ? <>Un créneau libre chez {annonce.piloteNom}, pour un vol de {formatDuration(annonce.duree)}.</>
+            : "Ces informations servent à confirmer et préparer votre vol avec le pilote."}
+        </p>
 
-          <div className="min-w-0">
+        {/* Le vol, en une ligne (téléphone : remplace le résumé latéral) */}
+        <dl className="mt-5 flex flex-wrap gap-x-6 gap-y-1 text-[13.5px] lg:hidden">
+          <div className="flex gap-1.5"><dt className="text-foreground/55">Pilote</dt><dd className="font-semibold text-foreground">{annonce.piloteNom}</dd></div>
+          <div className="flex gap-1.5"><dt className="text-foreground/55">Prix</dt><dd className="font-semibold text-foreground">{prefix}{annonce.prixClient} € <span className="text-foreground/55 font-normal">{unit}</span></dd></div>
+        </dl>
 
+        <div className="mt-8 pt-7 lg:mt-10 lg:pt-10 border-t border-border lg:grid lg:grid-cols-12">
+
+          {/* Colonne principale : l'étape en cours */}
+          <div className="lg:col-span-7">
             {step === "datetime" && (
               <>
-                <p className="flex items-start gap-1.5 text-xs text-foreground/60 mb-3">
-                  <AlertCircle size={13} className="shrink-0 mt-0.5 text-primary" />
+                <p className="flex items-start gap-1.5 text-[13px] text-foreground/60 mb-6">
+                  <AlertCircle size={14} className="shrink-0 mt-0.5 text-primary" />
                   Créneau souhaité, pas garanti : le pilote confirme votre demande, puis fixe avec vous l&apos;heure exacte du décollage.
                 </p>
 
-                <div className="card-premium overflow-hidden">
-                  <div className="p-5">
-                    <div className="flex items-center justify-between mb-4">
-                      <button type="button"
-                        onClick={() => { const ny = calMonth === 1 ? calYear - 1 : calYear; const nm = calMonth === 1 ? 12 : calMonth - 1; setCalYear(ny); setCalMonth(nm); loadMonth(ny, nm); }}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-foreground/40 hover:text-foreground hover:bg-secondary transition-all border border-border cursor-pointer"
-                        aria-label="Mois précédent">
-                        <ChevronLeft size={15} />
-                      </button>
-                      <span className="text-sm font-bold text-foreground">{MONTHS_FR[calMonth - 1]} {calYear}</span>
-                      <button type="button"
-                        onClick={() => { const ny = calMonth === 12 ? calYear + 1 : calYear; const nm = calMonth === 12 ? 1 : calMonth + 1; setCalYear(ny); setCalMonth(nm); loadMonth(ny, nm); }}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-foreground/40 hover:text-foreground hover:bg-secondary transition-all border border-border cursor-pointer"
-                        aria-label="Mois suivant">
-                        <ChevronRight size={15} />
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-7 mb-1">
-                      {DAYS_FR.map((d, i) => (
-                        <div key={i} className="h-8 flex items-center justify-center text-[9px] font-bold text-foreground/40 uppercase tracking-wider">{d}</div>
-                      ))}
-                    </div>
-
-                    {calLoading
-                      ? <div className="flex items-center justify-center h-44"><Loader2 size={20} className="animate-spin text-foreground/20" /></div>
-                      : <div className="grid grid-cols-7 gap-0.5">{renderCalendar()}</div>}
-
-                    <div className="flex flex-wrap items-center gap-4 mt-4 pt-4 border-t border-border text-[10px] text-foreground/40">
-                      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-primary" />Sélectionné</span>
-                      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full border-2 border-border" />Disponible</span>
-                      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-border" />Indisponible</span>
-                    </div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-[17px] font-black text-foreground">{MONTHS_FR[calMonth - 1]} {calYear}</h2>
+                  <div className="flex gap-2">
+                    <button type="button" aria-label="Mois précédent" disabled={atFirstMonth || calLoading} onClick={() => moveMonth(-1)} className={NAV_BTN}><ChevronLeft size={16} /></button>
+                    <button type="button" aria-label="Mois suivant" disabled={calLoading} onClick={() => moveMonth(1)} className={NAV_BTN}><ChevronRight size={16} /></button>
                   </div>
+                </div>
+                <div className="grid grid-cols-7 gap-1.5 sm:gap-2 mb-1.5">
+                  {DAYS_FR.map((d) => (
+                    <span key={d} className="text-center text-[11px] font-bold uppercase tracking-[1px] text-muted-foreground">{d}</span>
+                  ))}
+                </div>
+                {calLoading
+                  ? <div className="grid h-[280px] place-items-center"><Loader2 size={20} className="animate-spin text-muted-foreground/40" /></div>
+                  : <div className="grid grid-cols-7 gap-1.5 sm:gap-2">{cells}</div>}
+                {!calLoading && availDays.length === 0 && (
+                  <p className="mt-4 text-sm text-foreground/60">Aucune date libre ce mois-ci. Regardez le mois suivant.</p>
+                )}
 
-                  <div className="border-t border-border" />
-
-                  <div className="p-5">
-                    {!date ? (
-                      <div className="flex items-center gap-3 py-1">
-                        <Clock size={14} className="text-foreground/30 shrink-0" />
-                        <p className="text-sm text-foreground/50">Sélectionnez une date ci-dessus pour voir les créneaux disponibles</p>
-                      </div>
-                    ) : slotsLoading ? (
-                      <div className="flex items-center justify-center py-4"><Loader2 size={18} className="animate-spin text-foreground/20" /></div>
+                {date && (
+                  <div className="mt-8 pt-7 border-t border-border">
+                    <h2 className="mb-3 text-[17px] font-black text-foreground first-letter:uppercase">{fmtLong(date)}</h2>
+                    {slotsLoading ? (
+                      <Loader2 size={18} className="animate-spin text-muted-foreground/40" />
                     ) : slots.length === 0 ? (
-                      <div className="flex items-center gap-3 py-1">
-                        <Clock size={14} className="text-foreground/30 shrink-0" />
-                        <div>
-                          <p className="text-sm font-semibold text-foreground capitalize">{formattedDate}</p>
-                          <p className="text-xs text-foreground/50 mt-0.5">Aucun créneau disponible. Essayez une autre date.</p>
-                        </div>
-                      </div>
+                      <p className="text-[15px] text-foreground/60">Plus aucun créneau libre ce jour-là. Choisissez une autre date.</p>
                     ) : (
-                      <div>
-                        <div className="flex items-baseline gap-2 mb-3">
-                          <p className="text-sm font-black text-foreground capitalize">{formattedDate}</p>
-                          <span className="text-xs text-foreground/40">· {formatDuration(annonce.duree)}</span>
-                        </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                          {slots.map(s => (
-                            <button key={s} type="button" onClick={() => setHeure(s)}
-                              className={[
-                                "py-2.5 rounded-lg border text-sm font-bold transition-all duration-150 text-center cursor-pointer",
-                                heure === s
-                                  ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                                  : "border-border text-foreground hover:border-primary/50 hover:bg-primary/5 hover:text-primary",
-                              ].join(" ")}
-                            >{slotLabel(s)}</button>
-                          ))}
-                        </div>
+                      <div data-xs-grid className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {slots.map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            aria-pressed={heure === s}
+                            onClick={() => setHeure(s)}
+                            className={[
+                              "h-[52px] rounded-xl border text-[15px] font-bold tabular-nums transition-colors cursor-pointer",
+                              heure === s ? "border-primary bg-primary text-[#0b2238]" : "border-border bg-white text-foreground hover:border-foreground",
+                            ].join(" ")}
+                          >{slotLabel(s)}</button>
+                        ))}
                       </div>
                     )}
                   </div>
-                </div>
+                )}
               </>
             )}
 
             {step === "infos" && (
-              <div className="card-premium divide-y divide-border overflow-hidden">
-                <div className="p-5 sm:p-7">
-                  <p className="text-[10px] font-black text-primary uppercase tracking-[3px] mb-4">Coordonnées</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Field label="Prénom" required value={prenom} onChange={setPrenom} placeholder="Jean" />
-                    <Field label="Nom" required value={nom} onChange={setNom} placeholder="Dupont" />
-                    <div className="sm:col-span-2">
-                      <Field label="Email" required type="email" value={email} onChange={setEmail} placeholder="jean@exemple.com" />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <Field label="Téléphone" type="tel" value={telephone} onChange={setTelephone} placeholder="+32 470 00 00 00" />
-                    </div>
+              <div className="space-y-8">
+                <section>
+                  <p className={`${EYEBROW} mb-4`}>Coordonnées</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+                    <label className="block mb-4"><span className={LABEL}>Prénom</span>
+                      <input value={prenom} onChange={(e) => setPrenom(e.target.value)} required placeholder="Jean" className={FIELD} /></label>
+                    <label className="block mb-4"><span className={LABEL}>Nom</span>
+                      <input value={nom} onChange={(e) => setNom(e.target.value)} required placeholder="Dupont" className={FIELD} /></label>
                   </div>
-                </div>
+                  <label className="block mb-4"><span className={LABEL}>Email</span>
+                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="jean@exemple.com" className={FIELD} /></label>
+                  <label className="block"><span className={LABEL}>Téléphone</span>
+                    <input type="tel" value={telephone} onChange={(e) => setTelephone(e.target.value)} placeholder="+32 470 00 00 00" className={FIELD} /></label>
+                </section>
 
-                <div className="p-5 sm:p-7">
-                  <p className="text-[10px] font-black text-primary uppercase tracking-[3px] mb-4">Détails du vol</p>
-                  <div className="space-y-5">
-                    <div>
-                      <label className="block text-sm font-semibold text-foreground mb-3">Nombre de passagers</label>
-                      <div className="flex gap-2.5">
-                        {Array.from({ length: annonce.places }, (_, i) => i + 1).map(n => (
-                          <button key={n} type="button" onClick={() => setPassagers(n)}
-                            className={[
-                              "flex-1 py-2.5 rounded-lg border text-sm font-semibold transition-all duration-150 text-center cursor-pointer",
-                              passagers === n
-                                ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                                : "border-border text-foreground hover:border-primary/50 hover:bg-primary/5 hover:text-primary",
-                            ].join(" ")}
-                          >{n} {n === 1 ? "passager" : "passagers"}</button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-foreground mb-2">Message pour le pilote <span className="text-foreground/40 font-normal">(optionnel)</span></label>
-                      <textarea value={commentaire} onChange={e => setCommentaire(e.target.value)}
-                        rows={3} maxLength={500}
-                        className="w-full px-3 py-2.5 rounded-lg border border-border bg-input text-sm text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
-                    </div>
+                <section className="pt-7 border-t border-border">
+                  <p className={`${EYEBROW} mb-4`}>Détails du vol</p>
+                  <span className={LABEL}>Nombre de passagers</span>
+                  <div className="flex flex-wrap gap-2 mb-5">
+                    {Array.from({ length: annonce.places }, (_, i) => i + 1).map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        aria-pressed={passagers === n}
+                        onClick={() => setPassagers(n)}
+                        className={[
+                          "h-11 px-4 rounded-xl border text-sm font-bold transition-colors cursor-pointer",
+                          passagers === n ? "border-primary bg-primary text-[#0b2238]" : "border-border bg-white text-foreground hover:border-foreground",
+                        ].join(" ")}
+                      >{n} {n === 1 ? "passager" : "passagers"}</button>
+                    ))}
                   </div>
-                </div>
+                  <label className="block">
+                    <span className={LABEL}>Message pour le pilote <span className="font-normal text-foreground/45">(optionnel)</span></span>
+                    <textarea
+                      value={commentaire}
+                      onChange={(e) => setCommentaire(e.target.value)}
+                      rows={3}
+                      maxLength={500}
+                      className="w-full rounded-xl border border-border bg-secondary px-4 py-3 text-[15px] text-foreground placeholder:text-[#8a94a6] outline-none transition-colors focus:bg-white focus:border-foreground resize-none"
+                    />
+                  </label>
+                </section>
 
-                <div className="p-5 sm:p-7">
+                <section className="pt-7 border-t border-border">
                   <label className="flex items-start gap-3.5 cursor-pointer">
-                    <input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 accent-primary shrink-0 cursor-pointer" />
-                    <span className="text-sm text-foreground/60 leading-relaxed">
+                    <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-primary cursor-pointer" />
+                    <span className="text-[14px] leading-relaxed text-foreground/70">
                       J&apos;accepte que mon nom, mon email et mon téléphone soient transmis à{" "}
-                      <strong className="text-foreground">{annonce.piloteNom}</strong>, qui organise ce vol, pour
-                      qu&apos;il puisse me contacter et préparer le vol avec moi.
+                      <strong className="text-foreground">{annonce.piloteNom}</strong>, qui organise ce vol, pour qu&apos;il puisse
+                      me contacter et préparer le vol avec moi.
                     </span>
                   </label>
-                </div>
+                </section>
 
                 {submitError && (
-                  <div className="flex items-center gap-2.5 text-sm text-red-700 bg-red-50 border border-red-200 px-4 py-3.5 rounded-lg m-5 sm:m-7 mt-0">
-                    <AlertCircle size={14} className="shrink-0" /> {submitError}
-                  </div>
+                  <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{submitError}</p>
                 )}
               </div>
             )}
 
-            <div className="mt-5 flex items-center justify-between gap-4">
+            <div className="mt-8 pt-7 border-t border-border flex items-center justify-between gap-4">
               {step === "infos" ? (
-                <button type="button" onClick={() => setStep("datetime")}
-                  className="flex items-center gap-1.5 text-sm font-medium text-foreground/50 hover:text-foreground transition-colors cursor-pointer group">
-                  <ChevronLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
-                  Retour
+                <button type="button" onClick={() => setStep("datetime")} className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group">
+                  <ChevronLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" /> Retour
                 </button>
-              ) : <div />}
+              ) : <span />}
 
-              <button type="button" disabled={ctaDisabled} onClick={handleCTA}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-primary text-primary-foreground rounded-lg text-sm font-black transition-all disabled:opacity-30 hover:brightness-105 shadow-gold hover:-translate-y-px active:translate-y-0 active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed">
-                {submitting && <Loader2 size={14} className="animate-spin" />}
-                {step === "infos" && !submitting && <CheckCircle size={13} />}
-                <span>
-                  {step === "datetime" && (date && heure ? "Continuer" : date ? "Sélectionnez un créneau" : "Sélectionnez une date")}
-                  {step === "infos" && (submitting ? "Envoi en cours…" : "Envoyer ma demande")}
-                </span>
-                {!submitting && step === "datetime" && <ChevronRight size={15} />}
+              <button type="button" disabled={ctaDisabled} onClick={handleCTA} className={CTA}>
+                {submitting && <Loader2 size={15} className="animate-spin" />}
+                {step === "infos" && !submitting && <CheckCircle size={14} />}
+                {step === "datetime" && (date && heure ? "Continuer" : date ? "Sélectionnez un créneau" : "Sélectionnez une date")}
+                {step === "infos" && (submitting ? "Envoi en cours…" : "Envoyer ma demande")}
+                {!submitting && step === "datetime" && <ArrowRight size={15} />}
               </button>
             </div>
           </div>
 
-          <div className="hidden lg:block sticky top-[96px] self-start space-y-4">
-            <div className="card-premium overflow-hidden">
+          {/* Résumé collant (ordinateur) : même composition que la colonne prix de la page produit */}
+          <aside className="hidden lg:block lg:col-span-5 lg:pl-14 lg:ml-14 lg:border-l lg:border-border">
+            <div className="sticky top-[100px]">
               {annonce.coverImage && (
-                <div className="relative h-36 overflow-hidden">
-                  <Image src={annonce.coverImage} alt={annonce.titre} fill className="object-cover" sizes="300px" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-navy/60 to-transparent" />
+                <div className="relative mb-5 aspect-[16/10] overflow-hidden rounded-xl">
+                  <Image src={annonce.coverImage} alt={annonce.titre} fill className="object-cover" sizes="420px" />
                 </div>
               )}
-              <div className="px-5 pt-5 pb-4 border-b border-border">
-                <p className="text-[10px] font-bold text-primary uppercase tracking-[2px] mb-1">Votre réservation</p>
-                <p className="text-foreground text-2xl font-black leading-none tabular-nums">{annonce.prixClient} €</p>
-                <p className="text-muted-foreground text-xs mt-1">{annonce.titre} · {formatDuration(annonce.duree)}</p>
-              </div>
-              <div className="p-4 space-y-2.5 text-sm">
+              <p className={`${EYEBROW} mb-2`}>Votre réservation</p>
+              <p className="mb-5">
+                <span className="text-[36px] font-black leading-none text-foreground">{prefix}{annonce.prixClient}&nbsp;€</span>
+                <span className="ml-1.5 text-sm text-muted-foreground">{unit}</span>
+              </p>
+              <dl className="text-[14px]">
                 {[
-                  { l: "Pilote",    v: annonce.piloteNom },
-                  { l: "Départ",    v: "Charleroi · EBCI" },
-                  { l: "Date",      v: formattedDate ? <span className="capitalize">{formattedDate}</span> : <span className="text-muted-foreground">Non sélectionnée</span> },
-                  { l: "Créneau",   v: heure ? slotLabel(heure) : <span className="text-muted-foreground">—</span> },
-                  { l: "Passagers", v: `${passagers} passager${passagers > 1 ? "s" : ""}` },
-                ].map(({ l, v }) => (
-                  <div key={l} className="flex items-center justify-between gap-2">
-                    <span className="text-muted-foreground text-xs">{l}</span>
-                    <span className="font-semibold text-xs text-right">{v}</span>
+                  ["Pilote", annonce.piloteNom],
+                  ["Départ", "Charleroi · EBCI"],
+                  ["Date", dateChoisie ? <span className="first-letter:uppercase">{fmtLong(date)}</span> : <span className="text-foreground/35">à choisir</span>],
+                  ["Créneau", heure ? slotLabel(heure) : <span className="text-foreground/35">—</span>],
+                  ["Passagers", step === "infos" ? `${passagers} ${passagers > 1 ? "passagers" : "passager"}` : <span className="text-foreground/35">à préciser</span>],
+                ].map(([l, v]) => (
+                  <div key={l as string} className="flex justify-between gap-4 py-2.5 border-b border-border last:border-b-0">
+                    <dt className="text-foreground/55">{l}</dt>
+                    <dd className="text-right font-semibold text-foreground">{v}</dd>
                   </div>
                 ))}
-              </div>
-              <p className="px-4 pb-4 text-[10px] text-muted-foreground">
-                Vous ne payez pas à cette étape : le pilote vous enverra les infos de paiement une
-                fois votre créneau confirmé.
+              </dl>
+              <p className="mt-4 text-[12.5px] leading-relaxed text-foreground/55">
+                Vous ne payez pas à cette étape : le pilote vous enverra les infos de paiement une fois votre créneau confirmé.
               </p>
             </div>
-            <Link href={`/vol/annonce/${annonce.id}`} className="flex items-center gap-1.5 text-xs font-semibold text-white/50 hover:text-white transition-colors">
-              <ChevronLeft size={13} /> Retour à l&apos;annonce
-            </Link>
-          </div>
-
+          </aside>
         </div>
       </div>
-    </div>
-  );
-}
-
-function Field({ label, required, type = "text", value, onChange, placeholder }: {
-  label: string; required?: boolean; type?: string;
-  value: string; onChange: (v: string) => void; placeholder?: string;
-}) {
-  return (
-    <div>
-      <label className="block text-sm font-semibold text-foreground mb-2">
-        {label}{required && <span className="text-foreground/40 font-normal"> *</span>}
-      </label>
-      <input type={type} value={value} required={required} placeholder={placeholder}
-        onChange={e => onChange(e.target.value)}
-        className="w-full h-10 px-3 rounded-lg border border-border bg-input text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-foreground/30" />
-    </div>
+    </main>
   );
 }
