@@ -101,7 +101,16 @@ h1{font-size:34px;font-weight:900;line-height:1.05;letter-spacing:-.02em;margin:
 .vC .ph{margin:24px -16px 0;aspect-ratio:16/9;overflow:hidden;background:var(--navy)}
 .vC .ph img{width:100%;height:100%;object-fit:cover}
 .vC form,.vC .done{margin-top:28px}
-.vC .inl{margin-top:28px;font-size:14px;line-height:1.9;color:rgba(30,37,53,.72)}
+.vC .cinfo{margin-top:48px}
+.vC .map{aspect-ratio:4/3;border-radius:14px;overflow:hidden;background:var(--sec);margin-bottom:8px}
+.vC .map iframe{width:100%;height:100%;border:0;display:block}
+.vC .irow{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid var(--border)}
+.vC .irow:last-child{border-bottom:0}
+.vC .irow .ic{width:38px;height:38px;border-radius:10px;background:var(--sec);display:grid;place-items:center;color:var(--navy);flex:none}
+.vC .irow .t{font-size:14px;font-weight:700;margin:2px 0 3px}
+.vC .irow .d{font-size:14px;line-height:1.6;color:rgba(30,37,53,.72);margin:0}
+.vC .irow .lk{font-size:13px;margin:6px 0 0;color:var(--muted)}
+.vC .irow .lk a,.vC .irow a.u{color:var(--navy);font-weight:600;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(11,34,56,.25)}
 
 .row2{display:grid;gap:0 18px}
 
@@ -127,10 +136,11 @@ h1{font-size:34px;font-weight:900;line-height:1.05;letter-spacing:-.02em;margin:
   .vB .sendrow .legal{margin:0}
   .vB .help{grid-template-columns:repeat(3,1fr);gap:48px;padding:64px 0 112px}
 
-  .vC .split{grid-template-columns:5fr 6fr;column-gap:80px;padding-top:38px;padding-bottom:112px;grid-template-areas:"ph head" "ph body";grid-template-rows:auto 1fr}
+  /* Formulaire à gauche (7), infos à droite (5), qui démarrent à la hauteur du titre */
+  .vC .split{grid-template-columns:7fr 5fr;column-gap:80px;padding-top:38px;padding-bottom:112px;grid-template-areas:"head info" "body info";grid-template-rows:auto 1fr}
   .vC .chead{grid-area:head}
-  .vC .cbody{grid-area:body}
-  .vC .ph{grid-area:ph;margin:0;aspect-ratio:auto;min-height:560px;border-radius:14px}
+  .vC .cbody{grid-area:body;max-width:720px}
+  .vC .cinfo{grid-area:info;margin-top:0;align-self:start}
 }
 </style>
 </head>
@@ -139,13 +149,13 @@ h1{font-size:34px;font-weight:900;line-height:1.05;letter-spacing:-.02em;margin:
   <b>Maquette · Contact v2</b>
   <div class="seg" id="vw"><button data-v="desk" class="on">Ordinateur</button><button data-v="phone">Téléphone</button></div>
   <span class="lbl">Structure</span>
-  <div class="seg" id="var"><button data-x="A" class="on">A · Lettre</button><button data-x="B">B · Bande</button><button data-x="C">C · Photo</button></div>
+  <div class="seg" id="var"><button data-x="A">A · Lettre</button><button data-x="B">B · Bande</button><button data-x="C" class="on">C · Infos</button></div>
   <span class="lbl">État</span>
   <div class="seg" id="st"><button data-s="form" class="on">Formulaire</button><button data-s="sent">Message envoyé</button></div>
 </div>
 
 <div class="stage" id="stage">
-<div class="frame A" id="frame">
+<div class="frame C" id="frame">
   <header class="hdr"><div class="pill">
     <img class="logo" src="public/fly-horizons-logo-navy.svg" alt="Fly Horizons"><span class="fill"></span>
     <nav class="nav"><a href="#">Les vols</a><a href="#">Galerie</a><a href="#">À propos</a><a href="#">FAQ</a><a href="#">Contact</a></nav>
@@ -187,12 +197,35 @@ h1{font-size:34px;font-weight:900;line-height:1.05;letter-spacing:-.02em;margin:
       <h1>Écrivez-nous.</h1>
       <p class="lead">Une personne de l'équipe lit chaque message et vous répond par email sous 24&nbsp;h.</p>
     </div>
-    <div class="ph"><img src="public/hero-section.png" alt="Vue du cockpit en vol au-dessus de la campagne"></div>
     <div class="cbody">
       <form data-form></form>
       <div class="done"></div>
-      <p class="inl">Aussi par email : <a href="#">info@fly-horizons.com</a> · <a href="#">L'assistant</a> · <a href="#">FAQ</a></p>
     </div>
+    <aside class="cinfo" aria-label="Nous trouver et nous joindre">
+      <div class="map">
+        <iframe src="https://maps.google.com/maps?q=50.45787645919888,4.454058485690142&z=16&output=embed" title="Point de rendez-vous Fly Horizons" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      </div>
+      <div class="irow">
+        <span class="ic"><i data-lucide="map-pin"></i></span>
+        <div>
+          <p class="t">Point de rendez-vous</p>
+          <p class="d">Aviation générale, aérodrome de Charleroi (EBCI), 6041 Gosselies</p>
+          <p class="lk"><a href="https://www.google.com/maps/dir/?api=1&destination=50.45787645919888,4.454058485690142" target="_blank" rel="noopener">Itinéraire GPS</a> · <a href="#">Plan d'accès détaillé</a></p>
+        </div>
+      </div>
+      <div class="irow">
+        <span class="ic"><i data-lucide="mail"></i></span>
+        <div><p class="t">Email</p><p class="d"><a class="u" href="#">info@fly-horizons.com</a></p></div>
+      </div>
+      <div class="irow">
+        <span class="ic"><i data-lucide="clock"></i></span>
+        <div><p class="t">Délai de réponse</p><p class="d">Sous 24&nbsp;h, par une personne de l'équipe</p></div>
+      </div>
+      <div class="irow">
+        <span class="ic"><i data-lucide="message-circle"></i></span>
+        <div><p class="t">Une question simple ?</p><p class="d"><a class="u" href="#">Demandez à l'assistant</a> ou consultez la <a class="u" href="#">FAQ</a></p></div>
+      </div>
+    </aside>
   </div></main>
 
   <footer class="foot"><div class="wrap"><img src="public/fly-horizons-logo-white.svg" alt="Fly Horizons"><div>Footer actuel, inchangé.</div></div></footer>
