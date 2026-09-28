@@ -1607,6 +1607,20 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-28 (49) — Pages produit (annonce et ancien produit) sur un gabarit commun, selon la maquette validée</h3>
+      <ul>
+        <li><code>components/vols/VolProductLayout.tsx</code> : gabarit unique de <code>/vol/annonce/[id]</code> et <code>/vols/[slug]</code>, qui ne lui passent plus que leurs données.
+          Titre + pilote (« Voir le profil ») + durée/places ; galerie <code>VolGallery</code> (carrousel + compteur sur téléphone, mosaïque « Voir les N photos » sur ordinateur,
+          visionneuse au-dessus du header) ; prix + sièges ; texte et itinéraire avec carte figée <code>RouteMapStatic</code> ; colonne de réservation collante sans boîte (variante A) ;
+          frise « Comment ça se passe » ; 3 autres vols ; barre collante sur téléphone.</li>
+        <li>Annonce : « Réserver » vers <code>/reserver</code>, « Complet » sans place libre, virement ou espèces. En vente à la place : « dès X € / personne » + mention du recalcul si des places restent libres.
+          Ancien produit : « Faire une demande » vers <code>/reservation</code>, taxes d'escale sous le prix.</li>
+        <li>Téléphone : sièges sous le prix (le prix et « / personne » tiennent sur une ligne dès 360 px).</li>
+        <li>Supprimés, plus utilisés : <code>VolDetailClient</code>, <code>VolStickyBar</code>, <code>VolImageGallery</code>, <code>VolItineraryCard</code> (shop), <code>AnnonceStickyBar</code>.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-28 (48) — Accueil refait : hero gardé avec textes corrigés, bandeau exact, prochains vols + alerte email, principe, avis</h3>
       <ul>
         <li><code>HeroContent</code> : vidéo et animation gardées (hero 100 vh). Titre « Prenez place à bord. Partagez le ciel. » (l'ancien « Volez où vous voulez » laissait croire

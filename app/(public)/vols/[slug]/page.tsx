@@ -1,14 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { Route, ArrowRight, CalendarCheck, Map, Headphones, PlaneTakeoff } from "lucide-react";
-import { formatDuration } from "@/lib/vouchers";
-import { VolDetailClient } from "@/components/shop/VolDetailClient";
-import { VolImageGallery } from "@/components/shop/VolImageGallery";
-import { VolItineraryCard } from "@/components/shop/VolItineraryCard";
 import { PackCard } from "@/components/shop/PackCard";
-import { BackLink } from "@/components/shop/BackLink";
-import { VolStickyBar } from "@/components/shop/VolStickyBar";
+import { VolProductLayout } from "@/components/vols/VolProductLayout";
 import { jsonLd } from "@/lib/json-ld";
 
 function shuffle<T>(arr: T[]): T[] {
@@ -51,33 +44,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-const STEPS = [
-  {
-    num: "01",
-    icon: <CalendarCheck size={22} />,
-    title: "Demande en ligne",
-    desc: "Choisissez votre vol, une date et un horaire souhaités, puis envoyez votre demande. Aucun paiement n'est demandé à ce stade, que ce soit pour vous ou pour l'offrir.",
-  },
-  {
-    num: "02",
-    icon: <Map size={22} />,
-    title: "Confirmation par le pilote",
-    desc: "Votre pilote étudie votre demande sous 72h maximum (créneau, météo, faisabilité). Itinéraire libre, la route se compose avec vous ; destination fixée, elle est déjà tracée. Le lien de paiement suit.",
-  },
-  {
-    num: "03",
-    icon: <Headphones size={22} />,
-    title: "Briefing à Charleroi",
-    desc: "Rendez-vous sur l'aérodrome de Charleroi (EBCI) : briefing sécurité, casques audio fournis. Vous montez à bord en toute sérénité.",
-  },
-  {
-    num: "04",
-    icon: <PlaneTakeoff size={22} />,
-    title: "À vous le ciel",
-    desc: "Décollage, montée en altitude, panorama sur la Belgique. Votre pilote commente chaque repère tout au long du trajet et répond à toutes vos questions.",
-  },
-];
-
 export default async function VolDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const supabase = await createClient();
@@ -102,9 +68,7 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
 
   if (!vol) notFound();
 
-  const toutesAutres = autres ?? [];
-  const autresDurees = shuffle(toutesAutres.filter((p) => !p.route_waypoints || p.route_waypoints.length === 0)).slice(0, 3);
-  const autresItineraires = shuffle(toutesAutres.filter((p) => p.route_waypoints && p.route_waypoints.length > 0)).slice(0, 3);
+  const autresVols = shuffle(autres ?? []).slice(0, 3);
 
   const duree = vol.voucher_duration_minutes ?? 60;
   const sortedImages = [...(vol.images ?? [])].sort((a: { position?: number }, b: { position?: number }) => (a.position ?? 0) - (b.position ?? 0));
@@ -131,173 +95,28 @@ export default async function VolDetailPage({ params }: { params: Promise<{ slug
     },
   };
 
+  const escales = (vol.escales ?? []) as { icao: string; nom: string; taxe: number }[];
+  const taxes = escales.reduce((t, e) => t + e.taxe, 0);
+
   return (
-    <main className="bg-gradient-navy">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: jsonLd(productSchema) }}
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(productSchema) }} />
+      <VolProductLayout
+        title={vol.title}
+        description={vol.description ?? vol.short_description}
+        duree={duree}
+        places={3}
+        pilote={null}
+        images={sortedImages.map((i: { url: string }) => i.url)}
+        route={vol.route_waypoints}
+        price={vol.price}
+        mode="avion"
+        placesLibres={3}
+        priceNote={taxes > 0 ? `Dont ${taxes} € de taxe${escales.length > 1 ? "s" : ""} d'escale (${escales.map((e) => e.icao).join(", ")}).` : null}
+        cta={soldOut ? { disabled: "Offre épuisée" } : { href: `/reservation?produit=${vol.id}&duree=${duree}`, label: "Faire une demande" }}
+        paiement="Vous recevez les modalités de paiement par email, avec la confirmation du vol."
+        others={autresVols.length > 0 ? autresVols.map((p) => <PackCard key={p.id} pack={p} />) : null}
       />
-
-      {/* ══════ SPLIT — galerie gauche / info droite ══════ */}
-      <div className="pt-[98px] bg-gradient-navy">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 pt-2 sm:pt-12 pb-20">
-
-          <BackLink />
-
-          <div className="grid md:grid-cols-[1fr_380px] lg:grid-cols-[1fr_400px] gap-10 lg:gap-14 items-start">
-
-            {/* ── Gauche : galerie (sticky, suit le scroll jusqu'en bas de la colonne droite) ── */}
-            <div className="md:sticky md:top-28">
-              <VolImageGallery
-                images={sortedImages}
-                title={vol.title}
-                duree={duree}
-              />
-            </div>
-
-            {/* ── Droite : info + CTA ── */}
-            <div className="space-y-6">
-
-              <div>
-                <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-3">
-                  {formatDuration(duree)} · Vol en avion léger
-                </p>
-                <h1 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight">
-                  {vol.title}
-                </h1>
-                {vol.short_description && (
-                  <p className="text-foreground/55 text-sm leading-relaxed mt-3">
-                    {vol.short_description}
-                  </p>
-                )}
-              </div>
-
-              {vol.route_waypoints && vol.route_waypoints.length > 0 && (
-                <VolItineraryCard waypoints={vol.route_waypoints} />
-              )}
-
-              <VolDetailClient
-                id={vol.id} slug={vol.slug} title={vol.title}
-                price={vol.price} duree={duree} image_url={image} soldOut={soldOut} escales={vol.escales}
-              />
-
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ══════ COMMENT ÇA SE PASSE ══════ */}
-      <div className="bg-[#f5f5f7] py-20 sm:py-28 overflow-hidden">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
-
-          <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-4">
-            Déroulement
-          </p>
-          <h2 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight mb-16">
-            Comment ça se passe
-          </h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
-            {STEPS.map(({ num, icon, title, desc }) => (
-              <div key={num} className="relative flex flex-col gap-5">
-
-                {/* Numéro décoratif en arrière-plan */}
-                <span className="absolute -top-3 right-0 text-[96px] font-black leading-none select-none pointer-events-none tabular-nums text-foreground/[0.06]">
-                  {num}
-                </span>
-
-                {/* Icône gold proéminente */}
-                <div className="relative z-10 w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-[#0b2238] shadow-[0_6px_24px_rgba(242,183,5,0.35)]">
-                  {icon}
-                </div>
-
-                {/* Texte */}
-                <div className="flex flex-col gap-1">
-                  <span className="text-[10px] font-extrabold text-primary/70 uppercase tracking-[2.5px]">
-                    Étape {num}
-                  </span>
-                  <p className="text-foreground font-black text-[17px] leading-snug">
-                    {title}
-                  </p>
-                  <p className="text-foreground/60 text-sm leading-relaxed mt-1">
-                    {desc}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-        </div>
-      </div>
-
-      {/* ══════ AUTRES DURÉES — vols à durée libre ══════ */}
-      {autresDurees.length > 0 && (
-        <div className="bg-gradient-navy pt-20 sm:pt-28 pb-10 sm:pb-14">
-          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
-            <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-4">
-              Autres durées disponibles
-            </p>
-            <h2 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight mb-10">
-              Changer de durée
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {autresDurees.map((p) => (
-                <PackCard key={p.id} pack={p} />
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ══════ AUTRES ITINÉRAIRES — vols avec destination/circuit fixé ══════ */}
-      {autresItineraires.length > 0 && (
-        <div className={`bg-gradient-navy ${autresDurees.length > 0 ? "pt-10 sm:pt-14" : "pt-20 sm:pt-28"} pb-20 sm:pb-28`}>
-          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
-            <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-4">
-              Autres itinéraires
-            </p>
-            <h2 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight mb-10">
-              Destinations &amp; circuits
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {autresItineraires.map((p) => (
-                <PackCard key={p.id} pack={p} />
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ══════ VOL SUR MESURE — masqué 29/07/2026 en attendant confirmation légale, voir audit-legal-fly-horizons.html ══════ */}
-      {false && (
-      <div className="bg-card border-t border-border pt-14 pb-[88px]">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-          <div>
-            <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-3">Vol sur mesure</p>
-            <h2 className="text-2xl sm:text-3xl font-black text-foreground leading-tight">
-              Vous avez un itinéraire précis en tête ?
-            </h2>
-            <p className="text-muted-foreground text-sm mt-2 max-w-md leading-relaxed">
-              Tracez votre route sur la carte : durée et prix calculés en temps réel, au kilomètre près.
-            </p>
-          </div>
-          <Link
-            href="/vol-sur-mesure"
-            className="shrink-0 inline-flex items-center gap-2.5 px-6 py-3.5 bg-navy text-white rounded-lg text-sm font-black hover:opacity-90 transition-opacity"
-          >
-            <Route size={16} />
-            Créer mon vol sur mesure
-            <ArrowRight size={15} />
-          </Link>
-        </div>
-      </div>
-      )}
-
-      <VolStickyBar
-        id={vol.id} slug={vol.slug} title={vol.title}
-        price={vol.price} duree={duree} image_url={image} soldOut={soldOut}
-      />
-
-    </main>
+    </>
   );
 }
