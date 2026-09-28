@@ -1653,6 +1653,9 @@
         <li><b>Bug de contenu corrigé au passage</b> : cette page est le point d'arrivée de deux flows différents (l'ancien <code>/reservation</code> payé par Stripe, et <code>AnnonceReserveClient</code> pour les vols publiés par les pilotes),
           mais affichait toujours les mêmes étapes — dont « votre pilote vous propose un itinéraire », qui n'existe pas pour une annonce pilote (pas d'itinéraire, paiement par virement après confirmation, pas avant). Distinction ajoutée via
           <code>?type=annonce</code> sur la redirection d'<code>AnnonceReserveClient</code> : étapes et bloc « Paiement » propres à ce flow ; l'ancien flow (sans le paramètre) garde son texte d'origine.</li>
+        <li><b>Correctif composition (retour Romain) :</b> le premier jet restait vertical sur ordinateur (une colonne de 680 px perdue dans 1440 px de large, comme au téléphone).
+          Passé en horizontal sur PC : étapes (7/12) et infos pratiques + CTA (5/12, filet vertical) côte à côte, même composition que la page de réservation ; le téléphone reste inchangé, une seule colonne empilée.
+          Règle à appliquer partout : PC = horizontal, mobile = vertical, jamais la même colonne étroite recentrée sur un grand écran.</li>
       </ul>
     </div>
 
