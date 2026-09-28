@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { Mail, Wrench, CalendarClock } from "lucide-react";
-import { FaWhatsapp } from "react-icons/fa6";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const metadata: Metadata = {
@@ -11,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 const DEFAULT_MESSAGE =
-  "Les réservations restent possibles par mail ou WhatsApp, on vous répond vite.";
+  "Les réservations restent possibles par email, on vous répond vite.";
 
 function formatReopenDate(value: string) {
   const date = new Date(`${value}T00:00:00`);
@@ -85,15 +84,6 @@ export default async function MaintenancePage() {
           >
             <Mail size={16} />
             info@fly-horizons.com
-          </a>
-          <a
-            href="https://wa.me/32472324135"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="cursor-pointer inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#25D366] text-white rounded-lg text-sm font-bold hover:bg-[#1ebe5d] transition-colors"
-          >
-            <FaWhatsapp size={16} />
-            WhatsApp
           </a>
         </div>
       </div>

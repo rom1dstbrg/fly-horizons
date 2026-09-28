@@ -50,8 +50,7 @@ export default async function GuideFichePage({ params }: { params: Promise<{ slu
 
       {render ? render() : (
         <UnderConstruction title="Cette fiche arrive bientôt">
-          Nous la rédigeons en ce moment. En attendant, une question sur ce sujet : écrivez-nous sur WhatsApp ou
-          depuis <Link href="/pilote/guide/contact" className="font-semibold text-st-ink hover:underline">Nous contacter</Link>.
+          Nous la rédigeons en ce moment. En attendant, une question sur ce sujet : écrivez-nous depuis <Link href="/pilote/guide/contact" className="font-semibold text-st-ink hover:underline">Nous contacter</Link>.
         </UnderConstruction>
       )}
 

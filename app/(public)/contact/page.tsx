@@ -1,7 +1,6 @@
 import React from "react";
 import Link from "next/link";
 import { Mail, ArrowRight } from "lucide-react";
-import { FaWhatsapp } from "react-icons/fa6";
 import { ContactForm } from "@/components/shop/ContactForm";
 import { ChatSidebarRow } from "./ChatSidebarRow";
 import { ChatWidget } from "@/components/chat/ChatWidget";
@@ -61,23 +60,6 @@ export default function ContactPage() {
                   <p className="text-muted-foreground text-xs mt-0.5 truncate">info@fly-horizons.com</p>
                 </div>
                 <ArrowRight size={15} className="shrink-0 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
-              </a>
-
-              {/* WhatsApp */}
-              <a
-                href="https://wa.me/32472324135"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center gap-4 p-5 border-b border-border hover:bg-secondary transition-colors"
-              >
-                <div className="w-9 h-9 rounded-lg bg-[#25D366]/10 border border-[#25D366]/20 flex items-center justify-center text-[#25D366] shrink-0 transition-all">
-                  <FaWhatsapp size={17} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-black text-foreground text-sm">WhatsApp</p>
-                  <p className="text-muted-foreground text-xs mt-0.5">Disponible 7&nbsp;j/7</p>
-                </div>
-                <ArrowRight size={15} className="shrink-0 text-muted-foreground/40 group-hover:text-[#25D366] group-hover:translate-x-0.5 transition-all" />
               </a>
 
               {/* Chat IA */}

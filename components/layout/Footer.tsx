@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Mail, Lock } from "lucide-react";
-import { FaWhatsapp } from "react-icons/fa6";
 import { NewsletterForm } from "@/components/NewsletterForm";
 
 function IconFacebook({ size = 16 }: { size?: number }) {
@@ -26,7 +25,6 @@ const SOCIALS = [
   { href: "mailto:info@fly-horizons.com",                            label: "E-mail",     icon: <Mail size={15} /> },
   { href: "https://www.facebook.com/profile.php?id=61569809631946",  label: "Facebook",  icon: <IconFacebook size={15} /> },
   { href: "https://www.instagram.com/fly_horizons_belgium/",         label: "Instagram", icon: <IconInstagram size={15} /> },
-  { href: "https://wa.me/32472324135",                               label: "WhatsApp",  icon: <FaWhatsapp size={15} /> },
 ];
 
 const INFOS = [
@@ -105,7 +103,6 @@ export function Footer() {
               <ul className="space-y-2.5">
                 <li><a href="mailto:info@fly-horizons.com" className="text-sm text-white/50 hover:text-white transition-colors">info@fly-horizons.com</a></li>
                 <li><Link href="/contact" className="text-sm text-white/50 hover:text-white transition-colors">Formulaire de contact</Link></li>
-                <li><a href="https://wa.me/32472324135" target="_blank" rel="noopener noreferrer" className="text-sm text-white/50 hover:text-white transition-colors">WhatsApp</a></li>
               </ul>
             </div>
           </div>
@@ -197,7 +194,6 @@ export function Footer() {
               <ul className="space-y-2.5">
                 <li><a href="mailto:info@fly-horizons.com" className={lnk}>info@fly-horizons.com</a></li>
                 <li><Link href="/contact" className={lnk}>Formulaire de contact</Link></li>
-                <li><a href="https://wa.me/32472324135" target="_blank" rel="noopener noreferrer" className={lnk}>WhatsApp</a></li>
               </ul>
             </div>
 

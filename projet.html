@@ -260,7 +260,26 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
-      <p class="date">2026-09-28 (16) · Nouvelle direction artistique du site public</p>
+      <p class="date">2026-09-28 (17) · Canaux de contact et offre, remis à plat</p>
+      <h3>Plus de WhatsApp, plus de bons cadeaux ; espèces seulement si le pilote accepte ; À propos parle de la plateforme ; réservation PC en colonne à droite (A)</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Avant la refonte visuelle, Romain veut corriger l'urgent : la FAQ et le chatbot décrivaient encore l'ancien modèle (Stripe, bons cadeaux, un seul pilote), et WhatsApp
+          renvoyait tout vers son numéro perso. Base au 28/09 : <code>catalogue_source = annonces</code>, aucun produit voucher actif.</dd>
+        <dt>Décision</dt>
+        <dd>WhatsApp retiré partout (site, chatbot, emails, guide pilote) : contact = info@fly-horizons.com + formulaire. Bons cadeaux abandonnés (pour offrir, on réserve au nom de la personne).
+          Paiement : virement au pilote par défaut, espèces si le pilote l'accepte. Page À propos centrée sur la plateforme, Romain presque absent.
+          Page produit : réservation PC en variante A (colonne à droite sans boîte), tranche la question ouverte de la décision (16).</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Garder WhatsApp pour les pilotes seulement. Garder des bons cadeaux établis à la main.</dd>
+        <dt>Conséquences</dt>
+        <dd>CGP (art. 4 bons de vol, art. 7 Stripe, art. 10) et footer (« Paiement sécurisé Stripe », « avec Romain ») restent à resynchroniser. Les codes de bons déjà émis ne sont plus évoqués
+          dans la FAQ ni par le chatbot.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
+      <p class="date">2026-09-28 (16) ·Nouvelle direction artistique du site public</p>
       <h3>Le site public adopte la DA de <code>maquette-page-produit.html</code> : éditorial, sans boîtes, ordre téléphone pensé d'abord ; le style Studio reste réservé à l'admin et à l'espace pilote</h3>
       <dl>
         <dt>Contexte</dt>
@@ -1588,7 +1607,21 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
-      <h3>2026-09-27 (42) — Bilan de vol obligatoire avec rappels ; liens de l'accueil vers le tiroir ; test local sur téléphone</h3>
+      <h3>2026-09-28 (43) — WhatsApp retiré partout ; FAQ et chatbot remis à jour sur le vrai fonctionnement ; maquettes page produit et À propos</h3>
+      <ul>
+        <li>WhatsApp supprimé : footer, contact, FAQ, CGP, confidentialité, page maintenance, <code>NoFlightsNotice</code>, bouton du chatbot, ~25 emails
+          (<code>lib/email-templates.ts</code>, pied de page compris), guide pilote (<code>GuideContact</code>, fiche « bientôt »). Le contact passe par
+          info@fly-horizons.com et <code>/contact</code>.</li>
+        <li>FAQ réécrite (<code>app/(public)/faq/page.tsx</code>) : annonces publiées par des pilotes, paiement par virement au pilote avec QR (espèces si le pilote
+          accepte, plus de carte ni de Stripe), prix « à la place » recalculé à la clôture du groupe, plus de bons cadeaux, pas de compte obligatoire, assurance
+          de l'avion formulée pour plusieurs pilotes. Petit helper <code>item()</code> pour ne plus dupliquer question / réponse.</li>
+        <li>Prompt du chatbot (<code>app/api/chat/route.ts</code>) aligné sur la FAQ (même faits, plus de « Romain seul pilote », plus de Stripe ni de bons cadeaux).</li>
+        <li>Maquettes : <code>maquette-page-produit.html</code> (réservation PC : variante A retenue) et <code>maquette-about.html</code> (à valider).</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-09-27 (42) —Bilan de vol obligatoire avec rappels ; liens de l'accueil vers le tiroir ; test local sur téléphone</h3>
       <ul>
         <li>Bilan de vol : minutes réelles obligatoires (<code>AnnoncePiloteActions</code>, <code>marquerVolEffectue</code>), clôture possible payé ou non ;
           rappels push via <code>app/api/cron/bilan-vol</code> + tâche pg_cron horaire (<code>20260927f_cron_bilan_vol.sql</code>).</li>

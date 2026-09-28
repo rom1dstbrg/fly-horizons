@@ -5,9 +5,8 @@ import { ChatWidget } from "@/components/chat/ChatWidget";
 import Link from "next/link";
 import {
   ChevronDown, Search, MessageCircle, X,
-  CalendarCheck, CreditCard, Gift, CloudRain, PlaneTakeoff, Users,
+  CalendarCheck, CreditCard, CloudRain, PlaneTakeoff, Users,
 } from "lucide-react";
-import { FaWhatsapp } from "react-icons/fa6";
 import { jsonLd } from "@/lib/json-ld";
 
 // ── Recherche intelligente ──────────────────────────────────────────────────
@@ -16,7 +15,7 @@ const SYNONYMS: Record<string, string[]> = {
   prix:        ["tarif", "cout", "combien", "cher", "montant"],
   tarif:       ["prix", "cout", "combien"],
   payer:       ["paiement", "provision", "acompte", "regler", "stripe", "carte", "virement"],
-  paiement:    ["payer", "provision", "acompte", "stripe", "carte", "regler"],
+  paiement:    ["payer", "provision", "acompte", "stripe", "carte", "regler", "virement", "iban", "especes", "cash"],
   acompte:     ["provision", "payer", "paiement", "depot", "garantie"],
   provision:   ["payer", "paiement", "acompte", "depot", "garantie"],
   annuler:     ["annulation", "rembours", "reporter", "report", "modifier"],
@@ -108,115 +107,73 @@ type Theme = {
   items: FaqItem[];
 };
 
+const lk = "text-primary font-semibold hover:text-[#e6a800] transition-colors";
+const item = (q: string, aText: string, a?: React.ReactNode): FaqItem => ({ q, aText, a: a ?? aText });
+
 const THEMES: Theme[] = [
   {
     id: "reservation",
     title: "Participer à un vol",
     Icon: CalendarCheck,
     items: [
-      {
-        q: "Comment participer à un vol partagé ?",
-        aText: "Rendez-vous sur la page Nos vols, choisissez une durée libre (30, 60, 90 ou 120 minutes) ou un vol à itinéraire fixe vers une destination. Ouvrez la fiche du vol pour voir les photos et le détail, puis cliquez sur Faire une demande : sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis envoyez votre demande. Aucun paiement n'est demandé à ce stade. Le pilote étudie votre demande et vous répond sous 72 heures maximum : si le vol peut avoir lieu, vous recevez un lien de paiement sécurisé (ou convenez d'un paiement en espèces avec nous).",
-        a: <>Rendez-vous sur la page <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Nos vols</Link>, choisissez une durée libre (30, 60, 90 ou 120 minutes) ou un vol à itinéraire fixe vers une destination. Ouvrez la fiche du vol pour voir les photos et le détail, puis cliquez sur Faire une demande : sélectionnez une date et un horaire dans le calendrier, renseignez vos informations, puis envoyez votre demande. Aucun paiement n&apos;est demandé à ce stade. Le pilote étudie votre demande et vous répond sous 72 heures maximum : si le vol peut avoir lieu, vous recevez un lien de paiement sécurisé (ou convenez d&apos;un paiement en espèces avec nous).</>,
-      },
-      {
-        q: "Le pilote peut-il refuser ma demande de vol ?",
-        aText: "Oui. Fly Horizons se réserve le droit d'accepter ou de refuser toute demande de vol, à sa seule discrétion (disponibilité, météo, faisabilité technique...), tant que le paiement n'a pas été reçu et confirmé. Une demande envoyée ne garantit donc pas votre place à bord : vous rejoignez officiellement le vol une fois la demande acceptée par le pilote.",
-        a: "Oui. Fly Horizons se réserve le droit d'accepter ou de refuser toute demande de vol, à sa seule discrétion (disponibilité, météo, faisabilité technique...), tant que le paiement n'a pas été reçu et confirmé. Une demande envoyée ne garantit donc pas votre place à bord : vous rejoignez officiellement le vol une fois la demande acceptée par le pilote.",
-      },
-      {
-        q: "Quelle est la contribution pour un vol partagé en Belgique ?",
-        aText: "La contribution aux frais pour un vol partagé dépend de la formule choisie : durée libre (30, 60, 90 ou 120 minutes) ou vol à itinéraire fixe vers une destination, taxes d'escale incluses le cas échéant. Tous les montants à jour sont affichés sur la page Les vols, sans frais cachés.",
-        a: <>La contribution aux frais pour un vol partagé dépend de la formule choisie : durée libre (30, 60, 90 ou 120 minutes) ou vol à itinéraire fixe vers une destination, taxes d&apos;escale incluses le cas échéant. Tous les montants à jour sont affichés sur la page <Link href="/nos-offres" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Les vols</Link>, sans frais cachés.</>,
-      },
-      /* Masqué 29/07/2026 en attendant confirmation légale — voir audit-legal-fly-horizons.html
-      {
-        q: "Comment fonctionne le vol sur mesure ?",
-        aText: "Un assistant pas à pas vous guide pour choisir vos destinations : villes belges, monuments, lieux qui vous tiennent à cœur ou adresse précise. L'itinéraire se finalise sur la carte et le prix s'ajuste en temps réel, à la minute de vol réelle. Pas de forfait ni de tranche fixe : si vous volez 52 minutes, vous payez 52 minutes. Une fois votre demande envoyée, Romain vérifie la faisabilité (espaces aériens, restrictions) et vous revient sous 24 heures. Le lien de paiement n'est envoyé qu'après votre accord. Aucun paiement immédiat.",
-        a: <>Un assistant pas à pas vous guide pour choisir vos destinations : villes belges, monuments, lieux qui vous tiennent à cœur ou adresse précise. L&apos;itinéraire se finalise sur la carte et le prix s&apos;ajuste en temps réel, à la minute de vol réelle. Pas de forfait ni de tranche fixe. Romain vérifie la faisabilité et vous revient sous 24 heures. Le lien de paiement n&apos;arrive qu&apos;après votre accord. Accédez à l&apos;outil via <Link href="/vol-sur-mesure" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Vol sur mesure</Link>.</>,
-      },
-      */
-      {
-        q: "D'où partent les vols ?",
-        aText: "Les vols partent depuis l'aéroport de Brussels South Charleroi (EBCI/CRL).",
-        a: "Les vols partent depuis l'aéroport de Brussels South Charleroi (EBCI/CRL).",
-      },
-      {
-        q: "À quelles heures les vols sont-ils possibles ?",
-        aText: "Les vols ont lieu entre 7h et 21h environ, avec un retour au plus tard avant la fermeture de l'aérodrome à 22h. Pour un horaire précis ou tardif, contactez-nous : nous verrons ce qui est possible.",
-        a: <>Les vols ont lieu entre 7h et 21h environ, avec un retour au plus tard avant la fermeture de l&apos;aérodrome à 22h. Pour un horaire précis ou tardif, <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link> : nous verrons ce qui est possible.</>,
-      },
-      {
-        q: "Puis-je faire une demande pour quelqu'un d'autre ?",
-        aText: "Oui. Vous pouvez faire une demande directement au nom d'une autre personne, ou lui offrir un bon cadeau qu'elle utilisera elle-même pour choisir sa date (contactez-nous pour l'établir). Le bon cadeau est la solution la plus flexible : le bénéficiaire choisit sa date quand il le souhaite.",
-        a: <>Oui. Vous pouvez faire une demande directement au nom d&apos;une autre personne, ou lui offrir un bon cadeau qu&apos;elle utilisera elle-même pour choisir sa date (<Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link> pour l&apos;établir).</>,
-      },
-      {
-        q: "Combien de temps à l'avance faut-il faire sa demande ?",
-        aText: "Les demandes sont possibles jusqu'à 48 heures avant le vol au minimum. En dessous de ce délai, le calendrier n'affiche plus de créneaux disponibles. Pour une demande de dernière minute, rendez-vous sur la page Contact : nous répondrons le plus rapidement possible. En période chargée (printemps, été), il est conseillé d'envoyer votre demande plusieurs semaines à l'avance pour avoir le choix des dates.",
-        a: <>Les demandes sont possibles jusqu&apos;à 48 heures avant le vol au minimum. En dessous de ce délai, le calendrier n&apos;affiche plus de créneaux disponibles. Pour une demande de dernière minute, rendez-vous sur la <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">page Contact</Link> : nous répondrons le plus rapidement possible. En période chargée (printemps, été), il est conseillé d&apos;envoyer votre demande plusieurs semaines à l&apos;avance pour avoir le choix des dates.</>,
-      },
+      item(
+        "Comment participer à un vol partagé ?",
+        "Sur la page Les vols, choisissez un vol publié par un pilote. Sa fiche présente les photos, la durée, l'itinéraire et la participation aux frais. Cliquez sur Réserver, choisissez une date parmi les disponibilités du pilote, indiquez le nombre de passagers et vos coordonnées, puis envoyez votre demande. Aucun paiement n'est demandé à ce stade.",
+        <>Sur la page <Link href="/nos-offres" className={lk}>Les vols</Link>, choisissez un vol publié par un pilote. Sa fiche présente les photos, la durée, l&apos;itinéraire et la participation aux frais. Cliquez sur Réserver, choisissez une date parmi les disponibilités du pilote, indiquez le nombre de passagers et vos coordonnées, puis envoyez votre demande. Aucun paiement n&apos;est demandé à ce stade.</>,
+      ),
+      item(
+        "Qui sont les pilotes ?",
+        "Des pilotes privés licenciés, qui partagent les frais d'un vol qu'ils effectuent. Avant de publier un vol, chaque pilote nous transmet sa licence et son certificat médical, que nous vérifions. Le pilote reste seul commandant de bord et seul responsable de son vol. Son profil est accessible depuis la fiche du vol.",
+      ),
+      item(
+        "Le pilote peut-il refuser ma demande ?",
+        "Oui. Le pilote accepte ou décline chaque demande selon ses disponibilités, la météo et la faisabilité du vol. Une demande envoyée ne garantit donc pas votre place : vous rejoignez le vol une fois la demande acceptée.",
+      ),
+      item(
+        "Combien coûte un vol ?",
+        "Chaque vol affiche sa participation aux frais : votre part des frais réels du vol (avion, carburant, taxes d'aérodrome), sans marge commerciale. Le pilote paie aussi sa part. Selon le vol, le prix est donné pour l'avion entier (jusqu'à 3 passagers) ou par place. Tous les vols disponibles et leurs montants sont sur la page Les vols.",
+        <>Chaque vol affiche sa participation aux frais : votre part des frais réels du vol (avion, carburant, taxes d&apos;aérodrome), sans marge commerciale. Le pilote paie aussi sa part. Selon le vol, le prix est donné pour l&apos;avion entier (jusqu&apos;à 3 passagers) ou par place. Tous les vols disponibles et leurs montants sont sur la page <Link href="/nos-offres" className={lk}>Les vols</Link>.</>,
+      ),
+      item(
+        "D'où partent les vols ?",
+        "De l'aérodrome de Charleroi (EBCI). Le plan d'accès (parking, point de rendez-vous) est sur notre page Accès à l'aérodrome.",
+        <>De l&apos;aérodrome de Charleroi (EBCI). Le plan d&apos;accès (parking, point de rendez-vous) est sur notre page <Link href="/access-ebci" className={lk}>Accès à l&apos;aérodrome</Link>.</>,
+      ),
+      item(
+        "À quelles heures les vols ont-ils lieu ?",
+        "Les créneaux proposés sont ceux du pilote : vous les voyez au moment de choisir votre date. Les vols ont lieu de jour, en général entre 7 h et 21 h.",
+      ),
+      item(
+        "Puis-je réserver pour quelqu'un d'autre ou offrir un vol ?",
+        "Oui. Faites la demande avec les coordonnées de la personne qui volera, ou à votre nom en le précisant dans le message pour le pilote. Nous ne proposons pas de bons cadeaux.",
+      ),
+      item(
+        "Combien de temps à l'avance faut-il faire sa demande ?",
+        "Au moins 48 heures avant le vol : en dessous, le calendrier ne propose plus de créneaux. Au printemps et en été, mieux vaut s'y prendre plusieurs semaines à l'avance pour avoir le choix des dates.",
+      ),
     ],
   },
   {
     id: "paiement",
-    title: "Paiement et provision",
+    title: "Paiement",
     Icon: CreditCard,
     items: [
-      {
-        q: "Comment fonctionne le paiement de la provision ?",
-        aText: "Le pilote étudie votre demande sous 72 heures maximum ; si le vol peut avoir lieu, vous recevez un lien de paiement sécurisé via Stripe pour valider votre créneau — ou vous pouvez convenir d'un paiement en espèces avec nous. Aucun paiement n'est demandé au moment de la demande, et aucune saisie de carte n'a lieu ailleurs que sur la page sécurisée Stripe.",
-        a: "Le pilote étudie votre demande sous 72 heures maximum ; si le vol peut avoir lieu, vous recevez un lien de paiement sécurisé via Stripe pour valider votre créneau — ou vous pouvez convenir d'un paiement en espèces avec nous. Aucun paiement n'est demandé au moment de la demande, et aucune saisie de carte n'a lieu ailleurs que sur la page sécurisée Stripe.",
-      },
-      {
-        q: "Quels moyens de paiement sont acceptés ?",
-        aText: "Le paiement en ligne se fait via Stripe : carte Visa, Mastercard et American Express. Un paiement en espèces le jour du vol est aussi possible si c'est convenu avec nous au moment de la confirmation. Aucun virement bancaire n'est accepté sur le site.",
-        a: "Le paiement en ligne se fait via Stripe : carte Visa, Mastercard et American Express. Un paiement en espèces le jour du vol est aussi possible si c'est convenu avec nous au moment de la confirmation. Aucun virement bancaire n'est accepté sur le site.",
-      },
-      {
-        q: "Y a-t-il des frais supplémentaires après le vol ?",
-        aText: "Non, normalement. Le montant réglé pour votre vol couvre l'intégralité du vol prévu, il n'y a pas de solde à régler après coup. Dans de rares cas exceptionnels, un ajustement peut être fait sur base du temps de vol réel, mais ce n'est pas systématique.",
-        a: "Non, normalement. Le montant réglé pour votre vol couvre l'intégralité du vol prévu, il n'y a pas de solde à régler après coup. Dans de rares cas exceptionnels, un ajustement peut être fait sur base du temps de vol réel, mais ce n'est pas systématique.",
-      },
-      {
-        q: "Un bon cadeau peut-il couvrir la contribution en totalité ?",
-        aText: "Oui. Si le bon cadeau couvre la totalité du montant, aucun paiement supplémentaire n'est demandé : votre demande est enregistrée directement, puis étudiée par le pilote comme toute demande, sous 72 heures maximum. S'il ne couvre qu'une partie, le solde vous est demandé via Stripe une fois le vol confirmé.",
-        a: "Oui. Si le bon cadeau couvre la totalité du montant, aucun paiement supplémentaire n'est demandé : votre demande est enregistrée directement, puis étudiée par le pilote comme toute demande, sous 72 heures maximum. S'il ne couvre qu'une partie, le solde vous est demandé via Stripe une fois le vol confirmé.",
-      },
-    ],
-  },
-  {
-    id: "bons-cadeaux",
-    title: "Bons cadeaux",
-    Icon: Gift,
-    items: [
-      {
-        q: "Comment acheter un bon cadeau ?",
-        aText: "L'achat en ligne d'un bon cadeau n'est actuellement pas disponible sur le site. Contactez-nous directement (formulaire de contact ou WhatsApp) : nous établissons le bon cadeau avec vous, il vous est envoyé par email au format XXXX-XXXX-XXXX-XXXX.",
-        a: <>L&apos;achat en ligne d&apos;un bon cadeau n&apos;est actuellement pas disponible sur le site. <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Contactez-nous directement</Link> : nous établissons le bon cadeau avec vous, il vous est envoyé par email au format <span className="font-mono font-bold text-foreground">XXXX-XXXX-XXXX-XXXX</span>.</>,
-      },
-      {
-        q: "Comment le bénéficiaire utilise-t-il le bon cadeau ?",
-        aText: "Il se rend sur le formulaire de demande, choisit une date et un horaire, renseigne ses informations en indiquant son code, puis envoie sa demande. Le code est appliqué automatiquement et réduit le montant qui sera demandé une fois le créneau confirmé par le pilote.",
-        a: "Il se rend sur le formulaire de demande, choisit une date et un horaire disponibles, renseigne ses informations en indiquant son code, puis envoie sa demande. Le code est appliqué automatiquement et réduit le montant qui sera demandé une fois le créneau confirmé par le pilote.",
-      },
-      /* Masqué 29/07/2026 (mentionne le vol sur mesure) — voir audit-legal-fly-horizons.html
-      {
-        q: "Un bon cadeau est-il utilisable pour un vol sur mesure ?",
-        aText: "Oui. Le code est valable pour n'importe quelle formule de vol, durée fixe ou itinéraire libre. Il est déduit de la provision quelle que soit la formule choisie.",
-        a: "Oui. Le code est valable pour n'importe quelle formule : durée fixe ou vol sur mesure. Il est déduit de la provision quelle que soit la formule choisie.",
-      },
-      */
-      {
-        q: "Quelle est la durée de validité d'un bon cadeau ?",
-        aText: "La durée de validité est indiquée sur le bon lors de l'achat. Passé ce délai, le code ne peut plus être utilisé. En cas de doute, contactez-nous.",
-        a: <>La durée de validité est indiquée sur le bon lors de l&apos;achat. Passé ce délai, le code ne peut plus être utilisé. En cas de doute, <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link>.</>,
-      },
-      {
-        q: "Un bon cadeau est-il remboursable ?",
-        aText: "Non. Les bons cadeaux ne sont ni remboursables ni échangeables une fois achetés. Ils sont cependant transférables librement à toute autre personne.",
-        a: "Non. Les bons cadeaux ne sont ni remboursables ni échangeables une fois achetés. Ils sont cependant transférables librement à toute autre personne.",
-      },
+      item(
+        "Quand et comment dois-je payer ?",
+        "Uniquement une fois votre demande confirmée par le pilote. Vous recevez alors par email un lien vers une page de paiement avec le montant, l'IBAN du pilote et un QR code à scanner depuis votre app bancaire. Le virement va directement au pilote : Fly Horizons n'encaisse rien. Le pilote vous remet ensuite un reçu.",
+      ),
+      item(
+        "Puis-je payer en espèces ?",
+        "Oui, si le pilote l'accepte : convenez-en avec lui après la confirmation. Le virement reste le moyen de paiement par défaut. Le paiement par carte n'est pas proposé.",
+      ),
+      item(
+        "Pour un vol vendu à la place, pourquoi le prix n'est-il pas définitif ?",
+        "Parce que les frais sont partagés à parts égales entre les passagers réellement à bord. Le prix affiché correspond à un vol complet. Si toutes les places ne sont pas prises, le pilote clôture le groupe et la part de chacun est recalculée. Vous connaissez le montant définitif avant tout paiement.",
+      ),
+      item(
+        "Y a-t-il des frais supplémentaires après le vol ?",
+        "Non. Le montant confirmé couvre tout le vol prévu, taxes d'aérodrome comprises. Il n'y a rien à régler après le vol.",
+      ),
     ],
   },
   {
@@ -224,36 +181,33 @@ const THEMES: Theme[] = [
     title: "Avant le vol",
     Icon: CloudRain,
     items: [
-      {
-        q: "Que se passe-t-il en cas de mauvaise météo ?",
-        aText: "Le vol est reporté sans frais. La décision appartient au pilote et peut être prise jusqu'à 2 heures avant le départ. Vous êtes prévenu par email ou téléphone dès que possible. Un nouveau créneau est proposé selon les disponibilités.",
-        a: "Le vol est reporté sans frais. La décision appartient au pilote et peut être prise jusqu'à 2 heures avant le départ. Vous êtes prévenu par email ou téléphone dès que possible. Un nouveau créneau est proposé selon les disponibilités.",
-      },
-      {
-        q: "Puis-je annuler ou reporter mon vol ?",
-        aText: "Pour reporter à une nouvelle date, c'est gratuit jusqu'à 48 heures avant le vol : connectez-vous à votre compte, un lien de report vous sera proposé. Pour annuler : avec plus de 48 heures de préavis, le montant payé est converti en crédit de vol valable 12 mois (pas de remboursement en espèces, les frais du vol étant engagés dès la demande). Entre 24 et 48 heures, la situation est traitée au cas par cas, contactez-nous rapidement. En cas d'absence sans prévenir, aucun remboursement ni crédit n'est accordé.",
-        a: <>Pour reporter à une nouvelle date, c&apos;est gratuit jusqu&apos;à 48 heures avant le vol : connectez-vous à votre <Link href="/account" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">compte</Link>, un lien de report vous sera proposé. Pour annuler : avec plus de 48 heures de préavis, le montant payé est converti en <strong>crédit de vol valable 12 mois</strong> (pas de remboursement en espèces, les frais du vol étant engagés dès la demande). Entre 24 et 48 heures, la situation est traitée au cas par cas, <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link> rapidement. En cas d&apos;absence sans prévenir, aucun remboursement ni crédit n&apos;est accordé.</>,
-      },
-      {
-        q: "Combien de temps avant le vol dois-je arriver ?",
-        aText: "Arrivez 15 minutes avant l'heure prévue du départ. Ce temps est nécessaire pour les vérifications d'usage, le briefing de sécurité et l'embarquement. Le plan d'accès complet (parking, entrée) est disponible sur notre page Accès à l'aérodrome.",
-        a: <>Arrivez 15 minutes avant l&apos;heure prévue du départ. Ce temps est nécessaire pour les vérifications d&apos;usage, le briefing de sécurité et l&apos;embarquement. Le plan d&apos;accès complet (parking, entrée) est disponible sur notre page <Link href="/access-ebci" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Accès à l&apos;aérodrome</Link>.</>,
-      },
-      {
-        q: "Que dois-je porter et apporter pour le vol ?",
-        aText: "Portez des chaussures fermées : c'est indispensable pour monter dans l'avion et circuler sur la piste. Habillez-vous selon la météo du jour : un pull ou une veste légère est conseillé en toute saison, une veste chaude en automne et en hiver. N'apportez pas de bagages volumineux, l'espace est limité dans l'avion. Un appareil photo, un téléphone ou de petits accessoires sont les bienvenus. Évitez de consommer de l'alcool dans les heures précédant le vol. Casques audio et gilets de sauvetage sont fournis à bord.",
-        a: "Portez des chaussures fermées (obligatoire pour monter à bord et circuler sur la piste). Habillez-vous selon la météo : pull ou veste légère en toute saison, veste chaude en hiver. Pas de bagages volumineux, l'espace est limité. Appareil photo et téléphone sont les bienvenus. Évitez l'alcool avant le vol. Casques et gilets fournis.",
-      },
-      {
-        q: "Je suis enceinte ou j'ai une condition médicale, puis-je voler ?",
-        aText: "En cas de grossesse, consultez votre médecin avant de faire votre demande. Il n'y a pas de contre-indication générale pour les vols légers, mais les vibrations et les légères variations d'altitude peuvent être inconfortables. Pour toute condition médicale particulière (problème cardiaque, claustrophobie, traitement lourd, handicap moteur), signalez-le lors de votre demande ou contactez-nous avant de la faire : nous évaluerons ensemble la faisabilité en toute transparence.",
-        a: <>En cas de grossesse, consultez votre médecin avant de faire votre demande. Pour toute condition médicale particulière (problème cardiaque, claustrophobie, traitement lourd, handicap moteur), signalez-le lors de votre demande ou <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link> : nous évaluerons ensemble la faisabilité.</>,
-      },
-      {
-        q: "Dans quel délai ma demande est-elle confirmée ?",
-        aText: "Le pilote étudie votre demande dans un délai maximum de 72 heures, en pratique souvent en quelques heures. Si le vol peut avoir lieu, vous recevez un email de confirmation avec un lien de paiement sécurisé (ou les modalités convenues pour un paiement en espèces). L'heure précise de décollage est communiquée dans les jours qui précèdent le vol, en fonction des conditions météo et du trafic.",
-        a: "Le pilote étudie votre demande dans un délai maximum de 72 heures, en pratique souvent en quelques heures. Si le vol peut avoir lieu, vous recevez un email de confirmation avec un lien de paiement sécurisé (ou les modalités convenues pour un paiement en espèces). L'heure précise de décollage est communiquée dans les jours qui précèdent le vol, en fonction des conditions météo et du trafic.",
-      },
+      item(
+        "Dans quel délai ma demande est-elle confirmée ?",
+        "Le pilote répond dans un délai maximum de 72 heures, souvent bien plus vite. Vous recevez un email de confirmation, puis les informations de paiement. L'heure précise de décollage peut être ajustée dans les jours qui précèdent, selon la météo.",
+      ),
+      item(
+        "Que se passe-t-il en cas de mauvaise météo ?",
+        "Le pilote décide, parfois le jour même. Si la météo ne permet pas de voler en sécurité, le vol est reporté sans frais : le pilote vous propose un nouveau créneau par email.",
+      ),
+      item(
+        "Puis-je annuler ou reporter mon vol ?",
+        "Reporter est gratuit jusqu'à 48 heures avant le vol : contactez-nous ou répondez à l'email de confirmation. Pour annuler, prévenez le plus tôt possible. Le paiement ayant été fait directement au pilote, un éventuel remboursement se règle avec lui, et nous restons votre interlocuteur pour l'organiser. À moins de 48 heures, ou en cas d'absence sans prévenir, aucune compensation n'est garantie. Les conditions complètes sont dans nos conditions générales.",
+        <>Reporter est gratuit jusqu&apos;à 48 heures avant le vol : <Link href="/contact" className={lk}>contactez-nous</Link> ou répondez à l&apos;email de confirmation. Pour annuler, prévenez le plus tôt possible. Le paiement ayant été fait directement au pilote, un éventuel remboursement se règle avec lui, et nous restons votre interlocuteur pour l&apos;organiser. À moins de 48 heures, ou en cas d&apos;absence sans prévenir, aucune compensation n&apos;est garantie. Les conditions complètes sont dans nos <Link href="/cgp" className={lk}>conditions générales</Link>.</>,
+      ),
+      item(
+        "Combien de temps avant le vol dois-je arriver ?",
+        "15 minutes avant l'heure prévue, pour l'accueil, le briefing sécurité et l'embarquement. Le plan d'accès complet est sur notre page Accès à l'aérodrome.",
+        <>15 minutes avant l&apos;heure prévue, pour l&apos;accueil, le briefing sécurité et l&apos;embarquement. Le plan d&apos;accès complet est sur notre page <Link href="/access-ebci" className={lk}>Accès à l&apos;aérodrome</Link>.</>,
+      ),
+      item(
+        "Que dois-je porter et apporter ?",
+        "Des chaussures fermées, indispensables pour monter à bord. Une veste ou un pull selon la saison. Pas de bagage volumineux : la place est limitée. Téléphone et appareil photo sont les bienvenus. Pas d'alcool dans les 8 heures qui précèdent le vol. Les casques audio sont fournis.",
+      ),
+      item(
+        "Je suis enceinte ou j'ai une condition médicale, puis-je voler ?",
+        "En cas de grossesse, demandez l'avis de votre médecin avant de réserver. Pour toute condition particulière (problème cardiaque, épilepsie, claustrophobie, mobilité réduite), signalez-le dans le message au pilote ou contactez-nous avant : nous regarderons ensemble ce qui est possible.",
+        <>En cas de grossesse, demandez l&apos;avis de votre médecin avant de réserver. Pour toute condition particulière (problème cardiaque, épilepsie, claustrophobie, mobilité réduite), signalez-le dans le message au pilote ou <Link href="/contact" className={lk}>contactez-nous</Link> avant : nous regarderons ensemble ce qui est possible.</>,
+      ),
     ],
   },
   {
@@ -261,73 +215,66 @@ const THEMES: Theme[] = [
     title: "À bord",
     Icon: PlaneTakeoff,
     items: [
-      {
-        q: "Combien de passagers peuvent monter à bord ?",
-        aText: "L'avion dispose de 4 places : le pilote et jusqu'à 3 passagers. Si vous êtes plus de 3, il faudra prévoir plusieurs vols.",
-        a: "L'avion dispose de 4 places : le pilote et jusqu'à 3 passagers. Si vous êtes plus de 3, il faudra prévoir plusieurs vols.",
-      },
-      {
-        q: "Y a-t-il une limite de poids ?",
-        aText: "Le poids total des passagers ne doit idéalement pas dépasser 190 kg. Ce n'est pas un couperet strict : jusqu'à 250 kg, le pilote adapte le plein de carburant pour rester en sécurité ; au-delà, il vous contacte pour confirmer la faisabilité (calcul masse & centrage de l'avion). C'est pourquoi le poids total est demandé lors de votre demande.",
-        a: "Le poids total des passagers ne doit idéalement pas dépasser 190 kg. Ce n'est pas un couperet strict : jusqu'à 250 kg, le pilote adapte le plein de carburant pour rester en sécurité ; au-delà, il vous contacte pour confirmer la faisabilité (calcul masse & centrage de l'avion). C'est pourquoi le poids total est demandé lors de votre demande.",
-      },
-      {
-        q: "Y a-t-il un âge minimum pour voler ?",
-        aText: "Non. Il n'y a pas d'âge minimum. Un enfant peut monter à bord à condition d'être accompagné d'un adulte. Il peut même s'asseoir à l'avant, sous réserve de ne pas toucher aux commandes.",
-        a: "Non. Il n'y a pas d'âge minimum. Un enfant peut monter à bord à condition d'être accompagné d'un adulte. Il peut même s'asseoir à l'avant, sous réserve de ne pas toucher aux commandes.",
-      },
-      {
-        q: "Le vol est-il bruyant ?",
-        aText: "Non. Des casques antibruit sont fournis à bord pour tous les passagers. Ils permettent aussi de communiquer avec le pilote pendant tout le vol.",
-        a: "Non. Des casques antibruit sont fournis à bord pour tous les passagers. Ils permettent aussi de communiquer avec le pilote pendant tout le vol.",
-      },
-      {
-        q: "À quelle altitude vole-t-on ? Est-ce impressionnant ?",
-        aText: "Les vols se déroulent généralement entre 2 000 et 3 000 ft d'altitude, soit environ 600 à 1 000 m, selon l'itinéraire et la météo. À titre de comparaison, un avion de ligne vole à 10 000 m : ici, vous volez bas et vous voyez vraiment le sol défiler sous vous. L'avion vole à environ 120 kt (220 km/h), une allure fluide et agréable. L'avion est un Diamond DA40 à cockpit vitré : la vue est panoramique, à 360°. Certains passagers ressentent une légère appréhension au décollage, qui disparaît très vite en vol. Le pilote commente tout au long du trajet et peut adapter l'altitude si vous le demandez.",
-        a: "Les vols se déroulent généralement entre 2 000 et 3 000 ft d'altitude (environ 600 à 1 000 m), selon l'itinéraire et la météo. À titre de comparaison, un avion de ligne vole à 10 000 m : ici, vous volez bas et voyez vraiment le sol. L'avion croise à 120 kt (220 km/h), une allure douce et agréable. Le Diamond DA40 est un appareil à cockpit vitré : vue panoramique à 360°. Certains passagers ressentent une légère appréhension au décollage, elle disparaît très vite. Le pilote commente tout au long du trajet et peut adapter l'altitude si vous le demandez.",
-      },
-      {
-        q: "J'ai peur de voler, est-ce fait pour moi ?",
-        aText: "C'est une préoccupation très courante, et nous l'entendons souvent. Ce que vous ressentez est parfaitement normal : beaucoup de passagers montent à bord avec une certaine appréhension, et la grande majorité repart surpris de s'être sentis à l'aise dès les premières minutes. La différence avec un vol commercial : vous n'êtes pas enfermé dans une cabine. Vous êtes dans le cockpit, vous voyez ce que fait le pilote, vous comprenez ce qui se passe. Ce sentiment de transparence change tout. Les vols se déroulent à altitude modérée (600 à 1 000 m), à allure douce, loin des turbulences des altitudes commerciales. Si vous avez envie de redescendre ou si vous vous sentez mal à l'aise, vous le dites. Si vous avez le moindre doute, contactez-nous avant de faire votre demande : nous vous répondons directement et prenons le temps de vous expliquer.",
-        a: <>C&apos;est une préoccupation très courante, et nous l&apos;entendons souvent. Ce que vous ressentez est parfaitement normal : beaucoup de passagers montent à bord avec une certaine appréhension, et la grande majorité repart surpris de s&apos;être sentis à l&apos;aise dès les premières minutes.<br /><br />La différence avec un vol commercial : vous n&apos;êtes pas enfermé dans une cabine. Vous êtes dans le cockpit, vous voyez ce que fait le pilote, vous comprenez ce qui se passe : ce sentiment de transparence change tout. Les vols se déroulent à altitude modérée (600 à 1 000 m), à allure douce, loin des turbulences des altitudes commerciales.<br /><br />Si vous ressentez un inconfort pendant le vol, vous le dites et on s&apos;adapte. Si vous avez le moindre doute avant de faire votre demande, <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link> : nous vous répondons directement.</>,
-      },
-      {
-        q: "Les participants sont-ils assurés pendant le vol ?",
-        aText: "Le vol se déroule dans un cadre de partage de frais entre le pilote et les participants — un vol privé, pas un service de transport aérien commercial. L'avion utilisé (Diamond DA40) appartient à Air Academy New CAG (ATO-005, EBCI), école d'aviation certifiée, et vole sous sa police d'assurance. Pour toute question précise sur les garanties applicables à votre vol, contactez-nous avant de faire votre demande : nous vous transmettons les informations disponibles.",
-        a: <>Le vol se déroule dans un cadre de partage de frais entre le pilote et les participants — un vol privé, pas un service de transport aérien commercial. L&apos;avion utilisé (Diamond DA40) appartient à Air Academy New CAG (ATO-005, EBCI), école d&apos;aviation certifiée, et vole sous sa police d&apos;assurance. Pour toute question précise sur les garanties applicables à votre vol, <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link> avant de faire votre demande : nous vous transmettons les informations disponibles.</>,
-      },
-      {
-        q: "Vais-je recevoir une demande d'avis après mon vol ?",
-        aText: "Oui. Après votre vol, un email vous invite à répondre à une courte enquête de satisfaction. Cela prend moins d'une minute et aide à améliorer chaque prochain vol.",
-        a: "Oui. Après votre vol, un email vous invite à répondre à une courte enquête de satisfaction. Cela prend moins d'une minute et aide à améliorer chaque prochain vol.",
-      },
-      {
-        q: "Puis-je recevoir un certificat de vol ?",
-        aText: "Oui, sur simple demande et sans frais. Contactez-nous après votre vol pour le recevoir.",
-        a: <>Oui, sur simple demande et sans frais. <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">Contactez-nous</Link> après votre vol pour le recevoir.</>,
-      },
+      item(
+        "Combien de passagers peuvent monter à bord ?",
+        "Jusqu'à 3 passagers en plus du pilote, dans un avion léger de 4 places. Le nombre de places est indiqué sur chaque vol.",
+      ),
+      item(
+        "Y a-t-il une limite de poids ?",
+        "Oui, comme dans tout avion léger. Avant chaque vol, le pilote calcule la masse et le centrage de l'avion : il peut vous demander le poids approximatif des passagers. Ce n'est pas un jugement, c'est une question de sécurité.",
+      ),
+      item(
+        "Y a-t-il un âge minimum ?",
+        "Non. Un enfant peut voler, accompagné d'un parent ou d'un tuteur présent. Un mineur ne peut pas embarquer seul.",
+      ),
+      item(
+        "Le vol est-il bruyant ?",
+        "Des casques antibruit sont fournis à chaque passager. Ils permettent aussi de parler avec le pilote pendant tout le vol.",
+      ),
+      item(
+        "À quelle altitude vole-t-on ?",
+        "En général entre 2 000 et 3 000 pieds, soit 600 à 1 000 mètres, à environ 200 km/h. Un avion de ligne vole dix fois plus haut : ici, le paysage défile vraiment sous vous. Le pilote commente le trajet et peut adapter l'altitude si vous le souhaitez.",
+      ),
+      item(
+        "J'ai peur de voler, est-ce fait pour moi ?",
+        "C'est une appréhension très courante, et la plupart des passagers sont surpris de se sentir à l'aise dès les premières minutes. Vous êtes assis à côté du pilote, vous voyez ce qu'il fait et il vous explique ce qui se passe. On vole bas et doucement, loin des turbulences des altitudes de croisière. Si vous ressentez un inconfort, vous le dites et on s'adapte. Un doute avant de réserver ? Contactez-nous.",
+        <>C&apos;est une appréhension très courante, et la plupart des passagers sont surpris de se sentir à l&apos;aise dès les premières minutes. Vous êtes assis à côté du pilote, vous voyez ce qu&apos;il fait et il vous explique ce qui se passe. On vole bas et doucement, loin des turbulences des altitudes de croisière.<br /><br />Si vous ressentez un inconfort, vous le dites et on s&apos;adapte. Un doute avant de réserver ? <Link href="/contact" className={lk}>Contactez-nous</Link>.</>,
+      ),
+      item(
+        "Les passagers sont-ils assurés ?",
+        "Chaque avion vole sous sa propre assurance aviation, qui couvre la responsabilité civile envers les passagers. Votre pilote vous en donne le détail sur demande. Nous vous conseillons aussi une assurance individuelle accident. Il s'agit d'un vol privé en partage de frais, pas d'un transport aérien commercial.",
+      ),
+      item(
+        "Vais-je recevoir une demande d'avis après mon vol ?",
+        "Oui. Un email vous invite à répondre à une courte enquête. Cela prend moins d'une minute et aide les pilotes à s'améliorer.",
+      ),
+      item(
+        "Puis-je recevoir un certificat de vol ?",
+        "Oui, sans frais. Demandez-le à votre pilote ou contactez-nous après le vol.",
+        <>Oui, sans frais. Demandez-le à votre pilote ou <Link href="/contact" className={lk}>contactez-nous</Link> après le vol.</>,
+      ),
     ],
   },
   {
     id: "compte",
-    title: "Votre compte",
+    title: "Suivre ma demande",
     Icon: Users,
     items: [
-      {
-        q: "Dois-je créer un compte pour participer à un vol ?",
-        aText: "Non, ce n'est pas une étape séparée : un compte est créé automatiquement lors de votre première demande, à partir de l'email que vous renseignez. Vous pouvez ensuite vous connecter pour suivre vos demandes.",
-        a: "Non, ce n'est pas une étape séparée : un compte est créé automatiquement lors de votre première demande, à partir de l'email que vous renseignez. Vous pouvez ensuite vous connecter pour suivre vos demandes.",
-      },
-      {
-        q: "Comment suivre l'état de ma demande ?",
-        aText: "Connectez-vous à votre compte : vous y retrouvez le statut de votre demande en temps réel (en attente, provision reçue, date confirmée, heure confirmée). Chaque changement de statut vous est également notifié par email.",
-        a: <>Connectez-vous à votre <Link href="/account" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">compte</Link> : vous y retrouvez le statut en temps réel (en attente, provision reçue, date confirmée, heure confirmée). Chaque changement vous est notifié par email.</>,
-      },
-      {
-        q: "Je n'ai pas reçu l'email de confirmation, que faire ?",
-        aText: "Vérifiez vos spams. Si l'email n'y est pas, connectez-vous à votre compte : le statut et les détails de votre demande y sont toujours accessibles. En dernier recours, contactez-nous.",
-        a: <>Vérifiez vos spams. Si l&apos;email n&apos;y est pas, connectez-vous à votre <Link href="/account" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">compte</Link> : le statut et les détails de votre demande y sont toujours accessibles. En dernier recours, <Link href="/contact" className="text-primary font-semibold hover:text-[#e6a800] transition-colors">contactez-nous</Link>.</>,
-      },
+      item(
+        "Dois-je créer un compte ?",
+        "Non. Tout se passe par email. Si vous créez un compte avec la même adresse email, vous y retrouvez toutes vos demandes.",
+        <>Non. Tout se passe par email. Si vous <Link href="/register" className={lk}>créez un compte</Link> avec la même adresse email, vous y retrouvez toutes vos demandes.</>,
+      ),
+      item(
+        "Comment suivre l'état de ma demande ?",
+        "Chaque étape vous est envoyée par email : demande reçue, confirmation, paiement, rappel avant le vol. Avec un compte, vous voyez aussi le statut dans Mes réservations.",
+        <>Chaque étape vous est envoyée par email : demande reçue, confirmation, paiement, rappel avant le vol. Avec un <Link href="/account" className={lk}>compte</Link>, vous voyez aussi le statut dans Mes réservations.</>,
+      ),
+      item(
+        "Je n'ai pas reçu d'email, que faire ?",
+        "Vérifiez vos spams. Si l'email n'y est pas, contactez-nous : nous vérifions votre demande et vous la renvoyons.",
+        <>Vérifiez vos spams. Si l&apos;email n&apos;y est pas, <Link href="/contact" className={lk}>contactez-nous</Link> : nous vérifions votre demande et vous la renvoyons.</>,
+      ),
     ],
   },
 ];
@@ -405,7 +352,7 @@ export default function FaqPage() {
               Vous avez des questions ?
             </h1>
             <p className="text-foreground/60 text-sm max-w-lg leading-relaxed">
-              Demande de vol, paiement, bons cadeaux, expérience à bord : trouvez rapidement ce dont vous avez besoin.
+              Demande de vol, paiement, météo, expérience à bord : trouvez rapidement ce dont vous avez besoin.
             </p>
           </div>
 
@@ -414,7 +361,7 @@ export default function FaqPage() {
             <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <input
               type="text"
-              placeholder="Rechercher : provision, bon cadeau, météo, annulation…"
+              placeholder="Rechercher : paiement, météo, annulation…"
               value={search}
               onChange={(e) => { setSearch(e.target.value); setOpenKey(null); setActiveTheme(null); }}
               className="w-full pl-9 pr-9 py-2.5 text-sm bg-white border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
@@ -503,15 +450,6 @@ export default function FaqPage() {
               >
                 Poser une question →
               </button>
-              <a
-                href="https://wa.me/32472324135"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-bold bg-[#25D366] text-white rounded-lg hover:bg-[#1ebe5d] transition-colors"
-              >
-                <FaWhatsapp size={15} />
-                WhatsApp
-              </a>
             </div>
           </div>
 

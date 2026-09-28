@@ -141,7 +141,7 @@ function emailBase(bodyContent: string, title: string, footerExtra?: string): st
         <tr>
           <td bgcolor="#ffffff" style="background-color:#ffffff;padding:20px 0 0;text-align:center;">
             <p style="margin:0;font-size:11px;color:#94a3b8;">
-              Fly Horizons &middot; <a href="https://fly-horizons.com" style="color:#94a3b8;text-decoration:none;">fly-horizons.com</a> &middot; <a href="mailto:info@fly-horizons.com" style="color:#94a3b8;text-decoration:none;">info@fly-horizons.com</a> &middot; <a href="https://wa.me/32472324135" style="color:#94a3b8;text-decoration:none;">WhatsApp</a>
+              Fly Horizons &middot; <a href="https://fly-horizons.com" style="color:#94a3b8;text-decoration:none;">fly-horizons.com</a> &middot; <a href="mailto:info@fly-horizons.com" style="color:#94a3b8;text-decoration:none;">info@fly-horizons.com</a>
             </p>
             ${footerExtra ? `<p style="margin:6px 0 0;font-size:11px;color:#94a3b8;">${footerExtra}</p>` : ""}
           </td>
@@ -560,7 +560,7 @@ export function orderConfirmationEmail(props: OrderConfirmationProps): string {
       </tr>
     </table>
     <p class="em-muted" style="margin:20px 0 0;font-size:12px;color:#64748b;text-align:center;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -627,7 +627,7 @@ export function voucherEmail(props: VoucherEmailProps): string {
     ${separator()}
     ${signOff(null)}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -734,7 +734,7 @@ export function volSurMesureQuoteEmail(props: VolSurMesureQuoteEmailProps): stri
     ${separator()}
     ${signOff(pilote)}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -792,7 +792,7 @@ export function reservationConfirmationFreeEmail(p: ReservationConfirmationProps
     ${separator()}
     ${signOff(p.pilote)}
     <p class="em-muted" style="margin:0 0 24px;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>
 
@@ -835,7 +835,7 @@ export function reservationPaymentConfirmationEmail(p: ReservationPaymentConfirm
     ${separator()}
     ${signOff(p.pilote)}
     <p class="em-muted" style="margin:0 0 24px;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>
 
@@ -891,7 +891,7 @@ export function volSurMesureAcompteEmail(p: VolSurMesureAcompteProps): string {
     ${separator()}
     ${signOff(p.pilote)}
     <p class="em-muted" style="margin:0 0 24px;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>
 
@@ -1001,7 +1001,7 @@ export function reservationDateConfirmeeEmail(p: ReservationDateConfirmeeProps):
     ${separator()}
     ${signOff(p.pilote)}
     <p class="em-muted" style="margin:0 0 8px;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
@@ -1063,7 +1063,7 @@ export function reservationHeureConfirmeeEmail(p: ReservationHeureConfirmeeProps
     ${separator()}
     ${signOff(p.pilote, "Beau temps et bon vol,")}
     <p class="em-muted" style="margin:0 0 8px;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
@@ -1109,7 +1109,7 @@ export function reservationReportConfirmeeEmail(p: ReservationReportConfirmeePro
     ${separator()}
     ${signOff(p.pilote)}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>
 
@@ -1145,7 +1145,7 @@ export function boardingPassEmail(p: BoardingPassEmailProps): string {
     ${separator()}
     ${signOff(null)}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -1195,9 +1195,7 @@ export function contactAcknowledgmentEmail({ nom, sujet, message, threadUrl }: C
 
     ${separator()}
     ${signOff(null, "À bientôt,")}
-    <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      C&rsquo;est urgent ? <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">Contactez-nous sur WhatsApp</a>.
-    </p>`;
+`;
 
   return emailBase(body, "Votre message a été reçu · Fly Horizons");
 }
@@ -1223,7 +1221,7 @@ export function contactReplyEmail({ nom, sujet, reponse, threadUrl }: ContactRep
     ${separator()}
     ${signOff(null)}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -1339,7 +1337,7 @@ export function reservationPaymentInvitationEmail(p: ReservationPaymentInvitatio
     ${separator()}
     ${signOff(null)}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -1553,7 +1551,7 @@ export function reservationPaymentReminderEmail(p: ReservationPaymentReminderEma
     ${separator()}
     ${signOff(p.pilote)}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -1613,7 +1611,7 @@ export function reservationAutoAnnuleeEmail(p: ReservationAutoAnnuleeEmailProps)
     ${separator()}
     ${signOff(null, "Bonne journée,")}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      Il s&rsquo;agit d&rsquo;une erreur ou vous avez une question ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      Il s&rsquo;agit d&rsquo;une erreur ou vous avez une question ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -1667,7 +1665,7 @@ export function flightReminderEmail(p: FlightReminderEmailProps): string {
 
     ${signOff(p.pilote)}
     <p class="em-muted" style="margin:0 0 20px;font-size:12px;color:#64748b;">
-      Une question de derni&egrave;re minute ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      Une question de derni&egrave;re minute ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>
 
@@ -1706,7 +1704,7 @@ export function postVolEmail(p: PostVolEmailProps): string {
     ${separator()}
     ${signOff(p.pilote, "À bientôt,")}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
   return emailBase(body, "Merci pour votre vol · Fly Horizons");
@@ -1789,7 +1787,7 @@ export function customEmail({ subject, body, rescheduleUrl }: { subject: string;
     ${rescheduleBlock}
     ${separator()}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;text-align:center;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -1845,7 +1843,7 @@ export function rescheduleInviteEmail(p: {
     ${separator()}
     ${signOff(p.pilote)}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      Une question sur ce report ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      Une question sur ce report ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -1883,7 +1881,7 @@ export function rescheduleConfirmationEmail(p: {
     ${separator()}
     ${signOff(p.pilote)}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -1922,7 +1920,7 @@ export function slotProposalEmail(p: {
     ${separator()}
     ${signOff(p.pilote)}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -2037,7 +2035,7 @@ export function routeProposalEmail(p: RouteProposalEmailProps): string {
     ${separator()}
     ${signOff(p.pilote, "À bientôt,")}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -2095,7 +2093,7 @@ export function paymentLinkEmail(p: PaymentLinkEmailProps): string {
     ${separator()}
     ${signOff(p.pilote)}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -2191,7 +2189,7 @@ export function newsletterConfirmationEmail(prenom: string | null, unsubscribeUr
     ${separator()}
     ${signOff(null)}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -2216,7 +2214,7 @@ export function newsletterCampaignEmail(subject: string, body: string, prenom: s
     ${separator()}
     ${signOff(null)}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 
@@ -2244,7 +2242,7 @@ export function piloteAssignedClientEmail(p: {
     ${separator()}
     ${signOff({ prenom: p.piloteNom })}
     <p class="em-muted" style="margin:0;font-size:12px;color:#64748b;">
-      Une question ? R&eacute;pondez directement &agrave; cet email, <a href="https://wa.me/32472324135" style="color:#F2B705;font-weight:600;text-decoration:none;">contactez-nous sur WhatsApp</a>, ou visitez notre
+      Une question ? R&eacute;pondez directement &agrave; cet email ou visitez notre
       <a href="${SITE_URL}/contact" style="color:#F2B705;font-weight:600;text-decoration:none;">page contact</a>.
     </p>`;
 

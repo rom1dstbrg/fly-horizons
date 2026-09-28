@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maquette À propos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<!--
+  Maquette /about dans la nouvelle DA (réf. maquette-page-produit.html, décision 16 du 28/09).
+  Sujet : la plateforme, presque pas Romain.
+  - Même écart header → premier élément que la page produit (22 px téléphone / 36 px ordinateur).
+  - Prose, une section = un sujet : 1 ce qu'est FH · 2 principe du partage de frais · 3 les pilotes · 4 qui est derrière · 5 deux portes (voler / piloter).
+  - Aucune boîte ; photos pleine largeur dans la colonne, jamais superposées.
+-->
+<style>
+:root{
+  --navy:#0b2238; --gold:#F2B705; --gold-h:#e6a800; --bg:#f5f5f7; --sec:#edf0f7;
+  --fg:#1e2535; --muted:#64748b; --border:#e0e5ef;
+  --sh:0 2px 14px rgba(11,34,56,.07); --sh-gold:0 6px 24px rgba(242,183,5,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Poppins,system-ui,sans-serif;background:#dfe3ea;color:var(--fg);-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+[data-lucide]{width:16px;height:16px;stroke-width:2}
+
+/* Barre d'outils (hors design) */
+.tool{position:sticky;top:0;z-index:2000;background:#fff;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:10px 16px;font-size:12px}
+.tool b{font-weight:800;font-size:13px}
+.seg{display:inline-flex;background:var(--sec);border-radius:9px;padding:3px}
+.seg button{border:0;background:transparent;padding:6px 11px;border-radius:7px;font-size:12px;font-weight:600;color:var(--muted)}
+.seg button.on{background:#fff;color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.tool .sp{flex:1}
+.btn-notes{border:1px solid var(--border);background:#fff;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700}
+.notes{display:none;background:#fffbea;border-bottom:1px solid #f3e3a1;padding:16px 20px;font-size:13px;line-height:1.6}
+.notes.open{display:block}
+.notes ol{margin:0;padding-left:20px;max-width:920px}
+.notes p{margin:10px 0 0;max-width:920px;color:#6b5a14}
+.stage.phone{padding:28px 0 48px;display:flex;justify-content:center}
+.frame{container-type:inline-size;background:#fff;position:relative}
+.stage.phone .frame{width:390px;height:844px;overflow-y:auto;border-radius:46px;border:11px solid #0f1115;box-shadow:0 30px 80px rgba(0,0,0,.25);scrollbar-width:none}
+.stage.phone .frame::-webkit-scrollbar{display:none}
+
+/* Page */
+.wrap{max-width:1400px;margin:0 auto;padding:0 16px}
+.hdr{position:sticky;top:0;z-index:500;padding:8px 12px 0}
+.pill{max-width:1400px;margin:0 auto;background:#fff;border:1px solid var(--border);border-radius:16px;height:64px;display:flex;align-items:center;padding:0 16px;box-shadow:var(--sh)}
+.pill .logo{height:32px}
+.pill .fill{flex:1}
+.nav{display:none;align-items:center;gap:4px;margin-right:8px}
+.nav a{padding:8px 12px;font-size:14px;font-weight:500;color:var(--muted);border-radius:8px}
+.nav a:hover{color:var(--fg);background:var(--sec)}
+.vsep{display:none;width:1px;height:20px;background:var(--border);margin:0 4px}
+.login{display:none;align-items:center;gap:6px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--fg);border:1px solid var(--border);background:var(--sec);border-radius:8px}
+.login [data-lucide]{width:13px;height:13px}
+.burger{border:0;background:transparent;padding:8px;color:var(--muted)}
+.burger [data-lucide]{width:20px;height:20px}
+
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin:0 0 10px}
+h1{font-size:34px;font-weight:900;line-height:1.04;letter-spacing:-.02em;margin:0}
+h2{font-size:28px;font-weight:900;line-height:1.08;letter-spacing:-.02em;margin:0}
+.txt{font-size:15px;line-height:1.75;color:rgba(30,37,53,.75);margin:0}
+.txt + .txt{margin-top:14px}
+.lead{font-size:17px;line-height:1.7;color:rgba(30,37,53,.8)}
+
+/* 1 · Intro */
+.intro{padding:22px 0 0}
+.intro .txt{margin-top:18px}
+.band{margin:32px -16px 0;aspect-ratio:4/3;overflow:hidden;background:var(--navy)}
+.band img{width:100%;height:100%;object-fit:cover}
+.cap{font-size:12px;color:var(--muted);margin:10px 0 0}
+
+/* 2 · Principe */
+.principe{background:var(--bg);margin-top:56px;padding:56px 0}
+.pgrid{margin-top:28px;display:grid;gap:0}
+.pt{padding:20px 0;border-top:1px solid rgba(11,34,56,.1)}
+.pt:first-child{border-top:0;padding-top:0}
+.pt .t{font-size:17px;font-weight:900;margin:0 0 6px}
+.pt .d{font-size:14px;line-height:1.65;color:rgba(30,37,53,.68);margin:0}
+
+/* 3 · Pilotes */
+.pilotes{padding:56px 0}
+.pphoto{margin:28px -16px 0;aspect-ratio:4/3;overflow:hidden;background:var(--navy)}
+.pphoto img{width:100%;height:100%;object-fit:cover}
+.pilotes .ptext{margin-top:24px}
+.checks{list-style:none;margin:22px 0 0;padding:0;display:grid;gap:12px}
+.checks li{display:flex;gap:10px;font-size:14px;line-height:1.55}
+.checks [data-lucide]{color:var(--gold-h);flex:none;margin-top:2px;width:18px;height:18px}
+.lnk{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:var(--navy);margin-top:22px}
+.lnk:hover{color:var(--gold-h)}
+
+/* 4 · Derrière FH */
+.behind{padding:40px 0 56px;border-top:1px solid var(--border)}
+.behind .row{display:flex;gap:16px;align-items:flex-start}
+.behind img{width:56px;height:56px;border-radius:50%;object-fit:cover;object-position:top;flex:none}
+.behind .n{font-size:15px;font-weight:800;margin:0 0 6px}
+.behind .txt{font-size:14px}
+
+/* 5 · Deux portes */
+.doors{background:var(--bg);padding:56px 0 64px}
+.dgrid{display:grid;gap:0}
+.door{padding:28px 0}
+.door + .door{border-top:1px solid rgba(11,34,56,.1)}
+.door h2{font-size:26px}
+.door .txt{margin:10px 0 20px;max-width:440px}
+.cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--gold);color:var(--navy);border:0;border-radius:10px;padding:13px 22px;font-size:14px;font-weight:900;box-shadow:var(--sh-gold);transition:background .15s,transform .15s}
+.cta:hover{background:var(--gold-h);transform:translateY(-1px)}
+.cta [data-lucide]{width:15px;height:15px}
+.ghost{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:#fff;color:var(--fg);border-radius:10px;padding:12px 20px;font-size:14px;font-weight:700}
+.ghost:hover{border-color:var(--fg)}
+.ghost [data-lucide]{width:15px;height:15px}
+
+/* Footer actuel (sans WhatsApp) */
+.foot{background:var(--navy)}
+.fm{padding:32px 0 40px;display:flex;flex-direction:column;gap:28px}
+.fd{display:none}
+.foot .flogo{height:28px;margin-bottom:16px}
+.foot .tag{color:rgba(255,255,255,.4);font-size:14px;line-height:1.6;margin:0 0 16px;max-width:320px}
+.soc{display:flex;gap:16px;color:rgba(255,255,255,.4)}
+.soc [data-lucide]{width:15px;height:15px}
+.fsep{height:1px;background:rgba(255,255,255,.05)}
+.fh{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(242,183,5,.7);margin:0 0 12px}
+.fcol ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.fcol li{font-size:14px;color:rgba(255,255,255,.5)}
+.fbot{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;font-size:11px;color:rgba(255,255,255,.3)}
+
+@container (min-width: 900px){
+  .wrap{padding:0 40px}
+  .hdr{padding:14px 16px 0}
+  .pill{height:60px;padding:0 24px}
+  .nav,.login{display:flex}
+  .vsep{display:block}
+  .burger{display:none}
+  h1{font-size:56px;line-height:1}
+  h2{font-size:44px;line-height:1.02}
+  .txt{font-size:16px}
+  .lead{font-size:19px}
+
+  .intro{padding-top:36px}
+  .igrid{display:grid;grid-template-columns:7fr 5fr;gap:72px;align-items:end}
+  .intro .txt{margin-top:0}
+  .band{margin:48px 0 0;aspect-ratio:21/8;border-radius:14px}
+
+  .principe{margin-top:96px;padding:112px 0}
+  .pwrap{display:grid;grid-template-columns:5fr 7fr;gap:80px;align-items:start}
+  .phead{position:sticky;top:110px}
+  .pgrid{margin-top:0;grid-template-columns:1fr 1fr;gap:0 48px}
+  .pt{padding:28px 0}
+  .pt:nth-child(-n+2){border-top:0;padding-top:0}
+  .pt .t{font-size:19px}
+  .pt .d{font-size:15px}
+
+  .pilotes{padding:112px 0}
+  .pl{display:grid;grid-template-columns:6fr 5fr;gap:80px;align-items:center}
+  .pphoto{margin:0;aspect-ratio:4/5;border-radius:14px;order:2}
+  .pilotes .ptext{margin-top:0}
+
+  .behind{padding:56px 0 96px}
+  .behind .row{max-width:760px;gap:20px}
+  .behind img{width:64px;height:64px}
+
+  .doors{padding:96px 0}
+  .dgrid{grid-template-columns:1fr 1fr}
+  .door{padding:8px 56px 8px 0}
+  .door + .door{border-top:0;border-left:1px solid rgba(11,34,56,.1);padding:8px 0 8px 56px}
+  .door h2{font-size:36px}
+
+  .fm{display:none}
+  .fd{display:block}
+  .fgrid{display:grid;grid-template-columns:1.6fr .9fr .9fr .9fr 1.3fr;gap:32px;padding:48px 0}
+  .fd .flogo{height:32px}
+  .fd .fh{color:var(--gold)}
+  .fdb{padding:20px 0;border-top:1px solid rgba(255,255,255,.05);display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.25)}
+}
+</style>
+</head>
+<body>
+
+<div class="tool">
+  <b>Maquette · À propos</b>
+  <div class="seg" id="vw">
+    <button data-v="desk" class="on">Ordinateur</button>
+    <button data-v="phone">Téléphone</button>
+  </div>
+  <span class="sp"></span>
+  <button class="btn-notes" id="nb">Choix de la maquette ▾</button>
+</div>
+<div class="notes" id="notes">
+  <ol>
+    <li><b>Sujet = la plateforme.</b> Romain n'apparaît plus qu'en fin de page, en quelques lignes (« Derrière Fly Horizons »).</li>
+    <li><b>Cinq sections, un sujet chacune</b> : ce qu'est Fly Horizons · le principe du partage de frais · les pilotes · qui est derrière · voler ou piloter.</li>
+    <li><b>Des photos</b> (la page n'était que du texte), toujours dans l'ordre titre → texte → image sur téléphone.</li>
+    <li><b>Plus de bloc navy avec vagues</b> : le principe du partage de frais passe sur fond gris clair, comme « Comment ça se passe » de la page produit.</li>
+    <li><b>Les 4 principes</b> gardent leurs titres validés en juillet. Les textes sont réécrits au pluriel (plusieurs pilotes).</li>
+    <li><b>Fin de page à deux portes</b> : « Envie de voler ? » vers les vols, « Vous êtes pilote ? » vers Devenir pilote. Côte à côte, séparées par un filet, sans boîte.</li>
+    <li>Même écart sous le header que la page produit.</li>
+  </ol>
+  <p>Photos provisoires tirées de la galerie. Textes à relire.</p>
+</div>
+
+<div class="stage" id="stage">
+<div class="frame" id="frame">
+
+  <header class="hdr">
+    <div class="pill">
+      <img class="logo" src="public/fly-horizons-logo-navy.svg" alt="Fly Horizons">
+      <span class="fill"></span>
+      <nav class="nav"><a href="#">Les vols</a><a href="#">Galerie</a><a href="#">À propos</a><a href="#">FAQ</a><a href="#">Contact</a></nav>
+      <span class="vsep"></span>
+      <a class="login" href="#"><i data-lucide="user"></i>Connexion</a>
+      <button class="burger" aria-label="Menu"><i data-lucide="menu"></i></button>
+    </div>
+  </header>
+
+  <main>
+    <!-- 1 · CE QU'EST FLY HORIZONS -->
+    <section class="intro">
+      <div class="wrap">
+        <div class="igrid">
+          <div>
+            <p class="eyebrow">À propos</p>
+            <h1>Des pilotes privés partagent leurs vols avec vous.</h1>
+          </div>
+          <p class="txt lead">Fly Horizons met en relation des passagers qui veulent voir la Belgique d'en haut et des pilotes privés qui volent de toute façon. Le pilote publie son vol, vous le rejoignez, et les frais réels sont partagés entre les occupants.</p>
+        </div>
+        <div class="band"><img src="public/gallery/3.png" alt="Un avion léger sur le tarmac de Charleroi"></div>
+        <p class="cap">Aérodrome de Charleroi (EBCI), point de départ des vols.</p>
+        <div class="igrid" style="margin-top:28px">
+          <div></div>
+          <div>
+            <p class="txt">Ce n'est ni une compagnie aérienne, ni une agence de baptêmes de l'air. Les pilotes ne sont pas payés pour voler : ils entretiennent leurs heures, partent explorer, et préfèrent le faire à plusieurs. Vous payez votre part de l'avion, du carburant et des taxes d'aérodrome, rien de plus.</p>
+            <p class="txt">Les vols partent de l'aérodrome de Charleroi et durent de trente minutes à deux heures, avec jusqu'à trois passagers à bord. Chaque vol est présenté sur sa propre page : durée, itinéraire, pilote et participation aux frais.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 · LE PRINCIPE DU PARTAGE DE FRAIS -->
+    <section class="principe">
+      <div class="wrap pwrap">
+        <div class="phead">
+          <p class="eyebrow">Vol partagé</p>
+          <h2>Le principe du partage de frais</h2>
+          <p class="txt" style="margin-top:16px;max-width:420px">Le vol partagé répond à un cadre précis, distinct du transport aérien commercial. Il repose sur quatre principes.</p>
+        </div>
+        <div class="pgrid">
+          <div class="pt"><p class="t">Le pilote décide, vous ne commandez pas un vol</p><p class="d">Vous demandez à rejoindre un vol publié par un pilote. Il accepte ou décline chaque demande, selon ses disponibilités et à sa seule discrétion.</p></div>
+          <div class="pt"><p class="t">Partage des frais réels, sans marge</p><p class="d">Avion, carburant et taxes d'aérodrome sont répartis entre les occupants, pilote compris. Personne ne gagne d'argent sur le vol.</p></div>
+          <div class="pt"><p class="t">Aucun créneau garanti</p><p class="d">La météo et les disponibilités du pilote déterminent chaque vol, comme pour tout vol privé. Un vol peut être reporté jusqu'au jour même.</p></div>
+          <div class="pt"><p class="t">Un cadre non commercial</p><p class="d">Ce n'est pas un service de transport aérien, mais un partage de coûts entre particuliers. Le paiement va directement au pilote : Fly Horizons n'encaisse rien.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 · LES PILOTES -->
+    <section class="pilotes">
+      <div class="wrap pl">
+        <div class="ptext-wrap">
+          <p class="eyebrow">Les pilotes</p>
+          <h2>Qui vous emmène</h2>
+          <div class="pphoto mobile-only-order"><img src="public/gallery/10.jpg" alt="Un avion léger en vol"></div>
+          <div class="ptext">
+            <p class="txt">Les pilotes de Fly Horizons sont des pilotes privés licenciés. Avant de pouvoir publier un vol, chacun nous transmet sa licence et son certificat médical, que nous vérifions un par un, et accepte notre charte : sécurité d'abord, frais partagés honnêtement, passagers informés.</p>
+            <p class="txt">Une fois en l'air, le pilote reste seul commandant de bord. C'est lui qui prépare le vol, vérifie la météo, calcule la masse de l'avion et décide de partir ou non. Son profil est visible sur chaque vol qu'il publie.</p>
+            <ul class="checks">
+              <li><i data-lucide="check"></i>Licence de pilote et certificat médical vérifiés</li>
+              <li><i data-lucide="check"></i>Charte Fly Horizons acceptée</li>
+              <li><i data-lucide="check"></i>Seul responsable de son vol, de la préparation à l'atterrissage</li>
+            </ul>
+          </div>
+        </div>
+        <div class="pphoto desk-only"><img src="public/gallery/10.jpg" alt="Un avion léger en vol"></div>
+      </div>
+    </section>
+
+    <!-- 4 · DERRIÈRE FLY HORIZONS -->
+    <section class="wrap">
+      <div class="behind">
+        <p class="eyebrow">Derrière Fly Horizons</p>
+        <div class="row">
+          <img src="public/photo-pilote.jpg" alt="">
+          <div>
+            <p class="n">Romain Destanberg, fondateur</p>
+            <p class="txt">Pilote privé basé à Charleroi, Romain a lancé Fly Horizons pour que les places libres des petits avions ne volent plus à vide. La plateforme ne pilote pas et n'encaisse rien : elle vérifie les pilotes, publie leurs vols et accompagne chaque passager, de la demande à l'atterrissage.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 · DEUX PORTES -->
+    <section class="doors">
+      <div class="wrap dgrid">
+        <div class="door">
+          <h2>Envie de voler ?</h2>
+          <p class="txt">Parcourez les vols publiés par nos pilotes et envoyez votre demande. Rien à payer avant la confirmation.</p>
+          <a class="cta" href="#">Voir les vols <i data-lucide="arrow-right"></i></a>
+        </div>
+        <div class="door">
+          <h2>Vous êtes pilote ?</h2>
+          <p class="txt">Partagez les frais de vos vols avec des passagers, en restant seul maître à bord.</p>
+          <a class="ghost" href="#">Devenir pilote partenaire <i data-lucide="arrow-right"></i></a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap">
+      <div class="fm">
+        <div><img class="flogo" src="public/fly-horizons-logo-white.svg" alt="Fly Horizons"><p class="tag">Vols partagés en avion léger avec Romain, pilote et fondateur, au départ de l'aérodrome de Charleroi (EBCI).</p><div class="soc"><i data-lucide="mail"></i><i data-lucide="facebook"></i><i data-lucide="instagram"></i></div></div>
+        <div class="fsep"></div>
+        <div class="fcol"><p class="fh">Informations</p><ul><li>Les vols</li><li>À propos</li><li>FAQ</li><li>Galerie</li></ul></div>
+        <div class="fcol"><p class="fh">Contact</p><ul><li>info@fly-horizons.com</li><li>Formulaire de contact</li></ul></div>
+        <div class="fsep"></div>
+        <div class="fbot"><span>© 2026 Fly Horizons, Rue des Fusillés, 6040 Charleroi. Tous droits réservés.</span></div>
+      </div>
+      <div class="fd">
+        <div class="fgrid">
+          <div><img class="flogo" src="public/fly-horizons-logo-white.svg" alt="Fly Horizons"><p class="tag">Vols partagés en avion léger avec Romain, pilote et fondateur, au départ de l'aérodrome de Charleroi (EBCI).</p><div class="soc"><i data-lucide="mail"></i><i data-lucide="facebook"></i><i data-lucide="instagram"></i></div></div>
+          <div class="fcol"><p class="fh">Informations</p><ul><li>Les vols</li><li>À propos</li><li>FAQ</li><li>Galerie</li></ul></div>
+          <div class="fcol"><p class="fh">Pratique</p><ul><li>Plan d'accès · EBCI</li><li>Faire une demande</li><li>Mon compte</li><li>Vous êtes pilote ?</li></ul></div>
+          <div class="fcol"><p class="fh">Contact</p><ul><li>info@fly-horizons.com</li><li>Formulaire de contact</li></ul></div>
+          <div class="fcol"><p class="fh">Newsletter</p><ul><li>Recevez un email dès qu'un vol est organisé.</li></ul></div>
+        </div>
+        <div class="fdb"><span>© 2026 Fly Horizons, Rue des Fusillés, 6040 Charleroi. Tous droits réservés.</span><span>Conditions générales · Confidentialité · Contact</span></div>
+      </div>
+    </div>
+  </footer>
+</div>
+</div>
+
+<style>
+/* Photo « pilotes » : dans le flux après le titre sur téléphone, colonne à droite sur ordinateur */
+.desk-only{display:none}
+@container (min-width: 900px){ .mobile-only-order{display:none} .desk-only{display:block} }
+</style>
+<script>
+lucide.createIcons();
+function seg(id, fn){ const el=document.getElementById(id); el.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
+  el.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); fn(b); }); }
+seg('vw', b => document.getElementById('stage').classList.toggle('phone', b.dataset.v==='phone'));
+document.getElementById('nb').addEventListener('click',()=>document.getElementById('notes').classList.toggle('open'));
+</script>
+</body>
+</html>

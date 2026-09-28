@@ -61,7 +61,7 @@ export function SiteSettingsForm({
         <div>
           <p className="text-sm font-medium text-foreground">Site en reconstruction</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Redirige tous les visiteurs vers une page &quot;site en pause&quot; (mail + WhatsApp). Connecté en admin, vous continuez de voir le site normalement.
+            Redirige tous les visiteurs vers une page &quot;site en pause&quot; (email). Connecté en admin, vous continuez de voir le site normalement.
           </p>
         </div>
         <button
@@ -89,7 +89,7 @@ export function SiteSettingsForm({
             <textarea
               value={maintMessage}
               onChange={e => { setMaintMessage(e.target.value); setSaved(false); }}
-              placeholder="Les réservations restent possibles par mail ou WhatsApp, on vous répond vite."
+              placeholder="Les réservations restent possibles par email, on vous répond vite."
               rows={2}
               className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
             />

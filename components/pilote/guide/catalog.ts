@@ -73,7 +73,7 @@ export const GUIDE_TABS: { key: GuideTabKey; label: string; intro: string; entri
     entries: [
       { slug: "charte", icon: ShieldCheck, title: "La charte du pilote", desc: "Le texte que vous avez accepté, en entier.", min: 4, featured: true, ready: true },
       { slug: "faq", icon: CircleQuestionMark, title: "Questions fréquentes", desc: "Paiement, notifications, annulation, documents.", min: 3 },
-      { slug: "contact", icon: MessageCircle, title: "Nous contacter", desc: "WhatsApp, email, ou signaler un problème.", min: 1, ready: true },
+      { slug: "contact", icon: MessageCircle, title: "Nous contacter", desc: "Par email, ou signaler un problème.", min: 1, ready: true },
     ],
   },
 ];

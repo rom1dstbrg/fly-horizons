@@ -1,4 +1,4 @@
-import { Share, SquarePlus, EllipsisVertical, Smartphone, Mail, MessageCircle, Flag } from "lucide-react";
+import { Share, SquarePlus, EllipsisVertical, Smartphone, Mail, Flag } from "lucide-react";
 import { Card, SectionHeader } from "@/components/pilote/studio";
 import { CHARTE_PILOTE_TEXTE, CHARTE_VERSION } from "@/lib/pilote/charte";
 
@@ -86,8 +86,7 @@ export function GuideCharte() {
 
 export function GuideContact() {
   const items = [
-    { icon: MessageCircle, title: "WhatsApp", desc: "Une question, un imprévu, un vol qui ne peut pas se faire.", href: "https://wa.me/32472324135" },
-    { icon: Mail, title: "info@fly-horizons.com", desc: "Pour ce qui peut attendre un peu.", href: "mailto:info@fly-horizons.com" },
+    { icon: Mail, title: "info@fly-horizons.com", desc: "Une question, un imprévu, un vol qui ne peut pas se faire.", href: "mailto:info@fly-horizons.com" },
   ];
   return (
     <div className="space-y-6">

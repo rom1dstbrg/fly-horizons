@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { CgvAccordion } from "@/components/shop/CgvAccordion";
-import { FaWhatsapp } from "react-icons/fa6";
 
 export const metadata: Metadata = {
   title: "Politique de confidentialité · Fly Horizons",
@@ -239,15 +238,6 @@ export default function PolitiqueConfidentialitePage() {
               <p className="text-xs text-white/50">Envoyez un e-mail à info@fly-horizons.com, réponse sous 48 h.</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <a
-                href="https://wa.me/32472324135"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-bold bg-[#25D366] text-white rounded-lg hover:bg-[#1ebe5d] transition-colors"
-              >
-                <FaWhatsapp size={15} />
-                WhatsApp
-              </a>
               <a
                 href="mailto:info@fly-horizons.com"
                 className="inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-black bg-primary text-primary-foreground rounded-lg hover:brightness-105 active:scale-[0.98] transition-all shadow-gold"
