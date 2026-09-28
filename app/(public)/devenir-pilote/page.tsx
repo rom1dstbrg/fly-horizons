@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Check, Megaphone, CalendarDays, Route, Scale, BookOpen, Wallet } from "lucide-react";
 
@@ -10,8 +9,8 @@ export const metadata: Metadata = {
 
 // Nouvelle DA (maquette-devenir-pilote.html, 28/09). La page suit les questions d'un pilote,
 // dans l'ordre : est-ce que je peux (conditions) → comment ça se passe → avec quels outils →
-// dans quel cadre. Chaque section a sa forme propre : intro 7/5 alignée en bas, une seule photo
-// en bandeau 21:8, déroulé en tableau à filets (moment | étape), outils en 3 colonnes à filets.
+// dans quel cadre. Chaque section a sa forme propre, sans photo : intro 7/5 alignée en bas,
+// déroulé en tableau à filets (moment | étape), outils en 3 colonnes à filets.
 // L'aérodrome de départ est demandé dans la candidature mais jamais imposé sur la page.
 
 const WRAP = "max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10";
@@ -73,7 +72,7 @@ export default function DevenirPilotePage() {
     <main className="min-h-screen bg-white">
 
       {/* ══ 1 · INTRO : texte | conditions ══ */}
-      <section className="pt-page pb-10 lg:pb-[72px]">
+      <section className="pt-page pb-12 lg:pb-24">
         <div className={`${WRAP} grid gap-9 lg:grid-cols-[7fr_5fr] lg:gap-x-[88px] lg:items-end`}>
           <div>
             <p className={EYEBROW}>Pilotes</p>
@@ -107,26 +106,9 @@ export default function DevenirPilotePage() {
         </div>
       </section>
 
-      {/* ══ 2 · BANDEAU PHOTO ══ */}
-      <div className={WRAP}>
-        <figure>
-          <div className="relative -mx-4 sm:-mx-6 lg:mx-0 aspect-[4/3] lg:aspect-[21/8] lg:rounded-[14px] overflow-hidden bg-[#0b2238]">
-            <Image
-              src="/hero-section.png"
-              alt="Vue depuis le siège du pilote, en vol au-dessus de la campagne"
-              fill
-              priority
-              className="object-cover"
-              sizes="(min-width: 1400px) 1320px, 100vw"
-            />
-          </div>
-          <figcaption className="mt-2.5 lg:mt-3 text-[13px] text-muted-foreground">
-            Préparation, décision de partir, conduite du vol : vous restez seul commandant de bord.
-          </figcaption>
-        </figure>
-      </div>
+      <div className={WRAP}><hr className="border-border" /></div>
 
-      {/* ══ 3 · DÉROULÉ : moment | étape ══ */}
+      {/* ══ 2 · DÉROULÉ : moment | étape ══ */}
       <section className="py-12 lg:py-24">
         <div className={WRAP}>
           <div className="grid gap-3.5 mb-[26px] lg:grid-cols-2 lg:gap-x-[72px] lg:items-end lg:mb-11">
@@ -152,7 +134,7 @@ export default function DevenirPilotePage() {
         </div>
       </section>
 
-      {/* ══ 4 · ESPACE PILOTE : 6 outils ══ */}
+      {/* ══ 3 · ESPACE PILOTE : 6 outils ══ */}
       <section className="bg-[#f5f5f7] py-12 lg:py-24">
         <div className={WRAP}>
           <div className="grid gap-3.5 lg:grid-cols-2 lg:gap-x-[72px] lg:items-end">
@@ -181,7 +163,7 @@ export default function DevenirPilotePage() {
         </div>
       </section>
 
-      {/* ══ 5 · LE CADRE : texte | qui fait quoi ══ */}
+      {/* ══ 4 · LE CADRE : texte | qui fait quoi ══ */}
       <section className="py-12 lg:py-24">
         <div className={`${WRAP} grid gap-7 lg:grid-cols-[5fr_7fr] lg:gap-x-[88px]`}>
           <div>
@@ -216,7 +198,7 @@ export default function DevenirPilotePage() {
         </div>
       </section>
 
-      {/* ══ 6 · FIN ══ */}
+      {/* ══ 5 · FIN ══ */}
       <section className="border-t border-border pt-11 pb-14 lg:pt-[72px] lg:pb-24">
         <div className={`${WRAP} flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between`}>
           <div>

@@ -12,8 +12,8 @@ import { Send, Loader2, Check, Plane, ArrowLeft } from "lucide-react";
 // Romain, un simple message qu'il traite manuellement — jamais une création de
 // compte pilote automatique.
 // Nouvelle DA (maquette-devenir-pilote.html, 28/09) : mêmes champs, pastilles et
-// confirmation sur place que ContactForm. L'aérodrome est obligatoire (critère interne,
-// jamais affiché comme condition sur le site).
+// confirmation sur place que ContactForm. Heures, avion et aérodrome obligatoires (l'aérodrome
+// est un critère interne, jamais affiché comme condition sur le site).
 
 const FIELD = "w-full rounded-xl border border-border bg-secondary px-4 text-[15px] text-foreground placeholder:text-[#8a94a6] outline-none transition-colors focus:bg-white focus:border-foreground";
 const LABEL = "block text-[13px] font-bold text-foreground mb-2";
@@ -36,9 +36,9 @@ export function CandidaturePiloteForm() {
 
     const message = [
       `Licence : ${licence}`,
-      `Aérodrome de départ : ${get("aerodrome") || "—"}`,
-      `Avion(s) : ${get("aeronef") || "—"}`,
-      `Heures de vol totales : ${get("heures") || "—"}`,
+      `Aérodrome de départ : ${get("aerodrome")}`,
+      `Avion(s) : ${get("aeronef")}`,
+      `Heures de vol totales : ${get("heures")}`,
       `Téléphone : ${get("telephone") || "—"}`,
       "",
       get("motivation") || "(pas de message complémentaire)",
@@ -100,8 +100,8 @@ export function CandidaturePiloteForm() {
           <input name="telephone" type="tel" autoComplete="tel" placeholder="+32 4xx xx xx xx" className={`${FIELD} h-[52px]`} />
         </label>
         <label className="block mb-[18px]">
-          <span className={LABEL}>Heures de vol totales{OPT}</span>
-          <input name="heures" type="number" min={0} inputMode="numeric" placeholder="Ex. : 250" className={`${FIELD} h-[52px]`} />
+          <span className={LABEL}>Heures de vol totales</span>
+          <input name="heures" required type="number" min={0} inputMode="numeric" placeholder="Ex. : 250" className={`${FIELD} h-[52px]`} />
         </label>
       </div>
 
@@ -133,8 +133,8 @@ export function CandidaturePiloteForm() {
           <input name="aerodrome" required placeholder="Nom ou code OACI" className={`${FIELD} h-[52px]`} />
         </label>
         <label className="block mb-[18px]">
-          <span className={LABEL}>Avion(s) utilisé(s){OPT}</span>
-          <input name="aeronef" placeholder="Ex. : DA40, C172" className={`${FIELD} h-[52px]`} />
+          <span className={LABEL}>Avion(s) utilisé(s)</span>
+          <input name="aeronef" required placeholder="Ex. : DA40, C172" className={`${FIELD} h-[52px]`} />
         </label>
       </div>
 
