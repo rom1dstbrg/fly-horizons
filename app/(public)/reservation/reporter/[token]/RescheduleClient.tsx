@@ -6,17 +6,17 @@ import { ArrowLeft, CalendarDays, Check, ChevronLeft, ChevronRight, Loader2 } fr
 import { rescheduleReservation } from "@/lib/actions/reservations";
 import { plageLabel } from "@/lib/pilote-creneaux";
 
-// Page de report dans la nouvelle DA (28/09). Une seule colonne de 600 px, lue
-// dans l'ordre des gestes : titre, le vol reporté en une ligne, calendrier
-// (ouvert sur le premier mois qui a une date libre), créneaux du jour choisi
-// juste dessous, puis le choix en une ligne et le bouton. Rien à côté.
+// Page de report dans la nouvelle DA (28/09, maquette report-pc variante A).
+// Titre + le vol reporté en une ligne, pleine largeur. Dessous, ordinateur :
+// calendrier à gauche (7/12, ouvert sur le premier mois qui a une date libre),
+// créneaux du jour puis choix + bouton à droite (5/12, filet vertical) : on
+// choisit de gauche à droite. Téléphone : une colonne dans le même ordre.
 // Après envoi, confirmation sur place (même schéma que la page contact).
 
 const MONTHS_FR = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 const DAYS_FR   = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
 
 const EYEBROW = "text-[11px] font-bold text-primary uppercase tracking-[3px]";
-const SECTION = "mt-8 pt-7 border-t border-border";
 const NAV_BTN = "grid h-10 w-10 place-items-center rounded-xl border border-border text-foreground hover:border-foreground transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-default disabled:hover:border-border";
 const SECONDARY = "inline-flex items-center gap-2 px-5 py-3 bg-white border border-border text-foreground rounded-[10px] text-sm font-bold hover:border-foreground transition-colors";
 
@@ -179,100 +179,108 @@ export function RescheduleClient({ token, currentDate, duree, prenom, passagers,
 
   return (
     <main className="bg-white pt-page pb-24">
-      <div className="max-w-[600px] mx-auto px-4 sm:px-6">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
-        <p className={`${EYEBROW} mb-3`}>Report de vol</p>
-        <h1 className="text-[34px] lg:text-[44px] font-black text-foreground leading-[1.03] tracking-[-0.02em]">
-          Choisissez une nouvelle date.
-        </h1>
-        <p className="mt-4 text-[15px] leading-[1.7] text-foreground/75">
-          {prenom ? `Bonjour ${prenom}, ` : ""}
-          {piloteNom
-            ? <>les dates proposées sont celles où {piloteNom} est disponible. Vous choisissez un créneau de 2 h ; l&apos;heure exacte du décollage se fixe ensuite avec votre pilote.</>
-            : <>choisissez une date puis une heure de départ.</>}
-        </p>
+        <div className="max-w-[760px]">
+          <p className={`${EYEBROW} mb-3`}>Report de vol</p>
+          <h1 className="text-[34px] lg:text-[48px] font-black text-foreground leading-[1.03] tracking-[-0.02em]">
+            Choisissez une nouvelle date.
+          </h1>
+          <p className="mt-4 text-[15px] leading-[1.7] text-foreground/75">
+            {prenom ? `Bonjour ${prenom}, ` : ""}
+            {piloteNom
+              ? <>les dates proposées sont celles où {piloteNom} est disponible. Vous choisissez un créneau de 2 h ; l&apos;heure exacte du décollage se fixe ensuite avec votre pilote.</>
+              : <>choisissez une date puis une heure de départ.</>}
+          </p>
 
-        {/* Le vol reporté, en une ligne */}
-        <dl className="mt-5 flex flex-wrap gap-x-6 gap-y-1 text-[13.5px]">
-          <div className="flex gap-1.5"><dt className="text-foreground/55">Date prévue</dt><dd className="font-semibold text-foreground/45 line-through">{fmtLong(currentDate)}</dd></div>
-          {piloteNom && <div className="flex gap-1.5"><dt className="text-foreground/55">Pilote</dt><dd className="font-semibold text-foreground">{piloteNom}</dd></div>}
-          <div className="flex gap-1.5"><dt className="text-foreground/55">Durée</dt><dd className="font-semibold text-foreground">{fmtDuree(duree)}</dd></div>
-          <div className="flex gap-1.5"><dt className="text-foreground/55">Passagers</dt><dd className="font-semibold text-foreground">{passagers}</dd></div>
-        </dl>
+          {/* Le vol reporté, en une ligne */}
+          <dl className="mt-5 flex flex-wrap gap-x-6 gap-y-1 text-[13.5px]">
+            <div className="flex gap-1.5"><dt className="text-foreground/55">Date prévue</dt><dd className="font-semibold text-foreground/45 line-through">{fmtLong(currentDate)}</dd></div>
+            {piloteNom && <div className="flex gap-1.5"><dt className="text-foreground/55">Pilote</dt><dd className="font-semibold text-foreground">{piloteNom}</dd></div>}
+            <div className="flex gap-1.5"><dt className="text-foreground/55">Durée</dt><dd className="font-semibold text-foreground">{fmtDuree(duree)}</dd></div>
+            <div className="flex gap-1.5"><dt className="text-foreground/55">Passagers</dt><dd className="font-semibold text-foreground">{passagers}</dd></div>
+          </dl>
+        </div>
 
-        {/* Date */}
-        <section className={SECTION}>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-[17px] font-black text-foreground">{MONTHS_FR[calMonth - 1]} {calYear}</h2>
-            <div className="flex gap-2">
-              <button type="button" aria-label="Mois précédent" disabled={atFirstMonth || calLoading} onClick={() => moveMonth(-1)} className={NAV_BTN}><ChevronLeft size={16} /></button>
-              <button type="button" aria-label="Mois suivant" disabled={calLoading} onClick={() => moveMonth(1)} className={NAV_BTN}><ChevronRight size={16} /></button>
-            </div>
-          </div>
-          <div className="grid grid-cols-7 gap-1.5 mb-1.5">
-            {DAYS_FR.map((d) => (
-              <span key={d} className="text-center text-[11px] font-bold uppercase tracking-[1px] text-muted-foreground">{d}</span>
-            ))}
-          </div>
-          {calLoading
-            ? <div className="grid h-[280px] place-items-center"><Loader2 size={20} className="animate-spin text-muted-foreground/40" /></div>
-            : <div className="grid grid-cols-7 gap-1.5">{cells}</div>}
-          {!calLoading && availDays.length === 0 && (
-            <p className="mt-4 text-sm text-foreground/60">Aucune date libre ce mois-ci. Regardez le mois suivant.</p>
-          )}
-        </section>
+        <div className="mt-8 pt-7 lg:mt-10 lg:pt-10 border-t border-border lg:grid lg:grid-cols-12">
 
-        {/* Créneau du jour choisi, juste sous le calendrier */}
-        {selectedDate && (
-          <section className={SECTION}>
-            <h2 className="mb-3 text-[17px] font-black text-foreground first-letter:uppercase">{fmtLong(selectedDate)}</h2>
-            {slotsLoading ? (
-              <Loader2 size={18} className="animate-spin text-muted-foreground/40" />
-            ) : slots.length === 0 ? (
-              <p className="text-[15px] text-foreground/60">Plus aucun créneau libre ce jour-là. Choisissez une autre date.</p>
-            ) : (
-              <div data-xs-grid className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {slots.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    aria-pressed={selectedHeure === s}
-                    onClick={() => { setSelectedHeure(s); setError(""); }}
-                    className={[
-                      "h-[52px] rounded-xl border text-[15px] font-bold tabular-nums transition-colors cursor-pointer",
-                      selectedHeure === s ? "border-primary bg-primary text-[#0b2238]" : "border-border bg-white text-foreground hover:border-foreground",
-                    ].join(" ")}
-                  >{slotLabel(s)}</button>
-                ))}
+          {/* Gauche : le jour */}
+          <section className="lg:col-span-7">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-[17px] font-black text-foreground">{MONTHS_FR[calMonth - 1]} {calYear}</h2>
+              <div className="flex gap-2">
+                <button type="button" aria-label="Mois précédent" disabled={atFirstMonth || calLoading} onClick={() => moveMonth(-1)} className={NAV_BTN}><ChevronLeft size={16} /></button>
+                <button type="button" aria-label="Mois suivant" disabled={calLoading} onClick={() => moveMonth(1)} className={NAV_BTN}><ChevronRight size={16} /></button>
               </div>
+            </div>
+            <div className="grid grid-cols-7 gap-1.5 sm:gap-2 mb-1.5">
+              {DAYS_FR.map((d) => (
+                <span key={d} className="text-center text-[11px] font-bold uppercase tracking-[1px] text-muted-foreground">{d}</span>
+              ))}
+            </div>
+            {calLoading
+              ? <div className="grid h-[300px] place-items-center"><Loader2 size={20} className="animate-spin text-muted-foreground/40" /></div>
+              : <div className="grid grid-cols-7 gap-1.5 sm:gap-2">{cells}</div>}
+            {!calLoading && availDays.length === 0 && (
+              <p className="mt-4 text-sm text-foreground/60">Aucune date libre ce mois-ci. Regardez le mois suivant.</p>
             )}
           </section>
-        )}
 
-        {/* Choix + confirmation */}
-        <section className={SECTION}>
-          <p className="text-[15px] text-foreground/60">
-            Nouvelle date :{" "}
-            {choix
-              ? <strong className="text-foreground">{fmtLong(selectedDate)}, <span className="whitespace-nowrap">{slotLabel(selectedHeure)}</span></strong>
-              : <strong className="font-semibold text-foreground/35">à choisir</strong>}
-          </p>
-          {error && (
-            <p role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p>
-          )}
-          <button
-            type="button"
-            onClick={handleConfirm}
-            disabled={!choix || submitting}
-            className="mt-5 w-full inline-flex items-center justify-center gap-2 px-[26px] py-[15px] bg-primary text-[#0b2238] rounded-[10px] text-[15px] font-black hover:bg-[#e6a800] disabled:opacity-40 disabled:cursor-default transition-colors shadow-gold cursor-pointer"
-          >
-            {submitting && <Loader2 size={16} className="animate-spin" />}
-            {submitting ? "Enregistrement…" : choix ? "Confirmer le report" : selectedDate ? "Choisissez un créneau" : "Choisissez une date"}
-          </button>
-          <p className="mt-3 text-[13px] leading-relaxed text-foreground/55">
-            Le prix et le paiement ne changent pas. Vous recevez un email de confirmation.
-          </p>
-        </section>
+          {/* Droite : le créneau, puis la confirmation */}
+          <div className="lg:col-span-5 mt-8 pt-7 border-t border-border lg:mt-0 lg:pt-0 lg:border-t-0 lg:border-l lg:pl-14 lg:ml-14">
+            <section>
+              <h2 className="mb-3 text-[17px] font-black text-foreground first-letter:uppercase">
+                {selectedDate ? fmtLong(selectedDate).replace(/ \d{4}$/, "") : piloteNom ? "Créneau" : "Heure de départ"}
+              </h2>
+              {!selectedDate ? (
+                <p className="text-[15px] text-foreground/60">Choisissez d&apos;abord un jour dans le calendrier.</p>
+              ) : slotsLoading ? (
+                <Loader2 size={18} className="animate-spin text-muted-foreground/40" />
+              ) : slots.length === 0 ? (
+                <p className="text-[15px] text-foreground/60">Plus aucun créneau libre ce jour-là. Choisissez une autre date.</p>
+              ) : (
+                <div data-xs-grid className="grid grid-cols-2 gap-2">
+                  {slots.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      aria-pressed={selectedHeure === s}
+                      onClick={() => { setSelectedHeure(s); setError(""); }}
+                      className={[
+                        "h-[52px] rounded-xl border text-[15px] font-bold tabular-nums transition-colors cursor-pointer",
+                        selectedHeure === s ? "border-primary bg-primary text-[#0b2238]" : "border-border bg-white text-foreground hover:border-foreground",
+                      ].join(" ")}
+                    >{slotLabel(s)}</button>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section className="mt-8 pt-7 border-t border-border">
+              <p className="text-[15px] text-foreground/60">
+                Nouvelle date :{" "}
+                {choix
+                  ? <strong className="text-foreground">{fmtLong(selectedDate)}, <span className="whitespace-nowrap">{slotLabel(selectedHeure)}</span></strong>
+                  : <strong className="font-semibold text-foreground/35">à choisir</strong>}
+              </p>
+              {error && (
+                <p role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p>
+              )}
+              <button
+                type="button"
+                onClick={handleConfirm}
+                disabled={!choix || submitting}
+                className="mt-5 w-full inline-flex items-center justify-center gap-2 px-[26px] py-[15px] bg-primary text-[#0b2238] rounded-[10px] text-[15px] font-black hover:bg-[#e6a800] disabled:opacity-40 disabled:cursor-default transition-colors shadow-gold cursor-pointer"
+              >
+                {submitting && <Loader2 size={16} className="animate-spin" />}
+                {submitting ? "Enregistrement…" : choix ? "Confirmer le report" : selectedDate ? "Choisissez un créneau" : "Choisissez une date"}
+              </button>
+              <p className="mt-3 text-[13px] leading-relaxed text-foreground/55">
+                Le prix et le paiement ne changent pas. Vous recevez un email de confirmation.
+              </p>
+            </section>
+          </div>
+        </div>
       </div>
     </main>
   );
