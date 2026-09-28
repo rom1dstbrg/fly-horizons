@@ -8,12 +8,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
 <!--
-  Maquette /contact (28/09), nouvelle DA, composition propre : une page pour ÉCRIRE.
-  RÈGLE : ordinateur 2 colonnes 5 | 7 ; gauche = titre + promesse, puis « autres moyens » et
-  « avant d'écrire » en lignes à filets ; droite = formulaire posé sur la page, sans carte,
-  qui démarre à la hauteur du titre. Téléphone : titre → formulaire → le reste.
-  Champs = vocabulaire de la recherche FAQ. Après envoi : confirmation sur place
-  (modèle à réutiliser pour tous les formulaires du site).
+  Maquette /contact v2 (28/09) : la v1 (formulaire flottant à droite, 3 blocs à gauche) ne plaît pas.
+  Trois structures à comparer, même contenu, même confirmation après envoi :
+  A « Lettre »  : une seule colonne étroite (680 px) ; titre, formulaire, puis une ligne d'autres moyens.
+  B « Bande »   : titre + intro côte à côte ; formulaire dans une bande gris clair pleine largeur
+                  (coordonnées à gauche, message à droite) ; 3 colonnes d'aide dessous.
+  C « Photo »   : photo à gauche sur toute la hauteur du formulaire ; titre + formulaire à droite.
 -->
 <style>
 :root{--navy:#0b2238;--gold:#F2B705;--gold-h:#e6a800;--bg:#f5f5f7;--sec:#edf0f7;--fg:#1e2535;--muted:#64748b;--border:#e0e5ef;--sh:0 2px 14px rgba(11,34,56,.07);--sh-gold:0 6px 24px rgba(242,183,5,.35)}
@@ -23,6 +23,7 @@ body{font-family:Poppins,system-ui,sans-serif;background:#dfe3ea;color:var(--fg)
 a{color:inherit;text-decoration:none}
 button,input,textarea{font-family:inherit}
 button{cursor:pointer}
+img{display:block;max-width:100%}
 [data-lucide]{width:16px;height:16px;stroke-width:2}
 .tool{position:sticky;top:0;z-index:2000;background:#fff;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:10px 16px;font-size:12px}
 .tool b{font-weight:800;font-size:13px}
@@ -30,11 +31,6 @@ button{cursor:pointer}
 .seg{display:inline-flex;background:var(--sec);border-radius:9px;padding:3px}
 .seg button{border:0;background:transparent;padding:6px 11px;border-radius:7px;font-size:12px;font-weight:600;color:var(--muted)}
 .seg button.on{background:#fff;color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.08)}
-.tool .sp{flex:1}
-.btn-notes{border:1px solid var(--border);background:#fff;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700}
-.notes{display:none;background:#fffbea;border-bottom:1px solid #f3e3a1;padding:16px 20px;font-size:13px;line-height:1.6}
-.notes.open{display:block}
-.notes ol{margin:0;padding-left:20px;max-width:920px}
 .stage.phone{padding:28px 0 48px;display:flex;justify-content:center}
 .frame{container-type:inline-size;background:#fff;position:relative}
 .stage.phone .frame{width:390px;height:844px;overflow-y:auto;border-radius:46px;border:11px solid #0f1115;box-shadow:0 30px 80px rgba(0,0,0,.25);scrollbar-width:none}
@@ -51,15 +47,13 @@ button{cursor:pointer}
 .login [data-lucide]{width:13px;height:13px}
 .burger{border:0;background:transparent;padding:8px;color:var(--muted)}
 .burger [data-lucide]{width:20px;height:20px}
+.foot{background:var(--navy);color:rgba(255,255,255,.45);padding:40px 0;font-size:13px}
+.foot img{height:28px;margin-bottom:12px}
+
+/* Commun */
 .eyebrow{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin:0 0 12px}
 h1{font-size:34px;font-weight:900;line-height:1.05;letter-spacing:-.02em;margin:0}
-.lead{font-size:16px;line-height:1.7;color:rgba(30,37,53,.78);margin:14px 0 0;max-width:440px}
-.page{padding:24px 0 72px}
-.cg{display:grid;grid-template-columns:1fr;grid-template-areas:"head" "form" "side"}
-.head{grid-area:head}
-.formz{grid-area:form;margin-top:32px}
-.side{grid-area:side;margin-top:56px}
-.row2{display:grid;gap:0 18px}
+.lead{font-size:16px;line-height:1.7;color:rgba(30,37,53,.78);margin:14px 0 0;max-width:460px}
 .f{display:block;margin-bottom:18px}
 .f>span{display:block;font-size:13px;font-weight:700;color:var(--fg);margin:0 0 8px}
 .f input,.f textarea{width:100%;border:1px solid var(--border);background:var(--sec);border-radius:12px;padding:0 16px;font-size:15px;color:var(--fg);outline:none;transition:.15s}
@@ -71,34 +65,46 @@ h1{font-size:34px;font-weight:900;line-height:1.05;letter-spacing:-.02em;margin:
 .topic{border:1px solid var(--border);background:#fff;border-radius:999px;padding:7px 13px;font-size:13px;font-weight:600;color:var(--muted)}
 .topic:hover{color:var(--fg);border-color:var(--fg)}
 .topic.on{background:var(--navy);border-color:var(--navy);color:#fff}
-.send{display:flex;flex-direction:column;gap:14px;margin-top:6px}
-.cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--gold);color:var(--navy);border:0;border-radius:10px;padding:15px 26px;font-size:15px;font-weight:900;box-shadow:var(--sh-gold);transition:background .15s,transform .15s}
-.cta:hover{background:var(--gold-h);transform:translateY(-1px)}
-.legal{font-size:12px;line-height:1.6;color:var(--muted);margin:0}
-.legal a{color:var(--navy);font-weight:600;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(11,34,56,.25)}
-.done{display:none;padding:8px 0 0}
+.cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--gold);color:var(--navy);border:0;border-radius:10px;padding:15px 26px;font-size:15px;font-weight:900;box-shadow:var(--sh-gold)}
+.cta:hover{background:var(--gold-h)}
+.legal{font-size:12px;line-height:1.6;color:var(--muted);margin:12px 0 0}
+.legal a,.inl a{color:var(--navy);font-weight:600;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(11,34,56,.25)}
+.done{display:none}
 .done .ok{width:48px;height:48px;border-radius:50%;background:var(--gold);color:var(--navy);display:grid;place-items:center;margin-bottom:18px}
 .done .ok [data-lucide]{width:22px;height:22px;stroke-width:2.5}
-.done h2{font-size:26px;font-weight:900;margin:0 0 10px;letter-spacing:-.01em}
+.done h2{font-size:26px;font-weight:900;margin:0 0 10px}
 .done p{font-size:15px;line-height:1.7;color:rgba(30,37,53,.75);margin:0 0 8px;max-width:520px}
 .done .next{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
 .ghost{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:#fff;color:var(--fg);border-radius:10px;padding:12px 20px;font-size:14px;font-weight:700}
-.ghost:hover{border-color:var(--fg)}
-.frame.sent .formz form{display:none}
+.frame.sent form{display:none}
 .frame.sent .done{display:block}
-.side h2{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
-.side .blk + .blk{margin-top:36px}
-.line{display:flex;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid var(--border)}
-.line .ic{width:38px;height:38px;border-radius:10px;background:var(--sec);display:grid;place-items:center;color:var(--navy);flex:none}
-.line .t{font-size:15px;font-weight:700;margin:0}
-.line .d{font-size:13px;color:var(--muted);margin:2px 0 0}
-.line .go{margin-left:auto;color:var(--muted)}
-.line:hover .t{color:var(--navy)}
-.faq a{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--border);font-size:15px;font-weight:600;color:var(--fg)}
-.faq a:hover{color:var(--navy)}
-.faq a [data-lucide]{color:var(--muted);flex:none}
-.foot{background:var(--navy);color:rgba(255,255,255,.45);padding:40px 0;font-size:13px}
-.foot img{height:28px;margin-bottom:12px}
+.v{display:none}
+.frame.A .vA,.frame.B .vB,.frame.C .vC{display:block}
+
+/* ── A · Lettre ── */
+.vA .col{max-width:680px;margin:0 auto;padding:24px 0 72px}
+.vA form,.vA .done{margin-top:32px}
+.vA .inl{margin-top:40px;padding-top:24px;border-top:1px solid var(--border);font-size:14px;line-height:1.9;color:rgba(30,37,53,.72)}
+
+/* ── B · Bande ── */
+.vB .top{padding:24px 0 32px}
+.vB .band{background:var(--bg);padding:32px 0 40px}
+.vB .fgrid{display:grid;gap:0}
+.vB .help{display:grid;gap:28px;padding:48px 0 72px}
+.vB .help h3{font-size:15px;font-weight:800;margin:0 0 6px}
+.vB .help p{font-size:14px;line-height:1.65;color:rgba(30,37,53,.7);margin:0}
+.vB .help a.k{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:14px;font-weight:700;color:var(--navy)}
+.vB .band .f input,.vB .band .f textarea{background:#fff}
+
+/* ── C · Photo ── */
+.vC .split{display:grid;padding-top:24px;padding-bottom:72px}
+.vC .ph{margin:24px -16px 0;aspect-ratio:16/9;overflow:hidden;background:var(--navy)}
+.vC .ph img{width:100%;height:100%;object-fit:cover}
+.vC form,.vC .done{margin-top:28px}
+.vC .inl{margin-top:28px;font-size:14px;line-height:1.9;color:rgba(30,37,53,.72)}
+
+.row2{display:grid;gap:0 18px}
+
 @container (min-width: 900px){
   .wrap{padding:0 40px}
   .hdr{padding:14px 16px 0}
@@ -108,107 +114,148 @@ h1{font-size:34px;font-weight:900;line-height:1.05;letter-spacing:-.02em;margin:
   .burger{display:none}
   h1{font-size:52px;line-height:1.02}
   .lead{font-size:17px}
-  .page{padding:38px 0 112px}
-  .cg{grid-template-columns:5fr 7fr;column-gap:96px;grid-template-areas:"head form" "side form";grid-template-rows:auto 1fr}
-  .formz{margin-top:0;max-width:720px}
-  .side{margin-top:48px;align-self:start}
   .row2{grid-template-columns:1fr 1fr}
-  .send{flex-direction:row;align-items:center;justify-content:space-between;gap:24px}
-  .legal{max-width:360px}
+
+  .vA .col{padding:38px 0 112px}
+
+  .vB .top{display:grid;grid-template-columns:1fr 1fr;column-gap:72px;align-items:end;padding:38px 0 48px}
+  .vB .top .lead{margin:0}
+  .vB .band{padding:56px 0}
+  .vB .fgrid{grid-template-columns:5fr 7fr;column-gap:48px}
+  .vB .fgrid textarea{min-height:258px}
+  .vB .sendrow{grid-column:1/-1;display:flex;align-items:center;gap:24px}
+  .vB .sendrow .legal{margin:0}
+  .vB .help{grid-template-columns:repeat(3,1fr);gap:48px;padding:64px 0 112px}
+
+  .vC .split{grid-template-columns:5fr 6fr;column-gap:80px;padding-top:38px;padding-bottom:112px;grid-template-areas:"ph head" "ph body";grid-template-rows:auto 1fr}
+  .vC .chead{grid-area:head}
+  .vC .cbody{grid-area:body}
+  .vC .ph{grid-area:ph;margin:0;aspect-ratio:auto;min-height:560px;border-radius:14px}
 }
 </style>
 </head>
 <body>
 <div class="tool">
-  <b>Maquette · Contact</b>
+  <b>Maquette · Contact v2</b>
   <div class="seg" id="vw"><button data-v="desk" class="on">Ordinateur</button><button data-v="phone">Téléphone</button></div>
+  <span class="lbl">Structure</span>
+  <div class="seg" id="var"><button data-x="A" class="on">A · Lettre</button><button data-x="B">B · Bande</button><button data-x="C">C · Photo</button></div>
   <span class="lbl">État</span>
   <div class="seg" id="st"><button data-s="form" class="on">Formulaire</button><button data-s="sent">Message envoyé</button></div>
-  <span class="sp"></span>
-  <button class="btn-notes" id="nb">Règle de composition ▾</button>
 </div>
-<div class="notes" id="notes">
-  <ol>
-    <li><b>Une page pour écrire</b> : le formulaire occupe la grande colonne, dès la hauteur du titre. Plus de carte blanche autour.</li>
-    <li><b>À gauche</b> : la promesse (une personne répond sous 24&nbsp;h), puis les autres moyens (email, assistant) et « Avant d'écrire », trois questions fréquentes qui ouvrent la FAQ au bon thème. En lignes à filets, sans boîte.</li>
-    <li><b>Téléphone</b> : titre, formulaire, puis le reste. On écrit d'abord.</li>
-    <li><b>Sujet</b> : des pastilles (Ma demande de vol, Paiement, Report ou annulation, Devenir pilote, Autre) qui remplissent le champ ; on peut toujours écrire son sujet. L'exemple « bon cadeau » disparaît.</li>
-    <li><b>Champs</b> : même style que la recherche de la FAQ.</li>
-    <li><b>Après l'envoi</b> : confirmation sur la page (bascule « Message envoyé »), au lieu d'une notification puis d'un retour forcé vers l'accueil. Ce sera le modèle pour les autres formulaires du site.</li>
-  </ol>
-</div>
+
 <div class="stage" id="stage">
-<div class="frame" id="frame">
+<div class="frame A" id="frame">
   <header class="hdr"><div class="pill">
     <img class="logo" src="public/fly-horizons-logo-navy.svg" alt="Fly Horizons"><span class="fill"></span>
     <nav class="nav"><a href="#">Les vols</a><a href="#">Galerie</a><a href="#">À propos</a><a href="#">FAQ</a><a href="#">Contact</a></nav>
     <span class="vsep"></span><a class="login" href="#"><i data-lucide="user"></i>Connexion</a>
     <button class="burger" aria-label="Menu"><i data-lucide="menu"></i></button>
   </div></header>
-  <main class="page"><div class="wrap cg">
-    <div class="head">
-      <p class="eyebrow">Contact</p>
-      <h1>Écrivez-nous.</h1>
+
+  <!-- ══ A · LETTRE ══ -->
+  <main class="v vA"><div class="wrap"><div class="col">
+    <p class="eyebrow">Contact</p>
+    <h1>Écrivez-nous.</h1>
+    <p class="lead">Une personne de l'équipe lit chaque message et vous répond par email sous 24&nbsp;h.</p>
+    <form data-form></form>
+    <div class="done"></div>
+    <p class="inl">Vous préférez votre boîte mail ? <a href="#">info@fly-horizons.com</a>. Une question simple ? <a href="#">Demandez à l'assistant</a> ou parcourez la <a href="#">FAQ</a>.</p>
+  </div></div></main>
+
+  <!-- ══ B · BANDE ══ -->
+  <main class="v vB">
+    <div class="wrap top">
+      <div><p class="eyebrow">Contact</p><h1>Écrivez-nous.</h1></div>
       <p class="lead">Une personne de l'équipe lit chaque message et vous répond par email sous 24&nbsp;h. Pas de réponse automatique.</p>
     </div>
-    <div class="formz">
-      <form id="form">
-        <div class="row2">
-          <label class="f"><span>Nom</span><input required placeholder="Jean Dupont"></label>
-          <label class="f"><span>Email</span><input required type="email" placeholder="jean@exemple.com"></label>
-        </div>
-        <div class="f"><span>Sujet</span>
-          <div class="topics" id="topics">
-            <button type="button" class="topic">Ma demande de vol</button><button type="button" class="topic">Paiement</button><button type="button" class="topic">Report ou annulation</button><button type="button" class="topic">Devenir pilote</button><button type="button" class="topic">Autre</button>
-          </div>
-          <input id="sujet" required placeholder="Ou écrivez votre sujet">
-        </div>
-        <label class="f"><span>Message</span><textarea required placeholder="Dites-nous tout : date du vol, nom du pilote, question…"></textarea></label>
-        <div class="send">
-          <button class="cta" type="submit"><i data-lucide="send"></i>Envoyer le message</button>
-          <p class="legal">Vos coordonnées servent uniquement à vous répondre. <a href="#">Confidentialité</a></p>
-        </div>
-      </form>
-      <div class="done">
-        <div class="ok"><i data-lucide="check"></i></div>
-        <h2>Message envoyé.</h2>
-        <p>Merci ! Vous recevez une copie par email, avec un lien pour suivre la conversation. Nous vous répondons sous 24&nbsp;h.</p>
-        <p>Pensez à vérifier vos spams si rien n'arrive.</p>
-        <div class="next"><a class="ghost" href="#"><i data-lucide="plane"></i>Voir les vols</a><a class="ghost" href="#"><i data-lucide="arrow-left"></i>Retour à l'accueil</a></div>
-      </div>
+    <div class="band"><div class="wrap">
+      <form data-form="B"></form>
+      <div class="done"></div>
+    </div></div>
+    <div class="wrap help">
+      <div><h3>Par email</h3><p>Vous préférez écrire depuis votre boîte mail : même adresse, même délai de réponse.</p><a class="k" href="#">info@fly-horizons.com <i data-lucide="arrow-up-right"></i></a></div>
+      <div><h3>L'assistant</h3><p>Pour une question simple sur les vols, le paiement ou la météo, réponse immédiate, jour et nuit.</p><a class="k" href="#">Poser une question <i data-lucide="arrow-right"></i></a></div>
+      <div><h3>La FAQ</h3><p>Payer, annuler, se préparer : la réponse est peut-être déjà là.</p><a class="k" href="#">Voir les questions fréquentes <i data-lucide="arrow-right"></i></a></div>
     </div>
-    <aside class="side">
-      <div class="blk"><h2>Autres moyens</h2>
-        <a class="line" href="#"><span class="ic"><i data-lucide="mail"></i></span><span><p class="t">info@fly-horizons.com</p><p class="d">Pour écrire depuis votre boîte mail</p></span><i data-lucide="arrow-up-right" class="go"></i></a>
-        <a class="line" href="#"><span class="ic"><i data-lucide="message-circle"></i></span><span><p class="t">L'assistant</p><p class="d">Réponse immédiate, jour et nuit</p></span><i data-lucide="arrow-right" class="go"></i></a>
-      </div>
-      <div class="blk faq"><h2>Avant d'écrire</h2>
-        <a href="#">Quand et comment dois-je payer&nbsp;? <i data-lucide="arrow-right"></i></a>
-        <a href="#">Que se passe-t-il en cas de mauvaise météo&nbsp;? <i data-lucide="arrow-right"></i></a>
-        <a href="#">Puis-je annuler ou reporter mon vol&nbsp;? <i data-lucide="arrow-right"></i></a>
-      </div>
-    </aside>
+  </main>
+
+  <!-- ══ C · PHOTO ══ -->
+  <main class="v vC"><div class="wrap split">
+    <div class="chead">
+      <p class="eyebrow">Contact</p>
+      <h1>Écrivez-nous.</h1>
+      <p class="lead">Une personne de l'équipe lit chaque message et vous répond par email sous 24&nbsp;h.</p>
+    </div>
+    <div class="ph"><img src="public/hero-section.png" alt="Vue du cockpit en vol au-dessus de la campagne"></div>
+    <div class="cbody">
+      <form data-form></form>
+      <div class="done"></div>
+      <p class="inl">Aussi par email : <a href="#">info@fly-horizons.com</a> · <a href="#">L'assistant</a> · <a href="#">FAQ</a></p>
+    </div>
   </div></main>
+
   <footer class="foot"><div class="wrap"><img src="public/fly-horizons-logo-white.svg" alt="Fly Horizons"><div>Footer actuel, inchangé.</div></div></footer>
 </div>
 </div>
+
+<template id="tpl-form">
+  <div class="row2">
+    <label class="f"><span>Nom</span><input required placeholder="Jean Dupont"></label>
+    <label class="f"><span>Email</span><input required type="email" placeholder="jean@exemple.com"></label>
+  </div>
+  <div class="f"><span>Sujet</span>
+    <div class="topics"><button type="button" class="topic">Ma demande de vol</button><button type="button" class="topic">Paiement</button><button type="button" class="topic">Report ou annulation</button><button type="button" class="topic">Devenir pilote</button><button type="button" class="topic">Autre</button></div>
+    <input class="sujet" required placeholder="Ou écrivez votre sujet">
+  </div>
+  <label class="f"><span>Message</span><textarea required placeholder="Dites-nous tout : date du vol, nom du pilote, question…"></textarea></label>
+  <button class="cta" type="submit"><i data-lucide="send"></i>Envoyer le message</button>
+  <p class="legal">Vos coordonnées servent uniquement à vous répondre. <a href="#">Confidentialité</a></p>
+</template>
+<template id="tpl-form-b">
+  <div class="fgrid">
+    <div>
+      <label class="f"><span>Nom</span><input required placeholder="Jean Dupont"></label>
+      <label class="f"><span>Email</span><input required type="email" placeholder="jean@exemple.com"></label>
+      <div class="f"><span>Sujet</span>
+        <div class="topics"><button type="button" class="topic">Ma demande de vol</button><button type="button" class="topic">Paiement</button><button type="button" class="topic">Report ou annulation</button><button type="button" class="topic">Devenir pilote</button><button type="button" class="topic">Autre</button></div>
+        <input class="sujet" required placeholder="Ou écrivez votre sujet">
+      </div>
+    </div>
+    <label class="f"><span>Message</span><textarea required placeholder="Dites-nous tout : date du vol, nom du pilote, question…"></textarea></label>
+    <div class="sendrow">
+      <button class="cta" type="submit"><i data-lucide="send"></i>Envoyer le message</button>
+      <p class="legal">Vos coordonnées servent uniquement à vous répondre. <a href="#">Confidentialité</a></p>
+    </div>
+  </div>
+</template>
+<template id="tpl-done">
+  <div class="ok"><i data-lucide="check"></i></div>
+  <h2>Message envoyé.</h2>
+  <p>Merci ! Vous recevez une copie par email, avec un lien pour suivre la conversation. Nous vous répondons sous 24&nbsp;h.</p>
+  <p>Pensez à vérifier vos spams si rien n'arrive.</p>
+  <div class="next"><a class="ghost" href="#"><i data-lucide="plane"></i>Voir les vols</a><a class="ghost" href="#"><i data-lucide="arrow-left"></i>Retour à l'accueil</a></div>
+</template>
+
 <script>
+const frame = document.getElementById('frame');
+document.querySelectorAll('form[data-form]').forEach(f => { f.innerHTML = document.getElementById(f.dataset.form === 'B' ? 'tpl-form-b' : 'tpl-form').innerHTML; });
+document.querySelectorAll('.done').forEach(d => d.innerHTML = document.getElementById('tpl-done').innerHTML);
 lucide.createIcons();
-const frame = document.getElementById('frame'), sujet = document.getElementById('sujet');
 function setState(s){ frame.classList.toggle('sent', s === 'sent'); document.querySelectorAll('#st button').forEach(b => b.classList.toggle('on', b.dataset.s === s)); }
-document.getElementById('form').addEventListener('submit', e => { e.preventDefault(); setState('sent'); });
-document.getElementById('topics').addEventListener('click', e => {
-  const b = e.target.closest('.topic'); if(!b) return;
-  document.querySelectorAll('.topic').forEach(x => x.classList.toggle('on', x === b));
-  sujet.value = b.textContent === 'Autre' ? '' : b.textContent;
-  if (b.textContent === 'Autre') sujet.focus();
+document.addEventListener('submit', e => { e.preventDefault(); setState('sent'); });
+document.addEventListener('click', e => {
+  const t = e.target.closest('.topic'); if(!t) return;
+  const form = t.closest('form'), sujet = form.querySelector('.sujet');
+  form.querySelectorAll('.topic').forEach(x => x.classList.toggle('on', x === t));
+  sujet.value = t.textContent === 'Autre' ? '' : t.textContent;
+  if (t.textContent === 'Autre') sujet.focus();
 });
-sujet.addEventListener('input', () => document.querySelectorAll('.topic').forEach(x => x.classList.remove('on')));
-document.getElementById('vw').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return;
-  document.querySelectorAll('#vw button').forEach(x => x.classList.toggle('on', x === b));
-  document.getElementById('stage').classList.toggle('phone', b.dataset.v === 'phone'); });
-document.getElementById('st').addEventListener('click', e => { const b = e.target.closest('button'); if(b) setState(b.dataset.s); });
-document.getElementById('nb').addEventListener('click', () => document.getElementById('notes').classList.toggle('open'));
+function seg(id, fn){ const el = document.getElementById(id); el.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return;
+  el.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); fn(b); }); }
+seg('vw', b => document.getElementById('stage').classList.toggle('phone', b.dataset.v === 'phone'));
+seg('var', b => { frame.classList.remove('A','B','C'); frame.classList.add(b.dataset.x); });
+seg('st', b => setState(b.dataset.s));
 </script>
 </body>
 </html>
