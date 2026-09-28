@@ -113,7 +113,7 @@ export default function GalleryClient({ images }: { images: GalleryImage[] }) {
         <div className="mt-10 flex flex-col items-center gap-2">
           <button
             onClick={() => setVisibleCount(c => c + LOAD_MORE)}
-            className="px-8 py-3 rounded-full border border-foreground/20 text-sm font-semibold text-foreground hover:bg-foreground hover:text-background transition-colors cursor-pointer"
+            className="px-6 py-3 rounded-[10px] bg-white border border-border text-sm font-bold text-foreground hover:border-foreground transition-colors cursor-pointer"
           >
             Voir plus
           </button>
@@ -126,7 +126,9 @@ export default function GalleryClient({ images }: { images: GalleryImage[] }) {
       {/* Lightbox */}
       {lightboxIndex !== null && (
         <div
-          className="fixed inset-0 z-50 bg-black/92 flex items-center justify-center"
+          // z au-dessus du header fixe (z-1200) et du chat (z-50) : sinon le header
+          // recouvre la visionneuse et cache le bouton Fermer sur téléphone.
+          className="fixed inset-0 z-[1300] bg-black/95 flex items-center justify-center"
           onClick={close}
         >
           <button

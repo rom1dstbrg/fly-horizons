@@ -27,16 +27,17 @@ export default async function GaleriePage() {
   }));
 
   return (
-    <main className="min-h-screen bg-[#f5f5f7]">
-      <section className="pt-[98px] pb-24 sm:pb-20">
+    <main className="min-h-screen bg-white">
+      <section className="pt-page pb-24 sm:pb-20">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
-          <div className="mb-8 pt-2 sm:pt-6">
-            <p className="text-xs font-bold text-primary uppercase tracking-[3px] mb-4">Galerie</p>
-            <h1 className="text-4xl sm:text-5xl font-black text-foreground leading-none tracking-tight mb-4">
+          {/* En-tête aligné sur les pages refaites (nouvelle DA, 28/09) : écart .pt-page, titres 34/52 */}
+          <div className="mb-8 lg:mb-10">
+            <p className="text-[11px] font-bold text-primary uppercase tracking-[3px] mb-3">Galerie</p>
+            <h1 className="text-[34px] lg:text-[52px] font-black text-foreground leading-[1.03] tracking-[-0.02em]">
               Vols en images
             </h1>
-            <p className="text-foreground/60 text-sm max-w-lg leading-relaxed">
+            <p className="mt-3 max-w-[460px] text-[15px] leading-[1.7] text-foreground/70">
               Ce que vous voyez depuis le sol, nous le survolons.
               Voici ce que ça donne vu d&apos;en haut.
             </p>

@@ -1607,7 +1607,16 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
-      <h3>2026-09-28 (46) — Page Contact refaite ; confirmation sur place après envoi ; cartes Google Maps débloquées</h3>
+      <h3>2026-09-28 (47) — Galerie alignée sur la nouvelle DA ; visionneuse au premier plan</h3>
+      <ul>
+        <li><code>app/(public)/galerie/page.tsx</code> : écart header <code>.pt-page</code>, fond blanc, titres 34 / 52 px comme les pages refaites. Mosaïque inchangée.</li>
+        <li><code>GalleryClient</code> : la visionneuse plein écran passait sous le header fixe et le bouton du chat (z-50 contre z-1200) ; le bouton Fermer était caché
+          sous le header sur téléphone. Passée en <code>z-[1300]</code>, fond 95 %. Bouton « Voir plus » au style des boutons secondaires (coins 10 px).</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-09-28 (46) —Page Contact refaite ; confirmation sur place après envoi ; cartes Google Maps débloquées</h3>
       <ul>
         <li><code>app/(public)/contact/page.tsx</code> (maquette-contact.html, variante C) : titre + formulaire à gauche, colonne d'infos à droite sur ordinateur
           (carte du point de rendez-vous, adresse EBCI + itinéraire GPS + plan d'accès, email, délai de réponse, assistant / FAQ) ; sur téléphone, uniquement le formulaire.</li>
