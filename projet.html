@@ -1626,6 +1626,16 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-28 (55) — Création de compte dans la nouvelle DA ; cadre commun avec la connexion</h3>
+      <ul>
+        <li><code>components/auth/AuthShell.tsx</code> : cadre partagé (logo, « Retour au site », colonne 420 px), titre, message d'erreur, champ mot de passe avec œil, classes de champ et de bouton.
+          <code>/login</code> passe dessus sans changement visible.</li>
+        <li><code>app/register/page.tsx</code> refaite : fond blanc, mêmes champs que Contact, confirmation sur place (pastille dorée, « Vérifiez vos emails. », Se connecter / Retour à l'accueil).
+          Logique inchangée (honeypot, vérification des deux mots de passe, action <code>register</code>).</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-28 (54) — Page de connexion dans la nouvelle DA</h3>
       <ul>
         <li><code>app/login/page.tsx</code> : fond blanc (fini le dégradé navy et la carte), logo + « Retour au site » en haut, colonne de 420 px, mêmes champs et bouton que Contact,

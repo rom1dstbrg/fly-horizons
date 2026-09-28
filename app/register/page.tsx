@@ -3,16 +3,18 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { register } from "@/lib/actions/auth";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Mail, ShieldCheck } from "lucide-react";
+import { Check, Loader2, UserPlus, ArrowLeft } from "lucide-react";
+import { AuthShell, AuthHeading, AuthError, PasswordInput, AUTH_FIELD, AUTH_LABEL, AUTH_LINK, AUTH_SUBMIT } from "@/components/auth/AuthShell";
+
+// Nouvelle DA (28/09) : même cadre que /login (components/auth/AuthShell.tsx) et
+// confirmation sur place après l'envoi, même schéma que ContactForm.
 
 export default function RegisterPage() {
-  const [error, setError]            = useState<string | null>(null);
-  const [success, setSuccess]        = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [showPassword, setShowPassword]  = useState(false);
-  const [showConfirm, setShowConfirm]    = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -27,8 +29,7 @@ export default function RegisterPage() {
     }
 
     const password = formData.get("password") as string;
-    const confirm  = formData.get("confirm_password") as string;
-
+    const confirm = formData.get("confirm_password") as string;
     if (password !== confirm) {
       setError("Les mots de passe ne correspondent pas.");
       return;
@@ -41,152 +42,83 @@ export default function RegisterPage() {
     });
   }
 
+  if (success) {
+    return (
+      <AuthShell>
+        <div role="status">
+          <div className="w-12 h-12 rounded-full bg-primary text-[#0b2238] grid place-items-center mb-[18px]">
+            <Check size={22} strokeWidth={2.5} />
+          </div>
+          <h1 className="text-[26px] font-black text-foreground mb-2.5">Vérifiez vos emails.</h1>
+          <p className="text-[15px] leading-[1.7] text-foreground/75 mb-2">
+            Nous vous avons envoyé un lien de confirmation. Cliquez dessus pour activer votre compte.
+          </p>
+          <p className="text-[15px] leading-[1.7] text-foreground/75">Pensez à vérifier vos spams si rien n&apos;arrive.</p>
+          <div className="flex flex-wrap gap-2.5 mt-[22px]">
+            <Link href="/login" className="inline-flex items-center gap-2 px-5 py-3 bg-white border border-border text-foreground rounded-[10px] text-sm font-bold hover:border-foreground transition-colors">
+              Se connecter
+            </Link>
+            <Link href="/" className="inline-flex items-center gap-2 px-5 py-3 bg-white border border-border text-foreground rounded-[10px] text-sm font-bold hover:border-foreground transition-colors">
+              <ArrowLeft size={15} /> Retour à l&apos;accueil
+            </Link>
+          </div>
+        </div>
+      </AuthShell>
+    );
+  }
+
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-navy px-4 py-16">
-      <div className="w-full max-w-md">
+    <AuthShell>
+      <AuthHeading title="Créer un compte." lead="Pour suivre vos demandes de vol, échanger avec le pilote et retrouver vos paiements." />
 
-        <h1 className="text-4xl font-black text-foreground text-center leading-none tracking-tight mb-8">
-          Créer un compte
-        </h1>
+      <form onSubmit={handleSubmit}>
+        {/* Honeypot — caché des humains, rempli par les bots */}
+        <input type="text" name="_hp" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
 
-        <div className="card-premium p-8">
-          {success ? (
-            <div className="text-center space-y-4 py-4">
-              <div className="w-14 h-14 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto">
-                <Mail size={24} className="text-primary" />
-              </div>
-              <h2 className="text-lg font-black text-foreground">Vérifiez vos emails</h2>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Un lien de confirmation a été envoyé à votre adresse email.
-                Cliquez dessus pour activer votre compte.
-              </p>
-              <p className="text-xs text-muted-foreground/70">
-                Pensez à vérifier vos spams si vous ne le trouvez pas.
-              </p>
-            </div>
-          ) : (
-            <>
-              <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Honeypot — caché des humains, rempli par les bots */}
-                <input
-                  type="text"
-                  name="_hp"
-                  tabIndex={-1}
-                  autoComplete="off"
-                  aria-hidden="true"
-                  className="hidden"
-                />
+        {error && <AuthError message={error} />}
 
-                {error && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
-                    {error}
-                  </div>
-                )}
+        <label className="block mb-[18px]">
+          <span className={AUTH_LABEL}>Nom complet</span>
+          <input name="full_name" type="text" required autoComplete="name" placeholder="Jean Dupont" className={AUTH_FIELD} />
+        </label>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="full_name" className="text-sm font-semibold text-foreground">Nom complet</Label>
-                  <Input
-                    id="full_name"
-                    name="full_name"
-                    type="text"
-                    placeholder="Jean Dupont"
-                    required
-                    autoComplete="name"
-                    className="bg-input border-border text-foreground placeholder:text-muted-foreground/40 focus:border-foreground focus:bg-card transition-colors"
-                  />
-                </div>
+        <label className="block mb-[18px]">
+          <span className={AUTH_LABEL}>Email</span>
+          <input name="email" type="email" required autoComplete="email" placeholder="vous@exemple.com" className={AUTH_FIELD} />
+        </label>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="email" className="text-sm font-semibold text-foreground">Email</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="vous@exemple.com"
-                    required
-                    autoComplete="email"
-                    className="bg-input border-border text-foreground placeholder:text-muted-foreground/40 focus:border-foreground focus:bg-card transition-colors"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="password" className="text-sm font-semibold text-foreground">
-                    Mot de passe
-                    <span className="text-muted-foreground font-normal ml-1 text-xs">(8 caractères minimum)</span>
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      required
-                      autoComplete="new-password"
-                      className="bg-input border-border text-foreground pr-10 focus:border-foreground focus:bg-card transition-colors"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(v => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      tabIndex={-1}
-                      aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
-                    >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="confirm_password" className="text-sm font-semibold text-foreground">
-                    Confirmer le mot de passe
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="confirm_password"
-                      name="confirm_password"
-                      type={showConfirm ? "text" : "password"}
-                      placeholder="••••••••"
-                      required
-                      autoComplete="new-password"
-                      className="bg-input border-border text-foreground pr-10 focus:border-foreground focus:bg-card transition-colors"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirm(v => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      tabIndex={-1}
-                      aria-label={showConfirm ? "Masquer la confirmation" : "Afficher la confirmation"}
-                    >
-                      {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isPending}
-                  className="w-full py-3.5 bg-primary text-primary-foreground font-black text-sm rounded-lg hover:bg-[#e6a800] transition-colors shadow-gold disabled:opacity-60 cursor-pointer"
-                >
-                  {isPending ? "Création..." : "Créer mon compte"}
-                </button>
-              </form>
-
-              <p className="text-center text-sm text-muted-foreground mt-6">
-                Déjà un compte ?{" "}
-                <Link href="/login" className="text-foreground font-semibold hover:text-primary transition-colors">
-                  Se connecter
-                </Link>
-              </p>
-            </>
-          )}
+        <div className="mb-[18px]">
+          <label htmlFor="password" className={AUTH_LABEL}>
+            Mot de passe <span className="font-medium text-muted-foreground">(8 caractères minimum)</span>
+          </label>
+          <PasswordInput
+            id="password" name="password" autoComplete="new-password"
+            shown={showPassword} onToggle={() => setShowPassword(v => !v)}
+            labelShow="Afficher le mot de passe" labelHide="Masquer le mot de passe"
+          />
         </div>
 
-        <div className="flex items-center justify-center gap-1.5 mt-6 text-[11px] text-muted-foreground/70">
-          <ShieldCheck size={12} />
-          <span>Compte sécurisé · Données chiffrées</span>
+        <div className="mb-6">
+          <label htmlFor="confirm_password" className={AUTH_LABEL}>Confirmer le mot de passe</label>
+          <PasswordInput
+            id="confirm_password" name="confirm_password" autoComplete="new-password"
+            shown={showConfirm} onToggle={() => setShowConfirm(v => !v)}
+            labelShow="Afficher la confirmation" labelHide="Masquer la confirmation"
+          />
         </div>
 
+        <button type="submit" disabled={isPending} className={AUTH_SUBMIT}>
+          {isPending
+            ? <><Loader2 size={16} className="animate-spin" /> Création…</>
+            : <><UserPlus size={16} /> Créer mon compte</>}
+        </button>
+      </form>
+
+      <div className="mt-8 pt-6 border-t border-border text-sm leading-relaxed text-foreground/70">
+        <p>
+          Déjà un compte ? <Link href="/login" className={AUTH_LINK}>Se connecter</Link>
+        </p>
       </div>
-    </main>
+    </AuthShell>
   );
 }
