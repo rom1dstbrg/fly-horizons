@@ -109,10 +109,13 @@
           <b>6.</b> <code>/cgp</code> et <code>/politique-de-confidentialite</code> (légal, liés depuis le footer partout).
           Secondaire, moins vu : <code>/nos-pilotes/[id]</code>, <code>/account/reservations/[id]/carte</code>,
           <code>/newsletter/unsubscribe</code>, <code>/vol/itineraire/[token]</code> (ancien système, vieilles résas seulement).
-          En pause, pas de priorité : <code>/vol-sur-mesure</code> + <code>/vol-sur-mesure/success</code> (masquées du Header depuis juillet).
-          <b>Ne pas retravailler</b> (flow Stripe « commande classique » toujours câblé — panier Header, webhook, sitemap priority 0.9, cf. Décisions) :
-          <code>/checkout</code>, <code>/orders</code>, <code>/orders/success</code>, <code>/cart</code>, <code>/vols/[slug]</code>, <code>/configurer</code> (dépendance interne de <code>/vol-sur-mesure</code>, gardé tant qu'elle reste en pause plutôt que supprimée).
           <code>/devenir-pilote/candidature</code> déjà en nouvelle DA. Détail : Changelog du 28/09 (entrée 66, audit + suppression des pages mortes).</li>
+        <li><b>Code mort en attente de nettoyage (28/09 soir) — pas encore fait, sur demande explicite de Romain.</b>
+          Romain confirme le 28/09 que la vente de vouchers et le vol sur mesure n'existent plus dans l'offre. Contrairement à ce qui était noté plus haut le même jour (« ne pas retravailler, flow Stripe vivant ») — <b>correction</b> : le panier
+          est en fait masqué depuis le 30/07 (pas actif comme je l'avais cru), 0 produit actif, 0 voucher vendu, 0 réservation « vol sur mesure » jamais créée. Tout est supprimable :
+          front public commande classique (<code>/checkout</code>, <code>/cart</code>, <code>/orders</code>, <code>/orders/success</code>, <code>/vols/[slug]</code>, <code>PackCard</code>, ~1700 lignes),
+          boutique admin (<code>/admin/boutique</code> + composants, ~2500 lignes — les 2 commandes en base sont des tests confirmés par Romain, aucun client réel),
+          vol sur mesure + configurateur (<code>/vol-sur-mesure</code>, <code>/configurer</code>, ~2500 lignes). À traiter avec précaution : la branche « commande classique » du webhook Stripe (partagée avec le bouton admin « Lien de paiement », encore utilisé). À ne pas toucher : les 29 fichiers où <code>type_resa === "perso"</code> apparaît en branche défensive (gros chantier, gain nul, 0 ligne en base). Plan complet dans la mémoire <code>project_dead_code_vouchers_volsurmesure</code> — exécuter seulement quand Romain demande de nettoyer.</li>
         <li><b>Tester en conditions réelles la fusion admin/pilote</b> — Romain n'a pas encore eu
           l'occasion. Se connecter avec <code>info@fly-horizons.com</code>, vérifier
           <code>/pilote</code>, <code>/pilote/annonces</code>, <code>/pilote/profil</code>, et créer
