@@ -1,52 +1,35 @@
 "use client";
 
-import { useState } from "react";
-import {
-  User, CalendarDays, Ticket, MapPin, Mails, ShieldCheck, LayoutDashboard, LogOut,
-} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import {
+  CalendarDays, User as UserIcon, Ticket, LayoutDashboard, LogOut, Clock, PlaneTakeoff,
+} from "lucide-react";
 import { logout } from "@/lib/actions/auth";
-import { AccountOverview } from "@/components/account/AccountOverview";
+import { WeatherWidget } from "@/components/account/WeatherWidget";
 import { ReservationsSection, type Reservation } from "@/components/account/sections/ReservationsSection";
 import { BonsSection, type VoucherCode } from "@/components/account/sections/BonsSection";
-import { NewsletterSection } from "@/components/account/sections/NewsletterSection";
-import { SecuritySection } from "@/components/account/sections/SecuritySection";
-import { AddressBook } from "@/components/account/AddressBook";
+import { ProfileSection } from "@/components/account/sections/ProfileSection";
+import { formatDuration } from "@/lib/vouchers";
 
-type Tab = "apercu" | "reservations" | "bons" | "adresses" | "newsletter" | "securite";
+// Nouvelle DA (28/09, maquette « mon compte » v2 validée par Romain) :
+// - Des onglets (la v1 sans onglet, en une seule page qui défile, a été jugée
+//   pas assez structurée), mais 3 au lieu de 6 : Réservations, Profil (infos +
+//   notifications + sécurité regroupées), Bons de vol (seulement s'il y en a
+//   un — 0 en base au 28/09). « Adresses » retirée (liée aux anciens bons
+//   physiques, 0 en base ; la page /account/adresses reste, juste plus liée).
+// - Le prochain vol reste affiché au-dessus des onglets, quel que soit l'onglet ouvert.
+// - Ordinateur : sidebar d'onglets + contenu large. Téléphone : bandeau scrollable.
+// - Tous les boutons d'action ont un texte à côté de l'icône (retour de Romain
+//   sur la v1 : une icône seule laisse deviner).
 
-const NAV: { id: Tab; label: string; Icon: React.ElementType }[] = [
-  { id: "apercu",        label: "Aperçu",       Icon: User },
-  { id: "reservations",  label: "Réservations", Icon: CalendarDays },
-  { id: "bons",          label: "Bons de vol",  Icon: Ticket },
-  { id: "adresses",      label: "Adresses",     Icon: MapPin },
-  { id: "newsletter",    label: "Newsletter",   Icon: Mails },
-  { id: "securite",      label: "Sécurité",     Icon: ShieldCheck },
-];
+type Tab = "resa" | "profil" | "bons";
 
-const SECTION_TITLE: Record<Tab, string> = {
-  apercu:       "Mon compte",
-  reservations: "Mes réservations",
-  bons:         "Mes bons de vol",
-  adresses:     "Adresses de livraison",
-  newsletter:   "Newsletter",
-  securite:     "Sécurité",
+const HASH_TO_TAB: Record<string, Tab> = {
+  reservations: "resa", resa: "resa",
+  profil: "profil", apercu: "profil", securite: "profil", newsletter: "profil",
+  bons: "bons",
 };
-
-function initials(name: string) {
-  return name.trim().split(/\s+/).map((w) => w[0]?.toUpperCase() ?? "").slice(0, 2).join("");
-}
-
-interface Address {
-  id: string;
-  full_name: string;
-  line1: string;
-  line2: string | null;
-  city: string;
-  postal_code: string;
-  country: string;
-  is_default: boolean;
-}
 
 export interface AccountTabsProps {
   user: {
@@ -56,192 +39,161 @@ export interface AccountTabsProps {
     created_at: string;
     is_admin: boolean;
   };
-  stats: { reservations: number; vouchers: number; orders: number };
-  addresses: Address[];
   vouchers: VoucherCode[];
   reservations: Reservation[];
   newsletterActive: boolean | null;
 }
 
-function SectionHeader({ tab, Icon, subtitle }: { tab: Tab; Icon: React.ElementType; subtitle?: string }) {
-  return (
-    <div className="flex items-center gap-3 mb-6">
-      <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-        <Icon size={16} className="text-primary" />
-      </div>
-      <div>
-        <h1 className="text-lg font-bold text-foreground leading-tight">{SECTION_TITLE[tab]}</h1>
-        {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
-      </div>
-    </div>
-  );
+const EYEBROW = "text-[11px] font-bold text-primary uppercase tracking-[3px] mb-2.5";
+const SIDE_LINK = "flex items-center gap-2.5 px-3 py-2.5 rounded-[10px] text-[13.5px] font-semibold transition-colors";
+
+function formatHeure(h: string | null | undefined) {
+  if (!h) return null;
+  const [hh, mm] = h.split(":");
+  return `${hh}h${mm}`;
 }
 
-export function AccountTabs({ user, stats, addresses, vouchers, reservations, newsletterActive }: AccountTabsProps) {
-  const [tab, setTab] = useState<Tab>("apercu");
+export function AccountTabs({ user, vouchers, reservations, newsletterActive }: AccountTabsProps) {
+  const [tab, setTab] = useState<Tab>("resa");
 
-  const activeVouchers = vouchers.filter((v) => v.status === "unused").length;
+  // Un lien externe (email de confirmation, page de report…) pointe vers
+  // /account#reservations : on ouvre le bon onglet au chargement.
+  useEffect(() => {
+    const h = window.location.hash.replace("#", "");
+    if (h && HASH_TO_TAB[h]) setTab(HASH_TO_TAB[h]);
+  }, []);
 
-  const nextFlight = reservations
+  const hasVouchers = vouchers.length > 0;
+  // Onglet "bons" demandé (hash) mais plus rien à y montrer : on retombe sur
+  // Réservations sans passer par un second rendu (pas de setState en effet).
+  const activeTab: Tab = tab === "bons" && !hasVouchers ? "resa" : tab;
+
+  const nextFlight = useMemo(() => reservations
     .filter((r) => new Date(r.date_vol + "T23:59:59") >= new Date() && r.statut !== "annulee")
-    .sort((a, b) => a.date_vol.localeCompare(b.date_vol))[0] ?? null;
+    .sort((a, b) => a.date_vol.localeCompare(b.date_vol))[0] ?? null, [reservations]);
 
-  function badgeCount(id: Tab): number | null {
-    if (id === "reservations") return reservations.length || null;
-    if (id === "bons") return activeVouchers || null;
-    if (id === "adresses") return addresses.length || null;
-    return null;
-  }
+  const memberSince = new Date(user.created_at).toLocaleDateString("fr-BE", { month: "long", year: "numeric" });
+  const firstName = user.full_name?.split(" ")[0] || null;
 
-  function sectionSubtitle(id: Tab): string | undefined {
-    if (id === "reservations") {
-      const upcoming = reservations.filter((r) => new Date(r.date_vol + "T23:59:59") >= new Date()).length;
-      return upcoming > 0
-        ? `${upcoming} à venir · ${reservations.length - upcoming} passée${reservations.length - upcoming !== 1 ? "s" : ""}`
-        : `${reservations.length} réservation${reservations.length !== 1 ? "s" : ""}`;
-    }
-    if (id === "bons") {
-      return vouchers.length === 0
-        ? "Aucun bon"
-        : `${vouchers.length} bon${vouchers.length !== 1 ? "s" : ""}${activeVouchers > 0 ? ` · ${activeVouchers} disponible${activeVouchers !== 1 ? "s" : ""}` : ""}`;
-    }
-    if (id === "adresses") {
-      return addresses.length === 0
-        ? "Aucune adresse"
-        : `${addresses.length} adresse${addresses.length !== 1 ? "s" : ""} enregistrée${addresses.length !== 1 ? "s" : ""}`;
-    }
-    if (id === "newsletter") return "Notifications de vols organisés";
-    if (id === "securite") return "Mot de passe et session";
-    return undefined;
-  }
+  const nextFlightDate = nextFlight
+    ? new Date(nextFlight.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long" })
+    : null;
+  const daysUntil = nextFlight
+    ? Math.ceil((new Date(nextFlight.date_vol + "T23:59:59").getTime() - Date.now()) / 86400000)
+    : null;
+
+  const TABS: { id: Tab; label: string; Icon: React.ElementType; count?: number }[] = [
+    { id: "resa", label: "Réservations", Icon: CalendarDays, count: reservations.length || undefined },
+    { id: "profil", label: "Profil", Icon: UserIcon },
+    ...(hasVouchers ? [{ id: "bons" as Tab, label: "Bons de vol", Icon: Ticket, count: vouchers.length }] : []),
+  ];
 
   return (
-    <main className="min-h-screen bg-gradient-navy pt-24 pb-16">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+    <main className="bg-white pt-page pb-20">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
 
-        {/* Mobile tab bar */}
-        <div className="lg:hidden sticky top-[72px] z-40 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2.5 bg-background/95 backdrop-blur border-b border-border mb-6">
-          <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
-            {NAV.map(({ id, label, Icon }) => {
-              const count = badgeCount(id);
-              return (
-                <button
-                  key={id}
-                  onClick={() => setTab(id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors shrink-0 cursor-pointer ${
-                    tab === id ? "bg-navy text-white" : "bg-secondary border border-border text-muted-foreground"
-                  }`}
-                >
-                  <Icon size={12} />
-                  {label}
-                  {count !== null && (
-                    <span className={`text-[10px] font-bold min-w-[16px] text-center rounded-full px-1 ${
-                      tab === id ? "bg-white/20 text-white" : "bg-foreground/10 text-foreground"
-                    }`}>
-                      {count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+        <p className={EYEBROW}>Mon espace</p>
+        <h1 className="text-[28px] lg:text-[40px] font-black text-foreground leading-[1.05] tracking-[-0.02em]">
+          {firstName ? `Bonjour, ${firstName}.` : "Mon compte"}
+        </h1>
+        <p className="mt-2 text-[13.5px] text-muted-foreground">Membre depuis {memberSince}</p>
+
+        {/* Prochain vol : fond léger, visible quel que soit l'onglet ouvert */}
+        {nextFlight && nextFlightDate && (
+          <div className="mt-6 rounded-2xl bg-secondary/70 px-5 py-4 sm:px-6 sm:py-5">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div>
+                <p className="text-[10px] font-bold text-[#0b2238]/45 uppercase tracking-[2px] mb-1">Prochain vol</p>
+                <p className="text-[17px] font-black text-[#0b2238] capitalize">{nextFlightDate}</p>
+                <p className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12.5px] text-[#0b2238]/65">
+                  {nextFlight.heure_vol && <span className="flex items-center gap-1.5"><Clock size={13} />{formatHeure(nextFlight.heure_vol)}</span>}
+                  <span className="flex items-center gap-1.5"><PlaneTakeoff size={13} />{formatDuration(nextFlight.duree)}</span>
+                  {nextFlight.pilote_nom && <span>Avec {nextFlight.pilote_nom}</span>}
+                </p>
+              </div>
+              {daysUntil !== null && (
+                <span className={`shrink-0 text-[13px] font-bold px-3 py-1.5 rounded-[10px] ${
+                  daysUntil <= 0 ? "bg-green-100 text-green-700" : daysUntil <= 7 ? "bg-primary/25 text-[#0b2238]" : "bg-white text-[#0b2238]/70"
+                }`}>
+                  {daysUntil <= 0 ? "Aujourd'hui !" : daysUntil === 1 ? "Demain" : `J-${daysUntil}`}
+                </span>
+              )}
+            </div>
+            {/* bordered : le composant ajoute lui-même son filet, seulement s'il a des données à montrer */}
+            <WeatherWidget date={nextFlight.date_vol} bordered />
+          </div>
+        )}
+
+        <div className="mt-7 pt-6 lg:mt-9 lg:pt-8 border-t border-border lg:grid lg:grid-cols-[196px_minmax(0,1fr)] lg:gap-11">
+
+          {/* Onglets — téléphone : bandeau scrollable */}
+          <div className="lg:hidden -mx-4 sm:-mx-6 px-4 sm:px-6 mb-6 flex gap-1.5 overflow-x-auto [scrollbar-width:none]">
+            {TABS.map(({ id, label, Icon, count }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setTab(id)}
+                className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-[12.5px] font-semibold whitespace-nowrap border cursor-pointer transition-colors ${
+                  activeTab === id ? "bg-[#0b2238] text-white border-[#0b2238]" : "bg-white text-muted-foreground border-border"
+                }`}
+              >
+                <Icon size={13} /> {label}
+                {count != null && (
+                  <span className={`text-[10px] font-bold px-1.5 rounded-full ${activeTab === id ? "bg-white/20" : "bg-secondary"}`}>{count}</span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Onglets — ordinateur : sidebar */}
+          <nav className="hidden lg:flex lg:flex-col lg:sticky lg:top-[110px] lg:self-start gap-0.5">
+            {TABS.map(({ id, label, Icon, count }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setTab(id)}
+                className={`${SIDE_LINK} text-left cursor-pointer ${activeTab === id ? "bg-[#0b2238] text-white" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}
+              >
+                <Icon size={15} className={activeTab === id ? "opacity-100" : "opacity-60"} />
+                <span className="flex-1">{label}</span>
+                {count != null && (
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${activeTab === id ? "bg-white/20" : "bg-secondary text-muted-foreground"}`}>{count}</span>
+                )}
+              </button>
+            ))}
+
+            {user.is_admin && (
+              <Link href="/admin" className={`${SIDE_LINK} text-[#8a6400] hover:bg-primary/10 mt-2.5`}>
+                <LayoutDashboard size={15} className="opacity-70" /> Dashboard admin
+              </Link>
+            )}
+            <form action={logout} className="mt-1.5 pt-1.5 border-t border-border">
+              <button type="submit" className={`${SIDE_LINK} w-full text-muted-foreground hover:text-red-600 hover:bg-red-50 cursor-pointer`}>
+                <LogOut size={15} className="opacity-60" /> Déconnexion
+              </button>
+            </form>
+          </nav>
+
+          {/* Contenu */}
+          <div className="min-w-0">
+            {activeTab === "resa" && <ReservationsSection reservations={reservations} />}
+            {activeTab === "profil" && <ProfileSection user={user} newsletterActive={newsletterActive} />}
+            {activeTab === "bons" && hasVouchers && <BonsSection vouchers={vouchers} />}
           </div>
         </div>
 
-        <div className="flex gap-8 lg:gap-10">
-
-          {/* Desktop sidebar */}
-          <aside className="hidden lg:block w-52 shrink-0 sticky top-28 self-start">
-            <div className="space-y-1">
-
-              <nav className="space-y-0.5">
-                {NAV.map(({ id, label, Icon }) => {
-                  const isActive = tab === id;
-                  const count = badgeCount(id);
-                  return (
-                    <button
-                      key={id}
-                      onClick={() => setTab(id)}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left cursor-pointer ${
-                        isActive
-                          ? "bg-navy text-white shadow-sm"
-                          : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                      }`}
-                    >
-                      <Icon size={15} className={isActive ? "opacity-100" : "opacity-60 group-hover:opacity-80"} />
-                      <span className="flex-1">{label}</span>
-                      {count !== null && (
-                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${
-                          isActive ? "bg-white/20 text-white" : "bg-secondary text-muted-foreground border border-border"
-                        }`}>
-                          {count}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </nav>
-
-              {user.is_admin && (
-                <div className="pt-2">
-                  <Link href="/admin" className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-primary hover:bg-primary/8 transition-all">
-                    <LayoutDashboard size={15} className="opacity-70" />
-                    Dashboard admin
-                  </Link>
-                </div>
-              )}
-
-              <div className="pt-3 mt-1 border-t border-border">
-                <form action={logout}>
-                  <button type="submit" className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-all text-left cursor-pointer">
-                    <LogOut size={15} className="opacity-60" />
-                    Déconnexion
-                  </button>
-                </form>
-              </div>
-            </div>
-          </aside>
-
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            {tab === "apercu" && (
-              <>
-                <SectionHeader tab="apercu" Icon={User} />
-                <AccountOverview user={user} stats={stats} nextFlight={nextFlight} onNavigate={setTab} />
-              </>
-            )}
-            {tab === "reservations" && (
-              <>
-                <SectionHeader tab="reservations" Icon={CalendarDays} subtitle={sectionSubtitle("reservations")} />
-                <ReservationsSection reservations={reservations} />
-              </>
-            )}
-            {tab === "bons" && (
-              <>
-                <SectionHeader tab="bons" Icon={Ticket} subtitle={sectionSubtitle("bons")} />
-                <BonsSection vouchers={vouchers} />
-              </>
-            )}
-            {tab === "adresses" && (
-              <>
-                <SectionHeader tab="adresses" Icon={MapPin} subtitle={sectionSubtitle("adresses")} />
-                <div className="card-premium p-6">
-                  <AddressBook addresses={addresses} />
-                </div>
-              </>
-            )}
-            {tab === "newsletter" && (
-              <>
-                <SectionHeader tab="newsletter" Icon={Mails} subtitle={sectionSubtitle("newsletter")} />
-                <NewsletterSection newsletterActive={newsletterActive} />
-              </>
-            )}
-            {tab === "securite" && (
-              <>
-                <SectionHeader tab="securite" Icon={ShieldCheck} subtitle={sectionSubtitle("securite")} />
-                <SecuritySection />
-              </>
-            )}
-          </div>
+        {/* Téléphone : admin + déconnexion, en bas de page */}
+        <div className="lg:hidden mt-10 pt-6 border-t border-border flex flex-col gap-1">
+          {user.is_admin && (
+            <Link href="/admin" className="flex items-center gap-2.5 py-2 text-[13.5px] font-semibold text-[#8a6400]">
+              <LayoutDashboard size={15} className="opacity-70" /> Dashboard admin
+            </Link>
+          )}
+          <form action={logout}>
+            <button type="submit" className="flex items-center gap-2.5 py-2 text-[13.5px] font-semibold text-muted-foreground cursor-pointer">
+              <LogOut size={15} className="opacity-60" /> Déconnexion
+            </button>
+          </form>
         </div>
       </div>
     </main>

@@ -13,16 +13,16 @@ export default async function AccountPage() {
 
   const adminSupabase = createAdminClient();
 
-  const [{ data: profile }, { data: addresses }, { data: orders }, { data: newsletterSub }] =
+  const [{ data: profile }, { data: orders }, { data: newsletterSub }] =
     await Promise.all([
       supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
-      supabase.from("addresses").select("*").eq("user_id", user.id).order("is_default", { ascending: false }),
-      supabase.from("orders").select("id, created_at, status, total, subtotal, discount_amount, coupon_code, shipping_cost, shipping_address")
-        .eq("user_id", user.id).neq("status", "pending").order("created_at", { ascending: false }),
+      supabase.from("orders").select("id")
+        .eq("user_id", user.id).neq("status", "pending"),
       adminSupabase.from("newsletter_subscribers").select("active").eq("email", user.email!.toLowerCase()).maybeSingle(),
     ]);
 
-  // Voucher codes: by order + by email (vouchers sent manually)
+  // Bons de vol : par commande + par email (bons envoyés à la main). N'apparaît
+  // dans le nouveau hub que s'il y en a au moins un (voir AccountTabs).
   const orderIds = (orders ?? []).map((o) => o.id);
   const [{ data: byOrder }, { data: byEmail }] = await Promise.all([
     orderIds.length > 0
@@ -41,7 +41,7 @@ export default async function AccountPage() {
     order_id: string | null; product_title: string | null; expires_at: string | null;
   }[];
 
-  // Reservations via client email lookup
+  // Réservations via l'email du client
   const { data: clients } = await adminSupabase
     .from("clients").select("id").eq("email", user.email!.toLowerCase());
 
@@ -53,14 +53,17 @@ export default async function AccountPage() {
     acompte: number | null; distance_km: number | null; created_at: string;
     route: string | null; route_status: string | null; route_token: string | null;
     waypoints: Array<{ lat: number; lng: number; nom: string }> | null;
+    pilotes: { nom: string } | { nom: string }[] | null;
   };
 
-  let reservations: (ResaRow & { latestProposalToken: string | null; latestProposalStatus: string | null })[] = [];
+  let reservations: (Omit<ResaRow, "pilotes"> & {
+    pilote_nom: string | null; latestProposalToken: string | null; latestProposalStatus: string | null;
+  })[] = [];
 
   if (clientIds.length > 0) {
     const { data: resas } = await adminSupabase
       .from("reservations")
-      .select("id, date_vol, heure_vol, duree, passagers, statut, type_resa, payment_token, acompte, distance_km, created_at, route, route_status, route_token, waypoints")
+      .select("id, date_vol, heure_vol, duree, passagers, statut, type_resa, payment_token, acompte, distance_km, created_at, route, route_status, route_token, waypoints, pilotes(nom)")
       .in("client_id", clientIds)
       .order("date_vol", { ascending: false });
 
@@ -81,8 +84,9 @@ export default async function AccountPage() {
       }
     }
 
-    reservations = rawResas.map((r) => ({
+    reservations = rawResas.map(({ pilotes, ...r }) => ({
       ...r,
+      pilote_nom: (Array.isArray(pilotes) ? pilotes[0] : pilotes)?.nom ?? null,
       latestProposalToken: latestProposal[r.id]?.token ?? null,
       latestProposalStatus: latestProposal[r.id]?.status ?? null,
     }));
@@ -100,12 +104,6 @@ export default async function AccountPage() {
         created_at: user.created_at,
         is_admin: profile?.role === "admin",
       }}
-      stats={{
-        reservations: reservations.length,
-        vouchers: vouchers.filter((v) => v.status === "unused").length,
-        orders: (orders ?? []).length,
-      }}
-      addresses={addresses ?? []}
       vouchers={vouchers}
       reservations={reservations}
       newsletterActive={newsletterSub?.active ?? null}

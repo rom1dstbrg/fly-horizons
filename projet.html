@@ -1646,6 +1646,21 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-28 (63) — Page « Mon compte » dans la nouvelle DA, 3 onglets au lieu de 6 (maquette validée)</h3>
+      <ul>
+        <li><code>AccountTabs</code> refaite : fond blanc, sans <code>card-premium</code>, filets. Ordinateur : sidebar de 3 onglets + contenu large ; téléphone : bandeau scrollable. Le prochain vol reste affiché
+          au-dessus des onglets, quel que soit celui ouvert. 1re version sans onglet (une seule page qui défile) jugée pas assez structurée par Romain, reprise avec des onglets sur retour.</li>
+        <li>3 onglets au lieu de 6 (en base au 28/09 : 0 bon de vol, 0 adresse, 4 réservations actives sur 6 comptes) : <b>Réservations</b> (par défaut),
+          <b>Profil</b> (infos + notifications + mot de passe regroupés, au lieu de 3 onglets séparés), <b>Bons de vol</b> seulement s'il y en a un. « Adresses » retirée de la nav (page <code>/account/adresses</code>
+          et <code>AddressBook</code> pas supprimées, encore utilisées par l'ancien <code>/checkout</code>).</li>
+        <li>Tous les boutons d'action ont un texte à côté de l'icône (Carte, Boarding pass, Reçu, Reporter…) — la v1 avait des icônes seules, jugées ambiguës.</li>
+        <li><b>Bug corrigé au passage</b> : les emails/pages qui pointent vers <code>/account#reservations</code> (confirmation, report, rappels…) n'ouvraient jamais le bon onglet, le hash n'était jamais lu. Lu au chargement maintenant.</li>
+        <li>« Avec {pilote} » ajouté sur chaque réservation (join <code>pilotes(nom)</code> manquant jusqu'ici dans <code>app/account/page.tsx</code>).</li>
+        <li><code>AccountOverview.tsx</code> supprimée (fondue dans <code>AccountTabs</code>). <code>stats.orders</code>/adresses retirés de la requête serveur, plus utilisés.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-28 (62) — Page de succès de réservation (/reservation/success) dans la nouvelle DA, contenu corrigé par flow</h3>
       <ul>
         <li>Fond blanc, sans boîte, <code>.pt-page</code>, pastille de confirmation dorée (même schéma que Contact/report). Étapes numérotées et bloc « Informations pratiques » réutilisent le style

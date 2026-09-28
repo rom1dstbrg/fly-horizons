@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { RotateCcw, Loader2 } from "lucide-react";
+import { CalendarClock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { generateClientRescheduleToken } from "@/lib/actions/reservations";
 
@@ -26,9 +26,9 @@ export function RescheduleButton({ reservationId }: { reservationId: string }) {
       type="button"
       onClick={handle}
       disabled={loading}
-      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-50 cursor-pointer ml-auto"
+      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[9px] border border-border text-xs font-semibold text-foreground bg-white hover:border-foreground transition-colors disabled:opacity-50 cursor-pointer"
     >
-      {loading ? <Loader2 size={11} className="animate-spin" /> : <RotateCcw size={11} />}
+      {loading ? <Loader2 size={13} className="animate-spin" /> : <CalendarClock size={13} />}
       Reporter
     </button>
   );
