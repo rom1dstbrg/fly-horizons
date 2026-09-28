@@ -321,7 +321,8 @@ export default async function HomePage() {
       )}
 
       {/* ═══ AVIS : citations, sans cartes ═══ */}
-      <section className={`${SECTION} border-t border-border`}>
+      {/* Sans filet : quand la galerie (blanche) précède, son espacement bas suffit */}
+      <section className={`${SECTION} ${galleryPreview.length > 0 ? "pt-0 lg:pt-0" : ""}`}>
         <div className={WRAP}>
           <div className="mb-7 lg:mb-10">
             <p className={EYEBROW}>Ils ont volé avec nous</p>
