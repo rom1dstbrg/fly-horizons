@@ -74,6 +74,15 @@
         ],
         "createdAt": "2026-09-29T08:04:16.892Z",
         "reason": "Eyebrow doré au-dessus du h1 = élément de la DA publique validée le 28/09 (projet.html, présent sur contact/FAQ/à propos), pas un ajout de cette maquette"
+      },
+      {
+        "rule": "kicker-above-heading",
+        "value": "*",
+        "files": [
+          "maquette-proposition.html"
+        ],
+        "createdAt": "2026-09-29T08:12:04.518Z",
+        "reason": "Eyebrow doré au-dessus du h1 = élément de la DA publique validée le 28/09 (projet.html), même exception que maquette-access-ebci.html"
       }
     ]
   }

@@ -3,6 +3,7 @@
 // Annonces en statut « reservee » : invisibles sur le site public.
 //
 //   node scripts/test-data.mjs seed    crée les données
+//   node scripts/test-data.mjs proposition   crée UNE proposition d'itinéraire en attente (page /vol/proposition/[token])
 //   node scripts/test-data.mjs clean   supprime tout ce qui est marqué TEST
 import { createClient } from "@supabase/supabase-js";
 import fs from "fs";
@@ -74,7 +75,38 @@ async function seed() {
   console.log("Créé : 3 clients, 5 annonces, 5 réservations (TEST).");
 }
 
+// Une proposition d'itinéraire en attente, pour voir /vol/proposition/[token] comme le client.
+// Client dédié (email +testprop) : `clean` le supprime avec sa réservation, et la proposition part en cascade.
+// Attention : accepter/modifier depuis la page envoie de vrais emails (à l'adresse +testprop, donc chez Romain).
+async function proposition() {
+  const email = "romainpilot2003+testprop@gmail.com";
+  const old = must(await db.from("clients").select("id").eq("email", email), "clients");
+  if (old.length) {
+    must(await db.from("reservations").delete().in("client_id", old.map((c) => c.id)).select("id"), "resa");
+    must(await db.from("clients").delete().in("id", old.map((c) => c.id)), "clients");
+  }
+  const [client] = must(await db.from("clients").insert([
+    { id: crypto.randomUUID(), prenom: "Léa", nom: "TEST Proposition", email, telephone: "+32470000009" },
+  ]).select("id"), "client");
+  const [resa] = must(await db.from("reservations").insert([{
+    pilote_id: PILOTE_ID, client_id: client.id, type_resa: "perso", annonce_id: null,
+    date_vol: "2026-10-03", heure_vol: "10:00", duree: 60, passagers: 2, acompte: 240,
+    statut: "heure_confirmee", pilote_paye: false, pilote_paye_at: null, duree_reelle: null, commentaire: null,
+  }]).select("id"), "réservation");
+  const [prop] = must(await db.from("route_proposals").insert([{
+    reservation_id: resa.id, duree: 60, acompte: 240,
+    admin_comment: "Bonjour Léa, voici ce que je vous propose : on part vers Waterloo, on longe Bruxelles avec vue sur l'Atomium, puis retour par Louvain-la-Neuve. La météo s'annonce très belle pour cette date.",
+    waypoints: [
+      { lat: 50.6803, lng: 4.4120, nom: "Waterloo, Butte du Lion" },
+      { lat: 50.8949, lng: 4.3415, nom: "Bruxelles, Atomium" },
+      { lat: 50.6680, lng: 4.6127, nom: "Louvain-la-Neuve" },
+    ],
+  }]).select("token"), "proposition");
+  console.log(`Proposition créée (TEST). Ouvrir : http://localhost:3000/vol/proposition/${prop.token}`);
+}
+
 const cmd = process.argv[2];
 if (cmd === "seed") await seed();
+else if (cmd === "proposition") await proposition();
 else if (cmd === "clean") await clean();
-else console.log("usage : node scripts/test-data.mjs seed|clean");
+else console.log("usage : node scripts/test-data.mjs seed|proposition|clean");

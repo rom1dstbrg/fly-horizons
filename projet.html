@@ -1663,6 +1663,15 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-29 (68) — Page /vol/proposition/[token] refaite dans la nouvelle DA + commande de test</h3>
+      <ul>
+        <li>Maquette <code>maquette-proposition.html</code>. 1re version (A carte plein écran collante, B carte en bande) rejetée : Romain veut « la carte en 16/9 avec la colonne à droite, comme avant ». Retenu : <b>C1 sur ordinateur</b> (titre pleine largeur, carte 8/12 qui prend la hauteur de la colonne, min. 470 px | colonne 4/12 : message du pilote, lieux, réponse) et <b>M2 sur téléphone</b> (une colonne, carte figée, réponse dans une barre collante en bas : un seul CTA toujours visible). Plus de panneau en card ni de tiroir ; la page défile (le verrouillage du scroll est supprimé). Confirmation sur place (pastille dorée).</li>
+        <li>Logique inchangée (<code>respondToRouteProposal</code>, messages d'acceptation selon espèces / déjà payé / lien de paiement). Date : « Samedi 3 octobre 2026 » (plus de majuscule à chaque mot).</li>
+        <li><code>scripts/test-data.mjs proposition</code> : crée une proposition en attente (client <code>romainpilot2003+testprop@gmail.com</code>, base PROD, marquée TEST) et affiche l'URL locale. <code>clean</code> la supprime. Accepter/modifier depuis la page envoie de vrais emails à cette adresse (chez Romain). Non poussé.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-29 (67) — Page /access-ebci refaite dans la nouvelle DA</h3>
       <ul>
         <li>Maquette <code>maquette-access-ebci.html</code> (2 structures : A « Fil », B « Bande »). Choix de Romain : <b>B sur ordinateur, A sur téléphone</b> (photos pleine largeur, numéro + texte au-dessus). Principe : la page est un trajet (GPS → vue d'ensemble → 4 étapes → point de rendez-vous), sans cartes/boîtes, bouton GPS une seule fois, code du parking visible dès le haut.</li>

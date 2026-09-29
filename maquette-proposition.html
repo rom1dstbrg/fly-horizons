@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maquette Proposition d'itinéraire</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<!--
+  Maquette /vol/proposition/[token] v2 (29/09). La v1 (A « carte à côté » plein écran, B « bande ») ne plaît pas :
+  Romain veut la carte en 16/9 avec la colonne à droite, « un peu comme avant », sans le panneau en card.
+  Ordinateur : titre pleine largeur, puis carte à gauche (8) | colonne à droite (4) : message, lieux, réponse.
+    C1 « Carte qui suit la colonne » : la carte prend toute la hauteur de la colonne (min. 16/9), pas de vide dessous.
+    C2 « 16/9 strict »               : carte 16/9 collante ; la colonne de droite défile à côté.
+  Téléphone (M1 = v1, plu à ~60 %) :
+    M1 « Colonne »          : titre, carte figée, message, lieux, réponse en fin de page.
+    M2 « Barre de réponse » : mêmes blocs, mais la réponse est une barre collante en bas d'écran (J'accepte toujours visible).
+-->
+<style>
+:root{--navy:#0b2238;--gold:#F2B705;--gold-h:#e6a800;--bg:#f5f5f7;--sec:#edf0f7;--fg:#1e2535;--muted:#64748b;--border:#e0e5ef;--sh:0 2px 14px rgba(11,34,56,.07);--sh-gold:0 6px 24px rgba(242,183,5,.35)}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Poppins,system-ui,sans-serif;background:#dfe3ea;color:var(--fg);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button,textarea{font-family:inherit}
+button{cursor:pointer}
+[data-lucide]{width:16px;height:16px;stroke-width:2}
+.tool{position:sticky;top:0;z-index:2000;background:#fff;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:10px 16px;font-size:12px}
+.tool b{font-weight:800;font-size:13px}
+.tool .lbl{color:var(--muted);font-weight:600}
+.seg{display:inline-flex;background:var(--sec);border-radius:9px;padding:3px}
+.seg button{border:0;background:transparent;padding:6px 11px;border-radius:7px;font-size:12px;font-weight:600;color:var(--muted)}
+.seg button.on{background:#fff;color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.stage.phone{padding:28px 0 48px;display:flex;justify-content:center}
+.frame{container-type:inline-size;background:#fff;position:relative}
+.stage.phone .frame{width:390px;height:844px;overflow-y:auto;border-radius:46px;border:11px solid #0f1115;box-shadow:0 30px 80px rgba(0,0,0,.25);scrollbar-width:none}
+.stage.phone .frame::-webkit-scrollbar{display:none}
+.wrap{max-width:1400px;margin:0 auto;padding:0 16px}
+.hdr{position:sticky;top:0;z-index:500;padding:8px 12px 0}
+.pill{max-width:1400px;margin:0 auto;background:#fff;border:1px solid var(--border);border-radius:16px;height:64px;display:flex;align-items:center;padding:0 16px;box-shadow:var(--sh)}
+.pill .logo{height:32px}
+.pill .fill{flex:1}
+.nav{display:none;align-items:center;gap:4px;margin-right:8px}
+.nav a{padding:8px 12px;font-size:14px;font-weight:500;color:var(--muted);border-radius:8px}
+.vsep{display:none;width:1px;height:20px;background:var(--border);margin:0 4px}
+.login{display:none;align-items:center;gap:6px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--fg);border:1px solid var(--border);background:var(--sec);border-radius:8px}
+.login [data-lucide]{width:13px;height:13px}
+.burger{border:0;background:transparent;padding:8px;color:var(--muted)}
+.burger [data-lucide]{width:20px;height:20px}
+.foot{background:var(--navy);color:rgba(255,255,255,.45);padding:40px 0;font-size:13px}
+.foot img{height:28px;margin-bottom:12px}
+
+/* Commun */
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin:0 0 12px}
+h1{font-size:30px;font-weight:900;line-height:1.08;letter-spacing:-.02em;margin:0}
+.meta{display:flex;align-items:center;gap:8px;margin:12px 0 0;font-size:15px;color:rgba(30,37,53,.72)}
+.meta [data-lucide]{width:15px;height:15px}
+.hello{margin:0 0 6px;font-size:14px;color:var(--muted)}
+.hello b{color:var(--fg);font-weight:700}
+.k{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.msg p:not(.k){margin:0;font-size:16px;line-height:1.7;color:rgba(30,37,53,.85);white-space:pre-wrap}
+.map{position:relative;background:var(--sec);overflow:hidden;z-index:0}
+.stage.phone .map{pointer-events:none}
+.map>div{position:absolute;inset:0}
+/* Lieux */
+.stops{list-style:none;margin:0;padding:0}
+.stops li{position:relative;display:flex;gap:14px;padding-bottom:18px}
+.stops li:last-child{padding-bottom:0}
+.stops li::before{content:"";position:absolute;left:13px;top:30px;bottom:2px;width:2px;background:var(--border)}
+.stops li:last-child::before{display:none}
+.dot{width:28px;height:28px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:12px;font-weight:800;background:var(--gold);color:var(--navy)}
+.dot.pl{background:var(--navy);color:var(--gold)}
+.dot [data-lucide]{width:13px;height:13px}
+.stops .n{font-size:15px;font-weight:700;margin:3px 0 0;line-height:1.35}
+.stops .s{font-size:13px;color:var(--muted);margin:1px 0 0}
+/* Réponse */
+.cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;background:var(--gold);color:var(--navy);border:0;border-radius:10px;padding:15px 26px;font-size:15px;font-weight:900;box-shadow:var(--sh-gold)}
+.cta:hover{background:var(--gold-h)}
+.ghost{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:10px;border:1px solid var(--border);background:#fff;color:var(--fg);border-radius:10px;padding:13px 20px;font-size:14px;font-weight:700}
+.ghost:hover{border-color:var(--fg)}
+.ask{margin:16px 0 0;font-size:13px;line-height:1.6;color:var(--muted)}
+.ask a{color:var(--navy);font-weight:600;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(11,34,56,.25)}
+.mod{display:none}
+.mod label span{display:block;font-size:13px;font-weight:700;margin:0 0 8px}
+.mod textarea{width:100%;min-height:120px;resize:vertical;border:1px solid var(--border);background:var(--sec);border-radius:12px;padding:14px 16px;font-size:15px;line-height:1.6;color:var(--fg);outline:none}
+.mod textarea:focus{background:#fff;border-color:var(--fg)}
+.mod .row{display:flex;gap:10px;margin-top:12px}
+.mod .row .ghost{width:auto;margin:0}
+.mod .row .cta{flex:1}
+.done{display:none}
+.done .ok{width:44px;height:44px;border-radius:50%;background:var(--gold);color:var(--navy);display:grid;place-items:center;margin-bottom:14px}
+.done .ok [data-lucide]{width:20px;height:20px;stroke-width:2.5}
+.done h2{font-size:22px;font-weight:900;margin:0 0 8px}
+.done p{font-size:15px;line-height:1.7;color:rgba(30,37,53,.78);margin:0}
+.frame[data-st=modify] .choose{display:none}
+.frame[data-st=modify] .mod{display:block}
+.frame[data-st=accepted] .choose,.frame[data-st=modreq] .choose{display:none}
+.frame[data-st=accepted] .d-acc{display:block}
+.frame[data-st=modreq] .d-mod{display:block}
+.sep{border:0;border-top:1px solid var(--border);margin:28px 0}
+
+/* ── Structure (téléphone : une colonne, ordre du DOM) ── */
+.split{padding-top:24px;padding-bottom:56px}
+.map{aspect-ratio:4/3;margin:24px -16px 0}
+.msg{margin-top:28px}
+.lieux{margin-top:28px}
+.rep{margin-top:32px;padding-top:28px;border-top:1px solid var(--border)}
+
+/* M2 : barre de réponse collante en bas (téléphone uniquement, voir @container max) */
+@container (max-width: 899px){
+  .M2 .split{padding-bottom:0}
+  .M2 .rep{position:sticky;bottom:0;z-index:600;margin:32px -16px 0;padding:14px 16px 16px;background:#fff;border-top:1px solid var(--border);box-shadow:0 -6px 20px rgba(11,34,56,.08)}
+  .M2 .rep .ask{margin-top:10px;font-size:12px}
+  .M2 .rep .ghost{margin-top:8px;padding:10px 16px}
+  .M2 .rep .done h2{font-size:18px}
+}
+
+@container (min-width: 900px){
+  .wrap{padding:0 40px}
+  .hdr{padding:14px 16px 0}
+  .pill{height:60px;padding:0 24px}
+  .nav,.login{display:flex}
+  .vsep{display:block}
+  .burger{display:none}
+  h1{font-size:44px;line-height:1.04}
+  .cta{width:100%}
+
+  /* Titre pleine largeur, puis carte 8/12 | colonne 4/12 */
+  .split{display:grid;grid-template-columns:8fr 4fr;column-gap:64px;padding-top:38px;padding-bottom:112px;align-items:start;
+    grid-template-areas:"head head" "map msg" "map lieux" "map rep";grid-template-rows:auto auto auto 1fr}
+  .head{grid-area:head}
+  .map{grid-area:map;margin:0;border-radius:14px;margin-top:32px}
+  .msg{grid-area:msg;margin-top:32px}
+  .lieux{grid-area:lieux;margin-top:28px}
+  .rep{grid-area:rep;margin-top:28px;padding-top:28px}
+
+  /* C1 : la carte suit la hauteur de la colonne (16/9 minimum) */
+  .C1 .map{align-self:stretch;aspect-ratio:auto;min-height:470px}
+  /* C2 : 16/9 strict, collante */
+  .C2 .map{aspect-ratio:16/9;position:sticky;top:96px}
+}
+</style>
+</head>
+<body>
+<div class="tool">
+  <b>Maquette · Proposition d'itinéraire</b>
+  <div class="seg" id="vw"><button data-v="desk" class="on">Ordinateur</button><button data-v="phone">Téléphone</button></div>
+  <span class="lbl">Ordinateur</span>
+  <div class="seg" id="dk"><button data-x="C1" class="on">C1 · Carte pleine hauteur</button><button data-x="C2">C2 · 16/9 collante</button></div>
+  <span class="lbl">Téléphone</span>
+  <div class="seg" id="mb"><button data-x="M1" class="on">M1 · Colonne</button><button data-x="M2">M2 · Barre collante</button></div>
+  <span class="lbl">État</span>
+  <div class="seg" id="st"><button data-s="choose" class="on">À répondre</button><button data-s="modify">Modification</button><button data-s="accepted">Accepté</button><button data-s="modreq">Demande envoyée</button></div>
+</div>
+
+<div class="stage" id="stage">
+<div class="frame C1 M1" id="frame" data-st="choose">
+  <header class="hdr"><div class="pill">
+    <img class="logo" src="public/fly-horizons-logo-navy.svg" alt="Fly Horizons"><span class="fill"></span>
+    <nav class="nav"><a href="#">Les vols</a><a href="#">Galerie</a><a href="#">À propos</a><a href="#">FAQ</a><a href="#">Contact</a></nav>
+    <span class="vsep"></span><a class="login" href="#"><i data-lucide="user"></i>Connexion</a>
+    <button class="burger" aria-label="Menu"><i data-lucide="menu"></i></button>
+  </div></header>
+
+  <!-- ══ Structure unique : ordre DOM = ordre téléphone ══ -->
+  <main class="vA"><div class="wrap split">
+    <div class="head">
+      <p class="hello">Bonjour <b>Julie</b>,</p>
+      <p class="eyebrow">Proposition d'itinéraire</p>
+      <h1>Samedi 3 octobre 2026</h1>
+      <p class="meta"><i data-lucide="clock"></i>1 h de vol · départ de Charleroi</p>
+    </div>
+    <div class="map" data-map><div></div></div>
+    <div class="msg">
+      <p class="k">Message de votre pilote</p>
+      <p>Bonjour Julie, voici ce que je vous propose : on part vers Waterloo, on longe Bruxelles avec vue sur l'Atomium, puis retour par Louvain-la-Neuve. La météo s'annonce très belle pour cette date.</p>
+    </div>
+    <div class="lieux">
+      <p class="k">Lieux à survoler</p>
+      <ol class="stops" data-stops></ol>
+    </div>
+    <div class="rep" data-rep></div>
+  </div></main>
+
+  <footer class="foot"><div class="wrap"><img src="public/fly-horizons-logo-white.svg" alt="Fly Horizons"><div>Footer actuel, inchangé.</div></div></footer>
+</div>
+</div>
+
+<template id="tpl-stops">
+  <li><span class="dot pl"><i data-lucide="plane-takeoff"></i></span><div><p class="n">Charleroi EBCI</p><p class="s">Départ</p></div></li>
+  <li><span class="dot">1</span><div><p class="n">Waterloo, Butte du Lion</p></div></li>
+  <li><span class="dot">2</span><div><p class="n">Bruxelles, Atomium</p></div></li>
+  <li><span class="dot">3</span><div><p class="n">Louvain-la-Neuve</p></div></li>
+  <li><span class="dot pl"><i data-lucide="plane-landing"></i></span><div><p class="n">Charleroi EBCI</p><p class="s">Retour</p></div></li>
+</template>
+<template id="tpl-rep">
+  <div class="choose">
+    <button class="cta" data-go="accepted"><i data-lucide="check"></i>J'accepte cet itinéraire</button>
+    <button class="ghost" data-go="modify"><i data-lucide="message-square"></i>Demander une modification</button>
+  </div>
+  <div class="mod">
+    <label><span>Vos souhaits de modification</span><textarea placeholder="Je souhaite survoler…"></textarea></label>
+    <div class="row"><button class="ghost" data-go="choose">Annuler</button><button class="cta" data-go="modreq"><i data-lucide="send"></i>Envoyer</button></div>
+  </div>
+  <div class="done d-acc">
+    <div class="ok"><i data-lucide="check"></i></div>
+    <h2>Itinéraire accepté.</h2>
+    <p>Votre pilote a bien été notifié. Votre lien de paiement vous a été envoyé par email.</p>
+  </div>
+  <div class="done d-mod">
+    <div class="ok"><i data-lucide="message-square"></i></div>
+    <h2>Demande envoyée.</h2>
+    <p>Votre pilote revient vers vous avec un itinéraire modifié.</p>
+  </div>
+  <p class="ask">Une question ? <a href="#">info@fly-horizons.com</a></p>
+</template>
+
+<script>
+const frame = document.getElementById('frame');
+document.querySelectorAll('[data-stops]').forEach(o => o.innerHTML = document.getElementById('tpl-stops').innerHTML);
+document.querySelectorAll('[data-rep]').forEach(o => o.innerHTML = document.getElementById('tpl-rep').innerHTML);
+lucide.createIcons();
+
+const PTS = [[50.4592,4.4538],[50.6803,4.4120],[50.8949,4.3415],[50.6680,4.6127],[50.4592,4.4538]];
+const maps = [];
+document.querySelectorAll('[data-map] > div').forEach(el => {
+  const m = L.map(el, {zoomControl:false, attributionControl:false, scrollWheelZoom:false}).setView([50.65,4.4], 9);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom:19}).addTo(m);
+  L.polyline(PTS, {color:'#F2B705', weight:3, dashArray:'8 8'}).addTo(m);
+  PTS.slice(1,4).forEach((p,i) => L.marker(p, {icon:L.divIcon({className:'', iconSize:[28,28], iconAnchor:[14,14],
+    html:'<div style="width:28px;height:28px;background:#F2B705;color:#0b2238;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35)">'+(i+1)+'</div>'})}).addTo(m));
+  L.marker(PTS[0], {icon:L.divIcon({className:'', iconSize:[30,30], iconAnchor:[15,15],
+    html:'<div style="width:30px;height:30px;background:#0b2238;border:3px solid #F2B705;border-radius:50%"></div>'})}).addTo(m);
+  maps.push(m);
+});
+function fit(){ maps.forEach(m => { m.invalidateSize(); m.fitBounds(PTS, {padding:[40,40], animate:false}); }); }
+setTimeout(fit, 200); setTimeout(fit, 900);
+
+function setState(s){ frame.dataset.st = s; document.querySelectorAll('#st button').forEach(b => b.classList.toggle('on', b.dataset.s === s)); }
+document.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) setState(g.dataset.go); });
+function seg(id, fn){ const el = document.getElementById(id); el.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return;
+  el.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); fn(b); }); }
+seg('vw', b => { document.getElementById('stage').classList.toggle('phone', b.dataset.v === 'phone'); setTimeout(fit, 100); });
+seg('dk', b => { frame.classList.remove('C1','C2'); frame.classList.add(b.dataset.x); setTimeout(fit, 100); });
+seg('mb', b => { frame.classList.remove('M1','M2'); frame.classList.add(b.dataset.x); setTimeout(fit, 100); });
+seg('st', b => setState(b.dataset.s));
+</script>
+</body>
+</html>
