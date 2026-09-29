@@ -1663,6 +1663,15 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-09-29 (67) — Page /access-ebci refaite dans la nouvelle DA</h3>
+      <ul>
+        <li>Maquette <code>maquette-access-ebci.html</code> (2 structures : A « Fil », B « Bande »). Choix de Romain : <b>B sur ordinateur, A sur téléphone</b> (photos pleine largeur, numéro + texte au-dessus). Principe : la page est un trajet (GPS → vue d'ensemble → 4 étapes → point de rendez-vous), sans cartes/boîtes, bouton GPS une seule fois, code du parking visible dès le haut.</li>
+        <li>Ordinateur : titre | GPS + code, vue aérienne pleine largeur, 4 étapes sur une ligne, puis photo (hauteur alignée sur la colonne de droite, sinon vide « bizarre » signalé par Romain) | texte + carte. Un seul DOM (ordre téléphone), la photo repasse au-dessus du texte via <code>flex-col-reverse</code>.</li>
+        <li>Photos passées en <code>next/image</code> optimisé (avant : <code>unoptimized</code>, PNG 1920 px bruts). Non poussé.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-09-28 (66) — Audit complet du site public + suppression des pages mortes</h3>
       <ul>
         <li>Demande de Romain : la liste des pages restant à refaire (entrée 65) ne couvrait que les pages « de flow » (lien email/redirection). Audit élargi à tout <code>app/(public)</code> + <code>app/account</code> + auth pour lister vraiment tout ce qui reste — voir Board pour la liste à jour.</li>

@@ -65,6 +65,15 @@
         ],
         "createdAt": "2026-09-28T07:56:43.974Z",
         "reason": "Charte FH figée (STYLE-STATUS.html) : eyebrow doré au-dessus des H1/H2 du site public, même exception que les autres maquettes"
+      },
+      {
+        "rule": "kicker-above-heading",
+        "value": "*",
+        "files": [
+          "maquette-access-ebci.html"
+        ],
+        "createdAt": "2026-09-29T08:04:16.892Z",
+        "reason": "Eyebrow doré au-dessus du h1 = élément de la DA publique validée le 28/09 (projet.html, présent sur contact/FAQ/à propos), pas un ajout de cette maquette"
       }
     ]
   }

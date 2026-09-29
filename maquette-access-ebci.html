@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maquette Plan d'accès</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<!--
+  Maquette /access-ebci (29/09). Ancienne page : 4 cartes empilées (bg + bordure), une icône par titre,
+  vue aérienne, 4 étapes en grille 2x2, photo au sol, carte, CTA GPS répété deux fois.
+  Principe : la page est un TRAJET. Quelqu'un est sur son téléphone, sur le parking, et suit l'ordre
+  d'arrivée : GPS -> vue d'ensemble -> 4 étapes photo (code à l'étape 4) -> point de rendez-vous -> attente.
+  Sans boîtes ; le CTA GPS n'apparaît qu'une fois en haut ; le code du parking est visible dès le haut.
+  Deux structures à comparer, même contenu :
+  A « Fil »    : ordinateur = titre + CTA + code collés à gauche (sticky), trajet numéroté à droite
+                 (une grande photo par étape, dans l'ordre). Le téléphone montre la même chose en une colonne.
+  B « Bande »  : ordinateur = titre, vue aérienne pleine largeur, les 4 étapes côte à côte sur une ligne,
+                 puis point de rendez-vous (photo | texte + carte).
+-->
+<style>
+:root{--navy:#0b2238;--gold:#F2B705;--gold-h:#e6a800;--bg:#f5f5f7;--sec:#edf0f7;--fg:#1e2535;--muted:#64748b;--border:#e0e5ef;--sh:0 2px 14px rgba(11,34,56,.07);--sh-gold:0 6px 24px rgba(242,183,5,.35)}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Poppins,system-ui,sans-serif;background:#dfe3ea;color:var(--fg);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+img{display:block;max-width:100%}
+[data-lucide]{width:16px;height:16px;stroke-width:2}
+.tool{position:sticky;top:0;z-index:2000;background:#fff;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:10px 16px;font-size:12px}
+.tool b{font-weight:800;font-size:13px}
+.tool .lbl{color:var(--muted);font-weight:600}
+.seg{display:inline-flex;background:var(--sec);border-radius:9px;padding:3px}
+.seg button{border:0;background:transparent;padding:6px 11px;border-radius:7px;font-size:12px;font-weight:600;color:var(--muted)}
+.seg button.on{background:#fff;color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.stage.phone{padding:28px 0 48px;display:flex;justify-content:center}
+.frame{container-type:inline-size;background:#fff;position:relative}
+.stage.phone .frame{width:390px;height:844px;overflow-y:auto;border-radius:46px;border:11px solid #0f1115;box-shadow:0 30px 80px rgba(0,0,0,.25);scrollbar-width:none}
+.stage.phone .frame::-webkit-scrollbar{display:none}
+.wrap{max-width:1400px;margin:0 auto;padding:0 16px}
+.hdr{position:sticky;top:0;z-index:500;padding:8px 12px 0}
+.pill{max-width:1400px;margin:0 auto;background:#fff;border:1px solid var(--border);border-radius:16px;height:64px;display:flex;align-items:center;padding:0 16px;box-shadow:var(--sh)}
+.pill .logo{height:32px}
+.pill .fill{flex:1}
+.nav{display:none;align-items:center;gap:4px;margin-right:8px}
+.nav a{padding:8px 12px;font-size:14px;font-weight:500;color:var(--muted);border-radius:8px}
+.vsep{display:none;width:1px;height:20px;background:var(--border);margin:0 4px}
+.login{display:none;align-items:center;gap:6px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--fg);border:1px solid var(--border);background:var(--sec);border-radius:8px}
+.login [data-lucide]{width:13px;height:13px}
+.burger{border:0;background:transparent;padding:8px;color:var(--muted)}
+.burger [data-lucide]{width:20px;height:20px}
+.foot{background:var(--navy);color:rgba(255,255,255,.45);padding:40px 0;font-size:13px}
+.foot img{height:28px;margin-bottom:12px}
+
+/* Commun */
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin:0 0 12px}
+h1{font-size:34px;font-weight:900;line-height:1.05;letter-spacing:-.02em;margin:0}
+.lead{font-size:16px;line-height:1.7;color:rgba(30,37,53,.78);margin:14px 0 0;max-width:460px}
+.lead b{color:var(--fg);font-weight:700}
+.cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--gold);color:var(--navy);border:0;border-radius:10px;padding:15px 26px;font-size:15px;font-weight:900;box-shadow:var(--sh-gold);margin-top:22px}
+.cta:hover{background:var(--gold-h)}
+.cta.full{width:100%}
+.code{margin-top:22px}
+.code .k{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.code .row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.code .c{font-size:26px;font-weight:900;letter-spacing:.14em;color:var(--navy);background:var(--sec);border-radius:10px;padding:6px 16px}
+.code .or{font-size:13px;color:var(--muted)}
+.code .n{font-size:13px;line-height:1.6;color:var(--muted);margin:8px 0 0}
+.ph{position:relative;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:var(--sec)}
+.ph img{width:100%;height:100%;object-fit:cover}
+.tag{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.step .num{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--navy);color:var(--gold);font-size:13px;font-weight:800;flex:none}
+.step .t{font-size:15px;line-height:1.55;font-weight:600;color:var(--fg);margin:0}
+.step .t small{display:block;font-weight:500;font-size:14px;color:rgba(30,37,53,.72);margin-top:4px}
+.wait h2{font-size:20px;font-weight:900;margin:0 0 8px;letter-spacing:-.01em}
+.wait p{font-size:15px;line-height:1.7;color:rgba(30,37,53,.78);margin:0}
+.wait p b{color:var(--fg);font-weight:700}
+.map{aspect-ratio:4/3;border-radius:14px;overflow:hidden;background:var(--sec)}
+.map iframe{width:100%;height:100%;border:0;display:block}
+.help{font-size:14px;line-height:1.8;color:rgba(30,37,53,.72);margin:0}
+.help a{color:var(--navy);font-weight:600;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(11,34,56,.25)}
+.v{display:none}
+.frame.A .vA,.frame.B .vB{display:block}
+
+/* ── A · Fil ── */
+.vA .head{padding:24px 0 8px}
+.vA .flow{padding:24px 0 8px}
+.vA .item{margin-bottom:36px}
+.vA .item .top{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px}
+.vA .item .top .t{padding-top:2px}
+.vA .item .ph{margin:0 -16px;border-radius:0}
+.vA .item .ph.full{margin:0 -16px}
+.vA .end{padding:0 0 64px}
+.vA .end .map{margin:0 0 20px}
+
+/* ── B · Bande ── */
+.vB .head{padding:24px 0 0}
+.vB .over{margin:28px -16px 0;border-radius:0}
+.vB .steps{display:grid;gap:28px;padding:36px 0 8px}
+.vB .step .ph{margin-bottom:12px}
+.vB .step .top{display:flex;gap:10px;align-items:flex-start}
+.vB .meet{padding:28px 0 8px}
+.vB .meet .ph{margin:0 -16px 20px;border-radius:0}
+.vB .meet .map{margin-top:24px}
+.vB .tail{padding:20px 0 64px}
+
+@container (min-width: 900px){
+  .wrap{padding:0 40px}
+  .hdr{padding:14px 16px 0}
+  .pill{height:60px;padding:0 24px}
+  .nav,.login{display:flex}
+  .vsep{display:block}
+  .burger{display:none}
+  h1{font-size:52px;line-height:1.02}
+  .lead{font-size:17px}
+  .cta.full{width:auto}
+
+  /* A : 5fr sticky | 7fr trajet */
+  .vA .split{display:grid;grid-template-columns:5fr 7fr;column-gap:80px;padding-top:38px;padding-bottom:112px;align-items:start}
+  .vA .head{position:sticky;top:96px;padding:0}
+  .vA .flow{padding:0}
+  .vA .item{margin-bottom:56px}
+  .vA .item .top{margin-bottom:16px}
+  .vA .item .ph,.vA .item .ph.full{margin:0;border-radius:14px}
+  .vA .item .t{font-size:17px}
+  .vA .end{padding:0}
+
+  /* B : vue aérienne pleine largeur, 4 étapes sur une ligne, arrivée en 2 colonnes */
+  .vB .head{display:grid;grid-template-columns:1fr auto;column-gap:72px;align-items:end;padding:38px 0 0}
+  .vB .head .side{display:flex;flex-direction:column;align-items:flex-start}
+  .vB .head .cta{margin-top:0}
+  .vB .over{margin:44px 0 0;border-radius:14px;aspect-ratio:21/9}
+  .vB .steps{grid-template-columns:repeat(4,1fr);gap:24px;padding:48px 0 16px}
+  .vB .meet{display:grid;grid-template-columns:7fr 5fr;column-gap:80px;padding:72px 0 16px;align-items:start}
+  .vB .meet .ph{margin:0;border-radius:14px}
+  .vB .meet .map{margin-top:28px}
+  .vB .tail{padding:32px 0 112px}
+}
+</style>
+</head>
+<body>
+<div class="tool">
+  <b>Maquette · Plan d'accès</b>
+  <div class="seg" id="vw"><button data-v="desk" class="on">Ordinateur</button><button data-v="phone">Téléphone</button></div>
+  <span class="lbl">Structure</span>
+  <div class="seg" id="var"><button data-x="A" class="on">A · Fil</button><button data-x="B">B · Bande</button></div>
+</div>
+
+<div class="stage" id="stage">
+<div class="frame A" id="frame">
+  <header class="hdr"><div class="pill">
+    <img class="logo" src="public/fly-horizons-logo-navy.svg" alt="Fly Horizons"><span class="fill"></span>
+    <nav class="nav"><a href="#">Les vols</a><a href="#">Galerie</a><a href="#">À propos</a><a href="#">FAQ</a><a href="#">Contact</a></nav>
+    <span class="vsep"></span><a class="login" href="#"><i data-lucide="user"></i>Connexion</a>
+    <button class="burger" aria-label="Menu"><i data-lucide="menu"></i></button>
+  </div></header>
+
+  <!-- ══ A · FIL ══ -->
+  <main class="v vA"><div class="wrap split">
+    <div class="head">
+      <p class="eyebrow">Point de rendez-vous</p>
+      <h1>Plan d'accès.</h1>
+      <p class="lead">Aéroport de Charleroi (EBCI). Présentez-vous <b>15&nbsp;minutes avant</b> l'heure indiquée.</p>
+      <a class="cta full" href="#"><i data-lucide="navigation"></i>Lancer l'itinéraire GPS</a>
+      <div class="code">
+        <p class="k">Code du parking</p>
+        <div class="row"><span class="c">1477</span><span class="or">ou</span><span class="c">2022</span></div>
+        <p class="n">Si l'un ne fonctionne pas, essayez l'autre.</p>
+      </div>
+    </div>
+
+    <div class="flow">
+      <div class="item">
+        <p class="tag">Vue d'ensemble</p>
+        <div class="ph full"><img src="public/access-ebci/access-ebci-plan.png" alt="Vue aérienne de l'accès au parking"></div>
+      </div>
+      <div class="item step">
+        <div class="top"><span class="num">1</span><p class="t">Depuis le rond-point, prendre la direction de l'aérodrome</p></div>
+        <div class="ph"><img src="public/access-ebci/access-ebci-step-1.png" alt=""></div>
+      </div>
+      <div class="item step">
+        <div class="top"><span class="num">2</span><p class="t">Suivre la route jusqu'à l'entrée du parking</p></div>
+        <div class="ph"><img src="public/access-ebci/access-ebci-step-2.png" alt=""></div>
+      </div>
+      <div class="item step">
+        <div class="top"><span class="num">3</span><p class="t">Prendre la direction du parking P31</p></div>
+        <div class="ph"><img src="public/access-ebci/access-ebci-step-3.png" alt=""></div>
+      </div>
+      <div class="item step">
+        <div class="top"><span class="num">4</span><p class="t">Saisir le code à la barrière<small>Codes : 1477 ou 2022</small></p></div>
+        <div class="ph"><img src="public/access-ebci/access-ebci-step-4.png" alt=""></div>
+      </div>
+      <div class="item step wait">
+        <div class="top"><span class="num">5</span><p class="t">Rejoindre le point de rendez-vous</p></div>
+        <div class="ph"><img src="public/access-ebci/access-ebci-metting-point.png" alt="Point de rendez-vous, vue au sol"></div>
+        <p style="margin-top:16px"><b>En attendant votre vol,</b> vous pouvez patienter devant le bâtiment ou entrer dans le terminal, accessible au public. Vous y trouverez des <b>toilettes</b> et un <b>distributeur de boissons</b>.</p>
+      </div>
+      <div class="end">
+        <div class="map"><iframe src="https://maps.google.com/maps?q=50.45787645919888,4.454058485690142&z=17&t=k&output=embed" title="Point de rendez-vous Fly Horizons" loading="lazy"></iframe></div>
+        <p class="help">Problème pour nous trouver ? <a href="#">info@fly-horizons.com</a> · <a href="#">FAQ</a></p>
+      </div>
+    </div>
+  </div></main>
+
+  <!-- ══ B · BANDE ══ -->
+  <main class="v vB"><div class="wrap">
+    <div class="head">
+      <div>
+        <p class="eyebrow">Point de rendez-vous</p>
+        <h1>Plan d'accès.</h1>
+        <p class="lead">Aéroport de Charleroi (EBCI). Présentez-vous <b>15&nbsp;minutes avant</b> l'heure indiquée.</p>
+      </div>
+      <div class="side">
+        <a class="cta full" href="#"><i data-lucide="navigation"></i>Lancer l'itinéraire GPS</a>
+        <div class="code">
+          <p class="k">Code du parking</p>
+          <div class="row"><span class="c">1477</span><span class="or">ou</span><span class="c">2022</span></div>
+          <p class="n">Si l'un ne fonctionne pas, essayez l'autre.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="ph over"><img src="public/access-ebci/access-ebci-plan.png" alt="Vue aérienne de l'accès au parking"></div>
+
+    <div class="steps">
+      <div class="step"><div class="ph"><img src="public/access-ebci/access-ebci-step-1.png" alt=""></div><div class="top"><span class="num">1</span><p class="t">Depuis le rond-point, prendre la direction de l'aérodrome</p></div></div>
+      <div class="step"><div class="ph"><img src="public/access-ebci/access-ebci-step-2.png" alt=""></div><div class="top"><span class="num">2</span><p class="t">Suivre la route jusqu'à l'entrée du parking</p></div></div>
+      <div class="step"><div class="ph"><img src="public/access-ebci/access-ebci-step-3.png" alt=""></div><div class="top"><span class="num">3</span><p class="t">Prendre la direction du parking P31</p></div></div>
+      <div class="step"><div class="ph"><img src="public/access-ebci/access-ebci-step-4.png" alt=""></div><div class="top"><span class="num">4</span><p class="t">Saisir le code à la barrière<small>Codes : 1477 ou 2022</small></p></div></div>
+    </div>
+
+    <div class="meet">
+      <div class="ph"><img src="public/access-ebci/access-ebci-metting-point.png" alt="Point de rendez-vous, vue au sol"></div>
+      <div class="wait">
+        <h2>Au point de rendez-vous</h2>
+        <p><b>En attendant votre vol,</b> vous pouvez patienter devant le bâtiment ou entrer dans le terminal, accessible au public. Vous y trouverez des <b>toilettes</b> et un <b>distributeur de boissons</b>.</p>
+        <div class="map"><iframe src="https://maps.google.com/maps?q=50.45787645919888,4.454058485690142&z=17&t=k&output=embed" title="Point de rendez-vous Fly Horizons" loading="lazy"></iframe></div>
+      </div>
+    </div>
+    <div class="tail"><p class="help">Problème pour nous trouver ? <a href="#">info@fly-horizons.com</a> · <a href="#">FAQ</a></p></div>
+  </div></main>
+
+  <footer class="foot"><div class="wrap"><img src="public/fly-horizons-logo-white.svg" alt="Fly Horizons"><div>Footer actuel, inchangé.</div></div></footer>
+</div>
+</div>
+
+<script>
+const frame = document.getElementById('frame');
+lucide.createIcons();
+function seg(id, fn){ const el = document.getElementById(id); el.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return;
+  el.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); fn(b); }); }
+seg('vw', b => document.getElementById('stage').classList.toggle('phone', b.dataset.v === 'phone'));
+seg('var', b => { frame.classList.remove('A','B'); frame.classList.add(b.dataset.x); });
+</script>
+</body>
+</html>
