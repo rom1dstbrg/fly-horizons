@@ -101,12 +101,10 @@
       <ol>
         <li><b>Refonte nouvelle DA : pages restantes (28/09, périmètre élargi à tout le site public le 28/09 soir).</b>
           Après page produit, réservation, succès, report, compte, nos-offres, paiement annonce, suivi de résa :
-          <b>1.</b> <code>/access-ebci</code> (statique mais très liée) ·
-          <b>2.</b> <code>/vol/proposition/[token]</code> (itinéraire proposé par le pilote) — prochaine ·
-          <b>3.</b> <code>/reservation/creneau-propose/[token]</code> (autre créneau proposé) ·
-          <b>4.</b> <code>/reservation/messages/[token]</code> (fil pilote ↔ client) ·
-          <b>5.</b> <code>/contact/ticket/[token]</code> (fil client/admin) ·
-          <b>6.</b> <code>/cgp</code> et <code>/politique-de-confidentialite</code> (légal, liés depuis le footer partout).
+          <s><code>/access-ebci</code>, <code>/vol/proposition/[token]</code>, <code>/reservation/creneau-propose/[token]</code> faites le 29/09</s> ·
+          <b>1.</b> <code>/reservation/messages/[token]</code> (fil pilote ↔ client) ·
+          <b>2.</b> <code>/contact/ticket/[token]</code> (fil client/admin) ·
+          <b>3.</b> <code>/cgp</code> et <code>/politique-de-confidentialite</code> (légal, liés depuis le footer partout).
           Secondaire, moins vu : <code>/nos-pilotes/[id]</code>, <code>/account/reservations/[id]/carte</code>,
           <code>/newsletter/unsubscribe</code>, <code>/vol/itineraire/[token]</code> (ancien système, vieilles résas seulement).
           <code>/devenir-pilote/candidature</code> déjà en nouvelle DA. Détail : Changelog du 28/09 (entrée 66, audit + suppression des pages mortes).</li>
@@ -1661,6 +1659,15 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-09-29 (69) — Page /reservation/creneau-propose/[token] refaite dans la nouvelle DA + commande de test</h3>
+      <ul>
+        <li>Maquette <code>maquette-creneau-propose.html</code> (A deux colonnes, B bandeau). Choix de Romain : <b>B</b> (« Demandé » barré → « Proposé » en grand entre deux filets, boutons dessous ; téléphone : barre de réponse collante, comme la proposition d'itinéraire). Retours : « Bonjour Léa, » placé juste avant la phrase « Le vol du samedi… » (pas au-dessus du titre) ; artefact de maquette corrigé (le cadre ne remplissait pas l'écran, on voyait du gris sous le footer — la vraie page n'était pas concernée).</li>
+        <li>Texte neutre (« votre pilote » à la place du « je »), état « Lien invalide » refait sans bloc navy. Logique inchangée (<code>respondToSlotProposal</code>).</li>
+        <li><code>scripts/test-data.mjs creneau</code> : réservation TEST (client <code>+testcreneau</code>) avec un créneau proposé en attente ; affiche l'URL locale. Accepter envoie un email d'info à l'admin ; « Je choisis une autre date » mène à la page de report. Non poussé.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-09-29 (68) — Page /vol/proposition/[token] refaite dans la nouvelle DA + commande de test</h3>

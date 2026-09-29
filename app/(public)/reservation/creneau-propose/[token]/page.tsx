@@ -1,6 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { SlotProposalForm } from "./SlotProposalForm";
-import { XCircle } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -23,22 +22,23 @@ export default async function CreneauProposePage({ params }: PageProps) {
 
   if (!resa || !resa.slot_proposal_date || !resa.slot_proposal_heure) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-gradient-navy px-4 pt-[98px] pb-16">
-        <div className="max-w-md w-full text-center space-y-4">
-          <div className="w-14 h-14 rounded-lg bg-secondary border border-border flex items-center justify-center mx-auto">
-            <XCircle size={24} className="text-foreground/30" />
+      <main className="min-h-screen bg-white">
+        <section className="pt-page pb-24 lg:pb-32">
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
+            <p className="text-[11px] font-bold text-primary uppercase tracking-[3px] mb-3">Créneau proposé</p>
+            <h1 className="text-[32px] lg:text-[44px] font-black text-foreground leading-[1.08] lg:leading-[1.04] tracking-[-0.02em] mb-3">
+              Lien invalide.
+            </h1>
+            <p className="max-w-[520px] text-base leading-[1.7] text-foreground/80">
+              Cette proposition n&apos;est plus valide. Elle a peut-être déjà été traitée. Écrivez-nous à{" "}
+              <a href="mailto:info@fly-horizons.com" className="font-semibold text-[#0b2238] underline decoration-[#0b2238]/25 underline-offset-[3px] hover:decoration-primary transition-colors">
+                info@fly-horizons.com
+              </a>{" "}
+              si vous avez besoin d&apos;aide.
+            </p>
           </div>
-          <h1 className="text-xl font-black text-foreground">Lien invalide</h1>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Cette proposition n&apos;est plus valide. Elle a peut-être déjà été traitée.
-            Contactez-nous à{" "}
-            <a href="mailto:info@fly-horizons.com" className="text-primary hover:brightness-90 transition-all font-semibold">
-              info@fly-horizons.com
-            </a>{" "}
-            si vous avez besoin d&apos;aide.
-          </p>
-        </div>
-      </div>
+        </section>
+      </main>
     );
   }
 

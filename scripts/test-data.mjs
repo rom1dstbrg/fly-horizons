@@ -4,6 +4,7 @@
 //
 //   node scripts/test-data.mjs seed    crée les données
 //   node scripts/test-data.mjs proposition   crée UNE proposition d'itinéraire en attente (page /vol/proposition/[token])
+//   node scripts/test-data.mjs creneau       crée UNE réservation avec un autre créneau proposé (page /reservation/creneau-propose/[token])
 //   node scripts/test-data.mjs clean   supprime tout ce qui est marqué TEST
 import { createClient } from "@supabase/supabase-js";
 import fs from "fs";
@@ -105,8 +106,32 @@ async function proposition() {
   console.log(`Proposition créée (TEST). Ouvrir : http://localhost:3000/vol/proposition/${prop.token}`);
 }
 
+// Une réservation avec un créneau proposé en attente, pour voir /reservation/creneau-propose/[token].
+// Client dédié (+testcreneau) supprimé par `clean`. Accepter envoie un email d'info à l'admin (Romain) ;
+// « Je choisis une autre date » redirige vers la page de report (mail de report au client, chez Romain).
+async function creneau() {
+  const email = "romainpilot2003+testcreneau@gmail.com";
+  const old = must(await db.from("clients").select("id").eq("email", email), "clients");
+  if (old.length) {
+    must(await db.from("reservations").delete().in("client_id", old.map((c) => c.id)).select("id"), "resa");
+    must(await db.from("clients").delete().in("id", old.map((c) => c.id)), "clients");
+  }
+  const [client] = must(await db.from("clients").insert([
+    { id: crypto.randomUUID(), prenom: "Léa", nom: "TEST Créneau", email, telephone: "+32470000010" },
+  ]).select("id"), "client");
+  const token = crypto.randomUUID();
+  must(await db.from("reservations").insert([{
+    pilote_id: PILOTE_ID, client_id: client.id, type_resa: "perso", annonce_id: null,
+    date_vol: "2026-10-10", heure_vol: "10:00", duree: 60, passagers: 2, acompte: 240,
+    statut: "en_attente", pilote_paye: false, pilote_paye_at: null, duree_reelle: null, commentaire: null,
+    slot_proposal_token: token, slot_proposal_date: "2026-10-11", slot_proposal_heure: "10:00",
+  }]).select("id"), "réservation");
+  console.log(`Créneau proposé créé (TEST). Ouvrir : http://localhost:3000/reservation/creneau-propose/${token}`);
+}
+
 const cmd = process.argv[2];
 if (cmd === "seed") await seed();
 else if (cmd === "proposition") await proposition();
+else if (cmd === "creneau") await creneau();
 else if (cmd === "clean") await clean();
-else console.log("usage : node scripts/test-data.mjs seed|proposition|clean");
+else console.log("usage : node scripts/test-data.mjs seed|proposition|creneau|clean");

@@ -83,6 +83,15 @@
         ],
         "createdAt": "2026-09-29T08:12:04.518Z",
         "reason": "Eyebrow doré au-dessus du h1 = élément de la DA publique validée le 28/09 (projet.html), même exception que maquette-access-ebci.html"
+      },
+      {
+        "rule": "kicker-above-heading",
+        "value": "*",
+        "files": [
+          "maquette-creneau-propose.html"
+        ],
+        "createdAt": "2026-09-29T08:27:44.197Z",
+        "reason": "Eyebrow doré au-dessus du h1 = élément de la DA publique validée le 28/09 (projet.html), même exception que les autres maquettes"
       }
     ]
   }
