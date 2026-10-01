@@ -138,7 +138,7 @@ export function TableCell({ children, align = "left", className }: {
   return (
     <td
       className={cn(
-        "border-t border-st-line-soft px-3 py-3 text-st-text first:pl-4 last:pr-4 [tr:first-child>&]:border-t-0",
+        "border-t border-st-line-soft px-3 py-3 text-st-text first:pl-4 last:pr-4 sm:first:rounded-l-[12px] sm:last:rounded-r-[12px] [tr:first-child>&]:border-t-0",
         align === "right" ? "st-num text-right" : align === "center" ? "text-center" : "text-left",
         className,
       )}
