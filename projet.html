@@ -270,6 +270,21 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-10-01 (25) · Transactions admin : bilan de l'année, virements aux pilotes, tiroir propre</p>
+      <h3>La page Transactions passe en Studio avec un tiroir spécifique et le bénéfice calculé pour les vols confiés à un pilote</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Suite de la refonte admin (décisions 19, 23, 24). Maquette validée par Romain : https://claude.ai/artifact/3AdhQAgM5tzpZ2FSSW8Csu (bureau et téléphone). Besoin exprimé : pour un vol réglé chez Fly Horizons puis assigné à un pilote, saisir le montant viré au pilote et le montant remboursé au client ; le reste est le bénéfice.</dd>
+        <dt>Décision</dt>
+        <dd><b>Bilan</b> de l'année (sélecteur d'année, solde net, graphique par mois, encaissé / coûts avion / virés aux pilotes / frais Stripe / dépenses et remboursements). <b>« À virer aux pilotes »</b> remonté sous le bilan, seulement s'il reste des virements à saisir. <b>Tableau</b> à 4 colonnes (Opération, Encaissé, Sorties, Résultat), onglets Tout / Vols / Dépenses, recherche. <b>Tiroir propre aux transactions</b> (560 px, feuille du bas sur téléphone) : pour un vol confié, champs « Viré au pilote » et « Remboursé au client » et bénéfice recalculé en direct (encaissé − frais Stripe − remboursement − virement, coût avion exclu) ; pour un autre vol, résultat net − coût avion, part du pilote, remboursement modifiable. Bouton « Fermer et ouvrir la réservation » vers le tiroir classique. Dépenses : ajout, modification, suppression dans le même tiroir. <b>Pilotes tiers</b> en section séparée sous le tableau. Téléphone : le tableau devient des cartes (comportement Studio).</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Garder les 11 colonnes du tableau ; « Pilotes tiers » en onglet ; tiroir classique ouvert directement depuis une ligne ; lignes de vouchers dans la liste (vente arrêtée, 0 en base : leur montant reste compté dans l'encaissé si jamais il y en avait).</dd>
+        <dt>Conséquences</dt>
+        <dd>Aucune migration : <code>reversement_pilote</code> et <code>remboursement</code> existent déjà. Les types et le résultat d'un vol vivent dans <code>lib/transactions-types.ts</code> (<code>netVol</code>, <code>resultatVol</code>). Le bilan est recalculé côté navigateur par année ; le PDF et le solde historique de <code>getTransactionsData</code> sont inchangés. Pas vu en vrai par Romain à ce stade.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-10-01 (24) · Clients admin : liste de supervision, tiroir, fiche complète</p>
       <h3>La page Clients passe en Studio avec trois niveaux : la liste surveille, le tiroir donne le coup d'œil, la fiche garde tout</h3>
       <dl>
@@ -1730,6 +1745,13 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-10-01 (86) — Page Transactions refaite en Studio (bilan, tiroir, bénéfice des vols confiés)</h3>
+      <ul>
+        <li><code>components/admin/TransactionsClient.tsx</code> réécrit, <code>app/admin/transactions/page.tsx</code> simplifié, nouveau <code>lib/transactions-types.ts</code> (types + <code>netVol</code> / <code>resultatVol</code>), <code>lib/transactions.ts</code> renvoie en plus pilote, IBAN, virement et date de virement par vol. Bilan par année, « À virer aux pilotes », tableau à 4 colonnes, tiroir vol (viré au pilote, remboursé au client, bénéfice en direct, bouton vers le tiroir classique), tiroir dépense, pilotes tiers à part. Actions serveur inchangées. Décision 25. Maquette : <code>maquette-admin-transactions.html</code>.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-10-01 (85) — Page Conversations assistant refaite en Studio (tableau + tiroir)</h3>

@@ -1,0 +1,333 @@
+<title>Maquette Transactions admin</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+<style>
+/* Mise en page : carte de bilan en haut, bloc "À virer aux pilotes" si besoin, tableau à 5 colonnes + tiroir 560 px. Tout le détail chiffré passe dans le tiroir. */
+:root{
+  --bg:#f5f6f8; --card:#fff; --surface:#f4f5f7; --line:#eceef2; --line-strong:#dcdfe6;
+  --text:#0f1117; --text2:#4d5463; --muted:#5f6675; --ink:#0b2238; --ink-soft:#e8edf3; --bar:#c7d2de;
+  --gold:#F2B705; --gold-soft:#fdf4d6; --gold-text:#8a6400;
+  --ok:#16794a; --ok-soft:#e7f5ec; --bad:#c4372c; --bad-soft:#fbeae8; --info:#2b5cb8; --info-soft:#eaf0fb;
+  --font:'Poppins',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0c1117; --card:#131a22; --surface:#1a222c; --line:#222b36; --line-strong:#2e3946;
+  --text:#eef1f5; --text2:#b4bcc8; --muted:#8a93a1; --ink:#e8edf3; --ink-soft:#1d2b3b; --bar:#34475c;
+  --gold-soft:#3a2f0c; --gold-text:#f2c94c; --ok:#4cc38a; --ok-soft:#12301f; --bad:#ef7b70; --bad-soft:#3a1a17; --info-soft:#16253f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c1117; --card:#131a22; --surface:#1a222c; --line:#222b36; --line-strong:#2e3946;
+  --text:#eef1f5; --text2:#b4bcc8; --muted:#8a93a1; --ink:#e8edf3; --ink-soft:#1d2b3b; --bar:#34475c;
+  --gold-soft:#3a2f0c; --gold-text:#f2c94c; --ok:#4cc38a; --ok-soft:#12301f; --bad:#ef7b70; --bad-soft:#3a1a17; --info-soft:#16253f; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--font);padding-inline:16px;padding-block:24px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:20px}
+h1{font-size:26px;font-weight:700;margin:0}
+h2{margin:0}
+.note{font-size:12.5px;color:var(--muted);margin:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 1px 2px rgba(11,34,56,.05)}
+.num{font-variant-numeric:tabular-nums}
+.head{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between}
+.head .acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{height:38px;border-radius:11px;border:1px solid var(--line-strong);background:var(--card);color:var(--text);font:550 13px var(--font);padding:0 16px;cursor:pointer}
+.btn.p{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.seg{display:inline-flex;background:var(--surface);border-radius:11px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:none;font:600 12.5px var(--font);color:var(--text2);padding:6px 12px;border-radius:9px;cursor:pointer}
+.seg button.on{background:var(--card);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.seg b{font-weight:600;color:var(--muted);margin-left:5px}
+
+/* Carte de bilan */
+.bilan-top{display:flex;flex-wrap:wrap;gap:20px;justify-content:space-between;align-items:flex-end;padding:20px}
+.big{font-size:40px;font-weight:500;letter-spacing:-.035em;line-height:1.05;margin:4px 0}
+.lbl{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;margin:0 0 6px}
+.chart{display:flex;gap:8px;align-items:flex-end;height:86px}
+.chart div{display:flex;flex-direction:column;align-items:center;gap:4px}
+.chart span{width:22px;border-radius:6px;background:var(--bar)}
+.chart .cur span{background:var(--ink)}
+.chart small{font-size:11px;color:var(--muted)}
+.split{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid var(--line)}
+.split>div{padding:14px 20px;border-left:1px solid var(--line)}
+.split>div:first-child{border-left:0}
+.split .v{font-size:19px;font-weight:600;margin:0}
+.split .h{font-size:12px;color:var(--muted);margin:2px 0 0}
+.neg{color:var(--bad)}.pos{color:var(--ok)}.warn{color:var(--gold-text)}
+
+/* À virer aux pilotes */
+.rev-head{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line)}
+.rev-head h3{margin:0;font-size:15px}
+.rev{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 18px;border-top:1px solid var(--line)}
+.rev:first-of-type{border-top:0}
+.iban{font:12px ui-monospace,Menlo,monospace;color:var(--muted);background:none;border:0;padding:0;cursor:pointer;text-align:left}
+.pay{display:flex;gap:6px;align-items:center}
+.pay input{width:96px;height:34px;border:1px solid var(--line-strong);background:var(--card);color:var(--text);border-radius:10px;padding:0 10px;font:13px var(--font);text-align:right}
+.pay .btn{height:34px;padding:0 12px}
+
+/* Tableau */
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line)}
+.search{height:34px;border:1px solid var(--line-strong);background:var(--card);color:var(--text);border-radius:10px;padding:0 12px;font:13px var(--font);min-width:220px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:left;padding:10px 14px;font-weight:600;white-space:nowrap}
+th.r,td.r{text-align:right}
+td{padding:12px 14px;border-top:1px solid var(--line);vertical-align:middle}
+tr.row{cursor:pointer}tr.row:hover{background:var(--surface)}tr.row.sel{background:var(--surface)}
+.who{display:flex;gap:12px;align-items:center;min-width:0}
+.tile{width:40px;height:44px;border-radius:10px;background:var(--surface);display:grid;place-items:center;text-align:center;flex:none;line-height:1.1}
+.tile b{display:block;font-size:15px}.tile i{font-style:normal;font-size:11px;text-transform:uppercase;color:var(--muted)}
+.n{font-weight:550}.sub{font-size:12px;color:var(--muted)}
+.badge{display:inline-block;font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:99px;white-space:nowrap}
+.b-vol{background:var(--info-soft);color:var(--info)}
+.b-dep{background:var(--gold-soft);color:var(--gold-text)}
+.b-tiers{background:var(--surface);color:var(--text2)}
+.b-ok{background:var(--ok-soft);color:var(--ok)}
+.b-bad{background:var(--bad-soft);color:var(--bad)}
+
+/* Tiroir */
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 560px;gap:20px;align-items:start}
+.stage>div{min-width:0;display:grid;gap:20px}
+.sheet{position:sticky;top:16px;display:flex;flex-direction:column;max-height:calc(100vh - 32px);overflow:hidden}
+.sh-head{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start}
+.sh-head h2{font-size:17px}
+.sh-body{padding:18px 20px;overflow:auto;display:grid;gap:18px}
+.hero{background:var(--surface);border-radius:14px;padding:16px 18px}
+.hero .v{font-size:30px;font-weight:500;letter-spacing:-.03em;margin:2px 0}
+.rows{display:grid}
+.rows>div{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-top:1px solid var(--line);font-size:13.5px}
+.rows>div:first-child{border-top:0}
+.rows dt,.rows .k{color:var(--muted)}
+.bar{height:8px;border-radius:99px;background:var(--surface);overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:var(--ink)}
+.sh-foot{padding:14px 20px;border-top:1px solid var(--line);display:grid;gap:8px}
+.foot-row{display:flex;gap:8px;flex-wrap:wrap}.foot-row .btn{flex:1}
+.link{font-size:12.5px;color:var(--info);font-weight:600;text-decoration:none;text-align:center}
+.fld{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.fld:first-child{border-top:0}
+.fld input{height:36px;border:1px solid var(--line-strong);background:var(--card);color:var(--text);border-radius:10px;padding:0 10px;font:13.5px var(--font);text-align:right;width:100%}
+.mock-label{font-size:12px;color:var(--muted);margin:0 0 -8px}
+
+.phones{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+.phone{width:390px;max-width:100%;min-height:760px;position:relative;overflow:hidden;background:var(--bg);border:1px solid var(--line-strong);border-radius:30px;padding:16px;display:grid;gap:12px;align-content:start}
+.ph-h{display:flex;justify-content:space-between;align-items:center}
+.mrows{display:grid;margin-top:10px}.mrows>div{display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid var(--line);font-size:13px}.mrows span{color:var(--muted)}
+.mcard{padding:12px 14px}
+.fab{position:sticky;bottom:0;text-align:center;background:var(--ink);color:var(--card);border-radius:12px;padding:12px;font-weight:600;font-size:13px}
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.35)}
+.sheetm{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:24px 24px 0 0;padding:12px 16px 18px;display:grid;gap:4px}
+.grab{width:40px;height:4px;border-radius:9px;background:var(--line-strong);margin:0 auto 12px}
+@media(max-width:1100px){.stage{grid-template-columns:minmax(0,1fr)}.sheet{position:static;max-height:none}}
+@media(max-width:760px){
+  .split{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .split>div{border-top:1px solid var(--line)}
+  .split>div:nth-child(odd){border-left:0}
+  .chart span{width:14px}.big{font-size:34px}
+  .rev{grid-template-columns:minmax(0,1fr)}
+  .hide-sm{display:none}
+}
+</style>
+
+<div class="wrap">
+  <div>
+    <h1>Transactions</h1>
+    <p class="note">Maquette admin : bilan de l'année, virements aux pilotes à faire, tableau à 5 colonnes, tiroir de 560 px pour le détail. Chiffres d'exemple.</p>
+  </div>
+
+  <div class="head">
+    <div class="seg"><button class="on">2026</button><button>2025</button></div>
+    <div class="acts">
+      <button class="btn">Exporter PDF</button>
+      <button class="btn p">Ajouter une dépense</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div>
+      <!-- 1. Bilan -->
+      <div class="card">
+        <div class="bilan-top">
+          <div>
+            <p class="lbl" style="margin:0">Solde net en 2026</p>
+            <p class="big num pos">+1 482 €</p>
+            <p class="note">Encaissé 3 920 € moins toutes les sorties, ci-dessous.</p>
+          </div>
+          <div class="chart" aria-label="Encaissé par mois">
+            <div><span style="height:6px"></span><small>J</small></div>
+            <div><span style="height:10px"></span><small>F</small></div>
+            <div><span style="height:22px"></span><small>M</small></div>
+            <div><span style="height:34px"></span><small>A</small></div>
+            <div><span style="height:48px"></span><small>M</small></div>
+            <div><span style="height:58px"></span><small>J</small></div>
+            <div><span style="height:64px"></span><small>J</small></div>
+            <div><span style="height:52px"></span><small>A</small></div>
+            <div><span style="height:40px"></span><small>S</small></div>
+            <div class="cur"><span style="height:16px"></span><small>O</small></div>
+          </div>
+        </div>
+        <div class="split">
+          <div><p class="lbl">Encaissé</p><p class="v num pos">+3 920 €</p><p class="h">24 paiements</p></div>
+          <div><p class="lbl">Coûts avion</p><p class="v num neg">−1 190 €</p><p class="h">sur 17 vols</p></div>
+          <div><p class="lbl">Virés aux pilotes</p><p class="v num neg">−640 €</p><p class="h">4 virements</p></div>
+          <div><p class="lbl">Frais Stripe</p><p class="v num neg">−68 €</p><p class="h">cartes seulement</p></div>
+          <div><p class="lbl">Dépenses, remb.</p><p class="v num neg">−540 €</p><p class="h">dont 90 € remboursés</p></div>
+        </div>
+      </div>
+
+      <!-- 2. À virer (n'apparaît que s'il y en a) -->
+      <div class="card">
+        <div class="rev-head">
+          <div><h3>À virer aux pilotes <span class="warn" style="font-size:12.5px;margin-left:6px">2 à faire</span></h3><p class="note">Vols réglés à Fly Horizons puis confiés à un pilote. Virement après le vol, puis saisie du montant.</p></div>
+        </div>
+        <div class="rev">
+          <div><div class="n">Marc Lambert</div><button class="iban" title="Copier l'IBAN">BE68 5390 0754 7034</button></div>
+          <div class="sub">Léa Martin · vol du 27 sept.<br>Encaissé 180 €</div>
+          <div class="pay"><input aria-label="Montant viré" placeholder="Montant €" inputmode="decimal"><button class="btn p">Marquer viré</button></div>
+        </div>
+        <div class="rev">
+          <div><div class="n">Julie Renard</div><span class="sub" style="color:var(--gold-text)">IBAN non renseigné</span></div>
+          <div class="sub">Thomas Bertrand · vol du 29 sept.<br>Encaissé 240 €</div>
+          <div class="pay"><input aria-label="Montant viré" placeholder="Montant €" inputmode="decimal"><button class="btn p">Marquer viré</button></div>
+        </div>
+      </div>
+
+      <!-- 3. Tableau -->
+      <div class="card">
+        <div class="toolbar">
+          <div class="seg"><button class="on">Tout<b>36</b></button><button>Vols<b>24</b></button><button>Dépenses<b>11</b></button></div>
+          <input class="search" placeholder="Client, pilote, libellé…" aria-label="Recherche">
+        </div>
+        <div class="tw"><table>
+          <thead><tr><th>Opération</th><th class="hide-sm">Type</th><th class="r">Encaissé</th><th class="r hide-sm">Sorties</th><th class="r">Résultat</th></tr></thead>
+          <tbody>
+            <tr class="row sel" data-k="vol1"><td><div class="who"><span class="tile"><span><b>27</b><i>sept.</i></span></span><div><div class="n">Léa Martin</div><div class="sub">Vol de 45 min · 2 passagers</div></div></div></td><td class="hide-sm"><span class="badge b-vol">Vol</span></td><td class="r num"><div class="n">180 €</div><div class="sub">net 174,95 €</div></td><td class="r num hide-sm neg">−132,50 €</td><td class="r num pos"><div class="n">+42,45 €</div></td></tr>
+            <tr class="row" data-k="conf"><td><div class="who"><span class="tile"><span><b>29</b><i>sept.</i></span></span><div><div class="n">Thomas Bertrand</div><div class="sub">Confié à Julie Renard · réglé chez nous</div></div></div></td><td class="hide-sm"><span class="badge b-vol">Vol confié</span></td><td class="r num"><div class="n">240 €</div><div class="sub">net 233,02 €</div></td><td class="r num hide-sm neg">−190,00 €</td><td class="r num pos"><div class="n">+43,02 €</div></td></tr>
+            <tr class="row" data-k="dep1"><td><div class="who"><span class="tile"><span><b>25</b><i>sept.</i></span></span><div><div class="n">SkyDemon, abonnement</div><div class="sub">Dépense</div></div></div></td><td class="hide-sm"><span class="badge b-dep">Dépense</span></td><td class="r num"><span class="sub">—</span></td><td class="r num hide-sm neg">−9,99 €</td><td class="r num neg"><div class="n">−9,99 €</div></td></tr>
+            <tr class="row" data-k="vol2"><td><div class="who"><span class="tile"><span><b>21</b><i>sept.</i></span></span><div><div class="n">Sophie Dubois</div><div class="sub">Vol de 30 min · 1 passager</div></div></div></td><td class="hide-sm"><span class="badge b-vol">Vol</span></td><td class="r num"><div class="n">95 €</div><div class="sub">net 92,33 €</div></td><td class="r num hide-sm neg">−88,00 €</td><td class="r num pos"><div class="n">+4,33 €</div></td></tr>
+            <tr class="row" data-k="vol3"><td><div class="who"><span class="tile"><span><b>14</b><i>sept.</i></span></span><div><div class="n">Jean Peeters</div><div class="sub">Vol non effectué · remboursé</div></div></div></td><td class="hide-sm"><span class="badge b-vol">Vol</span></td><td class="r num"><div class="n">95 €</div><div class="sub">remb. −95 €</div></td><td class="r num hide-sm neg">−0 €</td><td class="r num"><div class="n">0 €</div></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <!-- 4. Pilotes tiers : section séparée -->
+      <div class="card">
+        <div class="rev-head"><div><h3>Vols des pilotes tiers</h3><p class="note">Le client règle directement le pilote : 0 € dans ta caisse, listé pour information.</p></div></div>
+        <div class="tw"><table>
+          <thead><tr><th>Vol</th><th>Pilote</th><th class="r">Montant</th><th class="r">Paiement</th></tr></thead>
+          <tbody>
+            <tr><td><div class="n">Amina Laurent</div><div class="sub">19 sept.</div></td><td>Marc Lambert</td><td class="r num">110 €</td><td class="r"><span class="badge b-ok">Payé</span></td></tr>
+            <tr><td><div class="n">Paul Dumont</div><div class="sub">12 sept.</div></td><td>Marc Lambert</td><td class="r num">110 €</td><td class="r"><span class="badge b-dep">En attente</span></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <aside class="card sheet" aria-label="Tiroir">
+      <div class="sh-head">
+        <span class="tile"><span><b>27</b><i>sept.</i></span></span>
+        <div style="flex:1;min-width:0"><h2 id="shT">Léa Martin</h2><div class="sub" id="shS">Vol de 45 min · 2 passagers</div></div>
+        <span class="badge b-vol" id="shB">Vol</span>
+      </div>
+      <div class="sh-body" id="shBody">
+        <div class="hero"><p class="lbl" style="margin:0">Résultat de ce vol</p><p class="v num pos">+42,45 €</p><p class="sub">Net encaissé 174,95 € moins le coût avion 132,50 €</p></div>
+        <div>
+          <p class="lbl">Part du pilote</p>
+          <div class="rows"><div><span class="k">Coût de l'avion</span><span class="num">132,50 €</span></div></div>
+          <div class="bar"><i style="width:0%"></i></div>
+          <p class="sub" style="margin-top:6px">Le pilote n'a rien payé de sa poche : les passagers ont couvert 100 % du coût (attendu environ 25 %).</p>
+        </div>
+        <div class="rows">
+          <div><span class="k">Montant dû</span><span class="num">180,00 €</span></div>
+          <div><span class="k">Payé (brut)</span><span class="num pos">+180,00 €</span></div>
+          <div><span class="k">Frais Stripe</span><span class="num neg">−5,05 €</span></div>
+          <div><span class="k">Remboursement</span><span class="num">0 €</span></div>
+          <div><span class="k">Durée réelle</span><span class="num">48 min (prévu 45)</span></div>
+          <div><span class="k">Passagers</span><span class="num">2</span></div>
+        </div>
+      </div>
+      <div class="sh-foot">
+        <div class="foot-row"><button class="btn p" style="flex:1">Fermer et ouvrir la réservation</button></div>
+      </div>
+    </aside>
+  </div>
+
+
+  <h2 style="font-size:19px;margin-top:8px">Vue téléphone</h2>
+  <p class="note">Même contenu, en colonne. Les lignes deviennent des cartes, le tiroir monte du bas de l'écran. Les filtres défilent sur une ligne.</p>
+  <div class="phones">
+    <div class="phone">
+      <div class="ph-h"><b>Transactions</b><div class="seg"><button class="on">2026</button><button>2025</button></div></div>
+      <div class="card" style="padding:16px">
+        <p class="lbl" style="margin:0">Solde net en 2026</p><p class="num pos" style="font-size:32px;font-weight:500;margin:2px 0;letter-spacing:-.03em">+1 482 €</p>
+        <p class="sub">Encaissé 3 920 €</p>
+        <div class="mrows"><div><span>Coûts avion</span><b class="num neg">−1 190 €</b></div><div><span>Virés aux pilotes</span><b class="num neg">−640 €</b></div><div><span>Frais Stripe</span><b class="num neg">−68 €</b></div><div><span>Dépenses, remb.</span><b class="num neg">−540 €</b></div></div>
+      </div>
+      <div class="card" style="padding:14px 16px;border-color:var(--gold)">
+        <p class="n" style="margin:0">À virer aux pilotes <span class="warn" style="font-size:12.5px">2</span></p>
+        <p class="sub">Marc Lambert · Léa Martin · 180 €</p>
+        <p class="sub">Julie Renard · Thomas Bertrand · 240 €</p>
+        <button class="btn p" style="width:100%;margin-top:10px">Saisir les virements</button>
+      </div>
+      <div class="seg" style="width:100%;flex-wrap:nowrap;overflow:auto"><button class="on">Tout</button><button>Vols</button><button>Dépenses</button></div>
+      <div class="card mcard"><div class="who"><span class="tile"><span><b>29</b><i>sept.</i></span></span><div style="flex:1"><div class="n">Thomas Bertrand</div><div class="sub">Vol confié · Julie Renard</div></div><div style="text-align:right"><div class="n num pos">+43,02 €</div><div class="sub">240 € encaissés</div></div></div></div>
+      <div class="card mcard"><div class="who"><span class="tile"><span><b>27</b><i>sept.</i></span></span><div style="flex:1"><div class="n">Léa Martin</div><div class="sub">Vol de 45 min</div></div><div style="text-align:right"><div class="n num pos">+42,45 €</div><div class="sub">180 € encaissés</div></div></div></div>
+      <div class="card mcard"><div class="who"><span class="tile"><span><b>25</b><i>sept.</i></span></span><div style="flex:1"><div class="n">SkyDemon</div><div class="sub">Dépense</div></div><div style="text-align:right"><div class="n num neg">−9,99 €</div></div></div></div>
+      <div class="fab">Ajouter une dépense</div>
+    </div>
+    <div class="phone">
+      <div class="dim"></div>
+      <div class="sheetm">
+        <div class="grab"></div>
+        <div class="who" style="margin-bottom:12px"><span class="tile"><span><b>29</b><i>sept.</i></span></span><div style="flex:1"><div class="n">Thomas Bertrand</div><div class="sub">Confié à Julie Renard</div></div><span class="badge b-vol">Vol confié</span></div>
+        <div class="hero"><p class="lbl" style="margin:0">Bénéfice sur ce vol</p><p class="v num pos">+43,02 €</p></div>
+        <div class="fld"><span><span class="n">Viré à Julie</span></span><input value="190" aria-label="Viré"></div>
+        <div class="fld"><span><span class="n">Remboursé à Thomas</span></span><input value="0" aria-label="Remboursé"></div>
+        <div class="rows"><div><span class="k">Encaissé</span><span class="num pos">+240 €</span></div><div><span class="k">Frais Stripe</span><span class="num neg">−6,98 €</span></div></div>
+        <button class="btn p" style="width:100%;margin-top:10px">Enregistrer</button>
+        <button class="btn" style="width:100%;margin-top:8px">Fermer et ouvrir la réservation</button>
+      </div>
+    </div>
+  </div>
+  <p class="mock-label">Variante du tiroir pour une dépense : montant, description et date modifiables, bouton Enregistrer et lien « Supprimer cette dépense ». Même tiroir pour l'ajout.</p>
+</div>
+
+<script>
+// Clic sur une ligne : le tiroir change de contenu (maquette, textes d'exemple).
+var D = {
+  vol1:{t:"Léa Martin",s:"Vol de 45 min · 2 passagers",b:"Vol",c:"b-vol",h:"+42,45 €",hs:"Net encaissé 174,95 € moins le coût avion 132,50 €",p:0},
+  vol2:{t:"Sophie Dubois",s:"Vol de 30 min · 1 passager",b:"Vol",c:"b-vol",h:"+4,33 €",hs:"Net encaissé 92,33 € moins le coût avion 88,00 €",p:0},
+  vol3:{t:"Jean Peeters",s:"Vol non effectué · remboursé",b:"Vol",c:"b-vol",h:"0 €",hs:"Payé 95 €, remboursé 95 €",p:0},
+  dep1:{t:"SkyDemon, abonnement",s:"Dépense du 25 sept.",b:"Dépense",c:"b-dep",h:"−9,99 €",hs:"Sortie de caisse",p:0},
+  tiers:{t:"Amina Laurent",s:"Pilote Marc Lambert · payé directement",b:"Pilote tiers",c:"b-tiers",h:"0 €",hs:"Le client règle le pilote : rien ne passe par la caisse de Fly Horizons",p:0}
+};
+
+var CONF='<div class="hero"><p class="lbl" style="margin:0">Bénéfice sur ce vol</p><p class="v num pos" id="benef">+43,02 €</p><p class="sub">Ce qui reste après le remboursement, les frais Stripe et le virement au pilote</p></div>'
++'<div><p class="lbl">Ce que tu as sorti</p><div>'
++'<div class="fld"><span><span class="n">Viré à Julie Renard</span><br><span class="sub">BE12 3456 7890 1234 · après le vol</span></span><input id="iVire" value="190" inputmode="decimal" aria-label="Montant viré au pilote"></div>'
++'<div class="fld"><span><span class="n">Remboursé à Thomas</span><br><span class="sub">si le client a été remboursé en partie</span></span><input id="iRemb" value="0" inputmode="decimal" aria-label="Montant remboursé au client"></div>'
++'</div></div>'
++'<div class="rows"><div><span class="k">Encaissé chez nous</span><span class="num pos">+240,00 €</span></div><div><span class="k">Frais Stripe</span><span class="num neg">−6,98 €</span></div><div><span class="k">Remboursé au client</span><span class="num neg" id="rRemb">−0,00 €</span></div><div><span class="k">Viré au pilote</span><span class="num neg" id="rVire">−190,00 €</span></div><div><span class="k"><b>Bénéfice</b></span><span class="num pos" id="rBen"><b>+43,02 €</b></span></div></div>'
++'<p class="sub">Le coût de l'avion ne compte pas ici : le pilote vole avec son propre avion.</p>';
+function calc(){var v=parseFloat(document.getElementById("iVire").value)||0,r=parseFloat(document.getElementById("iRemb").value)||0,b=240-6.98-r-v;
+ var f=function(n){return (n<0?"−":"+")+Math.abs(n).toFixed(2).replace(".",",")+" €"};
+ document.getElementById("benef").textContent=f(b);document.getElementById("benef").className="v num "+(b<0?"neg":"pos");
+ document.getElementById("rBen").innerHTML="<b>"+f(b)+"</b>";document.getElementById("rRemb").textContent="−"+r.toFixed(2).replace(".",",")+" €";document.getElementById("rVire").textContent="−"+v.toFixed(2).replace(".",",")+" €";}
+var ORIG=null;
+document.querySelectorAll("tr.row").forEach(function(r){
+  r.addEventListener("click",function(){
+    document.querySelectorAll("tr.row").forEach(function(x){x.classList.remove("sel")});
+    r.classList.add("sel");
+    var body=document.getElementById("shBody"); if(ORIG===null) ORIG=body.innerHTML;
+    if(r.dataset.k==="conf"){
+      document.getElementById("shT").textContent="Thomas Bertrand";document.getElementById("shS").textContent="Confié à Julie Renard · 240 € réglés à Fly Horizons";
+      var bb=document.getElementById("shB");bb.textContent="Vol confié";bb.className="badge b-vol";
+      body.innerHTML=CONF;["iVire","iRemb"].forEach(function(i){document.getElementById(i).addEventListener("input",calc)});
+      return;
+    }
+    if(ORIG!==null) body.innerHTML=ORIG;
+    var d=D[r.dataset.k]; if(!d) return;
+    document.getElementById("shT").textContent=d.t;
+    document.getElementById("shS").textContent=d.s;
+    var b=document.getElementById("shB"); b.textContent=d.b; b.className="badge "+d.c;
+    var hero=document.querySelector("#shBody .hero");
+    hero.querySelector(".v").textContent=d.h;
+    hero.querySelector(".v").className="v num "+(d.h.charAt(0)==="−"?"neg":d.h==="0 €"?"":"pos");
+    hero.querySelector(".sub").textContent=d.hs;
+  });
+});
+</script>

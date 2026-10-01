@@ -1,27 +1,21 @@
-import { PageHeader } from "@/components/admin/PageHeader";
 import { TransactionsClient } from "@/components/admin/TransactionsClient";
 import { getTransactionsData } from "@/lib/transactions";
 
 export const metadata = { title: "Transactions — Admin" };
 
 export default async function TransactionsPage() {
-  const { vols, piloteVols, reversements, reversementsDisponibles, vouchers, depenses, soldeGlobal } = await getTransactionsData();
+  const { vols, piloteVols, reversements, reversementsDisponibles, vouchers, depenses } = await getTransactionsData();
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Brussels" }).format(new Date());
 
   return (
-    <div className="space-y-5">
-      <PageHeader
-        title="Transactions"
-        subtitle="Suivi financier — vols, vouchers et solde des caisses"
-      />
-      <TransactionsClient
-        vols={vols}
-        piloteVols={piloteVols}
-        reversements={reversements}
-        reversementsDisponibles={reversementsDisponibles}
-        vouchers={vouchers}
-        depenses={depenses}
-        soldeGlobal={soldeGlobal}
-      />
-    </div>
+    <TransactionsClient
+      vols={vols}
+      piloteVols={piloteVols}
+      reversements={reversements}
+      reversementsDisponibles={reversementsDisponibles}
+      vouchers={vouchers}
+      depenses={depenses}
+      today={today}
+    />
   );
 }

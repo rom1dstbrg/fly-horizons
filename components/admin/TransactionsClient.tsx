@@ -1,472 +1,58 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { TrendingUp, TrendingDown, Minus, Plus, Trash2, Pencil, X, Check, Loader2, Receipt, Download } from "lucide-react";
+import { useCallback, useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { Check, Download, ExternalLink, Plus, Receipt, Trash2 } from "lucide-react";
 import { addDepense, deleteDepense, updateDepense } from "@/lib/actions/depenses";
 import { setReversementPilote } from "@/lib/actions/reversement-pilote";
-import { getReservationForDrawer } from "@/lib/actions/reservation-edit";
+import { getReservationForDrawer, updateReservationAllFields } from "@/lib/actions/reservation-edit";
 import { ReservationDrawer } from "@/components/admin/reservation-drawer/ReservationDrawer";
 import type { DrawerReservation } from "@/components/admin/reservation-drawer/types";
-import { StatGrid, PageToolbar, FilterChip, EmptyState, AdminSheet } from "@/components/admin/ui";
+import {
+  Badge, Button, ButtonLabel, buttonClasses, Card, CardSplit, DateTile, EmptyState, FormField, Input, Metric,
+  PageHeader, Segmented, SectionHeader, Sheet, SheetBody, SheetFooter, SheetHeader, SheetHero, SheetRow, SheetRows,
+  Table, TableCell, TableHeaderCell, TableRow, TableSearch,
+} from "@/components/pilote/studio";
+import { cn } from "@/lib/utils";
 import { uuid } from "@/lib/uuid";
+import {
+  netVol, resultatVol,
+  type Depense, type LigneReversement, type LignePiloteVol, type LigneVol, type LigneVoucher, type SoldeStats,
+} from "@/lib/transactions-types";
 
-export type LigneVol = {
-  id: string;
-  date: string;
-  client: string;
-  type_resa: "standard" | "perso";
-  acompte: number | null;
-  paye: number;
-  remboursement: number;
-  net_client: number;
-  duree: number | null;
-  duree_reelle: number | null;
-  passagers: number | null;
-  cout_avion: number | null;
-  part_pilote: number | null;
-  part_pilote_pct: number | null;
-  part_attendue_pct: number | null;
-  resultat: number | null;
-  voucher_code: string | null;
-  voucher_montant: number | null;
-  stripe_fee: number | null;
-  stripe_net: number | null;
-  stripe_fee_estimated: boolean;
+// Page Transactions de l'admin (maquette validée le 01/10) : bilan de l'année,
+// virements aux pilotes à faire, tableau des vols et dépenses, tiroir propre aux
+// transactions (avec un bouton vers le tiroir classique de la réservation), puis
+// les vols des pilotes tiers à part. Sur téléphone, le tableau devient des cartes.
+
+type Tab = "tout" | "vols" | "depenses";
+type OpenSheet = { kind: "vol"; id: string } | { kind: "depense"; id: string | "new" };
+type Row =
+  | { kind: "vol"; date: string; vol: LigneVol }
+  | { kind: "depense"; date: string; depense: Depense };
+
+const MOIS = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
+const round2 = (n: number) => Math.round(n * 100) / 100;
+const eur = (v: number, d = 2) =>
+  v.toLocaleString("fr-BE", { minimumFractionDigits: Math.abs(v % 1) < 0.005 ? 0 : d, maximumFractionDigits: 2 }) + " €";
+const signed = (v: number) => (v > 0 ? "+" : v < 0 ? "−" : "") + eur(Math.abs(v));
+const plural = (n: number, s: string) => `${n} ${s}${n > 1 ? "s" : ""}`;
+const toneOf = (v: number | null) => (v == null || Math.abs(v) < 0.005 ? "text-st-muted" : v > 0 ? "text-st-ok" : "text-st-bad");
+const longDate = (d: string) =>
+  new Date(d.slice(0, 10) + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "short", day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Brussels" });
+const num = (s: string) => {
+  const n = parseFloat(s.replace(",", "."));
+  return Number.isFinite(n) ? n : 0;
 };
-
-export type LigneVoucher = {
-  id: string;
-  date: string;
-  destinataire: string;
-  type: "boutique" | "cash" | "offered";
-  minutes: number;
-  montant: number | null;
-  code: string;
-};
-
-// Vol confié à un pilote tiers (modèle A) — informatif, 0 € dans la caisse.
-export type LignePiloteVol = {
-  id: string;
-  date: string;
-  client: string;
-  pilote: string;
-  montant: number | null;
-  paye: boolean;
-};
-
-// Vol réglé à Fly Horizons puis confié à un pilote (décision 18) : Romain vire
-// le pilote après le vol, hors de l'app ; on trace le montant et la date.
-export type LigneReversement = {
-  id: string;
-  date: string;
-  client: string;
-  pilote: string;
-  iban: string | null;
-  encaisse: number;
-  effectue: boolean;
-  montant: number | null;
-  faitLe: string | null;
-};
-
-export type Depense = {
-  id: string;
-  montant: number;
-  description: string;
-  date: string;
-};
-
-export type SoldeStats = {
-  encaisse: number;
-  rembourse: number;
-  cout_avion: number;
-  depenses: number;
-  solde_net: number;
-  stripe_fees: number;
-  part_pilote_moyenne_pct: number | null;
-  vols_avec_cout: number;
-  reversements: number;
-};
-
-type FilterType = "tout" | "vols" | "vouchers" | "depenses";
-
-type Ligne =
-  | { kind: "vol";      data: LigneVol }
-  | { kind: "voucher";  data: LigneVoucher }
-  | { kind: "depense";  data: Depense };
-
-function fmt(n: number) {
-  return n.toLocaleString("fr-BE", { style: "currency", currency: "EUR" });
-}
-
-function KpiCard({ label, value, cls, sub }: { label: string; value: string; cls?: string; sub?: string }) {
-  return (
-    <div className="bg-card border border-border rounded-xl p-3">
-      <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1 truncate">{label}</p>
-      <p className={`text-base font-black whitespace-nowrap ${cls ?? "text-foreground"}`}>{value}</p>
-      {sub && <p className="text-[9px] text-muted-foreground mt-1 leading-tight">{sub}</p>}
-    </div>
-  );
-}
-
-const DASH = <span className="text-muted-foreground">—</span>;
-
-function PartPilote({ montant, pct, attenduePct }: { montant: number | null; pct: number | null; attenduePct: number | null }) {
-  if (montant == null || pct == null) return <span className="text-xs text-muted-foreground">—</span>;
-  // Vert si la part payée atteint ~la part déclarée dans /admin/settings, orange sinon, rouge si quasi nulle
-  const ratio = attenduePct != null && attenduePct > 0 ? pct / attenduePct : null;
-  const cls = pct < 0.5 ? "text-red-500"
-    : ratio != null && ratio < 0.6 ? "text-amber-600"
-    : "text-emerald-600";
-  return (
-    <div className="flex flex-col items-end gap-0.5">
-      <span className={`font-semibold ${cls}`}>{fmt(montant)}</span>
-      <span className={`text-[10px] ${cls}`}>
-        {pct}% {attenduePct != null && <span className="text-muted-foreground">(attendu ~{attenduePct}%)</span>}
-      </span>
-    </div>
-  );
-}
-
-function Resultat({ v }: { v: number | null }) {
-  if (v === null) return <span className="text-xs text-muted-foreground">—</span>;
-  if (Math.abs(v) < 0.01) return <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Minus size={11} />{fmt(0)}</span>;
-  if (v > 0) return <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-semibold"><TrendingUp size={11} />+{fmt(v)}</span>;
-  return <span className="inline-flex items-center gap-1 text-xs text-red-500 font-semibold"><TrendingDown size={11} />{fmt(v)}</span>;
-}
-
-function VolRow({ vol }: { vol: LigneVol }) {
-  const coveredByVoucher = !!vol.voucher_code && vol.paye === 0;
-  return (
-    <>
-      <td className="px-3 py-3 font-medium text-foreground text-sm whitespace-nowrap">{vol.client}</td>
-      <td className="px-3 py-3">
-        <div className="flex flex-col gap-0.5">
-          <span className={`inline-flex w-fit px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
-            vol.type_resa === "perso" ? "bg-purple-50 text-purple-700 border-purple-200" : "bg-blue-50 text-blue-700 border-blue-200"
-          }`}>
-            {vol.type_resa === "perso" ? "Sur mesure" : "Standard"}
-          </span>
-          {vol.voucher_code && (
-            <span className="text-[10px] text-amber-600 font-mono">Voucher {vol.voucher_code}</span>
-          )}
-        </div>
-      </td>
-      {/* Dû */}
-      <td className="px-3 py-3 text-right tabular-nums text-xs text-emerald-600">
-        {vol.acompte != null ? fmt(vol.acompte) : DASH}
-      </td>
-      {/* Brut payé */}
-      <td className="px-3 py-3 text-right tabular-nums text-xs">
-        {coveredByVoucher ? (
-          <div className="flex flex-col items-end gap-0.5">
-            <span className="font-semibold text-emerald-600">+{fmt(vol.paye)}</span>
-            <span className="text-[10px] text-amber-600 font-mono">via {vol.voucher_code}</span>
-          </div>
-        ) : vol.paye > 0
-          ? <span className="font-semibold text-emerald-600">+{fmt(vol.paye)}</span>
-          : DASH
-        }
-      </td>
-      {/* Net reçu — brut moins commission Stripe (cash/voucher : identique au brut, pas de frais) */}
-      <td className="px-3 py-3 text-right tabular-nums text-xs">
-        {vol.paye > 0 ? (
-          <div className="flex flex-col items-end gap-0.5">
-            <span className="font-semibold text-foreground">
-              {vol.stripe_net != null && vol.stripe_fee_estimated && "~"}{fmt(vol.stripe_net ?? vol.paye)}
-            </span>
-            {vol.stripe_net != null && (
-              <span
-                className="text-[10px] text-red-400"
-                title={vol.stripe_fee_estimated ? "Estimé (1,5 % + 0,25 €) — frais réel non capturé pour ce paiement" : "Frais réel Stripe"}
-              >
-                −{fmt(vol.stripe_fee ?? 0)} frais
-              </span>
-            )}
-          </div>
-        ) : DASH}
-      </td>
-      {/* Remboursement */}
-      <td className="px-3 py-3 text-right tabular-nums text-xs text-red-500">
-        {vol.remboursement > 0 ? `−${fmt(vol.remboursement)}` : <span className="text-muted-foreground">{fmt(0)}</span>}
-      </td>
-      {/* Durée */}
-      <td className="px-3 py-3 text-right tabular-nums text-xs text-muted-foreground whitespace-nowrap">
-        {vol.duree_reelle != null ? (
-          <span>
-            <span className="text-foreground font-medium">{vol.duree_reelle} min</span>
-            {vol.duree != null && vol.duree_reelle !== vol.duree && (
-              <span className={`ml-1 text-[10px] ${vol.duree_reelle > vol.duree ? "text-red-400" : "text-emerald-500"}`}>
-                (prévu {vol.duree})
-              </span>
-            )}
-          </span>
-        ) : (
-          <span className="italic text-muted-foreground/60 text-[10px]">non renseignée</span>
-        )}
-      </td>
-      {/* Coût avion */}
-      <td className="px-3 py-3 text-right tabular-nums text-xs text-red-500">
-        {vol.cout_avion != null ? `−${fmt(vol.cout_avion)}` : DASH}
-      </td>
-      {/* Part pilote */}
-      <td className="px-3 py-3 text-right tabular-nums">
-        <PartPilote montant={vol.part_pilote} pct={vol.part_pilote_pct} attenduePct={vol.part_attendue_pct} />
-      </td>
-      {/* Résultat */}
-      <td className="px-3 py-3 text-right"><Resultat v={vol.resultat} /></td>
-    </>
-  );
-}
-
-function VoucherRow({ v }: { v: LigneVoucher }) {
-  const montant = v.montant ?? null;
-  return (
-    <>
-      <td className="px-3 py-3 text-sm text-foreground">{v.destinataire}</td>
-      <td className="px-3 py-3">
-        <div className="flex flex-col gap-0.5">
-          <span className={`inline-flex w-fit px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
-            v.type === "boutique" ? "bg-purple-50 text-purple-700 border-purple-200" : "bg-amber-50 text-amber-700 border-amber-200"
-          }`}>
-            {v.type === "boutique" ? "Voucher boutique" : "Voucher cash"}
-          </span>
-          <span className="text-[10px] text-muted-foreground font-mono">{v.code} · {v.minutes} min</span>
-        </div>
-      </td>
-      <td className="px-3 py-3 text-right text-xs text-muted-foreground">{DASH}</td>
-      <td className="px-3 py-3 text-right tabular-nums text-xs font-semibold text-emerald-600">
-        {montant != null ? `+${fmt(montant)}` : DASH}
-      </td>
-      <td className="px-3 py-3 text-right text-xs text-muted-foreground">{DASH}</td>
-      <td className="px-3 py-3 text-right tabular-nums text-xs font-semibold text-emerald-600">
-        {montant != null ? `+${fmt(montant)}` : DASH}
-      </td>
-      <td className="px-3 py-3 text-right text-xs text-muted-foreground">{DASH}</td>
-      <td className="px-3 py-3 text-right text-xs text-muted-foreground">{DASH}</td>
-      <td className="px-3 py-3 text-right text-xs text-muted-foreground">{DASH}</td>
-      <td className="px-3 py-3 text-right">
-        <Resultat v={montant} />
-      </td>
-    </>
-  );
-}
-
-const inputCls = "w-full h-8 px-2 rounded-lg border border-input bg-background text-xs focus:outline-none focus:ring-1 focus:ring-navy/30";
-
-function DepenseRow({
-  d,
-  onEdit,
-  onDelete,
-  isPending,
-}: {
-  d: Depense;
-  onEdit: () => void;
-  onDelete: () => void;
-  isPending: boolean;
-}) {
-  return (
-    <>
-      <td className="px-3 py-3 text-sm text-foreground">{d.description}</td>
-      <td className="px-3 py-3">
-        <span className="inline-flex w-fit px-2 py-0.5 rounded-full text-[10px] font-semibold border bg-orange-50 text-orange-700 border-orange-200">
-          Dépense
-        </span>
-      </td>
-      <td className="px-3 py-3 text-right text-xs text-muted-foreground">{DASH}</td>
-      <td className="px-3 py-3 text-right text-xs text-muted-foreground">{DASH}</td>
-      <td className="px-3 py-3 text-right text-xs text-muted-foreground">{DASH}</td>
-      <td className="px-3 py-3 text-right text-xs text-muted-foreground">{DASH}</td>
-      <td className="px-3 py-3 text-right text-xs text-muted-foreground">{DASH}</td>
-      <td className="px-3 py-3 text-right text-xs text-muted-foreground">{DASH}</td>
-      <td className="px-3 py-3 text-right text-xs text-muted-foreground">{DASH}</td>
-      <td className="px-3 py-3 text-right">
-        <Resultat v={-d.montant} />
-      </td>
-      <td className="px-2 py-3">
-        <div className="flex items-center gap-1 justify-end">
-          <button
-            onClick={onEdit}
-            className="p-1.5 rounded-lg text-muted-foreground hover:text-navy hover:bg-navy/10 transition-colors cursor-pointer"
-          >
-            <Pencil size={12} />
-          </button>
-          <button
-            onClick={onDelete}
-            disabled={isPending}
-            className="p-1.5 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-30"
-          >
-            <Trash2 size={12} />
-          </button>
-        </div>
-      </td>
-    </>
-  );
-}
-
-function DepenseEditRow({
-  d,
-  onSave,
-  onCancel,
-  isPending,
-}: {
-  d: Depense;
-  onSave: (montant: number, description: string, date: string) => void;
-  onCancel: () => void;
-  isPending: boolean;
-}) {
-  const [montant, setMontant] = useState(String(d.montant));
-  const [description, setDescription] = useState(d.description);
-  const [date, setDate] = useState(d.date);
-
-  return (
-    <>
-      <td className="px-3 py-2" colSpan={2}>
-        <input
-          type="text"
-          value={description}
-          onChange={e => setDescription(e.target.value)}
-          placeholder="Description"
-          className={inputCls}
-          autoFocus
-        />
-      </td>
-      <td className="px-3 py-2" colSpan={5} />
-      <td className="px-3 py-2">
-        <input
-          type="number"
-          value={montant}
-          onChange={e => setMontant(e.target.value)}
-          step="0.01"
-          min="0.01"
-          placeholder="Montant"
-          className={inputCls}
-        />
-      </td>
-      <td className="px-3 py-2" />
-      <td className="px-3 py-2">
-        <input
-          type="date"
-          value={date}
-          onChange={e => setDate(e.target.value)}
-          className={inputCls}
-        />
-      </td>
-      <td className="px-2 py-2">
-        <div className="flex items-center gap-1 justify-end">
-          <button
-            onClick={() => onSave(parseFloat(montant), description, date)}
-            disabled={isPending}
-            className="p-1.5 rounded-lg bg-navy text-white hover:brightness-90 transition-colors cursor-pointer disabled:opacity-50"
-          >
-            {isPending ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
-          </button>
-          <button
-            onClick={onCancel}
-            className="p-1.5 rounded-lg text-muted-foreground hover:bg-secondary transition-colors cursor-pointer"
-          >
-            <X size={12} />
-          </button>
-        </div>
-      </td>
-    </>
-  );
-}
-
-function ReversementRow({ r }: { r: LigneReversement }) {
-  const [montant, setMontant] = useState<number | null>(r.montant);
-  const [faitLe, setFaitLe] = useState<string | null>(r.faitLe);
-  const [saisie, setSaisie] = useState("");
-  const [error, setError] = useState("");
-  const [copied, setCopied] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const rawDate = r.date.length === 10 ? r.date + "T12:00:00Z" : r.date;
-
-  function save(value: number | null) {
-    setError("");
-    startTransition(async () => {
-      const res = await setReversementPilote(r.id, value);
-      if (res.error) { setError(res.error); return; }
-      setMontant(res.montant ?? null);
-      setFaitLe(res.le ?? null);
-      setSaisie("");
-    });
-  }
-
-  function copyIban(iban: string) {
-    navigator.clipboard?.writeText(iban.replace(/\s+/g, ""));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  }
-
-  return (
-    <tr className="hover:bg-secondary/30 transition-colors align-top">
-      <td className="px-3 py-3 text-xs text-muted-foreground whitespace-nowrap">
-        {new Date(rawDate).toLocaleDateString("fr-BE", { day: "numeric", month: "short", year: "2-digit" })}
-      </td>
-      <td className="px-3 py-3 text-sm text-foreground">{r.client}</td>
-      <td className="px-3 py-3 text-sm text-foreground">
-        {r.pilote}
-        {r.iban ? (
-          <button
-            type="button"
-            onClick={() => copyIban(r.iban!)}
-            className="block mt-0.5 font-mono text-[11px] text-muted-foreground hover:text-foreground cursor-pointer"
-            title="Copier l'IBAN"
-          >
-            {copied ? "IBAN copié" : r.iban}
-          </button>
-        ) : (
-          <span className="block mt-0.5 text-[11px] text-amber-600">IBAN non renseigné</span>
-        )}
-      </td>
-      <td className="px-3 py-3 text-sm text-right text-foreground whitespace-nowrap">{fmt(r.encaisse)}</td>
-      <td className="px-3 py-3 text-right">
-        {montant != null ? (
-          <div className="flex flex-col items-end gap-0.5">
-            <span className="text-sm font-semibold text-emerald-600 whitespace-nowrap">
-              <Check size={12} className="inline -mt-0.5 mr-1" />
-              {fmt(montant)} viré{faitLe ? ` le ${new Date(faitLe).toLocaleDateString("fr-BE", { day: "numeric", month: "short" })}` : ""}
-            </span>
-            <button type="button" disabled={isPending} onClick={() => save(null)} className="text-[11px] text-muted-foreground hover:text-foreground cursor-pointer disabled:opacity-50">
-              annuler
-            </button>
-          </div>
-        ) : (
-          <div className="flex flex-col items-end gap-1">
-            {!r.effectue && <span className="text-[11px] text-muted-foreground">Vol pas encore effectué</span>}
-            <div className="flex items-center justify-end gap-1.5">
-              <input
-                type="number" step="0.01" min="0.01" inputMode="decimal"
-                value={saisie} onChange={e => setSaisie(e.target.value)}
-                placeholder="Montant €"
-                aria-label={`Montant viré à ${r.pilote}`}
-                className="w-24 h-8 px-2 rounded-md border border-input bg-background text-sm text-right focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-              <button
-                type="button"
-                disabled={isPending || !(parseFloat(saisie) > 0)}
-                onClick={() => save(parseFloat(saisie))}
-                className="inline-flex items-center gap-1 h-8 px-3 rounded-md bg-navy text-white text-xs font-semibold hover:brightness-90 disabled:opacity-50 transition-colors cursor-pointer whitespace-nowrap"
-              >
-                {isPending ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Marquer viré
-              </button>
-            </div>
-            {error && <span className="text-[11px] text-destructive">{error}</span>}
-          </div>
-        )}
-      </td>
-    </tr>
-  );
-}
 
 export function TransactionsClient({
-  vols,
+  vols: initialVols,
   piloteVols = [],
   reversements = [],
   reversementsDisponibles = true,
   vouchers,
   depenses: initialDepenses,
-  soldeGlobal,
+  today,
 }: {
   vols: LigneVol[];
   piloteVols?: LignePiloteVol[];
@@ -474,402 +60,641 @@ export function TransactionsClient({
   reversementsDisponibles?: boolean;
   vouchers: LigneVoucher[];
   depenses: Depense[];
-  soldeGlobal: SoldeStats;
+  soldeGlobal?: SoldeStats;
+  today: string;
 }) {
+  const router = useRouter();
+  const [vols, setVols] = useState<LigneVol[]>(initialVols);
   const [depenses, setDepenses] = useState<Depense[]>(initialDepenses);
-  const [filter, setFilter] = useState<FilterType>("tout");
-  const [formOpen, setFormOpen] = useState(false);
-  const [montant, setMontant] = useState("");
-  const [description, setDescription] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  const [formError, setFormError] = useState("");
-  const [isPending, startTransition] = useTransition();
+  const [year, setYear] = useState(today.slice(0, 4));
+  const [tab, setTab] = useState<Tab>("tout");
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState<OpenSheet | null>(null);
+  const [classique, setClassique] = useState<DrawerReservation | null>(null);
+  const [loadingClassique, setLoadingClassique] = useState(false);
 
-  // Drawer vol (standard + perso, même composant)
-  const [volDrawer, setVolDrawer] = useState<DrawerReservation | null>(null);
-  const [loadingVolId, setLoadingVolId] = useState<string | null>(null);
+  const years = useMemo(() => {
+    const s = new Set<string>([today.slice(0, 4)]);
+    for (const v of vols) s.add(v.date.slice(0, 4));
+    for (const d of depenses) s.add(d.date.slice(0, 4));
+    return [...s].sort().reverse().slice(0, 4);
+  }, [vols, depenses, today]);
 
-  // Edition dépenses
-  const [editingDepenseId, setEditingDepenseId] = useState<string | null>(null);
+  const volsAn = useMemo(() => vols.filter((v) => v.date.startsWith(year)), [vols, year]);
+  const depensesAn = useMemo(() => depenses.filter((d) => d.date.startsWith(year)), [depenses, year]);
+  const vouchersAn = useMemo(
+    () => vouchers.filter((v) => v.type !== "offered" && v.date.startsWith(year)),
+    [vouchers, year],
+  );
 
-  // Solde global mis à jour en temps réel avec les dépenses locales
-  const totalDepenses = depenses.reduce((s, d) => s + d.montant, 0);
-  const soldeNet = Math.round((soldeGlobal.encaisse - soldeGlobal.rembourse - soldeGlobal.stripe_fees - soldeGlobal.cout_avion - soldeGlobal.reversements - totalDepenses) * 100) / 100;
-  const aReverser = reversements.filter(r => r.effectue && r.montant == null).length;
+  // Bilan de l'année : même formule que le solde net historique.
+  const bilan = useMemo(() => {
+    const parMois = Array<number>(12).fill(0);
+    let encaisse = 0, coutAvion = 0, vire = 0, stripe = 0, rembourse = 0, nPaiements = 0, nAvecCout = 0;
+    for (const v of volsAn) {
+      encaisse += v.paye;
+      if (v.paye > 0) nPaiements++;
+      parMois[Number(v.date.slice(5, 7)) - 1] += v.paye;
+      rembourse += v.remboursement;
+      if (!v.confie && v.cout_avion != null) { coutAvion += v.cout_avion; nAvecCout++; }
+      if (v.confie && v.reversement != null) vire += v.reversement;
+      if (v.stripe_net != null) stripe += v.stripe_fee ?? 0;
+    }
+    for (const v of vouchersAn) {
+      encaisse += v.montant ?? 0;
+      parMois[Number(v.date.slice(5, 7)) - 1] += v.montant ?? 0;
+    }
+    const depensesTotal = depensesAn.reduce((s, d) => s + d.montant, 0);
+    const nVire = volsAn.filter((v) => v.confie && v.reversement != null).length;
+    return {
+      parMois, encaisse: round2(encaisse), coutAvion: round2(coutAvion), vire: round2(vire),
+      stripe: round2(stripe), rembourse: round2(rembourse), depenses: round2(depensesTotal),
+      nPaiements, nAvecCout, nVire,
+      solde: round2(encaisse - coutAvion - vire - stripe - rembourse - depensesTotal),
+    };
+  }, [volsAn, depensesAn, vouchersAn]);
 
-  async function openVolDrawer(vol: LigneVol) {
-    if (loadingVolId) return;
-    setLoadingVolId(vol.id);
-    const result = await getReservationForDrawer(vol.id, vol.type_resa === "perso");
-    setLoadingVolId(null);
-    if (!result.data) return;
-    setVolDrawer(result.data as unknown as DrawerReservation);
+  const aVirerRows = useMemo(
+    () => reversements
+      .map((r) => ({ r, vol: vols.find((v) => v.id === r.id) }))
+      .filter((x): x is { r: LigneReversement; vol: LigneVol } => !!x.vol && x.vol.reversement == null),
+    [reversements, vols],
+  );
+  const nAFaire = aVirerRows.filter((x) => x.vol.effectue).length;
+
+  const rows: Row[] = useMemo(() => {
+    const all: Row[] = [
+      ...volsAn.map((vol) => ({ kind: "vol" as const, date: vol.date, vol })),
+      ...depensesAn.map((depense) => ({ kind: "depense" as const, date: depense.date, depense })),
+    ];
+    return all.sort((a, b) => b.date.localeCompare(a.date));
+  }, [volsAn, depensesAn]);
+
+  const q = query.trim().toLowerCase();
+  const shown = rows.filter((r) =>
+    (tab === "tout" || (tab === "vols") === (r.kind === "vol")) &&
+    (!q || (r.kind === "vol"
+      ? `${r.vol.client} ${r.vol.pilote ?? ""}`.toLowerCase().includes(q)
+      : r.depense.description.toLowerCase().includes(q))),
+  );
+  const counts = { tout: rows.length, vols: volsAn.length, depenses: depensesAn.length };
+
+  const piloteVolsAn = piloteVols.filter((v) => v.date.startsWith(year));
+  const maxMois = Math.max(...bilan.parMois, 1);
+  const moisCourant = year === today.slice(0, 4) ? Number(today.slice(5, 7)) - 1 : 11;
+
+  const close = useCallback(() => setOpen(null), []);
+
+  function patchVol(id: string, patch: Partial<LigneVol>) {
+    setVols((prev) => prev.map((v) => (v.id === id ? { ...v, ...patch } : v)));
   }
 
-  function handleAddDepense(e: React.FormEvent) {
-    e.preventDefault();
-    setFormError("");
-    const m = parseFloat(montant);
-    if (isNaN(m) || m <= 0) { setFormError("Montant invalide."); return; }
-    if (!description.trim()) { setFormError("Description requise."); return; }
-    startTransition(async () => {
-      const r = await addDepense(m, description, date);
-      if (r.error) { setFormError(r.error); return; }
-      setDepenses(prev => [{ id: uuid(), montant: m, description: description.trim(), date }, ...prev]);
-      setMontant(""); setDescription("");
-      setDate(new Date().toISOString().slice(0, 10));
-      setFormOpen(false);
-    });
+  async function openClassique(id: string, perso: boolean) {
+    if (loadingClassique) return;
+    setLoadingClassique(true);
+    const res = await getReservationForDrawer(id, perso);
+    setLoadingClassique(false);
+    if (!res.data) return;
+    setOpen(null);
+    setClassique(res.data as unknown as DrawerReservation);
   }
 
-  function handleDeleteDepense(id: string) {
-    startTransition(async () => {
-      const r = await deleteDepense(id);
-      if (!r.error) setDepenses(prev => prev.filter(d => d.id !== id));
-    });
-  }
-
-  function handleUpdateDepense(id: string, montant: number, description: string, date: string) {
-    startTransition(async () => {
-      const r = await updateDepense(id, montant, description, date);
-      if (!r.error) {
-        setDepenses(prev => prev.map(d => d.id === id ? { ...d, montant, description, date } : d));
-        setEditingDepenseId(null);
-      }
-    });
-  }
-
-  // Fusion et tri par date desc
-  const allLignes: Ligne[] = [
-    ...vols.map(d => ({ kind: "vol" as const, data: d })),
-    ...vouchers.filter(v => v.type !== "offered").map(d => ({ kind: "voucher" as const, data: d })),
-    ...depenses.map(d => ({ kind: "depense" as const, data: d })),
-  ].sort((a, b) => {
-    const da = a.data.date;
-    const db = b.data.date;
-    return db.localeCompare(da);
-  });
-
-  const filtered = filter === "tout" ? allLignes
-    : filter === "vols" ? allLignes.filter(l => l.kind === "vol")
-    : filter === "vouchers" ? allLignes.filter(l => l.kind === "voucher")
-    : allLignes.filter(l => l.kind === "depense");
-
-  const FILTERS: { key: FilterType; label: string; count: number }[] = [
-    { key: "tout",      label: "Tout",      count: allLignes.length },
-    { key: "vols",      label: "Vols",      count: vols.length },
-    { key: "vouchers",  label: "Vouchers",  count: vouchers.filter(v => v.type !== "offered").length },
-    { key: "depenses",  label: "Dépenses",  count: depenses.length },
-  ];
+  const openVol = open?.kind === "vol" ? vols.find((v) => v.id === open.id) ?? null : null;
+  const sheetValue = open && (open.kind === "depense" || openVol) ? open : null;
 
   return (
     <>
-      <div className="space-y-5">
-        {/* KPIs globaux */}
-        <div>
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">Solde caisses Fly Horizons (cumulatif)</p>
-          <StatGrid cols={7}>
-            <KpiCard label="Total encaissé" value={`+${fmt(soldeGlobal.encaisse)}`} cls="text-emerald-600" />
-            <KpiCard label="Remboursements" value={soldeGlobal.rembourse > 0 ? `−${fmt(soldeGlobal.rembourse)}` : fmt(0)} cls="text-red-500" />
-            <KpiCard
-              label="Coûts avion"
-              value={soldeGlobal.cout_avion > 0 ? `−${fmt(soldeGlobal.cout_avion)}` : "À renseigner"}
-              cls={soldeGlobal.cout_avion > 0 ? "text-red-500" : "text-muted-foreground"}
-            />
-            <KpiCard
-              label="Part pilote moyenne"
-              value={soldeGlobal.part_pilote_moyenne_pct != null ? `${soldeGlobal.part_pilote_moyenne_pct}%` : "—"}
-              cls={
-                soldeGlobal.part_pilote_moyenne_pct == null ? "text-muted-foreground"
-                : soldeGlobal.part_pilote_moyenne_pct < 10 ? "text-red-500"
-                : "text-emerald-600"
-              }
-              sub={`sur ${soldeGlobal.vols_avec_cout} vol${soldeGlobal.vols_avec_cout > 1 ? "s" : ""} avec coût renseigné`}
-            />
-            <KpiCard
-              label="Dépenses autres"
-              value={totalDepenses > 0 ? `−${fmt(totalDepenses)}` : fmt(0)}
-              cls={totalDepenses > 0 ? "text-red-500" : "text-muted-foreground"}
-            />
-            <KpiCard
-              label="Frais Stripe"
-              value={soldeGlobal.stripe_fees > 0 ? `−${fmt(soldeGlobal.stripe_fees)}` : fmt(0)}
-              cls={soldeGlobal.stripe_fees > 0 ? "text-red-500" : "text-muted-foreground"}
-              sub="paiements carte uniquement, hors cash/voucher"
-            />
-            <KpiCard
-              label="Solde net"
-              value={`${soldeNet >= 0 ? "+" : ""}${fmt(soldeNet)}`}
-              cls={soldeNet >= 0 ? "text-emerald-600" : "text-red-500"}
-              sub={soldeGlobal.reversements > 0 ? `après −${fmt(soldeGlobal.reversements)} virés aux pilotes` : undefined}
-            />
-          </StatGrid>
-        </div>
-
-        {(reversements.length > 0 || !reversementsDisponibles) && (
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-border">
-              <p className="text-sm font-bold text-foreground">
-                À reverser aux pilotes
-                {aReverser > 0 && <span className="ml-2 text-xs font-semibold text-amber-600">{aReverser} à faire</span>}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Vols réglés à Fly Horizons puis confiés à un pilote. Fais le virement une fois le vol effectué, puis indique le montant viré.
-              </p>
-            </div>
-            {!reversementsDisponibles ? (
-              <p className="px-4 py-3 text-xs text-amber-600">
-                Suivi indisponible : la migration <code>20260928_reversement_pilote.sql</code> n&apos;a pas encore été exécutée sur Supabase.
-              </p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm min-w-[640px]">
-                  <thead>
-                    <tr className="border-b border-border bg-secondary">
-                      <th className="text-left px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Date</th>
-                      <th className="text-left px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Client</th>
-                      <th className="text-left px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Pilote</th>
-                      <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Encaissé</th>
-                      <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Virement au pilote</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/60">
-                    {reversements.map(r => <ReversementRow key={r.id} r={r} />)}
-                  </tbody>
-                </table>
-              </div>
+      <PageHeader
+        title="Transactions"
+        actions={
+          <>
+            {years.length > 1 && (
+              <Segmented value={year} onChange={setYear} items={years.map((y) => ({ key: y, label: y }))} className="max-[480px]:hidden" />
             )}
+            <a href="/api/admin/transactions/export" className={buttonClasses({ variant: "secondary" })}>
+              <Download />
+              <ButtonLabel full="Exporter PDF" short="PDF" />
+            </a>
+            <Button onClick={() => setOpen({ kind: "depense", id: "new" })}>
+              <Plus />
+              <ButtonLabel full="Ajouter une dépense" short="Dépense" />
+            </Button>
+          </>
+        }
+      />
+      {years.length > 1 && (
+        <Segmented value={year} onChange={setYear} items={years.map((y) => ({ key: y, label: y }))} className="min-[481px]:hidden" />
+      )}
+
+      {/* Bilan de l'année */}
+      <Card padded={false}>
+        <div className="flex flex-col gap-5 p-4 sm:flex-row sm:items-end sm:justify-between sm:p-5">
+          <div className="min-w-0">
+            <p className="text-[12.5px] text-st-muted">Solde net en {year}</p>
+            <p className={cn("st-num mt-1 text-[34px] font-medium leading-[1.05] tracking-[-0.035em] sm:text-[40px]", toneOf(bilan.solde))}>
+              {signed(bilan.solde)}
+            </p>
+            <p className="mt-1 text-[12.5px] text-st-muted">
+              Encaissé {eur(bilan.encaisse)} moins toutes les sorties ci-dessous
+            </p>
           </div>
-        )}
-
-        <PageToolbar
-          filters={
-            <div className="flex flex-wrap gap-2">
-              {FILTERS.map(f => (
-                <FilterChip
-                  key={f.key}
-                  label={f.label}
-                  active={filter === f.key}
-                  count={f.count}
-                  onClick={() => setFilter(f.key)}
+          <div className="flex h-[86px] items-end gap-1.5 sm:gap-2" aria-label="Encaissé par mois">
+            {bilan.parMois.slice(0, moisCourant + 1).map((v, i) => (
+              <div key={i} className="flex flex-col items-center gap-1" title={eur(v)}>
+                <span
+                  className={cn("w-[14px] rounded-[6px] sm:w-[22px]", i === moisCourant ? "bg-st-ink" : v > 0 ? "bg-[#c7d2de]" : "bg-st-surface")}
+                  style={{ height: Math.max(4, Math.round((v / maxMois) * 64)) }}
                 />
-              ))}
-            </div>
-          }
-          actions={
-            <>
-              <a
-                href="/api/admin/transactions/export"
-                download
-                className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg border border-border text-foreground text-sm font-semibold hover:bg-secondary cursor-pointer transition-all"
-              >
-                <Download size={14} /> Exporter PDF
-              </a>
-              <button
-                onClick={() => { setFormOpen(true); setFormError(""); }}
-                className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:brightness-105 shadow-gold cursor-pointer transition-all"
-              >
-                <Plus size={14} /> Ajouter une dépense
-              </button>
-            </>
-          }
-        />
+                <small className="text-[11px] text-st-muted">{MOIS[i]}</small>
+              </div>
+            ))}
+          </div>
+        </div>
+        <CardSplit className="lg:grid-cols-5">
+          <Metric label="Encaissé" value={"+" + eur(bilan.encaisse)} tone={bilan.encaisse > 0 ? "ok" : undefined} hint={plural(bilan.nPaiements, "paiement")} />
+          <Metric label="Coûts avion" value={bilan.coutAvion > 0 ? "−" + eur(bilan.coutAvion) : eur(0)} tone={bilan.coutAvion > 0 ? "bad" : undefined} hint={bilan.nAvecCout > 0 ? `sur ${plural(bilan.nAvecCout, "vol")}` : "à renseigner"} />
+          <Metric label="Virés aux pilotes" value={bilan.vire > 0 ? "−" + eur(bilan.vire) : eur(0)} tone={bilan.vire > 0 ? "bad" : undefined} hint={bilan.nVire > 0 ? plural(bilan.nVire, "virement") : "aucun"} />
+          <Metric label="Frais Stripe" value={bilan.stripe > 0 ? "−" + eur(bilan.stripe) : eur(0)} tone={bilan.stripe > 0 ? "bad" : undefined} hint="cartes seulement" />
+          <Metric
+            label="Dépenses, remb."
+            value={bilan.depenses + bilan.rembourse > 0 ? "−" + eur(bilan.depenses + bilan.rembourse) : eur(0)}
+            tone={bilan.depenses + bilan.rembourse > 0 ? "bad" : undefined}
+            hint={bilan.rembourse > 0 ? `dont ${eur(bilan.rembourse)} remboursés` : "aucun remboursement"}
+          />
+        </CardSplit>
+      </Card>
 
-        {/* Tableau unifié */}
-        {filtered.length === 0 ? (
-          <EmptyState
-            icon={Receipt}
-            title={filter !== "tout" ? `Aucune transaction "${filter}"` : "Aucune transaction"}
-            description="Les vols, vouchers et dépenses apparaîtront ici."
+      {/* À virer aux pilotes : seulement s'il y a quelque chose à faire */}
+      {!reversementsDisponibles && (
+        <p className="rounded-[12px] bg-st-warn-soft px-4 py-3 text-[12.5px] text-st-warn">
+          Suivi des virements indisponible : la migration <code>20260928_reversement_pilote.sql</code> n&apos;a pas encore été exécutée sur Supabase.
+        </p>
+      )}
+      {aVirerRows.length > 0 && (
+        <section className="space-y-2.5">
+          <SectionHeader title={<>À virer aux pilotes {nAFaire > 0 && <span className="ml-1.5 text-[12.5px] font-medium text-st-warn">{nAFaire} à faire</span>}</>} />
+          <Card padded={false} className="divide-y divide-st-line-soft">
+            {aVirerRows.map(({ r, vol }) => (
+              <AVirerLigne
+                key={r.id}
+                r={r}
+                vol={vol}
+                onSaved={(montant, le) => patchVol(r.id, { reversement: montant, reversement_at: le })}
+                onOpen={() => setOpen({ kind: "vol", id: r.id })}
+              />
+            ))}
+          </Card>
+        </section>
+      )}
+
+      {/* Vols et dépenses */}
+      <Table
+        toolbar={
+          <>
+            <Segmented
+              value={tab}
+              onChange={setTab}
+              className="max-sm:w-full"
+              fill={false}
+              items={[
+                { key: "tout", label: "Tout", count: counts.tout },
+                { key: "vols", label: "Vols", count: counts.vols },
+                { key: "depenses", label: "Dépenses", count: counts.depenses },
+              ]}
+            />
+            <TableSearch value={query} onChange={setQuery} placeholder="Client, pilote, libellé…" className="max-sm:w-full" />
+          </>
+        }
+      >
+        <thead>
+          <tr>
+            <TableHeaderCell>Opération</TableHeaderCell>
+            <TableHeaderCell align="right">Encaissé</TableHeaderCell>
+            <TableHeaderCell align="right">Sorties</TableHeaderCell>
+            <TableHeaderCell align="right">Résultat</TableHeaderCell>
+          </tr>
+        </thead>
+        <tbody>
+          {shown.length === 0 ? (
+            <tr><td colSpan={4} className="py-10 text-center text-sm text-st-muted">Aucune opération ici.</td></tr>
+          ) : shown.map((r) => r.kind === "vol" ? (
+            <VolLigne key={`v-${r.vol.id}`} vol={r.vol} selected={open?.kind === "vol" && open.id === r.vol.id} onOpen={() => setOpen({ kind: "vol", id: r.vol.id })} />
+          ) : (
+            <TableRow key={`d-${r.depense.id}`} onClick={() => setOpen({ kind: "depense", id: r.depense.id })} selected={open?.kind === "depense" && open.id === r.depense.id}>
+              <TableCell>
+                <div className="flex min-w-0 items-center gap-3">
+                  <DateTile date={r.depense.date} className="max-sm:hidden" />
+                  <div className="min-w-0">
+                    <p className="truncate font-[550]">{r.depense.description}</p>
+                    <p className="text-[12px] text-st-muted"><Badge tone="gold" size="sm">Dépense</Badge></p>
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell align="right"><span className="text-st-muted">—</span></TableCell>
+              <TableCell align="right"><span className="st-num text-st-bad">−{eur(r.depense.montant)}</span></TableCell>
+              <TableCell align="right"><span className="st-num font-[550] text-st-bad">{signed(-r.depense.montant)}</span></TableCell>
+            </TableRow>
+          ))}
+        </tbody>
+      </Table>
+
+      {/* Pilotes tiers : à part, rien ne passe par la caisse */}
+      {piloteVolsAn.length > 0 && (
+        <section className="space-y-2.5">
+          <SectionHeader title="Vols des pilotes tiers" />
+          <Table>
+            <thead>
+              <tr>
+                <TableHeaderCell>Vol</TableHeaderCell>
+                <TableHeaderCell>Pilote</TableHeaderCell>
+                <TableHeaderCell align="right">Montant</TableHeaderCell>
+                <TableHeaderCell align="right">Paiement</TableHeaderCell>
+              </tr>
+            </thead>
+            <tbody>
+              {piloteVolsAn.map((v) => (
+                <TableRow key={v.id}>
+                  <TableCell>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <DateTile date={v.date.slice(0, 10)} className="max-sm:hidden" />
+                      <div className="min-w-0">
+                        <p className="truncate font-[550]">{v.client}</p>
+                        <p className="text-[12px] text-st-muted">payé directement au pilote</p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>{v.pilote}</TableCell>
+                  <TableCell align="right"><span className="st-num">{v.montant != null ? eur(v.montant) : "—"}</span></TableCell>
+                  <TableCell align="right"><Badge tone={v.paye ? "success" : "warning"}>{v.paye ? "Payé" : "En attente"}</Badge></TableCell>
+                </TableRow>
+              ))}
+            </tbody>
+          </Table>
+          <p className="px-1 text-[12px] text-st-muted">Le client règle directement le pilote : 0 € dans la caisse de Fly Horizons, listé pour information.</p>
+        </section>
+      )}
+
+      {rows.length === 0 && piloteVolsAn.length === 0 && (
+        <EmptyState icon={Receipt} title="Aucune transaction" description="Les vols et les dépenses de l'année apparaîtront ici." />
+      )}
+
+      <Sheet value={sheetValue} onClose={close}>
+        {(v) => v.kind === "depense" ? (
+          <DepenseSheet
+            key={v.id}
+            depense={v.id === "new" ? null : depenses.find((d) => d.id === v.id) ?? null}
+            today={today}
+            onClose={close}
+            onAdded={(d) => setDepenses((p) => [d, ...p])}
+            onUpdated={(d) => setDepenses((p) => p.map((x) => (x.id === d.id ? d : x)))}
+            onDeleted={(id) => setDepenses((p) => p.filter((x) => x.id !== id))}
           />
         ) : (
-          <div className="bg-card border border-border rounded-xl overflow-x-auto">
-            <table className="w-full text-sm min-w-[1080px]">
-              <thead>
-                <tr className="border-b border-border bg-secondary">
-                  <th className="text-left px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Date</th>
-                  <th className="text-left px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Label</th>
-                  <th className="text-left px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Type</th>
-                  <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Dû</th>
-                  <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Brut payé</th>
-                  <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Net reçu</th>
-                  <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Remb.</th>
-                  <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Durée</th>
-                  <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Coût avion</th>
-                  <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Part pilote</th>
-                  <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Résultat</th>
-                  <th className="w-16 px-2" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
-                {filtered.map(ligne => {
-                  const rawDate = ligne.data.date.length === 10 ? ligne.data.date + "T12:00:00Z" : ligne.data.date;
-                  const dateStr = new Date(rawDate).toLocaleDateString("fr-BE", { day: "numeric", month: "short", year: "2-digit" });
-
-                  if (ligne.kind === "vol") {
-                    const isLoading = loadingVolId === ligne.data.id;
-                    return (
-                      <tr
-                        key={`vol-${ligne.data.id}`}
-                        onClick={() => openVolDrawer(ligne.data)}
-                        className="hover:bg-secondary/40 transition-colors cursor-pointer"
-                      >
-                        <td className="px-3 py-3 text-xs text-muted-foreground whitespace-nowrap">
-                          <span className="flex items-center gap-1.5">
-                            {isLoading && <Loader2 size={11} className="animate-spin text-navy" />}
-                            {dateStr}
-                          </span>
-                        </td>
-                        <VolRow vol={ligne.data} />
-                        <td className="px-2" />
-                      </tr>
-                    );
-                  }
-                  if (ligne.kind === "voucher") {
-                    return (
-                      <tr key={`vc-${ligne.data.id}`} className="hover:bg-secondary/30 transition-colors">
-                        <td className="px-3 py-3 text-xs text-muted-foreground whitespace-nowrap">{dateStr}</td>
-                        <VoucherRow v={ligne.data} />
-                        <td className="px-2" />
-                      </tr>
-                    );
-                  }
-                  // Dépense
-                  const isEditing = editingDepenseId === ligne.data.id;
-                  if (isEditing) {
-                    return (
-                      <tr key={`dep-${ligne.data.id}`} className="bg-amber-50/50">
-                        <td className="px-3 py-2 text-xs text-muted-foreground whitespace-nowrap">{dateStr}</td>
-                        <DepenseEditRow
-                          d={ligne.data}
-                          onSave={(m, desc, dt) => handleUpdateDepense(ligne.data.id, m, desc, dt)}
-                          onCancel={() => setEditingDepenseId(null)}
-                          isPending={isPending}
-                        />
-                      </tr>
-                    );
-                  }
-                  return (
-                    <tr key={`dep-${ligne.data.id}`} className="hover:bg-secondary/30 transition-colors">
-                      <td className="px-3 py-3 text-xs text-muted-foreground whitespace-nowrap">{dateStr}</td>
-                      <DepenseRow
-                        d={ligne.data}
-                        onEdit={() => setEditingDepenseId(ligne.data.id)}
-                        onDelete={() => handleDeleteDepense(ligne.data.id)}
-                        isPending={isPending}
-                      />
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          (() => {
+            const vol = vols.find((x) => x.id === v.id);
+            return vol ? (
+              <VolSheet
+                key={vol.id}
+                vol={vol}
+                onClose={close}
+                onSaved={(patch) => { patchVol(vol.id, patch); router.refresh(); }}
+                onOpenClassique={() => openClassique(vol.id, vol.type_resa === "perso")}
+                loadingClassique={loadingClassique}
+              />
+            ) : null;
+          })()
         )}
-
-        {piloteVols.length > 0 && (
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-border">
-              <p className="text-sm font-bold text-foreground">Vols pilotes tiers</p>
-              <p className="text-xs text-muted-foreground">
-                Le client règle directement le pilote. 0 € dans ta caisse — listés ici pour info uniquement.
-              </p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[560px]">
-                <thead>
-                  <tr className="border-b border-border bg-secondary">
-                    <th className="text-left px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Date</th>
-                    <th className="text-left px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Client</th>
-                    <th className="text-left px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Pilote</th>
-                    <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Montant</th>
-                    <th className="text-right px-3 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Payé</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/60">
-                  {piloteVols.map((v) => {
-                    const rawDate = v.date.length === 10 ? v.date + "T12:00:00Z" : v.date;
-                    return (
-                      <tr key={v.id} className="hover:bg-secondary/30 transition-colors">
-                        <td className="px-3 py-3 text-xs text-muted-foreground whitespace-nowrap">
-                          {new Date(rawDate).toLocaleDateString("fr-BE", { day: "numeric", month: "short", year: "2-digit" })}
-                        </td>
-                        <td className="px-3 py-3 text-sm text-foreground">{v.client}</td>
-                        <td className="px-3 py-3 text-sm text-foreground">{v.pilote}</td>
-                        <td className="px-3 py-3 text-sm text-right text-foreground">{v.montant != null ? `${v.montant} €` : "—"}</td>
-                        <td className="px-3 py-3 text-xs text-right">
-                          {v.paye ? <span className="text-emerald-600 font-semibold">oui</span> : <span className="text-amber-600">non</span>}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Drawer ajout dépense */}
-      <AdminSheet
-        open={formOpen}
-        onClose={() => setFormOpen(false)}
-        title="Ajouter une dépense"
-      >
-        <div className="p-1">
-          <form onSubmit={handleAddDepense} className="space-y-4">
-            {formError && <p className="text-xs text-destructive">{formError}</p>}
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Montant (€) *</label>
-              <input
-                type="number" step="0.01" min="0.01" required
-                value={montant} onChange={e => setMontant(e.target.value)}
-                placeholder="9.99"
-                className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                autoFocus
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Description *</label>
-              <input
-                type="text" required
-                value={description} onChange={e => setDescription(e.target.value)}
-                placeholder="Ex. SkyDemon mensuel"
-                className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Date *</label>
-              <input
-                type="date" required
-                value={date} onChange={e => setDate(e.target.value)}
-                className="w-full h-9 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-            <div className="flex gap-2 pt-1">
-              <button
-                type="submit" disabled={isPending}
-                className="flex items-center gap-2 px-4 h-9 rounded-lg bg-primary text-primary-foreground text-sm font-black hover:brightness-105 shadow-gold disabled:opacity-50 transition-all cursor-pointer"
-              >
-                {isPending ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
-                Ajouter
-              </button>
-              <button
-                type="button" onClick={() => setFormOpen(false)}
-                className="px-4 h-9 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary transition-colors cursor-pointer"
-              >
-                Annuler
-              </button>
-            </div>
-          </form>
-        </div>
-      </AdminSheet>
+      </Sheet>
 
       <ReservationDrawer
-        reservation={volDrawer}
-        onClose={() => setVolDrawer(null)}
+        reservation={classique}
+        onClose={() => setClassique(null)}
         onStatusChange={() => {}}
         onFieldsChange={() => {}}
       />
     </>
+  );
+}
+
+// ── Ligne du tableau : un vol ────────────────────────────────────────────────
+function VolLigne({ vol, selected, onOpen }: { vol: LigneVol; selected: boolean; onOpen: () => void }) {
+  const res = resultatVol(vol);
+  const sortie = vol.confie ? vol.reversement : vol.cout_avion;
+  const sortiesTotal = sortie != null || vol.remboursement > 0 ? (sortie ?? 0) + vol.remboursement : null;
+  return (
+    <TableRow onClick={onOpen} selected={selected}>
+      <TableCell>
+        <div className="flex min-w-0 items-center gap-3">
+          <DateTile date={vol.date.slice(0, 10)} className="max-sm:hidden" />
+          <div className="min-w-0">
+            <p className="truncate font-[550]">{vol.client}</p>
+            <p className="flex flex-wrap items-center gap-1.5 text-[12px] text-st-muted">
+              {vol.confie ? <Badge tone="info" size="sm">Vol confié</Badge> : <Badge tone="info" size="sm">Vol</Badge>}
+              <span className="truncate">
+                {vol.confie
+                  ? vol.pilote ?? ""
+                  : vol.duree_reelle != null ? `${vol.duree_reelle} min` : "durée non renseignée"}
+              </span>
+            </p>
+          </div>
+        </div>
+      </TableCell>
+      <TableCell align="right">
+        {vol.paye > 0 ? (
+          <>
+            <p className="st-num font-[550]">{eur(vol.paye)}</p>
+            <p className="st-num text-[12px] text-st-muted max-sm:hidden">
+              {vol.stripe_net != null ? `net ${vol.stripe_fee_estimated ? "~" : ""}${eur(netVol({ ...vol, remboursement: 0 }))}` : "sans frais"}
+            </p>
+          </>
+        ) : <span className="text-st-muted">—</span>}
+      </TableCell>
+      <TableCell align="right">
+        {sortiesTotal != null && sortiesTotal > 0 ? (
+          <>
+            <p className="st-num text-st-bad">−{eur(sortiesTotal)}</p>
+            {vol.remboursement > 0 && <p className="st-num text-[12px] text-st-muted max-sm:hidden">dont {eur(vol.remboursement)} remboursés</p>}
+          </>
+        ) : <span className="text-st-muted">—</span>}
+      </TableCell>
+      <TableCell align="right">
+        {res != null ? (
+          <p className={cn("st-num font-[550]", toneOf(res))}>{signed(res)}</p>
+        ) : (
+          <p className="text-[12px] text-st-muted">{vol.confie ? "à virer" : "coût à renseigner"}</p>
+        )}
+      </TableCell>
+    </TableRow>
+  );
+}
+
+// ── « À virer » : une ligne par vol confié, saisie rapide du virement ─────────
+function AVirerLigne({ r, vol, onSaved, onOpen }: {
+  r: LigneReversement; vol: LigneVol;
+  onSaved: (montant: number | null, le: string | null) => void;
+  onOpen: () => void;
+}) {
+  const [saisie, setSaisie] = useState("");
+  const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [pending, start] = useTransition();
+
+  function save() {
+    setError("");
+    start(async () => {
+      const res = await setReversementPilote(r.id, num(saisie));
+      if (res.error) { setError(res.error); return; }
+      onSaved(res.montant ?? null, res.le ?? null);
+      setSaisie("");
+    });
+  }
+  function copyIban(iban: string) {
+    navigator.clipboard?.writeText(iban.replace(/\s+/g, ""));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+
+  return (
+    <div className="grid gap-3 px-4 py-3.5 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto] sm:items-center sm:px-5">
+      <div className="min-w-0">
+        <p className="truncate font-[550]">{r.pilote}</p>
+        {r.iban ? (
+          <button type="button" onClick={() => copyIban(r.iban!)} title="Copier l'IBAN" className="cursor-pointer font-mono text-[12px] text-st-muted hover:text-st-text">
+            {copied ? "IBAN copié" : r.iban}
+          </button>
+        ) : <p className="text-[12px] text-st-warn">IBAN non renseigné</p>}
+      </div>
+      <button type="button" onClick={onOpen} className="min-w-0 cursor-pointer text-left text-[12.5px] text-st-muted hover:text-st-text">
+        <span className="block truncate">{r.client} · vol du {longDate(r.date)}</span>
+        <span className="block">Encaissé {eur(r.encaisse)}{!vol.effectue && " · vol pas encore effectué"}</span>
+      </button>
+      <div>
+        <div className="flex items-center gap-2">
+          <Input
+            inputMode="decimal" placeholder="Montant €" value={saisie} onChange={(e) => setSaisie(e.target.value)}
+            aria-label={`Montant viré à ${r.pilote}`} className="!min-h-[34px] w-28 text-right !py-1.5"
+          />
+          <Button size="sm" loading={pending} disabled={!(num(saisie) > 0)} onClick={save}>
+            <Check />Marquer viré
+          </Button>
+        </div>
+        {error && <p className="mt-1 text-xs text-st-bad">{error}</p>}
+      </div>
+    </div>
+  );
+}
+
+// ── Tiroir d'un vol ──────────────────────────────────────────────────────────
+function VolSheet({ vol, onClose, onSaved, onOpenClassique, loadingClassique }: {
+  vol: LigneVol;
+  onClose: () => void;
+  onSaved: (patch: Partial<LigneVol>) => void;
+  onOpenClassique: () => void;
+  loadingClassique: boolean;
+}) {
+  const [vire, setVire] = useState(vol.reversement != null ? String(vol.reversement) : "");
+  const [remb, setRemb] = useState(vol.remboursement > 0 ? String(vol.remboursement) : "");
+  const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [pending, start] = useTransition();
+
+  // Aperçu en direct, avant enregistrement.
+  const draft: LigneVol = {
+    ...vol,
+    remboursement: round2(num(remb)),
+    reversement: vol.confie ? (num(vire) > 0 ? round2(num(vire)) : null) : vol.reversement,
+  };
+  const res = resultatVol(draft);
+  const dirty = draft.remboursement !== vol.remboursement || (vol.confie && draft.reversement !== vol.reversement);
+  const fee = vol.stripe_net != null ? vol.stripe_fee ?? 0 : 0;
+  const partPct = !vol.confie && vol.part_pilote_pct != null ? vol.part_pilote_pct : null;
+
+  function save() {
+    setMsg(null);
+    start(async () => {
+      const patch: Partial<LigneVol> = {};
+      if (draft.remboursement !== vol.remboursement) {
+        const r = await updateReservationAllFields(vol.id, {}, { remboursement: draft.remboursement });
+        if ("error" in r && r.error) { setMsg({ text: "Erreur : " + r.error, ok: false }); return; }
+        patch.remboursement = draft.remboursement;
+        patch.net_client = round2(vol.paye - draft.remboursement);
+      }
+      if (vol.confie && draft.reversement !== vol.reversement) {
+        const r = await setReversementPilote(vol.id, draft.reversement);
+        if (r.error) { setMsg({ text: "Erreur : " + r.error, ok: false }); return; }
+        patch.reversement = r.montant ?? null;
+        patch.reversement_at = r.le ?? null;
+      }
+      onSaved(patch);
+      setMsg({ text: "Enregistré", ok: true });
+    });
+  }
+
+  return (
+    <>
+      <SheetHeader
+        title={vol.client}
+        subtitle={vol.confie ? `Confié à ${vol.pilote ?? "un pilote"} · réglé à Fly Horizons` : `Vol du ${longDate(vol.date)}`}
+        leading={<DateTile date={vol.date.slice(0, 10)} />}
+        onClose={onClose}
+      />
+      <SheetBody>
+        <SheetHero
+          label={vol.confie ? "Bénéfice sur ce vol" : "Résultat de ce vol"}
+          aside={<Badge tone="info">{vol.confie ? "Vol confié" : "Vol"}</Badge>}
+          hint={
+            res == null
+              ? vol.confie ? "Saisis le montant viré au pilote pour voir le bénéfice" : "Coût avion inconnu : la durée réelle du vol manque"
+              : vol.confie
+                ? "Ce qui reste après le remboursement, les frais Stripe et le virement au pilote"
+                : `Net encaissé ${eur(netVol(draft))} moins le coût avion ${eur(vol.cout_avion ?? 0)}`
+          }
+        >
+          <span className={toneOf(res)}>{res == null ? "—" : signed(res)}</span>
+        </SheetHero>
+
+        {vol.confie && (
+          <div className="space-y-3">
+            <FormField
+              id="tr-vire"
+              label={`Viré à ${vol.pilote ?? "le pilote"}`}
+              hint={vol.iban ? <>IBAN <span className="font-mono">{vol.iban}</span>{!vol.effectue && " · vol pas encore effectué"}</> : "IBAN non renseigné"}
+            >
+              <Input id="tr-vire" inputMode="decimal" placeholder="0 €" value={vire} onChange={(e) => setVire(e.target.value)} className="text-right" />
+            </FormField>
+          </div>
+        )}
+        <FormField id="tr-remb" label="Remboursé au client" hint="À renseigner si le client a été remboursé, en tout ou en partie.">
+          <Input id="tr-remb" inputMode="decimal" placeholder="0 €" value={remb} onChange={(e) => setRemb(e.target.value)} className="text-right" />
+        </FormField>
+
+        {partPct != null && vol.cout_avion != null && vol.part_pilote != null && (
+          <div>
+            <div className="flex items-baseline justify-between text-sm">
+              <span className="text-st-text-2">Part du pilote dans le coût avion</span>
+              <span className="st-num font-[550]">{eur(vol.part_pilote)} sur {eur(vol.cout_avion)}</span>
+            </div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-st-surface">
+              <div className="h-full rounded-full bg-st-ink" style={{ width: `${Math.min(100, partPct)}%` }} />
+            </div>
+            <p className="mt-1.5 text-xs text-st-muted">
+              {partPct}% payés par le pilote{vol.part_attendue_pct != null ? `, attendu environ ${vol.part_attendue_pct}%` : ""}. Les passagers couvrent le reste.
+            </p>
+          </div>
+        )}
+
+        <SheetRows>
+          <SheetRow label="Montant dû"><span className="st-num">{vol.acompte != null ? eur(vol.acompte) : "—"}</span></SheetRow>
+          <SheetRow label="Payé (brut)"><span className="st-num text-st-ok">{vol.paye > 0 ? "+" + eur(vol.paye) : "—"}</span></SheetRow>
+          {vol.voucher_code && <SheetRow label="Voucher"><span className="font-mono text-[12.5px]">{vol.voucher_code}</span></SheetRow>}
+          {vol.stripe_net != null && (
+            <SheetRow label={vol.stripe_fee_estimated ? "Frais Stripe (estimés)" : "Frais Stripe"}>
+              <span className="st-num text-st-bad">−{eur(fee)}</span>
+            </SheetRow>
+          )}
+          <SheetRow label="Remboursé"><span className="st-num">{draft.remboursement > 0 ? "−" + eur(draft.remboursement) : eur(0)}</span></SheetRow>
+          {vol.confie
+            ? <SheetRow label="Viré au pilote"><span className="st-num">{draft.reversement != null ? "−" + eur(draft.reversement) : "—"}</span></SheetRow>
+            : <SheetRow label="Coût avion"><span className="st-num">{vol.cout_avion != null ? "−" + eur(vol.cout_avion) : "—"}</span></SheetRow>}
+          <SheetRow label="Durée">
+            <span className="st-num">
+              {vol.duree_reelle != null ? `${vol.duree_reelle} min` : "non renseignée"}
+              {vol.duree != null && vol.duree_reelle != null && vol.duree_reelle !== vol.duree ? ` (prévu ${vol.duree})` : ""}
+            </span>
+          </SheetRow>
+          {vol.passagers != null && <SheetRow label="Passagers"><span className="st-num">{vol.passagers}</span></SheetRow>}
+        </SheetRows>
+
+        {vol.confie && vol.reversement != null && vol.reversement_at && (
+          <p className="text-[12.5px] text-st-muted">Virement enregistré le {longDate(vol.reversement_at)}.</p>
+        )}
+        {msg && (
+          <p className={cn("rounded-[10px] px-3 py-2 text-[12.5px] font-medium", msg.ok ? "bg-st-ok-soft text-st-ok" : "bg-st-bad-soft text-st-bad")}>{msg.text}</p>
+        )}
+      </SheetBody>
+      <SheetFooter>
+        <div className="flex flex-col gap-2">
+          {dirty && (
+            <Button size="lg" fullWidth className="sm:h-[38px] sm:text-[13px]" loading={pending} onClick={save}>
+              <Check />Enregistrer
+            </Button>
+          )}
+          <Button variant="secondary" fullWidth loading={loadingClassique} onClick={onOpenClassique}>
+            <ExternalLink />Fermer et ouvrir la réservation
+          </Button>
+        </div>
+      </SheetFooter>
+    </>
+  );
+}
+
+// ── Tiroir d'une dépense (ajout, modification, suppression) ──────────────────
+function DepenseSheet({ depense, today, onClose, onAdded, onUpdated, onDeleted }: {
+  depense: Depense | null;
+  today: string;
+  onClose: () => void;
+  onAdded: (d: Depense) => void;
+  onUpdated: (d: Depense) => void;
+  onDeleted: (id: string) => void;
+}) {
+  const [montant, setMontant] = useState(depense ? String(depense.montant) : "");
+  const [description, setDescription] = useState(depense?.description ?? "");
+  const [date, setDate] = useState(depense?.date ?? today);
+  const [error, setError] = useState("");
+  const [pending, start] = useTransition();
+
+  function save(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    const m = num(montant);
+    if (!(m > 0)) { setError("Montant invalide."); return; }
+    if (!description.trim()) { setError("Description requise."); return; }
+    start(async () => {
+      const r = depense ? await updateDepense(depense.id, m, description, date) : await addDepense(m, description, date);
+      if (r.error) { setError(r.error); return; }
+      const next = { id: depense?.id ?? uuid(), montant: m, description: description.trim(), date };
+      if (depense) onUpdated(next); else onAdded(next);
+      onClose();
+    });
+  }
+  function remove() {
+    if (!depense) return;
+    start(async () => {
+      const r = await deleteDepense(depense.id);
+      if (r.error) { setError(r.error); return; }
+      onDeleted(depense.id);
+      onClose();
+    });
+  }
+
+  return (
+    <form onSubmit={save} className="flex min-h-0 flex-1 flex-col">
+      <SheetHeader title={depense ? "Modifier la dépense" : "Ajouter une dépense"} subtitle={depense ? longDate(depense.date) : "Sortie de caisse"} onClose={onClose} />
+      <SheetBody>
+        <FormField id="dep-desc" label="Description">
+          <Input id="dep-desc" required value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Ex. SkyDemon mensuel" autoFocus={!depense} />
+        </FormField>
+        <div className="grid grid-cols-2 gap-3">
+          <FormField id="dep-montant" label="Montant (€)">
+            <Input id="dep-montant" required inputMode="decimal" value={montant} onChange={(e) => setMontant(e.target.value)} placeholder="9,99" className="text-right" />
+          </FormField>
+          <FormField id="dep-date" label="Date">
+            <Input id="dep-date" type="date" required value={date} onChange={(e) => setDate(e.target.value)} />
+          </FormField>
+        </div>
+        {error && <p className="rounded-[10px] bg-st-bad-soft px-3 py-2 text-[12.5px] font-medium text-st-bad">{error}</p>}
+      </SheetBody>
+      <SheetFooter>
+        <div className="flex flex-col gap-2">
+          <Button type="submit" size="lg" fullWidth className="sm:h-[38px] sm:text-[13px]" loading={pending}>
+            {depense ? <><Check />Enregistrer</> : <><Plus />Ajouter</>}
+          </Button>
+          {depense && (
+            <Button variant="danger" fullWidth disabled={pending} onClick={remove}>
+              <Trash2 />Supprimer cette dépense
+            </Button>
+          )}
+        </div>
+      </SheetFooter>
+    </form>
   );
 }

@@ -1,7 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { stripeNetInfo } from "@/lib/stripe-fee";
 import { piloteEncaisse, isRegleFlyHorizons } from "@/lib/pilote/payment";
-import type { LigneVol, LigneVoucher, LignePiloteVol, LigneReversement, Depense, SoldeStats } from "@/components/admin/TransactionsClient";
+import type { LigneVol, LigneVoucher, LignePiloteVol, LigneReversement, Depense, SoldeStats } from "@/lib/transactions-types";
 
 type TarifAvion = { prix_heure: number; actif_depuis: string };
 
@@ -11,6 +11,11 @@ function tarifPourDate(tarifs: TarifAvion[], dateVol: string): number {
   );
   const applicable = sorted.find(t => t.actif_depuis <= dateVol);
   return (applicable ?? sorted[sorted.length - 1])?.prix_heure ?? 0;
+}
+
+function pilotesNom(r: { pilotes?: unknown }): { nom: string; iban: string | null } | null {
+  const raw = r.pilotes;
+  return (Array.isArray(raw) ? raw[0] : raw) as { nom: string; iban: string | null } | null ?? null;
 }
 
 export async function getTransactionsData(): Promise<{
@@ -190,6 +195,12 @@ export async function getTransactionsData(): Promise<{
       stripe_fee: stripeFee,
       stripe_net: stripeNet,
       stripe_fee_estimated: stripeFeeEstimated,
+      confie,
+      pilote: confie ? (pilotesNom(r)?.nom ?? null) : null,
+      iban: confie ? (pilotesNom(r)?.iban ?? null) : null,
+      effectue: r.statut === "vol_effectue",
+      reversement,
+      reversement_at: confie ? reversementMap.get(r.id)?.le ?? null : null,
     };
   });
 

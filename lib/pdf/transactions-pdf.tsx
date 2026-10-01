@@ -1,6 +1,6 @@
 import React from "react";
 import { Document, Page, Text, View, Image } from "@react-pdf/renderer";
-import type { LigneVol, LigneVoucher, Depense, SoldeStats } from "@/components/admin/TransactionsClient";
+import type { LigneVol, LigneVoucher, Depense, SoldeStats } from "@/lib/transactions-types";
 
 const NAVY   = "#062548";
 const GOLD   = "#F6C000";
