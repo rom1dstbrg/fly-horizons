@@ -270,6 +270,22 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-10-01 (21) · Style des emails</p>
+      <h3>Les emails passent au langage du site (grand titre, filet doré, sans boîtes, logo centré tout en bas) et gèrent le mode sombre ; remplace 2 règles de la V2 du 14/09</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Les emails V2 (14/09) précèdent la nouvelle DA du site (28/09) : texte de 13-14 px sans titre, police système, 6 cadres dorés, 20 fonds colorés, vert/rouge/orange, liens bleus, logo en en-tête, 52 px de marge perdus de chaque côté sur téléphone. Romain (capture Gmail iPhone) : « on perd beaucoup d'espace à gauche et à droite ». Maquette <code>maquette-emails.html</code> validée : « c'est très bien comme style ».</dd>
+        <dt>Décision</dt>
+        <dd><b>Remplace</b> la règle V2 n°1 (« en-tête = logo seul », « pas de h1 ») : un <b>filet doré + un titre (h1)</b> ouvrent chaque email (déduit du titre, ou explicite en 4e paramètre de <code>emailBase()</code>), et le <b>logo passe tout en bas, centré, sous la ligne de contact</b> (choix de Romain). Texte 16 px, détails 14 px, lignes séparées par des filets, aucun cadre ni fond teinté, marine et or seulement (le vert/rouge/orange sont ramenés au marine), liens marine soulignés, bouton doré inchangé et pleine largeur, tout aligné à gauche, Poppins en premier (Apple Mail ; Gmail retombe sur Arial). Marges compactes par défaut (342 px de texte sur 390), généreuses dès 600 px. Gris pâle #94a3b8 (2,6:1) foncé en #64748b (4,8:1). Plus de tirets cadratins dans les textes d'emails.
+          <b>Mode sombre</b> : CSS <code>prefers-color-scheme</code> (fond #0a1220, textes clairs, bouton doré inchangé, logo blanc échangé) pour Apple Mail et assimilés, plus <code>[data-ogsc]</code> pour Outlook.com ; une passe (<code>withDarkClasses</code>) pose les classes d'après les couleurs écrites en ligne pour atteindre tous les emails sans les classer à la main. <b>Gmail</b> ignore ces règles et inverse lui-même : le logo existe aussi en <b>plaque blanche aux coins arrondis</b> (<code>public/logo-email-badge.png</code>), invisible sur fond blanc et lisible une fois le fond inversé.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Garder « light only » (email blanc éclatant dans une boîte sombre). Restyler chaque email à la main (34 gabarits : on a changé les fonctions communes, ajouté une passe de normalisation et converti 29 encadrés). Un h1 écrit à la main pour chaque email (déduit du titre par défaut, exceptions seulement pour 6).</dd>
+        <dt>Conséquences</dt>
+        <dd><b>À savoir avant de pousser :</b> les 2 logos (<code>public/logo-email-badge.png</code>, <code>logo-email-white.png</code>) doivent être en ligne <b>avant</b> qu'un email parte, sinon image cassée : ils partent avec le déploiement. Le rendu <b>Gmail sombre</b> n'est vérifié que par une inversion simulée (l'aperçu a un bouton « Gmail sombre (simulé) ») : à confirmer en envoyant un vrai email test depuis Gmail en mode sombre. Les 5 emails condamnés (boutique, bons, vol sur mesure, ancien assistant) ne sont pas restylés (leurs codes de bon sont illisibles en mode sombre : 4 cas, sans importance). Mémoire : la règle 1 de la V2 est marquée remplacée.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-10-01 (20) · Pages légales (CGP + confidentialité)</p>
       <h3>Les CGP et la politique de confidentialité sont réécrites sur le fond pour décrire l'offre réelle (v2.0), dans le style de la FAQ</h3>
       <dl>
@@ -1669,6 +1685,32 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-10-01 (79) — Emails : nouveau style codé dans tous les gabarits + mode sombre</h3>
+      <ul>
+        <li><code>lib/email-templates.ts</code> : <code>emailBase()</code> réécrit (filet doré + h1, logo centré en bas sous le pied de page, marges compactes/larges, Poppins, mode sombre) ; fonctions communes réécrites (<code>infoRows</code>, <code>callout</code>, <code>nextStep</code>, <code>ctaButton</code> pleine largeur, <code>signOff</code>, <code>amountCard</code>) + nouvelles <code>payBlock</code> (montant en grand + bouton + note, remplace 4 cadres dorés) et <code>textLink</code> ; 2 alertes rouges, 1 encadré vert et 1 bleu convertis en <code>callout</code> ; 40 liens dorés passés en marine souligné ; labels « Détails du vol » avant les tableaux retirés (16) ; tailles de texte relevées (167 balises) ; 11 tirets cadratins remplacés ; <code>customEmail</code> et newsletter : l'objet est désormais le titre (plus répété en 1re ligne). Titres explicites pour 6 emails (rappel J-2, créneau confirmé, paiement par virement, rappel de paiement, nouveau message, récapitulatif).</li>
+        <li>Mode sombre vérifié par audit automatique de contraste sur les 39 emails, en clair et en sombre (texte contre son vrai fond) : 0 problème sur les emails actuels. Logos : <code>public/logo-email-badge.png</code> (clair, plaque blanche), <code>public/logo-email-white.png</code> (sombre). Aperçu (<code>email-preview.html</code>) : boutons <b>Clair / Sombre / Gmail sombre (simulé)</b> à côté d'Ordinateur / iPhone, logos lus en local. Écart au-dessus du filet réduit (68 px devenus 28 px sur téléphone, 56 px sur ordinateur) : il avait été prévu pour le logo en en-tête. <code>tsc</code> OK. Les 5 emails condamnés (boutique, bons, vol sur mesure, ancien assistant) sont retirés de l'aperçu et de <code>/admin/emails-preview</code> (aperçu : 34 emails = 29 publics + 5 admin) ; leur code reste dans <code>lib/email-templates.ts</code> jusqu'au nettoyage du code mort. Non commité, non poussé ; à pousser avec les logos.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-10-01 (78) — Emails : 2 gabarits supprimés + maquette du nouveau style (<code>maquette-emails.html</code>)</h3>
+      <ul>
+        <li><b>Supprimés</b> (aucun appelant dans le code) : <code>newsletterCampaignEmail</code> (remplacé par <code>newsletterFromBlocksEmail</code>) et <code>piloteParticipationEmail</code>, avec ses éléments devenus orphelins (<code>piloteParticipationBlock</code>, <code>PiloteParticipationInfo</code>, <code>secondaryButton</code>) et leurs entrées dans <code>email-preview.html</code> et <code>/admin/emails-preview</code>. Aperçu régénéré : 39/39 emails rendus. <code>tsc</code> OK.</li>
+        <li><b>Pas supprimés, mais à ne PAS restyler</b> : 5 emails appelés seulement par du code mort (<code>orderConfirmationEmail</code>, <code>voucherEmail</code>, <code>volSurMesureQuoteEmail</code>, <code>volSurMesureAcompteEmail</code>, <code>reservationConfirmationFreeEmail</code>) : ils partiront avec le nettoyage du code mort. <code>piloteRouteFeedbackEmail</code> gardé : à brancher dans le nouveau flux (le pilote d'une annonce n'est pas prévenu). Le rappel de paiement #21 décrit encore le paiement par carte Stripe : à revoir ou supprimer, hors maquette.</li>
+        <li><b>Maquette</b> : 3 emails du flux actuel (rappel avant le vol, créneau confirmé, paiement par virement), « actuel » (vrai rendu) contre « nouveau », en iPhone ou ordinateur. Nouveau style : grand titre, texte 16 px, filets, aucune boîte, marine et or seulement, liens marine soulignés, bouton doré, tout à gauche, Poppins (Apple Mail) avec repli Arial. Option « filet doré / aucun » au-dessus du titre. Option « logo en haut / en bas » (question de Romain : le logo en bas, comme une signature ; par défaut en bas dans la maquette). Non codé dans <code>lib/email-templates.ts</code> : en attente du choix de Romain. Non commité, non poussé.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-10-01 (77) — Emails : marges réduites sur téléphone + aperçu avec maquette iPhone</h3>
+      <ul>
+        <li>Constat (capture Gmail iPhone de Romain, email de rappel) : on perdait 16 px (marge extérieure) + 36 px (marge de la carte) de chaque côté, soit 52 px, et il restait 286 px de texte sur 390. <code>emailBase()</code> (<code>lib/email-templates.ts</code>) passe à des marges <b>compactes par défaut</b> (4 + 20 px, soit 342 px de texte, +20 %) et ne remet les marges généreuses (16 + 36 px) que par <code>@media (min-width: 600px)</code>. Choix « compact par défaut » : les clients qui ignorent les media queries (Gmail avec un compte non Google, etc.) reçoivent la version téléphone. Les 5 emails admin (<code>adminEmailBase</code>, pas de carte) ne sont pas concernés.</li>
+        <li><code>email-preview.html</code> (généré par <code>scripts/generate-email-preview.ts</code>) : sélecteur <b>Ordinateur / iPhone</b> (choix mémorisé), maquette d'iPhone de 390 px de large (barre d'état, îlot, en-tête de mail « Fly Horizons · à moi » + objet) : l'iframe fait 390 px, donc les règles mobiles s'appliquent comme sur le vrai téléphone. Régénéré : 41/41 emails rendus (aussi à jour des templates depuis le 14/09). Non commité, non poussé.</li>
+        <li>Rappel, pas corrigé : le rappel J-2 contient un tiret cadratin (« décollage — Romain sera sur place »), contraire à la règle de voix ; il y en a ~75 dans <code>email-templates.ts</code> (texte visible + entités <code>&amp;mdash;</code>), à traiter sur demande.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-10-01 (76) — Suppression des 2 dernières pages d'anciens systèmes et de leur chaîne (−906 lignes)</h3>
