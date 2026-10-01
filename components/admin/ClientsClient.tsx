@@ -6,7 +6,7 @@ import { Info, MessageSquare, Plane, Users, Phone } from "lucide-react";
 import { deleteClient } from "@/lib/actions/delete";
 import {
   Badge, Button, EmptyState, LinkButton, PillTabs, Segmented, Select, Sheet, SheetBody, SheetFooter,
-  SheetHeader, SheetRow, SheetRows, StatCard, StatGrid, Table, TableCell, TableHeaderCell,
+  SheetHeader, SheetRow, SheetRows, Table, TableCell, TableHeaderCell,
   TableRow, TableSearch, type BadgeTone, DateTile, SectionHeader,
 } from "@/components/pilote/studio";
 import { ResaBadge } from "@/components/pilote/ResaBadge";
@@ -18,13 +18,11 @@ import {
   fmtDateLongue, fmtEuro, fmtJour, routeCities, summarizeClient,
   type AdminClient, type ClientResa, type ClientSummary,
 } from "@/lib/admin-clients";
-import { cn } from "@/lib/utils";
 
 // Page Clients de l'admin (01/10, maquette validée) : surveiller (qui attend quoi,
 // qui est fidèle), coup d'œil dans le tiroir, historique complet dans la fiche.
 // Mêmes composants Studio que Réservations.
 
-type Filtre = "tous" | "suivre" | "avenir" | "fideles";
 type Vue = "clients" | "equipe";
 type Tri = "activite" | "nom" | "vols" | "inscription";
 type DrawerTab = "apercu" | "vols" | "messages";
@@ -41,7 +39,6 @@ export function ClientsClient({ clients: initial, today }: { clients: AdminClien
   const [openId, setOpenId] = useState<string | null>(null);
   const [drawerTab, setDrawerTab] = useState<DrawerTab>("apercu");
   const [vue, setVue] = useState<Vue>("clients");
-  const [filtre, setFiltre] = useState<Filtre>("tous");
   const [tri, setTri] = useState<Tri>("activite");
   const [query, setQuery] = useState("");
 
@@ -54,21 +51,9 @@ export function ClientsClient({ clients: initial, today }: { clients: AdminClien
   const publics = rows.filter((r) => r.client.role === "customer");
   const base = vue === "clients" ? publics : equipe;
 
-  const aSuivre = publics.filter((r) => r.s.signal).length;
-  const avenir = publics.filter((r) => r.s.prochain).length;
-  const avenir7 = publics.filter((r) => r.s.prochain && r.s.prochain.date_vol <= addDays(today, 7)).length;
-  const fideles = publics.filter((r) => r.s.effectues >= 2 || r.s.vols >= 2).length;
-  const monthStart = today.slice(0, 7);
-  const nouveaux = publics.filter((r) => r.client.created_at.slice(0, 7) === monthStart).length;
-
   const needle = query.trim().toLowerCase();
   const filtered = base
     .filter((r) => {
-      if (vue === "clients") {
-        if (filtre === "suivre" && !r.s.signal) return false;
-        if (filtre === "avenir" && !r.s.prochain) return false;
-        if (filtre === "fideles" && !(r.s.effectues >= 2 || r.s.vols >= 2)) return false;
-      }
       if (!needle) return true;
       const c = r.client;
       return `${c.prenom} ${c.nom} ${c.email ?? ""} ${c.telephone ?? ""} ${c.id}`.toLowerCase().includes(needle);
@@ -89,28 +74,10 @@ export function ClientsClient({ clients: initial, today }: { clients: AdminClien
     setClients((prev) => prev.filter((c) => c.id !== id));
     setOpenId(null);
   }
-  function toggle(f: Filtre) {
-    setFiltre((cur) => (cur === f ? "tous" : f));
-  }
   function openDrawer(id: string, tab: DrawerTab = "apercu") {
     setDrawerTab(tab);
     setOpenId(id);
   }
-
-  // Chiffres posés sur le fond, sans boîte : le filtre actif est souligné.
-  const stat = (f: Filtre, props: Parameters<typeof StatCard>[0]) => (
-    <button
-      type="button"
-      onClick={() => toggle(f)}
-      aria-pressed={filtre === f}
-      className={cn(
-        "cursor-pointer border-b-2 pb-3 text-left outline-none transition-colors focus-visible:ring-4 focus-visible:ring-st-ink-soft",
-        filtre === f ? "border-st-ink" : "border-st-line hover:border-st-line-strong",
-      )}
-    >
-      <StatCard {...props} className={cn(props.className, "rounded-none border-0 bg-transparent p-0 shadow-none sm:p-0")} />
-    </button>
-  );
 
   if (clients.length === 0) {
     return (
@@ -124,35 +91,12 @@ export function ClientsClient({ clients: initial, today }: { clients: AdminClien
 
   return (
     <div className="space-y-5">
-      {vue === "clients" && (
-        <StatGrid>
-          {stat("tous", {
-            label: "Clients",
-            value: publics.length,
-            hint: nouveaux > 0 ? `+${nouveaux} ce mois-ci` : "aucun nouveau ce mois-ci",
-          })}
-          {stat("suivre", {
-            label: "À suivre",
-            value: aSuivre,
-            tone: aSuivre > 0 ? "warn" : undefined,
-            hint: "demande ou paiement en attente",
-          })}
-          {stat("avenir", {
-            label: "Vol à venir",
-            value: avenir,
-            hint: `${avenir7} dans les 7 jours`,
-          })}
-          {stat("fideles", { label: "Fidèles", value: fideles, hint: "2 vols ou plus" })}
-        </StatGrid>
-      )}
-
       <Table
-        className="rounded-none border-0 bg-transparent p-0 shadow-none"
         toolbar={
           <>
             <Segmented
               value={vue}
-              onChange={(v) => { setVue(v); setFiltre("tous"); }}
+              onChange={setVue}
               items={[
                 { key: "clients", label: "Clients", count: publics.length },
                 { key: "equipe", label: "Pilotes & admin", count: equipe.length },
@@ -184,7 +128,7 @@ export function ClientsClient({ clients: initial, today }: { clients: AdminClien
           {filtered.length === 0 ? (
             <tr>
               <td colSpan={6} className="py-10 text-center text-sm text-st-muted">
-                {filtre !== "tous" || needle ? "Aucun client ne correspond." : "Aucun client."}
+                {needle ? "Aucun client ne correspond." : "Aucun client."}
               </td>
             </tr>
           ) : (
@@ -249,11 +193,6 @@ export function ClientsClient({ clients: initial, today }: { clients: AdminClien
   );
 }
 
-function addDays(iso: string, n: number) {
-  const d = new Date(iso + "T12:00:00Z");
-  d.setUTCDate(d.getUTCDate() + n);
-  return d.toISOString().slice(0, 10);
-}
 
 // ── Contenu du tiroir ─────────────────────────────────────────
 function ClientSheetContent({ row, today, startTab, onClose, onPatch, onDeleted }: {
