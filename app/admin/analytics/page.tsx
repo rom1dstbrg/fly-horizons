@@ -48,7 +48,6 @@ const PATH_LABELS: Record<string, string> = {
 function pageLabel(pathname: string): string {
   if (PATH_LABELS[pathname]) return PATH_LABELS[pathname];
   if (pathname.startsWith("/vols/")) return `Offre : ${pathname.replace("/vols/", "").replace(/-/g, " ")}`;
-  if (pathname.startsWith("/vol/itineraire/")) return "Itinéraire partagé";
   if (pathname.startsWith("/vol/proposition/")) return "Proposition de vol";
   if (pathname.startsWith("/reservation/reporter/")) return "Reporter réservation";
   return pathname;

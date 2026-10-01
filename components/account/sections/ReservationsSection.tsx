@@ -33,9 +33,6 @@ export interface Reservation {
   created_at: string;
   pilote_nom?: string | null;
   route?: string | null;
-  route_status?: string | null;
-  route_token?: string | null;
-  waypoints?: Array<{ lat: number; lng: number; nom: string }> | null;
   latestProposalToken?: string | null;
   latestProposalStatus?: string | null;
 }
@@ -108,11 +105,7 @@ function ResaRow({ resa, showWeather = false }: { resa: Reservation; showWeather
     !["annulee", "vol_effectue", "payment_pending", "demande_recue"].includes(resa.statut) &&
     (new Date(resa.date_vol + "T23:59:59Z").getTime() - Date.now()) > 48 * 60 * 60 * 1000;
 
-  const carteHref = resa.latestProposalToken
-    ? `/vol/proposition/${resa.latestProposalToken}`
-    : isPerso && resa.waypoints?.length
-    ? `/account/reservations/${resa.id}/carte`
-    : null;
+  const carteHref = resa.latestProposalToken ? `/vol/proposition/${resa.latestProposalToken}` : null;
 
   return (
     <div className="py-5 border-b border-border last:border-b-0">
@@ -163,27 +156,6 @@ function ResaRow({ resa, showWeather = false }: { resa: Reservation; showWeather
             </p>
           </div>
         )
-      )}
-
-      {resa.route && (
-        <div className="mt-3 rounded-[10px] bg-secondary/60 border border-border p-3">
-          <div className="flex items-start gap-2">
-            <MapPin size={13} className="text-muted-foreground shrink-0 mt-0.5" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">Itinéraire proposé</p>
-              <p className="text-xs text-foreground leading-snug">{resa.route}</p>
-            </div>
-            {resa.route_status === "validated" && <CheckCircle size={14} className="text-green-600 shrink-0 mt-0.5" />}
-          </div>
-          {resa.route_status === "sent" && resa.route_token && (
-            <Link href={`/vol/itineraire/${resa.route_token}`} className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[9px] border border-amber-200 bg-amber-50 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors">
-              Valider ou modifier l&apos;itinéraire
-            </Link>
-          )}
-          {resa.route_status === "modification_requested" && (
-            <span className="mt-2 inline-flex items-center text-xs text-muted-foreground">Modification en cours de traitement</span>
-          )}
-        </div>
       )}
 
       {showWeather && <div className="mt-3"><WeatherWidget date={resa.date_vol} bordered={false} /></div>}

@@ -198,14 +198,6 @@ export async function updateStatutReservation(
                 .maybeSingle();
               if (proposal?.token) {
                 routeUrl = `${siteUrl}/vol/proposition/${proposal.token}`;
-              } else if (resa.route?.trim()) {
-                // Fallback ancien système texte
-                const routeToken = resa.route_token ?? crypto.randomUUID();
-                await supabase
-                  .from("reservations")
-                  .update({ route_token: routeToken, route_status: "sent", route_responded_at: null, route_feedback: null })
-                  .eq("id", id);
-                routeUrl = `${siteUrl}/vol/itineraire/${routeToken}`;
               }
             }
             const boardingPass = await buildBoardingPassAttachment(supabase, id, resa.date_vol, resa.heure_vol, resa.duree);

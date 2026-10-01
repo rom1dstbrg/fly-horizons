@@ -53,21 +53,11 @@ export interface ReservationData {
   distance_km: number | null;
   created_at: string;
   route?: string | null;
-  route_status?: string | null;
-  route_token?: string | null;
-  route_feedback?: string | null;
-  waypoints?: Array<{ lat: number; lng: number; nom: string }> | null;
   latestProposalToken?: string | null;
   latestProposalStatus?: string | null;
   latestProposalWaypoints?: Array<{ lat: number; lng: number; nom?: string }> | null;
   packTitle?: string | null;
 }
-
-const ROUTE_STATUS_CONFIG: Record<string, { label: string; tone: string }> = {
-  sent:                   { label: "En attente de votre validation", tone: "text-amber-700 bg-amber-50" },
-  validated:              { label: "Itinéraire validé",              tone: "text-[#0b2238] bg-primary/15" },
-  modification_requested: { label: "Modification demandée",          tone: "text-amber-700 bg-amber-50" },
-};
 
 interface Props {
   reservation: ReservationData;
@@ -441,37 +431,6 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
                 })}
               </ol>
 
-              {/* Itinéraire — ancien système (texte libre) */}
-              {resa.route && (
-                <div className="mt-9 pt-8 border-t border-border">
-                  <div className="flex items-center justify-between gap-3 mb-4">
-                    <p className={EYEBROW}>Itinéraire proposé</p>
-                    {resa.route_status && ROUTE_STATUS_CONFIG[resa.route_status] && (
-                      <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${ROUTE_STATUS_CONFIG[resa.route_status].tone}`}>
-                        {ROUTE_STATUS_CONFIG[resa.route_status].label}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[14.5px] text-foreground/75 whitespace-pre-line leading-relaxed">{resa.route}</p>
-                  {resa.route_feedback && (
-                    <div className="mt-4 rounded-xl bg-amber-50 px-4 py-3">
-                      <p className="text-[11px] font-bold text-amber-700 uppercase tracking-wide mb-1">Votre retour</p>
-                      <p className="text-[13px] text-amber-700 leading-relaxed">{resa.route_feedback}</p>
-                    </div>
-                  )}
-                  {resa.route_status === "sent" && resa.route_token && (
-                    <Link href={`/vol/itineraire/${resa.route_token}`} className={SOLID_CTA}>
-                      Valider ou modifier la route
-                    </Link>
-                  )}
-                  {resa.route_status === "validated" && (
-                    <p className="mt-4 flex items-center gap-1.5 text-[13px] font-semibold text-foreground">
-                      <Check size={14} className="text-primary" /> Vous avez validé cet itinéraire
-                    </p>
-                  )}
-                </div>
-              )}
-
               {/* Proposition de route — nouveau système */}
               {resa.latestProposalToken && (
                 <div className="mt-9 pt-8 border-t border-border">
@@ -501,17 +460,6 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
                   )}
 
                   <Link href={`/vol/proposition/${resa.latestProposalToken}`} className={SOLID_CTA}>
-                    <Map size={14} /> Afficher sur la carte
-                  </Link>
-                </div>
-              )}
-
-              {/* Waypoints — sans proposition (vol sur mesure) */}
-              {isPerso && !resa.latestProposalToken && resa.waypoints && resa.waypoints.length > 0 && (
-                <div className="mt-9 pt-8 border-t border-border">
-                  <p className={`${EYEBROW} mb-1`}>Vos destinations souhaitées</p>
-                  <WaypointsList waypoints={resa.waypoints} />
-                  <Link href={`/account/reservations/${resa.id}/carte`} className={SOLID_CTA}>
                     <Map size={14} /> Afficher sur la carte
                   </Link>
                 </div>

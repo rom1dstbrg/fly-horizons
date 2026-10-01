@@ -25,7 +25,7 @@ export default async function ReservationTrackerPage({ params }: PageProps) {
   // Fetch reservation
   const { data: resa } = await adminSupabase
     .from("reservations")
-    .select("id, date_vol, heure_vol, duree, passagers, statut, type_resa, payment_token, acompte, distance_km, created_at, client_id, route, route_status, route_token, route_feedback, waypoints, pilote_id, pilote_paye")
+    .select("id, date_vol, heure_vol, duree, passagers, statut, type_resa, payment_token, acompte, distance_km, created_at, client_id, route, pilote_id, pilote_paye")
     .eq("id", id)
     .single();
 
@@ -98,10 +98,6 @@ export default async function ReservationTrackerPage({ params }: PageProps) {
         distance_km: resa.distance_km,
         created_at: resa.created_at,
         route: resa.route ?? null,
-        route_status: resa.route_status ?? null,
-        route_token: resa.route_token ?? null,
-        route_feedback: resa.route_feedback ?? null,
-        waypoints: resa.waypoints ?? null,
         pilotePayment,
         latestProposalToken: latestProposal?.token ?? null,
         latestProposalStatus: latestProposal?.status ?? null,

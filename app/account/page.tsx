@@ -51,8 +51,7 @@ export default async function AccountPage() {
     id: string; date_vol: string; heure_vol: string | null; duree: number;
     passagers: number; statut: string; type_resa: string; payment_token: string | null;
     acompte: number | null; distance_km: number | null; created_at: string;
-    route: string | null; route_status: string | null; route_token: string | null;
-    waypoints: Array<{ lat: number; lng: number; nom: string }> | null;
+    route: string | null;
     pilotes: { nom: string } | { nom: string }[] | null;
   };
 
@@ -63,7 +62,7 @@ export default async function AccountPage() {
   if (clientIds.length > 0) {
     const { data: resas } = await adminSupabase
       .from("reservations")
-      .select("id, date_vol, heure_vol, duree, passagers, statut, type_resa, payment_token, acompte, distance_km, created_at, route, route_status, route_token, waypoints, pilotes(nom)")
+      .select("id, date_vol, heure_vol, duree, passagers, statut, type_resa, payment_token, acompte, distance_km, created_at, route, pilotes(nom)")
       .in("client_id", clientIds)
       .order("date_vol", { ascending: false });
 
