@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { satisfactionResultEmail, fmtDuration } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { rateLimit, getIp } from "@/lib/rate-limit";
-import { MAX_PHOTOS, RECO_VALUES, SOURCE_VALUES } from "@/lib/satisfaction";
+import { COMME_ANNONCE_VALUES, MAX_PHOTOS, RECO_VALUES, SOURCE_VALUES } from "@/lib/satisfaction";
 
 export async function POST(request: NextRequest) {
   const { allowed } = await rateLimit(`satisfaction:${getIp(request)}`, 5, 60_000);
@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
       note_qualite_prix,
       recommandation,
       source_decouverte,
+      comme_annonce,
       commentaire,
       photos,
     } = body;
@@ -32,7 +33,8 @@ export async function POST(request: NextRequest) {
       !reservation_id ||
       !notesValid ||
       !RECO_VALUES.includes(recommandation) ||
-      !SOURCE_VALUES.includes(source_decouverte)
+      !SOURCE_VALUES.includes(source_decouverte) ||
+      !COMME_ANNONCE_VALUES.includes(comme_annonce)
     ) {
       return NextResponse.json({ error: "Données invalides." }, { status: 400 });
     }
@@ -49,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     const { data: resa, error: resaErr } = await supabase
       .from("reservations")
-      .select("id, date_vol, duree, statut, clients(prenom, nom, email)")
+      .select("id, date_vol, duree, statut, clients(prenom, nom, email), pilotes(nom)")
       .eq("id", reservation_id)
       .single();
 
@@ -61,7 +63,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Le vol n'est pas encore marqué comme effectué." }, { status: 403 });
     }
 
-    const { error: insertErr } = await supabase.from("satisfaction_surveys").insert({
+    const row = {
       reservation_id,
       note_preparation,
       note_pilote,
@@ -71,7 +73,13 @@ export async function POST(request: NextRequest) {
       source_decouverte,
       commentaire: commentaire?.trim() || null,
       photos: photoPaths,
-    });
+    };
+    let { error: insertErr } = await supabase.from("satisfaction_surveys").insert({ ...row, comme_annonce });
+    // Colonne `comme_annonce` pas encore créée (migration 20261001c non exécutée) : on enregistre
+    // l'avis sans cette réponse plutôt que de le perdre.
+    if (insertErr && (insertErr.code === "42703" || insertErr.code === "PGRST204")) {
+      ({ error: insertErr } = await supabase.from("satisfaction_surveys").insert(row));
+    }
 
     if (insertErr) {
       if (insertErr.code === "23505") {
@@ -82,6 +90,7 @@ export async function POST(request: NextRequest) {
     }
 
     const client = resa.clients as unknown as { prenom: string; nom: string; email: string };
+    const pilote = (Array.isArray(resa.pilotes) ? resa.pilotes[0] : resa.pilotes) as { nom: string } | null;
     const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
       weekday: "long", day: "numeric", month: "long", year: "numeric",
     });
@@ -90,7 +99,7 @@ export async function POST(request: NextRequest) {
       from: EMAIL_FROM,
       to: [EMAIL_REPLY_TO],
       replyTo: EMAIL_REPLY_TO,
-      subject: `[Satisfaction] ${client.prenom} ${client.nom} · ${fmtDuration(resa.duree)} le ${resa.date_vol}`,
+      subject: `[Satisfaction] ${client.prenom} ${client.nom}${pilote ? ` avec ${pilote.nom}` : ""} · ${fmtDuration(resa.duree)} le ${resa.date_vol}`,
       html: satisfactionResultEmail({
         prenom: client.prenom,
         nom: client.nom,
@@ -102,6 +111,8 @@ export async function POST(request: NextRequest) {
         noteQualitePrix: note_qualite_prix,
         recommandation,
         sourceDecouverte: source_decouverte,
+        commeAnnonce: comme_annonce,
+        piloteNom: pilote?.nom ?? null,
         commentaire: commentaire?.trim() || null,
         nbPhotos: photoPaths.length,
       }),

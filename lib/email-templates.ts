@@ -1509,9 +1509,9 @@ export function postVolEmail(p: PostVolEmailProps): string {
   const accompagnementText = p.pilote?.prenom
     ? `C&rsquo;est avec beaucoup de plaisir que ${esc(p.pilote.prenom)} vous a accompagn&eacute; lors de votre vol du <strong>${esc(p.dateStr)}</strong> (${p.duree}&nbsp;min).`
     : `C&rsquo;est avec beaucoup de plaisir que nous vous avons accompagn&eacute; lors de votre vol du <strong>${esc(p.dateStr)}</strong> (${p.duree}&nbsp;min).`;
-  const avisText = p.pilote?.prenom
-    ? `Votre avis compte vraiment : il aide ${esc(p.pilote.prenom)} &agrave; am&eacute;liorer chaque vol. L&rsquo;enqu&ecirc;te prend moins d&rsquo;une minute, et chaque r&eacute;ponse est lue personnellement.`
-    : `Votre avis compte vraiment : il nous aide &agrave; am&eacute;liorer chaque vol. L&rsquo;enqu&ecirc;te prend moins d&rsquo;une minute, et nous lisons chaque r&eacute;ponse personnellement.`;
+  // Les avis sont lus par l'équipe Fly Horizons seulement (pas montrés au pilote) : on ne
+  // promet donc pas que l'avis « aide le pilote ».
+  const avisText = `Votre avis compte vraiment : il nous aide &agrave; veiller &agrave; la qualit&eacute; de chaque vol. L&rsquo;enqu&ecirc;te prend moins d&rsquo;une minute, et nous lisons chaque r&eacute;ponse.`;
 
   const body = `
     <p class="em-body" style="margin:0 0 24px;font-size:16px;color:#334155;line-height:1.7;">
@@ -1543,6 +1543,8 @@ interface SatisfactionResultEmailProps {
   noteQualitePrix: number;
   recommandation: string;
   sourceDecouverte: string;
+  commeAnnonce?: string | null;
+  piloteNom?: string | null;
   commentaire?: string | null;
   nbPhotos?: number;
 }
@@ -1570,10 +1572,12 @@ export function satisfactionResultEmail(p: SatisfactionResultEmailProps): string
     <p style="margin:0 0 16px;font-size:16px;font-weight:700;">Nouvel avis reçu</p>
     ${adminLine("Client", `${esc(p.prenom)} ${esc(p.nom)}`)}
     ${adminLine("Vol", `${esc(p.dateStr)} (${fmtDuration(p.duree)})`)}
-    ${adminLine("Préparation de la venue", stars(p.notePreparation))}
-    ${adminLine("Le pilote en vol", stars(p.notePilote))}
-    ${adminLine("Le vol en lui-même", stars(p.noteVol))}
-    ${adminLine("Qualité / prix", stars(p.noteQualitePrix))}
+    ${p.piloteNom ? adminLine("Pilote", esc(p.piloteNom)) : ""}
+    ${adminLine("Le pilote", stars(p.notePilote))}
+    ${adminLine("Le vol", stars(p.noteVol))}
+    ${adminLine("Avant le vol", stars(p.notePreparation))}
+    ${adminLine("Participation aux frais", stars(p.noteQualitePrix))}
+    ${p.commeAnnonce ? adminLine("Comme annoncé", esc({ oui: "Oui, tout à fait", presque: "Presque", non: "Non" }[p.commeAnnonce] ?? p.commeAnnonce)) : ""}
     ${adminLine("Recommanderait Fly Horizons", esc(recoTxt))}
     ${adminLine("Nous a connus par", esc(sourceTxt))}
     ${p.commentaire ? `<p style="margin:16px 0;font-style:italic;">&laquo;&nbsp;${esc(p.commentaire)}&nbsp;&raquo;</p>` : ""}

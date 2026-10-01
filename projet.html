@@ -270,6 +270,21 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-10-01 (30) · Satisfaction : formulaire public et page admin refaits autour du pilote</p>
+      <h3>L'avis d'un client porte sur un vol avec un pilote précis : le formulaire le nomme, l'admin ventile les avis par pilote</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Le vol est maintenant associé à un pilote (plateforme de mise en relation). Le formulaire ne le mentionnait pas, parlait à la première personne (« je lis moi-même »), demandait un « rapport qualité / prix » alors que le client verse une participation aux frais, et vivait hors du site (fond navy). L'admin n'avait aucune ventilation par pilote. Maquette validée : https://claude.ai/artifact/QdByiQfjKYq86q9mYVXfxv.</dd>
+        <dt>Décision</dt>
+        <dd><b>Formulaire</b> (<code>app/(public)/satisfaction/[id]</code>, donc avec l'en-tête et le pied du site) : titre « Comment s'est passé votre vol avec Sarah ? », pilote, date et durée ; « nous » à la place de « je » ; quatre notes : « Sarah, votre pilote », « Le vol », « Avant le vol », « La participation aux frais » (mêmes colonnes en base, seuls les libellés changent) ; <b>nouvelle question « Le vol s'est-il passé comme annoncé ? »</b> (oui / presque / non) pour repérer retards et itinéraires non respectés ; recommandation de Fly Horizons, source et commentaire gardés ; confirmation sur la page. <b>Admin</b> : synthèse en phrases, 4 chiffres (avis et taux de réponse, note moyenne, recommandent, à surveiller), « par axe », <b>tableau par pilote</b> qui filtre la liste (une note du pilote sous 4 en rouge dès 3 avis), liste des avis, tiroir avec le pilote du vol et un lien vers le vol. « À surveiller » = note moyenne ≤ 3, « non » à la recommandation, ou vol pas comme annoncé. Anciens vols sans pilote : « Non renseigné ».</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Montrer les avis au pilote concerné (non : lus par l'équipe seulement, l'email post-vol ne promet plus que l'avis « aide le pilote ») ; remplacer la recommandation de Fly Horizons par « revoleriez-vous avec Sarah ? » (formulaire plus long, pas retenu pour l'instant) ; garder l'ancienne page admin en cartes.</dd>
+        <dt>Conséquences</dt>
+        <dd><b>Migration <code>20261001c_satisfaction_comme_annonce.sql</code> à exécuter</b> (colonne <code>comme_annonce</code>). Tant qu'elle n'est pas passée, le formulaire enregistre l'avis sans cette réponse (repli sur l'erreur de colonne absente) et l'admin affiche « Pas demandé ». L'email admin « Nouvel avis » indique le pilote et « comme annoncé ». Les avis déjà reçus n'ont pas de réponse à « comme annoncé ».</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-10-01 (29) · Stripe retiré du site, politique de confidentialité 2.1</p>
       <h3>Plus aucun paiement par carte : le flux Stripe (routes publiques, webhook, cron, emails, boutons admin) est supprimé ; la politique de confidentialité décrit la nouvelle mesure d'audience</h3>
       <dl>
@@ -1805,6 +1820,15 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-10-01 (97) — Satisfaction refaite : formulaire public et page admin par pilote</h3>
+      <ul>
+        <li>Public : <code>app/satisfaction</code> déplacé en <code>app/(public)/satisfaction/[id]</code> et réécrit (nouvelle DA, deux colonnes sur ordinateur, pilote nommé, question « comme annoncé », confirmation sur la page). <code>/api/satisfaction/submit</code> accepte et exige <code>comme_annonce</code> (repli si la colonne n'existe pas) et ajoute le pilote à l'email admin ; <code>postVolEmail</code> : phrase alignée (avis lu par l'équipe).</li>
+        <li>Admin : <code>app/admin/satisfaction/page.tsx</code> (chargement, avis et vols par pilote lus par tranches), <code>components/admin/SatisfactionClient.tsx</code> (Studio), <code>lib/satisfaction-stats.ts</code> (calculs et phrases), <code>components/admin/RichText.tsx</code> (partagé avec Analytiques). Migration <code>20261001c</code>.</li>
+        <li>Vérifié : <code>tsc</code> et ESLint sans erreur ; rendu avec des avis fabriqués (9 avis, 4 pilotes dont « Non renseigné ») sur ordinateur et téléphone ; formulaire rempli : le bouton s'active. Non vérifié : envoi réel d'un avis en base et réception de l'email, ni le formulaire avec un vrai vol effectué. Pas poussé.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-10-01 (96) — Variables Stripe supprimées de Vercel, paragraphe Anthropic retiré de la politique</h3>

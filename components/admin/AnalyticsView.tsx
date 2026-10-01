@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Info } from "lucide-react";
 import { fmtDay, type Analytics, type Rich, type Trend } from "@/lib/analytics-stats";
+import { RichText } from "@/components/admin/RichText";
 import { AnalyticsDataActions } from "@/components/admin/AnalyticsDataActions";
 import { Badge, Card, PageHeader } from "@/components/pilote/studio";
 import { cn } from "@/lib/utils";
@@ -8,16 +9,6 @@ import { cn } from "@/lib/utils";
 export const ANALYTICS_PERIODS = [7, 30, 90] as const;
 const PERIODS = ANALYTICS_PERIODS;
 const fr = (n: number) => n.toLocaleString("fr-BE");
-
-function RichText({ r }: { r: Rich }) {
-  return (
-    <>
-      {r.map((x, i) => typeof x === "string"
-        ? <span key={i}>{x}</span>
-        : <b key={i} className={cn("font-semibold text-st-text", x.tone === "up" && "text-st-ok", x.tone === "down" && "text-st-bad")}>{x.b}</b>)}
-    </>
-  );
-}
 
 function TrendBadge({ t, unit = "%" }: { t: Trend; unit?: string }) {
   if (t.dir === "none") return null;
