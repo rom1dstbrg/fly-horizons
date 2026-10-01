@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maquette Messages</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<!--
+  Maquette /reservation/messages/[token] (01/10). Fil de messages pilote <-> client sur un vol (lien reçu par email).
+  Aujourd'hui : fond gris, card d'en-tête, colonne de 760 px recentrée, bulles navy (pilote) / blanches (client).
+  Principes (comme les autres pages refaites) : pas de boîtes sauf les bulles, ordinateur = on utilise la largeur,
+  téléphone = une colonne (titre, vol, fil) + barre de saisie collante en bas ; un seul DOM, ordre téléphone.
+  A « Journal »     : titre à gauche, le vol à droite sur la même ligne ; le fil en lignes (rail : qui + quand | texte), sans bulles.
+  B « Deux colonnes » : fil en bulles à gauche (8/12), colonne « Votre vol » collante à droite (4/12, filet vertical).
+  Téléphone : identique pour A et B (bulles : vous à droite en navy, le pilote à gauche).
+-->
+<style>
+:root{--navy:#0b2238;--gold:#F2B705;--gold-h:#e6a800;--bg:#f5f5f7;--sec:#edf0f7;--fg:#1e2535;--muted:#64748b;--border:#e0e5ef;--sh:0 2px 14px rgba(11,34,56,.07);--sh-gold:0 6px 24px rgba(242,183,5,.35)}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Poppins,system-ui,sans-serif;background:#dfe3ea;color:var(--fg);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button,textarea{font-family:inherit}
+button{cursor:pointer}
+[data-lucide]{width:16px;height:16px;stroke-width:2}
+.tool{position:sticky;top:0;z-index:2000;background:#fff;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:10px 16px;font-size:12px}
+.tool b{font-weight:800;font-size:13px}
+.tool .lbl{color:var(--muted);font-weight:600}
+.seg{display:inline-flex;background:var(--sec);border-radius:9px;padding:3px}
+.seg button{border:0;background:transparent;padding:6px 11px;border-radius:7px;font-size:12px;font-weight:600;color:var(--muted)}
+.seg button.on{background:#fff;color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.stage.phone{padding:28px 0 48px;display:flex;justify-content:center}
+.frame{container-type:inline-size;background:#fff;position:relative;min-height:100vh;display:flex;flex-direction:column}
+.frame .main{flex:1}
+.stage.phone .frame{width:390px;height:844px;min-height:0;overflow-y:auto;border-radius:46px;border:11px solid #0f1115;box-shadow:0 30px 80px rgba(0,0,0,.25);scrollbar-width:none}
+.stage.phone .frame::-webkit-scrollbar{display:none}
+.wrap{max-width:1400px;margin:0 auto;padding:0 16px}
+.hdr{position:sticky;top:0;z-index:500;padding:8px 12px 0}
+.pill{max-width:1400px;margin:0 auto;background:#fff;border:1px solid var(--border);border-radius:16px;height:64px;display:flex;align-items:center;padding:0 16px;box-shadow:var(--sh)}
+.pill .logo{height:32px}
+.pill .fill{flex:1}
+.nav{display:none;align-items:center;gap:4px;margin-right:8px}
+.nav a{padding:8px 12px;font-size:14px;font-weight:500;color:var(--muted);border-radius:8px}
+.vsep{display:none;width:1px;height:20px;background:var(--border);margin:0 4px}
+.login{display:none;align-items:center;gap:6px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--fg);border:1px solid var(--border);background:var(--sec);border-radius:8px}
+.login [data-lucide]{width:13px;height:13px}
+.burger{border:0;background:transparent;padding:8px;color:var(--muted)}
+.burger [data-lucide]{width:20px;height:20px}
+.foot{background:var(--navy);color:rgba(255,255,255,.45);padding:40px 0;font-size:13px}
+.foot img{height:28px;margin-bottom:12px}
+
+/* Commun */
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin:0 0 12px}
+h1{font-size:32px;font-weight:900;line-height:1.08;letter-spacing:-.02em;margin:0}
+.k{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.pg{padding-top:24px}
+.info{margin-top:22px}
+.info .date{font-size:16px;font-weight:700;margin:0}
+.info .sub{font-size:14px;color:var(--muted);margin:2px 0 0}
+.pil{display:flex;align-items:center;gap:10px;margin-top:14px}
+.av{width:36px;height:36px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700;flex:none}
+.pil b{display:block;font-size:14px;font-weight:700;line-height:1.25}
+.pil a{font-size:12.5px;color:var(--muted);text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(11,34,56,.25)}
+.pil a:hover{color:var(--navy)}
+.side-ask{display:none}
+
+/* fil — téléphone (bulles) */
+.thread{margin-top:28px;padding-bottom:6px}
+.msg{display:flex;flex-direction:column;align-items:flex-start;margin-top:4px}
+.msg.first{margin-top:20px}
+.msg:first-child{margin-top:0}
+.msg.me{align-items:flex-end}
+.who{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin:0 0 4px 2px}
+.msg.me .who{display:none}
+.txt{max-width:86%;padding:10px 15px;border-radius:18px;font-size:15px;line-height:1.55;white-space:pre-wrap;background:var(--sec);color:var(--fg)}
+.msg.me .txt{background:var(--navy);color:#fff}
+.msg.first:not(.me) .txt{border-top-left-radius:6px}
+.msg.first.me .txt{border-top-right-radius:6px}
+.time{font-size:11px;color:var(--muted);margin:5px 3px 0}
+.rail{display:none}
+.empty{padding:36px 0 8px}
+.empty p{font-size:15px;line-height:1.7;color:rgba(30,37,53,.72);margin:0;max-width:420px}
+.frame:not([data-st=empty]) .empty{display:none}
+.frame[data-st=empty] .thread .msg{display:none}
+
+/* saisie */
+.composer{position:sticky;bottom:0;z-index:600;margin:14px -16px 0;padding:12px 16px 14px;background:#fff;border-top:1px solid var(--border);box-shadow:0 -6px 20px rgba(11,34,56,.07)}
+.composer .row{display:flex;align-items:flex-end;gap:10px}
+.composer textarea{flex:1;resize:none;border:1px solid var(--border);background:var(--bg);border-radius:14px;padding:11px 14px;font-size:15px;line-height:1.5;color:var(--fg);min-height:46px;max-height:140px}
+.composer textarea:focus{outline:2px solid rgba(242,183,5,.55);outline-offset:0;border-color:var(--gold)}
+.send{flex:none;width:46px;height:46px;border:0;border-radius:12px;background:var(--gold);color:var(--navy);display:grid;place-items:center;box-shadow:var(--sh-gold)}
+.send:hover{background:var(--gold-h)}
+.send [data-lucide]{width:18px;height:18px;stroke-width:2.5}
+.send-l{display:none}
+.hint{font-size:12px;color:var(--muted);margin:8px 2px 0}
+
+/* invalide */
+.bad{display:none;padding:24px 0 96px}
+.bad h1{margin-bottom:12px}
+.bad p{font-size:15px;line-height:1.7;color:rgba(30,37,53,.78);margin:0}
+.bad a{color:var(--navy);font-weight:600;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(11,34,56,.25)}
+.frame[data-st=invalid] .main{display:none}
+.frame[data-st=invalid] .bad{display:block}
+
+@container (min-width: 900px){
+  .wrap{padding:0 40px}
+  .hdr{padding:14px 16px 0}
+  .pill{height:60px;padding:0 24px}
+  .nav,.login{display:flex}
+  .vsep{display:block}
+  .burger{display:none}
+  h1{font-size:44px;line-height:1.04}
+  .bad{padding:38px 0 128px}
+  .pg{padding-top:38px;padding-bottom:112px}
+  .composer{position:static;margin:0;padding:0;border:0;box-shadow:none;background:transparent}
+  .send{width:auto;height:50px;padding:0 22px;gap:8px;display:inline-flex;align-items:center;font-size:14px;font-weight:900}
+  .send-l{display:inline}
+  .composer textarea{min-height:50px}
+  .info .sub{font-size:15px}
+
+  /* ── A · Journal ── */
+  .A .pg{display:grid;grid-template-columns:1fr 340px;column-gap:72px;align-items:end}
+  .A .top{grid-column:1}
+  .A .info{grid-column:2;grid-row:1;margin:0;border-left:1px solid var(--border);padding-left:40px}
+  .A .thread{grid-column:1 / -1;margin-top:44px;border-top:1px solid var(--border);padding-top:8px}
+  .A .composer{grid-column:1 / -1;margin-top:8px;border-top:1px solid var(--border);padding-top:28px}
+  .A .msg,.A .msg.me,.A .msg.first{display:grid;grid-template-columns:220px minmax(0,720px);column-gap:40px;align-items:start;margin:0;padding:22px 0;border-bottom:1px solid var(--border)}
+  .A .msg .who,.A .msg.me .who{display:none}
+  .A .rail{display:block;padding-top:3px}
+  .A .rail b{display:block;font-size:14px;font-weight:700}
+  .A .rail span{font-size:13px;color:var(--muted)}
+  .A .msg:not(.me) .rail b{color:var(--navy)}
+  .A .time{display:none}
+  .A .txt,.A .msg.me .txt{max-width:none;padding:0;background:transparent;color:var(--fg);border-radius:0;font-size:16px;line-height:1.7}
+  .A .msg.first:not(.me) .txt,.A .msg.first.me .txt{border-radius:0}
+  .A .composer .row{display:grid;grid-template-columns:220px minmax(0,720px) auto;column-gap:40px;align-items:end}
+  .A .composer .rl{display:block;padding-bottom:14px;font-size:14px;font-weight:700}
+  .A .composer .hint{margin-left:260px}
+  .A .empty{padding:36px 0 36px 260px}
+  .A .msg{border-bottom:1px solid var(--border)}
+
+  /* ── B · Deux colonnes ── */
+  .B .pg{display:grid;grid-template-columns:8fr 4fr;align-items:start}
+  .B .top,.B .thread,.B .composer{grid-column:1;padding-right:72px}
+  .B .info{grid-column:2;grid-row:1 / span 3;margin:0;border-left:1px solid var(--border);padding-left:72px;padding-top:6px;position:sticky;top:96px}
+  .B .thread{margin-top:36px}
+  .B .composer{margin-top:20px;padding-top:0}
+  .B .composer .rl{display:none}
+  .B .txt{max-width:78%;font-size:15.5px}
+  .B .side-ask{display:block;margin:28px 0 0;font-size:13px;line-height:1.6;color:var(--muted)}
+  .B .side-ask a{color:var(--navy);font-weight:600;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(11,34,56,.25)}
+  .B .empty{padding:36px 0 8px}
+}
+.rl{display:none}
+</style>
+</head>
+<body>
+<div class="tool">
+  <b>Maquette · Messages</b>
+  <div class="seg" id="vw"><button data-v="desk" class="on">Ordinateur</button><button data-v="phone">Téléphone</button></div>
+  <span class="lbl">Structure</span>
+  <div class="seg" id="var"><button data-x="A" class="on">A · Journal</button><button data-x="B">B · Deux colonnes</button></div>
+  <span class="lbl">État</span>
+  <div class="seg" id="st"><button data-s="thread" class="on">Conversation</button><button data-s="empty">Aucun message</button><button data-s="invalid">Lien invalide</button></div>
+</div>
+
+<div class="stage" id="stage">
+<div class="frame A" id="frame" data-st="thread">
+  <header class="hdr"><div class="pill">
+    <img class="logo" src="public/fly-horizons-logo-navy.svg" alt="Fly Horizons"><span class="fill"></span>
+    <nav class="nav"><a href="#">Les vols</a><a href="#">Galerie</a><a href="#">À propos</a><a href="#">FAQ</a><a href="#">Contact</a></nav>
+    <span class="vsep"></span><a class="login" href="#"><i data-lucide="user"></i>Connexion</a>
+    <button class="burger" aria-label="Menu"><i data-lucide="menu"></i></button>
+  </div></header>
+
+  <div class="wrap"><div class="bad">
+    <p class="eyebrow">Vos échanges</p>
+    <h1>Lien invalide.</h1>
+    <p>Ce lien n'est plus valide. Écrivez-nous à <a href="#">info@fly-horizons.com</a> si vous avez besoin d'aide.</p>
+  </div></div>
+
+  <div class="main">
+  <main><div class="wrap pg">
+    <div class="top">
+      <p class="eyebrow">Vos échanges</p>
+      <h1>Votre vol du samedi 10 octobre.</h1>
+    </div>
+
+    <div class="info">
+      <p class="k">Votre vol</p>
+      <p class="date">Samedi 10 octobre 2026</p>
+      <p class="sub">à 10:00</p>
+      <div class="pil"><span class="av">RD</span><div><b>Romain Destanberg</b><a href="#">Voir le profil</a></div></div>
+      <p class="side-ask">Urgent le jour du vol ? Écrivez-nous à <a href="#">info@fly-horizons.com</a>.</p>
+    </div>
+
+    <div class="thread" id="thread"></div>
+    <div class="empty"><p>Aucun message pour l'instant. Écrivez ici pour joindre votre pilote.</p></div>
+
+    <form class="composer" id="form">
+      <div class="row">
+        <span class="rl">Votre message</span>
+        <textarea id="ta" rows="1" placeholder="Votre message…"></textarea>
+        <button class="send" type="submit" aria-label="Envoyer"><i data-lucide="send"></i><span class="send-l">Envoyer</span></button>
+      </div>
+    </form>
+  </div></main>
+  </div>
+
+  <footer class="foot"><div class="wrap"><img src="public/fly-horizons-logo-white.svg" alt="Fly Horizons"><div>Footer actuel, inchangé.</div></div></footer>
+</div>
+</div>
+
+<script>
+const frame = document.getElementById('frame');
+const msgs = [
+  {a:'pilote', n:'Romain', t:'Jeu. 1 oct., 09:12', c:"Bonjour Léa, votre créneau du samedi 10 octobre est bien noté. Je vous propose de vous retrouver à l'accueil de l'aérodrome vers 9:45."},
+  {a:'pilote', n:'Romain', t:'Jeu. 1 oct., 09:13', c:"Pensez à votre pièce d'identité."},
+  {a:'client', n:'Vous', t:'Jeu. 1 oct., 18:40', c:"Super, merci. Est-ce qu'on peut survoler le château de Beloeil ? Mon père y a grandi."},
+  {a:'pilote', n:'Romain', t:'Ven. 2 oct., 08:05', c:"Avec plaisir, c'est sur la route. Je regarde la météo la veille et je vous confirme."},
+];
+function esc(s){return s.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}
+function render(){
+  document.getElementById('thread').innerHTML = msgs.map((m,i)=>{
+    const me = m.a==='client', first = i===0 || msgs[i-1].a!==m.a, last = i===msgs.length-1 || msgs[i+1].a!==m.a;
+    return `<div class="msg ${me?'me':''} ${first?'first':''}">
+      <div class="rail"><b>${me?'Vous':m.n}</b><span>${m.t}</span></div>
+      ${first && !me ? `<p class="who">${m.n}</p>`:''}
+      <div class="txt">${esc(m.c)}</div>
+      ${last?`<p class="time">${m.t}</p>`:''}
+    </div>`;
+  }).join('');
+  lucide.createIcons();
+}
+render();
+document.getElementById('form').addEventListener('submit', e=>{
+  e.preventDefault(); const ta=document.getElementById('ta'); const v=ta.value.trim(); if(!v) return;
+  msgs.push({a:'client', n:'Vous', t:'À l\'instant', c:v}); ta.value=''; render();
+});
+function setState(s){ frame.dataset.st = s; if(s==='empty'){} }
+function seg(id, fn){ const el = document.getElementById(id); el.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return;
+  el.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); fn(b); }); }
+seg('vw', b => document.getElementById('stage').classList.toggle('phone', b.dataset.v === 'phone'));
+seg('var', b => { frame.classList.remove('A','B'); frame.classList.add(b.dataset.x); });
+seg('st', b => setState(b.dataset.s));
+lucide.createIcons();
+</script>
+</body>
+</html>

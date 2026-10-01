@@ -1,19 +1,18 @@
-import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { TicketThread } from "./TicketThread";
 import { getAdminPilotePhoto } from "@/lib/pilote/admin-photo";
-import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Votre demande · Fly Horizons",
   robots: { index: false },
 };
 
-const STATUT: Record<string, { label: string; cls: string }> = {
-  nouveau: { label: "En attente", cls: "bg-secondary text-muted-foreground border-border" },
-  lu:      { label: "Lu",         cls: "bg-secondary text-muted-foreground border-border" },
-  repondu: { label: "Répondu",    cls: "bg-primary/10 text-primary border-primary/30"     },
-  archive: { label: "Archivé",    cls: "bg-secondary text-muted-foreground border-border" },
+const STATUT: Record<string, { label: string; dot: string }> = {
+  nouveau: { label: "En attente", dot: "bg-muted-foreground/50" },
+  lu:      { label: "Lu",         dot: "bg-muted-foreground/50" },
+  repondu: { label: "Répondu",    dot: "bg-primary" },
+  archive: { label: "Archivé",    dot: "bg-muted-foreground/50" },
 };
 
 function relativeTime(iso: string): string {
@@ -35,6 +34,8 @@ interface Message {
   created_at: string;
 }
 
+const mailLink = "font-semibold text-[#0b2238] underline decoration-[#0b2238]/25 underline-offset-[3px] hover:decoration-primary transition-colors";
+
 export default async function TicketPage({
   params,
 }: {
@@ -47,9 +48,27 @@ export default async function TicketPage({
     .from("contacts")
     .select("id, nom, email, sujet, statut, created_at")
     .eq("thread_token", token)
-    .single();
+    .maybeSingle();
 
-  if (!contact) notFound();
+  if (!contact) {
+    return (
+      <main className="min-h-screen bg-white">
+        <section className="pt-page pb-24 lg:pb-32">
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
+            <p className="text-[11px] font-bold text-primary uppercase tracking-[3px] mb-3">Votre demande</p>
+            <h1 className="text-[32px] lg:text-[44px] font-black text-foreground leading-[1.08] lg:leading-[1.04] tracking-[-0.02em] mb-3">
+              Lien invalide.
+            </h1>
+            <p className="max-w-[520px] text-base leading-[1.7] text-foreground/80">
+              Ce lien n&apos;est plus valide. Écrivez-nous à{" "}
+              <a href="mailto:info@fly-horizons.com" className={mailLink}>info@fly-horizons.com</a>{" "}
+              si vous avez besoin d&apos;aide.
+            </p>
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   const { data: rawMessages } = await supabase
     .from("contact_messages")
@@ -61,7 +80,7 @@ export default async function TicketPage({
   const adminPhotoUrl = await getAdminPilotePhoto();
 
   const dateStr  = new Date(contact.created_at).toLocaleDateString("fr-BE", {
-    day: "numeric", month: "long", year: "numeric",
+    day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Brussels",
   });
   const statut   = STATUT[contact.statut] ?? STATUT.nouveau;
   const ticketId = contact.id.slice(0, 8).toUpperCase();
@@ -69,39 +88,32 @@ export default async function TicketPage({
   const lastReply = lastMsg ? relativeTime(lastMsg.created_at) : null;
 
   return (
-    <main className="min-h-screen bg-[#f5f5f7]">
-      <div className="pt-[80px] sm:pt-[98px] pb-16 px-4 sm:px-6 xl:px-10">
-        <div className="max-w-[1400px] mx-auto">
-          <div className="max-w-[760px] mx-auto">
-
-            {/* Ticket info */}
-            <div className="bg-card border border-border rounded-lg px-5 py-4 shadow-premium mb-6">
-              <h1 className="text-base font-black text-foreground leading-snug mb-2">
-                {contact.sujet}
-              </h1>
-              <div className="flex items-center gap-2 mb-3">
-                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-[1px] ${statut.cls}`}>
-                  {statut.label}
-                </span>
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[2px]">
-                  #{ticketId}
-                </span>
-              </div>
-              <div className="border-t border-border pt-3 space-y-0.5">
-                <p className="text-[11px] text-muted-foreground">Ouvert le {dateStr}</p>
-                <p className="text-[11px] text-muted-foreground truncate">{contact.email}</p>
-                {lastReply && (
-                  <p className="text-[11px] text-muted-foreground">Dernière réponse {lastReply}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Thread + reply */}
-            <TicketThread token={token} initialMessages={messages} adminPhotoUrl={adminPhotoUrl} />
-
-            <div className="pb-8" />
-
+    <main className="min-h-screen bg-white">
+      <div className="pt-page pb-0 lg:pb-28">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10 lg:grid lg:grid-cols-[minmax(0,8fr)_minmax(0,4fr)] lg:items-start">
+          <div className="lg:col-start-1 lg:pr-[72px]">
+            <p className="text-[11px] font-bold text-primary uppercase tracking-[3px] mb-3">Votre demande</p>
+            <h1 className="text-[32px] lg:text-[44px] font-black text-foreground leading-[1.08] lg:leading-[1.04] tracking-[-0.02em] break-words first-letter:uppercase">
+              {contact.sujet}
+            </h1>
           </div>
+
+          <aside className="mt-[22px] lg:mt-0 lg:col-start-2 lg:row-start-1 lg:row-span-3 lg:sticky lg:top-28 lg:border-l lg:border-border lg:pl-[72px] lg:pt-1.5">
+            <p className="text-[11px] font-bold uppercase tracking-[2px] text-muted-foreground mb-1.5">Votre demande</p>
+            <p className="flex items-center gap-2 text-base font-bold text-foreground">
+              <span className={`h-2 w-2 rounded-full ${statut.dot}`} aria-hidden />
+              {statut.label}
+              <span className="text-[12px] font-semibold uppercase tracking-[2px] text-muted-foreground">#{ticketId}</span>
+            </p>
+            <p className="mt-0.5 text-sm lg:text-[15px] text-muted-foreground">Ouverte le {dateStr}</p>
+            {lastReply && <p className="text-sm lg:text-[15px] text-muted-foreground">Dernier message {lastReply}</p>}
+            <p className="mt-3.5 truncate text-sm text-foreground/70">{contact.email}</p>
+            <p className="hidden lg:block mt-7 text-[13px] leading-[1.6] text-muted-foreground">
+              Vous préférez écrire par email ? <a href="mailto:info@fly-horizons.com" className={mailLink}>info@fly-horizons.com</a>.
+            </p>
+          </aside>
+
+          <TicketThread token={token} initialMessages={messages} adminPhotoUrl={adminPhotoUrl} />
         </div>
       </div>
     </main>
