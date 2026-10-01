@@ -9,6 +9,9 @@ const BOT_UA_RE =
 // Événements de parcours acceptés (voir lib/track-event.ts).
 const EVENTS = new Set(["creneau_choisi", "etape_infos"]);
 
+// Pages des espaces internes (admin, pilote) : hors mesure d'audience.
+const INTERNAL_PATH_RE = /^\/(admin|pilote)(\/|$)/;
+
 // Comptes internes à exclure du comptage, peu importe leur rôle
 const EXCLUDED_EMAILS = new Set(["info@fly-horizons.com", "romainpilot2003@gmail.com"]);
 
@@ -16,7 +19,8 @@ export async function POST(req: NextRequest) {
   try {
     const { pathname, referrer, screen_width, visitor_id, event } = await req.json();
 
-    if (!pathname || typeof pathname !== "string" || pathname.startsWith("/admin")) {
+    // Espaces internes : jamais comptés (admin et espace pilote).
+    if (!pathname || typeof pathname !== "string" || INTERNAL_PATH_RE.test(pathname)) {
       return NextResponse.json({ ok: true });
     }
     if (pathname.length > 500) return NextResponse.json({ ok: true });
@@ -29,21 +33,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
-    // Exclut les vues générées par un compte interne connecté qui navigue sur le site public
+    // Exclut les vues d'un compte interne connecté (admin ou pilote) qui navigue sur le
+    // site public. On le dit au navigateur (`internal`) : il cesse alors d'envoyer quoi
+    // que ce soit, même déconnecté ensuite.
     const authClient = await createClient();
     const { data: { user } } = await authClient.auth.getUser();
     if (user) {
       const email = user.email?.toLowerCase();
       if (email && EXCLUDED_EMAILS.has(email)) {
-        return NextResponse.json({ ok: true });
+        return NextResponse.json({ ok: true, internal: true });
       }
       const { data: profile } = await authClient
         .from("profiles")
         .select("role")
         .eq("id", user.id)
         .single();
-      if (profile?.role === "admin") {
-        return NextResponse.json({ ok: true });
+      if (profile?.role === "admin" || profile?.role === "pilote") {
+        return NextResponse.json({ ok: true, internal: true });
       }
     }
 

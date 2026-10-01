@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { getVisitorId } from "@/lib/track-event";
+import { getVisitorId, isInternalBrowser, markInternalIfTold } from "@/lib/track-event";
 
 export function AnalyticsTracker() {
   const pathname = usePathname();
@@ -12,6 +12,7 @@ export function AnalyticsTracker() {
   useEffect(() => {
     if (pathname === prev.current) return;
     prev.current = pathname;
+    if (isInternalBrowser()) return;
 
     const referrer = isFirst.current ? document.referrer : undefined;
     isFirst.current = false;
@@ -25,7 +26,7 @@ export function AnalyticsTracker() {
         screen_width: window.innerWidth,
         visitor_id: getVisitorId(),
       }),
-    }).catch(() => {});
+    }).then(markInternalIfTold).catch(() => {});
   }, [pathname]);
 
   return null;

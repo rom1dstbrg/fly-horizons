@@ -1792,6 +1792,14 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-10-01 (94) — Analytiques : l'espace pilote et les comptes pilote ne sont plus comptés</h3>
+      <ul>
+        <li>Constat : le suivi est monté dans le layout racine, donc il tournait aussi sur <code>/pilote/*</code>, et seuls les comptes admin (et 2 adresses) étaient exclus sur le site public. <code>/api/track</code> ignore maintenant <code>/admin</code> et <code>/pilote</code> ; les comptes de rôle <code>pilote</code> comme <code>admin</code> sont exclus, et le serveur répond <code>internal: true</code> : le navigateur mémorise <code>fh_internal</code> et n'envoie plus rien (même déconnecté ensuite). Le calcul des statistiques écarte aussi les anciennes lignes <code>/pilote*</code> déjà en base.</li>
+        <li>Vérifié : 3 envois (<code>/pilote/vols</code>, <code>/pilote</code>, <code>/admin/analytics</code>) n'ajoutent aucune ligne (482 avant, 482 après). Non vérifié avec un vrai compte pilote connecté. Limites : un pilote jamais connecté depuis un navigateur donné reste compté sur le site public ; les anciennes visites de pilotes sur le site public ne sont pas identifiables. <code>/account</code> (espace client) reste compté.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-10-01 (93) — Page Analytiques refaite : chiffres expliqués, parcours de la visite à la demande</h3>
       <ul>
         <li>Nouveaux : <code>lib/analytics-stats.ts</code> (visites, comparaison, parcours, phrases), <code>components/admin/AnalyticsView.tsx</code> (affichage), <code>components/admin/AnalyticsDataActions.tsx</code> (export + réinitialisation en deux temps), <code>lib/track-event.ts</code> (<code>trackEvent</code>, identifiant de navigateur partagé avec <code>AnalyticsTracker</code>), migration <code>20261001b_site_events.sql</code>. <code>app/admin/analytics/page.tsx</code> ne fait plus que charger (par tranches de 1000 lignes) et appeler le calcul.</li>

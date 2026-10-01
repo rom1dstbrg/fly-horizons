@@ -157,13 +157,18 @@ export interface Analytics {
   brief: { lead: Rich; points: Rich[] };
 }
 
+// Espaces internes : jamais comptés. Le suivi les ignore déjà ; ce filtre écarte
+// aussi les anciennes lignes enregistrées avant cette règle (espace pilote).
+const INTERNAL_PATH_RE = /^\/(admin|pilote)(\/|$)/;
+
 export function computeAnalytics(args: {
   views: View[];
   events: Ev[];
   keys: string[];
   prevKeys: string[];
 }): Analytics {
-  const { views, events, keys, prevKeys } = args;
+  const { events, keys, prevKeys } = args;
+  const views = args.views.filter((v) => !INTERNAL_PATH_RE.test(v.pathname));
   const cur = new Set(keys);
   const prev = new Set(prevKeys);
   const sessions = buildSessions(views);
