@@ -154,7 +154,7 @@ export function ClientsClient({ clients: initial, today }: { clients: AdminClien
               ]}
             />
             <div className="flex min-w-0 flex-wrap items-center gap-2 max-sm:w-full">
-              <Select aria-label="Tri" className="h-[34px] min-h-0 w-auto text-[12.5px] max-sm:flex-1" value={tri} onChange={(e) => setTri(e.target.value as Tri)}>
+              <Select aria-label="Tri" className="h-[34px] min-h-0 w-auto rounded-[10px] py-0 pl-2.5 pr-8 text-[16px] sm:text-[12.5px] max-sm:flex-1" value={tri} onChange={(e) => setTri(e.target.value as Tri)}>
                 <option value="activite">Dernière activité</option>
                 <option value="nom">Nom</option>
                 <option value="vols">Plus de vols</option>
