@@ -49,19 +49,22 @@ function useSettingsCtx() {
 // Briques au niveau du module : définies dans le composant, elles seraient
 // recréées à chaque frappe et les champs perdraient le focus.
 const Group = ({ title, children }: { title?: string; children: React.ReactNode }) => (
-  <section className="rounded-2xl border border-st-line bg-white px-4 pb-1 pt-3.5 shadow-st-sm lg:px-5">
+  <section className="max-lg:rounded-2xl max-lg:border max-lg:border-st-line max-lg:bg-white max-lg:px-4 max-lg:pb-1 max-lg:pt-3.5 max-lg:shadow-st-sm lg:border-t lg:border-st-line lg:px-7 lg:pb-1 lg:pt-5 lg:first:border-t-0">
     {title && <h3 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-st-muted">{title}</h3>}
     <div className="divide-y divide-st-line-soft">{children}</div>
   </section>
 );
 
 const Row = ({ title, desc, children, wrap }: { title: string; desc?: string; children: React.ReactNode; wrap?: boolean }) => (
-  <div className={cn("flex gap-4 py-3.5", wrap ? "flex-col sm:flex-row sm:items-center sm:justify-between" : "items-center justify-between")}>
+  <div className={cn(
+    "flex gap-4 py-3.5 lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start lg:gap-10 lg:py-5",
+    wrap ? "flex-col sm:flex-row sm:items-center sm:justify-between" : "items-center justify-between",
+  )}>
     <div className="min-w-0">
       <p className="text-sm font-semibold text-st-text">{title}</p>
       {desc && <p className="mt-0.5 max-w-[52ch] text-[12.5px] leading-snug text-st-muted">{desc}</p>}
     </div>
-    <div className="shrink-0">{children}</div>
+    <div className="shrink-0 lg:shrink lg:justify-self-start">{children}</div>
   </div>
 );
 
@@ -90,7 +93,7 @@ const ToggleRow = ({ k, title, desc, danger, children }: { k: BoolKey; title: st
   return (
   <>
     <Row title={title} desc={desc}><Switch k={k} label={title} danger={danger} /></Row>
-    {v[k] && children && <div className="space-y-3 pb-4">{children}</div>}
+    {v[k] && children && <div className="space-y-3 pb-4 lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-10 lg:space-y-0 lg:pb-5 lg:[&>*]:col-start-2">{children}</div>}
   </>
   );
 };
@@ -222,11 +225,7 @@ export function SettingsClient({ settings, tarifs, currentTarifId }: { settings:
 
           <div className="px-4 pb-32 pt-4 lg:p-0">
             {CATS.map((c) => (
-              <div key={c.id} hidden={c.id !== active} className="st-pane-in space-y-6">
-                <div className="max-lg:hidden">
-                  <h2 className="text-xl font-semibold tracking-[-0.02em]">{c.title}</h2>
-                  <p className="mt-1 text-[13px] text-st-muted">{c.lead}</p>
-                </div>
+              <div key={c.id} hidden={c.id !== active} className="st-pane-in space-y-6 lg:space-y-0 lg:overflow-hidden lg:rounded-2xl lg:border lg:border-st-line lg:bg-white lg:shadow-st-sm">
                 <p className="text-[12.5px] text-st-muted lg:hidden">{c.lead}</p>
 
                 {c.id === "site" && (
@@ -349,6 +348,16 @@ export function SettingsClient({ settings, tarifs, currentTarifId }: { settings:
                     </Group>
                   </>
                 )}
+
+                <div className="flex items-center justify-between gap-3 border-t border-st-line px-7 py-4 max-lg:hidden">
+                  <span className={cn("min-w-0 text-[13px] text-st-muted", (problem || error) && "text-st-bad")}>
+                    {problem || error || (dirty ? `${dirty} modification${dirty > 1 ? "s" : ""} non enregistrée${dirty > 1 ? "s" : ""}` : "Aucune modification")}
+                  </span>
+                  <span className="flex shrink-0 items-center gap-2">
+                    {dirty > 0 && <Button variant="ghost" onClick={() => { setV(base); setError(""); }}>Annuler</Button>}
+                    <Button disabled={!dirty || !!problem} loading={saving} onClick={save}>Enregistrer</Button>
+                  </span>
+                </div>
               </div>
             ))}
           </div>
@@ -360,7 +369,7 @@ export function SettingsClient({ settings, tarifs, currentTarifId }: { settings:
         <div
           className={cn(
             "fixed inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-[65] flex items-center justify-between gap-3 rounded-2xl bg-st-ink py-2.5 pl-5 pr-2.5 text-white shadow-st-lg",
-            "lg:sticky lg:inset-x-auto lg:bottom-6 lg:ml-[320px]",
+            "lg:hidden",
             !open && "max-lg:hidden",
           )}
         >
