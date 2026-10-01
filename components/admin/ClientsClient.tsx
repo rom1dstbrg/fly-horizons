@@ -1,386 +1,448 @@
-﻿"use client";
+"use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { Tag, ExternalLink, Mail, Send, Loader2, Users } from "lucide-react";
+import { Info, MessageSquare, Plane, Users, Phone } from "lucide-react";
 import { deleteClient } from "@/lib/actions/delete";
-import { sendEmailToClient } from "@/lib/actions/clients";
-import { AdminBadge, STATUT_VOUCHER, type BadgeVariant } from "@/components/admin/ui/AdminBadge";
-import { getResaBadge } from "@/components/admin/ui/resaBadge";
-import { AdminRowActions } from "@/components/admin/ui/AdminRowActions";
-import { AdminSheet, SheetSection, SheetRow } from "@/components/admin/ui/AdminSheet";
-import { PageToolbar, EmptyState } from "@/components/admin/ui";
+import {
+  Badge, Button, EmptyState, LinkButton, PillTabs, Segmented, Select, Sheet, SheetBody, SheetFooter,
+  SheetHeader, SheetRow, SheetRows, StatCard, StatGrid, Table, TableCell, TableHeaderCell,
+  TableRow, TableSearch, type BadgeTone, DateTile, SectionHeader,
+} from "@/components/pilote/studio";
+import { ResaBadge } from "@/components/pilote/ResaBadge";
+import { ConfirmActionDialog, type PendingAction } from "@/components/admin/reservation-drawer/ConfirmActionDialog";
+import {
+  ClientAvatar, ClientEditForm, ClientEmailForm, ClientThread, SignalText, typeLabel,
+} from "@/components/admin/clients/ClientParts";
+import {
+  fmtDateLongue, fmtEuro, fmtJour, routeCities, summarizeClient,
+  type AdminClient, type ClientResa, type ClientSummary,
+} from "@/lib/admin-clients";
+import { cn } from "@/lib/utils";
 
-// Rôle du compte lié (par email) — "customer" = pas de compte élevé = badge "Client"
-const ROLE_BADGE: Record<string, { label: string; variant: BadgeVariant }> = {
-  admin:    { label: "Admin",  variant: "primary"   },
-  pilote:   { label: "Pilote", variant: "orange"    },
-  customer: { label: "Client", variant: "secondary" },
+// Page Clients de l'admin (01/10, maquette validée) : surveiller (qui attend quoi,
+// qui est fidèle), coup d'œil dans le tiroir, historique complet dans la fiche.
+// Mêmes composants Studio que Réservations.
+
+type Filtre = "tous" | "suivre" | "avenir" | "fideles";
+type Vue = "clients" | "equipe";
+type Tri = "activite" | "nom" | "vols" | "inscription";
+type DrawerTab = "apercu" | "vols" | "messages";
+
+const ROLE_TONE: Record<string, { label: string; tone: BadgeTone }> = {
+  admin: { label: "Admin", tone: "ink" },
+  pilote: { label: "Pilote", tone: "gold" },
 };
-function roleBadge(role: string) {
-  return ROLE_BADGE[role] ?? ROLE_BADGE.customer;
+
+type Row = { client: AdminClient; s: ClientSummary };
+
+export function ClientsClient({ clients: initial, today }: { clients: AdminClient[]; today: string }) {
+  const [clients, setClients] = useState<AdminClient[]>(initial);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [drawerTab, setDrawerTab] = useState<DrawerTab>("apercu");
+  const [vue, setVue] = useState<Vue>("clients");
+  const [filtre, setFiltre] = useState<Filtre>("tous");
+  const [tri, setTri] = useState<Tri>("activite");
+  const [query, setQuery] = useState("");
+
+  const rows: Row[] = useMemo(
+    () => clients.map((client) => ({ client, s: summarizeClient(client, today) })),
+    [clients, today],
+  );
+
+  const equipe = rows.filter((r) => r.client.role !== "customer");
+  const publics = rows.filter((r) => r.client.role === "customer");
+  const base = vue === "clients" ? publics : equipe;
+
+  const aSuivre = publics.filter((r) => r.s.signal).length;
+  const avenir = publics.filter((r) => r.s.prochain).length;
+  const avenir7 = publics.filter((r) => r.s.prochain && r.s.prochain.date_vol <= addDays(today, 7)).length;
+  const fideles = publics.filter((r) => r.s.effectues >= 2 || r.s.vols >= 2).length;
+  const monthStart = today.slice(0, 7);
+  const nouveaux = publics.filter((r) => r.client.created_at.slice(0, 7) === monthStart).length;
+
+  const needle = query.trim().toLowerCase();
+  const filtered = base
+    .filter((r) => {
+      if (vue === "clients") {
+        if (filtre === "suivre" && !r.s.signal) return false;
+        if (filtre === "avenir" && !r.s.prochain) return false;
+        if (filtre === "fideles" && !(r.s.effectues >= 2 || r.s.vols >= 2)) return false;
+      }
+      if (!needle) return true;
+      const c = r.client;
+      return `${c.prenom} ${c.nom} ${c.email ?? ""} ${c.telephone ?? ""} ${c.id}`.toLowerCase().includes(needle);
+    })
+    .sort((a, b) => {
+      if (tri === "nom") return `${a.client.nom} ${a.client.prenom}`.localeCompare(`${b.client.nom} ${b.client.prenom}`);
+      if (tri === "vols") return b.s.vols - a.s.vols;
+      if (tri === "inscription") return b.client.created_at.localeCompare(a.client.created_at);
+      return b.s.activite.localeCompare(a.s.activite);
+    });
+
+  const open = rows.find((r) => r.client.id === openId) ?? null;
+
+  function patchClient(id: string, fields: Partial<AdminClient>) {
+    setClients((prev) => prev.map((c) => (c.id === id ? { ...c, ...fields } : c)));
+  }
+  function removeClient(id: string) {
+    setClients((prev) => prev.filter((c) => c.id !== id));
+    setOpenId(null);
+  }
+  function toggle(f: Filtre) {
+    setFiltre((cur) => (cur === f ? "tous" : f));
+  }
+  function openDrawer(id: string, tab: DrawerTab = "apercu") {
+    setDrawerTab(tab);
+    setOpenId(id);
+  }
+
+  const stat = (f: Filtre, props: Parameters<typeof StatCard>[0]) => (
+    <button
+      type="button"
+      onClick={() => toggle(f)}
+      aria-pressed={filtre === f}
+      className="cursor-pointer rounded-[20px] text-left outline-none focus-visible:ring-4 focus-visible:ring-st-ink-soft"
+    >
+      <StatCard {...props} className={cn(props.className, filtre === f && "ring-2 ring-st-ink")} />
+    </button>
+  );
+
+  if (clients.length === 0) {
+    return (
+      <EmptyState
+        icon={Users}
+        title="Aucun client pour l'instant"
+        description="Les clients apparaissent ici dès leur première demande de vol."
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      {vue === "clients" && (
+        <StatGrid>
+          {stat("tous", {
+            label: "Clients",
+            value: publics.length,
+            hint: nouveaux > 0 ? `+${nouveaux} ce mois-ci` : "aucun nouveau ce mois-ci",
+          })}
+          {stat("suivre", {
+            label: "À suivre",
+            value: aSuivre,
+            tone: aSuivre > 0 ? "warn" : undefined,
+            hint: "demande ou paiement en attente",
+          })}
+          {stat("avenir", {
+            label: "Vol à venir",
+            value: avenir,
+            hint: `${avenir7} dans les 7 jours`,
+          })}
+          {stat("fideles", { label: "Fidèles", value: fideles, hint: "2 vols ou plus" })}
+        </StatGrid>
+      )}
+
+      <Table
+        toolbar={
+          <>
+            <Segmented
+              value={vue}
+              onChange={(v) => { setVue(v); setFiltre("tous"); }}
+              items={[
+                { key: "clients", label: "Clients", count: publics.length },
+                { key: "equipe", label: "Pilotes & admin", count: equipe.length },
+              ]}
+            />
+            <div className="flex min-w-0 flex-wrap items-center gap-2 max-sm:w-full">
+              <Select aria-label="Tri" className="h-[34px] min-h-0 w-auto text-[12.5px] max-sm:flex-1" value={tri} onChange={(e) => setTri(e.target.value as Tri)}>
+                <option value="activite">Dernière activité</option>
+                <option value="nom">Nom</option>
+                <option value="vols">Plus de vols</option>
+                <option value="inscription">Inscription</option>
+              </Select>
+              <TableSearch value={query} onChange={setQuery} placeholder="Nom, email, téléphone…" className="max-sm:w-full" />
+            </div>
+          </>
+        }
+      >
+        <thead>
+          <tr>
+            <TableHeaderCell>Client</TableHeaderCell>
+            <TableHeaderCell>Contact</TableHeaderCell>
+            <TableHeaderCell align="right">Vols</TableHeaderCell>
+            <TableHeaderCell>Prochain vol</TableHeaderCell>
+            <TableHeaderCell align="right">Payé</TableHeaderCell>
+            <TableHeaderCell>Signal</TableHeaderCell>
+          </tr>
+        </thead>
+        <tbody>
+          {filtered.length === 0 ? (
+            <tr>
+              <td colSpan={6} className="py-10 text-center text-sm text-st-muted">
+                {filtre !== "tous" || needle ? "Aucun client ne correspond." : "Aucun client."}
+              </td>
+            </tr>
+          ) : (
+            filtered.map(({ client: c, s }) => {
+              const role = ROLE_TONE[c.role];
+              return (
+                <TableRow key={c.id} onClick={() => openDrawer(c.id)} selected={openId === c.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <ClientAvatar prenom={c.prenom} nom={c.nom} />
+                      <div className="min-w-0">
+                        <p className="flex items-center gap-2 font-[550]">
+                          <span className="truncate">{c.prenom} {c.nom}</span>
+                          {role && <Badge size="sm" tone={role.tone}>{role.label}</Badge>}
+                        </p>
+                        <p className="text-xs text-st-muted">{c.id}</p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <p className="max-w-[220px] truncate max-sm:max-w-none">{c.email || "—"}</p>
+                    <p className="text-xs text-st-muted">{c.telephone || "pas de téléphone"}</p>
+                  </TableCell>
+                  <TableCell align="right">{s.vols}</TableCell>
+                  <TableCell>
+                    {s.prochain ? (
+                      <>
+                        <p className="font-[550]">{s.prochain.date_vol === today ? "Aujourd'hui" : fmtJour(s.prochain.date_vol)}</p>
+                        <p className="max-w-[200px] truncate text-xs text-st-muted max-sm:max-w-none">
+                          {[s.prochain.pilotes?.nom, s.prochain.heure_vol ? s.prochain.heure_vol.slice(0, 5) : "heure à fixer"].filter(Boolean).join(" · ")}
+                        </p>
+                      </>
+                    ) : (
+                      <span className="text-st-muted">Aucun</span>
+                    )}
+                  </TableCell>
+                  <TableCell align="right">{s.paye > 0 ? fmtEuro(s.paye) : <span className="text-st-muted">0 €</span>}</TableCell>
+                  <TableCell>
+                    <SignalText signal={s.signal} />
+                  </TableCell>
+                </TableRow>
+              );
+            })
+          )}
+        </tbody>
+      </Table>
+
+      <Sheet value={open} onClose={() => setOpenId(null)}>
+        {(row) => (
+          <ClientSheetContent
+            key={row.client.id}
+            row={row}
+            today={today}
+            startTab={drawerTab}
+            onClose={() => setOpenId(null)}
+            onPatch={(f) => patchClient(row.client.id, f)}
+            onDeleted={() => removeClient(row.client.id)}
+          />
+        )}
+      </Sheet>
+    </div>
+  );
 }
 
-interface Reservation {
-  id: string;
-  date_vol: string;
-  heure_vol: string | null;
-  duree: number;
-  statut: string;
-  type_resa: string;
-  payment_status: string | null;
-  created_at: string;
+function addDays(iso: string, n: number) {
+  const d = new Date(iso + "T12:00:00Z");
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
 }
 
-interface Voucher {
-  id: string;
-  code: string;
-  duration_minutes: number;
-  prix: number | null;
-  product_title: string;
-  status: string;
-  used_at: string | null;
-  expires_at: string | null;
-  created_at: string;
-}
-
-interface Client {
-  id: string;
-  prenom: string;
-  nom: string;
-  email: string;
-  telephone: string | null;
-  created_at: string;
-  role: string;
-  reservations: Reservation[];
-  vouchers: Voucher[];
-}
-
-// ── Corps du drawer (remonté à chaque client pour reset l'état) ─
-function DrawerBody({ client, startWithEmailOpen }: { client: Client; startWithEmailOpen: boolean }) {
-  const [emailOpen, setEmailOpen] = useState(startWithEmailOpen);
-  const [emailSubject, setEmailSubject] = useState(`Fly Horizons — Message pour ${client.prenom} ${client.nom}`);
-  const [emailBody, setEmailBody] = useState(`Bonjour ${client.prenom},\n\n\n\nCordialement,\nL'équipe Fly Horizons`);
-  const [feedback, setFeedback] = useState("");
+// ── Contenu du tiroir ─────────────────────────────────────────
+function ClientSheetContent({ row, today, startTab, onClose, onPatch, onDeleted }: {
+  row: Row;
+  today: string;
+  startTab: DrawerTab;
+  onClose: () => void;
+  onPatch: (f: Partial<AdminClient>) => void;
+  onDeleted: () => void;
+}) {
+  const { client: c, s } = row;
+  const [tab, setTab] = useState<DrawerTab>(startTab);
+  const [editing, setEditing] = useState(false);
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [deleteError, setDeleteError] = useState("");
 
-  const resaCount = client.reservations.length;
-  const voucherCount = client.vouchers.length;
-  const joinedAt = new Date(client.created_at).toLocaleDateString("fr-BE", {
-    day: "numeric", month: "long", year: "numeric",
-  });
-
-  function handleSend() {
-    startTransition(async () => {
-      const r = await sendEmailToClient(client.id, emailSubject, emailBody);
-      if (r.error) { setFeedback(r.error); return; }
-      setFeedback("Email envoyé ✓");
-      setEmailOpen(false);
-      setTimeout(() => setFeedback(""), 3000);
+  function askDelete() {
+    setPendingAction({
+      title: `Supprimer ${c.prenom} ${c.nom} ?`,
+      consequences: [
+        `Ses ${c.reservations.length} réservation${c.reservations.length > 1 ? "s" : ""} et leurs messages sont supprimés aussi.`,
+        "Cette action est définitive.",
+      ],
+      confirmLabel: "Supprimer le client",
+      danger: true,
+      run: () => {
+        startTransition(async () => {
+          const r = await deleteClient(c.id);
+          if (r?.error) { setDeleteError(r.error); setPendingAction(null); return; }
+          setPendingAction(null);
+          onDeleted();
+        });
+      },
     });
   }
 
-  return (
-    <>
-      {/* Infos générales */}
-      <SheetSection title="Informations">
-        <SheetRow label="Prénom" value={client.prenom} />
-        <SheetRow label="Nom" value={client.nom} />
-        <SheetRow label="Email" value={client.email} />
-        {client.telephone && <SheetRow label="Téléphone" value={client.telephone} />}
-        <SheetRow label="Inscrit le" value={joinedAt} />
-      </SheetSection>
-
-      {/* Réservations */}
-      <SheetSection title={`Réservations (${resaCount})`}>
-        {resaCount === 0 ? (
-          <p className="text-xs text-muted-foreground py-2">Aucune réservation.</p>
-        ) : (
-          <div className="space-y-2">
-            {client.reservations.map(r => {
-              const statut = getResaBadge(r);
-              const dateStr = new Date(r.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
-                day: "numeric", month: "short", year: "numeric",
-              });
-              return (
-                <div key={r.id} className="flex items-center gap-2 flex-wrap bg-secondary/30 rounded-lg px-3 py-2 text-xs">
-                  <AdminBadge variant={statut.variant} label={statut.label} />
-                  <span className="font-medium text-foreground">{dateStr}{r.heure_vol ? ` · ${r.heure_vol.slice(0, 5)}` : ""}</span>
-                  <span className="text-muted-foreground">{r.duree} min</span>
-                  <span className="text-muted-foreground opacity-60">
-                    {r.type_resa === "perso" ? "Sur mesure" : r.type_resa === "annonce_pilote" ? "Vol partagé" : "Standard"}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </SheetSection>
-
-      {/* Vouchers */}
-      <SheetSection title={`Vouchers (${voucherCount})`}>
-        {voucherCount === 0 ? (
-          <p className="text-xs text-muted-foreground py-2">Aucun voucher.</p>
-        ) : (
-          <div className="space-y-2">
-            {client.vouchers.map(v => {
-              const statut = STATUT_VOUCHER[v.status] ?? { label: v.status, variant: "secondary" as const };
-              const dureH = Math.floor(v.duration_minutes / 60);
-              const dureM = v.duration_minutes % 60;
-              const dureStr = dureH > 0 ? `${dureH}h${dureM > 0 ? dureM : ""}` : `${dureM} min`;
-              return (
-                <div key={v.id} className="flex items-center gap-2 flex-wrap bg-secondary/30 rounded-lg px-3 py-2 text-xs">
-                  <Tag size={11} className="text-violet-500 shrink-0" />
-                  <span className="font-mono font-bold text-violet-700 tracking-wider">{v.code}</span>
-                  <AdminBadge variant={statut.variant} label={statut.label} />
-                  <span className="font-medium text-foreground">{dureStr}</span>
-                  {v.prix != null && <span className="text-muted-foreground">{v.prix} €</span>}
-                  <span className="text-muted-foreground opacity-60 truncate max-w-[140px]">{v.product_title}</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </SheetSection>
-
-      {/* Email libre */}
-      <SheetSection title="Email libre">
-        {feedback && (
-          <p className={`text-xs mb-2 ${feedback.includes("✓") ? "text-emerald-600" : "text-destructive"}`}>
-            {feedback}
-          </p>
-        )}
-        {emailOpen ? (
-          <div className="space-y-2.5 bg-secondary/40 rounded-xl p-3.5 border border-border">
-            <div>
-              <p className="text-[10px] text-muted-foreground mb-1">À</p>
-              <p className="text-xs text-foreground font-medium">{client.email}</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-muted-foreground mb-1">Sujet</p>
-              <input
-                autoFocus
-                value={emailSubject}
-                onChange={e => setEmailSubject(e.target.value)}
-                className="w-full h-8 px-2.5 rounded-lg border border-input bg-background text-xs focus:outline-none focus:ring-1 focus:ring-navy/30"
-              />
-            </div>
-            <div>
-              <p className="text-[10px] text-muted-foreground mb-1">Message</p>
-              <textarea
-                value={emailBody}
-                onChange={e => setEmailBody(e.target.value)}
-                rows={6}
-                className="w-full px-2.5 py-2 rounded-lg border border-input bg-background text-xs resize-none focus:outline-none focus:ring-1 focus:ring-navy/30"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleSend}
-                disabled={isPending || !emailSubject.trim() || !emailBody.trim()}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0b2238] text-white text-xs font-semibold hover:bg-[#0b2238] transition-colors disabled:opacity-50"
-              >
-                {isPending ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
-                Envoyer
-              </button>
-              <button
-                onClick={() => setEmailOpen(false)}
-                disabled={isPending}
-                className="px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-secondary transition-colors"
-              >
-                Annuler
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button
-            onClick={() => setEmailOpen(true)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-          >
-            <Mail size={13} />
-            Composer un email…
-          </button>
-        )}
-      </SheetSection>
-    </>
-  );
-}
-
-// ── Drawer de détail client ────────────────────────────────────
-function ClientDrawer({
-  client,
-  startWithEmailOpen,
-  onClose,
-}: {
-  client: Client | null;
-  startWithEmailOpen: boolean;
-  onClose: () => void;
-}) {
-  if (!client) return null;
-
-  return (
-    <AdminSheet
-      open={!!client}
-      onClose={onClose}
-      title={`${client.prenom} ${client.nom}`}
-      subtitle={client.email}
-      footer={
-        <Link
-          href={`/admin/clients/${client.id}`}
-          className="flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-        >
-          <ExternalLink size={14} />
-          Voir la fiche complète
-        </Link>
-      }
-    >
-      <DrawerBody key={`${client.id}-${startWithEmailOpen}`} client={client} startWithEmailOpen={startWithEmailOpen} />
-    </AdminSheet>
-  );
-}
-
-// ── Ligne du tableau ─────────────────────────────────────────────
-function ClientRow({
-  client,
-  onOpen,
-  onOpenEmail,
-  onDelete,
-}: {
-  client: Client;
-  onOpen: () => void;
-  onOpenEmail: () => void;
-  onDelete: () => Promise<{ error?: string } | void>;
-}) {
-  const resaCount = client.reservations.length;
-  const badge = roleBadge(client.role);
-
-  return (
-    <tr className="border-b border-border last:border-0 hover:bg-secondary/20 transition-colors">
-      <td className="px-4 py-3 hidden sm:table-cell cursor-pointer" onClick={onOpen}>
-        <span className="font-mono text-xs font-semibold text-muted-foreground/70">{client.id}</span>
-      </td>
-      <td className="px-4 py-3 cursor-pointer" onClick={onOpen}>
-        <span className="font-semibold text-foreground text-sm whitespace-nowrap">
-          {client.prenom} {client.nom}
-        </span>
-      </td>
-      <td className="px-4 py-3">
-        <button
-          type="button"
-          onClick={e => { e.stopPropagation(); onOpenEmail(); }}
-          title="Envoyer un email"
-          className="text-sm text-muted-foreground hover:text-primary hover:underline transition-colors cursor-pointer text-left truncate max-w-[220px] block"
-        >
-          {client.email}
-        </button>
-      </td>
-      <td className="px-4 py-3 hidden md:table-cell cursor-pointer" onClick={onOpen}>
-        <span className="text-sm text-muted-foreground whitespace-nowrap">{client.telephone || "—"}</span>
-      </td>
-      <td className="px-4 py-3 text-center cursor-pointer" onClick={onOpen}>
-        <span className="text-sm text-foreground font-medium">{resaCount}</span>
-      </td>
-      <td className="px-4 py-3 cursor-pointer" onClick={onOpen}>
-        <AdminBadge variant={badge.variant} label={badge.label} />
-      </td>
-      <td className="px-4 py-3">
-        <div className="flex items-center justify-end gap-1 flex-wrap">
-          <Link
-            href={`/admin/clients/${client.id}`}
-            title="Voir la fiche complète"
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
-          >
-            <ExternalLink size={12} />
-            Fiche complète
-          </Link>
-          <AdminRowActions onDelete={onDelete} />
-        </div>
-      </td>
-    </tr>
-  );
-}
-
-// ── Page principale ────────────────────────────────────────────
-export function ClientsClient({ clients: initial }: { clients: Client[] }) {
-  const [clients, setClients] = useState<Client[]>(initial);
-  const [search, setSearch] = useState("");
-  const [drawer, setDrawer] = useState<Client | null>(null);
-  const [drawerEmailShortcut, setDrawerEmailShortcut] = useState(false);
-
-  async function handleDelete(id: string) {
-    const result = await deleteClient(id);
-    if (!result?.error) {
-      setClients(prev => prev.filter(c => c.id !== id));
-      if (drawer?.id === id) setDrawer(null);
-    }
-    return result;
-  }
-
-  function openDrawer(client: Client, emailShortcut = false) {
-    setDrawerEmailShortcut(emailShortcut);
-    setDrawer(client);
-  }
-
-  const filtered = clients.filter(c => {
-    const q = search.toLowerCase();
-    return (
-      c.prenom.toLowerCase().includes(q) ||
-      c.nom.toLowerCase().includes(q) ||
-      (c.email ?? "").toLowerCase().includes(q) ||
-      (c.telephone ?? "").includes(q)
-    );
-  });
+  const vols = [...c.reservations].sort((a, b) => b.date_vol.localeCompare(a.date_vol));
 
   return (
     <>
-      <div className="space-y-4">
-        <PageToolbar
-          search={{ value: search, onChange: setSearch, placeholder: "Rechercher par nom, email ou tél…" }}
+      <SheetHeader
+        leading={<ClientAvatar prenom={c.prenom} nom={c.nom} size="lg" />}
+        title={`${c.prenom} ${c.nom}`}
+        subtitle={`${c.id} · client depuis le ${fmtDateLongue(c.created_at)}`}
+        onClose={onClose}
+      />
+      <div className="px-[22px] pb-3">
+        <PillTabs
+          value={tab}
+          onChange={setTab}
+          items={[
+            { key: "apercu", label: "Aperçu", icon: Info },
+            { key: "vols", label: "Vols", icon: Plane },
+            { key: "messages", label: "Messages", icon: MessageSquare },
+          ]}
         />
-
-        {filtered.length === 0 ? (
-          <EmptyState
-            icon={Users}
-            title={search ? "Aucun client trouvé" : "Aucun client enregistré"}
-            description={search ? "Aucun client ne correspond à cette recherche." : "Les clients apparaîtront ici dès la première réservation."}
-          />
-        ) : (
-          <div className="card-premium overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">ID</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nom</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Email</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">Téléphone</th>
-                    <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Vols</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Rôle</th>
-                    <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map(c => (
-                    <ClientRow
-                      key={c.id}
-                      client={c}
-                      onOpen={() => openDrawer(c)}
-                      onOpenEmail={() => openDrawer(c, true)}
-                      onDelete={() => handleDelete(c.id)}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
       </div>
 
-      <ClientDrawer
-        client={drawer}
-        startWithEmailOpen={drawerEmailShortcut}
-        onClose={() => setDrawer(null)}
+      <SheetBody>
+        {tab === "apercu" && (
+          <>
+            <div className="grid grid-cols-3 gap-3 rounded-2xl bg-st-surface p-4">
+              <Key label="Vols" value={String(s.vols)} />
+              <Key label="Payé" value={fmtEuro(s.paye)} />
+              <Key label="Dernier vol" value={s.dernier ? new Date(s.dernier.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", { day: "numeric", month: "short", timeZone: "Europe/Brussels" }) : "—"} />
+            </div>
+
+            <section className="space-y-2">
+              <SectionHeader title="Prochain vol" />
+              {s.prochain ? (
+                <>
+                  <VolLine r={s.prochain} today={today} />
+                  {s.signal && <SignalText signal={s.signal} />}
+                </>
+              ) : (
+                <p className="text-sm text-st-muted">Aucun vol prévu.</p>
+              )}
+            </section>
+
+            <section className="space-y-2">
+              <SectionHeader
+                title="Coordonnées"
+                action={!editing && <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>Modifier</Button>}
+              />
+              {editing ? (
+                <ClientEditForm
+                  clientId={c.id}
+                  prenom={c.prenom}
+                  nom={c.nom}
+                  telephone={c.telephone}
+                  onCancel={() => setEditing(false)}
+                  onSaved={(f) => { onPatch(f); setEditing(false); }}
+                />
+              ) : (
+                <SheetRows>
+                  <SheetRow label="Email">{c.email || "—"}</SheetRow>
+                  <SheetRow label="Téléphone">{c.telephone || "—"}</SheetRow>
+                  {s.piloteHabituel && <SheetRow label="Pilote habituel">{s.piloteHabituel}</SheetRow>}
+                </SheetRows>
+              )}
+            </section>
+          </>
+        )}
+
+        {tab === "vols" && (
+          vols.length === 0 ? (
+            <p className="py-6 text-center text-sm text-st-muted">Aucune réservation.</p>
+          ) : (
+            <div className="divide-y divide-st-line-soft">
+              {vols.map((r) => <div key={r.id} className="py-3 first:pt-0"><VolLine r={r} today={today} /></div>)}
+            </div>
+          )
+        )}
+
+        {tab === "messages" && (
+          <>
+            <ClientThread messages={c.messages} reservations={c.reservations} />
+            <section className="space-y-2 border-t border-st-line-soft pt-4">
+              <SectionHeader title="Écrire un email" />
+              {c.email ? (
+                <ClientEmailForm clientId={c.id} prenom={c.prenom} nom={c.nom} email={c.email} />
+              ) : (
+                <p className="text-sm text-st-muted">Ce client n&apos;a pas d&apos;email renseigné.</p>
+              )}
+            </section>
+          </>
+        )}
+
+        {deleteError && <p className="text-xs font-semibold text-st-bad">{deleteError}</p>}
+      </SheetBody>
+
+      <SheetFooter>
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            <Button className="flex-1" onClick={() => setTab("messages")}>Écrire à {c.prenom}</Button>
+            {c.telephone && (
+              <a
+                href={`tel:${c.telephone.replace(/\s/g, "")}`}
+                className="inline-flex h-[38px] items-center justify-center gap-[7px] rounded-[11px] border border-st-line bg-white px-4 text-[13px] font-[550] text-st-text shadow-st-sm transition-all hover:border-st-line-strong hover:bg-st-surface sm:hidden"
+              >
+                <Phone className="size-4" /> Appeler
+              </a>
+            )}
+            <LinkButton variant="secondary" href={`/admin/clients/${c.id}`}>
+              Fiche complète
+            </LinkButton>
+          </div>
+          <button
+            type="button"
+            onClick={askDelete}
+            className="mx-auto block cursor-pointer text-[12.5px] font-semibold text-st-bad hover:underline"
+          >
+            Supprimer ce client
+          </button>
+        </div>
+      </SheetFooter>
+
+      <ConfirmActionDialog
+        action={pendingAction}
+        isPending={isPending}
+        onCancel={() => setPendingAction(null)}
+        onConfirm={() => pendingAction?.run()}
       />
     </>
+  );
+}
+
+function Key({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.04em] text-st-muted">{label}</p>
+      <p className="st-num truncate text-[15px] font-semibold text-st-text">{value}</p>
+    </div>
+  );
+}
+
+// Une ligne de vol : tuile de date, route, détails, statut. Ouvre la réservation.
+export function VolLine({ r, today }: { r: ClientResa; today: string }) {
+  const cities = routeCities(r);
+  const detail = [
+    r.pilotes?.nom,
+    r.heure_vol ? r.heure_vol.slice(0, 5) : "heure à fixer",
+    `${r.duree} min`,
+    r.passagers ? `${r.passagers} pax` : null,
+  ].filter(Boolean).join(" · ");
+  return (
+    <Link href={`/admin/vols?ouvrir=${r.id}`} className="flex items-center gap-3 rounded-xl outline-none transition-colors hover:bg-st-surface/70 focus-visible:bg-st-surface/70">
+      <DateTile date={r.date_vol} today={r.date_vol === today} />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-[550]">{cities ?? typeLabel(r)}</p>
+        <p className="truncate text-xs text-st-muted">{detail}</p>
+      </div>
+      <ResaBadge reservation={r} />
+    </Link>
   );
 }

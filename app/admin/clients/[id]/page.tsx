@@ -1,52 +1,52 @@
+import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ClientFiche } from "@/components/admin/ClientFiche";
-import { notFound } from "next/navigation";
+import { RESA_COLUMNS, type AdminClient, type ClientMessage, type ClientResa } from "@/lib/admin-clients";
 
 interface Props {
   params: Promise<{ id: string }>;
 }
 
-export const metadata = { title: "Fiche Client — Admin" };
+export const metadata = { title: "Fiche client — Admin" };
 
 export default async function ClientFichePage({ params }: Props) {
   const { id } = await params;
   const db = createAdminClient();
 
-  const { data: client } = await db.from("clients").select("*").eq("id", id).single();
+  const { data: client } = await db.from("clients").select("id, prenom, nom, email, telephone, created_at").eq("id", id).single();
   if (!client) notFound();
 
-  const [{ data: reservations }, { data: vouchers }] = await Promise.all([
-    db.from("reservations")
-      .select("id, date_vol, heure_vol, duree, statut, type_resa, payment_status, acompte, paye, passagers, created_at")
-      .eq("client_id", client.id)
-      .order("created_at", { ascending: false }),
-    db.from("voucher_codes")
-      .select("id, code, duration_minutes, prix, product_title, status, used_at, expires_at, created_at")
-      .eq("recipient_email", client.email)
-      .order("created_at", { ascending: false }),
+  const { data: reservations } = await db
+    .from("reservations")
+    .select(RESA_COLUMNS)
+    .eq("client_id", client.id)
+    .order("date_vol", { ascending: false });
+  const resas = (reservations ?? []) as unknown as ClientResa[];
+
+  const [{ data: messages }, { data: profile }, { data: satisfaction }] = await Promise.all([
+    resas.length
+      ? db.from("reservation_messages").select("id, reservation_id, author, author_nom, content, created_at").in("reservation_id", resas.map((r) => r.id)).order("created_at", { ascending: true })
+      : Promise.resolve({ data: [] }),
+    db.from("profiles").select("role").eq("email", client.email).maybeSingle(),
+    resas.length
+      ? db.from("satisfaction_surveys").select("note_vol").in("reservation_id", resas.map((r) => r.id))
+      : Promise.resolve({ data: [] }),
   ]);
 
-  // Orders via profile email → user_id
-  const { data: profile } = await db
-    .from("profiles")
-    .select("id")
-    .eq("email", client.email)
-    .maybeSingle();
+  const notes = ((satisfaction ?? []) as { note_vol: number | null }[]).map((s) => s.note_vol).filter((n): n is number => typeof n === "number");
+  const moyenne = notes.length ? notes.reduce((a, b) => a + b, 0) / notes.length : null;
 
-  const { data: orders } = profile
-    ? await db
-        .from("orders")
-        .select("id, created_at, status, subtotal, total, items:order_items(id, title, quantity, unit_price)")
-        .eq("user_id", profile.id)
-        .order("created_at", { ascending: false })
-    : { data: [] };
+  const full: AdminClient = {
+    ...client,
+    role: profile?.role ?? "customer",
+    reservations: resas,
+    messages: (messages ?? []) as ClientMessage[],
+  };
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Brussels" }).format(new Date());
 
   return (
-    <ClientFiche
-      client={client}
-      reservations={reservations ?? []}
-      vouchers={vouchers ?? []}
-      orders={(orders ?? []) as never}
-    />
+    <div className="pilote-studio space-y-5 font-sans text-st-text">
+      <ClientFiche client={full} today={today} satisfaction={moyenne} />
+    </div>
   );
 }

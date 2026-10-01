@@ -270,6 +270,21 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-10-01 (24) · Clients admin : liste de supervision, tiroir, fiche complète</p>
+      <h3>La page Clients passe en Studio avec trois niveaux : la liste surveille, le tiroir donne le coup d'œil, la fiche garde tout</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Suite de la refonte admin (décisions 19 et 23). Maquette validée par Romain : https://claude.ai/artifact/U6cTQBL5TbEAeebgyrrgrW (liste, tiroir, fiche, téléphone).</dd>
+        <dt>Décision</dt>
+        <dd><b>Liste</b> : 4 stats qui filtrent (Clients, À suivre, Vol à venir, Fidèles), onglets Clients / Pilotes &amp; admin, tri (dernière activité, nom, plus de vols, inscription), colonnes Client, Contact, Vols, Prochain vol, Payé, Signal (mêmes signaux que Réservations). <b>Tiroir</b> 560 px, onglets Aperçu / Vols / Messages, « Écrire à X » en bouton principal, « Appeler » au téléphone, suppression en lien rouge avec confirmation. <b>Fiche</b> : prochain vol, historique, fil des messages à gauche ; coordonnées, chiffres, suppression à droite ; « Écrire » ouvre l'email en fenêtre. <b>Retirés</b> : vouchers et commandes boutique (0 voucher en base). <b>Ajoutés</b> : pilote habituel et satisfaction (note du vol) dans la fiche, idées de Claude à garder ou non.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Garder les anciennes cartes <code>card-premium</code> ; un badge de rôle dans chaque ligne (remplacé par l'onglet Pilotes &amp; admin).</dd>
+        <dt>Conséquences</dt>
+        <dd>« Payé » = somme de <code>reservations.paye</code> (encaissé réel, pas l'acompte prévu). Supprimer un client supprime ses réservations (comportement existant de <code>deleteClient</code>), désormais annoncé dans la fenêtre de confirmation. Pas vu en vrai par Romain à ce stade.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-10-01 (23) · Réservations admin : signaux, déclaration de paiement du client, notifications</p>
       <h3>La page Réservations de l'admin est la liste « Mes vols » du pilote avec une couche de supervision ; le client peut prévenir le pilote qu'il a payé ; des notifications push relancent aux seuils</h3>
       <dl>
@@ -1715,6 +1730,13 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-10-01 (83) — Page Clients refaite en Studio (liste, tiroir, fiche)</h3>
+      <ul>
+        <li><code>lib/admin-clients.ts</code> (types, <code>summarizeClient</code> : prochain vol, payé, signal, pilote habituel), <code>components/admin/ClientsClient.tsx</code> (liste + tiroir), <code>components/admin/ClientFiche.tsx</code>, <code>components/admin/clients/ClientParts.tsx</code> (avatar, signal, formulaires email et modification, fil de messages). Pages <code>app/admin/clients/page.tsx</code> et <code>[id]/page.tsx</code> réécrites. Vouchers et commandes retirés de la fiche. Décision 24.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-10-01 (82) — Badge « Report en cours » / « Créneau proposé »</h3>
