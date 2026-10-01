@@ -3,8 +3,10 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Check, AlertCircle, Upload, KeyRound, IdCard, User, Mail, Settings, Plus, X, FileText } from "lucide-react";
+import { Check, AlertCircle, Upload, KeyRound, IdCard, User, Mail, Bell, Settings, Plus, X, FileText } from "lucide-react";
 import { ChartePiloteGate } from "@/components/pilote/ChartePiloteGate";
+import { SettingRow } from "@/components/pilote/SettingRow";
+import { PiloteNotifications } from "@/components/pilote/PiloteNotifications";
 import { updateMyPiloteProfile, uploadPiloteProfilPhoto } from "@/lib/actions/pilote-profil";
 import { piloteLegalStatus } from "@/lib/pilote/legal";
 import { QUALIF_TYPES, defaultExpiry, type Qualification } from "@/lib/pilote/qualifications";
@@ -29,27 +31,9 @@ const TABS: { key: ProfilTab; label: string; desc: string; icon: React.Component
   { key: "profil", label: "Profil", desc: "Photo, bio, contact, IBAN", icon: User },
   { key: "licence", label: "Licence", desc: "Justificatifs, qualifications", icon: IdCard },
   { key: "emails", label: "Emails", desc: "Signature des messages", icon: Mail },
+  { key: "notifications", label: "Notifications", desc: "Alertes de vos vols", icon: Bell },
   { key: "compte", label: "Compte", desc: "Connexion et charte", icon: Settings },
 ];
-
-// Une ligne par réglage (façon pages de réglages Nexus / Vercel) : nom et
-// explication à gauche (1/3), contenu à droite (2/3), filet fin entre les lignes.
-function SettingRow({ title, desc, htmlFor, children }: {
-  title: string;
-  desc?: React.ReactNode;
-  htmlFor?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="grid gap-2.5 py-5 first:pt-0 last:pb-0 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] md:gap-10">
-      <div>
-        <label htmlFor={htmlFor} className="text-[13.5px] font-semibold text-st-text">{title}</label>
-        {desc && <p className="mt-0.5 text-[12.5px] leading-snug text-st-muted">{desc}</p>}
-      </div>
-      <div className="min-w-0">{children}</div>
-    </div>
-  );
-}
 
 // Pastille d'état d'une valeur relevée par Romain.
 function StateBadge({ state, empty, verified }: { state: LegalState; empty: boolean; verified: boolean }) {
@@ -465,6 +449,8 @@ export function PiloteProfilForm({ pilote, documentsSlot, initialTab }: {
               </div>
             )}
 
+            {tab === "notifications" && <PiloteNotifications initialPrefs={pilote.notif_prefs} />}
+
             {tab === "compte" && (
               <div className="divide-y divide-st-line-soft">
                 <SettingRow title="Email de connexion" desc="Pour changer d'adresse, contactez Romain.">
@@ -492,7 +478,7 @@ export function PiloteProfilForm({ pilote, documentsSlot, initialTab }: {
             )}
           </div>
 
-          {tab !== "compte" && (
+          {tab !== "compte" && tab !== "notifications" && (
             <div className="flex flex-col gap-3 border-t border-st-line-soft px-4 py-4 sm:flex-row sm:items-center sm:justify-end sm:px-6">
               {saved && (
                 <p className="flex items-center gap-2 text-[13px] text-st-ok sm:mr-auto">

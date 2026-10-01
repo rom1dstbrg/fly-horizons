@@ -270,6 +270,21 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-10-01 (31) · Espace pilote : réglages de notification</p>
+      <h3>Le pilote choisit quelles notifications il reçoit et les active depuis Profil &gt; Notifications</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Demande de Romain : dans l'espace pilote, des paramètres de notification pour sélectionner celles qu'on veut, et pour les activer si ce n'est pas déjà fait. Jusque-là, la seule façon d'activer était la feuille d'invitation à l'ouverture de l'app (reportable 7 jours), et rien ne permettait d'en couper une.</dd>
+        <dt>Décision</dt>
+        <dd>Nouvel onglet <b>Notifications</b> du profil (<code>/pilote/profil?onglet=notifications</code>). <b>Cet appareil</b> : activer, réactiver, envoyer un essai, désactiver ; cas gérés : jamais demandé, bloqué (comment débloquer), navigateur non compatible, iPhone hors de l'app (étapes « Sur l'écran d'accueil »). <b>Ce qui est reçu</b> : 14 notifications en 5 groupes (demandes et vols, messages et route, paiements, après le vol, suivi) avec « Tout activer / Tout désactiver ; chaque interrupteur s'enregistre tout de suite (retour en arrière si l'enregistrement échoue). Réglage <b>par compte</b>, valable sur tous les appareils ; <b>par défaut tout est activé</b> (clé absente = activée).</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Un bouton « Enregistrer » comme les autres onglets (inutile pour des interrupteurs) ; un réglage par appareil (plus lourd, le besoin porte sur le type de notification) ; une page séparée de /pilote/profil.</dd>
+        <dt>Conséquences</dt>
+        <dd><b>Migration <code>20261001d_pilote_notif_prefs.sql</code> à exécuter</b> (colonne <code>pilotes.notif_prefs</code>, jsonb). Tant qu'elle n'est pas passée, tout reste envoyé et l'enregistrement d'un réglage affiche « Enregistrement impossible ». L'envoi (<code>sendPushToPilote</code>, <code>notifyPiloteReservation</code>) et le cron <code>signaux</code> consultent les préférences ; l'admin garde ses propres réglages (Paramètres &gt; Notifications). Désactiver sur un appareil retire son abonnement et mémorise <code>fh-push-off</code> pour que <code>PushPrompt</code> ne le réabonne pas en silence.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-10-01 (30) · Satisfaction : formulaire public et page admin refaits autour du pilote</p>
       <h3>L'avis d'un client porte sur un vol avec un pilote précis : le formulaire le nomme, l'admin ventile les avis par pilote</h3>
       <dl>
@@ -1820,6 +1835,15 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-10-01 (98) — Espace pilote : onglet Profil &gt; Notifications</h3>
+      <ul>
+        <li>Nouveaux : <code>components/pilote/PiloteNotifications.tsx</code>, <code>components/pilote/SettingRow.tsx</code> (extrait de <code>PiloteProfilForm</code>), <code>lib/pilote/notif-prefs.ts</code> (14 types, groupes, libellés), <code>lib/push-client.ts</code> (abonnement partagé avec <code>PushPrompt</code>, état de l'appareil), migration <code>20261001d</code>. <code>saveNotifPrefs</code> dans <code>lib/actions/push.ts</code>.</li>
+        <li><code>lib/push.ts</code> : <code>sendPushToPilote(…, key)</code> ne notifie pas un type désactivé (repli sur « tout activé » si la colonne n'existe pas) ; <code>piloteAllowsPush</code> pour le cron <code>signaux</code>.</li>
+        <li>Vérifié : <code>tsc</code> et ESLint sans erreur ; rendu bureau et téléphone ; un enregistrement refusé remet le réglage comme avant. <b>Non vérifié</b> : l'activation réelle (permission, abonnement, essai reçu) sur un téléphone ou un iPhone, l'enregistrement en base (migration non exécutée) et le filtrage à l'envoi avec un vrai pilote. Pas poussé.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-10-01 (97) — Satisfaction refaite : formulaire public et page admin par pilote</h3>

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Bell } from "lucide-react";
-import { savePushSubscription, sendTestPush } from "@/lib/actions/push";
+import { sendTestPush } from "@/lib/actions/push";
+import { enableThisDevice, isOptedOut, isStandalone, pushSupported, subscribeThisDevice } from "@/lib/push-client";
 import { Button } from "@/components/pilote/studio";
 import { useScrollLock, useSwipeToClose } from "@/components/pilote/studio/sheet-gestures";
 
@@ -15,35 +16,6 @@ import { useScrollLock, useSwipeToClose } from "@/components/pilote/studio/sheet
 const SNOOZE_KEY = "fh-push-snooze";
 const SNOOZE_MS = 7 * 24 * 3600 * 1000;
 
-function isStandalone(): boolean {
-  return window.matchMedia("(display-mode: standalone)").matches
-    || (navigator as Navigator & { standalone?: boolean }).standalone === true;
-}
-
-function pushSupported(): boolean {
-  return "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
-}
-
-function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
-  const pad = "=".repeat((4 - (base64.length % 4)) % 4);
-  const raw = atob((base64 + pad).replace(/-/g, "+").replace(/_/g, "/"));
-  const out = new Uint8Array(new ArrayBuffer(raw.length));
-  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
-  return out;
-}
-
-async function subscribe(): Promise<boolean> {
-  const key = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-  if (!key) return false;
-  const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-  await navigator.serviceWorker.ready;
-  const sub = (await reg.pushManager.getSubscription())
-    ?? (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(key) }));
-  const json = sub.toJSON() as { endpoint: string; keys: { p256dh: string; auth: string } };
-  const res = await savePushSubscription({ endpoint: json.endpoint, keys: json.keys, app: "pilote", userAgent: navigator.userAgent });
-  return "success" in res;
-}
-
 export function PushPrompt() {
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -52,8 +24,9 @@ export function PushPrompt() {
   useEffect(() => {
     if (!pushSupported() || !isStandalone()) return;
     if (Notification.permission === "granted") {
-      // Renouvelle / réenregistre l'abonnement de cet appareil sans rien demander.
-      subscribe().catch(() => {});
+      // Renouvelle / réenregistre l'abonnement de cet appareil sans rien demander, sauf si le
+      // pilote les a coupées sur cet appareil (Profil > Notifications).
+      if (!isOptedOut()) subscribeThisDevice().catch(() => {});
       return;
     }
     if (Notification.permission !== "default") return;
@@ -79,16 +52,13 @@ export function PushPrompt() {
   async function enable() {
     setBusy(true);
     try {
-      const perm = await Notification.requestPermission();
-      if (perm !== "granted") { setRefused(true); return; }
-      if (await subscribe()) {
+      const r = await enableThisDevice();
+      if (r === "ok") {
         await sendTestPush().catch(() => {});
         setShow(false);
       } else {
         setRefused(true);
       }
-    } catch {
-      setRefused(true);
     } finally {
       setBusy(false);
     }

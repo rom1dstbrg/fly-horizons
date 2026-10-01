@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendPushToUser } from "@/lib/push";
+import { piloteAllowsPush, sendPushToUser } from "@/lib/push";
 import { getSignals, signalConfigFrom, type SignalKind } from "@/lib/reservation-signals";
 import { getAppSettings } from "@/lib/app-settings-server";
 
@@ -78,7 +78,8 @@ async function run(request: NextRequest) {
       const tag = `${s.kind}:${r.id}`;
       const dejaPrevenus = new Set<string>();
 
-      if (p?.user_id) {
+      // Le pilote peut avoir désactivé ces relances (Profil > Notifications) ; l'admin garde les siennes.
+      if (p?.user_id && (await piloteAllowsPush(p.user_id, "signaux"))) {
         dejaPrevenus.add(p.user_id);
         sent += await sendPushToUser(p.user_id, {
           title: TITRE[s.kind],

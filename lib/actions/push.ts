@@ -3,6 +3,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPushToUser } from "@/lib/push";
+import { requireSelfActivePilote } from "@/lib/actions/auth-guards";
+import { cleanPrefs, type NotifPrefs } from "@/lib/pilote/notif-prefs";
 
 // Abonnements push de l'appareil courant (27/09).
 
@@ -56,4 +58,16 @@ export async function sendTestPush(): Promise<{ sent: number }> {
     tag: "test",
   });
   return { sent };
+}
+
+/** Enregistre les types de notification que le pilote connecté veut recevoir. */
+export async function saveNotifPrefs(prefs: NotifPrefs): Promise<{ success: true } | { error: string }> {
+  try {
+    const { piloteId } = await requireSelfActivePilote();
+    const { error } = await createAdminClient().from("pilotes").update({ notif_prefs: cleanPrefs(prefs) }).eq("id", piloteId);
+    if (error) return { error: "Enregistrement impossible. Réessayez dans un instant." };
+    return { success: true };
+  } catch {
+    return { error: "Non autorisé" };
+  }
 }

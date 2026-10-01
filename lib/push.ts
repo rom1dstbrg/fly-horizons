@@ -1,5 +1,6 @@
 import webpush from "web-push";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { notifEnabled, type NotifPrefs, type PiloteNotifKey } from "@/lib/pilote/notif-prefs";
 
 // Envoi des notifications push (27/09). Un échec d'envoi ne casse jamais
 // l'action qui le déclenche : tout est attrapé et journalisé. Les abonnements
@@ -41,11 +42,34 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
   return sent;
 }
 
-export async function sendPushToPilote(piloteId: string | null | undefined, payload: PushPayload): Promise<number> {
+// Compte et préférences de notification d'un pilote (Espace pilote > Profil > Notifications).
+// Colonne `notif_prefs` créée par la migration 20261001d : tant qu'elle n'existe pas, tout est activé.
+async function loadPilote(by: "id" | "user_id", value: string): Promise<{ user_id: string | null; prefs: NotifPrefs } | null> {
+  const db = createAdminClient();
+  const first = await db.from("pilotes").select("user_id, notif_prefs").eq(by, value).maybeSingle();
+  if (!first.error) return first.data ? { user_id: first.data.user_id, prefs: (first.data.notif_prefs ?? {}) as NotifPrefs } : null;
+  const second = await db.from("pilotes").select("user_id").eq(by, value).maybeSingle();
+  return second.data ? { user_id: second.data.user_id, prefs: {} } : null;
+}
+
+/** Ce compte pilote veut-il cette notification ? (Oui s'il n'a pas de fiche pilote.) */
+export async function piloteAllowsPush(userId: string, key: PiloteNotifKey): Promise<boolean> {
+  try {
+    const p = await loadPilote("user_id", userId);
+    return p ? notifEnabled(p.prefs, key) : true;
+  } catch {
+    return true;
+  }
+}
+
+export async function sendPushToPilote(piloteId: string | null | undefined, payload: PushPayload, key?: PiloteNotifKey): Promise<number> {
   if (!piloteId) return 0;
   try {
-    const { data } = await createAdminClient().from("pilotes").select("user_id").eq("id", piloteId).maybeSingle();
-    return data?.user_id ? await sendPushToUser(data.user_id, payload) : 0;
+    const p = await loadPilote("id", piloteId);
+    if (!p?.user_id) return 0;
+    // Le pilote a désactivé ce type de notification : rien n'est envoyé.
+    if (key && !notifEnabled(p.prefs, key)) return 0;
+    return await sendPushToUser(p.user_id, payload);
   } catch (e) {
     console.error("[push] pilote", e);
     return 0;
@@ -97,7 +121,7 @@ export async function notifyPiloteReservation(reservationId: string, event: Pilo
       bilan_vol_relance: { title: "Bilan de vol toujours en attente", body: `Vol de ${client} du ${quand} : il manque les minutes volées pour le clôturer.` },
     };
     const tag = `${event}:${r.id}`;
-    await sendPushToPilote(r.pilote_id, { ...p[event], url: event.startsWith("paiement") || event === "client_dit_paye" ? "/pilote/transactions" : url, tag });
+    await sendPushToPilote(r.pilote_id, { ...p[event], url: event.startsWith("paiement") || event === "client_dit_paye" ? "/pilote/transactions" : url, tag }, event);
   } catch (e) {
     console.error("[push] notifyPiloteReservation", event, e);
   }

@@ -56,6 +56,8 @@ export interface Pilote {
   photo_url: string | null;
   // Signature libre ajoutée en bas des messages du pilote au client. Vide = défaut.
   signature: string | null;
+  // Notifications push voulues par le pilote ({ clé: false } = désactivée ; absent = activée).
+  notif_prefs?: Record<string, boolean> | null;
   // Modèle A (bloc D) — lien de paiement perso optionnel (Payconiq / Revolut).
   paylink: string | null;
 }
