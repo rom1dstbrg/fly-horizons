@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getAppSettings } from "@/lib/app-settings-server";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { requireAdmin, requireSelfActivePilote } from "./auth-guards";
 import { piloteLegalStatus } from "@/lib/pilote/legal";
@@ -14,7 +15,6 @@ import {
 // Bloc C · mise en jeu automatique d'un vol à tous les pilotes actifs et en
 // règle (« premier arrivé »). Fenêtre de 48h, expiration par cron.
 
-const OFFER_TTL_HOURS = 48;
 
 const PILOTE_LEGAL_COLS =
   "id, nom, email, statut, licence_numero, licence_expiration, medical_expiration, medical_classe, docs_status, docs_verified_at, conditions_accepted_at";
@@ -139,7 +139,8 @@ export async function createOffer(reservationId: string) {
     }
 
     const token = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + OFFER_TTL_HOURS * 3600 * 1000).toISOString();
+    const { validitePropositionH } = await getAppSettings();
+    const expiresAt = new Date(Date.now() + validitePropositionH * 3600 * 1000).toISOString();
 
     const { error: insErr } = await db.from("flight_offers").insert({
       reservation_id: reservationId,

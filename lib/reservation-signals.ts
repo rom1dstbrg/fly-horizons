@@ -2,7 +2,7 @@
 // Fonction pure, partagée par la page Réservations de l'admin et par le cron de
 // relances push (/api/cron/signaux) : mêmes seuils partout.
 //
-// Seuils fixés par Romain :
+// Seuils par défaut fixés par Romain (modifiables dans Paramètres › Suivi et alertes) :
 //  - demande sans réponse du pilote : orange à 36 h, rouge à 48 h ;
 //  - paiement en attente depuis l'envoi du lien : orange à 3 jours, rouge à 5 jours ;
 //  - le client dit avoir payé, le pilote n'a pas confirmé : même délai que la demande
@@ -10,6 +10,7 @@
 // Seuils posés par défaut (à valider) : vol passé non clôturé, vol proche sans heure.
 
 import { brusselsTimestamp } from "@/lib/utils";
+import type { AppSettings } from "@/lib/app-settings";
 
 export type SignalLevel = "warn" | "bad";
 export type SignalKind = "sans_reponse" | "client_dit_paye" | "paiement_attente" | "non_cloture" | "sans_heure";
@@ -38,6 +39,39 @@ export interface SignalInput {
 const H = 3600_000;
 const D = 24 * H;
 
+// Seuils (page Paramètres › Suivi et alertes) : valeurs en millisecondes.
+export interface SignalConfig {
+  sansReponse: [number, number];
+  clientPaye: [number, number];
+  paiement: [number, number];
+  nonCloture: [number, number];
+  sansHeure: boolean;
+}
+
+export const DEFAULT_SIGNAL_CONFIG: SignalConfig = {
+  sansReponse: [36 * H, 48 * H],
+  clientPaye: [36 * H, 48 * H],
+  paiement: [3 * D, 5 * D],
+  nonCloture: [24 * H, 72 * H],
+  sansHeure: true,
+};
+
+export function signalConfigFrom(s: AppSettings): SignalConfig {
+  return {
+    sansReponse: [s.sansReponseOrangeH * H, s.sansReponseRougeH * H],
+    clientPaye: [s.clientPayeOrangeH * H, s.clientPayeRougeH * H],
+    paiement: [s.paiementOrangeJ * D, s.paiementRougeJ * D],
+    nonCloture: [s.nonClotureOrangeH * H, s.nonClotureRougeH * H],
+    sansHeure: s.sansHeureActif,
+  };
+}
+
+// Configuration utilisée quand l'appelant n'en passe pas : côté navigateur, celle
+// que SignalConfigProvider installe au chargement de l'espace admin / pilote.
+// Côté serveur (cron), toujours passer la configuration explicitement.
+let current: SignalConfig = DEFAULT_SIGNAL_CONFIG;
+export function setSignalConfig(c: SignalConfig) { current = c; }
+
 const DEMANDE = ["demande_recue", "en_attente"];
 const TERMINE = ["annulee", "vol_effectue"];
 
@@ -51,7 +85,7 @@ function niveau(ms: number, orange: number, rouge: number): SignalLevel | null {
 }
 
 /** Tous les signaux actifs, le plus grave d'abord. */
-export function getSignals(r: SignalInput, now: number = Date.now()): Signal[] {
+export function getSignals(r: SignalInput, now: number = Date.now(), cfg: SignalConfig = current): Signal[] {
   const out: Signal[] = [];
   if (r.statut === "annulee") return out;
 
@@ -62,14 +96,14 @@ export function getSignals(r: SignalInput, now: number = Date.now()): Signal[] {
       r.pilote_assigned_at ? new Date(r.pilote_assigned_at).getTime() : 0,
     );
     const ms = now - depart;
-    const l = niveau(ms, 36 * H, 48 * H);
+    const l = niveau(ms, ...cfg.sansReponse);
     if (l) out.push({ kind: "sans_reponse", level: l, label: `Sans réponse depuis ${depuis(ms)}` });
   }
 
   // 2. Le client dit avoir payé : le pilote doit confirmer la réception
   if (r.client_paiement_declare_at && r.pilote_paye !== true) {
     const ms = now - new Date(r.client_paiement_declare_at).getTime();
-    const l = niveau(ms, 36 * H, 48 * H);
+    const l = niveau(ms, ...cfg.clientPaye);
     if (l) out.push({ kind: "client_dit_paye", level: l, label: `Paiement à confirmer depuis ${depuis(ms)}` });
   } else if (
     // 3. Lien de paiement envoyé, rien reçu ni déclaré
@@ -79,7 +113,7 @@ export function getSignals(r: SignalInput, now: number = Date.now()): Signal[] {
     (r.type_resa === "annonce_pilote" || r.statut === "payment_pending")
   ) {
     const ms = now - new Date(r.paiement_demande_at).getTime();
-    const l = niveau(ms, 3 * D, 5 * D);
+    const l = niveau(ms, ...cfg.paiement);
     if (l) out.push({ kind: "paiement_attente", level: l, label: `Paiement attendu depuis ${depuis(ms)}` });
   }
 
@@ -87,15 +121,15 @@ export function getSignals(r: SignalInput, now: number = Date.now()): Signal[] {
   // doit encore en choisir une. Ni « non clôturé » ni « sans heure » n'ont de sens.
   const dateAReprendre = !!(r.reschedule_token || r.slot_proposal_token);
 
-  // 4. Vol passé jamais clôturé (valeurs par défaut : orange à 24 h, rouge à 72 h)
+  // 4. Vol passé jamais clôturé
   if (!dateAReprendre && !TERMINE.includes(r.statut) && !DEMANDE.includes(r.statut) && r.statut !== "payment_pending") {
     const ms = now - brusselsTimestamp(r.date_vol, r.heure_vol);
-    const l = niveau(ms, 24 * H, 72 * H);
+    const l = niveau(ms, ...cfg.nonCloture);
     if (l) out.push({ kind: "non_cloture", level: l, label: `Non marqué effectué depuis ${depuis(ms)}` });
   }
 
   // 5. Vol dans moins de 48 h sans heure (rouge le jour même)
-  if (!dateAReprendre && !r.heure_vol && !TERMINE.includes(r.statut)) {
+  if (cfg.sansHeure && !dateAReprendre && !r.heure_vol && !TERMINE.includes(r.statut)) {
     const jours = (brusselsTimestamp(r.date_vol, "00:00") - now) / D;
     if (jours < 2 && jours > -1) {
       out.push({ kind: "sans_heure", level: jours < 1 ? "bad" : "warn", label: jours < 1 ? "Vol aujourd'hui sans heure" : "Vol demain sans heure" });
@@ -106,6 +140,6 @@ export function getSignals(r: SignalInput, now: number = Date.now()): Signal[] {
 }
 
 /** Le plus grave des signaux, ou null. */
-export function topSignal(r: SignalInput, now?: number): Signal | null {
-  return getSignals(r, now)[0] ?? null;
+export function topSignal(r: SignalInput, now?: number, cfg?: SignalConfig): Signal | null {
+  return getSignals(r, now, cfg)[0] ?? null;
 }

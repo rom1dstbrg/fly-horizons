@@ -1,0 +1,208 @@
+<title>Maquette Paramètres admin</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#f5f6f8; --card:#fff; --surface:#f4f5f7; --line:#eceef2; --line-strong:#dcdfe6;
+  --text:#0f1117; --text2:#4d5463; --muted:#5f6675; --ink:#0b2238; --ink-soft:#e8edf3;
+  --gold-soft:#fdf4d6; --gold-text:#7a5800; --ok:#16794a; --ok-soft:#e7f5ec; --bad:#c4372c; --info:#2b5cb8;
+  --font:'Poppins',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0c1117; --card:#131a22; --surface:#1a222c; --line:#222b36; --line-strong:#2e3946;
+  --text:#eef1f5; --text2:#b4bcc8; --muted:#9aa3b1; --ink:#e8edf3; --ink-soft:#1d2b3b;
+  --gold-soft:#3a2f0c; --gold-text:#f2c94c; --ok-soft:#12301f; --info:#7da6f0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c1117; --card:#131a22; --surface:#1a222c; --line:#222b36; --line-strong:#2e3946;
+  --text:#eef1f5; --text2:#b4bcc8; --muted:#9aa3b1; --ink:#e8edf3; --ink-soft:#1d2b3b;
+  --gold-soft:#3a2f0c; --gold-text:#f2c94c; --ok-soft:#12301f; --info:#7da6f0; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--font);margin:0;padding-inline:16px;padding-block:24px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:24px}
+h1{font-size:26px;font-weight:700;margin:0}
+.note{font-size:12.5px;color:var(--muted);margin:4px 0 0;line-height:1.5}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 1px 2px rgba(11,34,56,.05)}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 372px;gap:32px;align-items:start}
+button{font-family:var(--font);cursor:pointer}
+.m{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:640px}
+.cats{border-right:1px solid var(--line);padding:14px;display:grid;gap:2px;align-content:start}
+.cats h3{margin:6px 10px 12px;font-size:20px}
+.cat{display:flex;gap:12px;align-items:center;width:100%;text-align:left;border:0;background:none;color:var(--text);padding:10px;border-radius:12px}
+.cat:hover{background:var(--surface)}
+.cat.on{background:var(--ink-soft)}
+.ic{width:34px;height:34px;border-radius:10px;background:var(--surface);display:grid;place-items:center;flex:none;color:var(--ink)}
+.cat.on .ic{background:var(--ink);color:var(--card)}
+.ic svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.cat b{display:block;font-size:13.5px;font-weight:600}
+.cat span.s{display:block;font-size:11.5px;color:var(--muted);margin-top:1px}
+.pane{padding:26px 30px 90px;position:relative;display:grid;gap:26px;align-content:start}
+.pane h2{margin:0;font-size:20px}
+.pane .lead{margin:4px 0 0;font-size:13px;color:var(--muted)}
+.grp h4{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:0 0 4px}
+.row{display:flex;gap:18px;align-items:center;justify-content:space-between;padding:14px 0;border-top:1px solid var(--line)}
+.row.stack{align-items:flex-start}
+.row .n{font-size:14px;font-weight:600;margin:0}
+.row .d{font-size:12.5px;color:var(--muted);margin:3px 0 0;line-height:1.45;max-width:50ch}
+.new{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:99px;background:var(--gold-soft);color:var(--gold-text);margin-left:8px;vertical-align:1px}
+.sw{width:44px;height:26px;border-radius:99px;background:var(--line-strong);position:relative;flex:none;border:0}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .15s}
+.sw.on{background:var(--ink)}.sw.on::after{transform:translateX(18px)}
+.sw.warn.on{background:var(--bad)}
+.num{display:flex;align-items:center;gap:8px;flex:none}
+.num input{width:76px;text-align:right}
+.num u{text-decoration:none;font-size:12.5px;color:var(--muted);min-width:34px}
+input,textarea,select{border:1px solid var(--line-strong);background:var(--card);color:var(--text);border-radius:11px;padding:0 12px;height:38px;font:13.5px var(--font);width:100%}
+textarea{height:auto;padding:10px 12px;resize:none}
+.sub{display:grid;gap:10px;padding:2px 0 14px}
+.lbl{font-size:12px;color:var(--muted);font-weight:600;margin:0 0 5px;display:block}
+.seg{display:inline-flex;background:var(--surface);border-radius:11px;padding:3px;gap:2px;flex:none}
+.seg button{border:0;background:none;font:600 12.5px var(--font);color:var(--text2);padding:6px 12px;border-radius:9px}
+.seg button.on{background:var(--card);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.pair{display:flex;gap:14px;flex:none}
+.pair label{font-size:11px;color:var(--muted);display:block;margin-bottom:3px;font-weight:600}
+.dotw{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+.dw{background:#e08a00}.db{background:var(--bad)}
+.big{font-size:32px;font-weight:700;letter-spacing:-.02em;line-height:1}
+.big small{font-size:15px;font-weight:500;color:var(--muted)}
+.since{font-size:12.5px;color:var(--muted);margin-top:6px}
+.tag{display:inline-block;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--ok-soft);color:var(--ok)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:left;padding:8px 0;font-weight:600}
+td{padding:10px 0;border-top:1px solid var(--line)}
+.r{text-align:right}
+.link{color:var(--info);font-weight:600;font-size:13px;background:none;border:0;padding:0}
+.btn{height:36px;border-radius:11px;border:1px solid var(--line-strong);background:var(--card);color:var(--text);font:550 13px var(--font);padding:0 16px}
+.btn.p{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.out{background:var(--surface);border-radius:12px;padding:10px 14px;font-size:13px;display:flex;justify-content:space-between;margin-top:10px}
+.savebar{position:absolute;left:30px;right:30px;bottom:20px;display:flex;gap:12px;align-items:center;justify-content:space-between;background:var(--ink);color:var(--card);border-radius:14px;padding:9px 10px 9px 18px;font-size:13px}
+.savebar .btn{background:var(--card);color:var(--text);border:0;height:34px}
+.savebar[hidden]{display:none}
+.phone{width:372px;border:1px solid var(--line-strong);border-radius:34px;background:var(--bg);overflow:hidden;min-height:700px;position:relative}
+.phone .in{padding:20px 16px 90px;display:grid;gap:18px;align-content:start}
+.phone .top{display:flex;align-items:center;gap:10px;min-height:34px}
+.phone h3{margin:0;font-size:20px}
+.back{border:0;background:var(--surface);color:var(--text);width:34px;height:34px;border-radius:50%;font-size:16px}
+.plist{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.plist .cat{border-radius:0;padding:12px 14px;border-top:1px solid var(--line)}
+.plist .cat:first-child{border-top:0}
+.plist .cat::after{content:"›";margin-left:auto;color:var(--muted);font-size:20px}
+.phone .grp{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 16px 2px}
+.phone .grp h4{margin-bottom:0}
+.phone .row{flex-wrap:wrap}
+.phone .row .d{max-width:none}
+.phone .savebar{left:16px;right:16px;bottom:16px}
+.phone .pane{padding:0;gap:18px}
+.phone .pane>div:first-child{display:none}
+@media(max-width:1000px){.stage{grid-template-columns:1fr}.phone{margin:0 auto;max-width:100%}.m{grid-template-columns:1fr}.cats{border-right:0;border-bottom:1px solid var(--line)}.pane{padding:22px 18px 90px}.savebar{left:18px;right:18px}}
+</style>
+
+<div class="wrap">
+  <div>
+    <h1>Paramètres</h1>
+    <p class="note">Maquette interactive. Bureau : liste de catégories à gauche, réglages de la catégorie à droite. Téléphone : la liste, puis un écran par catégorie. Les réglages marqués <span class="new" style="margin:0">nouveau</span> sont aujourd'hui des valeurs écrites dans le code ou inexistantes : je les branche sur la page. Les autres existent déjà.</p>
+  </div>
+  <div class="stage">
+    <div class="card m" id="desk"></div>
+    <div class="phone" id="phone"></div>
+  </div>
+</div>
+
+<script>
+var IC={
+ globe:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/></svg>',
+ cal:'<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>',
+ alert:'<svg viewBox="0 0 24 24"><path d="M12 4 2.8 19.5h18.4L12 4Z"/><path d="M12 10v4.5M12 17.4v.1"/></svg>',
+ bell:'<svg viewBox="0 0 24 24"><path d="M6 16.5V11a6 6 0 1 1 12 0v5.5l1.5 2H4.5l1.5-2Z"/><path d="M10 21h4"/></svg>',
+ euro:'<svg viewBox="0 0 24 24"><path d="M17.5 6.5A6.5 6.5 0 1 0 17.5 17.5M4 10h9M4 14h9"/></svg>',
+ users:'<svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.3"/><path d="M3 19c.6-3.3 3-5 6-5s5.4 1.7 6 5M16 5.5a3.3 3.3 0 0 1 0 6M18 14.3c1.7.6 2.7 2 3 4.7"/></svg>'
+};
+var C=[
+ {id:'site',ic:'globe',t:'Site',s:'Maintenance, réservations, chatbot',lead:'Ce que voient les visiteurs du site public.',g:[
+  {h:'Accès au site',r:[
+   {k:'toggle',n:'Site en reconstruction',d:'Redirige les visiteurs vers une page « site en pause ». Connecté en admin, tu vois le site normalement.',v:true,warn:true,sub:[{k:'date',l:'Date de réouverture (facultatif)',v:'2026-11-15'},{k:'area',l:'Message affiché aux visiteurs',v:'Les réservations restent possibles par email, on vous répond vite.'}]},
+   {k:'toggle',n:'Fermer les réservations',d:'Bloque le calendrier sur toutes les pages de réservation.',v:false,warn:true,sub:[{k:'text',l:'Message affiché aux clients',v:''}]}]},
+  {h:'Assistant',r:[{k:'toggle',n:'Assistant chatbot',d:'Affiche ou masque le bouton de chat sur tout le site.',v:true}]}]},
+
+ {id:'resa',ic:'cal',t:'Réservations',s:'Préavis, délais, rappels',lead:'Les délais qui encadrent une demande, de la réponse du pilote au rappel avant le vol.',g:[
+  {h:'Avant le vol',r:[
+   {k:'num',n:'Préavis minimum',d:'Nombre de jours avant le vol à partir duquel un client peut réserver.',v:2,u:'jours'},
+   {k:'num',n:'Rappel envoyé au client',d:'Email de rappel envoyé avant le vol.',v:48,u:'h avant',nw:1},
+   {k:'num',n:'Annulation si le vol n\'est pas payé',d:'Un vol confirmé mais non réglé est annulé automatiquement à ce délai.',v:48,u:'h avant',nw:1}]},
+  {h:'Réponses',r:[
+   {k:'num',n:'Délai de réponse du pilote',d:'Passé ce délai, une demande sans réponse est libérée et le client est prévenu.',v:72,u:'heures',nw:1},
+   {k:'num',n:'Validité d\'une proposition de vol',d:'Durée pendant laquelle le client peut accepter un vol qu\'on lui propose.',v:48,u:'heures',nw:1}]},
+  {h:'Après le vol',r:[
+   {k:'num',n:'Premier rappel du bilan',d:'Notification envoyée au pilote pour clôturer le vol.',v:8,u:'h après',nw:1},
+   {k:'num',n:'Relance du bilan',d:'Deuxième rappel si le vol n\'est toujours pas clôturé.',v:24,u:'h après',nw:1}]}]},
+
+ {id:'suivi',ic:'alert',t:'Suivi et alertes',s:'Seuils orange et rouge',lead:'À partir de quand un vol est signalé dans Réservations. Les mêmes seuils déclenchent les notifications.',g:[
+  {h:'Seuils',r:[
+   {k:'pair',n:'Demande sans réponse du pilote',d:'Depuis la demande.',o:36,b:48,u:'h',nw:1},
+   {k:'pair',n:'Client dit avoir payé, pilote pas confirmé',d:'Depuis la déclaration du client.',o:36,b:48,u:'h',nw:1},
+   {k:'pair',n:'Paiement en attente',d:'Depuis l\'envoi du lien de paiement.',o:3,b:5,u:'jours',nw:1},
+   {k:'pair',n:'Vol passé non marqué effectué',d:'Depuis l\'heure du vol.',o:24,b:72,u:'h',nw:1}]},
+  {h:'Vol proche',r:[{k:'toggle',n:'Signaler un vol proche sans heure',d:'Orange à moins de 48 h, rouge le jour même.',v:true,nw:1}]}]},
+
+ {id:'notifs',ic:'bell',t:'Notifications',s:'Alertes sur ton téléphone',lead:'Les notifications poussées envoyées à l\'admin. Chaque palier part une seule fois par réservation.',g:[
+  {h:'Relances de suivi',r:[
+   {k:'toggle',n:'Demande sans réponse',d:'',v:true,nw:1},{k:'toggle',n:'Paiement en attente',d:'',v:true,nw:1},
+   {k:'toggle',n:'Client dit avoir payé',d:'',v:true,nw:1},{k:'toggle',n:'Vol non marqué effectué',d:'',v:true,nw:1}]},
+  {h:'Niveau',r:[{k:'seg',n:'Notifier à partir de',d:'Orange : dès le premier seuil. Rouge : seulement les cas graves.',o:['Orange','Rouge'],v:0,nw:1}]}]},
+
+ {id:'fin',ic:'euro',t:'Tarifs et finances',s:'Tarif avion, ma part',lead:'Sert au calcul de ton gain ou de ta perte sur chaque vol (Transactions, bilan de vol).',g:[
+  {h:'Tarif avion (école)',custom:'tarif'},
+  {h:'Ma part',r:[{k:'part'}]}]},
+
+ {id:'pil',ic:'users',t:'Pilotes',s:'Documents, annonces',lead:'Règles appliquées aux pilotes de la plateforme.',g:[
+  {h:'Documents',r:[
+   {k:'num',n:'Avertir avant l\'expiration',d:'Licence et certificat médical : avertissement à ce nombre de jours avant la date.',v:30,u:'jours',nw:1}]},
+  {h:'Annonces',r:[
+   {k:'toggle',n:'IBAN obligatoire pour publier',d:'Le pilote doit avoir un IBAN valide dans son profil.',v:true,nw:1},
+   {k:'toggle',n:'Documents vérifiés obligatoires',d:'Un pilote dont les documents ne sont pas vérifiés ne peut pas publier.',v:false,nw:1}]}]}
+];
+var NW=function(r){return r.nw?'<span class="new">nouveau</span>':''};
+function row(r,st,id){
+  var k=r.k,h='';
+  if(k==='toggle'){var on=st[id]!==undefined?st[id]:r.v;
+    h='<div><p class="n">'+r.n+NW(r)+'</p>'+(r.d?'<p class="d">'+r.d+'</p>':'')+'</div><button class="sw'+(r.warn?' warn':'')+(on?' on':'')+'" data-t="'+id+'" aria-label="'+r.n+'"></button>';
+    var out='<div class="row">'+h+'</div>';
+    if(on&&r.sub)out+='<div class="sub">'+r.sub.map(function(s){return fld(s)}).join('')+'</div>';
+    return out;}
+  if(k==='num')return '<div class="row"><div><p class="n">'+r.n+NW(r)+'</p><p class="d">'+r.d+'</p></div><div class="num"><input type="number" value="'+r.v+'" data-c="1" aria-label="'+r.n+'"><u>'+r.u+'</u></div></div>';
+  if(k==='pair')return '<div class="row"><div><p class="n">'+r.n+NW(r)+'</p><p class="d">'+r.d+'</p></div><div class="pair"><div><label><i class="dotw dw"></i>Orange</label><div class="num"><input type="number" value="'+r.o+'" data-c="1" aria-label="Orange"><u>'+r.u+'</u></div></div><div><label><i class="dotw db"></i>Rouge</label><div class="num"><input type="number" value="'+r.b+'" data-c="1" aria-label="Rouge"><u>'+r.u+'</u></div></div></div></div>';
+  if(k==='seg')return '<div class="row"><div><p class="n">'+r.n+NW(r)+'</p><p class="d">'+r.d+'</p></div><div class="seg">'+r.o.map(function(o,i){return '<button class="'+(i===r.v?'on':'')+'" data-c="1">'+o+'</button>'}).join('')+'</div></div>';
+  if(k==='part')return '<div class="row stack"><div style="flex:1"><p class="n">Part sur chaque vol</p><p class="d">Prix client = coût avion moins ta part.</p></div><div style="display:grid;gap:10px;justify-items:end"><div class="num"><input type="number" value="25" data-c="1" aria-label="Ma part"><div class="seg"><button class="on" data-c="1">%</button><button data-c="1">€</button></div></div><div class="out" style="margin:0;width:240px"><span>Prix client</span><b>192 €/h</b></div></div></div>';
+  return '';}
+function fld(s){var l='<label class="lbl">'+s.l+'</label>';
+  if(s.k==='area')return '<div>'+l+'<textarea rows="2" data-c="1">'+s.v+'</textarea></div>';
+  return '<div>'+l+'<input type="'+(s.k==='date'?'date':'text')+'" value="'+s.v+'" data-c="1"></div>';}
+function tarif(){return '<div style="padding:8px 0 4px;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap"><div><div class="big">256,00 €<small> /h</small></div><div class="since">Tarif actuel, depuis le 1 janvier 2026 · DA40</div></div><button class="btn p">Nouveau tarif</button></div><table><thead><tr><th>Depuis</th><th class="r">Prix/h</th><th></th></tr></thead><tbody><tr><td>1 janv. 2026 <span class="tag">actuel</span></td><td class="r">256,00 €</td><td class="r"><button class="link">Supprimer</button></td></tr><tr><td>1 janv. 2025</td><td class="r">243,00 €</td><td class="r"><button class="link">Supprimer</button></td></tr></tbody></table>';}
+function panel(c,st,cid){
+  return '<div><h2>'+c.t+'</h2><p class="lead">'+c.lead+'</p></div>'+c.g.map(function(g,gi){
+    return '<section class="grp"><h4>'+g.h+'</h4>'+(g.custom?tarif():g.r.map(function(r,ri){return row(r,st,cid+'.'+gi+'.'+ri)}).join(''))+'</section>';}).join('');}
+function mount(el,mode){
+  var S={cat:mode==='desk'?'site':null,st:{},dirty:0};
+  function label(){return S.dirty+' modification'+(S.dirty>1?'s':'')+' non enregistrée'+(S.dirty>1?'s':'');}
+  function draw(){
+    var c=C.filter(function(x){return x.id===S.cat})[0];
+    var list=C.map(function(x){return '<button class="cat'+(x.id===S.cat?' on':'')+'" data-cat="'+x.id+'"><span class="ic">'+IC[x.ic]+'</span><span><b>'+x.t+'</b><span class="s">'+x.s+'</span></span></button>'}).join('');
+    var bar='<div class="savebar"'+(S.dirty?'':' hidden')+'><span>'+label()+'</span><button class="btn" data-save="1">Enregistrer</button></div>';
+    if(mode==='desk'){el.innerHTML='<nav class="cats"><h3>Paramètres</h3>'+list+'</nav><div class="pane">'+panel(c,S.st,c.id)+bar+'</div>';}
+    else if(!c){el.innerHTML='<div class="in"><div class="top"><h3>Paramètres</h3></div><div class="plist">'+list+'</div></div>';}
+    else{el.innerHTML='<div class="in"><div class="top"><button class="back" data-back="1" aria-label="Retour">‹</button><h3>'+c.t+'</h3></div><p style="margin:-8px 0 0;font-size:12.5px;color:var(--muted)">'+c.lead+'</p><div class="pane">'+panel(c,S.st,c.id)+'</div>'+bar+'</div>';}
+  }
+  function touch(){S.dirty++;var b=el.querySelector('.savebar');if(b){b.hidden=false;b.firstChild.textContent=label();}}
+  el.addEventListener('click',function(e){
+    var t=e.target.closest('[data-cat],[data-t],[data-back],[data-save],.seg button');
+    if(!t)return;
+    if(t.dataset.cat){S.cat=t.dataset.cat;S.dirty=0;S.st={};draw();return;}
+    if(t.dataset.back){S.cat=null;S.dirty=0;S.st={};draw();return;}
+    if(t.dataset.save){S.dirty=0;draw();return;}
+    if(t.dataset.t){var id=t.dataset.t;S.st[id]=!t.classList.contains('on');S.dirty++;draw();return;}
+    if(t.closest('.seg')){t.parentNode.querySelectorAll('button').forEach(function(b){b.classList.remove('on')});t.classList.add('on');touch();}
+  });
+  el.addEventListener('input',function(e){if(e.target.dataset.c)touch();});
+  draw();
+}
+mount(document.getElementById('desk'),'desk');
+mount(document.getElementById('phone'),'phone');
+</script>

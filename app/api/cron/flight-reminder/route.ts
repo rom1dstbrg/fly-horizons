@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getAppSettings } from "@/lib/app-settings-server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendFlightReminder } from "@/lib/email-service";
 import { brusselsTimestamp } from "@/lib/utils";
@@ -24,6 +25,7 @@ export async function POST(request: NextRequest) {
     ? process.env.NEXT_PUBLIC_SITE_URL
     : "https://fly-horizons.com";
   const now = Date.now();
+  const rappelH = (await getAppSettings()).rappelClientH;
 
   const { data: reservations, error } = await supabase
     .from("reservations")
@@ -47,8 +49,8 @@ export async function POST(request: NextRequest) {
     const flight = brusselsTimestamp(resa.date_vol, resa.heure_vol);
     const hoursUntil = (flight - now) / (1000 * 60 * 60);
 
-    // Fenêtre 47-48h : envoi unique pour un cron horaire
-    if (hoursUntil < 47 || hoursUntil >= 48) continue;
+    // Fenêtre d'une heure juste avant le délai choisi : envoi unique pour un cron horaire
+    if (hoursUntil < rappelH - 1 || hoursUntil >= rappelH) continue;
 
     const raw = resa.clients;
     const c = Array.isArray(raw)

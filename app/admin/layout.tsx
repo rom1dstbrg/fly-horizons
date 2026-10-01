@@ -3,6 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { CommandPalette } from "@/components/admin/CommandPalette";
+import { SignalConfigProvider } from "@/components/admin/SignalConfigProvider";
+import { getAppSettings } from "@/lib/app-settings-server";
+import { signalConfigFrom } from "@/lib/reservation-signals";
 
 export const metadata: Metadata = {
   title: "Fly Horizons Admin",
@@ -44,13 +47,15 @@ export default async function AdminLayout({
 
   if (profile?.role !== "admin") redirect("/");
 
+  const signalConfig = signalConfigFrom(await getAppSettings());
+
   return (
     <div className="min-h-screen bg-background flex">
       <AdminSidebar />
       <CommandPalette />
       <main className="flex-1 min-w-0 lg:ml-64 min-h-screen">
         <div className="px-4 pt-16 pb-[calc(76px+env(safe-area-inset-bottom))] sm:px-6 sm:pt-16 lg:p-8 lg:pt-8 lg:pb-8">
-          {children}
+          <SignalConfigProvider value={signalConfig}>{children}</SignalConfigProvider>
         </div>
       </main>
     </div>

@@ -270,6 +270,21 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-10-01 (26) · Paramètres admin : catégories, délais réglables, seuils de suivi</p>
+      <h3>La page Paramètres devient une liste de catégories ; les délais et seuils jusque-là écrits dans le code deviennent des réglages</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Suite de la refonte admin. Romain veut « le plus de paramètres possibles », rangés par catégorie comme Nexus ou NurseTrack, tout dans une seule page pour ne pas ramer, avec une page qui glisse de droite à gauche à l'ouverture et dans l'autre sens à la fermeture. Maquette validée : https://claude.ai/artifact/4Cqs5uAj4JYCKnSVMhd3kZ</dd>
+        <dt>Décision</dt>
+        <dd>Cinq catégories : <b>Site</b>, <b>Réservations</b> (préavis, rappel client, annulation si impayé, délai de réponse du pilote, validité d'une proposition, rappels du bilan), <b>Suivi et alertes</b> (seuils orange / rouge de chaque signal), <b>Notifications</b> (par signal + niveau minimum), <b>Tarifs et finances</b> (tarif avion, ma part). Les défauts sont exactement les anciennes valeurs en dur. Un seul bouton « Enregistrer » pour tout. Retirés : provision « vol sur mesure », aperçu des packs, mise à jour des fiches produit (catalogue mort). « Ma part » est gardée (Transactions s'en sert).</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Catégorie « Pilotes » avec IBAN obligatoire et documents vérifiés obligatoires : ces deux garde-fous existent déjà et structurent le flux légal, les rendre optionnels est risqué. « Avertir N jours avant l'expiration des documents » : lu à une dizaine d'endroits (dont des composants clients) pour un gain nul, laissé à 30 jours.</dd>
+        <dt>Conséquences</dt>
+        <dd>Clés dans <code>crm_settings</code> (aucune migration), définies dans <code>lib/app-settings.ts</code>. Les crons (rappel, annulation, réponse pilote, bilan, signaux) et <code>flight-offers</code> lisent les réglages ; <code>getSignals</code> prend une configuration, installée côté navigateur par <code>SignalConfigProvider</code> dans les layouts admin et pilote. Un changement de seuil n'agit pas sur ce qui est déjà parti (une relance envoyée ne repart pas).</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-10-01 (25) · Transactions admin : bilan de l'année, virements aux pilotes, tiroir propre</p>
       <h3>La page Transactions passe en Studio avec un tiroir spécifique et le bénéfice calculé pour les vols confiés à un pilote</h3>
       <dl>
@@ -1745,6 +1760,16 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-10-01 (88) — Page Paramètres refaite : catégories, délais et seuils réglables</h3>
+      <ul>
+        <li>Nouveau <code>components/admin/SettingsClient.tsx</code> (liste de catégories, page qui glisse au téléphone, panneau à droite sur le bureau, barre « Enregistrer » unique) ; <code>app/admin/settings/page.tsx</code> simplifié ; <code>PrixVolForm</code>, <code>SiteSettingsForm</code>, <code>TarifAvionForm</code> supprimés ; <code>updateSiteSettings</code> et <code>updatePrixVol</code> remplacés par <code>updateAppSettings</code>.</li>
+        <li><code>lib/app-settings.ts</code> (clés, défauts, validation) + <code>lib/app-settings-server.ts</code>. Branchés : crons <code>flight-reminder</code>, <code>payment-deadline</code>, <code>demande-deadline</code>, <code>bilan-vol</code>, <code>signaux</code>, et <code>flight-offers</code> (validité d'une proposition).</li>
+        <li><code>lib/reservation-signals.ts</code> : <code>getSignals(r, now, cfg)</code>, <code>SignalConfig</code>, <code>signalConfigFrom</code> ; <code>SignalConfigProvider</code> dans les layouts admin et pilote.</li>
+        <li>Vérifié avec Playwright (bureau et téléphone) : focus conservé en tapant, transition de page mesurée (390 → 0 à l'ouverture, 0 → 390 à la fermeture). Pas essayé avec les vraies données ni enregistré en base ; pas poussé.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-10-01 (87) — Audit des tiroirs : boutons, suppression et messages d'état alignés</h3>

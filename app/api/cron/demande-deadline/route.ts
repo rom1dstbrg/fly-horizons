@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getAppSettings } from "@/lib/app-settings-server";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { reservationAutoAnnuleeEmail } from "@/lib/email-templates";
 import { releaseAnnoncePilote } from "@/lib/annonces-pilote-server";
@@ -22,7 +23,7 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = createAdminClient();
-  const deadline = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
+  const deadline = new Date(Date.now() - (await getAppSettings()).delaiReponsePiloteH * 60 * 60 * 1000).toISOString();
 
   const { data: reservations, error } = await supabase
     .from("reservations")

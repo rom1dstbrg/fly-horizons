@@ -11,6 +11,9 @@ import { ChartePiloteGate } from "@/components/pilote/ChartePiloteGate";
 import { PushPrompt } from "@/components/pilote/PushPrompt";
 import { piloteLegalStatus } from "@/lib/pilote/legal";
 import { CHARTE_VERSION } from "@/lib/pilote/charte";
+import { SignalConfigProvider } from "@/components/admin/SignalConfigProvider";
+import { getAppSettings } from "@/lib/app-settings-server";
+import { signalConfigFrom } from "@/lib/reservation-signals";
 
 // App « FH Pilote » sur l'écran d'accueil (27/09) : son propre manifest,
 // indispensable aux notifications push sur iPhone.
@@ -146,7 +149,9 @@ export default async function PiloteLayout({ children }: { children: React.React
         />
         <main className="flex-1 px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-[calc(1.25rem+env(safe-area-inset-top))] sm:px-6 lg:px-7 lg:pb-8 lg:pt-6">
           {/* Largeur plafonnée : sur un grand écran les cartes ne s'étirent pas sur 2 000 px. */}
-          <div className="mx-auto w-full max-w-[1320px]">{children}</div>
+          <div className="mx-auto w-full max-w-[1320px]">
+            <SignalConfigProvider value={signalConfigFrom(await getAppSettings())}>{children}</SignalConfigProvider>
+          </div>
         </main>
       </div>
       <PiloteTabBar

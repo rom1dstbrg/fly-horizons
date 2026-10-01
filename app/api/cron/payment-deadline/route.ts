@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getAppSettings } from "@/lib/app-settings-server";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { reservationPaymentReminderEmail, reservationAutoAnnuleeEmail } from "@/lib/email-templates";
 import { brusselsTimestamp } from "@/lib/utils";
@@ -26,6 +27,8 @@ export async function POST(request: NextRequest) {
   const supabase = createAdminClient();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const now = Date.now();
+  // Délai d'annulation (Paramètres › Réservations) ; le rappel part 23 à 24 h avant.
+  const annulationH = (await getAppSettings()).annulationImpayeH;
 
   // ── Récupération des réservations en attente de paiement ─────────────────
   const { data: reservations, error } = await supabase
@@ -52,8 +55,8 @@ export async function POST(request: NextRequest) {
     const flight = brusselsTimestamp(resa.date_vol, resa.heure_vol);
     const hoursUntil = (flight - now) / (1000 * 60 * 60);
 
-    // ── Annulation : vol dans moins de 48h ───────────────────────────────
-    if (hoursUntil < 48) {
+    // ── Annulation : vol dans moins de `annulationH` heures ──────────────
+    if (hoursUntil < annulationH) {
       // .select("id").maybeSingle() permet de savoir si une ligne a réellement été mise à jour.
       // Supabase ne renvoie pas d'erreur pour 0 lignes — seul `cancelledRow` null indique qu'on n'a
       // rien touché (paiement reçu entre la lecture et ici).
@@ -122,10 +125,10 @@ export async function POST(request: NextRequest) {
       continue;
     }
 
-    // ── Rappel : vol dans 71-72h (fenêtre 1h pour cron horaire) ─────────
+    // ── Rappel : 24 h avant l'annulation (fenêtre 1h pour cron horaire) ──
     // Le rappel est envoyé une seule fois car le cron ne repassera dans cette
-    // fenêtre qu'une fois (71h ≤ hoursUntil < 72h).
-    if (hoursUntil >= 71 && hoursUntil < 72) {
+    // fenêtre qu'une fois.
+    if (hoursUntil >= annulationH + 23 && hoursUntil < annulationH + 24) {
       const raw = resa.clients;
       const c = Array.isArray(raw) ? (raw[0] as { prenom: string; nom: string; email: string } | undefined) ?? null : (raw as { prenom: string; nom: string; email: string } | null);
       if (!c || !resa.payment_token) continue;

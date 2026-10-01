@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPushToUser } from "@/lib/push";
-import { getSignals, type SignalKind } from "@/lib/reservation-signals";
+import { getSignals, signalConfigFrom, type SignalKind } from "@/lib/reservation-signals";
+import { getAppSettings } from "@/lib/app-settings-server";
 
 /**
  * Relances push des signaux de supervision (01/10), appelées toutes les heures par
@@ -32,6 +33,16 @@ async function run(request: NextRequest) {
   }
 
   const db = createAdminClient();
+  const settings = await getAppSettings();
+  const cfg = signalConfigFrom(settings);
+  // Quels signaux envoient une notification, et à partir de quel niveau (Paramètres › Notifications).
+  const notifier: Record<SignalKind, boolean> = {
+    sans_reponse: settings.notifSansReponse,
+    client_dit_paye: settings.notifClientPaye,
+    paiement_attente: settings.notifPaiement,
+    non_cloture: settings.notifNonCloture,
+    sans_heure: false,
+  };
   const since = new Date(Date.now() - 14 * 86_400_000).toISOString().slice(0, 10);
 
   const { data: resas } = await db
@@ -47,7 +58,9 @@ async function run(request: NextRequest) {
 
   let sent = 0;
   for (const r of resas ?? []) {
-    const signals = getSignals(r as never).filter((s) => s.kind !== "sans_heure");
+    const signals = getSignals(r as never, Date.now(), cfg).filter(
+      (s) => notifier[s.kind] && (settings.notifNiveau === "warn" || s.level === "bad"),
+    );
     if (!signals.length) continue;
 
     const c = (Array.isArray(r.clients) ? r.clients[0] : r.clients) as { prenom: string | null; nom: string | null } | null;

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getAppSettings } from "@/lib/app-settings-server";
 import { notifyPiloteReservation } from "@/lib/push";
 import { isPiloteVol } from "@/lib/pilote/payment";
 import { brusselsTimestamp } from "@/lib/utils";
@@ -23,6 +24,7 @@ async function run(request: NextRequest) {
   }
 
   const db = createAdminClient();
+  const { bilanRappelH, bilanRelanceH } = await getAppSettings();
   const now = Date.now();
   const since = new Date(now - 14 * 24 * H).toISOString().slice(0, 10);
   const until = new Date(now).toISOString().slice(0, 10);
@@ -36,7 +38,7 @@ async function run(request: NextRequest) {
     .not("statut", "in", "(annulee,vol_effectue,demande_recue,en_attente,payment_pending)");
 
   const aClore = (vols ?? []).filter(
-    (r) => isPiloteVol(r) && now >= brusselsTimestamp(r.date_vol, r.heure_vol) + 8 * H,
+    (r) => isPiloteVol(r) && now >= brusselsTimestamp(r.date_vol, r.heure_vol) + bilanRappelH * H,
   );
   if (!aClore.length) return NextResponse.json({ sent: 0, candidates: 0 });
 
@@ -51,7 +53,7 @@ async function run(request: NextRequest) {
     const premier = envoye.get(`bilan_vol:${r.id}`);
     const event =
       premier === undefined ? "bilan_vol"
-      : !envoye.has(`bilan_vol_relance:${r.id}`) && now >= premier + 24 * H ? "bilan_vol_relance"
+      : !envoye.has(`bilan_vol_relance:${r.id}`) && now >= premier + bilanRelanceH * H ? "bilan_vol_relance"
       : null;
     if (!event) continue;
     // Réserve la clé d'abord : si elle existe déjà, le rappel est déjà parti.
