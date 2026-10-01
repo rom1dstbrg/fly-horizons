@@ -49,7 +49,7 @@ function useSettingsCtx() {
 // Briques au niveau du module : définies dans le composant, elles seraient
 // recréées à chaque frappe et les champs perdraient le focus.
 const Group = ({ title, children }: { title?: string; children: React.ReactNode }) => (
-  <section className="max-lg:rounded-2xl max-lg:border max-lg:border-st-line max-lg:bg-white max-lg:px-4 max-lg:pb-1 max-lg:pt-3">
+  <section className="rounded-2xl border border-st-line bg-white px-4 pb-1 pt-3.5 shadow-st-sm lg:px-5">
     {title && <h3 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-st-muted">{title}</h3>}
     <div className="divide-y divide-st-line-soft">{children}</div>
   </section>
@@ -360,7 +360,7 @@ export function SettingsClient({ settings, tarifs, currentTarifId }: { settings:
         <div
           className={cn(
             "fixed inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-[65] flex items-center justify-between gap-3 rounded-2xl bg-st-ink py-2.5 pl-5 pr-2.5 text-white shadow-st-lg",
-            "lg:inset-x-auto lg:bottom-6 lg:left-[calc(16rem+2rem+280px+2.5rem)] lg:right-8",
+            "lg:sticky lg:inset-x-auto lg:bottom-6 lg:ml-[320px]",
             !open && "max-lg:hidden",
           )}
         >

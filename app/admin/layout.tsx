@@ -55,7 +55,10 @@ export default async function AdminLayout({
       <CommandPalette />
       <main className="flex-1 min-w-0 lg:ml-64 min-h-screen">
         <div className="px-4 pt-16 pb-[calc(76px+env(safe-area-inset-bottom))] sm:px-6 sm:pt-16 lg:p-8 lg:pt-8 lg:pb-8">
-          <SignalConfigProvider value={signalConfig}>{children}</SignalConfigProvider>
+          {/* Même largeur plafonnée que l'espace pilote : sur un grand écran, le contenu ne s'étire pas. */}
+          <div className="mx-auto w-full max-w-[1320px]">
+            <SignalConfigProvider value={signalConfig}>{children}</SignalConfigProvider>
+          </div>
         </div>
       </main>
     </div>
