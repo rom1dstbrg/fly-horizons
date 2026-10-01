@@ -24,7 +24,7 @@ export type Tarif = { id: string; prix_heure: number; actif_depuis: string; note
 type CatId = "site" | "resa" | "suivi" | "notifs" | "fin";
 
 const CATS: { id: CatId; icon: LucideIcon; title: string; summary: string; lead: string }[] = [
-  { id: "site", icon: Globe, title: "Site", summary: "Maintenance, réservations, chatbot", lead: "Ce que voient les visiteurs du site public." },
+  { id: "site", icon: Globe, title: "Site", summary: "Maintenance, chatbot", lead: "Ce que voient les visiteurs du site public." },
   { id: "resa", icon: CalendarClock, title: "Réservations", summary: "Préavis, délais, rappels", lead: "Les délais qui encadrent une demande, de la réponse du pilote au rappel avant le vol." },
   { id: "suivi", icon: TriangleAlert, title: "Suivi et alertes", summary: "Seuils orange et rouge", lead: "À partir de quand un vol est signalé dans Réservations. Les mêmes seuils déclenchent les notifications." },
   { id: "notifs", icon: Bell, title: "Notifications", summary: "Alertes sur ton téléphone", lead: "Les notifications envoyées à l'admin. Chaque palier part une seule fois par réservation." },
@@ -171,7 +171,7 @@ export function SettingsClient({ settings, tarifs, currentTarifId }: { settings:
 
       <div className="lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start lg:gap-10">
         {/* Liste des catégories */}
-        <nav aria-label="Catégories de paramètres" className="overflow-hidden rounded-2xl border border-st-line bg-white lg:sticky lg:top-6 lg:rounded-none lg:border-0 lg:bg-transparent">
+        <nav aria-label="Catégories de paramètres" className="overflow-hidden rounded-2xl border border-st-line bg-white shadow-st-sm lg:sticky lg:top-6 lg:p-2">
           {CATS.map((c) => {
             const Icon = c.icon;
             const on = c.id === active;
@@ -182,7 +182,7 @@ export function SettingsClient({ settings, tarifs, currentTarifId }: { settings:
                 onClick={() => { setActive(c.id); setOpen(true); }}
                 className={cn(
                   "flex w-full cursor-pointer items-center gap-3 border-t border-st-line-soft px-4 py-3 text-left transition-colors first:border-t-0 hover:bg-st-surface",
-                  "lg:rounded-xl lg:border-0 lg:px-3 lg:py-2.5",
+                  "lg:rounded-xl lg:border-0 lg:px-3 lg:py-2.5 lg:first:border-0",
                   on && "lg:bg-st-ink-soft lg:hover:bg-st-ink-soft",
                 )}
               >
@@ -220,7 +220,7 @@ export function SettingsClient({ settings, tarifs, currentTarifId }: { settings:
             <h2 className="text-lg font-semibold tracking-[-0.02em]">{cat.title}</h2>
           </div>
 
-          <div className="px-4 pb-32 pt-4 lg:p-0 lg:pb-24">
+          <div className="px-4 pb-32 pt-4 lg:p-0">
             {CATS.map((c) => (
               <div key={c.id} hidden={c.id !== active} className="st-pane-in space-y-6">
                 <div className="max-lg:hidden">
