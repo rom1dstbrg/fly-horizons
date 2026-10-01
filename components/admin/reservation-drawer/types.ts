@@ -25,6 +25,8 @@ export interface DrawerReservation {
   avion_reserve?: boolean;
   cash_payment?: boolean;
   stripe_fee?: number | null;
+  /** Lien de report envoyé au client (effacé quand il a choisi sa nouvelle date). */
+  reschedule_token?: string | null;
   slot_proposal_token?: string | null;
   slot_proposal_date?: string | null;
   slot_proposal_heure?: string | null;

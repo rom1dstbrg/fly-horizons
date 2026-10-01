@@ -229,6 +229,7 @@ export function ReservationDrawer({
     startTransition(async () => {
       const r = await sendRescheduleInvite(reservation.id);
       if (r.error) { showFeedback("Erreur : " + r.error, false); return; }
+      onFieldsChange?.(reservation.id, { reschedule_token: "envoye" });
       showFeedback(r.emailError ? "Lien de report créé · email non envoyé, réessayez" : "Email de report envoyé au client ✓", !r.emailError);
     });
   }

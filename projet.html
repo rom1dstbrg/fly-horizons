@@ -1717,6 +1717,13 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-10-01 (82) — Badge « Report en cours » / « Créneau proposé »</h3>
+      <ul>
+        <li><code>getResaBadge</code> (<code>components/admin/ui/resaBadge.ts</code>) : si un lien de report est parti (<code>reschedule_token</code>) le badge passe à « Report en cours » (orange) au lieu de « Confirmé » ; si le pilote a proposé un créneau (<code>slot_proposal_token</code>), « Créneau proposé ». Retour à la normale quand le client a choisi (le jeton est effacé). Mis à jour tout de suite dans le tiroir à l'envoi. Migration signaux exécutée par Romain le 01/10 (job pg_cron 4).</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-10-01 (81) — Réservations admin : signaux, « J'ai effectué le virement », relances push</h3>
       <ul>
         <li><code>lib/reservation-signals.ts</code> (règles pures, partagées page + cron), <code>components/admin/AdminVolsClient.tsx</code> (remplace <code>ReservationsClient</code>), bannière de signaux dans <code>OverviewTab</code> du tiroir, champs ajoutés à <code>DrawerReservation</code>.</li>

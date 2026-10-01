@@ -11,7 +11,16 @@ export function getResaBadge(r: {
   statut: string;
   type_resa: string;
   payment_status?: string | null;
+  /** Lien de report envoyé : le client doit choisir une nouvelle date. */
+  reschedule_token?: string | null;
+  /** Nouveau créneau proposé par le pilote, en attente de la réponse du client. */
+  slot_proposal_token?: string | null;
 }): { label: string; variant: BadgeVariant } {
+  // Un report ou un créneau proposé prime sur « Confirmé » : c'est ce qu'il reste à faire.
+  if (!["annulee", "vol_effectue"].includes(r.statut)) {
+    if (r.reschedule_token) return { label: "Report en cours", variant: "warning" };
+    if (r.slot_proposal_token) return { label: "Créneau proposé", variant: "warning" };
+  }
   if (r.type_resa !== "perso" && r.statut === "en_attente" && r.payment_status === "paid") {
     return { label: "Payé", variant: "emerald" };
   }
