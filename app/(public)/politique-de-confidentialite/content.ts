@@ -70,7 +70,6 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
           "**Supabase** (supabase.com) : hébergement de la base de données, sur des serveurs situés en Europe.",
           "**Vercel** (vercel.com) : hébergement et diffusion du site.",
           "**Resend** (resend.com) : envoi des emails (confirmations, rappels, messages). Données transmises : prénom, nom, email, contenu de l'email.",
-          "**Anthropic** (anthropic.com) : uniquement si vous utilisez l'assistant de conversation. Le contenu de vos messages lui est transmis pour générer une réponse.",
           "**Fournisseurs de cartes.** Les pages Contact et Accès à l'aérodrome intègrent une carte Google Maps, et les cartes d'itinéraire utilisent des fonds de carte tiers (Esri, CARTO, OpenFlightMaps). Charger ces cartes transmet votre adresse IP à ces fournisseurs, qui peuvent aussi y déposer leurs propres cookies.",
         ],
       },

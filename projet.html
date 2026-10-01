@@ -1807,6 +1807,14 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-10-01 (96) — Variables Stripe supprimées de Vercel, paragraphe Anthropic retiré de la politique</h3>
+      <ul>
+        <li>Vercel (projet <code>fly_horizons</code>, production et preview) : supprimées <code>STRIPE_SECRET_KEY</code>, <code>STRIPE_WEBHOOK_SECRET</code>, <code>NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code> via <code>vercel env rm</code> ; 14 autres variables intactes (vérifié par <code>vercel env ls</code>). Le déploiement en production actuel tourne encore avec l'ancien code tant que <code>main</code> n'est pas poussé ; le prochain déploiement n'utilise plus ces variables.</li>
+        <li>Politique de confidentialité : à la demande de Romain, retrait de la puce « Anthropic (anthropic.com) : uniquement si vous utilisez l'assistant… » dans les destinataires. <b>Point ouvert</b> : l'assistant (<code>/api/chat</code>, clé <code>ANTHROPIC_API_KEY</code> toujours en place) envoie bien les messages à Anthropic, et l'article 2 (« Assistant de conversation ») le dit encore en renvoyant à l'article 4, qui ne le liste plus. À trancher : remettre la puce, ou retirer l'assistant et son paragraphe.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-10-01 (95) — Stripe supprimé du site, politique de confidentialité 2.1</h3>
       <ul>
         <li>Supprimés : <code>app/api/stripe/webhook</code>, <code>app/api/reservation/{pay,resume,checkout}</code>, <code>app/api/cron/payment-deadline</code> (+ <code>vercel.json</code>), 3 gabarits d'email (invitation, rappel, lien de paiement) et leurs aperçus, <code>sendPaymentLinkAdmin</code> / <code>resendPaymentLinkAdmin</code> et les boutons du tiroir, la dépendance <code>stripe</code>. <code>reservation-edit.ts</code> : un lien de paiement n'est créé et envoyé que pour une annonce (virement).</li>
