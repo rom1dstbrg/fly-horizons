@@ -130,7 +130,7 @@ export function AdminVolsClient({ reservations: initial }: { reservations: Reser
   );
 
   return (
-    <>
+    <div className="space-y-5">
       <StatGrid>
         {stat("sans_reponse", {
           label: "Sans réponse",
@@ -295,6 +295,6 @@ export function AdminVolsClient({ reservations: initial }: { reservations: Reser
         onFieldsChange={handleFieldsChange}
         viewerRole="admin"
       />
-    </>
+    </div>
   );
 }
