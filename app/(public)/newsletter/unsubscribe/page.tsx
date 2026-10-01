@@ -1,8 +1,13 @@
-import { createAdminClient } from "@/lib/supabase/admin";
 import Link from "next/link";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
+import { createAdminClient } from "@/lib/supabase/admin";
 
-export const metadata = { title: "Désinscription newsletter" };
+export const metadata = { title: "Désinscription newsletter", robots: { index: false } };
+
+// Nouvelle DA (01/10) : même langage que les autres pages de confirmation (pastille dorée, titre, texte, un lien),
+// sans card centrée. La désinscription reste immédiate à l'ouverture du lien (comportement inchangé).
+const mailLink = "font-semibold text-[#0b2238] underline decoration-[#0b2238]/25 underline-offset-[3px] hover:decoration-primary transition-colors";
+const Mail = () => <a href="mailto:info@fly-horizons.com" className={mailLink}>info@fly-horizons.com</a>;
 
 export default async function UnsubscribePage({
   searchParams,
@@ -19,7 +24,7 @@ export default async function UnsubscribePage({
       .from("newsletter_subscribers")
       .select("id, active")
       .eq("unsubscribe_token", token)
-      .single();
+      .maybeSingle();
 
     if (!data) {
       status = "invalid";
@@ -37,56 +42,40 @@ export default async function UnsubscribePage({
   const isOk = status === "success" || status === "already";
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-16 bg-[#f5f8ff]">
-      <div className="max-w-md w-full bg-white rounded-2xl border border-border shadow-sm p-8 text-center">
+    <main className="min-h-screen bg-white">
+      <section className="pt-page pb-24 lg:pb-32">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10">
+          {isOk ? (
+            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-primary text-[#0b2238]">
+              <Check size={20} strokeWidth={2.5} />
+            </div>
+          ) : (
+            <p className="text-[11px] font-bold text-primary uppercase tracking-[3px] mb-3">Newsletter</p>
+          )}
 
-        <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5 ${isOk ? "bg-green-50" : "bg-red-50"}`}>
-          {isOk
-            ? <CheckCircle2 size={28} className="text-green-500" />
-            : <XCircle size={28} className="text-red-400" />
-          }
+          <h1 className="text-[32px] lg:text-[44px] font-black text-foreground leading-[1.08] lg:leading-[1.04] tracking-[-0.02em] mb-3">
+            {status === "success" && "Vous êtes désinscrit."}
+            {status === "already" && "Déjà désinscrit."}
+            {status === "invalid" && "Lien invalide."}
+            {status === "missing" && "Lien incomplet."}
+          </h1>
+
+          <p className="max-w-[520px] text-base leading-[1.7] text-foreground/80">
+            {status === "success" && "Cette adresse ne recevra plus la newsletter de Fly Horizons. Vous pouvez vous réinscrire à tout moment depuis le bas de n'importe quelle page du site."}
+            {status === "already" && "Cette adresse ne reçoit déjà plus notre newsletter. Il n'y a rien d'autre à faire."}
+            {status === "invalid" && <>Ce lien de désinscription n&apos;est pas valide. Écrivez-nous à <Mail /> et nous vous retirons de la liste.</>}
+            {status === "missing" && <>Utilisez le lien de désinscription présent dans l&apos;email que vous avez reçu, ou écrivez-nous à <Mail />.</>}
+          </p>
+
+          <Link
+            href="/"
+            className="mt-6 inline-flex items-center gap-1.5 text-sm font-bold text-[#0b2238] underline decoration-[#0b2238]/25 underline-offset-4 hover:decoration-primary transition-colors"
+          >
+            Retour au site
+            <ArrowRight size={14} />
+          </Link>
         </div>
-
-        {status === "success" && (
-          <>
-            <h1 className="text-xl font-bold text-foreground mb-2">Désinscription confirmée</h1>
-            <p className="text-sm text-muted-foreground">
-              Vous avez bien été retiré de notre newsletter. Vous ne recevrez plus d'emails de notre part.
-            </p>
-          </>
-        )}
-        {status === "already" && (
-          <>
-            <h1 className="text-xl font-bold text-foreground mb-2">Déjà désinscrit</h1>
-            <p className="text-sm text-muted-foreground">
-              Cette adresse email n'est plus inscrite à notre newsletter.
-            </p>
-          </>
-        )}
-        {status === "invalid" && (
-          <>
-            <h1 className="text-xl font-bold text-foreground mb-2">Lien invalide</h1>
-            <p className="text-sm text-muted-foreground">
-              Ce lien de désinscription n'est pas valide ou a déjà été utilisé.
-            </p>
-          </>
-        )}
-        {status === "missing" && (
-          <>
-            <h1 className="text-xl font-bold text-foreground mb-2">Lien manquant</h1>
-            <p className="text-sm text-muted-foreground">
-              Le lien de désinscription est incomplet. Utilisez le lien fourni dans l'email reçu.
-            </p>
-          </>
-        )}
-
-        <Link
-          href="/"
-          className="inline-block mt-6 px-5 py-2.5 bg-navy text-white rounded-lg text-sm font-semibold hover:bg-navy/90 transition-colors"
-        >
-          Retour au site
-        </Link>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }
