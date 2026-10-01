@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { MessageSquare, Send } from "lucide-react";
 import {
   updateContactStatut, replyContact, deleteContact, getContactMessages,
@@ -99,6 +99,12 @@ function ContactSheetContent({ contact: c, clientId, onClose, onStatus, onDelete
   const [feedback, setFeedback] = useState<{ ok: boolean; text: string } | null>(null);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   const [isPending, startTransition] = useTransition();
+  const finRef = useRef<HTMLDivElement>(null);
+
+  // Ouvre le tiroir sur le bas : dernier message et zone de réponse, sans défiler.
+  useEffect(() => {
+    if (!loading) finRef.current?.scrollIntoView({ block: "end" });
+  }, [loading, messages.length]);
 
   useEffect(() => {
     let cancelled = false;
@@ -213,6 +219,7 @@ function ContactSheetContent({ contact: c, clientId, onClose, onStatus, onDelete
             Voir la fiche client
           </LinkButton>
         )}
+        <div ref={finRef} />
       </SheetBody>
 
       <SheetFooter>
