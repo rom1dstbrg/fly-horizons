@@ -27,7 +27,7 @@ export default async function AnnoncePaiementPage({ params }: PageProps) {
   const { data: resa } = await supabase
     .from("reservations")
     .select(
-      "id, statut, acompte, date_vol, heure_vol, duree, pilote_paye, pilote_paye_at, type_resa, clients(prenom, nom), pilotes(id, nom, iban, photo_url)",
+      "id, statut, acompte, date_vol, heure_vol, duree, pilote_paye, pilote_paye_at, client_paiement_declare_at, type_resa, clients(prenom, nom), pilotes(id, nom, iban, photo_url)",
     )
     .eq("payment_token", token)
     .eq("type_resa", "annonce_pilote")
@@ -78,6 +78,8 @@ export default async function AnnoncePaiementPage({ params }: PageProps) {
             <section className="lg:col-span-7">
               <PaiementStatus
                 reservationId={resa.id}
+                token={token}
+                declare={!!resa.client_paiement_declare_at}
                 montant={montant}
                 paye={paye}
                 piloteNom={piloteNom}

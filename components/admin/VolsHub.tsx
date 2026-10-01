@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { ReservationsClient } from "@/components/admin/ReservationsClient";
+import { AdminVolsClient } from "@/components/admin/AdminVolsClient";
 import { DispoPlanner } from "@/components/dispo/DispoPlanner";
 import { PilotesDispo } from "@/components/admin/PilotesDispo";
 import { Segmented } from "@/components/pilote/studio";
@@ -31,7 +31,7 @@ export function VolsHub({
     <div className="space-y-5">
       <div>
         {tab === "reservations" && (
-          <ReservationsClient reservations={resaStd as never} />
+          <AdminVolsClient reservations={resaStd as never} />
         )}
         {tab === "disponibilites" && (
           <div className="space-y-4">

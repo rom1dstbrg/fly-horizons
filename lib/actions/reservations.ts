@@ -588,7 +588,7 @@ export async function sendPaymentLinkAdmin(id: string) {
     let paymentToken = resa.payment_token as string | null;
     if (!paymentToken) {
       paymentToken = crypto.randomUUID();
-      await supabase.from("reservations").update({ payment_token: paymentToken }).eq("id", id);
+      await supabase.from("reservations").update({ payment_token: paymentToken, paiement_demande_at: new Date().toISOString() }).eq("id", id);
     }
 
     const { error: statusErr } = await supabase.from("reservations").update({ statut: "payment_pending" }).eq("id", id);

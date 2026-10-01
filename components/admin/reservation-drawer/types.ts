@@ -53,6 +53,10 @@ export interface DrawerReservation {
   // Marketplace pilotes (annonces) + assignation manuelle d'un vol standard (Bloc B)
   pilote_id?: string | null;
   pilote_assigned_at?: string | null;
+  /** Premier envoi du lien de paiement au client (signal « paiement en attente »). */
+  paiement_demande_at?: string | null;
+  /** Le client a cliqué « J'ai effectué le virement » : le pilote doit confirmer. */
+  client_paiement_declare_at?: string | null;
   pilote_declaration_at?: string | null;
   annonce_id?: string | null;
   /** Annonce d'origine (coût total du vol, part du pilote) — chargée par Mes vols. */

@@ -2238,6 +2238,29 @@ export function pilotePaiementCheckinEmail(p: {
   return adminEmailBase(body, "Rappel paiement · Fly Horizons");
 }
 
+/** Le client a cliqué « J'ai effectué le virement » : le pilote doit confirmer la réception. */
+export function pilotePaiementDeclareEmail(p: {
+  clientNom: string;
+  dateStr: string;
+  montant: number | null;
+  communication: string;
+  transactionsUrl: string;
+}): string {
+  const body = `
+    <p style="margin:0 0 12px;">
+      ${esc(p.clientNom)} indique avoir effectué le virement pour le vol du ${esc(p.dateStr)}.
+      Vérifiez votre compte, puis confirmez la réception dans votre espace, ou signalez que rien n'est arrivé.
+    </p>
+    ${adminLine("Client", esc(p.clientNom))}
+    ${adminLine("Date du vol", esc(p.dateStr))}
+    ${p.montant != null ? adminLine("Montant attendu", `${p.montant} €`) : ""}
+    ${adminLine("Communication", esc(p.communication))}
+    <p style="margin:12px 0 0;">Merci de répondre sous 48 h.</p>
+    ${adminLink(p.transactionsUrl, "Confirmer le paiement")}`;
+
+  return adminEmailBase(body, "Le client dit avoir payé · Fly Horizons");
+}
+
 // ── Accès à l'espace pilote et mot de passe ──────────────────────────────────
 // Envoyés par nous (Resend) plutôt que par Supabase : le lien est généré côté
 // serveur avec auth.admin.generateLink, seul l'email change (décision 2026-09-27).

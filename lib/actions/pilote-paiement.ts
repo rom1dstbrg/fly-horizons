@@ -88,6 +88,8 @@ export async function setPilotePaye(
       .update({
         pilote_paye: paye,
         pilote_paye_at: paye ? new Date().toISOString() : null,
+        // Le pilote infirme la réception : le client pourra déclarer son virement à nouveau.
+        ...(paye ? {} : { client_paiement_declare_at: null }),
         statut: restored,
         ...(nouveauMontant !== null ? { acompte: nouveauMontant } : {}),
         ...(paye ? { pre_payment_statut: null, payment_token: null } : {}),
@@ -196,6 +198,7 @@ export async function renvoyerLienVirement(reservationId: string) {
         .from("reservations")
         .update({
           payment_token: token,
+          paiement_demande_at: new Date().toISOString(),
           statut: "payment_pending",
           pre_payment_statut: resa.statut === "payment_pending" ? null : resa.statut,
         })

@@ -3,9 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Copy, Check, Download, RefreshCw, Clock } from "lucide-react";
+import { declarerPaiementClient } from "@/lib/actions/paiement-client";
 
 interface Props {
   reservationId: string;
+  token: string;
+  /** Le client a déjà cliqué « J'ai effectué le virement ». */
+  declare: boolean;
   montant: number | null;
   paye: boolean;
   piloteNom: string;
@@ -19,6 +23,8 @@ const EYEBROW = "text-[11px] font-bold text-primary uppercase tracking-[3px]";
 const CTA = "inline-flex items-center justify-center gap-2 rounded-[10px] bg-[#0b2238] px-6 py-[15px] text-sm font-black text-white hover:bg-[#0b2238]/90 transition-colors cursor-pointer";
 
 export function PaiementStatus({
+  token,
+  declare,
   montant,
   paye,
   piloteNom,
@@ -30,6 +36,18 @@ export function PaiementStatus({
   const router = useRouter();
   const [copied, setCopied] = useState<"iban" | "comm" | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [declared, setDeclared] = useState(declare);
+  const [sending, setSending] = useState(false);
+  const [declareError, setDeclareError] = useState<string | null>(null);
+
+  async function declarer() {
+    setSending(true);
+    setDeclareError(null);
+    const res = await declarerPaiementClient(token);
+    setSending(false);
+    if ("error" in res) setDeclareError(res.error);
+    else setDeclared(true);
+  }
 
   // Rafraîchit l'état ("en attente" → "confirmé") tant que le pilote n'a pas
   // coché « payé ». Pas de webhook : c'est un simple poll doux.
@@ -121,11 +139,31 @@ export function PaiementStatus({
         </p>
       )}
 
+      {/* Le client prévient le pilote qu'il a viré */}
+      {!declared && (
+        <div className="mt-7">
+          <button
+            type="button"
+            onClick={declarer}
+            disabled={sending}
+            className={`${CTA} w-full sm:w-auto disabled:opacity-60`}
+          >
+            {sending ? "Envoi…" : "J'ai effectué le virement"}
+          </button>
+          <p className="mt-2 text-[12.5px] text-foreground/55">
+            Un clic prévient {piloteNom} par email, une fois le virement fait depuis votre banque.
+          </p>
+          {declareError && <p className="mt-2 text-sm text-red-600">{declareError}</p>}
+        </div>
+      )}
+
       {/* Statut en direct */}
       <div className="mt-7 pt-6 border-t border-border flex items-center justify-between gap-3">
         <span className="flex items-center gap-2 text-sm text-foreground/70">
           <Clock size={15} className="text-amber-500" />
-          En attente de votre virement — le pilote confirmera dès réception.
+          {declared
+            ? `${piloteNom} a été prévenu. Il confirmera dès qu'il aura vu le virement.`
+            : "En attente de votre virement, le pilote confirmera dès réception."}
         </span>
         <button
           type="button"

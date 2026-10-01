@@ -270,6 +270,21 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-10-01 (23) · Réservations admin : signaux, déclaration de paiement du client, notifications</p>
+      <h3>La page Réservations de l'admin est la liste « Mes vols » du pilote avec une couche de supervision ; le client peut prévenir le pilote qu'il a payé ; des notifications push relancent aux seuils</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Romain gère le client, pas le vol (d'autres pilotes volent). Il est admin et pilote à la fois. Maquette validée : https://claude.ai/artifact/VncxNjNxtVkYFUcnd1r4eu (bureau, tiroir, téléphone).</dd>
+        <dt>Décision</dt>
+        <dd><b>Même page que « Mes vols »</b> (composants Studio), plus : colonne Pilote avec filtre et regroupement, colonne Signal, stats cliquables qui filtrent, coordonnées du client sur la ligne, bannière de signaux en tête de l'aperçu du tiroir. <b>Seuils de Romain</b> : demande sans réponse du pilote orange à 36 h, rouge à 48 h ; paiement en attente (depuis l'envoi du lien) orange à 3 jours, rouge à 5 jours. <b>Nouveau</b> : sur la page de paiement par virement, un bouton « J'ai effectué le virement » prévient le pilote (email + push) ; il a alors 48 h pour confirmer la réception ou signaler que rien n'est arrivé (orange à 36 h, rouge à 48 h : même délai que la demande, choix par défaut à confirmer). <b>Notifications</b> : cron horaire <code>/api/cron/signaux</code> ; à l'orange le pilote est prévenu, au rouge le pilote est relancé et l'admin prévenu aussi ; un palier ne part qu'une fois (<code>push_rappels_envoyes</code>). Deux signaux ajoutés par défaut, à valider : vol passé non marqué effectué (orange 24 h, rouge 72 h) et vol sans heure à moins de 48 h.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Une liste admin distincte, dans l'ancien style. Calculer « paiement en attente » depuis la date de confirmation du créneau (imprécis : on stocke <code>paiement_demande_at</code> à l'envoi du lien).</dd>
+        <dt>Conséquences</dt>
+        <dd><b>Migration à exécuter AVANT le déploiement</b> : <code>supabase/migrations/20261001_signaux_reservations.sql</code> (colonnes <code>paiement_demande_at</code> et <code>client_paiement_declare_at</code>, rattrapage des liens déjà envoyés, tâche pg_cron horaire avec <code>&lt;CRON_SECRET&gt;</code> à remplacer, après le déploiement de la route). Sans la migration, la page de paiement du client et le cron échouent. Si le pilote infirme la réception (« non payé »), la déclaration du client est effacée et il peut la refaire. L'ancienne liste admin <code>ReservationsClient</code> et son action de suppression sont retirées.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-10-01 (22) · Nettoyage du code mort avant la refonte de l'admin</p>
       <h3>La boutique (commande, panier, vouchers, coupons), le vol sur mesure et le configurateur sont supprimés avant de refaire l'admin en Studio</h3>
       <dl>
@@ -1700,6 +1715,15 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-10-01 (81) — Réservations admin : signaux, « J'ai effectué le virement », relances push</h3>
+      <ul>
+        <li><code>lib/reservation-signals.ts</code> (règles pures, partagées page + cron), <code>components/admin/AdminVolsClient.tsx</code> (remplace <code>ReservationsClient</code>), bannière de signaux dans <code>OverviewTab</code> du tiroir, champs ajoutés à <code>DrawerReservation</code>.</li>
+        <li>Client : bouton sur <code>/vol/annonce/paiement/[token]</code> → <code>declarerPaiementClient</code> (<code>lib/actions/paiement-client.ts</code>) : horodate, historique, push + email au pilote (<code>pilotePaiementDeclareEmail</code>). <code>paiement_demande_at</code> posé aux 3 endroits où le lien de paiement est créé ; <code>setPilotePaye(false)</code> efface la déclaration.</li>
+        <li><code>/api/cron/signaux</code> + migration <code>20261001_signaux_reservations.sql</code> (à exécuter à la main). <code>tsc</code> et <code>next build</code> OK ; seuils vérifiés par un script. Commité, non poussé.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-10-01 (80) — Code mort supprimé avant la refonte de l'admin (boutique, vouchers, vol sur mesure, configurateur)</h3>

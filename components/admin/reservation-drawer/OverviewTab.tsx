@@ -9,6 +9,7 @@ import {
 import { Button, Input } from "@/components/pilote/studio";
 import { cn } from "@/lib/utils";
 import { isPiloteVol, isRegleFlyHorizons } from "@/lib/pilote/payment";
+import { getSignals } from "@/lib/reservation-signals";
 import { BLOC_H, isBloc, plageLabel } from "@/lib/pilote-creneaux";
 import { stripeNetInfo } from "@/lib/stripe-fee";
 import type { DrawerReservation } from "./types";
@@ -326,6 +327,19 @@ export function OverviewTab({
           </div>
         )}
       </div>
+
+      {getSignals(r).map((sg) => (
+        <p
+          key={sg.kind}
+          className={cn(
+            "flex items-center gap-2 rounded-[12px] px-3 py-2.5 text-[12.5px] font-semibold",
+            sg.level === "bad" ? "bg-st-bad-soft text-st-bad" : "bg-st-warn-soft text-st-warn",
+          )}
+        >
+          <span className="h-2 w-2 shrink-0 rounded-full bg-current" />
+          {sg.label}
+        </p>
+      ))}
 
       {isAdmin && (r.slot_change_count ?? 0) > 0 && (
         <p className={cn("flex items-center gap-2 text-[12.5px]", (r.slot_change_count ?? 0) >= 2 ? "font-semibold text-st-warn" : "text-st-muted")}>

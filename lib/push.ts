@@ -57,7 +57,7 @@ export async function sendPushToPilote(piloteId: string | null | undefined, payl
 export type PiloteEvent =
   | "nouvelle_demande" | "vol_assigne" | "message_client" | "route_validee" | "route_modif"
   | "annulation" | "report" | "vol_48h" | "paiement_avant_vol" | "paiement_apres_vol"
-  | "bilan_vol" | "bilan_vol_relance";
+  | "bilan_vol" | "bilan_vol_relance" | "client_dit_paye";
 
 function dateCourte(d: string): string {
   return new Date(d + "T12:00:00Z").toLocaleDateString("fr-BE", { weekday: "short", day: "numeric", month: "short" });
@@ -93,10 +93,11 @@ export async function notifyPiloteReservation(reservationId: string, event: Pilo
       paiement_avant_vol: { title: "Paiement pas encore noté", body: `Vol de ${client} le ${quand} : marquez le paiement quand vous l'avez reçu.` },
       paiement_apres_vol: { title: "Paiement à vérifier", body: `Vol de ${client} du ${quand} fait, paiement toujours pas noté.` },
       bilan_vol: { title: "Bilan de vol à faire", body: `Vol de ${client} du ${quand} : notez les minutes volées et passez-le en vol effectué.` },
+      client_dit_paye: { title: "Le client dit avoir payé", body: `${client} a déclaré son virement pour le vol du ${quand}. Confirmez la réception.` },
       bilan_vol_relance: { title: "Bilan de vol toujours en attente", body: `Vol de ${client} du ${quand} : il manque les minutes volées pour le clôturer.` },
     };
     const tag = `${event}:${r.id}`;
-    await sendPushToPilote(r.pilote_id, { ...p[event], url: event.startsWith("paiement") ? "/pilote/transactions" : url, tag });
+    await sendPushToPilote(r.pilote_id, { ...p[event], url: event.startsWith("paiement") || event === "client_dit_paye" ? "/pilote/transactions" : url, tag });
   } catch (e) {
     console.error("[push] notifyPiloteReservation", event, e);
   }

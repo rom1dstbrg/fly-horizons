@@ -30,35 +30,3 @@ export async function deleteClient(clientId: string) {
   }
 }
 
-export async function deleteReservationStandard(resaId: string) {
-  try {
-    await checkAdmin();
-    const adminSupabase = createAdminClient();
-
-    const { data: resa } = await adminSupabase
-      .from("reservations")
-      .select("voucher_code")
-      .eq("id", resaId)
-      .single();
-
-    if (resa?.voucher_code) {
-      await adminSupabase
-        .from("voucher_codes")
-        .update({ status: "unused", used_at: null })
-        .eq("code", resa.voucher_code)
-        .in("status", ["reserved", "used"]);
-    }
-
-    const { error } = await adminSupabase
-      .from("reservations")
-      .delete()
-      .eq("id", resaId);
-    if (error) return { error: error.message };
-    revalidatePath("/admin/vols");
-    revalidatePath("/admin");
-    return { success: true };
-  } catch {
-    return { error: "Erreur suppression" };
-  }
-}
-

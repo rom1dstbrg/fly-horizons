@@ -406,7 +406,7 @@ export async function respondToRouteProposal(
         // On mémorise le statut d'avant (normalement "heure_confirmee", route déjà envoyée) dans
         // pre_payment_statut : le webhook Stripe le restaure après paiement au lieu de retomber
         // sur "en_attente", ce qui redemanderait à l'admin de reconfirmer une date déjà actée.
-        const extra: Record<string, unknown> = { payment_token: paymentToken };
+        const extra: Record<string, unknown> = { payment_token: paymentToken, paiement_demande_at: new Date().toISOString() };
         if (!isPerso) {
           extra.statut = "payment_pending";
           extra.pre_payment_statut = freshStatut ?? "heure_confirmee";
