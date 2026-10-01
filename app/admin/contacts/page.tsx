@@ -1,28 +1,28 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ContactsClient } from "@/components/admin/ContactsClient";
-import { PageHeader } from "@/components/admin/PageHeader";
+import { PageHeader } from "@/components/pilote/studio";
 
-export const metadata = { title: "Messages — Admin" };
+export const metadata = { title: "Contacts — Admin" };
 
 export default async function AdminContactsPage() {
-  const supabase = createAdminClient();
+  const db = createAdminClient();
 
-  const { data: contacts } = await supabase
-    .from("contacts")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const [{ data: contacts }, { data: clients }] = await Promise.all([
+    db.from("contacts").select("id, nom, email, sujet, message, statut, reponse, created_at").order("created_at", { ascending: false }),
+    db.from("clients").select("id, email").order("id", { ascending: true }),
+  ]);
 
-  const all = contacts ?? [];
+  // Email (minuscules) → identifiant client, pour le lien vers la fiche.
+  const clientIds: Record<string, string> = {};
+  for (const c of clients ?? []) {
+    const key = (c.email ?? "").toLowerCase();
+    if (key && !clientIds[key]) clientIds[key] = c.id;
+  }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        domain="clients"
-        title="Messages"
-        subtitle="Formulaire de contact : répondez directement depuis cette page"
-      />
-
-      <ContactsClient contacts={all} />
+    <div className="pilote-studio space-y-5 font-sans text-st-text">
+      <PageHeader title="Contacts" />
+      <ContactsClient contacts={contacts ?? []} clientIds={clientIds} />
     </div>
   );
 }

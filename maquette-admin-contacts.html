@@ -1,0 +1,121 @@
+<title>Maquette Contacts admin</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+<style>
+/* Mise en page : tableau pleine largeur + tiroir 560 px à droite, comme Clients. */
+:root{
+  --bg:#f5f6f8; --card:#fff; --surface:#f4f5f7; --line:#eceef2; --line-strong:#dcdfe6;
+  --text:#0f1117; --text2:#4d5463; --muted:#5f6675; --ink:#0b2238; --ink-soft:#e8edf3;
+  --gold:#F2B705; --gold-soft:#fdf4d6; --gold-text:#8a6400;
+  --ok:#16794a; --ok-soft:#e7f5ec; --bad:#c4372c; --info:#2b5cb8; --info-soft:#eaf0fb;
+  --font:'Poppins',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0c1117; --card:#131a22; --surface:#1a222c; --line:#222b36; --line-strong:#2e3946;
+  --text:#eef1f5; --text2:#b4bcc8; --muted:#8a93a1; --ink:#e8edf3; --ink-soft:#1d2b3b;
+  --gold-soft:#3a2f0c; --gold-text:#f2c94c; --ok-soft:#12301f; --info-soft:#16253f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c1117; --card:#131a22; --surface:#1a222c; --line:#222b36; --line-strong:#2e3946;
+  --text:#eef1f5; --text2:#b4bcc8; --muted:#8a93a1; --ink:#e8edf3; --ink-soft:#1d2b3b;
+  --gold-soft:#3a2f0c; --gold-text:#f2c94c; --ok-soft:#12301f; --info-soft:#16253f; color-scheme:dark}
+body{background:var(--bg);color:var(--text);font-family:var(--font);padding-inline:16px;padding-block:24px}
+*{box-sizing:border-box}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:20px}
+h1{font-size:26px;font-weight:700;margin:0}
+.note{font-size:12.5px;color:var(--muted);margin:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 1px 2px rgba(11,34,56,.05)}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line)}
+.seg{display:inline-flex;background:var(--surface);border-radius:11px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:none;font:600 12.5px var(--font);color:var(--text2);padding:6px 12px;border-radius:9px;cursor:pointer}
+.seg button.on{background:var(--card);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.seg b{font-weight:600;color:var(--muted);margin-left:5px}
+.search{height:34px;border:1px solid var(--line-strong);background:var(--card);color:var(--text);border-radius:10px;padding:0 12px;font:13px var(--font);min-width:220px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:left;padding:10px 14px;font-weight:600}
+td{padding:12px 14px;border-top:1px solid var(--line);vertical-align:middle}
+tr.row{cursor:pointer}tr.row:hover{background:var(--surface)}tr.row.sel{background:var(--surface)}
+.who{display:flex;gap:12px;align-items:center;min-width:0}
+.av{width:36px;height:36px;border-radius:50%;background:var(--ink-soft);color:var(--ink);display:grid;place-items:center;font-weight:700;font-size:12.5px;flex:none}
+.n{font-weight:550}.sub{font-size:12px;color:var(--muted)}
+.ex{max-width:340px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;color:var(--muted)}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--gold);margin-right:8px}
+.unread .n,.unread .subj{font-weight:700}
+.badge{display:inline-block;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:99px}
+.b-new{background:var(--gold-soft);color:var(--gold-text)}.b-lu{background:var(--surface);color:var(--text2)}
+.b-rep{background:var(--ok-soft);color:var(--ok)}.b-arc{background:var(--surface);color:var(--muted)}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 560px;gap:20px;align-items:start}
+.sheet{position:sticky;top:16px;display:flex;flex-direction:column;max-height:calc(100vh - 32px);overflow:hidden}
+.sh-head{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start}
+.sh-head h2{margin:0;font-size:17px}
+.sh-body{padding:18px 20px;overflow:auto;display:grid;gap:16px}
+.lbl{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;margin:0 0 6px}
+.subjet{font-size:15px;font-weight:600;margin:0}
+.msg{display:flex;flex-direction:column;gap:2px;max-width:88%}
+.msg .t{white-space:pre-wrap;font-size:13px;line-height:1.5;border-radius:16px;padding:10px 14px}
+.msg.c{align-items:flex-start}.msg.c .t{background:var(--surface)}
+.msg.a{align-items:flex-end;margin-left:auto}.msg.a .t{background:var(--ink);color:#fff}
+:root[data-theme="dark"] .msg.a .t{color:#0b2238}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .msg.a .t{color:#0b2238}}
+.msg small{font-size:11px;color:var(--muted);padding:0 4px}
+textarea{width:100%;min-height:120px;border:1px solid var(--line-strong);background:var(--card);color:var(--text);border-radius:12px;padding:12px 14px;font:13.5px var(--font);resize:vertical}
+.btn{height:38px;border-radius:11px;border:1px solid var(--line-strong);background:var(--card);color:var(--text);font:550 13px var(--font);padding:0 16px;cursor:pointer}
+.btn.p{background:var(--ink);color:#fff;border-color:var(--ink)}
+:root[data-theme="dark"] .btn.p{color:#0b2238}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.p{color:#0b2238}}
+.sh-foot{padding:14px 20px;border-top:1px solid var(--line);display:grid;gap:10px;text-align:center}
+.foot-row{display:flex;gap:8px;flex-wrap:wrap}.foot-row .btn{flex:1}
+.del{color:var(--bad);font-size:12.5px;font-weight:600;background:none;border:0;cursor:pointer;font-family:var(--font)}
+.ficheLink{font-size:12.5px;color:var(--info);font-weight:600;text-decoration:none}
+@media(max-width:980px){.stage{grid-template-columns:1fr}.sheet{position:static;max-height:none}}
+</style>
+
+<div class="wrap">
+  <div>
+    <h1>Contacts</h1>
+    <p class="note">Maquette : liste en tableau, tiroir de 560 px avec la conversation et la réponse. Messages d'exemple.</p>
+  </div>
+  <div class="stage">
+    <div class="card">
+      <div class="toolbar">
+        <div class="seg"><button class="on">À traiter<b>2</b></button><button>Répondus<b>5</b></button><button>Archivés<b>3</b></button><button>Tous<b>10</b></button></div>
+        <input id="q" class="search" placeholder="Nom, email, sujet…" aria-label="Recherche">
+      </div>
+      <div class="tw"><table>
+        <thead><tr><th>Contact</th><th>Message</th><th>Reçu</th><th>Statut</th></tr></thead>
+        <tbody>
+          <tr class="row sel unread"><td><div class="who"><span class="av">LM</span><div><div class="n"><span class="dot"></span>Léa Martin</div><div class="sub">lea.martin@gmail.com</div></div></div></td><td><div class="subj">Vol de groupe en novembre ?</div><div class="ex">Bonjour, nous sommes quatre amis et aimerions réserver…</div></td><td>Aujourd'hui<div class="sub">09:42</div></td><td><span class="badge b-new">Nouveau</span></td></tr>
+          <tr class="row unread"><td><div class="who"><span class="av">TB</span><div><div class="n"><span class="dot"></span>Thomas Bertrand</div><div class="sub">t.bertrand@outlook.com</div></div></div></td><td><div class="subj">Poids maximum par passager</div><div class="ex">Je pèse 105 kg, est-ce possible de voler à deux ?</div></td><td>Hier<div class="sub">18:10</div></td><td><span class="badge b-new">Nouveau</span></td></tr>
+          <tr class="row"><td><div class="who"><span class="av">SD</span><div><div class="n">Sophie Dubois</div><div class="sub">sophie.d@proximus.be</div></div></div></td><td><div class="subj">Report suite à la météo</div><div class="ex">Merci pour votre retour rapide, je choisis le 14.</div></td><td>28 sept.<div class="sub">14:03</div></td><td><span class="badge b-rep">Répondu</span></td></tr>
+          <tr class="row"><td><div class="who"><span class="av">JP</span><div><div class="n">Jean Peeters</div><div class="sub">jean.peeters@telenet.be</div></div></div></td><td><div class="subj">Facture pour mon employeur</div><div class="ex">Pourriez-vous m'envoyer un reçu au nom de la société ?</div></td><td>25 sept.<div class="sub">11:27</div></td><td><span class="badge b-lu">Lu</span></td></tr>
+          <tr class="row"><td><div class="who"><span class="av">AL</span><div><div class="n">Amina Laurent</div><div class="sub">amina.l@gmail.com</div></div></div></td><td><div class="subj">Où se retrouve-t-on à Spa ?</div><div class="ex">Le point de rendez-vous est bien à l'aérodrome ?</div></td><td>21 sept.<div class="sub">20:51</div></td><td><span class="badge b-arc">Archivé</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <aside class="card sheet" aria-label="Tiroir">
+      <div class="sh-head">
+        <span class="av" style="width:44px;height:44px;font-size:15px">LM</span>
+        <div style="flex:1;min-width:0"><h2>Léa Martin</h2><div class="sub">lea.martin@gmail.com · 1 oct. 2026, 09:42</div></div>
+        <span class="badge b-new">Nouveau</span>
+      </div>
+      <div class="sh-body">
+        <div><p class="lbl">Sujet</p><p class="subjet">Vol de groupe en novembre ?</p></div>
+        <div>
+          <p class="lbl">Conversation</p>
+          <div style="display:grid;gap:10px">
+            <div class="msg c"><div class="t">Bonjour, nous sommes quatre amis et aimerions réserver un vol en novembre. Est-ce possible de voler ensemble, ou faut-il deux vols séparés ?</div><small>Léa · 1 oct., 09:42</small></div>
+          </div>
+        </div>
+        <div>
+          <p class="lbl">Répondre à Léa</p>
+          <textarea id="r" placeholder="Votre réponse…"></textarea>
+        </div>
+        <a class="ficheLink" href="#" onclick="return false">Voir la fiche client (2 vols) →</a>
+      </div>
+      <div class="sh-foot">
+        <div class="foot-row"><button class="btn p" style="flex:2">Envoyer par email</button><button class="btn">Marquer comme lu</button><button class="btn">Archiver</button></div>
+        <button class="del">Supprimer ce message</button>
+      </div>
+    </aside>
+  </div>
+</div>

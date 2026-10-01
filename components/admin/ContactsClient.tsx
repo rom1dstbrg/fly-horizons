@@ -1,27 +1,38 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { MessageSquare, Send } from "lucide-react";
 import {
   updateContactStatut, replyContact, deleteContact, getContactMessages,
 } from "@/lib/actions/contacts";
-import { AdminBadge, STATUT_CONTACT } from "@/components/admin/ui/AdminBadge";
-import { AdminRowActions } from "@/components/admin/ui/AdminRowActions";
-import { AdminSheet, SheetSection } from "@/components/admin/ui/AdminSheet";
-import { PageToolbar, FilterChip, EmptyState } from "@/components/admin/ui";
-import { Send, Loader2, User, MessageSquare } from "lucide-react";
+import {
+  Badge, Button, EmptyState, FormField, LinkButton, Segmented, Sheet, SheetBody, SheetFooter,
+  SheetHeader, Table, TableCell, TableHeaderCell, TableRow, TableSearch, Textarea, SectionHeader,
+  type BadgeTone,
+} from "@/components/pilote/studio";
+import { ConfirmActionDialog, type PendingAction } from "@/components/admin/reservation-drawer/ConfirmActionDialog";
+import { cn } from "@/lib/utils";
 import { uuid } from "@/lib/uuid";
 
-const FILTERS = ["Tous", "Nouveaux", "Lus", "Répondus", "Archivés"] as const;
-const FILTER_VALUES: Record<string, string | null> = {
-  Tous: null, Nouveaux: "nouveau", Lus: "lu", Répondus: "repondu", Archivés: "archive",
+// Page Contacts de l'admin (01/10, maquette validée) : les messages du formulaire
+// public, un tableau, et un tiroir avec la conversation et la réponse par email.
+// Mêmes composants Studio que Clients et Réservations.
+
+type Vue = "traiter" | "repondus" | "archives" | "tous";
+
+const VUES: Record<Vue, (c: Contact) => boolean> = {
+  traiter: (c) => c.statut === "nouveau" || c.statut === "lu",
+  repondus: (c) => c.statut === "repondu",
+  archives: (c) => c.statut === "archive",
+  tous: () => true,
 };
 
-const STATUTS_LIST = [
-  { value: "nouveau", label: "Nouveau" },
-  { value: "lu",      label: "Lu"      },
-  { value: "repondu", label: "Répondu" },
-  { value: "archive", label: "Archivé" },
-];
+const STATUT: Record<string, { label: string; tone: BadgeTone }> = {
+  nouveau: { label: "Nouveau", tone: "gold" },
+  lu: { label: "Lu", tone: "neutral" },
+  repondu: { label: "Répondu", tone: "success" },
+  archive: { label: "Archivé", tone: "neutral" },
+};
 
 interface Contact {
   id: string;
@@ -41,297 +52,323 @@ interface ContactMessage {
   created_at: string;
 }
 
-// ── Corps du drawer ────────────────────────────────────────────
-function DrawerBody({
-  contact,
-  onStatusChange,
-}: {
+const TZ = "Europe/Brussels";
+const jourKey = (iso: string) => new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date(iso));
+
+function fmtRecu(iso: string) {
+  const d = new Date(iso);
+  const jour = jourKey(iso) === jourKey(new Date().toISOString())
+    ? "Aujourd'hui"
+    : d.toLocaleDateString("fr-BE", { day: "numeric", month: "short", timeZone: TZ });
+  const heure = d.toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit", timeZone: TZ });
+  return { jour, heure };
+}
+
+const fmtLong = (iso: string) =>
+  new Date(iso).toLocaleString("fr-BE", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: TZ });
+
+function initiales(nom: string) {
+  const parts = nom.trim().split(/\s+/).filter(Boolean);
+  return ((parts[0]?.[0] ?? "?") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
+}
+
+function Avatar({ nom, size = "md" }: { nom: string; size?: "md" | "lg" }) {
+  return (
+    <span
+      className={cn(
+        "grid shrink-0 place-items-center rounded-full bg-st-ink-soft font-bold text-st-ink",
+        size === "lg" ? "h-[52px] w-[52px] text-[17px]" : "h-9 w-9 text-[12.5px]",
+      )}
+    >
+      {initiales(nom)}
+    </span>
+  );
+}
+
+// ── Contenu du tiroir ─────────────────────────────────────────
+function ContactSheetContent({ contact: c, clientId, onClose, onStatus, onDeleted }: {
   contact: Contact;
-  onStatusChange: (id: string, statut: string) => void;
+  clientId: string | null;
+  onClose: () => void;
+  onStatus: (id: string, statut: string) => void;
+  onDeleted: (id: string) => void;
 }) {
-  const [messages, setMessages]   = useState<ContactMessage[]>([]);
-  const [loadingMsgs, setLoading] = useState(true);
-  const [reponse, setReponse]     = useState("");
-  const [feedback, setFeedback]   = useState("");
+  const [messages, setMessages] = useState<ContactMessage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [reponse, setReponse] = useState("");
+  const [feedback, setFeedback] = useState<{ ok: boolean; text: string } | null>(null);
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
-    setLoading(true);
-    getContactMessages(contact.id).then(r => {
+    let cancelled = false;
+    getContactMessages(c.id).then((r) => {
+      if (cancelled) return;
       setMessages(r.messages as ContactMessage[]);
       setLoading(false);
     });
-  }, [contact.id]);
+    return () => { cancelled = true; };
+  }, [c.id]);
 
-  function changeStatut(val: string) {
+  function changeStatut(statut: string) {
     startTransition(async () => {
-      await updateContactStatut(contact.id, val);
-      onStatusChange(contact.id, val);
+      await updateContactStatut(c.id, statut);
+      onStatus(c.id, statut);
     });
   }
 
-  function handleReply() {
+  function send() {
     if (!reponse.trim()) return;
     startTransition(async () => {
-      const r = await replyContact(contact.id, reponse, contact.email, contact.nom, contact.sujet);
-      if (r?.error) { setFeedback(r.error); return; }
-      const newMsg: ContactMessage = {
-        id: uuid(),
-        author: "admin",
-        content: reponse,
-        created_at: new Date().toISOString(),
-      };
-      setMessages(prev => [...prev, newMsg]);
+      const r = await replyContact(c.id, reponse, c.email, c.nom, c.sujet);
+      if (r?.error) { setFeedback({ ok: false, text: r.error }); return; }
+      setMessages((prev) => [...prev, { id: uuid(), author: "admin", content: reponse, created_at: new Date().toISOString() }]);
       setReponse("");
-      setFeedback("Réponse envoyée ✓");
-      onStatusChange(contact.id, "repondu");
-      setTimeout(() => setFeedback(""), 3000);
+      setFeedback({ ok: true, text: "Réponse envoyée" });
+      onStatus(c.id, "repondu");
     });
   }
+
+  function askDelete() {
+    setPendingAction({
+      title: `Supprimer le message de ${c.nom} ?`,
+      consequences: ["La conversation est supprimée, le client ne pourra plus ouvrir son lien de suivi.", "Cette action est définitive."],
+      confirmLabel: "Supprimer le message",
+      danger: true,
+      run: () => {
+        startTransition(async () => {
+          const r = await deleteContact(c.id);
+          setPendingAction(null);
+          if (r?.error) { setFeedback({ ok: false, text: r.error }); return; }
+          onDeleted(c.id);
+        });
+      },
+    });
+  }
+
+  const statut = STATUT[c.statut] ?? { label: c.statut, tone: "neutral" as BadgeTone };
+  const prenom = c.nom.split(" ")[0];
 
   return (
     <>
-      {/* Fil de messages */}
-      <SheetSection title="Conversation">
-        {loadingMsgs ? (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground py-4">
-            <Loader2 size={12} className="animate-spin" />
-            Chargement…
-          </div>
-        ) : messages.length === 0 ? (
-          <p className="text-xs text-muted-foreground italic">Aucun message.</p>
-        ) : (
-          <div className="space-y-3">
-            {messages.map(msg => {
-              const isAdmin = msg.author === "admin";
-              const timeStr = new Date(msg.created_at).toLocaleString("fr-BE", {
-                day: "numeric", month: "short",
-                hour: "2-digit", minute: "2-digit",
-              });
-              return (
-                <div key={msg.id} className={`flex gap-2 ${isAdmin ? "flex-row-reverse" : ""}`}>
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-bold ${
-                    isAdmin ? "bg-[#0b2238] text-[#F2B705]" : "bg-secondary text-muted-foreground"
-                  }`}>
-                    {isAdmin ? "R" : <User size={12} />}
-                  </div>
-                  <div className={`flex-1 max-w-[85%] flex flex-col ${isAdmin ? "items-end" : "items-start"}`}>
-                    <div className={`rounded-xl px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap ${
-                      isAdmin
-                        ? "bg-[#0b2238] text-white rounded-tr-sm"
-                        : "bg-secondary text-foreground rounded-tl-sm"
-                    }`}>
-                      {msg.content}
+      <SheetHeader
+        leading={<Avatar nom={c.nom} size="lg" />}
+        title={c.nom}
+        subtitle={`${c.email} · ${fmtLong(c.created_at)}`}
+        onClose={onClose}
+      />
+      <div className="px-[22px] pb-3">
+        <Badge tone={statut.tone} dot={c.statut === "nouveau"}>{statut.label}</Badge>
+      </div>
+
+      <SheetBody>
+        <section className="space-y-1">
+          <SectionHeader title="Sujet" />
+          <p className="text-[15px] font-semibold">{c.sujet}</p>
+        </section>
+
+        <section className="space-y-2">
+          <SectionHeader title="Conversation" />
+          {loading ? (
+            <p className="py-4 text-sm text-st-muted">Chargement…</p>
+          ) : messages.length === 0 ? (
+            <p className="py-4 text-sm text-st-muted">Aucun message.</p>
+          ) : (
+            <div className="space-y-2.5">
+              {messages.map((m) => {
+                const moi = m.author === "admin";
+                return (
+                  <div key={m.id} className={cn("flex flex-col", moi ? "items-end" : "items-start")}>
+                    <div className={cn("max-w-[88%] whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 text-[13px]", moi ? "bg-st-ink text-white" : "bg-st-surface text-st-text")}>
+                      {m.content}
                     </div>
-                    <p className="text-[10px] text-muted-foreground mt-0.5 px-0.5">{timeStr}</p>
+                    <span className="mt-0.5 px-1 text-[11px] text-st-muted">
+                      {moi ? "Vous" : prenom}
+                      {" · "}
+                      {new Date(m.created_at).toLocaleString("fr-BE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: TZ })}
+                    </span>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        <section className="space-y-2 border-t border-st-line-soft pt-4">
+          <SectionHeader title={`Répondre à ${prenom}`} />
+          <FormField id="ct-reponse" label="Message">
+            <Textarea
+              id="ct-reponse"
+              rows={6}
+              value={reponse}
+              onChange={(e) => setReponse(e.target.value)}
+              placeholder="Votre réponse…"
+            />
+          </FormField>
+          {feedback && <p className={cn("text-xs font-semibold", feedback.ok ? "text-st-ok" : "text-st-bad")}>{feedback.text}</p>}
+        </section>
+
+        {clientId && (
+          <LinkButton variant="ghost" size="sm" href={`/admin/clients/${clientId}`} className="self-start">
+            Voir la fiche client
+          </LinkButton>
+        )}
+      </SheetBody>
+
+      <SheetFooter>
+        <div className="space-y-3">
+          <div className="flex flex-wrap gap-2">
+            <Button className="min-w-[160px] flex-[2]" onClick={send} loading={isPending} disabled={!reponse.trim()}>
+              <Send /> Envoyer par email
+            </Button>
+            {c.statut === "nouveau" && (
+              <Button variant="secondary" className="flex-1" onClick={() => changeStatut("lu")} disabled={isPending}>Marquer comme lu</Button>
+            )}
+            {c.statut === "archive" ? (
+              <Button variant="secondary" className="flex-1" onClick={() => changeStatut("lu")} disabled={isPending}>Désarchiver</Button>
+            ) : (
+              <Button variant="secondary" className="flex-1" onClick={() => changeStatut("archive")} disabled={isPending}>Archiver</Button>
+            )}
           </div>
-        )}
-      </SheetSection>
-
-      {/* Statut */}
-      <SheetSection title="Statut">
-        <div className="flex flex-wrap gap-2">
-          {STATUTS_LIST.map(s => {
-            const isActive = contact.statut === s.value;
-            return (
-              <button
-                key={s.value}
-                disabled={isActive || isPending}
-                onClick={() => changeStatut(s.value)}
-                className={[
-                  "text-xs px-3 py-1.5 rounded-lg border font-medium transition-all cursor-pointer",
-                  isActive
-                    ? "bg-[#0b2238] text-white border-[#0b2238] cursor-default"
-                    : "border-border text-muted-foreground hover:bg-secondary disabled:opacity-50",
-                ].join(" ")}
-              >
-                {s.label}
-              </button>
-            );
-          })}
+          <button
+            type="button"
+            onClick={askDelete}
+            className="mx-auto block cursor-pointer text-[12.5px] font-semibold text-st-bad hover:underline"
+          >
+            Supprimer ce message
+          </button>
         </div>
-      </SheetSection>
+      </SheetFooter>
 
-      {/* Répondre */}
-      <SheetSection title={`Répondre à ${contact.nom}`}>
-        <textarea
-          value={reponse}
-          onChange={e => setReponse(e.target.value)}
-          rows={12}
-          placeholder={`Votre réponse à ${contact.nom}…`}
-          className="w-full px-3.5 py-3 rounded-xl border border-input bg-background text-sm resize-y min-h-[140px] focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-        {feedback && (
-          <p className={`text-xs mt-1 ${feedback.includes("✓") ? "text-emerald-600" : "text-destructive"}`}>
-            {feedback}
-          </p>
-        )}
-        <button
-          onClick={handleReply}
-          disabled={isPending || !reponse.trim()}
-          className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#0b2238] text-white text-xs font-semibold hover:opacity-90 disabled:opacity-50 transition-colors cursor-pointer"
-        >
-          {isPending ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
-          Envoyer par email
-        </button>
-      </SheetSection>
+      <ConfirmActionDialog
+        action={pendingAction}
+        isPending={isPending}
+        onCancel={() => setPendingAction(null)}
+        onConfirm={() => pendingAction?.run()}
+      />
     </>
   );
 }
 
-// ── Drawer wrapper ─────────────────────────────────────────────
-function ContactDrawer({
-  contact,
-  onClose,
-  onStatusChange,
-}: {
-  contact: Contact | null;
-  onClose: () => void;
-  onStatusChange: (id: string, statut: string) => void;
-}) {
-  if (!contact) return null;
-
-  const dateStr = new Date(contact.created_at).toLocaleDateString("fr-BE", {
-    day: "numeric", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
-  });
-
-  return (
-    <AdminSheet
-      open={!!contact}
-      onClose={onClose}
-      title={contact.nom}
-      subtitle={`${contact.email} · ${dateStr}`}
-      width="w-[520px]"
-    >
-      <DrawerBody
-        key={contact.id}
-        contact={contact}
-        onStatusChange={onStatusChange}
-      />
-    </AdminSheet>
-  );
-}
-
-// ── Carte contact ──────────────────────────────────────────────
-function ContactCard({
-  contact,
-  onOpen,
-  onDelete,
-}: {
-  contact: Contact;
-  onOpen: () => void;
-  onDelete: () => Promise<{ error?: string } | void>;
-}) {
-  const statut  = STATUT_CONTACT[contact.statut] ?? { label: contact.statut, variant: "secondary" as const };
-  const dateStr = new Date(contact.created_at).toLocaleDateString("fr-BE", {
-    day: "numeric", month: "short", year: "numeric",
-  });
-
-  return (
-    <div className="card-premium p-4 hover:border-primary/30 transition-colors">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0 cursor-pointer" onClick={onOpen}>
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="font-semibold text-foreground text-sm">{contact.nom}</p>
-            <AdminBadge variant={statut.variant} label={statut.label} />
-          </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {contact.email} · {dateStr}
-          </p>
-          <p className="text-xs text-foreground font-medium mt-1">{contact.sujet}</p>
-          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">
-            {contact.message}
-          </p>
-        </div>
-        <div onClick={e => e.stopPropagation()} className="shrink-0">
-          <AdminRowActions onView={onOpen} onDelete={onDelete} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Page principale ────────────────────────────────────────────
-export function ContactsClient({ contacts: initial }: { contacts: Contact[] }) {
+// ── Page ──────────────────────────────────────────────────────
+export function ContactsClient({ contacts: initial, clientIds }: { contacts: Contact[]; clientIds: Record<string, string> }) {
   const [contacts, setContacts] = useState<Contact[]>(initial);
-  const [filter, setFilter]     = useState<typeof FILTERS[number]>("Tous");
-  const [drawer, setDrawer]     = useState<Contact | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [vue, setVue] = useState<Vue>("traiter");
+  const [query, setQuery] = useState("");
 
-  function handleStatusChange(id: string, statut: string) {
-    setContacts(prev => prev.map(c => c.id === id ? { ...c, statut } : c));
-    setDrawer(prev => prev?.id === id ? { ...prev, statut } : prev);
+  const counts = useMemo(() => ({
+    traiter: contacts.filter(VUES.traiter).length,
+    repondus: contacts.filter(VUES.repondus).length,
+    archives: contacts.filter(VUES.archives).length,
+    tous: contacts.length,
+  }), [contacts]);
+
+  const needle = query.trim().toLowerCase();
+  const filtered = contacts
+    .filter(VUES[vue])
+    .filter((c) => !needle || `${c.nom} ${c.email} ${c.sujet} ${c.message}`.toLowerCase().includes(needle));
+
+  const open = contacts.find((c) => c.id === openId) ?? null;
+
+  function setStatut(id: string, statut: string) {
+    setContacts((prev) => prev.map((c) => (c.id === id ? { ...c, statut } : c)));
+  }
+  function removeContact(id: string) {
+    setContacts((prev) => prev.filter((c) => c.id !== id));
+    setOpenId(null);
   }
 
-  async function handleDelete(id: string) {
-    const result = await deleteContact(id);
-    if (!result?.error) {
-      setContacts(prev => prev.filter(c => c.id !== id));
-      if (drawer?.id === id) setDrawer(null);
-    }
-    return result;
+  if (contacts.length === 0) {
+    return (
+      <EmptyState
+        icon={MessageSquare}
+        title="Aucun message reçu"
+        description="Les messages du formulaire de contact apparaîtront ici."
+      />
+    );
   }
-
-  // "Tous" exclut les archivés par défaut — ils ne sont plus actionnables au quotidien,
-  // toujours consultables via le filtre "Archivés" dédié.
-  const filtered = filter === "Tous"
-    ? contacts.filter(c => c.statut !== "archive")
-    : contacts.filter(c => c.statut === FILTER_VALUES[filter]);
 
   return (
     <>
-      <div className="space-y-4">
-        <PageToolbar
-          filters={
-            <div className="flex flex-wrap gap-2">
-              {FILTERS.map(f => {
-                const val   = FILTER_VALUES[f];
-                const count = val === null
-                  ? contacts.filter(c => c.statut !== "archive").length
-                  : contacts.filter(c => c.statut === val).length;
-                return (
-                  <FilterChip
-                    key={f}
-                    label={f}
-                    active={filter === f}
-                    count={count}
-                    onClick={() => setFilter(f)}
-                  />
-                );
-              })}
-            </div>
-          }
-        />
+      <Table
+        toolbar={
+          <>
+            <Segmented
+              value={vue}
+              onChange={setVue}
+              items={[
+                { key: "traiter", label: "À traiter", count: counts.traiter },
+                { key: "repondus", label: "Répondus", count: counts.repondus },
+                { key: "archives", label: "Archivés", count: counts.archives },
+                { key: "tous", label: "Tous", count: counts.tous },
+              ]}
+            />
+            <TableSearch value={query} onChange={setQuery} placeholder="Nom, email, sujet…" className="max-sm:w-full" />
+          </>
+        }
+      >
+        <thead>
+          <tr>
+            <TableHeaderCell>Contact</TableHeaderCell>
+            <TableHeaderCell>Message</TableHeaderCell>
+            <TableHeaderCell>Reçu</TableHeaderCell>
+            <TableHeaderCell>Statut</TableHeaderCell>
+          </tr>
+        </thead>
+        <tbody>
+          {filtered.length === 0 ? (
+            <tr>
+              <td colSpan={4} className="py-10 text-center text-sm text-st-muted">
+                {needle ? "Aucun message ne correspond." : "Aucun message dans cette vue."}
+              </td>
+            </tr>
+          ) : (
+            filtered.map((c) => {
+              const s = STATUT[c.statut] ?? { label: c.statut, tone: "neutral" as BadgeTone };
+              const recu = fmtRecu(c.created_at);
+              const nouveau = c.statut === "nouveau";
+              return (
+                <TableRow key={c.id} onClick={() => setOpenId(c.id)} selected={openId === c.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Avatar nom={c.nom} />
+                      <div className="min-w-0">
+                        <p className={cn("truncate", nouveau ? "font-bold" : "font-[550]")}>{c.nom}</p>
+                        <p className="max-w-[220px] truncate text-xs text-st-muted max-sm:max-w-none">{c.email}</p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <p className={cn("max-w-[340px] truncate max-sm:max-w-none", nouveau && "font-bold")}>{c.sujet}</p>
+                    <p className="max-w-[340px] truncate text-xs text-st-muted max-sm:max-w-none">{c.message}</p>
+                  </TableCell>
+                  <TableCell>
+                    <p className="whitespace-nowrap">{recu.jour}</p>
+                    <p className="text-xs text-st-muted">{recu.heure}</p>
+                  </TableCell>
+                  <TableCell>
+                    <Badge size="sm" tone={s.tone} dot={nouveau}>{s.label}</Badge>
+                  </TableCell>
+                </TableRow>
+              );
+            })
+          )}
+        </tbody>
+      </Table>
 
-        {filtered.length === 0 ? (
-          <EmptyState
-            icon={MessageSquare}
-            title={filter !== "Tous" ? `Aucun message "${filter.toLowerCase()}"` : "Aucun message reçu"}
-            description="Les messages du formulaire de contact apparaîtront ici."
+      <Sheet value={open} onClose={() => setOpenId(null)}>
+        {(c) => (
+          <ContactSheetContent
+            key={c.id}
+            contact={c}
+            clientId={clientIds[c.email.toLowerCase()] ?? null}
+            onClose={() => setOpenId(null)}
+            onStatus={setStatut}
+            onDeleted={removeContact}
           />
-        ) : (
-          <div className="space-y-3">
-            {filtered.map(c => (
-              <ContactCard
-                key={c.id}
-                contact={c}
-                onOpen={() => setDrawer(c)}
-                onDelete={() => handleDelete(c.id)}
-              />
-            ))}
-          </div>
         )}
-      </div>
-
-      <ContactDrawer
-        contact={drawer}
-        onClose={() => setDrawer(null)}
-        onStatusChange={handleStatusChange}
-      />
+      </Sheet>
     </>
   );
 }

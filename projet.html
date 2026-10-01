@@ -1732,6 +1732,13 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-10-01 (84) — Page Contacts refaite en Studio (tableau + tiroir)</h3>
+      <ul>
+        <li><code>app/admin/contacts/page.tsx</code> et <code>components/admin/ContactsClient.tsx</code> réécrits sur les composants Studio : onglets À traiter / Répondus / Archivés / Tous, recherche, tableau (contact, sujet + extrait, reçu, statut), tiroir 560 px (conversation, réponse par email, marquer comme lu, archiver, suppression avec confirmation, lien vers la fiche client si l'email correspond). Actions serveur inchangées. Maquette : <code>maquette-admin-contacts.html</code>.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-10-01 (83) — Page Clients refaite en Studio (liste, tiroir, fiche)</h3>
       <ul>
         <li><code>lib/admin-clients.ts</code> (types, <code>summarizeClient</code> : prochain vol, payé, signal, pilote habituel), <code>components/admin/ClientsClient.tsx</code> (liste + tiroir), <code>components/admin/ClientFiche.tsx</code>, <code>components/admin/clients/ClientParts.tsx</code> (avatar, signal, formulaires email et modification, fil de messages). Pages <code>app/admin/clients/page.tsx</code> et <code>[id]/page.tsx</code> réécrites. Vouchers et commandes retirés de la fiche. Décision 24.</li>
