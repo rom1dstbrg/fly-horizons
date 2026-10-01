@@ -97,14 +97,18 @@ export function ClientsClient({ clients: initial, today }: { clients: AdminClien
     setOpenId(id);
   }
 
+  // Chiffres posés sur le fond, sans boîte : le filtre actif est souligné.
   const stat = (f: Filtre, props: Parameters<typeof StatCard>[0]) => (
     <button
       type="button"
       onClick={() => toggle(f)}
       aria-pressed={filtre === f}
-      className="cursor-pointer rounded-[20px] text-left outline-none focus-visible:ring-4 focus-visible:ring-st-ink-soft"
+      className={cn(
+        "cursor-pointer border-b-2 pb-3 text-left outline-none transition-colors focus-visible:ring-4 focus-visible:ring-st-ink-soft",
+        filtre === f ? "border-st-ink" : "border-st-line hover:border-st-line-strong",
+      )}
     >
-      <StatCard {...props} className={cn(props.className, filtre === f && "ring-2 ring-st-ink")} />
+      <StatCard {...props} className={cn(props.className, "rounded-none border-0 bg-transparent p-0 shadow-none sm:p-0")} />
     </button>
   );
 
@@ -143,6 +147,7 @@ export function ClientsClient({ clients: initial, today }: { clients: AdminClien
       )}
 
       <Table
+        className="rounded-none border-0 bg-transparent p-0 shadow-none"
         toolbar={
           <>
             <Segmented
