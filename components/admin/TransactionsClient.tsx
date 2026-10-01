@@ -9,7 +9,7 @@ import { getReservationForDrawer, updateReservationAllFields } from "@/lib/actio
 import { ReservationDrawer } from "@/components/admin/reservation-drawer/ReservationDrawer";
 import type { DrawerReservation } from "@/components/admin/reservation-drawer/types";
 import {
-  Badge, Button, ButtonLabel, buttonClasses, Card, CardSplit, DateTile, EmptyState, FormField, Input, Metric,
+  Badge, Button, ButtonLabel, buttonClasses, Card, DateTile, EmptyState, FormField, Input, Metric,
   PageHeader, Segmented, SectionHeader, Sheet, SheetBody, SheetFooter, SheetHeader, SheetHero, SheetRow, SheetRows,
   Table, TableCell, TableHeaderCell, TableRow, TableSearch,
 } from "@/components/pilote/studio";
@@ -163,7 +163,7 @@ export function TransactionsClient({
   const sheetValue = open && (open.kind === "depense" || openVol) ? open : null;
 
   return (
-    <>
+    <div className="space-y-5">
       <PageHeader
         title="Transactions"
         actions={
@@ -210,7 +210,7 @@ export function TransactionsClient({
             ))}
           </div>
         </div>
-        <CardSplit className="lg:grid-cols-5">
+        <Split5>
           <Metric label="Encaissé" value={"+" + eur(bilan.encaisse)} tone={bilan.encaisse > 0 ? "ok" : undefined} hint={plural(bilan.nPaiements, "paiement")} />
           <Metric label="Coûts avion" value={bilan.coutAvion > 0 ? "−" + eur(bilan.coutAvion) : eur(0)} tone={bilan.coutAvion > 0 ? "bad" : undefined} hint={bilan.nAvecCout > 0 ? `sur ${plural(bilan.nAvecCout, "vol")}` : "à renseigner"} />
           <Metric label="Virés aux pilotes" value={bilan.vire > 0 ? "−" + eur(bilan.vire) : eur(0)} tone={bilan.vire > 0 ? "bad" : undefined} hint={bilan.nVire > 0 ? plural(bilan.nVire, "virement") : "aucun"} />
@@ -221,7 +221,7 @@ export function TransactionsClient({
             tone={bilan.depenses + bilan.rembourse > 0 ? "bad" : undefined}
             hint={bilan.rembourse > 0 ? `dont ${eur(bilan.rembourse)} remboursés` : "aucun remboursement"}
           />
-        </CardSplit>
+        </Split5>
       </Card>
 
       {/* À virer aux pilotes : seulement s'il y a quelque chose à faire */}
@@ -372,7 +372,31 @@ export function TransactionsClient({
         onStatusChange={() => {}}
         onFieldsChange={() => {}}
       />
-    </>
+    </div>
+  );
+}
+
+// Rangée de cinq chiffres (CardSplit s'arrête à quatre) : 2 colonnes sur
+// téléphone, 5 sur bureau, un trait fin entre chaque cellule.
+function Split5({ children }: { children: React.ReactNode[] }) {
+  return (
+    <div className="grid grid-cols-2 border-t border-st-line lg:grid-cols-5">
+      {children.map((cell, i) => (
+        <div
+          key={i}
+          className={cn(
+            "min-w-0 border-st-line px-4 py-3.5 sm:px-5 sm:py-4",
+            i % 2 === 1 && "border-l",
+            i >= 2 && "border-t",
+            "lg:border-t-0",
+            i > 0 ? "lg:border-l" : "lg:border-l-0",
+            i === children.length - 1 && i % 2 === 0 && "max-lg:col-span-2",
+          )}
+        >
+          {cell}
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -404,7 +428,7 @@ function VolLigne({ vol, selected, onOpen }: { vol: LigneVol; selected: boolean;
           <>
             <p className="st-num font-[550]">{eur(vol.paye)}</p>
             <p className="st-num text-[12px] text-st-muted max-sm:hidden">
-              {vol.stripe_net != null ? `net ${vol.stripe_fee_estimated ? "~" : ""}${eur(netVol({ ...vol, remboursement: 0 }))}` : "sans frais"}
+              {vol.stripe_net != null ? `net ${vol.stripe_fee_estimated ? "≈ " : ""}${eur(netVol({ ...vol, remboursement: 0 }))}` : "sans frais"}
             </p>
           </>
         ) : <span className="text-st-muted">—</span>}
