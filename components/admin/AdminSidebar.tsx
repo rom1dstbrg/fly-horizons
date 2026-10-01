@@ -3,334 +3,151 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useState, useEffect, Suspense } from "react";
-import {
-  LayoutDashboard, Users, MessageSquare, Settings, LogOut,
-  Menu, X, ExternalLink, Search,
-  CalendarCheck, Clock,
-  Receipt,
-  LayoutGrid, UserCog, ArrowLeftRight, Flag,
-} from "lucide-react";
+import { ArrowLeftRight, LogOut, PanelLeftClose, PanelLeftOpen, Search, Settings } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
+import { cn } from "@/lib/utils";
+import {
+  ADMIN_NAV, ADMIN_SETTINGS_HREF, SECTION_LABEL, isAdminNavActive, type AdminBadgeKey, type AdminNavSection,
+} from "@/components/admin/admin-nav";
 
-type NavSection = { type: "section"; label: string };
-type NavLink = {
-  type: "link";
-  id: string;
-  icon: React.ElementType;
-  label: string;
-  href: string;
-  exact?: boolean;
-  tab?: string;
-  tabBase?: string;
-  badgeKey?: keyof PendingCounts;
-};
-type NavEntry = NavLink | NavSection;
+export type AdminCounts = Record<AdminBadgeKey, number>;
 
-interface PendingCounts {
-  contacts: number;
-  retours: number;
-}
-
-function usePendingCounts(): PendingCounts {
-  const [counts, setCounts] = useState<PendingCounts>({ contacts: 0, retours: 0 });
-
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const r = await fetch("/api/admin/pending-counts");
-        if (!r.ok) return;
-        const d = await r.json();
-        if (!cancelled) setCounts({ contacts: d.contacts ?? 0, retours: d.retours ?? 0 });
-      } catch { /* ignore — badge reste à sa dernière valeur connue */ }
-    }
-    load();
-    const interval = setInterval(load, 45_000);
-    return () => { cancelled = true; clearInterval(interval); };
-  }, []);
-
-  return counts;
-}
-
-const DEFAULT_TABS: Record<string, string> = {
-  "/admin/vols":     "reservations",
-};
-
-// Pages peu utilisées (dashboard, satisfaction,
-// newsletter, assistant, analytiques, galerie, emails) regroupées dans /admin/plus —
-// voir PLUS_PAGES ci-dessous, gardé synchronisé avec cette liste.
-const NAVIGATION: NavEntry[] = [
-  { type: "section", label: "Vols" },
-  { type: "link", id: "reservations",   icon: CalendarCheck, label: "Réservations",   href: "/admin/vols",                    tab: "reservations",   tabBase: "/admin/vols" },
-  { type: "link", id: "disponibilites", icon: Clock,         label: "Disponibilités", href: "/admin/vols?tab=disponibilites", tab: "disponibilites", tabBase: "/admin/vols" },
-
-  { type: "section", label: "CRM" },
-  { type: "link", id: "clients",  icon: Users,         label: "Clients",  href: "/admin/clients"  },
-  { type: "link", id: "contacts", icon: MessageSquare, label: "Contacts", href: "/admin/contacts", badgeKey: "contacts" },
-  { type: "link", id: "retours",  icon: Flag,          label: "Retours pilotes", href: "/admin/retours", badgeKey: "retours" },
-  { type: "link", id: "pilotes",  icon: UserCog,       label: "Équipe",   href: "/admin/pilotes"  },
-
-  { type: "section", label: "" },
-  { type: "link", id: "transactions", icon: Receipt,  label: "Transactions", href: "/admin/transactions" },
-  { type: "link", id: "settings",     icon: Settings, label: "Paramètres",   href: "/admin/settings"     },
-  { type: "link", id: "plus",         icon: LayoutGrid, label: "Plus",       href: "/admin/plus" },
-  { type: "link", id: "espace-pilote", icon: ArrowLeftRight, label: "Espace pilote", href: "/pilote" },
-];
-
-function isLinkActive(item: NavLink, pathname: string, currentTab: string | null): boolean {
-  if (item.exact) return pathname === item.href;
-  if (item.tab && item.tabBase) {
-    if (pathname !== item.tabBase) return false;
-    const active = currentTab ?? DEFAULT_TABS[item.tabBase] ?? "";
-    return active === item.tab;
-  }
-  return pathname.startsWith(item.href);
-}
-
-function openPalette() {
+export function openPalette() {
   document.dispatchEvent(new CustomEvent("openCommandPalette"));
 }
 
-function NavContentInner({ onClose }: { onClose?: () => void }) {
-  const pathname   = usePathname();
-  const searchParams = useSearchParams();
-  const currentTab = searchParams.get("tab");
-  const pendingCounts = usePendingCounts();
+// Marque : l'emblème (inchangé) et un logotype retravaillé : « Fly » en
+// regular, « Horizons » en gras, « Administration » en petites capitales dorées.
+export function AdminBrand({ size = 34, showText = true }: { size?: number; showText?: boolean }) {
+  return (
+    <>
+      <Image src="/icone.svg" alt="Fly Horizons" width={size} height={size} className="shrink-0" style={{ width: size, height: size }} unoptimized priority />
+      {showText && (
+        <span className="min-w-0 leading-none">
+          <span className="block whitespace-nowrap text-[17px] tracking-[-0.025em] text-st-ink">
+            <span className="font-normal">Fly</span> <span className="font-bold">Horizons</span>
+          </span>
+          <span className="mt-[5px] block whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.16em] text-st-gold-text">Administration</span>
+        </span>
+      )}
+    </>
+  );
+}
+
+const rowCls = "group relative flex h-10 w-full shrink-0 items-center gap-3 rounded-[11px] px-[14px] text-[13.5px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-st-ink/20";
+const labelCls = (open: boolean) =>
+  cn("min-w-0 flex-1 overflow-hidden whitespace-nowrap text-left transition-[opacity,transform] duration-200 ease-out", open ? "translate-x-0 opacity-100" : "-translate-x-1.5 opacity-0");
+
+// Barre latérale flottante (bureau) : détachée des bords et arrondie comme les
+// tiroirs. Ouverte en permanence (256 px) ; le bouton en haut la réduit en rail
+// d'icônes (76 px), choix mémorisé par AdminShell.
+export function AdminSidebar({ collapsed, onToggle, counts }: { collapsed: boolean; onToggle: () => void; counts: AdminCounts }) {
+  const pathname = usePathname() ?? "";
+  const tab = useSearchParams().get("tab");
+  const open = !collapsed;
+  const settingsActive = pathname.startsWith(ADMIN_SETTINGS_HREF);
+
+  const sections: AdminNavSection[] = ["pilotage", "relation", "gestion"];
 
   return (
-    <div className="flex flex-col h-full bg-card border-r border-border">
-
-      {/* Logo + close */}
-      <div className="flex items-center justify-between h-14 lg:h-16 px-5 border-b border-border shrink-0">
-        <Link href="/" className="block">
-          <Image
-            src="/fly-horizons-logo-admin.svg"
-            alt="Fly Horizons"
-            width={140}
-            height={36}
-            className="h-8 w-auto object-contain"
-            style={{ width: "auto" }}
-            priority
-            unoptimized
-          />
+    <aside
+      aria-label="Navigation admin"
+      className={cn(
+        "pilote-studio fixed bottom-3 left-3 top-3 z-40 hidden flex-col overflow-hidden rounded-[22px] border border-st-line bg-white px-3 py-3.5 font-sans shadow-st-lg transition-[width] duration-200 ease-out lg:flex",
+        open ? "w-64" : "w-[76px]",
+      )}
+    >
+      <div className="mb-2 flex h-11 shrink-0 items-center gap-3 pl-[6px]">
+        <Link href="/admin" aria-label="Dashboard" className="flex min-w-0 flex-1 items-center gap-3 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-st-ink/20">
+          <AdminBrand showText={open} />
         </Link>
-        {onClose && (
+        {open && (
           <button
-            onClick={onClose}
-            className="lg:hidden p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
-            aria-label="Fermer le menu"
+            type="button"
+            onClick={onToggle}
+            title="Réduire la barre"
+            aria-label="Réduire la barre latérale"
+            className="grid size-8 shrink-0 cursor-pointer place-items-center rounded-[9px] text-st-muted transition-colors hover:bg-st-surface hover:text-st-text"
           >
-            <X size={18} />
+            <PanelLeftClose size={17} strokeWidth={1.8} />
           </button>
         )}
       </div>
-
-      {/* CMD+K search trigger */}
-      <div className="px-3 py-3 shrink-0">
-        <button
-          onClick={() => { openPalette(); onClose?.(); }}
-          className="w-full flex items-center gap-2.5 px-3 py-2.5 lg:py-2 rounded-lg bg-secondary border border-border text-muted-foreground text-sm hover:border-navy/20 hover:bg-secondary/80 transition-all cursor-pointer"
-        >
-          <Search size={13} className="shrink-0" />
-          <span className="flex-1 text-left text-xs text-muted-foreground/70">Rechercher…</span>
-          <kbd className="hidden lg:inline-flex items-center gap-0.5 text-[10px] font-mono bg-background border border-border rounded px-1.5 py-0.5 text-muted-foreground/50">
-            ⌘K
-          </kbd>
+      {!open && (
+        <button type="button" onClick={onToggle} title="Ouvrir la barre" aria-label="Ouvrir la barre latérale" className={cn(rowCls, "cursor-pointer font-medium text-st-text-2 hover:bg-st-surface hover:text-st-text")}>
+          <PanelLeftOpen size={18} strokeWidth={1.8} className="shrink-0 text-st-muted" />
         </button>
-      </div>
+      )}
 
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto py-1 px-2.5 space-y-0.5">
-        {NAVIGATION.map((entry, i) => {
-          if (entry.type === "section") {
-            return (
-              <div key={`section-${i}`} className={entry.label ? "pt-3 pb-1 px-3" : "pt-2"}>
-                {entry.label && (
-                  <p className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-[1.5px]">
-                    {entry.label}
-                  </p>
-                )}
-              </div>
-            );
-          }
-
-          const isActive = isLinkActive(entry, pathname, currentTab);
-          const Icon = entry.icon;
-          const badgeCount = entry.badgeKey ? pendingCounts[entry.badgeKey] : 0;
-          return (
-            <Link
-              key={entry.id}
-              href={entry.href}
-              onClick={onClose}
-              className={`flex items-center gap-2.5 px-3 py-2.5 lg:py-2 rounded-lg text-sm font-medium transition-all ${
-                isActive
-                  ? "bg-navy text-white shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-              }`}
-            >
-              <Icon size={15} className="shrink-0" />
-              <span className="flex-1">{entry.label}</span>
-              {badgeCount > 0 && (
-                <span className={`shrink-0 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center ${
-                  isActive ? "bg-primary text-[#0b2238]" : "bg-primary/15 text-primary"
-                }`}>
-                  {badgeCount > 99 ? "99+" : badgeCount}
-                </span>
-              )}
-            </Link>
-          );
-        })}
+      <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto [scrollbar-width:none]">
+        {sections.map((section, si) => (
+          <div key={section} className="flex flex-col gap-0.5">
+            {open
+              ? <p className="px-3.5 pb-1 pt-3 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-st-muted">{SECTION_LABEL[section]}</p>
+              : si > 0 && <hr className="mx-2.5 my-2 border-0 border-t border-st-line" />}
+            {ADMIN_NAV.filter((n) => n.section === section).map((item) => {
+              const active = isAdminNavActive(item, pathname, tab);
+              const Icon = item.icon;
+              const count = item.badgeKey ? counts[item.badgeKey] : 0;
+              const tone = item.badgeKey === "retours" ? "bg-st-bad" : "bg-st-ink";
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  title={open ? undefined : item.label}
+                  className={cn(rowCls, active ? "bg-st-surface font-semibold text-st-ink" : "font-medium text-st-text-2 hover:bg-st-surface hover:text-st-text")}
+                >
+                  <Icon size={18} strokeWidth={active ? 2 : 1.8} className={cn("shrink-0", active ? "text-st-ink" : "text-st-muted group-hover:text-st-text-2")} />
+                  <span className={labelCls(open)}>{item.label}</span>
+                  {count > 0 && (open ? (
+                    <span className={cn("st-num grid h-5 min-w-5 shrink-0 place-items-center rounded-full px-1.5 text-[11px] font-semibold text-white", tone)}>{count > 99 ? "99+" : count}</span>
+                  ) : (
+                    <span className={cn("absolute left-[31px] top-[9px] size-[7px] rounded-full ring-2 ring-white", tone)} />
+                  ))}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
-      {/* External tools — desktop uniquement, pas utile en déplacement sur mobile */}
-      <div className="hidden lg:block px-2.5 pt-2 pb-1 border-t border-border shrink-0">
-        <p className="px-3 mb-1.5 text-[9px] font-bold text-muted-foreground/40 uppercase tracking-[1.5px]">Outils</p>
-        {[
-          { href: "https://vercel.com/romain-fly-horizons",                        label: "Vercel"       },
-          { href: "https://supabase.com/dashboard",                                label: "Supabase"     },
-          { href: "https://resend.com/emails",                                     label: "Resend"       },
-          { href: "https://dashboard.stripe.com/acct_1LMvw92UU7RkMsk7/dashboard", label: "Stripe"       },
-          { href: "https://privateemail.com/appsuite/#!!&app=io.ox/mail&folder=default0/INBOX&storeLocale=true", label: "Privatemail" },
-        ].map(({ href, label }) => (
-          <a
-            key={href}
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2.5 px-3 py-2 lg:py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
-          >
-            <ExternalLink size={11} className="shrink-0 text-muted-foreground/50" />
-            {label}
-          </a>
-        ))}
-      </div>
-
-      {/* Logout */}
-      <div className="px-2.5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-border shrink-0">
+      <div className="mt-2 flex shrink-0 flex-col gap-0.5">
+        <button type="button" onClick={openPalette} title={open ? undefined : "Rechercher"} className={cn(rowCls, "cursor-pointer font-medium text-st-text-2 hover:bg-st-surface hover:text-st-text")}>
+          <Search size={18} strokeWidth={1.8} className="shrink-0 text-st-muted" />
+          <span className={labelCls(open)}>Rechercher</span>
+          {open && <kbd className="rounded-md border border-st-line px-1.5 py-0.5 font-mono text-[10px] text-st-muted">⌘K</kbd>}
+        </button>
+        <Link
+          href={ADMIN_SETTINGS_HREF}
+          aria-current={settingsActive ? "page" : undefined}
+          title={open ? undefined : "Paramètres"}
+          className={cn(rowCls, settingsActive ? "bg-st-surface font-semibold text-st-ink" : "font-medium text-st-text-2 hover:bg-st-surface hover:text-st-text")}
+        >
+          <Settings size={18} strokeWidth={settingsActive ? 2 : 1.8} className={cn("shrink-0", settingsActive ? "text-st-ink" : "text-st-muted")} />
+          <span className={labelCls(open)}>Paramètres</span>
+        </Link>
+        <Link href="/pilote" title={open ? undefined : "Espace pilote"} className={cn(rowCls, "font-medium text-st-text-2 hover:bg-st-surface hover:text-st-text")}>
+          <ArrowLeftRight size={18} strokeWidth={1.8} className="shrink-0 text-st-muted" />
+          <span className={labelCls(open)}>Espace pilote</span>
+        </Link>
         <form action={logout}>
-          <button
-            type="submit"
-            className="flex items-center gap-2.5 px-3 py-2.5 lg:py-2 rounded-lg text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all w-full cursor-pointer"
-          >
-            <LogOut size={14} />
-            Déconnexion
+          <button type="submit" title={open ? undefined : "Déconnexion"} className={cn(rowCls, "cursor-pointer font-medium text-st-text-2 hover:bg-st-bad-soft hover:text-st-bad")}>
+            <LogOut size={18} strokeWidth={1.8} className="shrink-0 text-st-muted group-hover:text-st-bad" />
+            <span className={labelCls(open)}>Déconnexion</span>
           </button>
         </form>
+
+        <div className="mt-1.5 flex items-center gap-3 border-t border-st-line px-[6px] pt-2.5">
+          <span className="grid size-[34px] shrink-0 place-items-center rounded-full bg-st-ink text-[12px] font-semibold text-white">RD</span>
+          {open && (
+            <span className="min-w-0 leading-tight">
+              <span className="block truncate text-[13px] font-semibold text-st-text">Romain</span>
+              <span className="block truncate text-[11.5px] text-st-muted">Admin</span>
+            </span>
+          )}
+        </div>
       </div>
-    </div>
-  );
-}
-
-function NavContent({ onClose }: { onClose?: () => void }) {
-  return (
-    <Suspense fallback={null}>
-      <NavContentInner onClose={onClose} />
-    </Suspense>
-  );
-}
-
-const BOTTOM_NAV = [
-  { id: "dashboard", icon: LayoutDashboard, label: "Accueil",  href: "/admin",          exact: true },
-  { id: "vols",      icon: CalendarCheck,   label: "Vols",     href: "/admin/vols",     base: "/admin/vols"     },
-  { id: "clients",   icon: Users,           label: "Clients",  href: "/admin/clients",  base: "/admin/clients"  },
-] as const;
-
-function BottomNavInner({ onMenuOpen }: { onMenuOpen: () => void }) {
-  const pathname = usePathname();
-
-  function isActive(item: typeof BOTTOM_NAV[number]): boolean {
-    if ("exact" in item && item.exact) return pathname === item.href;
-    if ("base" in item) return pathname.startsWith(item.base);
-    return pathname.startsWith(item.href);
-  }
-
-  return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border flex items-stretch" style={{ height: "calc(60px + env(safe-area-inset-bottom))", paddingBottom: "env(safe-area-inset-bottom)" }}>
-      {BOTTOM_NAV.map((item) => {
-        const Icon = item.icon;
-        const active = isActive(item);
-        return (
-          <Link
-            key={item.id}
-            href={item.href}
-            className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-semibold transition-colors cursor-pointer ${
-              active ? "text-navy" : "text-muted-foreground"
-            }`}
-          >
-            <Icon size={20} strokeWidth={active ? 2.5 : 1.75} />
-            <span>{item.label}</span>
-          </Link>
-        );
-      })}
-      <button
-        onClick={onMenuOpen}
-        className="flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-      >
-        <Menu size={20} strokeWidth={1.75} />
-        <span>Plus</span>
-      </button>
-    </nav>
-  );
-}
-
-export function AdminSidebar() {
-  const [mobileOpen, setMobileOpen] = useState(false);
-
-  return (
-    <>
-      {/* Desktop sidebar */}
-      <aside className="hidden lg:block fixed left-0 top-0 bottom-0 w-64 z-40">
-        <NavContent />
-      </aside>
-
-      {/* Mobile top bar */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 h-14 bg-card border-b border-border flex items-center justify-between px-4">
-        <Link href="/">
-          <Image
-            src="/fly-horizons-logo-admin.svg"
-            alt="Fly Horizons"
-            width={120}
-            height={32}
-            className="h-8 w-auto object-contain"
-            style={{ width: "auto" }}
-            unoptimized
-          />
-        </Link>
-        <button
-          onClick={openPalette}
-          className="p-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors cursor-pointer"
-          aria-label="Rechercher"
-        >
-          <Search size={18} />
-        </button>
-      </div>
-
-      {/* Mobile bottom nav */}
-      <BottomNavInner onMenuOpen={() => setMobileOpen(true)} />
-
-      {/* Mobile drawer avec animation */}
-      <div
-        className={`lg:hidden fixed inset-0 z-[60] transition-all duration-300 ${
-          mobileOpen ? "pointer-events-auto" : "pointer-events-none"
-        }`}
-      >
-        {/* Backdrop */}
-        <div
-          className={`absolute inset-0 bg-foreground/30 backdrop-blur-[2px] transition-opacity duration-300 ${
-            mobileOpen ? "opacity-100" : "opacity-0"
-          }`}
-          onClick={() => setMobileOpen(false)}
-        />
-        {/* Panel glissant — depuis la droite, côté du bouton "Plus" qui l'ouvre */}
-        <aside
-          className={`absolute right-0 top-0 bottom-0 w-[280px] max-w-[85vw] transition-transform duration-300 ease-out ${
-            mobileOpen ? "translate-x-0" : "translate-x-full"
-          }`}
-        >
-          <NavContent onClose={() => setMobileOpen(false)} />
-        </aside>
-      </div>
-    </>
+    </aside>
   );
 }

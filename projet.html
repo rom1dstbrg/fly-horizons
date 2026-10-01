@@ -270,6 +270,21 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-10-01 (27) · Barre latérale admin flottante, logotype retravaillé, barre du bas</p>
+      <h3>La navigation admin passe en Studio : barre flottante ouverte en permanence (réductible), logotype renouvelé, barre d'onglets du téléphone copiée sur le pilote</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Suite de la refonte admin. Maquette : https://claude.ai/artifact/G4LPEeYi6CkLyX2fxQf8JW. Romain trouve le logo actuel dépassé ; précision donnée ensuite : c'est le <b>texte</b> à côté de l'emblème qu'il veut renouveler, pas l'emblème. « Administration » sous « Fly Horizons » lui convient.</dd>
+        <dt>Décision</dt>
+        <dd><b>Emblème inchangé</b> (<code>icone.svg</code>) ; logotype « <b>Fly</b> » regular + « <b>Horizons</b> » gras, « ADMINISTRATION » en petites capitales dorées (composant <code>AdminBrand</code>, facile à changer). <b>Barre latérale</b> flottante (12 px des bords, coins 22 px, ombre des tiroirs), <b>ouverte en permanence</b> (256 px) avec un bouton pour la réduire en rail (76 px), état mémorisé dans le cookie <code>fh_admin_nav</code> lu par le layout (aucun saut au chargement). Section « Outils » (liens Vercel, Supabase…) supprimée. Navigation par logique : Pilotage (Dashboard, Réservations, Disponibilités), Relation (Clients, Contacts, Retours pilotes, Équipe), Gestion (Transactions, Plus) ; en bas Rechercher, Paramètres, Espace pilote, Déconnexion, plaque Romain. <b>Téléphone</b> : barre du haut (emblème + Administration + recherche) et barre d'onglets flottante identique à celle du pilote (Accueil, Réservations, Clients, Contacts + feuille « Plus »), vivant dans le layout : la pastille part dès le toucher, sans attendre la page.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Rail replié qui s'ouvre au survol comme le pilote (Romain veut la barre ouverte) ; ajouter un anneau ou des ailes dorées à l'emblème (mal compris au départ, proposé en maquette puis écarté).</dd>
+        <dt>Conséquences</dt>
+        <dd><code>AdminSidebar</code> réécrit, nouveaux <code>AdminShell</code>, <code>AdminTabBar</code>, <code>admin-nav.ts</code> (liste partagée bureau / téléphone). <code>public/fly-horizons-logo-admin.svg</code> n'est plus utilisé. La classe <code>pilote-studio</code> s'applique maintenant à toute la coque admin (pas de débordement horizontal, rebond désactivé).</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-10-01 (26) · Paramètres admin : catégories, délais réglables, seuils de suivi</p>
       <h3>La page Paramètres devient une liste de catégories ; les délais et seuils jusque-là écrits dans le code deviennent des réglages</h3>
       <dl>
@@ -1760,6 +1775,15 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-10-01 (90) — Barre latérale admin flottante, logotype renouvelé, barre du bas du téléphone</h3>
+      <ul>
+        <li><code>components/admin/AdminSidebar.tsx</code> réécrit (flottante, 256 px, bouton de réduction → rail 76 px, cookie <code>fh_admin_nav</code>) ; nouveaux <code>AdminShell.tsx</code> (coque + compteurs), <code>AdminTabBar.tsx</code> (copie du fonctionnement de <code>PiloteTabBar</code>), <code>admin-nav.ts</code> (navigation partagée) ; <code>app/admin/layout.tsx</code> lit le cookie et utilise <code>AdminShell</code>.</li>
+        <li>Section Outils supprimée ; Dashboard sorti de « Plus » vers le haut de la barre.</li>
+        <li>Vérifié avec Playwright : barre ouverte et réduite (contenu qui s'ajuste), téléphone avec feuille « Plus ». Pas testé avec le vrai compte (pastille sur la page active, compteurs réels) ; pas poussé.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-10-01 (89) — Dashboard admin refait en Studio (à traiter par signaux, 7 prochains jours, météo)</h3>
