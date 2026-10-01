@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Mail, Pencil, Phone } from "lucide-react";
 import { deleteClient } from "@/lib/actions/delete";
 import {
-  Badge, Button, EmptyState, LinkButton, PageHeader, SectionHeader, SheetRow, SheetRows,
+  Badge, Button, Card, EmptyState, LinkButton, PageHeader, SectionHeader, SheetRow, SheetRows,
   type BadgeTone,
 } from "@/components/pilote/studio";
 import { ConfirmActionDialog, type PendingAction } from "@/components/admin/reservation-drawer/ConfirmActionDialog";
@@ -87,20 +87,20 @@ export function ClientFiche({ client: initial, today, satisfaction }: {
       />
 
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="min-w-0 space-y-5">
-          <section className="space-y-3 border-t border-st-line-soft pt-5 first:border-t-0 first:pt-0">
+        <div className="min-w-0 space-y-4">
+          <Card className="space-y-3 p-5">
             <SectionHeader title="Prochain vol" />
             {s.prochain ? (
               <>
-                <VolLine r={s.prochain} today={today} />
+                <div className="rounded-2xl bg-st-surface p-3"><VolLine r={s.prochain} today={today} /></div>
                 {s.signal && <SignalText signal={s.signal} />}
               </>
             ) : (
               <p className="text-sm text-st-muted">Aucun vol prévu.</p>
             )}
-          </section>
+          </Card>
 
-          <section className="border-t border-st-line-soft pt-5">
+          <Card className="p-5">
             <SectionHeader title="Historique des vols" action={<span className="text-xs text-st-muted">{vols.length} vol{vols.length > 1 ? "s" : ""}</span>} />
             {vols.length === 0 ? (
               <EmptyState title="Aucun vol" description="Les demandes de ce client apparaîtront ici." />
@@ -109,16 +109,16 @@ export function ClientFiche({ client: initial, today, satisfaction }: {
                 {vols.map((r) => <div key={r.id} className="py-3 last:pb-0"><VolLine r={r} today={today} /></div>)}
               </div>
             )}
-          </section>
+          </Card>
 
-          <section className="border-t border-st-line-soft pt-5">
+          <Card className="p-5">
             <SectionHeader title="Messages" />
             <div className="mt-3"><ClientThread messages={client.messages} reservations={client.reservations} /></div>
-          </section>
+          </Card>
         </div>
 
-        <div className="min-w-0 space-y-5">
-          <section className="space-y-3 border-t border-st-line-soft pt-5 first:border-t-0 first:pt-0">
+        <div className="min-w-0 space-y-4">
+          <Card className="space-y-3 p-5">
             <SectionHeader title="Coordonnées" />
             {editing ? (
               <ClientEditForm
@@ -141,9 +141,9 @@ export function ClientFiche({ client: initial, today, satisfaction }: {
                 <Phone /> Appeler
               </LinkButton>
             )}
-          </section>
+          </Card>
 
-          <section className="space-y-3 border-t border-st-line-soft pt-5 first:border-t-0 first:pt-0">
+          <Card className="space-y-3 p-5">
             <SectionHeader title="En chiffres" />
             <SheetRows>
               <SheetRow label="Vols effectués">{s.effectues}</SheetRow>
@@ -151,7 +151,7 @@ export function ClientFiche({ client: initial, today, satisfaction }: {
               <SheetRow label="Pilote habituel">{s.piloteHabituel ?? "—"}</SheetRow>
               <SheetRow label="Satisfaction">{satisfaction != null ? `${Math.round(satisfaction * 10) / 10} / 5` : "—"}</SheetRow>
             </SheetRows>
-          </section>
+          </Card>
 
           {error && <p className="text-center text-xs font-semibold text-st-bad">{error}</p>}
           <button
