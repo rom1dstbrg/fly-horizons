@@ -102,11 +102,8 @@
         <li><b>Refonte nouvelle DA : pages restantes (28/09, périmètre élargi à tout le site public le 28/09 soir).</b>
           Après page produit, réservation, succès, report, compte, nos-offres, paiement annonce, suivi de résa :
           <s><code>/access-ebci</code>, <code>/vol/proposition/[token]</code>, <code>/reservation/creneau-propose/[token]</code> faites le 29/09</s> ·
-          <b>1.</b> <code>/reservation/messages/[token]</code> (fil pilote ↔ client) ·
-          <b>2.</b> <code>/contact/ticket/[token]</code> (fil client/admin) ·
-          <b>3.</b> <code>/cgp</code> et <code>/politique-de-confidentialite</code> (légal, liés depuis le footer partout).
-          Secondaire, moins vu : <code>/nos-pilotes/[id]</code>, <code>/account/reservations/[id]/carte</code>,
-          <code>/newsletter/unsubscribe</code>, <code>/vol/itineraire/[token]</code> (ancien système, vieilles résas seulement).
+          <s><code>/reservation/messages/[token]</code>, <code>/contact/ticket/[token]</code>, <code>/cgp</code> + <code>/politique-de-confidentialite</code> (fond réécrit v2.0), <code>/nos-pilotes/[id]</code>, <code>/newsletter/unsubscribe</code> faites le 01/10</s> ·
+          <b>Reste seulement</b> deux pages d'anciens systèmes (vieilles résas) : <code>/account/reservations/[id]/carte</code> et <code>/vol/itineraire/[token]</code> : à refaire ou à laisser partir avec le nettoyage du code mort ci-dessous.
           <code>/devenir-pilote/candidature</code> déjà en nouvelle DA. Détail : Changelog du 28/09 (entrée 66, audit + suppression des pages mortes).</li>
         <li><b>Code mort en attente de nettoyage (28/09 soir) — pas encore fait, sur demande explicite de Romain.</b>
           Romain confirme le 28/09 que la vente de vouchers et le vol sur mesure n'existent plus dans l'offre. Contrairement à ce qui était noté plus haut le même jour (« ne pas retravailler, flow Stripe vivant ») — <b>correction</b> : le panier
@@ -125,9 +122,7 @@
         <li><b>Décider la Phase 5</b> (<code>audit-admin-vs-pilote.html</code>) : <code>/admin/reservations</code>
           (tiroir de gestion) et <code>/admin/vols</code> (vue flotte) restent-ils de la supervision
           admin, ou migrent-ils aussi un jour vers l'espace pilote ? Rien n'urge.</li>
-        <li><b>Réécrire la page <code>/cgp</code></b> pour le modèle multi-pilotes — elle parle
-          encore uniquement de « l'avion de Fly Horizons » (DA40 Air Academy). Texte légal : ne pas
-          y toucher sans demande explicite de Romain.</li>
+        <li><s><b>Réécrire les pages légales pour le modèle multi-pilotes</b></s> : fait le 01/10 (CGP v2.0 + confidentialité v2.0 ; points à relire par Romain dans Décisions (20)).</li>
         <li><b>Centraliser « répondez à cet email » vs WhatsApp</b> (règle 4 du round 3 email,
           jamais codée) — ambigu tant que le webhook email entrant n'est pas branché (une réponse
           atterrit de toute façon comme un email brut chez Romain). À trancher avec lui plutôt qu'à
@@ -273,6 +268,21 @@
     <p class="meta"><b>Append-only.</b> On n'édite jamais une décision passée : on en ajoute une
       nouvelle qui la remplace, avec un lien. Chaque entrée : <i>Contexte · Décision · Alternatives
       écartées · Conséquences</i>. Plus récent en haut.</p>
+
+    <div class="dec">
+      <p class="date">2026-10-01 (20) · Pages légales (CGP + confidentialité)</p>
+      <h3>Les CGP et la politique de confidentialité sont réécrites sur le fond pour décrire l'offre réelle (v2.0), dans le style de la FAQ</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Romain : « il faut refaire le style mais aussi le fond ». Les CGP (v1.3) décrivaient encore une boutique avec livraison, des bons de vol, le vol sur mesure, un crédit de vol en cas d'annulation, un seul avion (DA40, 190 kg, Air Academy) et le paiement Stripe. La confidentialité (v1.1) taisait la newsletter, les conversations de l'assistant (stockées dans <code>chat_sessions</code>/<code>chat_messages</code>), les fils de messages, l'hébergeur (Vercel) et les cartes tierces (Google Maps sur Contact et Accès, fonds de carte Esri/CARTO/OpenFlightMaps). Cf. la leçon « vérifier chatbot + FAQ + pages légales » de l'audit de réouverture.</dd>
+        <dt>Décision</dt>
+        <dd>Réécriture alignée sur la FAQ (source de vérité publique) : annonces de pilotes, demande puis confirmation (réponse sous 72 h, demande 48 h avant), paiement direct au pilote (virement + QR SEPA, espèces si accepté, pas de carte), report gratuit jusqu'à 48 h, météo = report sans frais, remboursement éventuel réglé avec le pilote, assurance propre à chaque avion. Retirés : boutique/livraison, bons de vol, vol sur mesure, crédit de vol, DA40/190 kg, mention Air Academy. Ajoutés à la confidentialité : newsletter (consentement), assistant, messages, Vercel, cartes tierces, Stripe « cas exceptionnel ». Mise en page : même structure que la FAQ (sommaire collant | texte, pastilles sur téléphone), texte toujours déplié, sans accordéon ni boîtes.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Ne refaire que le style et garder le texte (laisserait promettre des fonctions qui n'existent plus). Garder l'accordéon (cache le texte à Ctrl+F et à l'impression). Inventer une durée de conservation pour l'assistant (aucune purge n'existe dans le code : formulé « jusqu'à suppression, effacement sur demande »).</dd>
+        <dt>Conséquences</dt>
+        <dd><b>À relire par Romain, ce sont des engagements :</b> (1) crédit de vol retiré, plus de promesse de bon en cas d'annulation >48 h ; (2) « remboursement éventuel étudié avec le pilote » si aucun nouveau créneau ne convient après un report ; (3) limite de masse non chiffrée (propre à chaque avion) ; (4) Stripe gardé comme « cas exceptionnel » : à retirer si le lien de paiement par carte n'est plus jamais envoyé ; (5) « sans entreprise ni numéro de TVA » conservé tel quel (statut assumé par Romain, voir audit) alors que la plateforme compte des pilotes tiers. Les 2 points critiques de l'audit (cadre NCO.GEN.104, part du pilote) restent non tranchés.</dd>
+      </dl>
+    </div>
 
     <div class="dec">
       <p class="date">2026-09-28 (19) · Cadrage de la refonte de l'admin</p>
@@ -1659,6 +1669,71 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-10-01 (76) — Suppression des 2 dernières pages d'anciens systèmes et de leur chaîne (−906 lignes)</h3>
+      <ul>
+        <li>Demande de Romain : « supprime juste ces deux pages et leur chaîne, ça allègera le site ». Vérifié avant : la page envoyée au client pour proposer une route est <code>/vol/proposition/[token]</code> (email « créneau confirmé », modification de réservation, espace compte) ; <code>/vol/itineraire/[token]</code> n'était qu'un « fallback ancien système texte » (déclenché si <code>reservations.route</code> était rempli : plus aucune écriture dans le code, 0 ligne en base, 0 <code>route_token</code>). <code>/account/reservations/[id]/carte</code> ne servait qu'au vol sur mesure (« perso » : seulement 2 réservations de test).</li>
+        <li>Supprimés : <code>app/(public)/vol/itineraire/[token]</code> (page + <code>RouteForm</code>), <code>app/account/reservations/[id]/carte</code> (page + <code>RouteMapView</code>), <code>lib/actions/route.ts</code> (<code>submitRouteResponse</code>), <code>components/account/RouteMapLeaflet.tsx</code> (orphelin après la carte). Retirés : branche « fallback texte » de l'email de confirmation (<code>reservations.ts</code>), blocs « itinéraire texte » et « destinations sur mesure » dans le suivi de réservation et la liste du compte, bouton « Carte » vers la page supprimée, champs <code>route_status/route_token/route_feedback/waypoints</code> de la chaîne compte, libellé d'analytics.</li>
+        <li><b>Gardés volontairement</b> : <code>routeFeedbackAdminEmail</code> (utilisé par le nouveau flux), colonnes <code>route_*</code> en base (aucune migration), affichage admin/pilote de <code>route_status</code>, et <code>piloteRouteFeedbackEmail</code> (voir ci-dessous). <code>tsc</code> OK ; <code>/vol/itineraire/…</code> répond 404, <code>/vol/proposition/…</code> et le reste inchangés. Non commité, non poussé.</li>
+        <li><b>Trou découvert (pas corrigé)</b> : quand le client valide ou demande une modification sur <code>/vol/proposition</code>, seul Romain (<code>info@</code>) est prévenu ; le pilote de l'annonce ne l'est pas. Le gabarit <code>piloteRouteFeedbackEmail</code> (« [client] vient de répondre à la route que vous avez proposée ») existe et n'était branché que dans l'action supprimée : c'est exactement ce qu'il faudrait y brancher. À décider avec Romain.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-10-01 (75) — Page /newsletter/unsubscribe refaite dans la nouvelle DA</h3>
+      <ul>
+        <li>Même langage que les autres pages de confirmation (pastille dorée + titre + texte + un lien, plus de card centrée sur fond bleuté, plus de vert/rouge décoratifs). 4 états : « Vous êtes désinscrit. », « Déjà désinscrit. », « Lien invalide. » (avec email pour être retiré à la main), « Lien incomplet. ». Pas de maquette (page de 4 phrases).</li>
+        <li>Logique inchangée : la désinscription est immédiate à l'ouverture du lien. Point à connaître : un filtre anti-spam qui « ouvre » les liens d'un email peut désinscrire quelqu'un sans qu'il le sache ; un bouton de confirmation règlerait ça mais ajoute une étape (non fait, à décider). Requête passée de <code>.single()</code> à <code>.maybeSingle()</code>.</li>
+        <li>Testé en réel (abonné TEST créé puis supprimé) : les 4 états rendent, la base passe bien à <code>active=false</code> + <code>unsubscribed_at</code>. Non commité, non poussé.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-10-01 (74) — Fiche pilote /nos-pilotes/[id] refaite dans la nouvelle DA (variante B) + défilement fluide vers « Voir ses vols »</h3>
+      <ul>
+        <li>Maquette <code>maquette-pilote.html</code> (A « Portrait », B « Texte d'abord »). Choix de Romain : <b>B</b>. Nom pleine largeur avec petite photo ronde ; bio en grand (7/12) | « Ce que nous vérifions » (5/12, filet vertical) ; puis « Les vols de [prénom] » (cartes <code>AnnonceCard</code>, 3 colonnes) ; mention partage de frais en bas.</li>
+        <li>Nouveau : les vols publiés du pilote (<code>annonces_pilote</code>, statut publiee) ; vérifications montrées <b>seulement si réelles</b> (<code>docs_status = verifies</code> pour licence + certificat, <code>conditions_accepted_at</code> pour la charte), jamais par défaut. Sans bio : texte neutre sans « il/elle » (l'ancien disait « Il assurera votre vol »). Aucun vol : message + lien vers Les vols.</li>
+        <li>« Voir ses vols » : composant <code>components/vols/ScrollLink.tsx</code> (défilement fluide propre à ce lien, respecte « réduire les animations », marge du header). Vérifié : progression 0 → 98 → 330 → 407 → 442 → 455 sur ordinateur. Pas de défilement fluide global ajouté au site.</li>
+        <li>Piège : <code>{prenom} n&amp;apos;a…</code> perdait l'espace au rendu (« Romainn'a ») ; remplacé par un gabarit de chaîne. Non vérifié en réel : l'état « avec vols » (aucune annonce publiée en base pour ce pilote au moment du test). Non commité, non poussé.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-10-01 (73) — Pages /cgp et /politique-de-confidentialite refaites (style FAQ + fond réécrit, v2.0)</h3>
+      <ul>
+        <li>Nouveau composant <code>components/legal/LegalDoc.tsx</code> : titre pleine largeur, sommaire collant numéroté (260 px) | texte, pastilles collées sous le header sur téléphone, suivi du défilement, filets et aucune boîte, texte toujours déplié. Mise en garde de fond = filet doré (plus de bloc). Texte en données (<code>content.ts</code> par page, mini-syntaxe <code>**gras**</code> et <code>[lien](url)</code>). Fin de page : une question + un bouton, plus de bloc navy.</li>
+        <li>Fond réécrit, détail et points à relire dans Décisions (20). CGP : 14 articles (v2.0) ; confidentialité : 11 articles (v2.0). Plus de tiret cadratin. Titres de page sans suffixe (le gabarit l'ajoute).</li>
+        <li><code>components/shop/CgvAccordion.tsx</code> supprimé (plus aucun usage). Typecheck OK, captures desktop + téléphone vérifiées. Non commité, non poussé.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-10-01 (72) — Page /contact/ticket/[token] refaite (même langage que les échanges d'un vol) + fil factorisé</h3>
+      <ul>
+        <li>Pas de nouvelle maquette : même structure que <code>/reservation/messages</code> (choix B de Romain, bulles type SMS, défilement au dernier message, squelette). Seule la colonne de droite change : « Votre demande » = statut (pastille de couleur au lieu du badge encadré) + n° de ticket, date d'ouverture, dernier message, email, lien mail. Titre = le sujet. Lien invalide = vraie page (avant : 404).</li>
+        <li>Fil de bulles + saisie + défilement extraits dans <code>components/messages/Thread.tsx</code> (props : messages normalisés, <code>onSend</code>, texte vide) ; <code>MessagesThread</code> et <code>TicketThread</code> ne sont plus que de fines enveloppes. Logique d'envoi inchangée (<code>submitClientReply</code> / <code>submitClientMessageReply</code>).</li>
+        <li><code>scripts/test-data.mjs ticket</code> / <code>ticket-clean</code> (ligne <code>contacts</code> email <code>+testticket</code>, hors du <code>clean</code> général). Testé en réel desktop + téléphone, supprimé. Non commité, non poussé.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-10-01 (71) — Page /reservation/messages/[token] refaite dans la nouvelle DA + squelette + défilement au dernier message</h3>
+      <ul>
+        <li>Maquette <code>maquette-messages.html</code> (A « Journal » en lignes sans bulles, B « Deux colonnes » en bulles). Choix de Romain : <b>B</b> (« les échanges type SMS parlent plus »). Ordinateur : titre + fil en bulles (8/12) | colonne « Votre vol » collante (4/12, filet vertical : date, pilote + « Voir le profil », contact urgence). Téléphone : une colonne, barre de saisie collante en bas. Vous = navy à droite, le pilote = gris clair à gauche, avatar du pilote conservé (demande du 27/09).</li>
+        <li>Demande de Romain : on est souvent tout en haut avec 10 messages à faire défiler. Désormais la page s'ouvre <b>directement sur le dernier message</b> (reçu ou envoyé), saisie visible ; le fil est masqué le temps de se placer (pas de saut visible). Repère de fin hors de la barre collante (dans la barre, il ne faisait rien défiler sur téléphone : bug trouvé en test). Aucun message = reste en haut.</li>
+        <li><code>loading.tsx</code> : squelette (titre, colonne vol, bulles, saisie) sur la même grille que la page. État « Lien invalide » ajouté (avant : 404). Heures affichées en fuseau Europe/Brussels. Logique d'envoi inchangée (<code>submitClientMessageReply</code>).</li>
+        <li><code>scripts/test-data.mjs messages</code> : réservation TEST (client <code>+testmessages</code>, 17/10) avec 10 messages. Testé en réel (desktop + téléphone), données supprimées. Non commité, non poussé.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-10-01 (70) — Réservation TEST visible dans « À traiter » mais absente de « Mes vols »</h3>
+      <ul>
+        <li>Cause : <code>scripts/test-data.mjs</code> (<code>proposition</code>, <code>creneau</code>) créait <code>type_resa: "perso"</code>, que <code>/pilote/vols</code> exclut, alors que l'accueil <code>/pilote</code> ne filtrait pas ce type pour « À traiter ». Le lien <code>?ouvrir=id</code> ne trouvait donc rien.</li>
+        <li>Corrigé : l'accueil exclut aussi <code>perso</code> (même règle que Vols) ; les deux commandes de test créent désormais <code>annonce_pilote</code>. À relancer (<code>node scripts/test-data.mjs creneau</code>) pour recréer la ligne de test. Non poussé.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-09-29 (69) — Page /reservation/creneau-propose/[token] refaite dans la nouvelle DA + commande de test</h3>
