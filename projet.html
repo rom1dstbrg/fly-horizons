@@ -1777,6 +1777,13 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-10-01 (91) — Logotype de l'admin : lettres d'origine</h3>
+      <ul>
+        <li>Choix de Romain (maquette <code>maquette-admin-logo.html</code>, https://claude.ai/artifact/GJPnYH8cCgyFRecsTPs3Tb) : emblème actuel + lettres FLY HORIZONS d'origine réduites + « ADMINISTRATION » doré dessous. Remplace la version « Fly / Horizons » à deux graisses (décision 27). Nouveau <code>components/admin/FhWordmark.tsx</code> (lettres en SVG, <code>currentColor</code>) ; <code>AdminBrand</code> l'utilise dans la barre latérale et la barre du haut du téléphone. L'emblème à anneau et ailes dorés reste disponible dans la maquette si Romain change d'avis.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-10-01 (90) — Barre latérale admin flottante, logotype renouvelé, barre du bas du téléphone</h3>
       <ul>
         <li><code>components/admin/AdminSidebar.tsx</code> réécrit (flottante, 256 px, bouton de réduction → rail 76 px, cookie <code>fh_admin_nav</code>) ; nouveaux <code>AdminShell.tsx</code> (coque + compteurs), <code>AdminTabBar.tsx</code> (copie du fonctionnement de <code>PiloteTabBar</code>), <code>admin-nav.ts</code> (navigation partagée) ; <code>app/admin/layout.tsx</code> lit le cookie et utilise <code>AdminShell</code>.</li>

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
 import { ArrowLeftRight, LogOut, PanelLeftClose, PanelLeftOpen, Search, Settings } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
+import { FhWordmark } from "@/components/admin/FhWordmark";
 import { cn } from "@/lib/utils";
 import {
   ADMIN_NAV, ADMIN_SETTINGS_HREF, SECTION_LABEL, isAdminNavActive, type AdminBadgeKey, type AdminNavSection,
@@ -16,18 +17,16 @@ export function openPalette() {
   document.dispatchEvent(new CustomEvent("openCommandPalette"));
 }
 
-// Marque : l'emblème (inchangé) et un logotype retravaillé : « Fly » en
-// regular, « Horizons » en gras, « Administration » en petites capitales dorées.
-export function AdminBrand({ size = 34, showText = true }: { size?: number; showText?: boolean }) {
+// Marque : l'emblème (inchangé), le logotype FLY HORIZONS d'origine réduit et
+// « Administration » en petites capitales dorées dessous (maquette du 01/10).
+export function AdminBrand({ size = 34, showText = true, wordHeight = 13 }: { size?: number; showText?: boolean; wordHeight?: number }) {
   return (
     <>
       <Image src="/icone.svg" alt="Fly Horizons" width={size} height={size} className="shrink-0" style={{ width: size, height: size }} unoptimized priority />
       {showText && (
-        <span className="min-w-0 leading-none">
-          <span className="block whitespace-nowrap text-[17px] tracking-[-0.025em] text-st-ink">
-            <span className="font-normal">Fly</span> <span className="font-bold">Horizons</span>
-          </span>
-          <span className="mt-[5px] block whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.16em] text-st-gold-text">Administration</span>
+        <span className="grid min-w-0 gap-[6px] leading-none">
+          <span className="block" style={{ height: wordHeight }}><FhWordmark className="h-full w-auto text-st-ink" /></span>
+          <span className="whitespace-nowrap text-[9.5px] font-semibold uppercase tracking-[0.16em] text-st-gold-text">Administration</span>
         </span>
       )}
     </>

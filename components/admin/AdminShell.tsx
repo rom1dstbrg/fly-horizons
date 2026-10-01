@@ -53,8 +53,7 @@ export function AdminShell({ initialCollapsed, children }: { initialCollapsed: b
       {/* Barre du haut (téléphone) */}
       <div className="pilote-studio fixed inset-x-0 top-0 z-40 flex h-[calc(3.5rem+env(safe-area-inset-top))] items-end justify-between border-b border-st-line bg-white/90 px-4 pb-2.5 font-sans backdrop-blur lg:hidden">
         <Link href="/admin" className="flex items-center gap-2.5">
-          <AdminBrand size={30} showText={false} />
-          <span className="text-[14px] font-semibold tracking-[-0.01em] text-st-ink">Administration</span>
+          <AdminBrand size={32} wordHeight={11} />
         </Link>
         <button type="button" onClick={openPalette} aria-label="Rechercher" className="grid size-9 cursor-pointer place-items-center rounded-full text-st-text-2 transition-colors hover:bg-st-surface">
           <Search size={19} />
