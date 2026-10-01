@@ -27,6 +27,9 @@ export async function POST(request: NextRequest) {
     .delete({ count: "exact" })
     .lt("created_at", cutoff.toISOString());
 
+  // Événements de parcours : même durée de conservation.
+  await supabase.from("site_events").delete().lt("created_at", cutoff.toISOString());
+
   if (error) {
     console.error("[/api/cron/purge-analytics] error:", error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });

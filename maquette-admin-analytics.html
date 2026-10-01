@@ -1,0 +1,181 @@
+<title>Maquette Analytiques admin</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--surface:#f4f5f7;--line:#eceef2;--line-strong:#dcdfe6;--text:#0f1117;--text2:#4d5463;--muted:#5f6675;--ink:#0b2238;--ink-soft:#e8edf3;--gold:#F2B705;--gold-soft:#fdf4d6;--gold-text:#7a5800;--ok:#16794a;--ok-soft:#e7f5ec;--bad:#c4372c;--bad-soft:#fbeceb;--info:#2b5cb8;--font:'Poppins',system-ui,sans-serif}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0c1117;--card:#131a22;--surface:#1a222c;--line:#222b36;--line-strong:#2e3946;--text:#eef1f5;--text2:#b4bcc8;--muted:#9aa3b1;--ink:#e8edf3;--ink-soft:#1d2b3b;--gold-soft:#3a2f0c;--gold-text:#f2c94c;--ok-soft:#12301f;--ok:#5fd18f;--bad-soft:#3a1714;--bad:#ff8a7e;--info:#7da6f0;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0c1117;--card:#131a22;--surface:#1a222c;--line:#222b36;--line-strong:#2e3946;--text:#eef1f5;--text2:#b4bcc8;--muted:#9aa3b1;--ink:#e8edf3;--ink-soft:#1d2b3b;--gold-soft:#3a2f0c;--gold-text:#f2c94c;--ok-soft:#12301f;--ok:#5fd18f;--bad-soft:#3a1714;--bad:#ff8a7e;--info:#7da6f0;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--font);margin:0;padding-inline:16px;padding-block:24px}
+.wrap{max-width:1320px;margin:0 auto;display:grid;gap:22px}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 372px;gap:32px;align-items:start}
+.note{font-size:12.5px;color:var(--muted);margin:0;line-height:1.5;max-width:100ch}
+.flag{border:1px dashed var(--gold-text);background:var(--gold-soft);color:var(--gold-text);border-radius:12px;padding:12px 14px;font-size:12.5px;line-height:1.5}
+.page{display:grid;gap:16px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.top h1{margin:0;font-size:26px;font-weight:600;letter-spacing:-.03em}
+.seg{display:inline-flex;background:var(--surface);border-radius:11px;padding:3px;gap:2px}
+.seg span{font:600 12.5px var(--font);color:var(--text2);padding:6px 12px;border-radius:9px}.seg .on{background:var(--card);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:0 1px 2px rgba(11,34,56,.05);padding:20px}
+.card h2{margin:0;font-size:15px;font-weight:600;letter-spacing:-.01em}
+.why{margin:4px 0 0;font-size:12.5px;line-height:1.5;color:var(--muted);max-width:75ch}
+.brief{display:grid;gap:12px}
+.brief .lead{font-size:17px;line-height:1.5;font-weight:500;margin:0;letter-spacing:-.01em}
+.brief b{font-weight:700}.brief .up{color:var(--ok)}
+.pts{display:grid;gap:8px;margin:2px 0 0;padding:0;list-style:none}
+.pts li{display:flex;gap:10px;font-size:13.5px;line-height:1.45;color:var(--text2)}
+.pts li::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--gold);flex:none;margin-top:7px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.kpi{padding:16px 18px;display:grid;gap:4px;align-content:start}
+.kpi .l{font-size:12.5px;color:var(--muted);margin:0;font-weight:500}
+.kpi .v{font-size:30px;font-weight:600;letter-spacing:-.035em;line-height:1.1;margin:0;font-variant-numeric:tabular-nums}
+.tr{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:7px;width:max-content}
+.tr.up{background:var(--ok-soft);color:var(--ok)}.tr.dn{background:var(--bad-soft);color:var(--bad)}.tr.eq{background:var(--surface);color:var(--text2)}
+.kpi .e{font-size:12px;color:var(--muted);line-height:1.45;margin:2px 0 0}
+.chart{display:flex;align-items:flex-end;gap:3px;height:150px;margin-top:16px;border-bottom:1px solid var(--line);position:relative}
+.chart i{flex:1;background:var(--ink);opacity:.78;border-radius:4px 4px 0 0;min-height:3px}
+.chart i.pk{opacity:1;background:var(--gold)}
+.chart i.we{opacity:.45}
+.ax{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:6px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:10px}.legend span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.legend .a::before{background:var(--ink);opacity:.78}.legend .b::before{background:var(--ink);opacity:.45}.legend .c::before{background:var(--gold)}
+.insight{display:flex;gap:10px;align-items:flex-start;margin-top:14px;padding:12px 14px;background:var(--surface);border-radius:12px;font-size:13px;line-height:1.5;color:var(--text2)}
+.insight b{color:var(--text)}.insight .ic{flex:none;width:18px;height:18px;border-radius:50%;background:var(--ink);color:var(--card);display:grid;place-items:center;font-size:11px;font-weight:700;margin-top:1px}
+.fun{display:grid;gap:12px;margin-top:16px}
+.st{display:grid;grid-template-columns:150px minmax(0,1fr) 120px;gap:14px;align-items:center}
+.st .n{font-size:13.5px;font-weight:600}.st .n small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.bar{height:26px;background:var(--surface);border-radius:8px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ink);border-radius:8px}
+.st .c{font-size:13px;text-align:right;font-variant-numeric:tabular-nums}.st .c b{font-size:15px}.st .c small{display:block;color:var(--muted);font-size:12px}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.rows{display:grid;margin-top:12px}
+.rw{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:10px 0;border-top:1px solid var(--line);align-items:center}
+.rw:first-child{border-top:0}
+.rw .n{font-size:13.5px;font-weight:550;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rw .n small{font-weight:400;color:var(--muted);margin-left:6px;font-size:12px}
+.rw .c{font-size:13px;color:var(--text2);font-variant-numeric:tabular-nums;text-align:right}
+.rw .m{grid-column:1/-1;height:6px;background:var(--surface);border-radius:99px;overflow:hidden}.rw .m i{display:block;height:100%;background:var(--ink);border-radius:99px}.rw .m i.g{background:var(--gold)}
+.dev{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.dev div{background:var(--surface);border-radius:14px;padding:14px;text-align:center}.dev b{display:block;font-size:24px;font-weight:600;letter-spacing:-.03em}.dev span{font-size:12.5px;color:var(--muted)}
+.gl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 28px;margin-top:14px}
+.gl dt{font-size:13.5px;font-weight:600}.gl dd{margin:2px 0 0;font-size:12.5px;line-height:1.5;color:var(--muted)}
+.mng{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.mng p{margin:0;font-size:12.5px;color:var(--muted);max-width:60ch}
+.btn{height:36px;border-radius:11px;border:1px solid var(--line-strong);background:var(--card);color:var(--text);font:550 13px var(--font);padding:0 16px}.btn.d{color:var(--bad)}
+.phone{width:372px;border:1px solid var(--line-strong);border-radius:34px;background:var(--bg);overflow:hidden}
+.phone .in{padding:20px 14px 26px;display:grid;gap:12px}
+.phone .kpis{grid-template-columns:1fr 1fr}.phone .kpi{padding:14px}.phone .kpi .v{font-size:25px}.phone .card{padding:16px;border-radius:18px}
+.phone .st{grid-template-columns:1fr;gap:6px}.phone .st .c{text-align:left}.phone .cols,.phone .gl{grid-template-columns:1fr}
+.phone .brief .lead{font-size:15px}.phone .top h1{font-size:22px}
+@media(max-width:1000px){.stage{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.cols,.gl{grid-template-columns:1fr}.phone{margin:0 auto;max-width:100%}.st{grid-template-columns:1fr;gap:6px}.st .c{text-align:left}}
+</style>
+<div class="wrap">
+  <p class="note">Maquette : bureau (largeur plafonnée à 1320 px) puis téléphone. Données d'exemple. Chaque bloc dit ce qu'il mesure, compare à la période précédente et finit par une phrase qui interprète le chiffre. Les phrases sont calculées à partir des vraies données.</p>
+  <div class="flag"><b>Ce qui change.</b> Les chiffres bruts restent, mais (1) une synthèse en phrases ouvre la page, (2) chaque chiffre est comparé aux 30 jours d'avant, (3) un nouveau bloc « Du premier regard à la demande » montre où les visiteurs s'arrêtent, (4) chaque section explique ce qu'elle mesure et ce qu'on peut en conclure, (5) un encadré « Comment lire ces chiffres » dit ce qui est compté et ce qui ne l'est pas (un visiteur = un navigateur, pas une personne ; toi et les robots sont exclus). La page des vols sur mesure, du panier et de la boutique disparaît des libellés (supprimés).</div>
+
+  <div class="stage">
+  <div class="page">
+    <div class="top"><h1>Analytiques</h1><span class="seg"><span>7 jours</span><span class="on">30 jours</span><span>90 jours</span></span></div>
+
+    <section class="card brief">
+      <h2>En bref</h2>
+      <p class="lead">Ces 30 derniers jours, <b>412 personnes</b> ont visité le site, soit <b class="up">18 % de plus</b> que les 30 jours d'avant. Elles ont ouvert <b>1 386 pages</b> et la plupart venaient de <b>Google</b>, depuis leur <b>téléphone</b>.</p>
+      <ul class="pts">
+        <li>La page la plus regardée est <b>Nos vols</b> (38 % des visites) : c'est bien là que les gens vont chercher un vol.</li>
+        <li>Sur 100 visiteurs, <b>31</b> ouvrent Nos vols et <b>2</b> envoient une demande. C'est le chiffre à surveiller.</li>
+        <li>Le <b>dimanche</b> est le jour le plus fréquenté : c'est le bon moment pour publier une annonce.</li>
+      </ul>
+    </section>
+
+    <div class="kpis">
+      <div class="card kpi"><p class="l">Visiteurs</p><p class="v">412</p><span class="tr up">▲ 18 %</span><p class="e">Navigateurs différents venus sur le site. Un même appareil qui revient compte une seule fois.</p></div>
+      <div class="card kpi"><p class="l">Pages vues</p><p class="v">1 386</p><span class="tr up">▲ 9 %</span><p class="e">Total de pages ouvertes, une même personne pouvant en ouvrir plusieurs.</p></div>
+      <div class="card kpi"><p class="l">Pages par visiteur</p><p class="v">3,4</p><span class="tr dn">▼ 8 %</span><p class="e">Plus ce nombre est haut, plus les gens explorent. Sous 2, ils repartent vite.</p></div>
+      <div class="card kpi"><p class="l">Nouveaux visiteurs</p><p class="v">78 %</p><span class="tr eq">stable</span><p class="e">Jamais vus avant la période. Le reste, 22 %, sont des gens déjà venus.</p></div>
+    </div>
+
+    <section class="card">
+      <h2>Visites par jour</h2>
+      <p class="why">Combien de pages sont ouvertes chaque jour. Les pics suivent en général une annonce, un post ou un envoi de newsletter.</p>
+      <div class="chart">
+        <i style="height:30%"></i><i style="height:38%"></i><i style="height:26%"></i><i style="height:33%" class="we"></i><i style="height:52%" class="we"></i><i style="height:34%"></i><i style="height:41%"></i><i style="height:29%"></i><i style="height:36%"></i><i style="height:44%"></i><i style="height:60%" class="we"></i><i style="height:74%" class="we"></i><i style="height:40%"></i><i style="height:35%"></i><i style="height:31%"></i><i style="height:48%"></i><i style="height:55%"></i><i style="height:62%" class="we"></i><i style="height:100%" class="pk"></i><i style="height:46%"></i><i style="height:39%"></i><i style="height:33%"></i><i style="height:37%"></i><i style="height:58%" class="we"></i><i style="height:80%" class="we"></i><i style="height:42%"></i><i style="height:36%"></i><i style="height:40%"></i><i style="height:45%"></i><i style="height:51%" class="we"></i>
+      </div>
+      <div class="ax"><span>2 sept.</span><span>16 sept.</span><span>1 oct.</span></div>
+      <div class="legend"><span class="a">Jour de semaine</span><span class="b">Week-end</span><span class="c">Jour le plus chargé</span></div>
+      <div class="insight"><span class="ic">i</span><span><b>Pic le 20 septembre : 74 visites</b>, soit 3 fois un jour normal (environ 25). Le week-end amène en moyenne 40 % de visites en plus qu'en semaine.</span></div>
+    </section>
+
+    <section class="card">
+      <h2>Du premier regard à la demande</h2>
+      <p class="why">Pour chaque étape, le nombre de visiteurs qui l'ont atteinte au moins une fois pendant la période. Cela montre où les gens s'arrêtent.</p>
+      <div class="fun">
+        <div class="st"><div class="n">Ont visité le site<small>Toute page</small></div><div class="bar"><i style="width:100%"></i></div><div class="c"><b>412</b></div></div>
+        <div class="st"><div class="n">Ont vu Nos vols<small>Les annonces des pilotes</small></div><div class="bar"><i style="width:31%"></i></div><div class="c"><b>128</b><small>31 % des visiteurs</small></div></div>
+        <div class="st"><div class="n">Ont envoyé une demande<small>Page « Demande envoyée »</small></div><div class="bar"><i style="width:2.2%;background:var(--gold)"></i></div><div class="c"><b>9</b><small>7 % de ceux qui ont vu Nos vols</small></div></div>
+      </div>
+      <div class="insight"><span class="ic">i</span><span><b>Le plus gros écart est entre la visite et Nos vols</b> : 69 % des visiteurs ne vont jamais voir les vols. Ils partent après l'accueil. C'est là qu'un meilleur appel à l'action aurait le plus d'effet.</span></div>
+    </section>
+
+    <div class="cols">
+      <section class="card">
+        <h2>Pages les plus vues</h2>
+        <p class="why">Ce qui intéresse vraiment les visiteurs. Le pourcentage est la part de toutes les pages vues.</p>
+        <div class="rows">
+          <div class="rw"><span class="n">Nos vols</span><span class="c">527 · 38 %</span><span class="m"><i style="width:100%"></i></span></div>
+          <div class="rw"><span class="n">Accueil</span><span class="c">391 · 28 %</span><span class="m"><i style="width:74%"></i></span></div>
+          <div class="rw"><span class="n">À propos</span><span class="c">142 · 10 %</span><span class="m"><i style="width:27%"></i></span></div>
+          <div class="rw"><span class="n">Nos pilotes<small>Sarah L.</small></span><span class="c">96 · 7 %</span><span class="m"><i style="width:18%"></i></span></div>
+          <div class="rw"><span class="n">FAQ</span><span class="c">71 · 5 %</span><span class="m"><i style="width:13%"></i></span></div>
+          <div class="rw"><span class="n">Contact</span><span class="c">48 · 3 %</span><span class="m"><i style="width:9%"></i></span></div>
+        </div>
+      </section>
+
+      <div style="display:grid;gap:16px;align-content:start">
+        <section class="card">
+          <h2>D'où viennent les visiteurs</h2>
+          <p class="why">Le site d'où la personne arrive. <b>Direct</b> = adresse tapée, favori, ou lien sans origine (WhatsApp, email). Compté à la première page seulement.</p>
+          <div class="rows">
+            <div class="rw"><span class="n">Google</span><span class="c">46 %</span><span class="m"><i class="g" style="width:46%"></i></span></div>
+            <div class="rw"><span class="n">Direct</span><span class="c">31 %</span><span class="m"><i class="g" style="width:31%"></i></span></div>
+            <div class="rw"><span class="n">Facebook</span><span class="c">14 %</span><span class="m"><i class="g" style="width:14%"></i></span></div>
+            <div class="rw"><span class="n">Instagram</span><span class="c">9 %</span><span class="m"><i class="g" style="width:9%"></i></span></div>
+          </div>
+        </section>
+        <section class="card">
+          <h2>Appareils</h2>
+          <p class="why">Le type d'écran utilisé, d'après la largeur de la fenêtre.</p>
+          <div class="dev"><div><b>68 %</b><span>Mobile</span></div><div><b>29 %</b><span>Ordinateur</span></div><div><b>3 %</b><span>Tablette</span></div></div>
+          <div class="insight"><span class="ic">i</span><span><b>Plus des deux tiers viennent du téléphone.</b> La version mobile du site est donc la version principale.</span></div>
+        </section>
+      </div>
+    </div>
+
+    <section class="card">
+      <h2>Comment lire ces chiffres</h2>
+      <dl class="gl">
+        <div><dt>Un visiteur n'est pas une personne</dt><dd>C'est un navigateur sur un appareil. Quelqu'un qui vient sur son téléphone puis son ordinateur compte pour deux.</dd></div>
+        <div><dt>Ce qui n'est pas compté</dt><dd>Les robots des moteurs de recherche, les visites de ton compte admin et les pages d'administration.</dd></div>
+        <div><dt>Aucun cookie, aucune donnée personnelle</dt><dd>Un identifiant aléatoire est gardé dans le navigateur. On ne sait ni qui est la personne, ni son adresse IP.</dd></div>
+        <div><dt>Conservation</dt><dd>Les visites sont supprimées automatiquement après 13 mois.</dd></div>
+      </dl>
+      <div class="mng"><p>Exporter les données brutes pour les ouvrir dans un tableur, ou tout effacer pour repartir de zéro (irréversible).</p><span style="display:flex;gap:8px"><span class="btn">Exporter en CSV</span><span class="btn d">Réinitialiser</span></span></div>
+    </section>
+  </div>
+
+  <!-- TÉLÉPHONE -->
+  <div class="phone"><div class="in page">
+    <div class="top"><h1>Analytiques</h1></div>
+    <span class="seg" style="width:100%;display:grid;grid-template-columns:repeat(3,1fr);text-align:center"><span>7 j</span><span class="on">30 j</span><span>90 j</span></span>
+    <section class="card brief"><h2>En bref</h2><p class="lead">Ces 30 derniers jours, <b>412 personnes</b> ont visité le site, <b class="up">18 % de plus</b> qu'avant. La plupart viennent de <b>Google</b>, sur <b>téléphone</b>.</p>
+      <ul class="pts"><li>La page la plus vue est <b>Nos vols</b>.</li><li>Sur 100 visiteurs, <b>2</b> envoient une demande.</li></ul></section>
+    <div class="kpis">
+      <div class="card kpi"><p class="l">Visiteurs</p><p class="v">412</p><span class="tr up">▲ 18 %</span></div>
+      <div class="card kpi"><p class="l">Pages vues</p><p class="v">1 386</p><span class="tr up">▲ 9 %</span></div>
+      <div class="card kpi"><p class="l">Pages / visiteur</p><p class="v">3,4</p><span class="tr dn">▼ 8 %</span></div>
+      <div class="card kpi"><p class="l">Nouveaux</p><p class="v">78 %</p><span class="tr eq">stable</span></div>
+    </div>
+    <section class="card"><h2>Visites par jour</h2><p class="why">Pages ouvertes chaque jour.</p>
+      <div class="chart" style="height:110px"><i style="height:30%"></i><i style="height:38%"></i><i style="height:26%"></i><i style="height:52%" class="we"></i><i style="height:34%"></i><i style="height:41%"></i><i style="height:44%"></i><i style="height:74%" class="we"></i><i style="height:35%"></i><i style="height:48%"></i><i style="height:62%" class="we"></i><i style="height:100%" class="pk"></i><i style="height:39%"></i><i style="height:37%"></i><i style="height:80%" class="we"></i><i style="height:40%"></i></div>
+      <div class="insight"><span class="ic">i</span><span><b>Pic le 20 sept. : 74 visites</b>, 3 fois un jour normal.</span></div></section>
+    <section class="card"><h2>Du premier regard à la demande</h2>
+      <div class="fun"><div class="st"><div class="n">Visite du site</div><div class="bar"><i style="width:100%"></i></div><div class="c"><b>412</b></div></div><div class="st"><div class="n">Ont vu Nos vols</div><div class="bar"><i style="width:31%"></i></div><div class="c"><b>128</b> · 31 %</div></div><div class="st"><div class="n">Demande envoyée</div><div class="bar"><i style="width:2.2%;background:var(--gold)"></i></div><div class="c"><b>9</b> · 7 %</div></div></div></section>
+  </div></div>
+  </div>
+</div>

@@ -24,5 +24,8 @@ export async function resetAnalytics() {
 
   if (error) return { error: "Erreur lors de la réinitialisation" };
 
+  // Événements de parcours (table absente tant que la migration n'est pas passée : sans importance).
+  await adminClient.from("site_events").delete().gte("created_at", "1970-01-01");
+
   revalidatePath("/admin/analytics");
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { trackEvent } from "@/lib/track-event";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -180,7 +181,7 @@ export function AnnonceReserveClient({ annonce }: { annonce: AnnonceReserveInfo 
   }
 
   function handleCTA() {
-    if (step === "datetime") { setStep("infos"); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+    if (step === "datetime") { setStep("infos"); trackEvent("etape_infos"); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
     handleSubmit();
   }
 
@@ -256,7 +257,7 @@ export function AnnonceReserveClient({ annonce }: { annonce: AnnonceReserveInfo 
                             key={s}
                             type="button"
                             aria-pressed={heure === s}
-                            onClick={() => setHeure(s)}
+                            onClick={() => { setHeure(s); trackEvent("creneau_choisi"); }}
                             className={[
                               "h-[52px] rounded-xl border text-[15px] font-bold tabular-nums transition-colors cursor-pointer",
                               heure === s ? "border-primary bg-primary text-[#0b2238]" : "border-border bg-white text-foreground hover:border-foreground",

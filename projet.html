@@ -270,6 +270,21 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-10-01 (28) · Analytiques : une page qui explique les chiffres, et mesure des étapes du formulaire</p>
+      <h3>La page Analytiques raconte les statistiques (synthèse en phrases, comparaison à la période d'avant, parcours de la visite à la demande) ; deux événements sont ajoutés pour suivre le formulaire</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Romain : « actuellement c'est des chiffres en brut et c'est tout ». Maquette validée : https://claude.ai/artifact/XAbgqxm6vyTuMkiCpvNycG. Constat à l'audit : la liste « Sources » comptait comme « Direct » toutes les pages suivantes d'une visite (le référent n'est envoyé qu'à la première page) ; la lecture était limitée à 1000 lignes par PostgREST sans le dire.</dd>
+        <dt>Décision</dt>
+        <dd>Une <b>visite</b> = série de pages d'un même navigateur, coupée après 30 min d'inactivité ; sources et appareils comptés par visite (hors navigation interne). Comparaison à la période de même durée juste avant. Parcours : Visite → Nos vols → annonce → formulaire (<code>/vol/annonce/[id]/reserver</code>) → créneau choisi → étape informations → demande envoyée (<code>/reservation/success</code>) ; chaque étape après l'annonce ne garde que ceux qui ont franchi la précédente. Phrases d'interprétation calculées (pic, week-end, plus gros écart du parcours, appareil dominant). Encadré « Comment lire ces chiffres ». Périodes 7 / 30 / 90 jours.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Parcours en 3 étapes seulement (sans mesure ajoutée) ; mesure de clics sur chaque bouton ; outil tiers (Plausible, Google Analytics) : moins de contrôle et un cookie ou un transfert de données en plus.</dd>
+        <dt>Conséquences</dt>
+        <dd>Nouvelle table <code>site_events</code> (<b>migration <code>20261001b_site_events.sql</code> à exécuter</b>, voir <code>feedback_verify_migrations</code>) ; tant qu'elle n'existe pas, les deux étapes de formulaire affichent « En attente des premières visites » et tout le reste fonctionne. <code>/api/track</code> accepte <code>creneau_choisi</code> et <code>etape_infos</code> (mêmes filtres : robots et comptes internes exclus), purge à 13 mois et réinitialisation couvrent la nouvelle table. Politique de confidentialité : à relire, les événements sont anonymes comme les pages vues mais ne sont pas cités.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-10-01 (27) · Barre latérale admin flottante, logotype retravaillé, barre du bas</p>
       <h3>La navigation admin passe en Studio : barre flottante ouverte en permanence (réductible), logotype renouvelé, barre d'onglets du téléphone copiée sur le pilote</h3>
       <dl>
@@ -1775,6 +1790,15 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-10-01 (93) — Page Analytiques refaite : chiffres expliqués, parcours de la visite à la demande</h3>
+      <ul>
+        <li>Nouveaux : <code>lib/analytics-stats.ts</code> (visites, comparaison, parcours, phrases), <code>components/admin/AnalyticsView.tsx</code> (affichage), <code>components/admin/AnalyticsDataActions.tsx</code> (export + réinitialisation en deux temps), <code>lib/track-event.ts</code> (<code>trackEvent</code>, identifiant de navigateur partagé avec <code>AnalyticsTracker</code>), migration <code>20261001b_site_events.sql</code>. <code>app/admin/analytics/page.tsx</code> ne fait plus que charger (par tranches de 1000 lignes) et appeler le calcul.</li>
+        <li><code>AnnonceReserveClient</code> envoie <code>creneau_choisi</code> (clic sur une heure) et <code>etape_infos</code> (passage à l'étape 2) ; <code>/api/track</code>, <code>purge-analytics</code> et <code>resetAnalytics</code> étendus.</li>
+        <li>Vérifié à l'écran avec 520 visiteurs fabriqués sur 60 jours et avec les vraies données (bureau + téléphone) ; l'écriture des événements en base n'a pas été essayée (migration non exécutée). Pas poussé.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-10-01 (92) — Page Plus refaite en Studio</h3>

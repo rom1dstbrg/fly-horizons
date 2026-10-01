@@ -6,12 +6,15 @@ import { createClient } from "@/lib/supabase/server";
 const BOT_UA_RE =
   /bot|crawl|spider|slurp|mediapartners|facebookexternalhit|whatsapp|telegrambot|preview|headless|phantomjs|puppeteer|playwright|curl|wget|python-requests|axios|go-http-client|monitoring|pingdom|uptimerobot|gptbot|ccbot|bytespider|petalbot|semrushbot|ahrefsbot|mj12bot|dotbot|yandexbot|baiduspider/i;
 
+// Événements de parcours acceptés (voir lib/track-event.ts).
+const EVENTS = new Set(["creneau_choisi", "etape_infos"]);
+
 // Comptes internes à exclure du comptage, peu importe leur rôle
 const EXCLUDED_EMAILS = new Set(["info@fly-horizons.com", "romainpilot2003@gmail.com"]);
 
 export async function POST(req: NextRequest) {
   try {
-    const { pathname, referrer, screen_width, visitor_id } = await req.json();
+    const { pathname, referrer, screen_width, visitor_id, event } = await req.json();
 
     if (!pathname || typeof pathname !== "string" || pathname.startsWith("/admin")) {
       return NextResponse.json({ ok: true });
@@ -42,6 +45,18 @@ export async function POST(req: NextRequest) {
       if (profile?.role === "admin") {
         return NextResponse.json({ ok: true });
       }
+    }
+
+    // Événement de parcours (étape du formulaire de demande) : table à part.
+    if (event !== undefined) {
+      if (typeof event !== "string" || !EVENTS.has(event)) return NextResponse.json({ ok: true });
+      const { error } = await createAdminClient().from("site_events").insert({
+        name: event,
+        pathname,
+        visitor_id: visitor_id || null,
+      });
+      if (error) console.error("[/api/track] insert site_events failed:", error.message);
+      return NextResponse.json({ ok: true });
     }
 
     const device =
