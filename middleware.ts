@@ -86,7 +86,7 @@ export async function middleware(request: NextRequest) {
   // Protection routes /account/*, /orders, /checkout
   // Redirige vers /login si pas connecté
   // /orders/success est volontairement exclu : page de
-  // confirmation accessible sans session (after Stripe redirect)
+  // confirmation accessible sans session (page de confirmation d'une demande)
   // -------------------------------------------------
   const requiresAuth =
     pathname.startsWith("/account") ||

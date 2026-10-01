@@ -42,7 +42,7 @@ export interface ReservationData {
   type_resa: string;
   payment_token: string | null;
   acompte: number | null;
-  // Vol pilote (annonce) : réglé en direct au pilote par virement, pas de Stripe.
+  // Vol pilote (annonce) : réglé en direct au pilote par virement.
   // Le détail (QR, IBAN, reçu) vit sur /vol/annonce/paiement/[token] ; ici on
   // n'affiche qu'un résumé + le lien.
   pilotePayment?: {
@@ -61,7 +61,6 @@ export interface ReservationData {
 
 interface Props {
   reservation: ReservationData;
-  siteUrl: string;
 }
 
 const EYEBROW = "text-[11px] font-bold text-primary uppercase tracking-[3px]";
@@ -208,7 +207,7 @@ function formatDate(dateStr: string) {
 
 // ── Component ──────────────────────────────────────────────────────────────
 
-export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
+export function ReservationTracker({ reservation: initial }: Props) {
   const router = useRouter();
   const [resa, setResa] = useState<ReservationData>(initial);
   const [liveStatus, setLiveStatus] = useState<"connecting" | "live" | "offline">("connecting");
@@ -289,13 +288,6 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
     : STANDARD_TIMELINE;
 
   const piloteVol = !!resa.pilotePayment;
-  const isPaid = !["payment_pending", "en_attente_perso", "demande_recue"].includes(resa.statut);
-  const hasPaymentLink = !piloteVol && resa.payment_token && !isPaid && !isCancelled;
-
-  const paymentUrl = isPerso
-    ? `${siteUrl}/api/vol-sur-mesure/pay/${resa.payment_token}`
-    : `${siteUrl}/api/reservation/pay/${resa.payment_token}`;
-
   const typeLabel = isPerso ? "Vol sur mesure" : (resa.packTitle ?? "Vol partagé");
   const title = resa.statut === "vol_effectue"
     ? "Vol effectué"
@@ -509,20 +501,6 @@ export function ReservationTracker({ reservation: initial, siteUrl }: Props) {
                 </dl>
 
                 <div>
-                  {hasPaymentLink && (
-                    <ActionRow
-                      Icon={CreditCard}
-                      title={isPerso ? "Provision requise" : "Paiement requis"}
-                      action={
-                        <Link href={paymentUrl} className={PAY_CTA}>
-                          Payer{resa.acompte != null ? ` ${resa.acompte} €` : ""}
-                        </Link>
-                      }
-                    >
-                      {isPerso ? "Réglez la provision pour confirmer votre vol." : "Réglez le montant pour confirmer votre réservation."}
-                    </ActionRow>
-                  )}
-
                   {piloteVol && resa.pilotePayment && (
                     <ActionRow
                       Icon={CreditCard}

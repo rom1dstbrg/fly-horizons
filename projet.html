@@ -270,6 +270,21 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-10-01 (29) · Stripe retiré du site, politique de confidentialité 2.1</p>
+      <h3>Plus aucun paiement par carte : le flux Stripe (routes publiques, webhook, cron, emails, boutons admin) est supprimé ; la politique de confidentialité décrit la nouvelle mesure d'audience</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Romain : « côté public, supprimer tout ce qui concerne Stripe et mettre à jour le légal avec le suivi analytique qu'on a ajouté ». Le règlement des vols se fait par virement au pilote (décision 08/09, aucun prestataire de paiement). Vérifié en base le 01/10 : 4 réservations (tests, déjà réglées), 0 en attente de paiement, 0 lien de paiement envoyé, 0 frais Stripe renseigné : aucun flux vivant.</dd>
+        <dt>Décision</dt>
+        <dd><b>Supprimé :</b> <code>/api/stripe/webhook</code>, <code>/api/reservation/pay</code>, <code>/resume</code>, <code>/checkout</code>, le cron <code>payment-deadline</code> (et son entrée <code>vercel.json</code>), les emails d'invitation / rappel / lien de paiement par carte, les boutons admin « Lien de paiement », « Renvoyer le lien », « Copier le lien » et leurs actions, la dépendance <code>stripe</code>, le domaine <code>*.stripe.com</code> de la CSP, et toutes les mentions publiques (pied de page « Paiement sécurisé Stripe », FAQ, politique, reçu PDF). L'acceptation d'un itinéraire ne génère plus de lien que pour une annonce (virement). <b>Gardé :</b> l'affichage comptable des anciens frais Stripe dans Transactions et le tiroir (<code>lib/stripe-fee.ts</code>, colonne <code>stripe_fee</code>) : historique, rien à y gagner à le retirer. <b>Politique 2.1 :</b> mesure des étapes du formulaire (sans donnée personnelle, sans IP), exclusion des robots et des comptes admin / pilote et de leurs espaces, indicateur <code>fh_internal</code> dans le stockage local, droit d'opposition, Stripe retiré des sous-traitants, phrase sur l'expiration des liens de paiement retirée (le cron qui l'appliquait n'existe plus).</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Ne retirer que les mentions publiques et laisser les routes (des liens d'email envoyés par un bouton admin auraient mené à une page morte) ; supprimer aussi l'affichage comptable des frais Stripe (perte d'historique pour rien).</dd>
+        <dt>Conséquences</dt>
+        <dd>Les variables <code>STRIPE_*</code> de Vercel et .env ne servent plus (à supprimer à la main). Le webhook déclaré côté Stripe (dashboard) pointe maintenant vers une route absente (404) : à désactiver là-bas. Un vol « standard » ne peut plus être encaissé par carte ; seul l'encaissement manuel (espèces, marqué par l'admin) reste dans le tiroir. Les CGP disaient déjà « le paiement par carte n'est pas proposé » : inchangées.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-10-01 (28) · Analytiques : une page qui explique les chiffres, et mesure des étapes du formulaire</p>
       <h3>La page Analytiques raconte les statistiques (synthèse en phrases, comparaison à la période d'avant, parcours de la visite à la demande) ; deux événements sont ajoutés pour suivre le formulaire</h3>
       <dl>
@@ -1790,6 +1805,15 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-10-01 (95) — Stripe supprimé du site, politique de confidentialité 2.1</h3>
+      <ul>
+        <li>Supprimés : <code>app/api/stripe/webhook</code>, <code>app/api/reservation/{pay,resume,checkout}</code>, <code>app/api/cron/payment-deadline</code> (+ <code>vercel.json</code>), 3 gabarits d'email (invitation, rappel, lien de paiement) et leurs aperçus, <code>sendPaymentLinkAdmin</code> / <code>resendPaymentLinkAdmin</code> et les boutons du tiroir, la dépendance <code>stripe</code>. <code>reservation-edit.ts</code> : un lien de paiement n'est créé et envoyé que pour une annonce (virement).</li>
+        <li>Public : pied de page, mots-clés de la FAQ, politique de confidentialité (<code>content.ts</code>, version 2.1), reçu PDF, liens de paiement de l'espace client (<code>ReservationsSection</code>, <code>ReservationTracker</code> : seul le lien de virement d'une annonce reste), CSP.</li>
+        <li>Vérifié : <code>tsc</code> sans erreur ; <code>/faq</code>, <code>/politique-de-confidentialite</code>, <code>/nos-offres</code> et l'accueil sans aucune occurrence de « stripe » ; <code>/api/reservation/pay/x</code> et <code>/api/stripe/webhook</code> répondent 404. Non testé avec un vrai compte client connecté. Pas poussé.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-10-01 (94) — Analytiques : l'espace pilote et les comptes pilote ne sont plus comptés</h3>

@@ -212,7 +212,7 @@ function InvoicePDF({
           {/* Payment note */}
           <View style={{ marginTop: 24, paddingTop: 16, borderTopWidth: 1, borderColor: BORDER }}>
             <Text style={{ fontSize: 8, color: MUTED }}>
-              Paiement reçu le {paidStr} par carte bancaire via Stripe.
+              Paiement reçu le {paidStr}.
               Ce reçu est établi à titre de justificatif de paiement.
             </Text>
           </View>

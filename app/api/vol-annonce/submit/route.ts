@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Règle J-2 : minimum 48h d'avance (basé sur la date du jour en heure de Bruxelles) —
-    // même règle que app/api/reservation/checkout/route.ts.
+    // même règle que app/api/reservation/submit/route.ts.
     const brusselsTodayStr = new Intl.DateTimeFormat("en-CA", {
       timeZone: "Europe/Brussels",
       year: "numeric", month: "2-digit", day: "2-digit",

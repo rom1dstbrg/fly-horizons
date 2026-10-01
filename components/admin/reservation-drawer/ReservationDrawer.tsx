@@ -10,8 +10,6 @@ import {
   sendCustomEmail,
   setAvionReserve,
   recordCashPayment,
-  resendPaymentLinkAdmin,
-  sendPaymentLinkAdmin,
   sendRescheduleInvite,
   sendBoardingPassEmail,
   proposeSlot,
@@ -107,7 +105,6 @@ export function ReservationDrawer({
   const [emailSubject, setEmailSubject] = useState("");
   const [emailBody, setEmailBody] = useState("");
   const [includeReschedule, setIncludeReschedule] = useState(false);
-  const [linkCopied, setLinkCopied] = useState(false);
 
   function showFeedback(msg: string, ok = true) {
     setFeedback({ msg, ok });
@@ -192,35 +189,6 @@ export function ReservationDrawer({
       } else {
         showFeedback(needsRoute ? "Créneau confirmé, route envoyée dans le même email ✓" : "Statut mis à jour, email envoyé ✓");
       }
-    });
-  }
-
-  function doSendPaymentLink() {
-    if (!reservation) return;
-    startTransition(async () => {
-      const res = await sendPaymentLinkAdmin(reservation.id);
-      if (res.error) { showFeedback("Erreur : " + res.error, false); return; }
-      onStatusChange?.(reservation.id, "payment_pending");
-      showFeedback(res.emailError ? "Statut mis à jour · email non envoyé, réessayez" : "Lien de paiement envoyé ✓", !res.emailError);
-    });
-  }
-
-  function doResendPaymentLink() {
-    if (!reservation) return;
-    startTransition(async () => {
-      const r = await resendPaymentLinkAdmin(reservation.id);
-      if (r.error) { showFeedback("Erreur : " + r.error, false); return; }
-      showFeedback("Email de paiement renvoyé ✓");
-    });
-  }
-
-  function copyPaymentLink() {
-    if (!reservation?.payment_token) return;
-    const rawUrl = typeof window !== "undefined" ? window.location.origin : "https://fly-horizons.com";
-    const url = `${rawUrl}/api/reservation/pay/${reservation.payment_token}`;
-    navigator.clipboard.writeText(url).then(() => {
-      setLinkCopied(true);
-      setTimeout(() => setLinkCopied(false), 2000);
     });
   }
 
@@ -439,13 +407,9 @@ export function ReservationDrawer({
                           cashPayment={cashPayment}
                           isCashPaymentPending={isCashPaymentPending}
                           onToggleCashPayment={doToggleCashPayment}
-                          linkCopied={linkCopied}
-                          onCopyPaymentLink={copyPaymentLink}
                           ask={setPendingAction}
                           onConfirmSlot={doConfirmHeureConfirmee}
                           onChangeStatut={doChangeStatut}
-                          onSendPaymentLink={doSendPaymentLink}
-                          onResendPaymentLink={doResendPaymentLink}
                           onSendBoardingPass={doSendBoardingPass}
                           onSendReschedule={doSendRescheduleInvite}
                           onRecordCash={doRecordCash}

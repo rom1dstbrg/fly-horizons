@@ -1255,47 +1255,6 @@ export function reservationMessageClientReplyEmail({
 
 // ── 14. Invitation au paiement (réservation admin) ────────────────────────────
 
-export interface ReservationPaymentInvitationProps {
-  prenom: string;
-  nom: string;
-  dateStr: string;
-  heure: string;
-  duree: number;
-  montant: number;
-  paymentUrl: string;
-  voucherCode?: string | null;
-  breakdown?: EmailPriceBreakdown | null;
-}
-
-export function reservationPaymentInvitationEmail(p: ReservationPaymentInvitationProps): string {
-  const rows: Array<[string, string]> = [
-    ["Date", `<span style="text-transform:capitalize;">${esc(p.dateStr)}</span>`],
-    ["Heure de départ", esc(p.heure)],
-    ["Durée du vol", fmtDuration(p.duree)],
-    ["Départ / retour", "Charleroi EBCI"],
-  ];
-  if (p.voucherCode) rows.push(["Voucher", `<span style="color:#0b2238;font-weight:600;">${esc(p.voucherCode)}</span>`]);
-
-  const body = `
-    <p class="em-body" style="margin:0 0 28px;font-size:16px;color:#334155;line-height:1.7;">Bonjour <strong style="color:#0b2238;">${esc(p.prenom)} ${esc(p.nom)}</strong>, voici le r&eacute;capitulatif de votre r&eacute;servation.</p>
-
-    ${infoRows(rows)}
-
-    ${payBlock({ label: `Montant &agrave; r&eacute;gler`, amount: `${fmt(p.montant)}`, href: `${esc(p.paymentUrl)}`, cta: `Payer ma r&eacute;servation, ${fmt(p.montant)}`, note: `Paiement s&eacute;curis&eacute; par Stripe, carte bancaire` })}
-
-    ${p.breakdown ? `${label("D&eacute;tail du paiement")}${buildPriceBreakdown(p.breakdown)}` : ""}
-
-    ${separator()}
-    ${signOff(null)}
-    <p class="em-muted" style="margin:0;font-size:13px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
-      <a href="${SITE_URL}/contact" style="color:#0b2238;font-weight:600;text-decoration:underline;">page contact</a>.
-    </p>`;
-
-  return emailBase(body, `Votre réservation · ${p.dateStr}`, undefined, "Récapitulatif de votre réservation.");
-}
-
-
 // ── 14b. Règlement d'une annonce pilote par virement (aucun PSP) ─────────────
 // Envoyé au client quand le pilote a confirmé la route de son annonce. Le
 // règlement se fait par virement direct au pilote via la page de paiement
@@ -1428,50 +1387,6 @@ export function annonceInscriptionPlaceEmail(p: AnnonceInscriptionPlaceProps): s
 }
 
 // ── 14c. Rappel de paiement — T-72h (deadline T-48h) ─────────────────────────
-
-export interface ReservationPaymentReminderEmailProps {
-  prenom: string;
-  nom: string;
-  dateStr: string;
-  heure: string;
-  duree: number;
-  montant: number;
-  paymentUrl: string;
-  deadlineStr: string;
-  breakdown?: EmailPriceBreakdown | null;
-  /** Pilote déjà identifié pour ce vol, s'il y en a un — sinon voix institutionnelle "Fly Horizons". */
-  pilote?: { prenom: string } | null;
-}
-
-export function reservationPaymentReminderEmail(p: ReservationPaymentReminderEmailProps): string {
-  const rows: Array<[string, string]> = [
-    ["Date", `<span style="text-transform:capitalize;">${esc(p.dateStr)}</span>`],
-    ["Heure de départ", esc(p.heure)],
-    ["Durée du vol", fmtDuration(p.duree)],
-    ["Départ / retour", "Charleroi EBCI"],
-  ];
-
-  const body = `
-    <p class="em-body" style="margin:0 0 28px;font-size:16px;color:#334155;line-height:1.7;">Bonjour <strong style="color:#0b2238;">${esc(p.prenom)} ${esc(p.nom)}</strong>, votre r&eacute;servation du <strong style="color:#0b2238;text-transform:capitalize;">${esc(p.dateStr)}</strong> est toujours en attente de paiement.</p>
-
-    ${callout(`<strong>Votre lien de paiement expire le ${esc(p.deadlineStr)}.</strong><br>
-            Pass&eacute; ce d&eacute;lai, votre r&eacute;servation sera automatiquement annul&eacute;e et le cr&eacute;neau remis en vente.`)}
-
-    ${infoRows(rows)}
-
-    ${payBlock({ label: `Montant &agrave; r&eacute;gler`, amount: `${fmt(p.montant)}`, href: `${esc(p.paymentUrl)}`, cta: `Payer maintenant, ${fmt(p.montant)}`, note: `Paiement s&eacute;curis&eacute; par Stripe, carte bancaire` })}
-
-    ${p.breakdown ? `${label("D&eacute;tail du paiement")}${buildPriceBreakdown(p.breakdown)}` : ""}
-
-    ${separator()}
-    ${signOff(p.pilote)}
-    <p class="em-muted" style="margin:0;font-size:13px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
-      <a href="${SITE_URL}/contact" style="color:#0b2238;font-weight:600;text-decoration:underline;">page contact</a>.
-    </p>`;
-
-  return emailBase(body, `Rappel : confirmez votre vol du ${p.dateStr}`, undefined, "Votre réservation attend votre paiement.");
-}
 
 // ── 14d. Annulation automatique — délai de paiement dépassé ──────────────────
 
@@ -1918,49 +1833,6 @@ export function routeProposalEmail(p: RouteProposalEmailProps): string {
 }
 
 // ── Payment link after route acceptance ──────────────────────────────────────
-
-export interface PaymentLinkEmailProps {
-  prenom: string;
-  dateStr: string;
-  duree: number;
-  acompte: number;
-  paymentUrl: string;
-  breakdown?: EmailPriceBreakdown | null;
-  /** Pilote déjà identifié pour ce vol, s'il y en a un — sinon voix institutionnelle "Fly Horizons". */
-  pilote?: { prenom: string } | null;
-}
-
-export function paymentLinkEmail(p: PaymentLinkEmailProps): string {
-  const body = `
-    <p class="em-body" style="margin:0 0 28px;font-size:16px;color:#334155;line-height:1.7;">
-      Bonjour <strong style="color:#0b2238;">${esc(p.prenom)}</strong>,
-      vous avez valid&eacute; votre itin&eacute;raire pour le vol du <strong style="color:#0b2238;">${esc(p.dateStr)}</strong>,
-      il ne reste qu&rsquo;une &eacute;tape&nbsp;: r&eacute;gler la provision pour confirmer d&eacute;finitivement votre r&eacute;servation.
-    </p>
-
-    ${infoRows([
-      ["Date du vol", `<strong style="text-transform:capitalize;">${esc(p.dateStr)}</strong>`],
-      ["D&eacute;part / retour", "Charleroi EBCI"],
-      ["Dur&eacute;e estim&eacute;e", `~${p.duree}&nbsp;min`],
-    ])}
-
-    ${payBlock({ label: `Provision &agrave; r&eacute;gler`, amount: `${fmt(p.acompte)}`, href: `${esc(p.paymentUrl)}`, cta: `R&eacute;gler ma provision, ${fmt(p.acompte)}`, note: `Paiement s&eacute;curis&eacute; par Stripe, carte bancaire` })}
-
-    ${p.breakdown ? `${label("D&eacute;tail de la provision")}${buildPriceBreakdown({ ...p.breakdown, totalLabel: "Provision &agrave; r&eacute;gler" })}` : ""}
-
-    <p class="em-body" style="margin:0 0 28px;font-size:15px;color:#334155;line-height:1.7;">
-      La provision encaiss&eacute;e couvre votre vol. Apr&egrave;s le vol, le montant d&eacute;finitif est calcul&eacute; selon la dur&eacute;e r&eacute;ellement effectu&eacute;e. Si elle d&eacute;passe ce montant, la diff&eacute;rence vous est rembours&eacute;e sous 24&nbsp;h.
-    </p>
-
-    ${separator()}
-    ${signOff(p.pilote)}
-    <p class="em-muted" style="margin:0;font-size:13px;color:#64748b;">
-      Des questions ? R&eacute;pondez directement &agrave; cet email ou visitez notre
-      <a href="${SITE_URL}/contact" style="color:#0b2238;font-weight:600;text-decoration:underline;">page contact</a>.
-    </p>`;
-
-  return emailBase(body, `Finalisez votre réservation · Fly Horizons`);
-}
 
 // ── Newsletter — types de blocs ──────────────────────────────────────────────
 

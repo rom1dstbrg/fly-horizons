@@ -31,7 +31,7 @@ const nextConfig: NextConfig = {
       `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
       "style-src 'self' 'unsafe-inline'",           // requis pour Leaflet et shadcn
       `img-src 'self' data: blob: ${supabaseHost} server.arcgisonline.com *.basemaps.cartocdn.com nwy-tiles-api.prod.newaydata.com`,
-      `connect-src 'self' ${supabaseHost} wss://${supabaseHost} *.stripe.com nominatim.openstreetmap.org overpass-api.de`,
+      `connect-src 'self' ${supabaseHost} wss://${supabaseHost} nominatim.openstreetmap.org overpass-api.de`,
       "font-src 'self' data:",
       // Cadres autorisés : Supabase (PDF des documents pilote, URL signée du bucket privé)
       // et Google Maps (carte du point de rendez-vous sur /contact et /access-ebci,

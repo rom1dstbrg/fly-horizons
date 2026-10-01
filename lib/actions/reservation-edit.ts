@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { toForeFlight, buildForeFlightRoute } from "@/lib/foreflight";
-import { routeProposalEmail, paymentLinkEmail, routeFeedbackAdminEmail, reservationPaymentInvitationEmail, annoncePaiementVirementEmail } from "@/lib/email-templates";
+import { routeProposalEmail, routeFeedbackAdminEmail, annoncePaiementVirementEmail } from "@/lib/email-templates";
 import { requireAdminOrOwningPilote as checkAdminOrOwningPilote } from "./auth-guards";
 
 async function logHistory(params: {
@@ -369,14 +369,14 @@ export async function respondToRouteProposal(
     const client = resa?.clients;
     const isPerso = resa?.type_resa === "perso";
     // Annonce pilote : le client règle le pilote par virement (page dédiée),
-    // jamais par carte / Stripe (décision 08/09).
+    // jamais par carte (décision 08/09).
     const isAnnonce = resa?.type_resa === "annonce_pilote";
     const piloteNom = Array.isArray(resa?.pilotes)
       ? resa?.pilotes[0]?.nom ?? ""
       : resa?.pilotes?.nom ?? "";
 
     // Relecture fraîche juste avant la logique de paiement — réduit la fenêtre de race condition
-    // au cas où le webhook Stripe aurait mis à jour entre le fetch initial et maintenant
+    // au cas où un paiement aurait été enregistré entre le fetch initial et maintenant
     let freshPaymentToken: string | null = resa?.payment_token ?? null;
     let freshStatut: string | null = resa?.statut ?? null;
     let alreadyPaid = resa?.statut === "acompte_recu" || resa?.payment_status === "paid";
@@ -397,15 +397,12 @@ export async function respondToRouteProposal(
     // ou si l'admin a coché "paiement en espèces" (cash_payment) pour cette réservation.
     const skipPayment = alreadyPaid || resa?.cash_payment === true;
     let paymentToken: string | null = null;
-    if (!skipPayment && status === "accepted" && resa?.id && proposalAcompte > 0) {
+    if (!skipPayment && isAnnonce && status === "accepted" && resa?.id && proposalAcompte > 0) {
       paymentToken = freshPaymentToken;
       if (!paymentToken) {
         paymentToken = crypto.randomUUID();
-        // Le tunnel standard (/api/reservation/pay/[token]) exige le statut "payment_pending"
-        // pour générer une session Stripe — sans ça il redirige directement vers /success sans encaisser.
-        // On mémorise le statut d'avant (normalement "heure_confirmee", route déjà envoyée) dans
-        // pre_payment_statut : le webhook Stripe le restaure après paiement au lieu de retomber
-        // sur "en_attente", ce qui redemanderait à l'admin de reconfirmer une date déjà actée.
+        // On mémorise le statut d'avant (normalement "heure_confirmee", route déjà envoyée)
+        // dans pre_payment_statut : il est restauré quand le pilote marque le virement reçu.
         const extra: Record<string, unknown> = { payment_token: paymentToken, paiement_demande_at: new Date().toISOString() };
         if (!isPerso) {
           extra.statut = "payment_pending";
@@ -443,62 +440,26 @@ export async function respondToRouteProposal(
       }),
     });
 
-    // Lien de paiement au client — uniquement si non encore payé, montant dû, et pas de paiement cash prévu
-    if (!skipPayment && status === "accepted" && client?.email && paymentToken && proposalAcompte > 0) {
-      if (isPerso) {
-        const paymentUrl = `${siteUrl}/api/vol-sur-mesure/pay/${paymentToken}`;
-        await resend.emails.send({
-          from: EMAIL_FROM,
-          to: [client.email],
-          replyTo: EMAIL_REPLY_TO,
-          subject: `Fly Horizons · Finalisez votre réservation`,
-          html: paymentLinkEmail({
-            prenom: client.prenom,
-            dateStr,
-            duree: proposalDuree,
-            acompte: proposalAcompte,
-            paymentUrl,
-            pilote: piloteNom ? { prenom: piloteNom.split(" ")[0] } : null,
-          }),
-        });
-      } else if (isAnnonce) {
-        // Règlement par virement direct au pilote — page de paiement dédiée.
-        const paiementUrl = `${siteUrl}/vol/annonce/paiement/${paymentToken}`;
-        await resend.emails.send({
-          from: EMAIL_FROM,
-          to: [client.email],
-          replyTo: EMAIL_REPLY_TO,
-          subject: "Réglez votre vol partagé · Fly Horizons",
-          html: annoncePaiementVirementEmail({
-            prenom: client.prenom,
-            nom: client.nom,
-            dateStr,
-            heure: resa?.heure_vol ?? "",
-            duree: proposalDuree,
-            montant: proposalAcompte,
-            piloteNom,
-            paiementUrl,
-          }),
-        });
-      } else {
-        const paymentUrl = `${siteUrl}/api/reservation/pay/${paymentToken}`;
-        await resend.emails.send({
-          from: EMAIL_FROM,
-          to: [client.email],
-          replyTo: EMAIL_REPLY_TO,
-          subject: "Votre réservation : lien de paiement Fly Horizons",
-          html: reservationPaymentInvitationEmail({
-            prenom: client.prenom,
-            nom: client.nom,
-            dateStr,
-            heure: resa?.heure_vol ?? "",
-            duree: proposalDuree,
-            montant: proposalAcompte,
-            paymentUrl,
-            voucherCode: null,
-          }),
-        });
-      }
+    // Lien de paiement au client (annonce pilote) : virement direct au pilote, page de
+    // paiement dédiée. Seulement si non encore payé, montant dû, et pas de paiement cash prévu.
+    if (!skipPayment && isAnnonce && status === "accepted" && client?.email && paymentToken && proposalAcompte > 0) {
+      const paiementUrl = `${siteUrl}/vol/annonce/paiement/${paymentToken}`;
+      await resend.emails.send({
+        from: EMAIL_FROM,
+        to: [client.email],
+        replyTo: EMAIL_REPLY_TO,
+        subject: "Réglez votre vol partagé · Fly Horizons",
+        html: annoncePaiementVirementEmail({
+          prenom: client.prenom,
+          nom: client.nom,
+          dateStr,
+          heure: resa?.heure_vol ?? "",
+          duree: proposalDuree,
+          montant: proposalAcompte,
+          piloteNom,
+          paiementUrl,
+        }),
+      });
     }
 
     return { success: true };

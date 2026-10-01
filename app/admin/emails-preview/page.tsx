@@ -6,8 +6,6 @@ import {
   contactNotificationEmail,
   contactAcknowledgmentEmail,
   contactReplyEmail,
-  reservationPaymentInvitationEmail,
-  reservationPaymentReminderEmail,
   reservationAutoAnnuleeEmail,
   flightReminderEmail,
   postVolEmail,
@@ -17,10 +15,8 @@ import {
   rescheduleInviteEmail,
   rescheduleConfirmationEmail,
   routeProposalEmail,
-  paymentLinkEmail,
   newsletterFromBlocksEmail,
   newsletterConfirmationEmail,
-  type EmailPriceBreakdown,
 } from "@/lib/email-templates";
 import { EmailsPreviewClient, type EmailPreviewEntry } from "@/components/admin/EmailsPreviewClient";
 
@@ -28,18 +24,6 @@ export const metadata = { title: "Emails · Admin" };
 
 // Données d'exemple, réalistes mais fictives — pour visualiser les gabarits réels
 // de lib/email-templates.ts sans dépendre de données en base.
-
-const breakdownExample: EmailPriceBreakdown = {
-  coutVol: 180,
-  dureeMin: 60,
-  distKm: 220,
-  provisionMarge: 20,
-  taxesEscales: 0,
-  voucherDiscount: 0,
-  couponDiscount: 10,
-  couponCode: "WELCOME2026",
-  total: 190,
-};
 
 export default function EmailsPreviewPage() {
   const entries: EmailPreviewEntry[] = [
@@ -56,37 +40,6 @@ export default function EmailsPreviewPage() {
         passengers: 2,
         montantPaye: 190,
         reservationId: "sample-id",
-      }),
-    },
-    {
-      id: "payment-invitation",
-      category: "Réservation standard",
-      label: "Invitation au paiement",
-      html: reservationPaymentInvitationEmail({
-        prenom: "Camille",
-        nom: "Petit",
-        dateStr: "samedi 15 août 2026",
-        heure: "14:00",
-        duree: 60,
-        montant: 190,
-        paymentUrl: "https://fly-horizons.com/reservation/pay/exemple",
-        breakdown: breakdownExample,
-      }),
-    },
-    {
-      id: "payment-reminder",
-      category: "Rappels & annulation",
-      label: "Rappel de paiement · T-72h",
-      html: reservationPaymentReminderEmail({
-        prenom: "Camille",
-        nom: "Petit",
-        dateStr: "samedi 15 août 2026",
-        heure: "14:00",
-        duree: 60,
-        montant: 190,
-        paymentUrl: "https://fly-horizons.com/reservation/pay/exemple",
-        deadlineStr: "jeudi 13 août à 14:00",
-        breakdown: breakdownExample,
       }),
     },
     {
@@ -186,19 +139,6 @@ export default function EmailsPreviewPage() {
         responseUrl: "https://fly-horizons.com/vol/proposition/exemple",
         totalAcompte: 250,
         alreadyPaid: false,
-      }),
-    },
-    {
-      id: "payment-link",
-      category: "Vol sur mesure",
-      label: "Lien de paiement après itinéraire",
-      html: paymentLinkEmail({
-        prenom: "Julien",
-        dateStr: "jeudi 20 août 2026",
-        duree: 75,
-        acompte: 250,
-        paymentUrl: "https://fly-horizons.com/vol-sur-mesure/pay/exemple",
-        breakdown: breakdownExample,
       }),
     },
     {

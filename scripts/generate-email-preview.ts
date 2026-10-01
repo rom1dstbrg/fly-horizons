@@ -43,8 +43,6 @@ const ADMIN_CATEGORIES = ["Contact", "Vol sur mesure", "Post-vol", "Pilotes"] as
 
 const CLASSIFICATION: Record<string, { side: "admin" | "public"; category: string; rank: number }> = {
   // Réservation standard
-  reservationPaymentInvitationEmail: { side: "public", category: "Réservation standard", rank: 1 },
-  reservationPaymentReminderEmail: { side: "public", category: "Réservation standard", rank: 2 },
   reservationAutoAnnuleeEmail: { side: "public", category: "Réservation standard", rank: 3 },
   reservationPaymentConfirmationEmail: { side: "public", category: "Réservation standard", rank: 4 },
   reservationDateConfirmeeEmail: { side: "public", category: "Réservation standard", rank: 5 },
@@ -58,7 +56,6 @@ const CLASSIFICATION: Record<string, { side: "admin" | "public"; category: strin
   postVolEmail: { side: "public", category: "Réservation standard", rank: 13 },
   // Vol sur mesure
   routeProposalEmail: { side: "public", category: "Vol sur mesure", rank: 1 },
-  paymentLinkEmail: { side: "public", category: "Vol sur mesure", rank: 2 },
   routeFeedbackAdminEmail: { side: "admin", category: "Vol sur mesure", rank: 5 },
   // Annonces pilote
   annonceInscriptionPlaceEmail: { side: "public", category: "Annonces pilote", rank: 0 },
@@ -201,19 +198,6 @@ entries.push(render(16, "reservationMessageClientReplyEmail", "Messagerie client
     adminUrl: "https://fly-horizons.com/pilote/vols/exemple",
   })));
 
-entries.push(render(17, "reservationPaymentInvitationEmail", "Invitation au paiement (réservation admin)", 1427, () =>
-  T.reservationPaymentInvitationEmail({
-    prenom: "Sophie",
-    nom: "Delcourt",
-    dateStr: "samedi 3 octobre 2026",
-    heure: "14:00",
-    duree: 60,
-    montant: 320,
-    paymentUrl: "https://fly-horizons.com/paiement/exemple",
-    voucherCode: null,
-    breakdown: { coutVol: 320, dureeMin: 60, total: 320 },
-  })));
-
 entries.push(render(18, "annoncePaiementVirementEmail", "Annonce pilote — règlement par virement (itinéraire validé)", 1492, () =>
   T.annoncePaiementVirementEmail({
     prenom: "Sophie",
@@ -247,19 +231,6 @@ entries.push(render(20, "annonceInscriptionPlaceEmail", "Annonce pilote — mode
     duree: 60,
     piloteNom: "Julien Verhaegen",
     passagers: 1,
-  })));
-
-entries.push(render(21, "reservationPaymentReminderEmail", "Rappel de paiement — T-72h", 1647, () =>
-  T.reservationPaymentReminderEmail({
-    prenom: "Sophie",
-    nom: "Delcourt",
-    dateStr: "samedi 3 octobre 2026",
-    heure: "14:00",
-    duree: 60,
-    montant: 320,
-    paymentUrl: "https://fly-horizons.com/paiement/exemple",
-    deadlineStr: "jeudi 1 octobre 2026 à 14:00",
-    breakdown: { coutVol: 320, dureeMin: 60, total: 320 },
   })));
 
 entries.push(render(22, "reservationAutoAnnuleeEmail", "Annulation automatique — délai de paiement dépassé", 1717, () =>
@@ -367,16 +338,6 @@ entries.push(render(31, "routeProposalEmail", "Proposition d'itinéraire (waypoi
     responseUrl: "https://fly-horizons.com/vol/proposition/exemple",
     totalAcompte: 320,
     alreadyPaid: false,
-  })));
-
-entries.push(render(32, "paymentLinkEmail", "Lien de paiement après acceptation de l'itinéraire", 2263, () =>
-  T.paymentLinkEmail({
-    prenom: "Sophie",
-    dateStr: "samedi 3 octobre 2026",
-    duree: 60,
-    acompte: 320,
-    paymentUrl: "https://fly-horizons.com/paiement/exemple",
-    breakdown: { coutVol: 320, dureeMin: 60, total: 320 },
   })));
 
 entries.push(render(33, "newsletterFromBlocksEmail", "Newsletter — éditeur de blocs (campagne visuelle)", 2372, () =>

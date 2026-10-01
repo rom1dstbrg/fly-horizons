@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, Clock, CreditCard, MapPin, CheckCircle, ChevronRight, Download, AlertCircle, Star, Ticket, Send } from "lucide-react";
+import { CalendarDays, Clock, CreditCard, MapPin, CheckCircle, ChevronRight, Download, Star, Ticket, Send } from "lucide-react";
 import { RescheduleButton } from "@/components/account/RescheduleButton";
 import { WeatherWidget } from "@/components/account/WeatherWidget";
 import { formatDuration } from "@/lib/vouchers";
@@ -90,10 +90,9 @@ function ResaRow({ resa, showWeather = false }: { resa: Reservation; showWeather
   const status     = RESA_STATUS[resa.statut] ?? RESA_STATUS.en_attente;
   const isPerso    = resa.type_resa === "perso";
   const isPaid     = !["en_attente", "payment_pending", "en_attente_perso", "demande_recue"].includes(resa.statut);
-  const hasPayLink = resa.payment_token && !isPaid;
-  const payUrl     = isPerso
-    ? `/api/vol-sur-mesure/pay/${resa.payment_token}`
-    : `/api/reservation/pay/${resa.payment_token}`;
+  // Vol d'une annonce : le client règle par virement sur la page de paiement dédiée.
+  const hasPayLink = resa.type_resa === "annonce_pilote" && resa.payment_token && !isPaid;
+  const payUrl     = `/vol/annonce/paiement/${resa.payment_token}`;
 
   const dateFormatted = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
     weekday: "long", day: "numeric", month: "long", year: "numeric",
@@ -137,25 +136,9 @@ function ResaRow({ resa, showWeather = false }: { resa: Reservation; showWeather
       {hasPayLink && (
         <Link href={payUrl} className={`${BTN_GOLD} mt-3 w-full sm:w-auto justify-center`}>
           <CreditCard size={13} />
-          {isPerso ? "Régler la provision" : "Finaliser le paiement"}
+          Régler mon vol
           {resa.acompte != null ? ` · ${resa.acompte} €` : ""}
         </Link>
-      )}
-
-      {resa.statut === "payment_pending" && !resa.payment_token && (
-        !isPerso ? (
-          <a href={`/api/reservation/resume/${resa.id}`} className={`${BTN_GOLD} mt-3`}>
-            <CreditCard size={13} /> Finaliser le paiement
-          </a>
-        ) : (
-          <div className="mt-3 flex items-start gap-2.5 p-3 rounded-[10px] bg-orange-50 border border-orange-200">
-            <AlertCircle size={14} className="text-orange-500 shrink-0 mt-0.5" />
-            <p className="text-xs text-orange-700">
-              <span className="font-semibold">Lien de paiement en préparation.</span> Vous le recevrez par email sous peu.
-              Une question ? <Link href="/contact" className="underline font-semibold">Nous contacter</Link>
-            </p>
-          </div>
-        )
       )}
 
       {showWeather && <div className="mt-3"><WeatherWidget date={resa.date_vol} bordered={false} /></div>}

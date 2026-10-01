@@ -77,12 +77,6 @@ export default async function ReservationTrackerPage({ params }: PageProps) {
     .limit(1)
     .maybeSingle();
 
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL?.startsWith("http://localhost") ||
-    process.env.NEXT_PUBLIC_SITE_URL?.startsWith("http://127")
-      ? process.env.NEXT_PUBLIC_SITE_URL
-      : "https://fly-horizons.com";
-
   return (
     <ReservationTracker
       reservation={{
@@ -106,7 +100,6 @@ export default async function ReservationTrackerPage({ params }: PageProps) {
           : null,
         packTitle: packTitle,
       }}
-      siteUrl={siteUrl ?? "https://fly-horizons.com"}
     />
   );
 }

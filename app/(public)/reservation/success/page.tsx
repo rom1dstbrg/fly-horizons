@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 // flows différents (jamais mélanger leur contenu) :
 // - "annonce" (AnnonceReserveClient, vols publiés par les pilotes) : demande
 //   seule, rien payé ici, viré au pilote après sa confirmation.
-// - défaut (app/(public)/reservation, anciens produits/vouchers + Stripe) :
+// - défaut (anciens produits/vouchers) :
 //   peut déjà être payé, itinéraire proposé ensuite par le pilote.
 const STEPS: Record<"annonce" | "defaut", { title: string; texte: string }[]> = {
   annonce: [

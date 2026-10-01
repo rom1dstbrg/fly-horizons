@@ -1,11 +1,13 @@
 import type { LegalSection } from "@/components/legal/LegalDoc";
 
-// Politique de confidentialité, version 2.0 (01/10/2026).
+// Politique de confidentialité, version 2.1 (01/10/2026).
+// 2.1 : mesure des étapes du formulaire de demande (table site_events), exclusion des comptes admin/pilote et de leurs
+// espaces, marqueur `fh_internal` ; retrait de Stripe (plus aucun paiement par carte) et de la phrase sur l'expiration des liens.
 // Refonte du fond : retirés boutique/livraison, bons de vol, vol sur mesure ; ajoutés ce que le site fait réellement
 // et que l'ancienne version taisait (newsletter, conversations de l'assistant, fils de messages, hébergeur, cartes tierces).
-// À garder alignée avec le code : AnalyticsTracker/`/api/track`, `chat_sessions`, `newsletter_subscribers`, cron purge-analytics.
+// À garder alignée avec le code : AnalyticsTracker/`/api/track`/`lib/track-event.ts`, `site_events`, `chat_sessions`, `newsletter_subscribers`, cron purge-analytics.
 
-export const PRIVACY_META = ["Version 2.0", "Mise à jour le 1er octobre 2026", "RGPD, loi belge du 30 juillet 2018"];
+export const PRIVACY_META = ["Version 2.1", "Mise à jour le 1er octobre 2026", "RGPD, loi belge du 30 juillet 2018"];
 
 export const PRIVACY_NOTICE = {
   title: "Ce que nous ne faisons pas",
@@ -36,7 +38,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
       "**Espace pilote (compte actif).** Prénom, nom, email, téléphone, numéro de licence, dates d'expiration de la licence et du certificat médical, IBAN, photo de profil, courte biographie. Finalités : vérifier l'éligibilité à publier des vols, organiser ces vols et générer le lien et le QR code de virement par lequel le passager règle directement le pilote. L'IBAN affiché est toujours celui du pilote, jamais celui du passager. Base légale : exécution d'un contrat.",
       "**Newsletter (facultative).** Email et prénom, après votre consentement explicite (case à cocher). Finalité : vous prévenir quand un vol est disponible. Vous pouvez vous désinscrire à tout moment depuis le lien présent dans chaque envoi. Base légale : consentement (art. 6.1.a).",
       "**Assistant de conversation.** Si vous utilisez l'assistant du site, vos messages et les réponses sont enregistrés et transmis à Anthropic pour générer les réponses (voir l'article 4). N'y indiquez pas de données que vous ne souhaitez pas communiquer. Base légale : intérêt légitime (répondre à vos questions, améliorer l'assistant).",
-      "**Mesure d'audience interne.** Pages visitées, page d'entrée sur le site (référent), type d'appareil (mobile, tablette, ordinateur) et identifiant technique aléatoire stocké dans votre navigateur, pour distinguer les visites d'un même appareil. Finalité : statistiques internes de fréquentation, jamais de publicité ni de profilage. Conservation : 13 mois glissants, puis suppression automatique. Base légale : intérêt légitime.",
+      "**Mesure d'audience interne.** Pages visitées, page d'entrée sur le site (référent), type d'appareil (mobile, tablette, ordinateur) et identifiant technique aléatoire stocké dans votre navigateur, pour distinguer les visites d'un même appareil. Nous mesurons aussi, sans aucune donnée personnelle, deux étapes du formulaire de demande de vol (le choix d'un créneau, puis le passage à l'étape des informations) pour savoir à quel moment les visiteurs s'arrêtent. Ces statistiques ne contiennent ni votre adresse IP, ni ce que vous saisissez dans le formulaire. Les robots, les comptes administrateur et pilote connectés et les pages des espaces administrateur et pilote ne sont pas comptés. Finalité : statistiques internes de fréquentation et amélioration du site, jamais de publicité ni de profilage. Conservation : 13 mois glissants, puis suppression automatique. Base légale : intérêt légitime ; vous pouvez vous y opposer à tout moment (article 6).",
       "**Avis après vol.** Une note et un commentaire facultatif, pour améliorer le service. Base légale : intérêt légitime.",
     ],
   },
@@ -69,7 +71,6 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
           "**Vercel** (vercel.com) : hébergement et diffusion du site.",
           "**Resend** (resend.com) : envoi des emails (confirmations, rappels, messages). Données transmises : prénom, nom, email, contenu de l'email.",
           "**Anthropic** (anthropic.com) : uniquement si vous utilisez l'assistant de conversation. Le contenu de vos messages lui est transmis pour générer une réponse.",
-          "**Stripe** (stripe.com) : uniquement dans le cas exceptionnel où un lien de paiement par carte vous est envoyé. Stripe traite alors directement vos données bancaires.",
           "**Fournisseurs de cartes.** Les pages Contact et Accès à l'aérodrome intègrent une carte Google Maps, et les cartes d'itinéraire utilisent des fonds de carte tiers (Esri, CARTO, OpenFlightMaps). Charger ces cartes transmet votre adresse IP à ces fournisseurs, qui peuvent aussi y déposer leurs propres cookies.",
         ],
       },
@@ -126,7 +127,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
           "Mots de passe stockés chiffrés (hachés) par Supabase Auth, jamais en clair.",
           "Aucune donnée de carte bancaire sur nos serveurs. L'IBAN d'un pilote est stocké en base sous accès restreint et n'est montré à un passager que sur la page de paiement de son propre vol.",
           "Base de données protégée par des règles d'accès par ligne (Row Level Security) : les tables sensibles, dont les données des pilotes, ne sont pas accessibles avec la clé publique du site, seul notre serveur y accède.",
-          "Liens de paiement à usage unique, avec expiration automatique.",
+          "Liens de paiement personnels, formés d'un jeton aléatoire impossible à deviner.",
           "Accès administrateur protégé par authentification.",
         ],
       },
@@ -142,6 +143,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
         ul: [
           "**Cookie de session :** maintient votre connexion à votre compte. Il dure le temps de la session, ou 30 jours si vous cochez « rester connecté ».",
           "**Identifiant de mesure d'audience :** un identifiant aléatoire stocké dans le stockage local de votre navigateur (et non dans un cookie), pour distinguer les visites d'un même appareil. Il sert uniquement à nos statistiques internes (article 2), n'est ni partagé ni vendu, et ses données sont supprimées après 13 mois.",
+          "**Indicateur de compte interne :** si vous vous connectez au site avec un compte administrateur ou pilote, votre navigateur retient une simple indication (dans le stockage local) pour ne plus envoyer de statistiques de visite. Elle ne contient aucune donnée personnelle.",
         ],
       },
       "Nous n'utilisons aucun cookie publicitaire ni outil de suivi comportemental. Les cartes intégrées de tiers (article 4) peuvent, elles, déposer leurs propres cookies lors de leur chargement.",

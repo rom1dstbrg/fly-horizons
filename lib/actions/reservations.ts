@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationReportConfirmeeEmail, boardingPassEmail, reservationPaymentInvitationEmail, reservationPaymentConfirmationEmail, volSurMesureAcompteEmail, postVolEmail, customEmail, rescheduleInviteEmail, rescheduleConfirmationEmail, reservationAutoAnnuleeEmail, slotProposalEmail } from "@/lib/email-templates";
+import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationReportConfirmeeEmail, boardingPassEmail, reservationPaymentConfirmationEmail, volSurMesureAcompteEmail, postVolEmail, customEmail, rescheduleInviteEmail, rescheduleConfirmationEmail, reservationAutoAnnuleeEmail, slotProposalEmail } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { makeRescheduleToken, parseRescheduleToken } from "@/lib/reschedule-token";
 import { rescheduleScope, piloteDeparts } from "@/lib/pilote-dispo";
@@ -421,10 +421,9 @@ export async function recordCashPayment(id: string, montant: number) {
     const updateFields: Record<string, unknown> = { paye: montant, payment_status: "paid" };
     let nextStatut: string;
     if (curResa?.statut === "payment_pending" && curResa.pre_payment_statut) {
-      // Résa passée en payment_pending pour ouvrir Stripe (ex. acceptation de route).
-      // Un encaissement manuel doit restaurer le statut d'avant, comme le fait le
-      // webhook Stripe — sinon on retombe sur acompte_recu et l'admin doit reconfirmer
-      // une date/heure déjà actée.
+      // Résa passée en payment_pending à l'acceptation de la route : un encaissement
+      // manuel doit restaurer le statut d'avant — sinon on retombe sur acompte_recu et
+      // l'admin doit reconfirmer une date/heure déjà actée.
       nextStatut = curResa.pre_payment_statut;
       updateFields.pre_payment_statut = null;
       updateFields.payment_token = null;
@@ -565,134 +564,6 @@ export async function sendCustomEmail(id: string, subject: string, body: string,
   } catch (err) {
     console.error("sendCustomEmail exception:", err);
     return { error: "Erreur envoi email" };
-  }
-}
-
-// ── Envoyer le lien de paiement depuis en_attente (admin) ────────────────────────
-
-export async function sendPaymentLinkAdmin(id: string) {
-  try {
-    await checkAdminOrOwningPilote(id);
-    const supabase = createAdminClient();
-
-    const { data: resa } = await supabase
-      .from("reservations")
-      .select("*, clients(*)")
-      .eq("id", id)
-      .single();
-
-    if (!resa) return { error: "Réservation introuvable" };
-    const client = resa.clients as { prenom: string; nom: string; email: string } | null;
-    if (!client?.email) return { error: "Email client introuvable" };
-
-    let paymentToken = resa.payment_token as string | null;
-    if (!paymentToken) {
-      paymentToken = crypto.randomUUID();
-      await supabase.from("reservations").update({ payment_token: paymentToken, paiement_demande_at: new Date().toISOString() }).eq("id", id);
-    }
-
-    const { error: statusErr } = await supabase.from("reservations").update({ statut: "payment_pending" }).eq("id", id);
-    if (statusErr) return { error: "Erreur mise à jour statut" };
-
-    const rawUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
-    const siteUrl = rawUrl.startsWith("http://localhost") || rawUrl.startsWith("http://127")
-      ? rawUrl
-      : "https://fly-horizons.com";
-    const paymentUrl = `${siteUrl}/api/reservation/pay/${paymentToken}`;
-    const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
-      weekday: "long", day: "numeric", month: "long", year: "numeric",
-    });
-
-    // Le statut est déjà "payment_pending" en base à ce stade : un échec d'envoi
-    // ne doit pas renvoyer une erreur générique, l'admin a déjà un bouton "Renvoyer"
-    // pour ce statut — on signale juste emailError pour qu'il sache qu'il faut l'utiliser.
-    let emailError = false;
-    try {
-      await resend.emails.send({
-        from: EMAIL_FROM,
-        to: [client.email],
-        replyTo: EMAIL_REPLY_TO,
-        subject: "Votre réservation : lien de paiement Fly Horizons",
-        html: reservationPaymentInvitationEmail({
-          prenom: client.prenom,
-          nom: client.nom,
-          dateStr,
-          heure: resa.heure_vol ?? "-",
-          duree: resa.duree,
-          montant: resa.acompte ?? 0,
-          paymentUrl,
-          voucherCode: resa.voucher_code ?? null,
-        }),
-      });
-    } catch (e) {
-      console.error("[sendPaymentLinkAdmin] Erreur email:", e);
-      emailError = true;
-    }
-
-    revalidatePath("/admin/vols");
-    return { success: true, emailError };
-  } catch {
-    return { error: "Erreur serveur" };
-  }
-}
-
-// ── Renvoyer le lien de paiement (admin) ──────────────────────────────────────────
-
-export async function resendPaymentLinkAdmin(id: string) {
-  try {
-    await checkAdminOrOwningPilote(id);
-    const supabase = createAdminClient();
-
-    const { data: resa } = await supabase
-      .from("reservations")
-      .select("*, clients(*)")
-      .eq("id", id)
-      .single();
-
-    if (!resa?.payment_token) return { error: "Pas de lien de paiement pour cette réservation" };
-
-    const client = resa.clients as { prenom: string; nom: string; email: string } | null;
-    if (!client?.email) return { error: "Email client introuvable" };
-
-    const rawUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
-    const siteUrl = rawUrl.startsWith("http://localhost") || rawUrl.startsWith("http://127")
-      ? rawUrl
-      : "https://fly-horizons.com";
-
-    const paymentUrl = `${siteUrl}/api/reservation/pay/${resa.payment_token}`;
-    const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
-      weekday: "long", day: "numeric", month: "long", year: "numeric",
-    });
-
-    // Deadline = vol - 48h
-    const heure = (resa.heure_vol ?? "00:00").slice(0, 5);
-    const flightTime = new Date(`${resa.date_vol}T${heure}:00+02:00`).getTime();
-    const deadlineStr = new Date(flightTime - 48 * 60 * 60 * 1000).toLocaleString("fr-BE", {
-      timeZone: "Europe/Brussels",
-      weekday: "long", day: "numeric", month: "long", year: "numeric",
-      hour: "2-digit", minute: "2-digit",
-    });
-
-    await resend.emails.send({
-      from: EMAIL_FROM,
-      to: [client.email],
-      replyTo: EMAIL_REPLY_TO,
-      subject: "Votre réservation : lien de paiement Fly Horizons",
-      html: reservationPaymentInvitationEmail({
-        prenom: client.prenom,
-        nom: client.nom,
-        dateStr,
-        heure: resa.heure_vol ?? "-",
-        duree: resa.duree,
-        montant: resa.acompte ?? 0,
-        paymentUrl,
-        voucherCode: resa.voucher_code ?? null,
-      }),
-    });
-
-    return { success: true };
-  } catch {
-    return { error: "Erreur serveur" };
   }
 }
 

@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
 
     // Résoudre le produit (offre précise si produit_id fourni, sinon match par durée
     // restreint aux offres "durée seule" — jamais une offre à itinéraire depuis un lien générique).
-    // Toujours filtré actif/voucher, comme /api/reservation/checkout — ce endpoint ne doit
+    // Toujours filtré actif/voucher — ce endpoint ne doit
     // jamais laisser un appelant piocher un produit inactif/brouillon ou d'un autre type.
     const { data: product } = produit_id
       ? await supabase.from("products").select("id, quantity_available, price, voucher_duration_minutes")

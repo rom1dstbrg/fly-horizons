@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Mail, Lock } from "lucide-react";
+import { Mail } from "lucide-react";
 import { NewsletterForm } from "@/components/NewsletterForm";
 
 function IconFacebook({ size = 16 }: { size?: number }) {
@@ -130,11 +130,6 @@ export function Footer() {
               <span className="text-white/15">·</span>
               <Link href="/contact" className="hover:text-white/60 transition-colors">Contact</Link>
             </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-white/20">
-              <Lock size={9} />
-              <span>Paiement sécurisé</span>
-              <span className="text-primary/70 font-semibold">Stripe</span>
-            </div>
           </div>
 
         </div>
@@ -218,11 +213,6 @@ export function Footer() {
                 <Link href="/politique-de-confidentialite" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">Confidentialité</Link>
                 <span>·</span>
                 <Link href="/contact" className="hover:text-white/60 transition-colors">Contact</Link>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Lock size={9} />
-                <span>Paiement sécurisé</span>
-                <span className="text-primary font-semibold">Stripe</span>
               </div>
             </div>
           </div>

@@ -14,8 +14,8 @@ import { jsonLd } from "@/lib/json-ld";
 const SYNONYMS: Record<string, string[]> = {
   prix:        ["tarif", "cout", "combien", "cher", "montant"],
   tarif:       ["prix", "cout", "combien"],
-  payer:       ["paiement", "provision", "acompte", "regler", "stripe", "carte", "virement"],
-  paiement:    ["payer", "provision", "acompte", "stripe", "carte", "regler", "virement", "iban", "especes", "cash"],
+  payer:       ["paiement", "provision", "acompte", "regler", "carte", "virement"],
+  paiement:    ["payer", "provision", "acompte", "carte", "regler", "virement", "iban", "especes", "cash"],
   acompte:     ["provision", "payer", "paiement", "depot", "garantie"],
   provision:   ["payer", "paiement", "acompte", "depot", "garantie"],
   annuler:     ["annulation", "rembours", "reporter", "report", "modifier"],

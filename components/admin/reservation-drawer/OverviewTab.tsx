@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   Check, Send, CheckCircle2, CalendarClock, Phone, Mail, Scale, Ticket, Banknote,
-  ExternalLink, Copy, RotateCcw, ChevronLeft, Route as RouteIcon,
+  ExternalLink, RotateCcw, ChevronLeft, Route as RouteIcon,
 } from "lucide-react";
 import { Button, Input } from "@/components/pilote/studio";
 import { cn } from "@/lib/utils";
@@ -119,12 +119,10 @@ export function OverviewTab({
   isProposePending,
   avionReserve, isReservePending, onToggleAvion,
   cashPayment, isCashPaymentPending, onToggleCashPayment,
-  linkCopied, onCopyPaymentLink,
+
   ask,
   onConfirmSlot,
   onChangeStatut,
-  onSendPaymentLink,
-  onResendPaymentLink,
   onSendBoardingPass,
   onSendReschedule,
   onRecordCash,
@@ -142,14 +140,12 @@ export function OverviewTab({
   isProposePending: boolean;
   avionReserve: boolean; isReservePending: boolean; onToggleAvion: (v: boolean) => void;
   cashPayment: boolean; isCashPaymentPending: boolean; onToggleCashPayment: (v: boolean) => void;
-  linkCopied: boolean; onCopyPaymentLink: () => void;
+
   /** Ouvre la fenêtre de confirmation. */
   ask: (a: PendingAction) => void;
   /** Confirme date + heure (et envoie la route) ; `time` si l'heure vient d'être choisie. */
   onConfirmSlot: (time?: string) => void;
   onChangeStatut: (s: string) => void;
-  onSendPaymentLink: () => void;
-  onResendPaymentLink: () => void;
   onSendBoardingPass: () => void;
   onSendReschedule: () => void;
   onRecordCash: (n: number) => void;
@@ -216,17 +212,12 @@ export function OverviewTab({
     text = "Dossier clôturé.";
   } else if (st === "payment_pending") {
     title = "En attente du paiement";
-    text = `${prenom} a reçu le lien de paiement.`;
+    text = `${prenom} n'a pas encore payé.`;
     if (isAdmin && !piloteEncaisse) {
       primary = (
         <Button onClick={() => ask({ title: "Marquer le paiement reçu ?", consequences: [`${prenom} reçoit un email confirmant son paiement.`, "La réservation passe en « Payé »."], confirmLabel: "Marquer reçu et envoyer", run: () => onChangeStatut("acompte_recu") })} loading={isPending}>
           <Check /> Marquer paiement reçu
         </Button>
-      );
-      secondary.push(
-        <Button key="resend" variant="secondary" onClick={() => ask({ title: "Renvoyer le lien de paiement ?", consequences: [`${prenom} reçoit à nouveau l'email avec son lien de paiement.`], confirmLabel: "Renvoyer", run: onResendPaymentLink })}>
-          <Send /> Renvoyer le lien
-        </Button>,
       );
     }
   } else if (["demande_recue", "en_attente", "acompte_recu", "date_confirmee"].includes(st)) {
@@ -245,13 +236,6 @@ export function OverviewTab({
     );
     if (st === "demande_recue" && !r.slot_proposal_token) {
       secondary.push(<Button key="slot" variant="secondary" onClick={() => setProposing(true)}><CalendarClock /> Autre créneau</Button>);
-    }
-    if (isStandard && isAdmin && !piloteEncaisse && (st === "en_attente" || st === "demande_recue")) {
-      secondary.push(
-        <Button key="pay" variant="secondary" onClick={() => ask({ title: "Envoyer le lien de paiement ?", consequences: [`${prenom} reçoit un email avec son lien de paiement Stripe.`, "La réservation passe en « Paiement en attente »."], confirmLabel: "Envoyer", run: onSendPaymentLink })}>
-          <Send /> Lien de paiement
-        </Button>,
-      );
     }
     if (st === "date_confirmee") {
       secondary.push(<Button key="back" variant="ghost" onClick={() => onChangeStatut("en_attente")}><ChevronLeft /> Revenir en attente</Button>);
@@ -376,15 +360,9 @@ export function OverviewTab({
         {r.remboursement != null && r.remboursement > 0 && <Row label="Remboursé"><span className="text-st-info">− {r.remboursement} €</span></Row>}
       </div>
 
-      {/* Paiement admin : lien, espèces, encaissement */}
+      {/* Paiement admin : espèces, encaissement */}
       {isAdmin && !piloteEncaisse && r.acompte != null && !terminal && (
         <div className="space-y-2.5">
-          {st === "payment_pending" && r.payment_token && (
-            <div className="flex items-center gap-2 rounded-[12px] border border-st-line px-3 py-2">
-              <code className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-st-text-2">/api/reservation/pay/{r.payment_token.slice(0, 12)}…</code>
-              <Button variant="secondary" size="sm" onClick={onCopyPaymentLink}>{linkCopied ? <Check /> : <Copy />}{linkCopied ? "Copié" : "Copier le lien"}</Button>
-            </div>
-          )}
           <div className="flex flex-wrap items-center justify-between gap-2">
             <label className="flex cursor-pointer items-center gap-2 text-[12.5px] text-st-text-2">
               <input type="checkbox" checked={cashPayment} disabled={isCashPaymentPending} onChange={(e) => onToggleCashPayment(e.target.checked)} className="h-4 w-4 cursor-pointer accent-st-ink" />
