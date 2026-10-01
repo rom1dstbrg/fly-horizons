@@ -328,16 +328,16 @@ function ClientSheetContent({ row, today, startTab, onClose, onPatch, onDeleted 
       <SheetFooter>
         <div className="space-y-3">
           <div className="flex gap-2">
-            <Button className="flex-1" onClick={() => setTab("messages")}>Écrire à {c.prenom}</Button>
+            <Button size="lg" className="flex-1 sm:h-[38px] sm:text-[13px]" onClick={() => setTab("messages")}>Écrire à {c.prenom}</Button>
             {c.telephone && (
               <a
                 href={`tel:${c.telephone.replace(/\s/g, "")}`}
-                className="inline-flex h-[38px] items-center justify-center gap-[7px] rounded-[11px] border border-st-line bg-white px-4 text-[13px] font-[550] text-st-text shadow-st-sm transition-all hover:border-st-line-strong hover:bg-st-surface sm:hidden"
+                className="inline-flex h-[46px] items-center justify-center gap-[7px] rounded-[11px] border border-st-line bg-white px-4 text-sm font-[550] text-st-text shadow-st-sm transition-all hover:border-st-line-strong hover:bg-st-surface sm:hidden"
               >
                 <Phone className="size-4" /> Appeler
               </a>
             )}
-            <LinkButton variant="secondary" href={`/admin/clients/${c.id}`}>
+            <LinkButton variant="secondary" size="lg" className="sm:h-[38px] sm:text-[13px]" href={`/admin/clients/${c.id}`}>
               Fiche complète
             </LinkButton>
           </div>

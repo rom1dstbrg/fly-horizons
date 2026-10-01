@@ -225,16 +225,16 @@ function ContactSheetContent({ contact: c, clientId, onClose, onStatus, onDelete
       <SheetFooter>
         <div className="space-y-3">
           <div className="flex flex-wrap gap-2">
-            <Button className="min-w-[160px] flex-[2]" onClick={send} loading={isPending} disabled={!reponse.trim()}>
+            <Button size="lg" className="min-w-[160px] flex-[2] sm:h-[38px] sm:text-[13px]" onClick={send} loading={isPending} disabled={!reponse.trim()}>
               <Send /> Envoyer par email
             </Button>
             {c.statut === "nouveau" && (
-              <Button variant="secondary" className="flex-1" onClick={() => changeStatut("lu")} disabled={isPending}>Marquer comme lu</Button>
+              <Button variant="secondary" size="lg" className="flex-1 sm:h-[38px] sm:text-[13px]" onClick={() => changeStatut("lu")} disabled={isPending}>Marquer comme lu</Button>
             )}
             {c.statut === "archive" ? (
-              <Button variant="secondary" className="flex-1" onClick={() => changeStatut("lu")} disabled={isPending}>Désarchiver</Button>
+              <Button variant="secondary" size="lg" className="flex-1 sm:h-[38px] sm:text-[13px]" onClick={() => changeStatut("lu")} disabled={isPending}>Désarchiver</Button>
             ) : (
-              <Button variant="secondary" className="flex-1" onClick={() => changeStatut("archive")} disabled={isPending}>Archiver</Button>
+              <Button variant="secondary" size="lg" className="flex-1 sm:h-[38px] sm:text-[13px]" onClick={() => changeStatut("archive")} disabled={isPending}>Archiver</Button>
             )}
           </div>
           <button

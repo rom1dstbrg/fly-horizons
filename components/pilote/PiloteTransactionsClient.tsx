@@ -241,7 +241,7 @@ export function PiloteTransactionsClient({ rows, today }: { rows: PiloteTransact
                 {t.etat !== "recu" && <SheetRow label="Communication" className="text-[12.5px]">{t.communication}</SheetRow>}
               </SheetRows>
               {msg && (
-                <p className={cn("rounded-[10px] px-3 py-2 text-[12.5px] font-medium", msg.ok ? "bg-st-ok-soft text-st-ok" : "bg-st-bad-soft text-st-bad")}>{msg.text}</p>
+                <p className={cn("rounded-[12px] px-3.5 py-2.5 text-[13px]", msg.ok ? "bg-st-ok-soft text-st-ok" : "bg-st-bad-soft text-st-bad")}>{msg.text}</p>
               )}
             </SheetBody>
             <SheetFooter>

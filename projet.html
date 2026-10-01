@@ -1747,6 +1747,15 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-10-01 (87) — Audit des tiroirs : boutons, suppression et messages d'état alignés</h3>
+      <ul>
+        <li>Boutons du pied de tiroir : tous en <code>size="lg"</code> (46 px au téléphone) avec <code>sm:h-[38px] sm:text-[13px]</code> sur le bureau, comme Pilotes et Retours. Corrigés : Contacts (Envoyer, Marquer comme lu, Archiver), Clients (Écrire, Fiche complète, Appeler) et Transactions.</li>
+        <li>Suppression : lien rouge centré sous les actions (Conversations, Clients, Contacts) ; Transactions (dépense) et Pilotes (qui avait un gros bouton rouge à côté d'Enregistrer, la confirmation en deux temps est gardée) s'y alignent.</li>
+        <li>Messages d'état dans un tiroir : un seul gabarit (<code>rounded-[12px] px-3.5 py-2.5 text-[13px]</code>) dans Transactions admin et pilote.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-10-01 (86) — Page Transactions refaite en Studio (bilan, tiroir, bénéfice des vols confiés)</h3>
       <ul>
         <li><code>components/admin/TransactionsClient.tsx</code> réécrit, <code>app/admin/transactions/page.tsx</code> simplifié, nouveau <code>lib/transactions-types.ts</code> (types + <code>netVol</code> / <code>resultatVol</code>), <code>lib/transactions.ts</code> renvoie en plus pilote, IBAN, virement et date de virement par vol. Bilan par année, « À virer aux pilotes », tableau à 4 colonnes, tiroir vol (viré au pilote, remboursé au client, bénéfice en direct, bouton vers le tiroir classique), tiroir dépense, pilotes tiers à part. Actions serveur inchangées. Décision 25. Maquette : <code>maquette-admin-transactions.html</code>.</li>

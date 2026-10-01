@@ -386,11 +386,16 @@ function FicheTab({ pilote, onClose, onConfirm, onNotice }: {
         {error && <p className="rounded-[12px] bg-st-bad-soft px-3.5 py-2.5 text-[13px] text-st-bad">{error}</p>}
       </SheetBody>
       <SheetFooter>
-        <div className="flex flex-col gap-2 sm:flex-row-reverse">
+        <div className="space-y-3">
           <Button type="submit" size="lg" className="sm:h-[38px] sm:text-[13px]" fullWidth loading={pending}>Enregistrer</Button>
-          <Button variant="danger" size="lg" className="sm:h-[38px] sm:text-[13px]" disabled={pending} onClick={remove}>
-            {confirmDelete ? "Confirmer la suppression" : "Supprimer"}
-          </Button>
+          <button
+            type="button"
+            disabled={pending}
+            onClick={remove}
+            className="mx-auto block cursor-pointer text-[12.5px] font-semibold text-st-bad hover:underline disabled:opacity-50"
+          >
+            {confirmDelete ? "Confirmer la suppression" : "Supprimer ce pilote"}
+          </button>
         </div>
       </SheetFooter>
     </form>

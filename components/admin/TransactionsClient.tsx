@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Download, ExternalLink, Plus, Receipt, Trash2 } from "lucide-react";
+import { Check, Download, ExternalLink, Plus, Receipt } from "lucide-react";
 import { addDepense, deleteDepense, updateDepense } from "@/lib/actions/depenses";
 import { setReversementPilote } from "@/lib/actions/reversement-pilote";
 import { getReservationForDrawer, updateReservationAllFields } from "@/lib/actions/reservation-edit";
@@ -632,7 +632,7 @@ function VolSheet({ vol, onClose, onSaved, onOpenClassique, loadingClassique }: 
           <p className="text-[12.5px] text-st-muted">Virement enregistré le {longDate(vol.reversement_at)}.</p>
         )}
         {msg && (
-          <p className={cn("rounded-[10px] px-3 py-2 text-[12.5px] font-medium", msg.ok ? "bg-st-ok-soft text-st-ok" : "bg-st-bad-soft text-st-bad")}>{msg.text}</p>
+          <p className={cn("rounded-[12px] px-3.5 py-2.5 text-[13px]", msg.ok ? "bg-st-ok-soft text-st-ok" : "bg-st-bad-soft text-st-bad")}>{msg.text}</p>
         )}
       </SheetBody>
       <SheetFooter>
@@ -642,7 +642,7 @@ function VolSheet({ vol, onClose, onSaved, onOpenClassique, loadingClassique }: 
               <Check />Enregistrer
             </Button>
           )}
-          <Button variant="secondary" fullWidth loading={loadingClassique} onClick={onOpenClassique}>
+          <Button variant="secondary" size="lg" fullWidth className="sm:h-[38px] sm:text-[13px]" loading={loadingClassique} onClick={onOpenClassique}>
             <ExternalLink />Fermer et ouvrir la réservation
           </Button>
         </div>
@@ -705,7 +705,7 @@ function DepenseSheet({ depense, today, onClose, onAdded, onUpdated, onDeleted }
             <Input id="dep-date" type="date" required value={date} onChange={(e) => setDate(e.target.value)} />
           </FormField>
         </div>
-        {error && <p className="rounded-[10px] bg-st-bad-soft px-3 py-2 text-[12.5px] font-medium text-st-bad">{error}</p>}
+        {error && <p className="rounded-[12px] bg-st-bad-soft px-3.5 py-2.5 text-[13px] text-st-bad">{error}</p>}
       </SheetBody>
       <SheetFooter>
         <div className="flex flex-col gap-2">
@@ -713,9 +713,14 @@ function DepenseSheet({ depense, today, onClose, onAdded, onUpdated, onDeleted }
             {depense ? <><Check />Enregistrer</> : <><Plus />Ajouter</>}
           </Button>
           {depense && (
-            <Button variant="danger" fullWidth disabled={pending} onClick={remove}>
-              <Trash2 />Supprimer cette dépense
-            </Button>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={remove}
+              className="mx-auto mt-1 block cursor-pointer text-[12.5px] font-semibold text-st-bad hover:underline disabled:opacity-50"
+            >
+              Supprimer cette dépense
+            </button>
           )}
         </div>
       </SheetFooter>
