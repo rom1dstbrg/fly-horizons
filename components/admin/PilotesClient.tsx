@@ -8,7 +8,7 @@ import { qualifLabel } from "@/lib/pilote/qualifications";
 import { ConfirmActionDialog, type PendingAction } from "@/components/admin/reservation-drawer/ConfirmActionDialog";
 import {
   Badge, Button, EmptyState, FormField, Input, LinkButton, PageHeader, Segmented, Sheet, SheetBody, SheetFooter,
-  SheetHeader, SheetRow, SheetRows, StatCard, StatGrid, Table, TableCell, TableHeaderCell, TableRow,
+  SheetHeader, SheetRow, SheetRows, Table, TableCell, TableHeaderCell, TableRow,
   TableSearch,
 } from "@/components/pilote/studio";
 import { cn } from "@/lib/utils";
@@ -74,7 +74,6 @@ export function PilotesClient({ pilotes, reliability }: {
   const actifs = pilotes.filter((p) => p.statut === "actif");
   const aVerifier = pilotes.filter((p) => p.docs_status === "envoyes");
   const pasEnRegle = actifs.filter((p) => !legalOf(p).ok);
-  const aSurveiller = pilotes.filter((p) => statsOf(p.id).isAtRisk);
 
   const q = search.trim().toLowerCase();
   const rows = pilotes
@@ -94,13 +93,6 @@ export function PilotesClient({ pilotes, reliability }: {
         title="Pilotes"
         actions={<Button onClick={() => setInviteOpen(true)}><UserPlus /> Inviter un pilote</Button>}
       />
-
-      <StatGrid>
-        <StatCard label="Pilotes actifs" value={actifs.length} hint={`${pilotes.length} au total`} />
-        <StatCard label="Documents à vérifier" value={aVerifier.length} tone={aVerifier.length ? "warn" : undefined} hint={aVerifier.length ? "En attente de vous" : "Rien en attente"} />
-        <StatCard label="Pas en règle" value={pasEnRegle.length} tone={pasEnRegle.length ? "bad" : undefined} hint="Ne reçoivent aucun vol" />
-        <StatCard label="À surveiller" value={aSurveiller.length} tone={aSurveiller.length ? "bad" : undefined} hint="Fiabilité" />
-      </StatGrid>
 
       {notice && <NoticeBar notice={notice} onClose={() => setNotice(null)} />}
 
