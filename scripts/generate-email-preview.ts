@@ -24,11 +24,12 @@ interface Entry {
   rank: number;
 }
 
+// Emails volontairement absents de l'aperçu (appelés seulement par du code mort, suppression prévue avec le nettoyage) :
+// orderConfirmationEmail, voucherEmail, volSurMesureQuoteEmail, volSurMesureAcompteEmail, reservationConfirmationFreeEmail.
 // Classification vérifiée en lisant les vrais points d'appel (qui reçoit l'email) :
 // side = destinataire réel (admin = Romain / info@fly-horizons.com, public = client ou pilote).
 // category + rank = ordre du flow métier (pas l'ordre de déclaration dans le fichier).
 const PUBLIC_CATEGORIES = [
-  "Boutique",
   "Réservation standard",
   "Vol sur mesure",
   "Annonces pilote",
@@ -41,11 +42,7 @@ const PUBLIC_CATEGORIES = [
 const ADMIN_CATEGORIES = ["Contact", "Vol sur mesure", "Post-vol", "Pilotes"] as const;
 
 const CLASSIFICATION: Record<string, { side: "admin" | "public"; category: string; rank: number }> = {
-  // Boutique
-  orderConfirmationEmail: { side: "public", category: "Boutique", rank: 0 },
-  voucherEmail: { side: "public", category: "Boutique", rank: 1 },
   // Réservation standard
-  reservationConfirmationFreeEmail: { side: "public", category: "Réservation standard", rank: 0 },
   reservationPaymentInvitationEmail: { side: "public", category: "Réservation standard", rank: 1 },
   reservationPaymentReminderEmail: { side: "public", category: "Réservation standard", rank: 2 },
   reservationAutoAnnuleeEmail: { side: "public", category: "Réservation standard", rank: 3 },
@@ -60,11 +57,8 @@ const CLASSIFICATION: Record<string, { side: "admin" | "public"; category: strin
   flightReminderEmail: { side: "public", category: "Réservation standard", rank: 12 },
   postVolEmail: { side: "public", category: "Réservation standard", rank: 13 },
   // Vol sur mesure
-  volSurMesureQuoteEmail: { side: "public", category: "Vol sur mesure", rank: 0 },
   routeProposalEmail: { side: "public", category: "Vol sur mesure", rank: 1 },
   paymentLinkEmail: { side: "public", category: "Vol sur mesure", rank: 2 },
-  volSurMesureAcompteEmail: { side: "public", category: "Vol sur mesure", rank: 3 },
-  piloteParticipationEmail: { side: "public", category: "Vol sur mesure", rank: 4 },
   routeFeedbackAdminEmail: { side: "admin", category: "Vol sur mesure", rank: 5 },
   // Annonces pilote
   annonceInscriptionPlaceEmail: { side: "public", category: "Annonces pilote", rank: 0 },
@@ -85,7 +79,6 @@ const CLASSIFICATION: Record<string, { side: "admin" | "public"; category: strin
   contactNotificationEmail: { side: "admin", category: "Contact", rank: 3 },
   // Newsletter
   newsletterConfirmationEmail: { side: "public", category: "Newsletter", rank: 0 },
-  newsletterCampaignEmail: { side: "public", category: "Newsletter", rank: 1 },
   newsletterFromBlocksEmail: { side: "public", category: "Newsletter", rank: 2 },
   // Divers / Post-vol
   customEmail: { side: "public", category: "Divers", rank: 0 },
@@ -114,80 +107,6 @@ function render(n: number, fn: string, label: string, line: number, build: () =>
 
 const entries: Entry[] = [];
 
-entries.push(render(1, "orderConfirmationEmail", "Confirmation de commande (boutique)", 346, () =>
-  T.orderConfirmationEmail({
-    orderRef: "FH-2026-0847",
-    customerEmail: "sophie.delcourt@example.com",
-    customerName: "Sophie Delcourt",
-    items: [
-      { title: "Vol découverte 30 min", quantity: 1, unit_price: 189, image_url: null },
-      { title: "Vol panoramique 60 min", quantity: 2, unit_price: 320, image_url: null },
-    ],
-    subtotal: 829,
-    shippingCost: 0,
-    discountAmount: 40,
-    total: 789,
-    couponCode: "BIENVENUE10",
-    shippingAddress: {
-      full_name: "Sophie Delcourt",
-      email: "sophie.delcourt@example.com",
-      line1: "Rue de la Station 12",
-      city: "Namur",
-      postal_code: "5000",
-      country: "Belgique",
-    },
-    orderDate: "2026-09-10",
-    voucherCodes: [
-      { code: "FH-ABCD-1234", duration_minutes: 30, product_title: "Vol découverte 30 min" },
-      { code: "FH-EFGH-5678", duration_minutes: 60, product_title: "Vol panoramique 60 min", expires_at: "2027-09-10" },
-    ],
-  })));
-
-entries.push(render(2, "voucherEmail", "Vouchers de vol envoyés après achat", 524, () =>
-  T.voucherEmail({
-    orderRef: "FH-2026-0847",
-    customerName: "Sophie Delcourt",
-    codes: [
-      { code: "FH-ABCD-1234", duration_minutes: 30, product_title: "Vol découverte 30 min" },
-      { code: "FH-EFGH-5678", duration_minutes: 60, product_title: "Vol panoramique 60 min", expires_at: "2027-09-10" },
-    ],
-  })));
-
-entries.push(render(3, "volSurMesureQuoteEmail", "Vol sur mesure — devis initial (sans paiement)", 634, () =>
-  T.volSurMesureQuoteEmail({
-    prenom: "Sophie",
-    nom: "Delcourt",
-    date: "2026-10-04",
-    heure: "10:30",
-    dureeMin: 75,
-    distKm: 210,
-    reservationId: "res_9f21ab",
-    styleVol: "Panoramique, survol de châteaux",
-    stopovers: [{ icao: "EBSP", nom: "Spa-La Sauvenière", taxe: 25 }],
-    prixEstime: 540,
-    discount: 60,
-    prixBillable: 480,
-    acompte: 300,
-    taxesEscales: 25,
-    totalAcompte: 325,
-    voucherCode: "FH-EFGH-5678",
-  })));
-
-entries.push(render(4, "reservationConfirmationFreeEmail", "Réservation standard — couverte par un voucher", 746, () =>
-  T.reservationConfirmationFreeEmail({
-    prenom: "Sophie",
-    nom: "Delcourt",
-    dateStr: "samedi 3 octobre 2026",
-    heure: "14:00",
-    duree: 30,
-    passengers: 2,
-    poids_total: 140,
-    voucherCode: "FH-ABCD-1234",
-    reservationId: "res_9f21ab",
-    dateISO: "2026-10-03",
-    montant: null,
-  })));
-
 entries.push(render(5, "reservationPaymentConfirmationEmail", "Réservation standard — paiement reçu", 812, () =>
   T.reservationPaymentConfirmationEmail({
     prenom: "Sophie",
@@ -201,28 +120,6 @@ entries.push(render(5, "reservationPaymentConfirmationEmail", "Réservation stan
     montantPaye: 320,
   })));
 
-entries.push(render(6, "volSurMesureAcompteEmail", "Vol sur mesure — provision reçue", 886, () =>
-  T.volSurMesureAcompteEmail({
-    prenom: "Sophie",
-    nom: "Delcourt",
-    dateStr: "dimanche 4 octobre 2026",
-    heure: "10:30",
-    dureeEstimee: 75,
-    voucherCode: "FH-EFGH-5678",
-    montantPaye: 325,
-    reservationId: "res_9f21ab",
-    dateISO: "2026-10-04",
-    breakdown: {
-      coutVol: 540,
-      dureeMin: 75,
-      distKm: 210,
-      taxesEscales: 25,
-      voucherDiscount: 60,
-      voucherCode: "FH-EFGH-5678",
-      total: 325,
-    },
-  })));
-
 entries.push(render(7, "reservationDateConfirmeeEmail", "Date de vol confirmée (avant itinéraire)", 1011, () =>
   T.reservationDateConfirmeeEmail({
     prenom: "Sophie",
@@ -230,19 +127,6 @@ entries.push(render(7, "reservationDateConfirmeeEmail", "Date de vol confirmée 
     duree: 60,
     route: null,
     routeUrl: null,
-  })));
-
-entries.push(render(8, "piloteParticipationEmail", "Participation aux frais à régler au pilote (itinéraire validé)", 1057, () =>
-  T.piloteParticipationEmail({
-    prenom: "Sophie",
-    dateStr: "samedi 3 octobre 2026",
-    piloteNom: "Julien Verhaegen",
-    montant: 145,
-    iban: "BE68 5390 0754 7034",
-    paylink: "https://payconiq.com/exemple",
-    communication: "VOL-3OCT-SOPHIE",
-    qrUrl: "https://fly-horizons.com/api/qr/exemple.png",
-    trackerUrl: "https://fly-horizons.com/paiement/track/exemple",
   })));
 
 entries.push(render(9, "reservationHeureConfirmeeEmail", "Créneau horaire confirmé (avec itinéraire)", 1078, () =>
@@ -512,14 +396,6 @@ entries.push(render(33, "newsletterFromBlocksEmail", "Newsletter — éditeur de
 entries.push(render(34, "newsletterConfirmationEmail", "Newsletter — confirmation d'inscription", 2393, () =>
   T.newsletterConfirmationEmail("Sophie", "https://fly-horizons.com/newsletter/unsubscribe/exemple")));
 
-entries.push(render(35, "newsletterCampaignEmail", "Newsletter — campagne texte simple (admin)", 2419, () =>
-  T.newsletterCampaignEmail(
-    "Météo idéale ce week-end",
-    "Bonjour,\n\nLe ciel s'annonce dégagé samedi et dimanche, encore quelques créneaux disponibles.\n\nÀ bientôt dans les airs !",
-    "Sophie",
-    "https://fly-horizons.com/newsletter/unsubscribe/exemple",
-  )));
-
 entries.push(render(36, "piloteAssignedClientEmail", "Attribution d'un vol à un pilote — email client", 2446, () =>
   T.piloteAssignedClientEmail({
     prenom: "Sophie",
@@ -623,11 +499,28 @@ const html = `<!DOCTYPE html>
   .badge-side { display: inline-block; font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; padding: 1px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
   .badge-side.admin { background: #fef3c7; color: #92400e; }
   .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-  .topbar { padding: 12px 20px; background: #fff; border-bottom: 1px solid #e5e7eb; }
+  .topbar { padding: 12px 20px; background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .seg { display: inline-flex; background: #f1f3f5; border-radius: 9px; padding: 3px; flex-shrink: 0; }
+  .seg button { border: 0; background: transparent; padding: 6px 12px; border-radius: 7px; font-size: 12px; font-weight: 700; color: #6b7280; cursor: pointer; font-family: inherit; }
+  .seg button.on { background: #fff; color: #111827; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
   .topbar .subject { font-size: 14px; font-weight: 700; color: #111827; }
   .topbar .meta { font-size: 11.5px; color: #6b7280; margin-top: 3px; font-family: "Consolas", monospace; }
   .frame-wrap { flex: 1; overflow: hidden; background: #eceef1; }
+  .frame-wrap.phone-mode { overflow: auto; display: flex; justify-content: center; align-items: flex-start; padding: 24px 0; background: #dfe3ea; }
   iframe { width: 100%; height: 100%; border: 0; background: #fff; }
+  /* Maquette iPhone : 390 px de large à l'intérieur du cadre, donc les règles @media mobiles des emails s'appliquent comme sur le vrai téléphone. */
+  .phone { width: 414px; flex-shrink: 0; height: min(844px, calc(100vh - 150px)); min-height: 560px; border: 12px solid #0f1115; border-radius: 56px; background: #fff; box-shadow: 0 30px 80px rgba(0,0,0,.28); position: relative; overflow: hidden; display: flex; flex-direction: column; }
+  .phone .island { position: absolute; top: 9px; left: 50%; transform: translateX(-50%); width: 112px; height: 32px; background: #0f1115; border-radius: 20px; z-index: 3; }
+  .phone .status { height: 54px; flex: none; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 30px 6px; font-size: 15px; font-weight: 700; color: #111827; background: #fff; }
+  .phone .status .sys { font-size: 12px; letter-spacing: 1px; font-weight: 700; }
+  .phone .mailhdr { flex: none; padding: 8px 16px 10px; border-bottom: 1px solid #eef0f2; background: #fff; }
+  .phone .mailhdr .row1 { display: flex; align-items: center; gap: 10px; }
+  .phone .mailhdr .av { width: 34px; height: 34px; border-radius: 50%; background: #f04e23; color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 15px; flex: none; }
+  .phone .mailhdr .who { font-size: 14px; font-weight: 700; color: #111827; line-height: 1.2; }
+  .phone .mailhdr .who small { display: block; font-weight: 500; font-size: 12px; color: #6b7280; }
+  .phone .mailhdr .subj { margin-top: 8px; font-size: 15px; font-weight: 700; color: #111827; line-height: 1.3; }
+  .phone iframe { flex: 1; width: 100%; height: auto; min-height: 0; }
+  .phone .home { position: absolute; bottom: 7px; left: 50%; transform: translateX(-50%); width: 130px; height: 5px; border-radius: 3px; background: #0f1115; z-index: 3; }
   .error-box { margin: 20px; padding: 16px; background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; color: #991b1b; font-family: "Consolas", monospace; font-size: 12px; white-space: pre-wrap; }
 </style>
 </head>
@@ -647,8 +540,14 @@ const html = `<!DOCTYPE html>
   </div>
   <div class="main">
     <div class="topbar">
-      <div class="subject" id="subject"></div>
-      <div class="meta" id="meta"></div>
+      <div style="min-width:0">
+        <div class="subject" id="subject"></div>
+        <div class="meta" id="meta"></div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;">
+        <div class="seg" id="themeSeg" title="Sombre : Apple Mail, Outlook. Gmail sombre : approximation par simple inversion des couleurs, pas le vrai rendu de Gmail."><button data-t="light">Clair</button><button data-t="dark">Sombre</button><button data-t="gmail">Gmail sombre (simulé)</button></div>
+        <div class="seg" id="devSeg"><button data-d="desk">Ordinateur</button><button data-d="phone">iPhone</button></div>
+      </div>
     </div>
     <div class="frame-wrap" id="frameWrap"></div>
   </div>
@@ -660,6 +559,29 @@ const ADMIN_CATEGORIES = ${JSON.stringify(ADMIN_CATEGORIES)};
 
 let activeSide = "public";
 let current = null;
+let device = "phone";
+let theme = "light";
+try { device = localStorage.getItem("fhPreviewDevice") || "phone"; theme = localStorage.getItem("fhPreviewTheme") || "light"; } catch (err) {}
+
+// Sombre : on active les règles @media (prefers-color-scheme: dark) de l'email. Gmail sombre (simulé) : inversion naïve
+// des couleurs, images ré-inversées : sert à repérer un logo ou un texte qui disparaîtrait, pas à juger le rendu exact.
+function themed(html) {
+  // Les nouveaux logos ne sont en ligne qu'après le déploiement : dans l'aperçu on lit les fichiers du dossier public/.
+  html = html.split("https://fly-horizons.com/logo-email-").join("public/logo-email-");
+  if (theme === "dark") return html.split("@media (prefers-color-scheme: dark)").join("@media all");
+  if (theme === "gmail") return html.replace("</head>", "<style>html{filter:invert(1) hue-rotate(180deg);background:#fff} img{filter:invert(1) hue-rotate(180deg)}</style></head>");
+  return html;
+}
+function updateThemeSeg() {
+  document.querySelectorAll("#themeSeg button").forEach(b => b.classList.toggle("on", b.dataset.t === theme));
+  document.getElementById("frameWrap").style.background = theme === "light" ? "" : "#1b1f27";
+}
+
+function escHtml(t) { return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+function updateDevSeg() {
+  document.querySelectorAll("#devSeg button").forEach(b => b.classList.toggle("on", b.dataset.d === device));
+}
 
 function countSide(side) { return ENTRIES.filter(e => e.side === side).length; }
 
@@ -730,12 +652,40 @@ function select(n) {
   } else {
     const iframe = document.createElement("iframe");
     iframe.setAttribute("sandbox", "allow-same-origin");
-    iframe.srcdoc = e.html;
-    wrap.appendChild(iframe);
+    iframe.srcdoc = themed(e.html);
+    wrap.classList.toggle("phone-mode", device === "phone");
+    if (device === "phone") {
+      const phone = document.createElement("div");
+      phone.className = "phone";
+      phone.innerHTML =
+        '<div class="island"></div>' +
+        '<div class="status"><span>9:41</span><span class="sys">&#9679;&#9679;&#9679;&#9679; 5G &#9646;</span></div>' +
+        '<div class="mailhdr"><div class="row1"><div class="av">F</div><div class="who">Fly Horizons<small>à moi</small></div></div>' +
+        '<div class="subj">' + escHtml(e.subject) + '</div></div>';
+      phone.appendChild(iframe);
+      phone.insertAdjacentHTML("beforeend", '<div class="home"></div>');
+      wrap.appendChild(phone);
+    } else {
+      wrap.appendChild(iframe);
+    }
   }
+  updateDevSeg();
+  updateThemeSeg();
   renderList(document.getElementById("search").value);
 }
 
+document.getElementById("themeSeg").addEventListener("click", (ev) => {
+  const b = ev.target.closest("button"); if (!b) return;
+  theme = b.dataset.t;
+  try { localStorage.setItem("fhPreviewTheme", theme); } catch (err) {}
+  if (current != null) select(current);
+});
+document.getElementById("devSeg").addEventListener("click", (ev) => {
+  const b = ev.target.closest("button"); if (!b) return;
+  device = b.dataset.d;
+  try { localStorage.setItem("fhPreviewDevice", device); } catch (err) {}
+  if (current != null) select(current);
+});
 document.getElementById("tabPublic").addEventListener("click", () => { activeSide = "public"; renderList(document.getElementById("search").value); });
 document.getElementById("tabAdmin").addEventListener("click", () => { activeSide = "admin"; renderList(document.getElementById("search").value); });
 document.getElementById("search").addEventListener("input", (ev) => renderList(ev.target.value));

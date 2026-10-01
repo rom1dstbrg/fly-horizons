@@ -1,10 +1,5 @@
 import {
-  orderConfirmationEmail,
-  voucherEmail,
-  volSurMesureQuoteEmail,
-  reservationConfirmationFreeEmail,
   reservationPaymentConfirmationEmail,
-  volSurMesureAcompteEmail,
   reservationDateConfirmeeEmail,
   reservationHeureConfirmeeEmail,
   reservationReportConfirmeeEmail,
@@ -25,7 +20,6 @@ import {
   paymentLinkEmail,
   newsletterFromBlocksEmail,
   newsletterConfirmationEmail,
-  newsletterCampaignEmail,
   type EmailPriceBreakdown,
 } from "@/lib/email-templates";
 import { EmailsPreviewClient, type EmailPreviewEntry } from "@/components/admin/EmailsPreviewClient";
@@ -49,54 +43,6 @@ const breakdownExample: EmailPriceBreakdown = {
 
 export default function EmailsPreviewPage() {
   const entries: EmailPreviewEntry[] = [
-    {
-      id: "order-confirmation",
-      category: "Boutique",
-      label: "Commande reçue",
-      html: orderConfirmationEmail({
-        orderRef: "FH-2026-0184",
-        customerEmail: "sophie.martin@example.com",
-        customerName: "Sophie Martin",
-        items: [{ title: "Casquette Fly Horizons", quantity: 1, unit_price: 24.9 }],
-        subtotal: 24.9,
-        shippingCost: 4.9,
-        discountAmount: 0,
-        total: 29.8,
-        shippingAddress: {
-          full_name: "Sophie Martin",
-          line1: "Rue de la Station 12",
-          city: "Namur",
-          postal_code: "5000",
-          country: "Belgique",
-        },
-        orderDate: new Date().toISOString(),
-      }),
-    },
-    {
-      id: "voucher-single",
-      category: "Boutique",
-      label: "Envoi d'un bon de vol",
-      html: voucherEmail({
-        orderRef: "FH-2026-0185",
-        customerName: "Laurent Dubois",
-        codes: [{ code: "AB12-CD34-EF56-GH78", duration_minutes: 60, product_title: "Vol partagé 60 min" }],
-      }),
-    },
-    {
-      id: "reservation-free",
-      category: "Réservation standard",
-      label: "Réservation confirmée · voucher",
-      html: reservationConfirmationFreeEmail({
-        prenom: "Camille",
-        nom: "Petit",
-        dateStr: "samedi 15 août 2026",
-        heure: "14:00",
-        duree: 60,
-        passengers: 2,
-        voucherCode: "AB12-CD34-EF56-GH78",
-        reservationId: "sample-id",
-      }),
-    },
     {
       id: "reservation-paid",
       category: "Réservation standard",
@@ -229,42 +175,6 @@ export default function EmailsPreviewPage() {
       }),
     },
     {
-      id: "vol-mesure-quote",
-      category: "Vol sur mesure",
-      label: "Demande de vol sur mesure",
-      html: volSurMesureQuoteEmail({
-        prenom: "Julien",
-        nom: "Renard",
-        date: "2026-08-20",
-        heure: "10:00",
-        dureeMin: 75,
-        distKm: 260,
-        styleVol: "Panoramique, châteaux",
-        stopovers: [],
-        prixEstime: 225,
-        discount: 0,
-        prixBillable: 225,
-        acompte: 25,
-        taxesEscales: 0,
-        totalAcompte: 250,
-        voucherCode: null,
-      }),
-    },
-    {
-      id: "vol-mesure-acompte",
-      category: "Vol sur mesure",
-      label: "Provision reçue · vol sur mesure",
-      html: volSurMesureAcompteEmail({
-        prenom: "Julien",
-        nom: "Renard",
-        dateStr: "jeudi 20 août 2026",
-        heure: "10:00",
-        dureeEstimee: 75,
-        montantPaye: 250,
-        breakdown: breakdownExample,
-      }),
-    },
-    {
       id: "route-proposal",
       category: "Vol sur mesure",
       label: "Proposition d'itinéraire",
@@ -384,17 +294,6 @@ export default function EmailsPreviewPage() {
       category: "Newsletter",
       label: "Confirmation d'inscription",
       html: newsletterConfirmationEmail("Camille", "https://fly-horizons.com/newsletter/unsubscribe?token=exemple"),
-    },
-    {
-      id: "newsletter-campaign",
-      category: "Newsletter",
-      label: "Campagne (texte libre)",
-      html: newsletterCampaignEmail(
-        "Un vol est organisé ce week-end !",
-        "Bonjour,\n\nJ'organise un vol partagé ce samedi en fin de matinée, il reste de la place à bord.\n\nSi ça vous dit de nous rejoindre, répondez à cet email ou réservez directement sur le site.",
-        "Camille",
-        "https://fly-horizons.com/newsletter/unsubscribe?token=exemple"
-      ),
     },
     {
       id: "newsletter-blocks",
