@@ -56,7 +56,7 @@ export default async function PiloteDashboard() {
   const [{ data: demandes }, { data: nonPayes }, { data: prochains }] = pilote
     ? await Promise.all([
         admin.from("reservations").select("id, date_vol, statut, clients(prenom, nom)")
-          .eq("pilote_id", pilote.id).in("statut", ["demande_recue", "en_attente"])
+          .eq("pilote_id", pilote.id).neq("type_resa", "perso").in("statut", ["demande_recue", "en_attente"])
           .order("date_vol", { ascending: true }),
         admin.from("reservations").select("id, date_vol, clients(prenom, nom)")
           .eq("pilote_id", pilote.id).eq("type_resa", "annonce_pilote")

@@ -5,6 +5,8 @@
 //   node scripts/test-data.mjs seed    crée les données
 //   node scripts/test-data.mjs proposition   crée UNE proposition d'itinéraire en attente (page /vol/proposition/[token])
 //   node scripts/test-data.mjs creneau       crée UNE réservation avec un autre créneau proposé (page /reservation/creneau-propose/[token])
+//   node scripts/test-data.mjs messages      crée UNE réservation avec 10 messages (page /reservation/messages/[token])
+//   node scripts/test-data.mjs ticket        crée UN ticket de contact avec 6 messages (page /contact/ticket/[token]) ; ticket-clean le supprime
 //   node scripts/test-data.mjs clean   supprime tout ce qui est marqué TEST
 import { createClient } from "@supabase/supabase-js";
 import fs from "fs";
@@ -90,7 +92,7 @@ async function proposition() {
     { id: crypto.randomUUID(), prenom: "Léa", nom: "TEST Proposition", email, telephone: "+32470000009" },
   ]).select("id"), "client");
   const [resa] = must(await db.from("reservations").insert([{
-    pilote_id: PILOTE_ID, client_id: client.id, type_resa: "perso", annonce_id: null,
+    pilote_id: PILOTE_ID, client_id: client.id, type_resa: "annonce_pilote", annonce_id: null,
     date_vol: "2026-10-03", heure_vol: "10:00", duree: 60, passagers: 2, acompte: 240,
     statut: "heure_confirmee", pilote_paye: false, pilote_paye_at: null, duree_reelle: null, commentaire: null,
   }]).select("id"), "réservation");
@@ -121,7 +123,7 @@ async function creneau() {
   ]).select("id"), "client");
   const token = crypto.randomUUID();
   must(await db.from("reservations").insert([{
-    pilote_id: PILOTE_ID, client_id: client.id, type_resa: "perso", annonce_id: null,
+    pilote_id: PILOTE_ID, client_id: client.id, type_resa: "annonce_pilote", annonce_id: null,
     date_vol: "2026-10-10", heure_vol: "10:00", duree: 60, passagers: 2, acompte: 240,
     statut: "en_attente", pilote_paye: false, pilote_paye_at: null, duree_reelle: null, commentaire: null,
     slot_proposal_token: token, slot_proposal_date: "2026-10-11", slot_proposal_heure: "10:00",
@@ -129,9 +131,76 @@ async function creneau() {
   console.log(`Créneau proposé créé (TEST). Ouvrir : http://localhost:3000/reservation/creneau-propose/${token}`);
 }
 
+// Une réservation avec une conversation de 10 messages, pour voir /reservation/messages/[token] (défilement au dernier message).
+// Client dédié (+testmessages) supprimé par `clean`. Répondre depuis la page envoie un vrai email au pilote (chez Romain).
+async function messages() {
+  const email = "romainpilot2003+testmessages@gmail.com";
+  const old = must(await db.from("clients").select("id").eq("email", email), "clients");
+  if (old.length) {
+    const rs = must(await db.from("reservations").select("id").in("client_id", old.map((c) => c.id)), "resa");
+    if (rs.length) must(await db.from("reservation_messages").delete().in("reservation_id", rs.map((r) => r.id)).select("id"), "messages");
+    must(await db.from("reservations").delete().in("client_id", old.map((c) => c.id)).select("id"), "resa");
+    must(await db.from("clients").delete().in("id", old.map((c) => c.id)), "clients");
+  }
+  const [client] = must(await db.from("clients").insert([
+    { id: crypto.randomUUID(), prenom: "Léa", nom: "TEST Messages", email, telephone: "+32470000011" },
+  ]).select("id"), "client");
+  const token = crypto.randomUUID();
+  const [resa] = must(await db.from("reservations").insert([{
+    pilote_id: PILOTE_ID, client_id: client.id, type_resa: "annonce_pilote", annonce_id: null,
+    date_vol: "2026-10-17", heure_vol: "10:00", duree: 60, passagers: 2, acompte: 240,
+    statut: "heure_confirmee", pilote_paye: false, pilote_paye_at: null, duree_reelle: null, commentaire: null,
+    messages_token: token,
+  }]).select("id"), "réservation");
+  const t = (min) => new Date(Date.parse("2026-10-01T07:00:00Z") + min * 60000).toISOString();
+  const rows = [
+    ["pilote", "Romain", "Bonjour Léa, votre créneau du samedi 10 octobre est bien noté. Je vous propose de vous retrouver à l'accueil de l'aérodrome vers 9:45.", 0],
+    ["pilote", "Romain", "Pensez à votre pièce d'identité.", 1],
+    ["client", null, "Super, merci. Est-ce qu'on peut survoler le château de Beloeil ? Mon père y a grandi.", 400],
+    ["pilote", "Romain", "Avec plaisir, c'est sur la route. Je regarde la météo la veille et je vous confirme.", 1380],
+    ["client", null, "Parfait !", 1400],
+    ["client", null, "Et pour les chaussures, des baskets ça va ?", 1401],
+    ["pilote", "Romain", "Oui, des baskets c'est très bien. Évitez juste les talons.", 1500],
+    ["client", null, "Noté. Mon frère vient aussi, il fait 1m92, ça passe dans l'avion ?", 2900],
+    ["pilote", "Romain", "Aucun souci, le DA40 est très spacieux. Il sera à l'aise.", 2950],
+    ["client", null, "Génial, à samedi alors !", 3000],
+  ].map(([author, author_nom, content, min]) => ({ reservation_id: resa.id, author, author_nom, content, created_at: t(min) }));
+  must(await db.from("reservation_messages").insert(rows).select("id"), "messages");
+  console.log(`Conversation créée (TEST). Ouvrir : http://localhost:3000/reservation/messages/${token}`);
+}
+
+// Un ticket de contact avec 6 messages, pour voir /contact/ticket/[token]. Pas de client : ligne `contacts` (email +testticket),
+// supprimée à chaque relance et par `node scripts/test-data.mjs ticket-clean` (le `clean` général ne touche pas aux contacts).
+async function ticket(clean = false) {
+  const email = "romainpilot2003+testticket@gmail.com";
+  const old = must(await db.from("contacts").select("id").eq("email", email), "contacts");
+  if (old.length) {
+    must(await db.from("contact_messages").delete().in("contact_id", old.map((c) => c.id)).select("id"), "messages");
+    must(await db.from("contacts").delete().in("id", old.map((c) => c.id)).select("id"), "contacts");
+  }
+  if (clean) return console.log("Ticket de test supprimé.");
+  const [c] = must(await db.from("contacts").insert([
+    { nom: "Léa TEST Ticket", email, sujet: "Question sur un vol pour deux personnes", message: "Bonjour, nous sommes deux, peut-on réserver le même vol ?" },
+  ]).select("id, thread_token"), "contact");
+  const t = (min) => new Date(Date.parse("2026-10-01T07:00:00Z") + min * 60000).toISOString();
+  const rows = [
+    ["client", "Bonjour, nous sommes deux, peut-on réserver le même vol ? Mon compagnon pèse 95 kg et moi 62.", 0],
+    ["admin", "Bonjour Léa, oui sans problème : le DA40 emporte deux passagers. Le poids total reste largement dans les limites.", 90],
+    ["admin", "Dites-moi la date qui vous arrange et je vous propose un créneau.", 91],
+    ["client", "Plutôt le samedi 17 octobre, le matin si possible.", 300],
+    ["admin", "Parfait, je regarde la météo et je reviens vers vous très vite.", 360],
+    ["client", "Merci beaucoup !", 380],
+  ].map(([author, content, min]) => ({ contact_id: c.id, author, content, created_at: t(min) }));
+  must(await db.from("contact_messages").insert(rows).select("id"), "messages");
+  console.log(`Ticket créé (TEST). Ouvrir : http://localhost:3000/contact/ticket/${c.thread_token}`);
+}
+
 const cmd = process.argv[2];
 if (cmd === "seed") await seed();
 else if (cmd === "proposition") await proposition();
 else if (cmd === "creneau") await creneau();
+else if (cmd === "messages") await messages();
+else if (cmd === "ticket") await ticket();
+else if (cmd === "ticket-clean") await ticket(true);
 else if (cmd === "clean") await clean();
-else console.log("usage : node scripts/test-data.mjs seed|proposition|creneau|clean");
+else console.log("usage : node scripts/test-data.mjs seed|proposition|creneau|messages|ticket|ticket-clean|clean");
