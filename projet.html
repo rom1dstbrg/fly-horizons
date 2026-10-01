@@ -1777,6 +1777,13 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-10-01 (92) — Page Plus refaite en Studio</h3>
+      <ul>
+        <li><code>app/admin/plus/page.tsx</code> : cartes cliquables Studio (3 colonnes sur bureau, 1 sur téléphone) vers Satisfaction, Newsletter, Assistant, Analytiques, Galerie, Emails. « Vue globale » retirée (le Dashboard est en tête de la barre latérale). Sans maquette préalable, vu la simplicité : à reprendre si Romain veut une autre disposition.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-10-01 (91) — Logotype de l'admin : lettres d'origine</h3>
       <ul>
         <li>Choix de Romain (maquette <code>maquette-admin-logo.html</code>, https://claude.ai/artifact/GJPnYH8cCgyFRecsTPs3Tb) : emblème actuel + lettres FLY HORIZONS d'origine réduites + « ADMINISTRATION » doré dessous. Remplace la version « Fly / Horizons » à deux graisses (décision 27). Nouveau <code>components/admin/FhWordmark.tsx</code> (lettres en SVG, <code>currentColor</code>) ; <code>AdminBrand</code> l'utilise dans la barre latérale et la barre du haut du téléphone. L'emblème à anneau et ailes dorés reste disponible dans la maquette si Romain change d'avis.</li>
