@@ -1,4 +1,5 @@
-import { Wind, Eye, Thermometer, Gauge } from "lucide-react";
+import { Eye, Thermometer, Gauge } from "lucide-react";
+import { Badge, Card } from "@/components/pilote/studio";
 
 export type MetarJson = {
   rawOb: string;
@@ -104,77 +105,42 @@ export async function MetarWidget() {
       })
     : null;
 
-  return (
-    <div className="bg-card rounded-xl border border-border overflow-hidden">
+  const RULES_TONE = { VFR: "success", MVFR: "info", IFR: "danger", LIFR: "danger" } as const;
 
-      {/* Header */}
-      <div className="bg-secondary border-b border-border px-4 py-2 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5">
-          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.8px]">METAR · EBCI</span>
-          {obsLabel && (
-            <span className="text-[9px] text-muted-foreground/50">· {obsLabel}</span>
-          )}
-        </div>
-        {fr && (
-          <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${fr.bg} ${fr.text}`}>
-            {fr.label}
-          </span>
-        )}
+  return (
+    <Card padded={false}>
+      <div className="flex items-center justify-between gap-3 px-5 pb-1 pt-4">
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-st-muted">
+          Météo · EBCI{obsLabel && <span className="ml-1.5 normal-case tracking-normal">· {obsLabel}</span>}
+        </h2>
+        {fr && <Badge tone={RULES_TONE[fr.label]}>{fr.label}</Badge>}
       </div>
 
       {!metar ? (
-        <div className="px-4 py-3">
-          <p className="text-xs text-muted-foreground">Données indisponibles</p>
-        </div>
+        <p className="px-5 pb-5 pt-3 text-sm text-st-muted">Données indisponibles.</p>
       ) : (
-        <div className="p-3 space-y-2.5">
-
-          {/* Métriques décodées */}
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-            <div className="flex items-center gap-2">
-              <Wind size={13} className="text-muted-foreground shrink-0" />
-              <span className="text-sm text-foreground font-medium">
-                {metar.wdir === "VRB" ? "Variable" : metar.wdir != null ? `${metar.wdir}°` : "—"}
-                {metar.wspd != null ? ` · ${metar.wspd} kt` : ""}
-                {metar.wgst != null ? ` G${metar.wgst}` : ""}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Eye size={13} className="text-muted-foreground shrink-0" />
-              <span className="text-sm text-foreground font-medium">{formatVis(metar.visib)}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Thermometer size={13} className="text-muted-foreground shrink-0" />
-              <span className="text-sm text-foreground font-medium">
-                {metar.temp != null ? `${metar.temp}°` : "—"} / {metar.dewp != null ? `${metar.dewp}°` : "—"}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Gauge size={13} className="text-muted-foreground shrink-0" />
-              <span className="text-sm text-foreground font-medium">
-                {metar.altim != null ? `Q${Math.round(metar.altim)}` : "—"}
-              </span>
-            </div>
+        <div className="space-y-4 px-5 pb-5 pt-2">
+          <p className="st-num text-[28px] font-medium leading-none tracking-[-0.03em]">
+            {metar.wdir === "VRB" ? "Variable" : metar.wdir != null ? `${metar.wdir}°` : "—"}
+            {metar.wspd != null && <span> / {metar.wspd} kt{metar.wgst != null ? ` G${metar.wgst}` : ""}</span>}
+          </p>
+          <dl className="grid grid-cols-3 gap-x-4 gap-y-3 text-sm">
+            <div><dt className="flex items-center gap-1.5 text-[11.5px] text-st-muted"><Eye size={12} />Visibilité</dt><dd className="mt-0.5 font-semibold">{formatVis(metar.visib)}</dd></div>
+            <div><dt className="flex items-center gap-1.5 text-[11.5px] text-st-muted"><Thermometer size={12} />Temp.</dt><dd className="mt-0.5 font-semibold">{metar.temp != null ? `${metar.temp}°` : "—"} / {metar.dewp != null ? `${metar.dewp}°` : "—"}</dd></div>
+            <div><dt className="flex items-center gap-1.5 text-[11.5px] text-st-muted"><Gauge size={12} />QNH</dt><dd className="mt-0.5 font-semibold">{metar.altim != null ? `${Math.round(metar.altim)} hPa` : "—"}</dd></div>
+          </dl>
+          <div className="rounded-xl bg-st-surface px-3.5 py-3">
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.06em] text-st-muted">METAR</p>
+            <p className="break-all font-mono text-xs leading-relaxed text-st-text">{metar.rawOb}</p>
           </div>
-
-          {/* Raw METAR */}
-          <div className="bg-secondary rounded-lg px-3 py-2.5">
-            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">METAR</p>
-            <p className="font-mono text-xs text-foreground leading-relaxed break-all">{metar.rawOb}</p>
-          </div>
-
-          {/* Raw TAF */}
           {taf?.rawTAF && (
-            <div className="bg-secondary rounded-lg px-3 py-2.5">
-              <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">TAF</p>
-              <p className="font-mono text-xs text-foreground leading-relaxed break-all">
-                {taf.rawTAF.replace(/^TAF\s+/, "")}
-              </p>
+            <div className="rounded-xl bg-st-surface px-3.5 py-3">
+              <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.06em] text-st-muted">TAF</p>
+              <p className="break-all font-mono text-xs leading-relaxed text-st-text">{taf.rawTAF.replace(/^TAF\s+/, "")}</p>
             </div>
           )}
-
         </div>
       )}
-    </div>
+    </Card>
   );
 }

@@ -1762,6 +1762,15 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-10-01 (89) — Dashboard admin refait en Studio (à traiter par signaux, 7 prochains jours, météo)</h3>
+      <ul>
+        <li><code>app/admin/page.tsx</code> réécrit (maquette validée : https://claude.ai/artifact/T1d8qpBz3jUKbdqdbU1AYK) : « À traiter » = signal le plus grave de chaque réservation (<code>getSignals</code> avec les seuils de Paramètres) + contacts non lus + retours pilotes à traiter ; « Les 7 prochains jours » (liste par jour, pilote, badge d'état) ; météo ; dernières demandes. Le grand calendrier n'est plus sur le dashboard (il reste dans Réservations : choix de Romain, il gère plus en admin qu'en pilote). Les vouchers qui expirent et les anciens compteurs (72 h, vol sur mesure) disparaissent.</li>
+        <li><code>components/admin/MetarWidget.tsx</code> restylé Studio (exports <code>flightRules</code> / <code>MetarJson</code> inchangés, utilisés par <code>MetarChip</code>). <code>DashboardCalendar</code> n'est plus utilisé par la page.</li>
+        <li>Vérifié à l'écran avec les vraies données (bureau + téléphone) ; aucun vol actif en base à ce moment, donc les lignes d'alerte et d'agenda n'ont été vues que dans la maquette.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-10-01 (88) — Page Paramètres refaite : catégories, délais et seuils réglables</h3>
       <ul>
         <li>Nouveau <code>components/admin/SettingsClient.tsx</code> (liste de catégories, page qui glisse au téléphone, panneau à droite sur le bureau, barre « Enregistrer » unique) ; <code>app/admin/settings/page.tsx</code> simplifié ; <code>PrixVolForm</code>, <code>SiteSettingsForm</code>, <code>TarifAvionForm</code> supprimés ; <code>updateSiteSettings</code> et <code>updatePrixVol</code> remplacés par <code>updateAppSettings</code>.</li>

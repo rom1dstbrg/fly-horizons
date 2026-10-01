@@ -1,259 +1,199 @@
-import { createAdminClient } from "@/lib/supabase/admin";
 import { Suspense } from "react";
 import Link from "next/link";
-import {
-  AlertTriangle, AlertCircle, CheckCircle2,
-  ArrowRight, Route, MessageSquare,
-  PlaneTakeoff,
-} from "lucide-react";
-import { DashboardCalendar } from "@/components/admin/DashboardCalendar";
+import { CheckCircle2, ChevronRight } from "lucide-react";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getAppSettings } from "@/lib/app-settings-server";
+import { getSignals, signalConfigFrom, type Signal, type SignalInput } from "@/lib/reservation-signals";
 import { MetarWidget } from "@/components/admin/MetarWidget";
-import { PageHeader } from "@/components/admin/PageHeader";
-import { FormSection, AdminBadge, getResaBadge } from "@/components/admin/ui";
+import { ResaBadge } from "@/components/pilote/ResaBadge";
+import { Card, PageHeader } from "@/components/pilote/studio";
+import { cn } from "@/lib/utils";
 
-export const metadata = { title: "Cockpit — Admin" };
+export const metadata = { title: "Dashboard — Admin" };
 
-// ─── types ────────────────────────────────────────────────────────────────────
+// Dashboard de l'admin (maquette validée le 01/10) : ce qui traîne (mêmes signaux
+// que la page Réservations, seuils réglés dans Paramètres), les 7 prochains
+// jours, la météo d'EBCI et les dernières demandes. Le calendrier complet reste
+// dans Réservations.
 
-type ActionItem = { label: string; href: string; icon: React.ElementType };
+type Resa = SignalInput & {
+  id: string;
+  duree: number | null;
+  passagers: number | null;
+  payment_status: string | null;
+  clients: { prenom: string | null; nom: string | null } | { prenom: string | null; nom: string | null }[] | null;
+  pilotes: { nom: string } | { nom: string }[] | null;
+};
 
-// ─── page ─────────────────────────────────────────────────────────────────────
+const COLS = `id, statut, type_resa, date_vol, heure_vol, duree, passagers, created_at, payment_status,
+  pilote_id, pilote_assigned_at, pilote_paye, paiement_demande_at, client_paiement_declare_at,
+  reschedule_token, slot_proposal_token, clients(prenom, nom), pilotes(nom)`;
+
+const one = <T,>(v: T | T[] | null): T | null => (Array.isArray(v) ? v[0] ?? null : v);
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const brusselsDay = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: "Europe/Brussels" });
+const addDays = (iso: string, n: number) => new Date(new Date(`${iso}T12:00:00Z`).getTime() + n * 86_400_000).toISOString().slice(0, 10);
+const fmtShort = (iso: string) => new Date(`${iso}T12:00:00Z`).toLocaleDateString("fr-BE", { weekday: "short", day: "numeric", month: "short" });
+
+function clientName(r: Resa) {
+  const c = one(r.clients);
+  return [c?.prenom, c?.nom ? `${c.nom[0]}.` : ""].filter(Boolean).join(" ") || "Client";
+}
+const piloteName = (r: Resa) => one(r.pilotes)?.nom ?? "Sans pilote";
+
+function ilYa(iso: string): string {
+  const min = Math.max(1, Math.round((Date.now() - new Date(iso).getTime()) / 60_000));
+  if (min < 60) return `il y a ${min} min`;
+  const h = Math.round(min / 60);
+  return h < 48 ? `il y a ${h} h` : `il y a ${Math.round(h / 24)} j`;
+}
+
+function Section({ title, count, href, link, children }: { title: string; count?: number; href?: string; link?: string; children: React.ReactNode }) {
+  return (
+    <Card padded={false}>
+      <div className="flex items-center justify-between gap-3 px-5 pb-1 pt-4">
+        <h2 className="flex items-center text-[11px] font-semibold uppercase tracking-[0.06em] text-st-muted">
+          {title}
+          {!!count && <span className="ml-2 grid h-5 min-w-5 place-items-center rounded-full bg-st-bad px-1.5 text-[11px] font-bold normal-case tracking-normal text-white">{count}</span>}
+        </h2>
+        {href && link && <Link href={href} className="text-[12.5px] font-semibold text-st-info hover:underline">{link}</Link>}
+      </div>
+      {children}
+    </Card>
+  );
+}
+
+type Todo = { key: string; level: Signal["level"] | "info"; title: string; sub: string; href: string };
 
 export default async function AdminDashboardPage() {
-  const supabase = createAdminClient();
-  const now         = new Date();
-  const tomorrowStr = new Date(now.getTime() + 86400000).toISOString().split("T")[0];
+  const db = createAdminClient();
+  const settings = await getAppSettings();
+  const cfg = signalConfigFrom(settings);
+  const now = new Date();
+  const today = brusselsDay(now);
 
-  const thirtyDaysFromNow = new Date(now.getTime() + 30 * 86400000).toISOString();
-
-  const [
-    { data: reservations },
-    { data: newContacts },
-    { data: vouchersExpiring },
-  ] = await Promise.all([
-    // Réservations — tous les champs requis par DrawerReservation
-    supabase.from("reservations").select(
-      `id, date_vol, heure_vol, duree, statut, type_resa, created_at,
-       voucher_code, coupon_code, payment_status, commentaire, acompte, paye, remboursement, payment_token,
-       route, route_token, route_status, route_feedback, passagers, poids_total, avion_reserve,
-       clients(id, prenom, nom, email, telephone)`
-    ).order("created_at", { ascending: false }),
-    supabase.from("contacts").select("id, prenom, nom, created_at")
-      .eq("statut", "nouveau").order("created_at", { ascending: false }).limit(5),
-    supabase.from("voucher_codes")
-      .select("id, code, recipient_name, product_title, expires_at")
-      .eq("status", "unused")
-      .not("expires_at", "is", null)
-      .gte("expires_at", now.toISOString())
-      .lte("expires_at", thirtyDaysFromNow)
-      .order("expires_at", { ascending: true }),
+  const [{ data: actives }, { data: recentes }, { count: contactsNonLus }, { count: retoursATraiter }] = await Promise.all([
+    db.from("reservations").select(COLS).neq("type_resa", "perso").not("statut", "in", "(annulee,vol_effectue)").gte("date_vol", addDays(today, -30)).order("date_vol", { ascending: true }),
+    db.from("reservations").select(COLS).neq("type_resa", "perso").order("created_at", { ascending: false }).limit(5),
+    db.from("contacts").select("id", { count: "exact", head: true }).eq("statut", "nouveau"),
+    db.from("pilote_retours").select("id", { count: "exact", head: true }).eq("statut", "a_traiter"),
   ]);
+  const resas = (actives ?? []) as unknown as Resa[];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const allResas  = (reservations ?? []) as any[];
-  const resaStd   = allResas.filter(r => r.type_resa === "standard");
-  const resaPerso = allResas.filter(r => r.type_resa === "perso");
+  // ── À traiter : le signal le plus grave de chaque réservation, puis contacts et retours
+  const signalees = resas
+    .map((r) => ({ r, s: getSignals(r, now.getTime(), cfg)[0] }))
+    .filter((x): x is { r: Resa; s: Signal } => !!x.s)
+    .sort((a, b) => (a.s.level === b.s.level ? a.r.date_vol.localeCompare(b.r.date_vol) : a.s.level === "bad" ? -1 : 1));
+  const todos: Todo[] = signalees.map(({ r, s }) => ({
+    key: r.id, level: s.level, title: s.label,
+    sub: `${clientName(r)} · ${fmtShort(r.date_vol)} · ${piloteName(r)}`,
+    href: `/admin/vols?ouvrir=${r.id}`,
+  }));
+  if (contactsNonLus) todos.push({ key: "contacts", level: "info", title: `${contactsNonLus} message${contactsNonLus > 1 ? "s" : ""} non lu${contactsNonLus > 1 ? "s" : ""}`, sub: "Contacts", href: "/admin/contacts" });
+  if (retoursATraiter) todos.push({ key: "retours", level: "info", title: `${retoursATraiter} retour${retoursATraiter > 1 ? "s" : ""} pilote à traiter`, sub: "Retours pilotes", href: "/admin/retours" });
+  const MAX = 8;
 
-  // ── Actionnables
-  const demandeRecue     = resaStd.filter(r => r.statut === "demande_recue").length;
-  const paymentPending   = resaStd.filter(r => r.statut === "payment_pending").length;
-  const enAttenteStd     = resaStd.filter(r => r.statut === "en_attente").length;
-  const enAttentePerso   = resaPerso.filter(r => r.statut === "en_attente").length;
-  const volsDemainSansH  = allResas.filter(r =>
-    r.date_vol === tomorrowStr && !r.heure_vol && ["en_attente", "date_confirmee"].includes(r.statut)
-  ).length;
-  const newContactsCount = newContacts?.length ?? 0;
+  // ── 7 prochains jours
+  const jours = Array.from({ length: 7 }, (_, i) => addDays(today, i)).map((d, i) => ({
+    d,
+    label: i === 0 ? "Aujourd'hui" : i === 1 ? "Demain" : cap(new Date(`${d}T12:00:00Z`).toLocaleDateString("fr-BE", { weekday: "long" })),
+    vols: resas.filter((r) => r.date_vol === d).sort((a, b) => (a.heure_vol ?? "99:99").localeCompare(b.heure_vol ?? "99:99")),
+  })).filter((j) => j.vols.length > 0);
+  const nbVols = jours.reduce((n, j) => n + j.vols.length, 0);
 
-  const expiringList = vouchersExpiring ?? [];
-  const expiringCritical = expiringList.filter(v => {
-    const days = Math.ceil((new Date(v.expires_at).getTime() - now.getTime()) / 86400000);
-    return days <= 7;
-  }).length;
-  const expiringCount = expiringList.length;
-
-  const urgentItems: ActionItem[] = [
-    ...(demandeRecue      > 0 ? [{ label: `${demandeRecue} nouvelle${demandeRecue > 1 ? "s" : ""} demande${demandeRecue > 1 ? "s" : ""} à traiter sous 72h`,   href: "/admin/vols",           icon: AlertTriangle }] : []),
-    ...(paymentPending    > 0 ? [{ label: `${paymentPending} paiement${paymentPending > 1 ? "s" : ""} en attente de confirmation`,                         href: "/admin/vols",           icon: AlertTriangle }] : []),
-    ...(volsDemainSansH   > 0 ? [{ label: `${volsDemainSansH} vol${volsDemainSansH > 1 ? "s" : ""} demain sans heure confirmée`,                           href: "/admin/vols",           icon: AlertTriangle }] : []),
-  ];
-  const todayItems: ActionItem[] = [
-    ...(enAttenteStd    > 0 ? [{ label: `${enAttenteStd} réservation${enAttenteStd > 1 ? "s" : ""} standard en attente de confirmation`,                    href: "/admin/vols",           icon: AlertCircle   }] : []),
-    ...(enAttentePerso  > 0 ? [{ label: `${enAttentePerso} vol${enAttentePerso > 1 ? "s" : ""} sur mesure en attente`,                                     href: "/admin/vols",           icon: AlertCircle   }] : []),
-    ...(newContactsCount > 0 ? [{ label: `${newContactsCount} message${newContactsCount > 1 ? "s" : ""} non lu${newContactsCount > 1 ? "s" : ""}`,         href: "/admin/contacts",       icon: MessageSquare }] : []),
-  ];
-  const allActionItems = [...urgentItems, ...todayItems];
-  const isUrgent = urgentItems.length > 0;
-
-  // ── Vols de demain
-  const volsTomorrow = allResas
-    .filter(r => r.date_vol === tomorrowStr && r.statut !== "annulee")
-    .sort((a, b) => (a.heure_vol ?? "99:99").localeCompare(b.heure_vol ?? "99:99"));
-
-  // ── Dernières réservations
-  const recentResas = allResas.slice(0, 6);
-
-  const greeting  = now.getHours() < 12 ? "Bonjour" : now.getHours() < 18 ? "Bon après-midi" : "Bonsoir";
-  const dateLabel = now.toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long" });
+  const hour = Number(new Intl.DateTimeFormat("fr-BE", { hour: "numeric", hour12: false, timeZone: "Europe/Brussels" }).format(now));
+  const greeting = hour < 12 ? "Bonjour" : hour < 18 ? "Bon après-midi" : "Bonsoir";
+  const dateLabel = cap(now.toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Brussels" }));
+  const recents = (recentes ?? []) as unknown as Resa[];
 
   return (
-    <div className="space-y-6 w-full">
+    <div className="pilote-studio space-y-5 font-sans text-st-text">
+      <PageHeader title={`${greeting}, Romain`} description={dateLabel} />
 
-      <PageHeader
-        title={`${greeting}, Romain`}
-        subtitle={dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1)}
-      />
-
-      {/* ── À traiter ────────────────────────────────────────────────── */}
-      {allActionItems.length === 0 ? (
-        <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center gap-3">
-          <CheckCircle2 size={14} className="text-green-500 shrink-0" />
-          <p className="text-sm font-medium text-green-700">Tout est en ordre, rien à traiter.</p>
-        </div>
-      ) : (
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <h2 className="text-[11px] font-bold text-muted-foreground uppercase tracking-[1.8px]">À traiter</h2>
-            <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold text-white ${isUrgent ? "bg-red-500" : "bg-amber-500"}`}>
-              {allActionItems.length}
-            </span>
-          </div>
-          <div className="bg-card rounded-xl border border-border overflow-hidden">
-            {urgentItems.length > 0 && (
-              <>
-                <div className="px-4 py-1.5 bg-red-50 border-b border-red-100/80">
-                  <span className="text-[9px] font-bold text-red-400 uppercase tracking-[1.5px]">Urgent</span>
-                </div>
-                {urgentItems.map((item, i) => {
-                  const Icon = item.icon;
-                  return (
-                    <Link key={`u${i}`} href={item.href}
-                      className="flex items-center gap-3 px-4 py-3 bg-red-50/40 hover:bg-red-50/80 transition-colors group border-b border-red-100/60"
-                    >
-                      <Icon size={12} className="text-red-500 shrink-0" />
-                      <span className="text-xs font-medium text-red-800 flex-1 leading-snug">{item.label}</span>
-                      <ArrowRight size={10} className="text-red-300 group-hover:text-red-400 transition-colors shrink-0" />
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
+        <div className="space-y-5">
+          <Section title="À traiter" count={todos.length} href="/admin/vols" link="Ouvrir les réservations">
+            {todos.length === 0 ? (
+              <p className="flex items-center gap-2.5 px-5 pb-5 pt-3 text-sm font-medium text-st-ok">
+                <CheckCircle2 size={16} /> Tout est en ordre, rien à traiter.
+              </p>
+            ) : (
+              <ul className="px-5 pb-2 pt-1">
+                {todos.slice(0, MAX).map((t) => (
+                  <li key={t.key} className="border-t border-st-line-soft first:border-t-0">
+                    <Link href={t.href} className="-mx-2 flex items-center gap-3 rounded-xl px-2 py-3 transition-colors hover:bg-st-surface">
+                      <i className={cn("size-[9px] shrink-0 rounded-full", t.level === "bad" ? "bg-st-bad" : t.level === "warn" ? "bg-[#e08a00]" : "bg-st-info")} />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-[13.5px] font-semibold">{t.title}</span>
+                        <span className="block truncate text-[12.5px] text-st-muted">{t.sub}</span>
+                      </span>
+                      <ChevronRight size={17} className="shrink-0 text-st-muted" />
                     </Link>
-                  );
-                })}
-              </>
-            )}
-            {todayItems.length > 0 && (
-              <>
-                {urgentItems.length > 0 && (
-                  <div className="px-4 py-1.5 bg-amber-50/60 border-b border-amber-100/80">
-                    <span className="text-[9px] font-bold text-amber-400 uppercase tracking-[1.5px]">Aussi</span>
-                  </div>
+                  </li>
+                ))}
+                {todos.length > MAX && (
+                  <li className="border-t border-st-line-soft py-3 text-center">
+                    <Link href="/admin/vols" className="text-[12.5px] font-semibold text-st-info hover:underline">+ {todos.length - MAX} autres dans Réservations</Link>
+                  </li>
                 )}
-                {todayItems.map((item, i) => {
-                  const Icon = item.icon;
-                  return (
-                    <Link key={`t${i}`} href={item.href}
-                      className={`flex items-center gap-3 px-4 py-3 hover:bg-secondary transition-colors group ${i < todayItems.length - 1 ? "border-b border-border" : ""}`}
-                    >
-                      <Icon size={12} className="text-amber-500 shrink-0" />
-                      <span className="text-xs text-foreground flex-1 leading-snug">{item.label}</span>
-                      <ArrowRight size={10} className="text-muted-foreground/30 group-hover:text-muted-foreground transition-colors shrink-0" />
-                    </Link>
-                  );
-                })}
-              </>
+              </ul>
             )}
-          </div>
+          </Section>
+
+          <Section title="Les 7 prochains jours" href="/admin/vols" link="Réservations">
+            {nbVols === 0 ? (
+              <p className="px-5 pb-5 pt-3 text-sm text-st-muted">Aucun vol prévu cette semaine.</p>
+            ) : (
+              <div className="pb-2">
+                {jours.map((j) => (
+                  <div key={j.d}>
+                    <p className="px-5 pb-1 pt-3 text-xs font-semibold text-st-muted">
+                      <span className="text-st-text">{j.label}</span> · {new Date(`${j.d}T12:00:00Z`).toLocaleDateString("fr-BE", { day: "numeric", month: "long" })}
+                    </p>
+                    {j.vols.map((r) => (
+                      <Link key={r.id} href={`/admin/vols?ouvrir=${r.id}`} className="grid grid-cols-[3.2rem_minmax(0,1fr)_auto] items-center gap-3 border-t border-st-line-soft px-5 py-2.5 transition-colors hover:bg-st-surface">
+                        <span className="st-num text-[15px] font-semibold">{r.heure_vol ? r.heure_vol.slice(0, 5) : "—"}</span>
+                        <span className="min-w-0">
+                          <span className="block truncate text-[13.5px] font-semibold">{clientName(r)}{r.duree ? ` · ${r.duree} min` : ""}</span>
+                          <span className="block truncate text-[12.5px] text-st-muted">
+                            {piloteName(r)}{r.passagers ? ` · ${r.passagers} passager${r.passagers > 1 ? "s" : ""}` : ""}{r.heure_vol ? "" : " · heure à confirmer"}
+                          </span>
+                        </span>
+                        <ResaBadge reservation={{ ...r, type_resa: r.type_resa ?? "annonce_pilote" }} />
+                      </Link>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
+          </Section>
         </div>
-      )}
 
-      {/* ── CALENDRIER + Demain/Météo ────────────────────────────────── */}
-      <div className="grid lg:grid-cols-[3fr_2fr] gap-5 items-start">
+        <div className="space-y-5">
+          <Suspense fallback={<Card><p className="text-sm text-st-muted">Chargement de la météo…</p></Card>}>
+            <MetarWidget />
+          </Suspense>
 
-        <div>
-          <FormSection title="Calendrier des vols" />
-          <DashboardCalendar reservations={allResas as never} />
-        </div>
-
-        <div className="space-y-4">
-
-          {/* Vols demain — affiché seulement s'il y en a */}
-          {volsTomorrow.length > 0 && (
-            <div>
-              <FormSection title="Demain" />
-              <div className="bg-card rounded-xl border border-border overflow-hidden">
-                {volsTomorrow.map((r, i) => {
-                  const client = r.clients as { prenom: string; nom: string } | null;
-                  const name   = client ? `${client.prenom} ${client.nom}`.trim() : "—";
-                  const statut = getResaBadge(r);
-                  return (
-                    <Link key={r.id} href="/admin/vols"
-                      className={`flex items-center gap-3 px-3.5 py-2.5 hover:bg-secondary transition-colors group ${i < volsTomorrow.length - 1 ? "border-b border-border" : ""}`}
-                    >
-                      {r.type_resa === "perso"
-                        ? <Route size={12} className="text-emerald-500 shrink-0" />
-                        : <PlaneTakeoff size={12} className="text-navy shrink-0" />
-                      }
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-foreground truncate">{name}</p>
-                        <p className="text-[10px] text-muted-foreground">{r.heure_vol ?? "Heure à confirmer"}</p>
-                      </div>
-                      <AdminBadge variant={statut.variant} label={statut.label} />
+          {recents.length > 0 && (
+            <Section title="Dernières demandes" href="/admin/vols" link="Voir tout">
+              <ul className="px-5 pb-2 pt-1">
+                {recents.map((r) => (
+                  <li key={r.id} className="border-t border-st-line-soft first:border-t-0">
+                    <Link href={`/admin/vols?ouvrir=${r.id}`} className="-mx-2 flex items-center justify-between gap-3 rounded-xl px-2 py-3 transition-colors hover:bg-st-surface">
+                      <span className="min-w-0">
+                        <span className="block truncate text-[13.5px] font-semibold">{clientName(r)}</span>
+                        <span className="block truncate text-[12.5px] text-st-muted">{fmtShort(r.date_vol)} · {ilYa(r.created_at)}</span>
+                      </span>
+                      <ResaBadge reservation={{ ...r, type_resa: r.type_resa ?? "annonce_pilote" }} />
                     </Link>
-                  );
-                })}
-              </div>
-            </div>
+                  </li>
+                ))}
+              </ul>
+            </Section>
           )}
-
-          {/* METAR / TAF */}
-          <div>
-            <FormSection title="Météo · EBCI" />
-            <Suspense fallback={
-              <div className="bg-card rounded-xl border border-border px-4 py-3">
-                <p className="text-xs text-muted-foreground">Chargement météo...</p>
-              </div>
-            }>
-              <MetarWidget />
-            </Suspense>
-          </div>
-
         </div>
       </div>
-
-      {/* ── DERNIÈRES RÉSERVATIONS ────────────────────────────────────── */}
-      {recentResas.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <FormSection title="Dernières réservations" />
-            <Link href="/admin/vols" className="text-xs text-muted-foreground hover:text-navy transition-colors flex items-center gap-1">
-              Voir tout <ArrowRight size={11} />
-            </Link>
-          </div>
-          <div className="bg-card rounded-xl border border-border overflow-hidden">
-            {recentResas.map((r, idx) => {
-              const client = r.clients as { prenom: string; nom: string } | null;
-              const name   = client ? `${client.prenom} ${client.nom}`.trim() || "—" : "—";
-              const date   = r.date_vol
-                ? new Date(r.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", { day: "numeric", month: "short" })
-                : new Date(r.created_at).toLocaleDateString("fr-BE", { day: "numeric", month: "short" });
-              const statut = getResaBadge(r);
-              return (
-                <div key={r.id} className={`flex items-center gap-4 px-5 py-3 hover:bg-secondary transition-colors ${idx < recentResas.length - 1 ? "border-b border-border" : ""}`}>
-                  {r.type_resa === "perso"
-                    ? <Route size={13} className="text-emerald-500 shrink-0" />
-                    : <PlaneTakeoff size={13} className="text-navy shrink-0" />
-                  }
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {date}{r.heure_vol ? ` · ${r.heure_vol}` : ""}
-                      {r.type_resa === "perso" ? " · Vol sur mesure" : ""}
-                    </p>
-                  </div>
-                  <AdminBadge variant={statut.variant} label={statut.label} />
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }

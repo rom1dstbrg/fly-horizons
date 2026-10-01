@@ -1,0 +1,152 @@
+<title>Maquette Dashboard admin</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#f5f6f8; --card:#fff; --surface:#f4f5f7; --line:#eceef2; --line-strong:#dcdfe6;
+  --text:#0f1117; --text2:#4d5463; --muted:#5f6675; --ink:#0b2238; --ink-soft:#e8edf3;
+  --gold-soft:#fdf4d6; --gold-text:#7a5800; --ok:#16794a; --ok-soft:#e7f5ec; --bad:#c4372c; --bad-soft:#fbeceb; --warn:#b06a00; --warn-soft:#fdf0dc; --info:#2b5cb8;
+  --font:'Poppins',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0c1117; --card:#131a22; --surface:#1a222c; --line:#222b36; --line-strong:#2e3946;
+  --text:#eef1f5; --text2:#b4bcc8; --muted:#9aa3b1; --ink:#e8edf3; --ink-soft:#1d2b3b;
+  --gold-soft:#3a2f0c; --gold-text:#f2c94c; --ok-soft:#12301f; --bad-soft:#3a1714; --warn-soft:#3a2a0c; --warn:#f0b25a; --info:#7da6f0; --bad:#ff8a7e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c1117; --card:#131a22; --surface:#1a222c; --line:#222b36; --line-strong:#2e3946;
+  --text:#eef1f5; --text2:#b4bcc8; --muted:#9aa3b1; --ink:#e8edf3; --ink-soft:#1d2b3b;
+  --gold-soft:#3a2f0c; --gold-text:#f2c94c; --ok-soft:#12301f; --bad-soft:#3a1714; --warn-soft:#3a2a0c; --warn:#f0b25a; --info:#7da6f0; --bad:#ff8a7e; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--font);margin:0;padding-inline:16px;padding-block:24px}
+.wrap{max-width:1320px;margin:0 auto;display:grid;gap:22px}
+h1{font-size:26px;font-weight:700;margin:0}
+.note{font-size:12.5px;color:var(--muted);margin:4px 0 0;line-height:1.5;max-width:90ch}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 372px;gap:32px;align-items:start}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 1px 2px rgba(11,34,56,.05)}
+.hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px 4px}
+.hd h2{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:0}
+.hd a{font-size:12.5px;font-weight:600;color:var(--info);text-decoration:none}
+.ct{display:inline-grid;place-items:center;min-width:20px;height:20px;border-radius:99px;background:#c4372c;color:#fff;font-size:11px;font-weight:700;padding:0 6px;margin-left:8px}
+.list{padding:4px 20px 8px}
+.li{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.li:first-child{border-top:0}
+.dot{width:9px;height:9px;border-radius:50%;flex:none}
+.d-bad{background:var(--bad)}.d-warn{background:#e08a00}.d-info{background:var(--info)}
+.li .n{font-size:13.5px;font-weight:600;margin:0}
+.li .s{font-size:12.5px;color:var(--muted);margin:1px 0 0}
+.li .go{margin-left:auto;color:var(--muted);font-size:18px}
+.badge{display:inline-block;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:99px;white-space:nowrap}
+.b-ok{background:var(--ok-soft);color:var(--ok)}.b-warn{background:var(--warn-soft);color:var(--warn)}.b-bad{background:var(--bad-soft);color:var(--bad)}.b-n{background:var(--surface);color:var(--text2)}
+.cols{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:20px;align-items:start}
+.col{display:grid;gap:20px}
+.day{font-size:12px;font-weight:600;color:var(--muted);padding:12px 20px 2px}
+.day b{color:var(--text)}
+.fl{display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 20px;border-top:1px solid var(--line)}
+.fl .t{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+.fl .n{font-size:13.5px;font-weight:600;margin:0}
+.fl .s{font-size:12.5px;color:var(--muted);margin:1px 0 0}
+.wx{padding:6px 20px 18px;display:grid;gap:14px}
+.wx .big{font-size:30px;font-weight:600;letter-spacing:-.03em}
+.wx .row{display:flex;gap:22px;flex-wrap:wrap}
+.wx .k{font-size:11.5px;color:var(--muted);margin:0}.wx .v{font-size:14px;font-weight:600;margin:1px 0 0}
+.raw{font:12px ui-monospace,Consolas,monospace;color:var(--text2);background:var(--surface);border-radius:10px;padding:10px 12px;line-height:1.5;word-break:break-all}
+.flag{border:1px dashed var(--gold-text);background:var(--gold-soft);color:var(--gold-text);border-radius:12px;padding:12px 14px;font-size:12.5px;line-height:1.5}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.top h3{margin:0;font-size:26px;font-weight:600;letter-spacing:-.03em}
+.top p{margin:2px 0 0;font-size:13px;color:var(--muted)}
+.phone{width:372px;border:1px solid var(--line-strong);border-radius:34px;background:var(--bg);overflow:hidden}
+.phone .in{padding:22px 16px 28px;display:grid;gap:16px}
+.phone .top h3{font-size:22px}
+.phone .hd{padding:14px 16px 2px}.phone .list{padding:2px 16px 6px}.phone .day{padding:10px 16px 2px}.phone .fl{padding:10px 16px;grid-template-columns:48px minmax(0,1fr) auto}.phone .wx{padding:6px 16px 16px}
+.mini{display:flex;gap:10px}
+.mini .card{flex:1;padding:12px 14px}
+.mini .k{font-size:11.5px;color:var(--muted);margin:0}.mini .v{font-size:24px;font-weight:600;letter-spacing:-.03em;margin:2px 0 0}
+@media(max-width:1000px){.stage{grid-template-columns:1fr}.cols{grid-template-columns:1fr}.phone{margin:0 auto;max-width:100%}}
+</style>
+
+<div class="wrap">
+  <div>
+    <h1>Dashboard</h1>
+    <p class="note">Maquette : bureau (deux colonnes, largeur plafonnée à 1320 px comme l'espace pilote) et téléphone (une colonne, le plus urgent en premier). Données d'exemple.</p>
+  </div>
+
+  <div class="flag"><b>Ce qui change.</b> « À traiter » ne compte plus les anciens statuts (demandes sous 72 h, vols sur mesure, vouchers qui expirent) : il reprend les <b>signaux</b> de la page Réservations (mêmes seuils que dans Paramètres) plus les contacts non lus et les retours pilotes à traiter. Le calendrier géant est remplacé par <b>« Les 7 prochains jours »</b>, une liste de vols avec le pilote ; le calendrier reste dans Réservations. Les vouchers qui expirent disparaissent (vente arrêtée).</div>
+
+  <div class="stage">
+    <!-- BUREAU -->
+    <div style="display:grid;gap:20px">
+      <div class="top"><div><h3>Bonjour, Romain</h3><p>Jeudi 1 octobre</p></div></div>
+      <div class="cols">
+        <div class="col">
+          <section class="card">
+            <div class="hd"><h2>À traiter<span class="ct">5</span></h2><a href="#">Ouvrir les réservations</a></div>
+            <div class="list">
+              <div class="li"><i class="dot d-bad"></i><div><p class="n">Demande sans réponse depuis 2 j</p><p class="s">Léa Martin · sam. 4 oct. · Pilote : Thomas V.</p></div><span class="go">›</span></div>
+              <div class="li"><i class="dot d-bad"></i><div><p class="n">Paiement attendu depuis 5 j</p><p class="s">Jean Peeters · dim. 5 oct. · Pilote : Sarah L.</p></div><span class="go">›</span></div>
+              <div class="li"><i class="dot d-warn"></i><div><p class="n">Non marqué effectué depuis 30 h</p><p class="s">Amina Laurent · mar. 29 sept. · Pilote : Romain</p></div><span class="go">›</span></div>
+              <div class="li"><i class="dot d-info"></i><div><p class="n">2 messages non lus</p><p class="s">Contacts</p></div><span class="go">›</span></div>
+              <div class="li"><i class="dot d-info"></i><div><p class="n">1 retour pilote à traiter</p><p class="s">Sarah L. · bug sur la page disponibilités</p></div><span class="go">›</span></div>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="hd"><h2>Les 7 prochains jours</h2><a href="#">Calendrier</a></div>
+            <div class="day"><b>Demain</b> · ven. 2 octobre</div>
+            <div class="fl"><span class="t">10:00</span><div><p class="n">Sophie Dubois · 60 min</p><p class="s">Pilote : Romain · 2 passagers</p></div><span class="badge b-ok">Confirmé</span></div>
+            <div class="fl"><span class="t">15:30</span><div><p class="n">Thomas Bertrand · 90 min</p><p class="s">Pilote : Sarah L. · 1 passager</p></div><span class="badge b-warn">Paiement attendu</span></div>
+            <div class="day"><b>Samedi</b> · 4 octobre</div>
+            <div class="fl"><span class="t">—</span><div><p class="n">Léa Martin · 60 min</p><p class="s">Pilote : Thomas V. · heure à confirmer</p></div><span class="badge b-bad">Sans réponse</span></div>
+            <div class="day"><b>Dimanche</b> · 5 octobre</div>
+            <div class="fl"><span class="t">09:30</span><div><p class="n">Jean Peeters · 120 min</p><p class="s">Pilote : Sarah L. · 3 passagers</p></div><span class="badge b-bad">Paiement en retard</span></div>
+          </section>
+        </div>
+
+        <div class="col">
+          <section class="card">
+            <div class="hd"><h2>Météo · EBCI</h2><a href="#">Détail</a></div>
+            <div class="wx">
+              <div class="row"><div><p class="k">Vent</p><p class="big">240° / 8 kt</p></div></div>
+              <div class="row"><div><p class="k">Visibilité</p><p class="v">9 km</p></div><div><p class="k">Nuages</p><p class="v">FEW 3500 ft</p></div><div><p class="k">Température</p><p class="v">14 °C</p></div><div><p class="k">QNH</p><p class="v">1016 hPa</p></div></div>
+              <p class="raw">EBCI 011050Z 24008KT 9999 FEW035 14/09 Q1016</p>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="hd"><h2>Dernières demandes</h2><a href="#">Voir tout</a></div>
+            <div class="list">
+              <div class="li"><div><p class="n">Léa Martin</p><p class="s">sam. 4 oct. · il y a 2 j</p></div><span class="badge b-bad" style="margin-left:auto">Sans réponse</span></div>
+              <div class="li"><div><p class="n">Thomas Bertrand</p><p class="s">ven. 2 oct. · il y a 3 j</p></div><span class="badge b-warn" style="margin-left:auto">À payer</span></div>
+              <div class="li"><div><p class="n">Sophie Dubois</p><p class="s">ven. 2 oct. · il y a 6 j</p></div><span class="badge b-ok" style="margin-left:auto">Confirmé</span></div>
+              <div class="li"><div><p class="n">Jean Peeters</p><p class="s">dim. 5 oct. · il y a 8 j</p></div><span class="badge b-warn" style="margin-left:auto">À payer</span></div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- TELEPHONE -->
+    <div class="phone"><div class="in">
+      <div class="top"><div><h3>Bonjour, Romain</h3><p>Jeudi 1 octobre</p></div></div>
+      <section class="card">
+        <div class="hd"><h2>À traiter<span class="ct">5</span></h2></div>
+        <div class="list">
+          <div class="li"><i class="dot d-bad"></i><div><p class="n">Demande sans réponse depuis 2 j</p><p class="s">Léa Martin · sam. 4 oct.</p></div><span class="go">›</span></div>
+          <div class="li"><i class="dot d-bad"></i><div><p class="n">Paiement attendu depuis 5 j</p><p class="s">Jean Peeters · dim. 5 oct.</p></div><span class="go">›</span></div>
+          <div class="li"><i class="dot d-warn"></i><div><p class="n">Non marqué effectué depuis 30 h</p><p class="s">Amina Laurent · mar. 29 sept.</p></div><span class="go">›</span></div>
+          <div class="li"><i class="dot d-info"></i><div><p class="n">2 messages non lus</p><p class="s">Contacts</p></div><span class="go">›</span></div>
+        </div>
+      </section>
+      <section class="card">
+        <div class="hd"><h2>Les 7 prochains jours</h2></div>
+        <div class="day"><b>Demain</b> · ven. 2 octobre</div>
+        <div class="fl"><span class="t">10:00</span><div><p class="n">Sophie Dubois</p><p class="s">Romain · 60 min</p></div><span class="badge b-ok">Confirmé</span></div>
+        <div class="fl"><span class="t">15:30</span><div><p class="n">Thomas Bertrand</p><p class="s">Sarah L. · 90 min</p></div><span class="badge b-warn">À payer</span></div>
+        <div class="day"><b>Samedi</b> · 4 octobre</div>
+        <div class="fl"><span class="t">—</span><div><p class="n">Léa Martin</p><p class="s">Thomas V. · 60 min</p></div><span class="badge b-bad">Sans réponse</span></div>
+      </section>
+      <section class="card">
+        <div class="hd"><h2>Météo · EBCI</h2></div>
+        <div class="wx"><p class="big">240° / 8 kt</p><div class="row"><div><p class="k">Visibilité</p><p class="v">9 km</p></div><div><p class="k">Nuages</p><p class="v">FEW 3500</p></div><div><p class="k">Temp.</p><p class="v">14 °C</p></div></div></div>
+      </section>
+    </div></div>
+  </div>
+</div>
