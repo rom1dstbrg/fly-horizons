@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maquette Fiche pilote</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<!--
+  Maquette /nos-pilotes/[id] (01/10). Fiche publique d'un pilote, atteinte par « Voir le profil » (fiche d'un vol, page de paiement,
+  email « Votre pilote »). Aujourd'hui : colonne de 880 px centrée, photo carrée + nom, bio, une phrase de bas de page. Aucune info de contact.
+  Données disponibles : nom, photo, bio, documents vérifiés (licence, certificat, charte), vols publiés (cartes AnnonceCard).
+  Principes (comme les autres pages) : pas de boîtes sauf les cartes de vols, ordinateur = on utilise la largeur, HTML dans l'ordre téléphone.
+  A « Portrait » : grande photo à gauche (5/12) | nom, ligne « vérifié » et bio à droite (7/12) ; puis « Ses vols » pleine largeur.
+  B « Texte d'abord » : nom pleine largeur avec petite photo ronde ; bio en grand (7/12) | « Ce que nous vérifions » (5/12, filet vertical) ; puis « Ses vols ».
+  États à regarder : sans photo (initiales), sans bio (texte neutre, sans « il/elle »), aucun vol publié.
+-->
+<style>
+:root{--navy:#0b2238;--gold:#F2B705;--gold-h:#e6a800;--bg:#f5f5f7;--sec:#edf0f7;--fg:#1e2535;--muted:#64748b;--border:#e0e5ef;--sh:0 2px 14px rgba(11,34,56,.07);--sh-gold:0 6px 24px rgba(242,183,5,.35)}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Poppins,system-ui,sans-serif;background:#dfe3ea;color:var(--fg);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+[data-lucide]{width:16px;height:16px;stroke-width:2}
+.tool{position:sticky;top:0;z-index:2000;background:#fff;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:10px 16px;font-size:12px}
+.tool b{font-weight:800;font-size:13px}
+.tool .lbl{color:var(--muted);font-weight:600}
+.seg{display:inline-flex;background:var(--sec);border-radius:9px;padding:3px}
+.seg button{border:0;background:transparent;padding:6px 11px;border-radius:7px;font-size:12px;font-weight:600;color:var(--muted)}
+.seg button.on{background:#fff;color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.stage.phone{padding:28px 0 48px;display:flex;justify-content:center}
+.frame{container-type:inline-size;background:#fff;position:relative;min-height:100vh;display:flex;flex-direction:column}
+.frame .main{flex:1}
+.stage.phone .frame{width:390px;height:844px;min-height:0;overflow-y:auto;border-radius:46px;border:11px solid #0f1115;box-shadow:0 30px 80px rgba(0,0,0,.25);scrollbar-width:none}
+.stage.phone .frame::-webkit-scrollbar{display:none}
+.wrap{max-width:1400px;margin:0 auto;padding:0 16px}
+.hdr{position:sticky;top:0;z-index:500;padding:8px 12px 0}
+.pill{max-width:1400px;margin:0 auto;background:#fff;border:1px solid var(--border);border-radius:16px;height:64px;display:flex;align-items:center;padding:0 16px;box-shadow:var(--sh)}
+.pill .logo{height:32px}
+.pill .fill{flex:1}
+.nav{display:none;align-items:center;gap:4px;margin-right:8px}
+.nav a{padding:8px 12px;font-size:14px;font-weight:500;color:var(--muted);border-radius:8px}
+.vsep{display:none;width:1px;height:20px;background:var(--border);margin:0 4px}
+.login{display:none;align-items:center;gap:6px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--fg);border:1px solid var(--border);background:var(--sec);border-radius:8px}
+.login [data-lucide]{width:13px;height:13px}
+.burger{border:0;background:transparent;padding:8px;color:var(--muted)}
+.burger [data-lucide]{width:20px;height:20px}
+.foot{background:var(--navy);color:rgba(255,255,255,.45);padding:40px 0;font-size:13px}
+.foot img{height:28px;margin-bottom:12px}
+
+/* Commun */
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin:0 0 12px}
+h1{font-size:34px;font-weight:900;line-height:1.05;letter-spacing:-.02em;margin:0}
+h2{font-size:26px;font-weight:900;line-height:1.1;letter-spacing:-.01em;margin:0}
+.pg{padding-top:24px;padding-bottom:56px}
+.ph{margin-top:22px;width:100%;aspect-ratio:4/3;border-radius:10px;overflow:hidden;background:var(--sec);display:grid;place-items:center}
+.ph img{width:100%;height:100%;object-fit:cover;object-position:50% 20%;display:block}
+.ph .ini{font-size:56px;font-weight:900;color:rgba(11,34,56,.25)}
+.nophoto .ph img{display:none}
+.ph .ini{display:none}
+.nophoto .ph .ini{display:block}
+.ver{display:flex;align-items:center;gap:8px;margin:18px 0 0;font-size:14px;font-weight:600;color:var(--fg)}
+.ver [data-lucide]{width:18px;height:18px;color:var(--navy)}
+.bio{margin-top:18px}
+.bio p{font-size:16px;line-height:1.75;color:rgba(30,37,53,.78);margin:0 0 14px;max-width:600px}
+.bio .alt{display:none}
+.nobio .bio .real{display:none}
+.nobio .bio .alt{display:block}
+.link{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:var(--navy);text-decoration:underline;text-underline-offset:4px;text-decoration-color:rgba(11,34,56,.25);margin-top:6px}
+.link:hover{text-decoration-color:var(--gold)}
+.link [data-lucide]{width:14px;height:14px}
+.vols{padding:40px 0 56px;border-top:1px solid var(--border)}
+.cards{display:grid;grid-template-columns:1fr;gap:12px;margin:24px 0 0}
+.card{display:block;position:relative;border-radius:10px;overflow:hidden;aspect-ratio:4/3;background:var(--navy)}
+.card img{width:100%;height:100%;object-fit:cover}
+.card::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.9),rgba(0,0,0,.15) 55%,transparent)}
+.card .dur{position:absolute;top:12px;left:12px;z-index:2;background:rgba(255,255,255,.18);backdrop-filter:blur(6px);color:#fff;font-size:12px;font-weight:700;padding:5px 10px;border-radius:999px}
+.card .in{position:absolute;inset:auto 0 0 0;padding:18px;z-index:2;color:#fff}
+.card .ct{font-size:19px;font-weight:700;line-height:1.2;margin:0 0 4px}
+.card .cp{font-size:12px;color:rgba(255,255,255,.7);margin:0 0 12px}
+.card .row{display:flex;justify-content:space-between;align-items:center}
+.card .pr{font-size:22px;font-weight:900}
+.card .pr small{font-size:12px;font-weight:500;color:rgba(255,255,255,.7)}
+.card .go{font-size:12px;font-weight:600;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);border-radius:8px;padding:6px 10px;display:inline-flex;gap:5px;align-items:center}
+.card .go [data-lucide]{width:12px;height:12px}
+.none{display:none;margin-top:16px}
+.none p{font-size:15px;line-height:1.7;color:rgba(30,37,53,.72);margin:0 0 6px;max-width:460px}
+.novols .cards{display:none}
+.novols .none{display:block}
+.note{padding:28px 0 8px;border-top:1px solid var(--border)}
+.note p{font-size:14px;line-height:1.7;color:var(--muted);margin:0 0 8px;max-width:560px}
+.checks{list-style:none;margin:0;padding:0}
+.checks li{display:flex;gap:10px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border);font-size:15px;line-height:1.5}
+.checks li:first-child{border-top:1px solid var(--border)}
+.checks [data-lucide]{width:18px;height:18px;flex:none;margin-top:2px;color:var(--navy)}
+.k{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+
+/* variantes : un seul DOM, l'ordre est celui du téléphone */
+.v{display:none}
+.frame.A .vA,.frame.B .vB{display:block}
+.vB .hd{display:flex;align-items:center;gap:16px}
+.vB .hd .rp{width:72px;height:72px;border-radius:50%;overflow:hidden;background:var(--sec);flex:none;display:grid;place-items:center}
+.vB .hd .rp img{width:100%;height:100%;object-fit:cover;object-position:50% 20%}
+.vB .hd .rp .ini{display:none;font-size:22px;font-weight:900;color:rgba(11,34,56,.3)}
+.nophoto .vB .hd .rp img{display:none}
+.nophoto .vB .hd .rp .ini{display:block}
+.vB .bio{margin-top:26px}
+.vB .side{margin-top:28px}
+.vB .side .link{margin-top:16px}
+
+@container (min-width: 640px){
+  .cards{grid-template-columns:repeat(2,1fr);gap:16px}
+  .card{aspect-ratio:3/4}
+}
+@container (min-width: 900px){
+  .wrap{padding:0 40px}
+  .hdr{padding:14px 16px 0}
+  .pill{height:60px;padding:0 24px}
+  .nav,.login{display:flex}
+  .vsep{display:block}
+  .burger{display:none}
+  h1{font-size:52px;line-height:1.03}
+  .pg{padding-top:38px;padding-bottom:80px}
+  .cards{grid-template-columns:repeat(3,1fr);margin-top:32px}
+  .vols{padding:56px 0 72px}
+
+  /* A : photo 5/12 | texte 7/12 (placement en grille, pas d'order) */
+  .vA .pg{display:grid;grid-template-columns:5fr 7fr;column-gap:88px;align-items:start}
+  .vA .ph{margin-top:0;grid-column:1;grid-row:1 / span 2;aspect-ratio:4/5}
+  .vA .head{grid-column:2;grid-row:1;padding-top:6px;align-self:end}
+  .vA .txt{grid-column:2;grid-row:2}
+  .vA .bio p{font-size:17px}
+
+  /* B : titre + petite photo | bio 7/12 + vérifications 5/12 */
+  .vB .hd .rp{width:96px;height:96px}
+  .vB .grid{display:grid;grid-template-columns:7fr 5fr;column-gap:0;margin-top:8px}
+  .vB .bio{margin-top:34px;padding-right:88px}
+  .vB .bio p{font-size:19px;line-height:1.75;max-width:640px}
+  .vB .side{margin-top:34px;border-left:1px solid var(--border);padding-left:72px}
+}
+</style>
+</head>
+<body>
+<div class="tool">
+  <b>Maquette · Fiche pilote</b>
+  <div class="seg" id="vw"><button data-v="desk" class="on">Ordinateur</button><button data-v="phone">Téléphone</button></div>
+  <span class="lbl">Structure</span>
+  <div class="seg" id="var"><button data-x="A" class="on">A · Portrait</button><button data-x="B">B · Texte d'abord</button></div>
+  <span class="lbl">États</span>
+  <div class="seg" id="s1"><button data-c="nophoto" class="">Sans photo</button></div>
+  <div class="seg" id="s2"><button data-c="nobio" class="">Sans bio</button></div>
+  <div class="seg" id="s3"><button data-c="novols" class="">Aucun vol</button></div>
+</div>
+
+<div class="stage" id="stage">
+<div class="frame A" id="frame">
+  <header class="hdr"><div class="pill">
+    <img class="logo" src="public/fly-horizons-logo-navy.svg" alt="Fly Horizons"><span class="fill"></span>
+    <nav class="nav"><a href="#">Les vols</a><a href="#">Galerie</a><a href="#">À propos</a><a href="#">FAQ</a><a href="#">Contact</a></nav>
+    <span class="vsep"></span><a class="login" href="#"><i data-lucide="user"></i>Connexion</a>
+    <button class="burger" aria-label="Menu"><i data-lucide="menu"></i></button>
+  </div></header>
+
+  <div class="main">
+  <!-- ══ A · Portrait ══ -->
+  <main class="v vA"><div class="wrap pg">
+    <div class="head"><p class="eyebrow">Pilote Fly Horizons</p><h1>Romain Destanberg</h1></div>
+    <div class="ph"><img src="public/photo-pilote.jpg" alt=""><span class="ini">RD</span></div>
+    <div class="txt">
+      <p class="ver"><i data-lucide="shield-check"></i>Licence et certificat médical vérifiés par Fly Horizons</p>
+      <div class="bio">
+        <div class="real">
+          <p>Pilote privé depuis plusieurs années, je vole au départ de Charleroi et j'aime faire découvrir la région vue du ciel : les lacs de l'Eau d'Heure, la vallée de la Meuse, Charleroi d'en haut.</p>
+          <p>Je partage les frais de mes vols avec des passagers curieux. On se retrouve à l'aérodrome, je vous explique tout, et on décolle.</p>
+        </div>
+        <p class="alt">Romain Destanberg est pilote privé et publie ses vols sur Fly Horizons. Retrouvez-les ci-dessous.</p>
+      </div>
+      <a class="link" href="#vols">Voir ses vols <i data-lucide="arrow-down"></i></a>
+    </div>
+  </div></main>
+
+  <!-- ══ B · Texte d'abord ══ -->
+  <main class="v vB"><div class="wrap pg">
+    <p class="eyebrow">Pilote Fly Horizons</p>
+    <div class="hd"><span class="rp"><img src="public/photo-pilote.jpg" alt=""><span class="ini">RD</span></span><h1>Romain Destanberg</h1></div>
+    <div class="grid">
+      <div class="bio">
+        <div class="real">
+          <p>Pilote privé depuis plusieurs années, je vole au départ de Charleroi et j'aime faire découvrir la région vue du ciel : les lacs de l'Eau d'Heure, la vallée de la Meuse, Charleroi d'en haut.</p>
+          <p>Je partage les frais de mes vols avec des passagers curieux. On se retrouve à l'aérodrome, je vous explique tout, et on décolle.</p>
+        </div>
+        <p class="alt">Romain Destanberg est pilote privé et publie ses vols sur Fly Horizons. Retrouvez-les ci-dessous.</p>
+      </div>
+      <div class="side">
+        <p class="k">Ce que nous vérifions</p>
+        <ul class="checks">
+          <li><i data-lucide="shield-check"></i>Licence de pilote vérifiée</li>
+          <li><i data-lucide="heart-pulse"></i>Certificat médical vérifié</li>
+          <li><i data-lucide="file-check"></i>Charte des pilotes acceptée</li>
+        </ul>
+        <a class="link" href="#vols">Voir ses vols <i data-lucide="arrow-down"></i></a>
+      </div>
+    </div>
+  </div></main>
+
+  <!-- Commun : ses vols + mention -->
+  <section class="vols" id="vols"><div class="wrap">
+    <p class="eyebrow">Disponibles</p>
+    <h2>Les vols de Romain</h2>
+    <div class="cards">
+      <a class="card" href="#"><img src="public/gallery/6.png" alt=""><span class="dur">30 min</span>
+        <div class="in"><p class="ct">Charleroi vu d'en haut</p><p class="cp">Avec Romain D.</p><div class="row"><span class="pr">145 € <small>/ avion</small></span><span class="go">Voir <i data-lucide="arrow-right"></i></span></div></div></a>
+      <a class="card" href="#"><img src="public/gallery/7.png" alt=""><span class="dur">1 h 30</span>
+        <div class="in"><p class="ct">La vallée de la Meuse</p><p class="cp">Avec Romain D.</p><div class="row"><span class="pr">119 € <small>/ pers.</small></span><span class="go">Voir <i data-lucide="arrow-right"></i></span></div></div></a>
+      <a class="card" href="#"><img src="public/gallery/8.png" alt=""><span class="dur">45 min</span>
+        <div class="in"><p class="ct">Vol découverte</p><p class="cp">Avec Romain D.</p><div class="row"><span class="pr">69 € <small>/ pers.</small></span><span class="go">Voir <i data-lucide="arrow-right"></i></span></div></div></a>
+    </div>
+    <div class="none">
+      <p>Romain n'a pas de vol publié en ce moment.</p>
+      <a class="link" href="#">Voir tous les vols disponibles <i data-lucide="arrow-right"></i></a>
+    </div>
+  </div></section>
+
+  <div class="wrap"><div class="note">
+    <p>Fly Horizons met en relation des passagers et des pilotes pour des vols en partage de frais. Chaque pilote est seul responsable de son vol.</p>
+    <a class="link" href="#">En savoir plus sur Fly Horizons <i data-lucide="arrow-right"></i></a>
+  </div></div>
+  <div style="height:56px"></div>
+  </div>
+
+  <footer class="foot"><div class="wrap"><img src="public/fly-horizons-logo-white.svg" alt="Fly Horizons"><div>Footer actuel, inchangé.</div></div></footer>
+</div>
+</div>
+
+<script>
+const frame = document.getElementById('frame');
+lucide.createIcons();
+function seg(id, fn){ const el = document.getElementById(id); el.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; fn(b, el); }); }
+seg('vw', (b, el) => { el.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); document.getElementById('stage').classList.toggle('phone', b.dataset.v === 'phone'); });
+seg('var', (b, el) => { el.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); frame.classList.remove('A','B'); frame.classList.add(b.dataset.x); });
+['s1','s2','s3'].forEach(id => seg(id, (b) => { const on = !b.classList.contains('on'); b.classList.toggle('on', on); frame.classList.toggle(b.dataset.c, on); }));
+</script>
+</body>
+</html>
