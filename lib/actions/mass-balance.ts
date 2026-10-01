@@ -84,7 +84,7 @@ export async function saveMassBalanceSheet(payload: SaveSheetPayload) {
       .single();
 
     if (error) return { error: error.message };
-    revalidatePath("/admin/mass-balance");
+    revalidatePath("/pilote/mass-balance");
     return { success: true, id: data.id as string };
   } catch {
     return { error: "Erreur serveur" };
@@ -117,7 +117,7 @@ export async function updateMassBalanceSheet(id: string, payload: SaveSheetPaylo
       .eq("id", id);
 
     if (error) return { error: error.message };
-    revalidatePath("/admin/mass-balance");
+    revalidatePath("/pilote/mass-balance");
     return { success: true, id };
   } catch {
     return { error: "Erreur serveur" };
@@ -130,7 +130,7 @@ export async function deleteMassBalanceSheet(id: string) {
     const db = createAdminClient();
     const { error } = await db.from("mass_balance_sheets").delete().eq("id", id);
     if (error) return { error: error.message };
-    revalidatePath("/admin/mass-balance");
+    revalidatePath("/pilote/mass-balance");
     return { success: true };
   } catch {
     return { error: "Erreur serveur" };

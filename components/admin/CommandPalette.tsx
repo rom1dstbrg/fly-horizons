@@ -7,7 +7,7 @@ import {
   CalendarDays,
   Users, MessageSquare, Settings, ArrowRight, User,
   X, Loader2,
-  Navigation, UserCog, Star, Mails, Bot, BarChart2, Images, Mail, Receipt, LayoutGrid, Flag,
+  UserCog, Star, Mails, Bot, BarChart2, Images, Mail, Receipt, LayoutGrid, Flag,
 } from "lucide-react";
 
 interface SearchResult {
@@ -19,7 +19,6 @@ interface SearchResult {
 const QUICK_LINKS = [
   { href: "/admin/vols",                       label: "Réservations",         icon: CalendarCheck,   group: "Navigation" },
   { href: "/admin/vols?tab=disponibilites",    label: "Disponibilités",       icon: CalendarDays,    group: "Navigation" },
-  { href: "/pilote/itineraires",                label: "Itinéraires",          icon: Navigation,      group: "Navigation" },
   { href: "/admin/clients",                    label: "Clients",              icon: Users,           group: "Navigation" },
   { href: "/admin/contacts",                   label: "Messages",             icon: MessageSquare,   group: "Navigation" },
   { href: "/admin/retours",                    label: "Retours pilotes",      icon: Flag,            group: "Navigation" },

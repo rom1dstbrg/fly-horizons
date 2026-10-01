@@ -31,6 +31,8 @@ export interface SignalInput {
   pilote_paye?: boolean | null;
   paiement_demande_at?: string | null;
   client_paiement_declare_at?: string | null;
+  reschedule_token?: string | null;
+  slot_proposal_token?: string | null;
 }
 
 const H = 3600_000;
@@ -81,15 +83,19 @@ export function getSignals(r: SignalInput, now: number = Date.now()): Signal[] {
     if (l) out.push({ kind: "paiement_attente", level: l, label: `Paiement attendu depuis ${depuis(ms)}` });
   }
 
+  // Report ou créneau proposé en cours : la date en base est périmée, le client
+  // doit encore en choisir une. Ni « non clôturé » ni « sans heure » n'ont de sens.
+  const dateAReprendre = !!(r.reschedule_token || r.slot_proposal_token);
+
   // 4. Vol passé jamais clôturé (valeurs par défaut : orange à 24 h, rouge à 72 h)
-  if (!TERMINE.includes(r.statut) && !DEMANDE.includes(r.statut) && r.statut !== "payment_pending") {
+  if (!dateAReprendre && !TERMINE.includes(r.statut) && !DEMANDE.includes(r.statut) && r.statut !== "payment_pending") {
     const ms = now - brusselsTimestamp(r.date_vol, r.heure_vol);
     const l = niveau(ms, 24 * H, 72 * H);
     if (l) out.push({ kind: "non_cloture", level: l, label: `Non marqué effectué depuis ${depuis(ms)}` });
   }
 
   // 5. Vol dans moins de 48 h sans heure (rouge le jour même)
-  if (!r.heure_vol && !TERMINE.includes(r.statut)) {
+  if (!dateAReprendre && !r.heure_vol && !TERMINE.includes(r.statut)) {
     const jours = (brusselsTimestamp(r.date_vol, "00:00") - now) / D;
     if (jours < 2 && jours > -1) {
       out.push({ kind: "sans_heure", level: jours < 1 ? "bad" : "warn", label: jours < 1 ? "Vol aujourd'hui sans heure" : "Vol demain sans heure" });

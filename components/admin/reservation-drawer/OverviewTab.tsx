@@ -284,7 +284,7 @@ export function OverviewTab({
   });
   const showCash = isAdmin && !piloteEncaisse && !["vol_effectue", "annulee"].includes(st) && r.acompte != null && (r.paye ?? 0) < r.acompte;
   const terminal = st === "vol_effectue" || st === "annulee";
-  const mbHref = isAdmin ? `/admin/mass-balance?resa=${r.id}` : `/pilote/mass-balance?resa=${r.id}`;
+  const mbHref = `/pilote/mass-balance?resa=${r.id}`;
 
   return (
     <div className="space-y-4">

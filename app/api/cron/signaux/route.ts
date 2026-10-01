@@ -37,7 +37,7 @@ async function run(request: NextRequest) {
   const { data: resas } = await db
     .from("reservations")
     .select(
-      "id, statut, type_resa, date_vol, heure_vol, created_at, pilote_id, pilote_assigned_at, pilote_paye, paiement_demande_at, client_paiement_declare_at, clients(prenom, nom), pilotes(nom, user_id)",
+      "id, statut, type_resa, date_vol, heure_vol, created_at, pilote_id, pilote_assigned_at, pilote_paye, paiement_demande_at, client_paiement_declare_at, reschedule_token, slot_proposal_token, clients(prenom, nom), pilotes(nom, user_id)",
     )
     .not("statut", "in", "(annulee,vol_effectue)")
     .gte("date_vol", since);

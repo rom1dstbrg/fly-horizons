@@ -7,9 +7,9 @@ import { useState, useEffect, Suspense } from "react";
 import {
   LayoutDashboard, Users, MessageSquare, Settings, LogOut,
   Menu, X, ExternalLink, Search,
-  CalendarCheck, Clock, Navigation,
+  CalendarCheck, Clock,
   Receipt,
-  LayoutGrid, Scale, UserCog, ArrowLeftRight, Flag,
+  LayoutGrid, UserCog, ArrowLeftRight, Flag,
 } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 
@@ -64,8 +64,6 @@ const NAVIGATION: NavEntry[] = [
   { type: "section", label: "Vols" },
   { type: "link", id: "reservations",   icon: CalendarCheck, label: "Réservations",   href: "/admin/vols",                    tab: "reservations",   tabBase: "/admin/vols" },
   { type: "link", id: "disponibilites", icon: Clock,         label: "Disponibilités", href: "/admin/vols?tab=disponibilites", tab: "disponibilites", tabBase: "/admin/vols" },
-  { type: "link", id: "itineraires",    icon: Navigation,    label: "Itinéraires",    href: "/pilote/itineraires" },
-  { type: "link", id: "masse-centrage", icon: Scale,         label: "Masse & centrage", href: "/admin/mass-balance" },
 
   { type: "section", label: "CRM" },
   { type: "link", id: "clients",  icon: Users,         label: "Clients",  href: "/admin/clients"  },

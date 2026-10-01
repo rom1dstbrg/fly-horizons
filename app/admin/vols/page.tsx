@@ -1,13 +1,13 @@
 import { Suspense } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { VolsHub } from "@/components/admin/VolsHub";
-import { PageHeader } from "@/components/admin/PageHeader";
+import { PageHeader } from "@/components/pilote/studio";
 import { addDaysIso } from "@/lib/pilote-creneaux";
 
 // Disponibilités des pilotes : semaine en cours + 11 suivantes.
 const DISPO_WEEKS = 12;
 
-export const metadata = { title: "Activité Vols — Admin" };
+export const metadata = { title: "Vols — Admin" };
 
 export default async function VolsPage() {
   const db = createAdminClient();
@@ -19,15 +19,11 @@ export default async function VolsPage() {
 
   const [
     { data: rawStd },
-    { data: plages },
-    { data: joursIndiv },
     { data: pilotes },
     { data: creneaux },
     { data: resasPilotes },
   ] = await Promise.all([
     db.from("reservations").select("*, clients(*), pilotes(nom), route_proposals(status, created_at), products(route_waypoints)").neq("type_resa", "perso").order("date_vol", { ascending: true }),
-    db.from("disponibilites").select("*").order("date_debut", { ascending: true }),
-    db.from("disponibilites_jours").select("*").order("date", { ascending: true }),
     db.from("pilotes").select("id, nom, photo_url").eq("statut", "actif").order("nom", { ascending: true }),
     db.from("pilote_creneaux").select("pilote_id, date, heure").gte("date", monday).lte("date", dispoEnd),
     db.from("reservations").select("pilote_id, date_vol, heure_vol, duree, clients(prenom)")
@@ -44,18 +40,12 @@ export default async function VolsPage() {
   const resaStd   = rawStd   ?? [];
 
   return (
-    <div className="space-y-5">
-      <PageHeader
-        domain="vols"
-        title="Activité Vols"
-        subtitle="Pipeline, calendrier et gestion de toutes les réservations"
-      />
+    <div className="pilote-studio space-y-5 font-sans text-st-text">
+      <PageHeader title="Vols" />
 
       <Suspense fallback={null}>
         <VolsHub
           resaStd={resaStd as never}
-          plages={plages ?? []}
-          joursIndiv={joursIndiv ?? []}
           dispo={{ monday, today, weeks: DISPO_WEEKS, pilotes: pilotes ?? [], ouverts, reservations: dispoResas }}
         />
       </Suspense>

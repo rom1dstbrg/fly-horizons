@@ -272,7 +272,7 @@ export function AdminVolsClient({ reservations: initial }: { reservations: Reser
                           title="Masse & centrage (poids préremplis)"
                           onClick={(e) => {
                             e.stopPropagation();
-                            router.push(`/admin/mass-balance?resa=${r.id}`);
+                            router.push(`/pilote/mass-balance?resa=${r.id}`);
                           }}
                         >
                           <Scale />
