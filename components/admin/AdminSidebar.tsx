@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Users, MessageSquare, Settings, LogOut,
   Menu, X, ExternalLink, Search,
   CalendarCheck, Clock, Navigation,
-  Package, Receipt,
+  Receipt,
   LayoutGrid, Scale, UserCog, ArrowLeftRight, Flag,
 } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
@@ -55,10 +55,9 @@ function usePendingCounts(): PendingCounts {
 
 const DEFAULT_TABS: Record<string, string> = {
   "/admin/vols":     "reservations",
-  "/admin/boutique": "produits",
 };
 
-// Pages peu utilisées (dashboard, sur mesure, vouchers, coupons, satisfaction,
+// Pages peu utilisées (dashboard, satisfaction,
 // newsletter, assistant, analytiques, galerie, emails) regroupées dans /admin/plus —
 // voir PLUS_PAGES ci-dessous, gardé synchronisé avec cette liste.
 const NAVIGATION: NavEntry[] = [
@@ -66,7 +65,6 @@ const NAVIGATION: NavEntry[] = [
   { type: "link", id: "reservations",   icon: CalendarCheck, label: "Réservations",   href: "/admin/vols",                    tab: "reservations",   tabBase: "/admin/vols" },
   { type: "link", id: "disponibilites", icon: Clock,         label: "Disponibilités", href: "/admin/vols?tab=disponibilites", tab: "disponibilites", tabBase: "/admin/vols" },
   { type: "link", id: "itineraires",    icon: Navigation,    label: "Itinéraires",    href: "/pilote/itineraires" },
-  { type: "link", id: "produits",       icon: Package,       label: "Les vols",       href: "/admin/boutique?tab=produits",   tab: "produits",       tabBase: "/admin/boutique" },
   { type: "link", id: "masse-centrage", icon: Scale,         label: "Masse & centrage", href: "/admin/mass-balance" },
 
   { type: "section", label: "CRM" },
@@ -237,7 +235,6 @@ function NavContent({ onClose }: { onClose?: () => void }) {
 const BOTTOM_NAV = [
   { id: "dashboard", icon: LayoutDashboard, label: "Accueil",  href: "/admin",          exact: true },
   { id: "vols",      icon: CalendarCheck,   label: "Vols",     href: "/admin/vols",     base: "/admin/vols"     },
-  { id: "boutique",  icon: Package,         label: "Les vols", href: "/admin/boutique", base: "/admin/boutique" },
   { id: "clients",   icon: Users,           label: "Clients",  href: "/admin/clients",  base: "/admin/clients"  },
 ] as const;
 

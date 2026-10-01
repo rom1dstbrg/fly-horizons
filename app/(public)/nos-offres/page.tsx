@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ChatWidget } from "@/components/chat/ChatWidget";
-import { PackCard } from "@/components/shop/PackCard";
 import { AnnonceCard } from "@/components/vols/AnnonceCard";
 import { NoFlightsNotice } from "@/components/shop/NoFlightsNotice";
 
@@ -21,7 +20,7 @@ export const metadata = {
   },
 };
 
-// Nouvelle DA (28/09) : même vocabulaire que l'accueil (cards AnnonceCard/PackCard
+// Nouvelle DA (28/09) : même vocabulaire que l'accueil (cards AnnonceCard
 // inchangées, écart header .pt-page, eyebrow + h1 34/52) mais composition propre à
 // cette page — voir feedback_page_composition_distincte. Différence avec la
 // section « Les prochains vols » de l'accueil : ici on affiche TOUT le catalogue
@@ -44,29 +43,6 @@ function Group({ eyebrow, title, children }: { eyebrow: string; title: string; c
 
 export default async function NosOffresPage() {
   const supabase = await createClient();
-
-  // Chantier "tout passe par l'espace pilote" (2026-09-13, à terme) : décision de
-  // dérivage prévue derrière ce flag, le temps que Romain republie son catalogue
-  // réel en annonces avant qu'on bascule l'affichage public. Tant que la clé est
-  // absente/≠ "annonces" en base, rien ne change (comportement products/Stripe
-  // actuel). Voir projet.html § Décisions.
-  const { data: sourceSetting } = await supabase
-    .from("crm_settings")
-    .select("value")
-    .eq("key", "catalogue_source")
-    .maybeSingle();
-  const catalogueSource = sourceSetting?.value === "annonces" ? "annonces" : "products";
-
-  const { data: packs } = await supabase
-    .from("products")
-    .select("*, images:product_images(*)")
-    .eq("active", true)
-    .eq("product_type", "voucher")
-    .or("quantity_available.is.null,quantity_available.gt.0")
-    .order("voucher_duration_minutes", { ascending: true });
-
-  const packsFixes = (packs ?? []).filter(p => !p.route_waypoints?.length);
-  const packsItineraire = (packs ?? []).filter(p => !!p.route_waypoints?.length);
 
   // annonces_pilote et pilotes sont verrouillées à service_role côté RLS (données
   // sensibles : IBAN, email pilote) — lecture via le client admin, filtrée
@@ -96,9 +72,7 @@ export default async function NosOffresPage() {
   const annoncesFixes = annonces.filter(a => !a.has_route);
   const annoncesItineraire = annonces.filter(a => a.has_route);
 
-  const nothingAtAll = catalogueSource === "annonces"
-    ? annonces.length === 0
-    : packsFixes.length === 0 && packsItineraire.length === 0 && annonces.length === 0;
+  const nothingAtAll = annonces.length === 0;
 
   return (
     <main className="bg-white">
@@ -119,7 +93,7 @@ export default async function NosOffresPage() {
 
           {nothingAtAll ? (
             <NoFlightsNotice />
-          ) : catalogueSource === "annonces" ? (
+          ) : (
             <>
               {annoncesFixes.length > 0 && (
                 <div className={GRID}>
@@ -129,24 +103,6 @@ export default async function NosOffresPage() {
               {annoncesItineraire.length > 0 && (
                 <Group eyebrow="Routes préparées par votre pilote" title="Itinéraires sélectionnés">
                   {annoncesItineraire.map((a) => <AnnonceCard key={a.id} annonce={a} />)}
-                </Group>
-              )}
-            </>
-          ) : (
-            <>
-              {packsFixes.length > 0 && (
-                <div className={GRID}>
-                  {packsFixes.map((pack) => <PackCard key={pack.id} pack={pack} />)}
-                </div>
-              )}
-              {packsItineraire.length > 0 && (
-                <Group eyebrow="Routes préparées par votre pilote" title="Itinéraires sélectionnés">
-                  {packsItineraire.map((pack) => <PackCard key={pack.id} pack={pack} />)}
-                </Group>
-              )}
-              {annonces.length > 0 && (
-                <Group eyebrow="Places disponibles" title="Vols proposés par nos pilotes">
-                  {annonces.map((a) => <AnnonceCard key={a.id} annonce={a} />)}
                 </Group>
               )}
             </>

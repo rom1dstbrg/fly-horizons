@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendOrderConfirmation, sendVoucherEmail } from "@/lib/email-service";
-import { generateVoucherPDFBuffer } from "@/lib/pdf/voucher-pdf";
-import { generateVoucherCode } from "@/lib/vouchers";
-import type { VoucherEmailCode } from "@/lib/email-templates";
 import { reservationPaymentConfirmationEmail, volSurMesureAcompteEmail } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { buildBoardingPassAttachment } from "@/lib/pdf/boarding-pass-attachment";
@@ -342,199 +338,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
-    // ── Commande shop ────────────────────────────────────────
-    const orderId = session.metadata?.orderId;
-
-    if (!orderId) {
-      return NextResponse.json({ received: true });
-    }
-
-    const { data: order } = await adminSupabase
-      .from("orders")
-      .select("*, items:order_items(*)")
-      .eq("id", orderId)
-      .single();
-
-    if (!order) {
-      return NextResponse.json({ error: "Commande introuvable" }, { status: 404 });
-    }
-
-    // Idempotence : si la commande est déjà payée, ignorer le webhook
-    if (order.status === "paid") {
-      return NextResponse.json({ received: true });
-    }
-
-    // Récupère la session fraîche — shipping_details est dans collected_information (API 2026-04-22)
-    const fullSession = await stripe.checkout.sessions.retrieve(session.id) as Stripe.Checkout.Session;
-
-    const shippingDetails = fullSession.collected_information?.shipping_details ?? null;
-    const customerEmail = fullSession.customer_details?.email ?? fullSession.customer_email ?? "";
-    const customerName = shippingDetails?.name || fullSession.customer_details?.name || undefined;
-
-    const shippingAddress = shippingDetails?.address
-      ? {
-          full_name: shippingDetails.name ?? "",
-          email: customerEmail,
-          line1: shippingDetails.address.line1 ?? "",
-          line2: shippingDetails.address.line2 ?? "",
-          city: shippingDetails.address.city ?? "",
-          postal_code: shippingDetails.address.postal_code ?? "",
-          country: shippingDetails.address.country ?? "",
-        }
-      : { ...order.shipping_address, email: customerEmail };
-
-    await adminSupabase
-      .from("orders")
-      .update({
-        status: "paid",
-        stripe_payment_intent: fullSession.payment_intent as string,
-        shipping_address: shippingAddress,
-      })
-      .eq("id", orderId);
-
-    // Traitement par article : stock physique OU génération de codes voucher
-    const voucherCodes: VoucherEmailCode[] = [];
-
-    for (const item of order.items ?? []) {
-      if (!item.product_id) continue;
-
-      const { data: product } = await adminSupabase
-        .from("products")
-        .select("stock, product_type, voucher_duration_minutes")
-        .eq("id", item.product_id)
-        .single();
-
-      if (!product) continue;
-
-      const isVoucher = product.product_type === "voucher" ||
-        (product.voucher_duration_minutes != null && product.voucher_duration_minutes > 0);
-
-      if (isVoucher) {
-        // Générer un code par quantité
-        for (let i = 0; i < item.quantity; i++) {
-          const code = generateVoucherCode();
-          const expiresAt = new Date();
-          expiresAt.setFullYear(expiresAt.getFullYear() + 1);
-          await adminSupabase.from("voucher_codes").insert({
-            code,
-            order_id: orderId,
-            order_item_id: item.id,
-            product_id: item.product_id,
-            duration_minutes: product.voucher_duration_minutes ?? 60,
-            product_title: item.title,
-            recipient_email: customerEmail || null,
-            recipient_name: customerName ?? null,
-            status: "unused",
-            expires_at: expiresAt.toISOString(),
-          });
-          voucherCodes.push({
-            code,
-            duration_minutes: product.voucher_duration_minutes ?? 60,
-            product_title: item.title,
-            expires_at: expiresAt,
-          });
-        }
-      } else {
-        // Décrémentation atomique côté DB pour éviter les race conditions entre webhooks parallèles.
-        // SQL requis dans Supabase (à exécuter une seule fois) :
-        // CREATE OR REPLACE FUNCTION decrement_product_stock(p_product_id uuid, p_qty int)
-        // RETURNS void LANGUAGE sql AS $$
-        //   UPDATE products SET stock = GREATEST(0, stock - p_qty) WHERE id = p_product_id;
-        // $$;
-        await adminSupabase.rpc("decrement_product_stock", {
-          p_product_id: item.product_id,
-          p_qty: item.quantity,
-        });
-      }
-    }
-
-    if (order.coupon_code) {
-      await adminSupabase.rpc("increment_coupon_usage", {
-        coupon_code: order.coupon_code,
-      });
-    }
-
-    if (customerEmail) {
-      await sendOrderConfirmation({
-        to: customerEmail,
-        orderRef: orderId.slice(0, 8).toUpperCase(),
-        customerName,
-        items: order.items?.map((i: {
-          title: string;
-          quantity: number;
-          unit_price: number;
-          image_url?: string | null;
-        }) => ({
-          title: i.title,
-          quantity: i.quantity,
-          unit_price: i.unit_price,
-          image_url: i.image_url ?? null,
-        })) ?? [],
-        subtotal: order.subtotal,
-        shippingCost: order.shipping_cost,
-        discountAmount: order.discount_amount,
-        total: order.total,
-        couponCode: order.coupon_code,
-        shippingAddress,
-        orderDate: order.created_at,
-      });
-
-      if (voucherCodes.length > 0) {
-        const pdfAttachments: Array<{ filename: string; content: Buffer }> = [];
-        for (const vc of voucherCodes) {
-          try {
-            const expiresAt = new Date();
-            expiresAt.setFullYear(expiresAt.getFullYear() + 1);
-            const pdfBuffer = await generateVoucherPDFBuffer({
-              code: vc.code,
-              duration_minutes: vc.duration_minutes,
-              product_title: vc.product_title,
-              expiresAt,
-            });
-            pdfAttachments.push({
-              filename: `bon-vol-${vc.code.slice(0, 8).toLowerCase()}.pdf`,
-              content: pdfBuffer,
-            });
-          } catch (err) {
-            console.error("PDF generation failed for voucher", vc.code, err);
-          }
-        }
-        await sendVoucherEmail({
-          to: customerEmail,
-          orderRef: orderId.slice(0, 8).toUpperCase(),
-          customerName,
-          codes: voucherCodes,
-          ...(pdfAttachments.length > 0 ? { attachments: pdfAttachments } : {}),
-        });
-      }
-    }
-
-    console.log(`Commande ${orderId} payée — ${voucherCodes.length} code(s) voucher générés`);
+    return NextResponse.json({ received: true });
   }
 
   if (event.type === "checkout.session.expired") {
     const session = event.data.object as Stripe.Checkout.Session;
-    const { orderId, voucherId, reservationId, type, paymentToken, couponCode } = session.metadata ?? {};
+    const { voucherId, reservationId, type, paymentToken, couponCode } = session.metadata ?? {};
 
     // Release any voucher that was atomically reserved for this session.
     // Exception : réservations perso — le voucher est réservé dès la création de la
     // réservation (pas à la session Stripe), donc on ne le libère pas ici.
-    // Pour tous les autres cas (shop, standard, type absent), on libère toujours.
+    // Pour tous les autres cas (standard, type absent), on libère toujours.
     if (voucherId && type !== "reservation_perso") {
       await adminSupabase
         .from("voucher_codes")
         .update({ status: "unused" })
         .eq("id", voucherId)
         .eq("status", "reserved");
-    }
-
-    // Cancel pending shop order
-    if (orderId) {
-      await adminSupabase
-        .from("orders")
-        .update({ status: "cancelled" })
-        .eq("id", orderId)
-        .eq("status", "pending");
     }
 
     // Cancel pending reservation — conditions séparées par type et par flux :

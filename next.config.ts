@@ -19,15 +19,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  async redirects() {
-    return [
-      { source: "/vols/aventure-60-min",       destination: "/vols/exploration-60-min", permanent: true },
-      { source: "/vols/voyage-90-min",          destination: "/vols/immersion-90-min",   permanent: true },
-      { source: "/vol-sur-mesure/configurer",   destination: "/configurer",              permanent: true },
-      { source: "/vol-sur-mesure/configurer/:path*", destination: "/configurer/:path*",  permanent: true },
-    ];
-  },
-
   async headers() {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
     const supabaseHost = supabaseUrl ? new URL(supabaseUrl).hostname : "*.supabase.co";

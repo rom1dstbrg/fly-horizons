@@ -4,7 +4,6 @@ import Image from "next/image";
 import { ChevronDown, Users, ArrowRight, Eye, HandCoins, BadgeCheck, Scale } from "lucide-react";
 import { HeroContent } from "@/components/HeroContent";
 import { ChatWidget } from "@/components/chat/ChatWidget";
-import { PackCard } from "@/components/shop/PackCard";
 import { AnnonceCard } from "@/components/vols/AnnonceCard";
 import { NewsletterForm } from "@/components/NewsletterForm";
 import { createClient } from "@/lib/supabase/server";
@@ -99,20 +98,10 @@ export const revalidate = 300;
 export default async function HomePage() {
   const supabase = await createClient();
 
-  // Même source que /nos-offres : flag crm_settings.catalogue_source (annonces des pilotes,
-  // ou anciens produits voucher en repli). Voir projet.html § Décisions (13/09).
   const [
-    { data: sourceSetting },
-    { data: packs },
     { data: rawAnnonces },
     { data: galleryRows },
   ] = await Promise.all([
-    supabase.from("crm_settings").select("value").eq("key", "catalogue_source").maybeSingle(),
-    supabase.from("products")
-      .select("*, images:product_images(*)")
-      .eq("active", true).eq("product_type", "voucher")
-      .or("quantity_available.is.null,quantity_available.gt.0")
-      .order("voucher_duration_minutes", { ascending: true }),
     // annonces_pilote/pilotes verrouillées service_role (IBAN, email pilote) —
     // lecture via le client admin, filtrée statut='publiee' uniquement.
     createAdminClient()
@@ -125,7 +114,6 @@ export default async function HomePage() {
       .order("display_order", { ascending: true })
       .limit(5),
   ]);
-  const catalogueSource = sourceSetting?.value === "annonces" ? "annonces" : "products";
 
   const annonces = (rawAnnonces ?? []).map(a => {
     const remainder = Math.round((a.prix_total - a.part_pilote) * 100) / 100;
@@ -143,9 +131,8 @@ export default async function HomePage() {
   });
 
   // Une seule section « Les prochains vols » (durée fixe et itinéraires mêlés), 4 vols max.
-  const vols = catalogueSource === "annonces" ? annonces.slice(0, 4) : [];
-  const packsVisibles = catalogueSource === "annonces" ? [] : (packs ?? []).slice(0, 4);
-  const noFlights = vols.length === 0 && packsVisibles.length === 0;
+  const vols = annonces.slice(0, 4);
+  const noFlights = vols.length === 0;
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const galleryPreview = (galleryRows ?? []).map(row => ({
@@ -230,9 +217,7 @@ export default async function HomePage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              {catalogueSource === "annonces"
-                ? vols.map((a) => <AnnonceCard key={a.id} annonce={a} />)
-                : packsVisibles.map((pack) => <PackCard key={pack.id} pack={pack} />)}
+              {vols.map((a) => <AnnonceCard key={a.id} annonce={a} />)}
             </div>
           )}
         </div>

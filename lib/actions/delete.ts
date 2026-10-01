@@ -1,7 +1,6 @@
 ﻿"use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -12,77 +11,6 @@ async function checkAdmin() {
   const { data: profile } = await supabase
     .from("profiles").select("role").eq("id", user.id).single();
   if (profile?.role !== "admin") throw new Error("Non autorise");
-}
-
-export async function deleteProduct(productId: string) {
-  try {
-    await checkAdmin();
-    const adminSupabase = createAdminClient();
-
-    // Supprimer les images du storage
-    const { data: images } = await adminSupabase
-      .from("product_images")
-      .select("url")
-      .eq("product_id", productId);
-
-    if (images && images.length > 0) {
-      const paths = images
-        .map((img) => {
-          const parts = img.url.split("/product-images/");
-          return parts[1] ?? null;
-        })
-        .filter(Boolean) as string[];
-
-      if (paths.length > 0) {
-        await adminSupabase.storage.from("product-images").remove(paths);
-      }
-    }
-
-    // Supprimer le produit (cascade supprime images + order_items)
-    const { error } = await adminSupabase
-      .from("products")
-      .delete()
-      .eq("id", productId);
-
-    if (error) return { error: error.message };
-
-    revalidatePath("/admin/boutique");
-    redirect("/admin/boutique?tab=produits");
-  } catch (err: unknown) {
-    if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
-    return { error: "Erreur suppression produit" };
-  }
-}
-
-export async function deleteReservationPerso(resaId: string) {
-  try {
-    await checkAdmin();
-    const adminSupabase = createAdminClient();
-
-    const { data: resa } = await adminSupabase
-      .from("reservations")
-      .select("voucher_code")
-      .eq("id", resaId)
-      .single();
-
-    if (resa?.voucher_code) {
-      await adminSupabase
-        .from("voucher_codes")
-        .update({ status: "unused", used_at: null })
-        .eq("code", resa.voucher_code)
-        .in("status", ["reserved", "used"]);
-    }
-
-    const { error } = await adminSupabase
-      .from("reservations")
-      .delete()
-      .eq("id", resaId);
-    if (error) return { error: error.message };
-    revalidatePath("/admin/vols");
-    return { success: true };
-  } catch {
-    return { error: "Erreur suppression" };
-  }
 }
 
 export async function deleteClient(clientId: string) {
@@ -134,22 +62,3 @@ export async function deleteReservationStandard(resaId: string) {
   }
 }
 
-export async function deleteCoupon(couponId: string) {
-  try {
-    await checkAdmin();
-    const adminSupabase = createAdminClient();
-
-    const { error } = await adminSupabase
-      .from("coupons")
-      .delete()
-      .eq("id", couponId);
-
-    if (error) return { error: error.message };
-
-    revalidatePath("/admin/boutique");
-    revalidatePath("/admin/boutique");
-    return { success: true };
-  } catch {
-    return { error: "Erreur suppression coupon" };
-  }
-}

@@ -270,6 +270,21 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-10-01 (22) · Nettoyage du code mort avant la refonte de l'admin</p>
+      <h3>La boutique (commande, panier, vouchers, coupons), le vol sur mesure et le configurateur sont supprimés avant de refaire l'admin en Studio</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Romain lance la refonte de l'admin (iPhone d'abord, PWA avec notifications, premier écran : Réservations en supervision, décision 19). Le 28/09 il avait confirmé que vouchers, checkout, commandes, panier, vol sur mesure et configurateur n'existent plus dans l'offre. Base revérifiée le 01/10 : 0 produit actif, 2 commandes (tests), 0 voucher, <code>catalogue_source = annonces</code>, 2 réservations <code>perso</code> qui sont des tests de Romain (<code>+testprop</code>, <code>+testcreneau</code>).</dd>
+        <dt>Décision</dt>
+        <dd>Supprimer d'abord, refaire ensuite : moins de pages à restyler. Fait dans l'ordre du plan : front public commande, vol sur mesure + configurateur, admin boutique/produits, branche « commande » du webhook Stripe. <b>Gardés volontairement</b> : <code>lib/vouchers.ts</code> (<code>formatDuration</code>), le reçu <code>/api/invoice/reservation/[id]</code>, la branche <code>reservation_perso</code> du webhook, les 29 fichiers <code>type_resa === "perso"</code>, <code>BonsSection</code> et <code>/api/voucher/pdf</code>.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Refaire ces pages en Studio puis les supprimer plus tard. Retirer aussi les 29 branches <code>perso</code> (gros chantier, gain nul).</dd>
+        <dt>Conséquences</dt>
+        <dd>L'accueil et <code>/nos-offres</code> ne lisent plus que les annonces (le flag <code>catalogue_source</code> n'est plus consulté). L'onglet « Vol sur mesure » de <code>/admin/vols</code> disparaît : les 2 réservations de test <code>perso</code> ne sont plus listées côté admin. Les liens de paiement <code>perso</code> (<code>/api/vol-sur-mesure/pay/…</code>) dans <code>reservation-edit.ts</code>, <code>ReservationTracker</code>, <code>ReservationsSection</code> pointent vers une route supprimée, dans des branches mortes. Le lien « facture » de <code>BonsSection</code> vise <code>/api/invoice/[orderId]</code>, supprimée (0 voucher, jamais affiché). Tables <code>products</code>, <code>orders</code>, <code>coupons</code> et colonnes laissées en base. Contenu à corriger séparément : chatbot et textes légaux qui citent encore « vol sur mesure ».</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-10-01 (21) · Style des emails</p>
       <h3>Les emails passent au langage du site (grand titre, filet doré, sans boîtes, logo centré tout en bas) et gèrent le mode sombre ; remplace 2 règles de la V2 du 14/09</h3>
       <dl>
@@ -1685,6 +1700,14 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-10-01 (80) — Code mort supprimé avant la refonte de l'admin (boutique, vouchers, vol sur mesure, configurateur)</h3>
+      <ul>
+        <li>Supprimés : <code>/checkout</code>, <code>/cart</code>, <code>/orders</code>, <code>/vols/[slug]</code>, <code>/vol-sur-mesure</code>, <code>/configurer</code>, <code>/admin/boutique</code>, <code>/admin/products</code>, <code>api/stripe/checkout</code>, <code>api/vol-sur-mesure</code>, <code>api/invoice/[orderId]</code>, <code>api/promo</code>, <code>api/coupons</code>, <code>api/vouchers</code>, <code>store/cart.ts</code>, <code>lib/configurator.ts</code>, <code>lib/vol-sur-mesure</code>, <code>PackCard</code>, <code>ClearCart</code>, 10 composants admin (boutique, produit, voucher, coupon, <code>VolsPersoClient</code>, <code>StopoversAdmin</code>), <code>lib/actions/{products,vouchers,coupons,stopovers}.ts</code>.</li>
+        <li>Retouchés : accueil et <code>/nos-offres</code> (annonces seulement), sidebar/barre du bas/palette de commandes/« Plus » de l'admin, tableau de bord (alertes vouchers), <code>VolsHub</code> (onglet sur mesure retiré), <code>delete.ts</code>, sitemap, <code>next.config.ts</code> (redirections), webhook Stripe (branche commande retirée). <code>tsc</code> et <code>next build</code> OK. Commité, non poussé.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-10-01 (79) — Emails : nouveau style codé dans tous les gabarits + mode sombre</h3>

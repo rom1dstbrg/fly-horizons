@@ -75,13 +75,11 @@ export default async function AdminDashboardPage() {
     ...(demandeRecue      > 0 ? [{ label: `${demandeRecue} nouvelle${demandeRecue > 1 ? "s" : ""} demande${demandeRecue > 1 ? "s" : ""} à traiter sous 72h`,   href: "/admin/vols",           icon: AlertTriangle }] : []),
     ...(paymentPending    > 0 ? [{ label: `${paymentPending} paiement${paymentPending > 1 ? "s" : ""} en attente de confirmation`,                         href: "/admin/vols",           icon: AlertTriangle }] : []),
     ...(volsDemainSansH   > 0 ? [{ label: `${volsDemainSansH} vol${volsDemainSansH > 1 ? "s" : ""} demain sans heure confirmée`,                           href: "/admin/vols",           icon: AlertTriangle }] : []),
-    ...(expiringCritical  > 0 ? [{ label: `${expiringCritical} voucher${expiringCritical > 1 ? "s" : ""} expirent dans moins de 7 jours`,                  href: "/admin/boutique?tab=vouchers", icon: AlertTriangle }] : []),
   ];
   const todayItems: ActionItem[] = [
     ...(enAttenteStd    > 0 ? [{ label: `${enAttenteStd} réservation${enAttenteStd > 1 ? "s" : ""} standard en attente de confirmation`,                    href: "/admin/vols",           icon: AlertCircle   }] : []),
     ...(enAttentePerso  > 0 ? [{ label: `${enAttentePerso} vol${enAttentePerso > 1 ? "s" : ""} sur mesure en attente`,                                     href: "/admin/vols",           icon: AlertCircle   }] : []),
     ...(newContactsCount > 0 ? [{ label: `${newContactsCount} message${newContactsCount > 1 ? "s" : ""} non lu${newContactsCount > 1 ? "s" : ""}`,         href: "/admin/contacts",       icon: MessageSquare }] : []),
-    ...(!expiringCritical && expiringCount > 0 ? [{ label: `${expiringCount} voucher${expiringCount > 1 ? "s" : ""} expirent dans moins de 30 jours`,      href: "/admin/boutique?tab=vouchers", icon: AlertCircle }] : []),
   ];
   const allActionItems = [...urgentItems, ...todayItems];
   const isUrgent = urgentItems.length > 0;

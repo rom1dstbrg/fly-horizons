@@ -3,13 +3,12 @@
 import { useEffect, useState, useRef, useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Search, LayoutDashboard, CalendarCheck, Route,
-  CalendarDays, Package, Ticket, Tag,
+  Search, LayoutDashboard, CalendarCheck,
+  CalendarDays,
   Users, MessageSquare, Settings, ArrowRight, User,
-  ShoppingBag, X, Loader2,
+  X, Loader2,
   Navigation, UserCog, Star, Mails, Bot, BarChart2, Images, Mail, Receipt, LayoutGrid, Flag,
 } from "lucide-react";
-import { STATUT_ORDER } from "@/components/admin/ui";
 
 interface SearchResult {
   clients: { id: string; prenom: string; nom: string; email: string }[];
@@ -21,7 +20,6 @@ const QUICK_LINKS = [
   { href: "/admin/vols",                       label: "Réservations",         icon: CalendarCheck,   group: "Navigation" },
   { href: "/admin/vols?tab=disponibilites",    label: "Disponibilités",       icon: CalendarDays,    group: "Navigation" },
   { href: "/pilote/itineraires",                label: "Itinéraires",          icon: Navigation,      group: "Navigation" },
-  { href: "/admin/boutique?tab=produits",      label: "Les vols",             icon: Package,         group: "Navigation" },
   { href: "/admin/clients",                    label: "Clients",              icon: Users,           group: "Navigation" },
   { href: "/admin/contacts",                   label: "Messages",             icon: MessageSquare,   group: "Navigation" },
   { href: "/admin/retours",                    label: "Retours pilotes",      icon: Flag,            group: "Navigation" },
@@ -30,17 +28,12 @@ const QUICK_LINKS = [
   { href: "/admin/settings",                   label: "Paramètres",           icon: Settings,        group: "Navigation" },
   { href: "/admin/plus",                       label: "Plus",                 icon: LayoutGrid,      group: "Navigation" },
   { href: "/admin",                            label: "Vue globale",          icon: LayoutDashboard, group: "Plus" },
-  { href: "/admin/vols?tab=sur-mesure",        label: "Vol sur mesure",       icon: Route,           group: "Plus" },
-  { href: "/admin/boutique?tab=vouchers",      label: "Vouchers",             icon: Ticket,          group: "Plus" },
-  { href: "/admin/boutique?tab=coupons",       label: "Coupons",              icon: Tag,             group: "Plus" },
   { href: "/admin/satisfaction",               label: "Satisfaction",         icon: Star,            group: "Plus" },
   { href: "/admin/newsletter",                 label: "Newsletter",           icon: Mails,           group: "Plus" },
   { href: "/admin/chat",                       label: "Assistant",            icon: Bot,             group: "Plus" },
   { href: "/admin/analytics",                  label: "Analytiques",          icon: BarChart2,       group: "Plus" },
   { href: "/admin/galerie",                    label: "Galerie",              icon: Images,          group: "Plus" },
   { href: "/admin/emails-preview",             label: "Emails",               icon: Mail,            group: "Plus" },
-  { href: "/admin/boutique?tab=vouchers",      label: "Nouveau voucher",      icon: Ticket,          group: "Actions rapides" },
-  { href: "/admin/products/new",               label: "Nouveau vol",          icon: Package,         group: "Actions rapides" },
 ];
 
 
@@ -175,56 +168,6 @@ export function CommandPalette() {
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{client.prenom} {client.nom}</p>
                     <p className="text-xs text-muted-foreground truncate">{client.email}</p>
-                  </div>
-                  <ArrowRight size={13} className="text-muted-foreground/40 shrink-0 ml-auto" />
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Order results */}
-          {results?.orders && results.orders.length > 0 && (
-            <div>
-              <p className="px-4 py-2 text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[1.5px]">
-                Commandes
-              </p>
-              {results.orders.map(order => (
-                <button
-                  key={order.id}
-                  onClick={() => navigate("/admin/boutique")}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-secondary transition-colors text-left"
-                >
-                  <div className="w-7 h-7 rounded-full bg-gold/10 flex items-center justify-center shrink-0">
-                    <ShoppingBag size={12} className="text-gold-600" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground font-mono">#{order.id.slice(0, 8).toUpperCase()}</p>
-                    <p className="text-xs text-muted-foreground">{STATUT_ORDER[order.status]?.label ?? order.status} · {order.total?.toFixed(2)} €</p>
-                  </div>
-                  <ArrowRight size={13} className="text-muted-foreground/40 shrink-0 ml-auto" />
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Voucher results */}
-          {results?.vouchers && results.vouchers.length > 0 && (
-            <div>
-              <p className="px-4 py-2 text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[1.5px]">
-                Vouchers
-              </p>
-              {results.vouchers.map(v => (
-                <button
-                  key={v.id}
-                  onClick={() => navigate("/admin/boutique?tab=vouchers")}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-secondary transition-colors text-left"
-                >
-                  <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
-                    <Ticket size={12} className="text-purple-600" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground font-mono tracking-wider">{v.code}</p>
-                    <p className="text-xs text-muted-foreground">{v.recipient_email ?? "—"}</p>
                   </div>
                   <ArrowRight size={13} className="text-muted-foreground/40 shrink-0 ml-auto" />
                 </button>
