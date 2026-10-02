@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { Check, Clock, Banknote, Send, PlaneLanding, Download, Receipt } from "lucide-react";
+import { Check, Clock, Banknote, Send, PlaneLanding, Download, Receipt, Mail, Timer, Wallet } from "lucide-react";
 import { Button, Input } from "@/components/pilote/studio";
 import {
   setPilotePaye,
@@ -15,6 +15,7 @@ import type { PendingAction } from "./ConfirmActionDialog";
 import { PaiementRecuForm, type PaiementMode } from "@/components/pilote/PaiementRecuForm";
 import { EtatBadge, PartageFrais, paiementDetail } from "@/components/pilote/PaiementUI";
 import { etatPaiement, todayBrussels } from "@/lib/pilote/transactions-shared";
+import { useScrollLock, useSwipeToClose } from "@/components/pilote/studio/sheet-gestures";
 
 const VOL_EFFECTUE_DELAI_MS = 8 * 60 * 60 * 1000;
 
@@ -36,6 +37,8 @@ interface Props {
   part?: number | null;
   dateVol: string;
   heureVol: string | null;
+  /** Durée prévue du vol (minutes), proposée comme repère dans le bilan. */
+  dureePrevue?: number | null;
   viewerRole?: "admin" | "pilote";
   onStatusChange?: (id: string, statut: string) => void;
   onFieldsChange?: (id: string, fields: { pilote_paye?: boolean; acompte?: number | null }) => void;
@@ -54,6 +57,7 @@ export function AnnoncePiloteActions({
   part = null,
   dateVol,
   heureVol,
+  dureePrevue = null,
   viewerRole = "pilote",
   onStatusChange,
   onFieldsChange,
@@ -67,7 +71,6 @@ export function AnnoncePiloteActions({
   useEffect(() => {
     const open = () => {
       setShowEffectue(true);
-      document.getElementById("reglement-bloc")?.scrollIntoView({ behavior: "smooth", block: "center" });
     };
     window.addEventListener("fh:ouvrir-bilan", open);
     return () => window.removeEventListener("fh:ouvrir-bilan", open);
@@ -202,28 +205,27 @@ export function AnnoncePiloteActions({
       {!done && !cancelled && statut !== "demande_recue" && statut !== "en_attente" && (
         effectueBloque ? (
           <p className="flex items-center gap-1.5 text-[12.5px] text-st-muted"><Clock size={14} /> « Vol effectué » disponible 8 h après l&apos;heure du décollage.</p>
-        ) : !showEffectue ? (
-          <Button variant="secondary" size="sm" onClick={() => setShowEffectue(true)}><PlaneLanding /> Marquer le vol effectué</Button>
         ) : (
-          <div className="space-y-2 rounded-[12px] bg-st-surface p-3">
-            <label className="block">
-              <span className="mb-1 block text-[12px] font-[550] text-st-text-2">Minutes réellement volées</span>
-              <Input type="number" inputMode="numeric" min={1} max={600} required autoFocus value={dureeReelle} onChange={(e) => setDureeReelle(e.target.value)} placeholder="ex. 55" />
-            </label>
-            <div className="grid grid-cols-[auto_1fr] gap-2">
-              <Button variant="secondary" size="sm" onClick={() => setShowEffectue(false)}>Annuler</Button>
-              <Button
-                size="sm"
-                loading={isPending}
-                disabled={!dureeValide}
-                onClick={() => run(() => marquerVolEffectue(reservationId, Number(dureeReelle)), "Vol marqué effectué ✓", () => onStatusChange?.(reservationId, "vol_effectue"))}
-              >
-                <PlaneLanding /> Confirmer
-              </Button>
-            </div>
-          </div>
+          <Button variant="secondary" size="sm" onClick={() => setShowEffectue(true)}><PlaneLanding /> Marquer le vol effectué</Button>
         )
       )}
+
+      <BilanVolDialog
+        open={showEffectue}
+        dureePrevue={dureePrevue}
+        dureeReelle={dureeReelle}
+        setDureeReelle={setDureeReelle}
+        valide={dureeValide}
+        loading={isPending}
+        onCancel={() => setShowEffectue(false)}
+        onConfirm={() =>
+          run(
+            () => marquerVolEffectue(reservationId, Number(dureeReelle)),
+            "Vol marqué effectué ✓",
+            () => { setShowEffectue(false); onStatusChange?.(reservationId, "vol_effectue"); },
+          )
+        }
+      />
 
       {(piloteePaye || done || viewerRole === "pilote") && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
@@ -255,6 +257,84 @@ export function AnnoncePiloteActions({
           Annuler la demande
         </button>
       )}
+    </div>
+  );
+}
+
+// Fenêtre « Bilan du vol » : explique ce que la clôture déclenche avant de demander
+// les minutes réellement volées (obligatoires). Bureau : carte centrée ; téléphone : feuille du bas.
+function BilanVolDialog({ open, dureePrevue, dureeReelle, setDureeReelle, valide, loading, onCancel, onConfirm }: {
+  open: boolean;
+  dureePrevue: number | null;
+  dureeReelle: string;
+  setDureeReelle: (v: string) => void;
+  valide: boolean;
+  loading: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onCancel(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onCancel]);
+  useScrollLock(open);
+  const swipeRef = useSwipeToClose(onCancel, { enabled: open });
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[300] flex items-end justify-center bg-st-ink/30 backdrop-blur-[1.5px] motion-safe:animate-in motion-safe:fade-in sm:items-center sm:p-4" onClick={onCancel}>
+      <div
+        ref={swipeRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="bilan-title"
+        onClick={(e) => e.stopPropagation()}
+        className="w-full space-y-4 rounded-t-[26px] bg-white p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-st-panel motion-safe:animate-in motion-safe:slide-in-from-bottom-4 sm:max-w-[420px] sm:rounded-[20px] sm:pb-5"
+      >
+        <div>
+          <h2 id="bilan-title" className="text-base font-semibold text-st-text">Bilan du vol</h2>
+          <p className="mt-1 text-[13px] leading-snug text-st-text-2">
+            Une dernière étape pour clôturer ce vol : indiquez le temps réellement passé en l&apos;air.
+          </p>
+        </div>
+
+        <label className="block">
+          <span className="mb-1.5 block text-[12.5px] font-[550] text-st-text-2">Minutes réellement volées</span>
+          <Input type="number" inputMode="numeric" min={1} max={600} required autoFocus value={dureeReelle} onChange={(e) => setDureeReelle(e.target.value)} placeholder={dureePrevue ? `ex. ${dureePrevue}` : "ex. 55"} />
+          <span className="mt-1.5 block text-[12px] leading-snug text-st-muted">
+            Du décollage à l&apos;atterrissage{dureePrevue ? `, pas la durée prévue (${dureePrevue} min)` : ""}. Obligatoire.
+          </span>
+        </label>
+
+        <div>
+          <p className="mb-2 text-[12.5px] font-semibold text-st-text">En validant :</p>
+          <ul className="space-y-2">
+            {[
+              [PlaneLanding, "Le vol passe en « Effectué » et le dossier est clôturé."],
+              [Mail, "Le client reçoit un email de remerciement avec l'enquête de satisfaction."],
+              [Timer, "Les minutes servent au bilan du vol dans vos Transactions."],
+              [Wallet, "Si le paiement n'est pas encore reçu, il reste à suivre dans Transactions."],
+            ].map(([Icon, text], i) => {
+              const I = Icon as typeof Check;
+              return (
+                <li key={i} className="flex gap-2 text-[13px] leading-snug text-st-text-2">
+                  <I size={15} className="mt-px shrink-0 text-st-ok" />
+                  <span>{text as string}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        <div className="grid grid-cols-[auto_1fr] gap-2 pt-1">
+          <Button variant="secondary" onClick={onCancel} disabled={loading}>Annuler</Button>
+          <Button onClick={onConfirm} loading={loading} disabled={!valide}>
+            <PlaneLanding /> Clôturer le vol
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

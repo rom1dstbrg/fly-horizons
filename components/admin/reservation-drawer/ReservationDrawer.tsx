@@ -438,6 +438,7 @@ export function ReservationDrawer({
                                 part={r.annonces_pilote?.part_pilote ?? null}
                                 dateVol={r.date_vol}
                                 heureVol={r.heure_vol}
+                                dureePrevue={r.duree ?? null}
                                 viewerRole={viewerRole}
                                 onStatusChange={onStatusChange}
                                 onFieldsChange={onFieldsChange}
