@@ -137,7 +137,10 @@ export async function POST(request: NextRequest) {
     if (modeVente === "place") {
       const prev = annonce.places_reservees ?? 0;
       const next = prev + passagersCount;
-      groupeComplet = next >= annonce.places;
+      // 02/10 : une annonce = un seul groupe. La 1re réservation ferme l'annonce
+      // même s'il reste des places (sinon pas de prix, pas de lien de paiement) ;
+      // le prix est partagé entre ses passagers et le pilote.
+      groupeComplet = true;
       const full = groupeComplet;
       const { data } = await supabase
         .from("annonces_pilote")
