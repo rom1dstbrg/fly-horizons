@@ -191,7 +191,7 @@ export async function updateStatutReservation(
             if (hasFreshRoute && routePayload) {
               // Route tracée/modifiée dans le drawer mais jamais envoyée (ou changée depuis) :
               // on l'envoie ici, dans le même email que la confirmation — un seul geste, un seul email.
-              const { data: proposal } = await supabase
+              const { data: proposal, error: proposalErr } = await supabase
                 .from("route_proposals")
                 .insert({
                   reservation_id: id,
@@ -202,6 +202,11 @@ export async function updateStatutReservation(
                 })
                 .select("token")
                 .single();
+              // Jamais de confirmation « sans route » en silence : on remonte l'erreur
+              // (le pilote voit « email non envoyé, réessayez » au lieu d'un email incomplet).
+              if (proposalErr || !proposal?.token) {
+                throw new Error(`route_proposals insert: ${proposalErr?.message ?? "pas de token"}`);
+              }
               if (proposal?.token) {
                 routeUrl = `${siteUrl}/vol/proposition/${proposal.token}`;
                 await supabase.from("reservations").update({ final_waypoints: routePayload.waypoints }).eq("id", id);
