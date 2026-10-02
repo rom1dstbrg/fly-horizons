@@ -96,7 +96,7 @@ export async function middleware(request: NextRequest) {
   if (requiresAuth && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    url.searchParams.set("redirectTo", pathname);
+    url.searchParams.set("redirectTo", pathname + request.nextUrl.search);
     return NextResponse.redirect(url);
   }
 
@@ -108,7 +108,7 @@ export async function middleware(request: NextRequest) {
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
-      url.searchParams.set("redirectTo", pathname);
+      url.searchParams.set("redirectTo", pathname + request.nextUrl.search);
       return NextResponse.redirect(url);
     }
 
@@ -127,7 +127,7 @@ export async function middleware(request: NextRequest) {
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
-      url.searchParams.set("redirectTo", pathname);
+      url.searchParams.set("redirectTo", pathname + request.nextUrl.search);
       return NextResponse.redirect(url);
     }
 
@@ -160,12 +160,10 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     const redirectTo = request.nextUrl.searchParams.get("redirectTo");
     const defaultPath = isAdmin ? "/admin" : isPilote ? "/pilote" : "/account";
-    url.pathname =
-      redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//")
-        ? redirectTo
-        : defaultPath;
-    url.searchParams.delete("redirectTo");
-    return NextResponse.redirect(url);
+    const safeTo = redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : null;
+    // redirectTo peut porter une query (/pilote/vols?ouvrir=…) : on la sépare du chemin.
+    const target = new URL(safeTo ?? defaultPath, request.nextUrl.origin);
+    return NextResponse.redirect(target);
   }
 
   return supabaseResponse;
@@ -173,6 +171,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|mp4|webm|ico|webmanifest)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|mp4|webm|ico|webmanifest)$).*)",
   ],
 };

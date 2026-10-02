@@ -412,7 +412,8 @@ function infoRows(rows: Array<[string, string]>): string {
 }
 
 /** « 17:00:00 » → « 17:00 » (les autres formats passent tels quels). */
-function hhmm(h: string): string {
+function hhmm(h?: string | null): string {
+  if (!h) return "";
   return /^\d{2}:\d{2}:\d{2}/.test(h) ? h.slice(0, 5) : h;
 }
 
@@ -808,7 +809,7 @@ export interface ReservationConfirmationProps {
 export function reservationConfirmationFreeEmail(p: ReservationConfirmationProps): string {
   const rows: Array<[string, string]> = [
     ["Date souhaitée", `<strong>${esc(p.dateStr)}</strong>`],
-    ["Heure", `<strong>${esc(p.heure)}</strong>`],
+    ["Heure", `<strong>${esc(hhmm(p.heure))}</strong>`],
     ["Durée", `<strong>${fmtDuration(p.duree)}</strong>`],
     ["Lieu", "Aéroport de Charleroi (EBCI)"],
   ];
@@ -854,7 +855,7 @@ export interface ReservationPaymentConfirmationProps extends ReservationConfirma
 export function reservationPaymentConfirmationEmail(p: ReservationPaymentConfirmationProps): string {
   const rows: Array<[string, string]> = [
     ["Date", `<strong>${esc(p.dateStr)}</strong>`],
-    ["Heure", `<strong>${esc(p.heure)}</strong>`],
+    ["Heure", `<strong>${esc(hhmm(p.heure))}</strong>`],
     ["Durée", `<strong>${fmtDuration(p.duree)}</strong>`],
     ["Lieu", "Aéroport de Charleroi (EBCI)"],
   ];
@@ -909,7 +910,7 @@ export interface VolSurMesureAcompteProps {
 export function volSurMesureAcompteEmail(p: VolSurMesureAcompteProps): string {
   const rows: Array<[string, string]> = [
     ["Date souhaitée", `<strong style="text-transform:capitalize;">${esc(p.dateStr)}</strong>`],
-    ["Heure", `<strong>${esc(p.heure)}</strong>`],
+    ["Heure", `<strong>${esc(hhmm(p.heure))}</strong>`],
     ["Durée estimée", `~${fmtDuration(p.dureeEstimee)}`],
     ["Départ / retour", "Charleroi EBCI"],
   ];
@@ -928,7 +929,7 @@ export function volSurMesureAcompteEmail(p: VolSurMesureAcompteProps): string {
       La provision couvre le co&ucirc;t r&eacute;el du vol, calcul&eacute; apr&egrave;s le vol selon la dur&eacute;e effectivement r&eacute;alis&eacute;e (elle peut varier avec la m&eacute;t&eacute;o ou le contr&ocirc;le a&eacute;rien). Si elle d&eacute;passe le montant d&eacute;finitif, la diff&eacute;rence est rembours&eacute;e sous 24&nbsp;h. En cas de m&eacute;t&eacute;o d&eacute;favorable, le vol est report&eacute; sans frais.
     </p>
 
-    ${nextStep(`C&rsquo;est tout bon&nbsp;! Rendez-vous le <strong>${esc(p.dateStr)}</strong> &agrave; <strong>${esc(p.heure)}</strong> &agrave; l&rsquo;a&eacute;roport de Charleroi (EBCI). Pr&eacute;sentez-vous 15&nbsp;min avant le d&eacute;collage.`)}
+    ${nextStep(`C&rsquo;est tout bon&nbsp;! Rendez-vous le <strong>${esc(p.dateStr)}</strong> &agrave; <strong>${esc(hhmm(p.heure))}</strong> &agrave; l&rsquo;a&eacute;roport de Charleroi (EBCI). Pr&eacute;sentez-vous 15&nbsp;min avant le d&eacute;collage.`)}
 
     ${separator()}
     ${signOff(p.pilote)}
@@ -1017,14 +1018,14 @@ export function reservationHeureConfirmeeEmail(props: ReservationHeureConfirmeeP
     ? (p.pilote?.prenom
         ? `${esc(p.pilote.prenom)} vous enverra votre itin&eacute;raire de vol avant le jour J, avec les lieux que vous survolerez.`
         : `Nous vous enverrons votre itin&eacute;raire de vol avant le jour J, avec les lieux que vous survolerez.`)
-    : `C&rsquo;est tout bon&nbsp;! Rendez-vous le <strong>${esc(p.dateStr)}</strong> &agrave; <strong>${esc(p.heure)}</strong> &agrave; l&rsquo;a&eacute;roport de Charleroi (EBCI). Pr&eacute;sentez-vous 15&nbsp;min avant le d&eacute;collage.`;
+    : `C&rsquo;est tout bon&nbsp;! Rendez-vous le <strong>${esc(p.dateStr)}</strong> &agrave; <strong>${esc(hhmm(p.heure))}</strong> &agrave; l&rsquo;a&eacute;roport de Charleroi (EBCI). Pr&eacute;sentez-vous 15&nbsp;min avant le d&eacute;collage.`;
 
   const body = `
-    <p class="em-body" style="margin:0 0 28px;font-size:16px;color:#334155;line-height:1.7;">Bonjour <strong style="color:#0b2238;">${esc(p.prenom)}</strong>, votre vol du <strong style="color:#0b2238;text-transform:capitalize;">${esc(p.dateStr)}</strong> &agrave; <strong style="color:#0b2238;">${esc(p.heure)}</strong> est planifi&eacute;.</p>
+    <p class="em-body" style="margin:0 0 28px;font-size:16px;color:#334155;line-height:1.7;">Bonjour <strong style="color:#0b2238;">${esc(p.prenom)}</strong>, votre vol du <strong style="color:#0b2238;text-transform:capitalize;">${esc(p.dateStr)}</strong> &agrave; <strong style="color:#0b2238;">${esc(hhmm(p.heure))}</strong> est planifi&eacute;.</p>
 
     ${infoRows([
       ["Date", `<strong style="text-transform:capitalize;">${esc(p.dateStr)}</strong>`],
-      ["Heure de d&eacute;part", `<strong>${esc(p.heure)}</strong>`],
+      ["Heure de d&eacute;part", `<strong>${esc(hhmm(p.heure))}</strong>`],
       ["Dur&eacute;e estim&eacute;e", `~${p.duree}&nbsp;min`],
       ["D&eacute;part, retour", "Charleroi (EBCI)"],
     ])}
@@ -1071,7 +1072,7 @@ export function reservationReportConfirmeeEmail(props: ReservationReportConfirme
 
     ${infoRows([
       ["Date", `<strong style="text-transform:capitalize;">${esc(p.dateStr)}</strong>`],
-      ["Heure de d&eacute;part", `<strong>${esc(p.heure)}</strong>`],
+      ["Heure de d&eacute;part", `<strong>${esc(hhmm(p.heure))}</strong>`],
       ["Dur&eacute;e estim&eacute;e", `~${fmtDuration(p.duree)}`],
     ])}
 
@@ -1106,7 +1107,7 @@ export function boardingPassEmail(p: BoardingPassEmailProps): string {
 
     ${infoRows([
       ["Date", `<strong style="text-transform:capitalize;">${esc(p.dateStr)}</strong>`],
-      ["Heure de d&eacute;part", `<strong>${esc(p.heure)}</strong>`],
+      ["Heure de d&eacute;part", `<strong>${esc(hhmm(p.heure))}</strong>`],
       ["Dur&eacute;e estim&eacute;e", `~${fmtDuration(p.duree)}`],
     ])}
 
@@ -1282,7 +1283,7 @@ export interface AnnoncePaiementVirementProps {
 export function annoncePaiementVirementEmail(p: AnnoncePaiementVirementProps): string {
   const rows: Array<[string, string]> = [
     ["Date", `<span style="text-transform:capitalize;">${esc(p.dateStr)}</span>`],
-    ["Heure de départ", esc(p.heure)],
+    ["Heure de départ", esc(hhmm(p.heure))],
     ["Durée du vol", fmtDuration(p.duree)],
     ["Départ / retour", "Charleroi EBCI"],
     ["Pilote", esc(p.piloteNom)],
@@ -1325,7 +1326,7 @@ export interface AnnoncePaiementConfirmeProps {
 export function annoncePaiementConfirmeEmail(p: AnnoncePaiementConfirmeProps): string {
   const rows: Array<[string, string]> = [
     ["Date", `<span style="text-transform:capitalize;">${esc(p.dateStr)}</span>`],
-    ["Heure de départ", esc(p.heure)],
+    ["Heure de départ", esc(hhmm(p.heure))],
     ["Durée du vol", fmtDuration(p.duree)],
     ["Pilote", esc(p.piloteNom)],
   ];
@@ -1367,7 +1368,7 @@ export interface AnnonceInscriptionPlaceProps {
 export function annonceInscriptionPlaceEmail(p: AnnonceInscriptionPlaceProps): string {
   const rows: Array<[string, string]> = [
     ["Date", `<span style="text-transform:capitalize;">${esc(p.dateStr)}</span>`],
-    ["Heure de départ", esc(p.heure)],
+    ["Heure de départ", esc(hhmm(p.heure))],
     ["Durée du vol", fmtDuration(p.duree)],
     ["Pilote", esc(p.piloteNom)],
     ["Vos places", `${p.passagers}`],
@@ -1421,7 +1422,7 @@ export function reservationAutoAnnuleeEmail(p: ReservationAutoAnnuleeEmailProps)
 
   const rows: Array<[string, string]> = [
     ["Date", `<span style="text-transform:capitalize;">${esc(p.dateStr)}</span>`],
-    ["Heure de départ", esc(p.heure)],
+    ["Heure de départ", esc(hhmm(p.heure))],
     ["Durée du vol", fmtDuration(p.duree)],
     ["Départ / retour", "Charleroi EBCI"],
   ];
@@ -1473,7 +1474,7 @@ export function flightReminderEmail(p: FlightReminderEmailProps): string {
 
     ${infoRows([
       ["Date", `<span style="text-transform:capitalize;">${esc(p.dateStr)}</span>`],
-      ["Heure de départ", `<strong style="font-size:15px;">${esc(p.heure)}</strong>`],
+      ["Heure de départ", `<strong style="font-size:15px;">${esc(hhmm(p.heure))}</strong>`],
       ["Durée", fmtDuration(p.duree)],
       ["Lieu de départ", "Aéroport de Charleroi (EBCI)"],
     ])}
@@ -1986,7 +1987,7 @@ export function piloteAssignedPiloteEmail(p: {
     </p>
     ${infoRows([
       ["Client", esc(p.clientNom)],
-      ["Date", `<span style="text-transform:capitalize;">${esc(p.dateStr)}</span>${p.heure ? ` &agrave; ${esc(p.heure)}` : ""}`],
+      ["Date", `<span style="text-transform:capitalize;">${esc(p.dateStr)}</span>${p.heure ? ` &agrave; ${esc(hhmm(p.heure))}` : ""}`],
       ["Dur&eacute;e", `${p.duree}&nbsp;min`],
       ["Passagers", String(p.passagers)],
     ])}
@@ -2045,7 +2046,7 @@ export function flightOfferEmail(p: {
       <strong style="color:#0b2238;">premier arriv&eacute;, premier servi</strong>.
     </p>
     ${infoRows([
-      ["Date", `<span style="text-transform:capitalize;">${esc(p.dateStr)}</span>${p.heure ? ` &agrave; ${esc(p.heure)}` : ""}`],
+      ["Date", `<span style="text-transform:capitalize;">${esc(p.dateStr)}</span>${p.heure ? ` &agrave; ${esc(hhmm(p.heure))}` : ""}`],
       ["Dur&eacute;e", `${p.duree}&nbsp;min`],
       ["Passagers", String(p.passagers)],
       ...(p.routeStr ? [["Itin&eacute;raire", esc(p.routeStr)] as [string, string]] : []),
@@ -2088,7 +2089,7 @@ export function piloteReleasedFlightAdminEmail(p: {
     <p style="margin:0 0 16px;font-size:16px;font-weight:700;">Un pilote a rendu un vol</p>
     <p style="margin:0 0 12px;">${esc(p.piloteNom)} a rendu ce vol. Il n'est plus attribué à personne, il faut le réassigner.</p>
     ${adminLine("Client", esc(p.clientNom))}
-    ${adminLine("Date", `${esc(p.dateStr)}${p.heure ? ` à ${esc(p.heure)}` : ""}`)}
+    ${adminLine("Date", `${esc(p.dateStr)}${p.heure ? ` à ${esc(hhmm(p.heure))}` : ""}`)}
     ${adminLink(p.volsUrl, "Ouvrir les vols")}`;
 
   return adminEmailBase(body, "Un pilote a rendu un vol · Fly Horizons");

@@ -9,6 +9,7 @@ import { PiloteTabBar } from "@/components/pilote/PiloteTabBar";
 import { MetarChip } from "@/components/pilote/MetarChip";
 import { ChartePiloteGate } from "@/components/pilote/ChartePiloteGate";
 import { PushPrompt } from "@/components/pilote/PushPrompt";
+import { PushNavigator } from "@/components/shared/PushNavigator";
 import { piloteLegalStatus } from "@/lib/pilote/legal";
 import { CHARTE_VERSION } from "@/lib/pilote/charte";
 import { SignalConfigProvider } from "@/components/admin/SignalConfigProvider";
@@ -139,6 +140,7 @@ export default async function PiloteLayout({ children }: { children: React.React
 
   return (
     <div className="pilote-studio flex min-h-screen bg-st-bg font-sans text-st-text">
+      <PushNavigator />
       <PiloteSidebar counts={counts} pilot={pilotIdInfo} isAdmin={profile?.role === "admin"} />
       {/* lg:pl-[76px] = largeur du rail replié : ouvert au survol, il se pose
           PAR-DESSUS le contenu sans le pousser (choix du 24/09, Studio). */}

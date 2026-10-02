@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plane, Scale } from "lucide-react";
 import { ReservationDrawer } from "@/components/admin/reservation-drawer/ReservationDrawer";
@@ -55,6 +55,14 @@ export function AdminVolsClient({ reservations: initial }: { reservations: Reser
   const openId = useSearchParams().get("ouvrir");
   const [reservations, setReservations] = useState<Reservation[]>(initial);
   const [drawer, setDrawer] = useState<Reservation | null>(() => initial.find((r) => r.id === openId) ?? null);
+  useEffect(() => {
+    if (!openId) return;
+    // Un vol arrivé depuis l'ouverture de la page n'est pas dans l'état local : on prend les données fraîches.
+    const found = reservations.find((r) => r.id === openId) ?? initial.find((r) => r.id === openId);
+    if (found && !reservations.some((r) => r.id === openId)) setReservations(initial);
+    if (found) setDrawer(found);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openId]);
   const [view, setView] = useState<"tout" | "avenir" | "passes">("tout");
   const [filtre, setFiltre] = useState<Filtre>("tous");
   const [pilote, setPilote] = useState("");

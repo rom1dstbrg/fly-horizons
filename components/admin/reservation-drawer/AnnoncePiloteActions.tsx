@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { Check, Clock, Banknote, Send, PlaneLanding, Download, Receipt } from "lucide-react";
 import { Button, Input } from "@/components/pilote/studio";
@@ -29,6 +29,8 @@ interface Props {
   montant: number | null;
   /** Date à laquelle le paiement a été marqué reçu (pilote_paye_at). */
   payeLe?: string | null;
+  /** Le client a indiqué avoir viré (bouton « J'ai payé » de sa page de paiement). */
+  clientDeclareLe?: string | null;
   /** Coût total du vol et part du pilote (annonce), pour la barre du partage. */
   cout?: number | null;
   part?: number | null;
@@ -47,6 +49,7 @@ export function AnnoncePiloteActions({
   piloteePaye,
   montant,
   payeLe = null,
+  clientDeclareLe = null,
   cout = null,
   part = null,
   dateVol,
@@ -60,6 +63,15 @@ export function AnnoncePiloteActions({
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [dureeReelle, setDureeReelle] = useState("");
   const [showEffectue, setShowEffectue] = useState(false);
+  // Le raccourci « Faire le bilan » de l'aperçu ouvre ce formulaire.
+  useEffect(() => {
+    const open = () => {
+      setShowEffectue(true);
+      document.getElementById("reglement-bloc")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    };
+    window.addEventListener("fh:ouvrir-bilan", open);
+    return () => window.removeEventListener("fh:ouvrir-bilan", open);
+  }, []);
   const dureeValide = /^\d+$/.test(dureeReelle) && Number(dureeReelle) >= 1 && Number(dureeReelle) <= 600;
   // Le paiement se confirme avec le montant reçu, modifiable (27/09).
   const [confirmMode, setConfirmMode] = useState<PaiementMode | null>(null);
@@ -109,7 +121,7 @@ export function AnnoncePiloteActions({
   const detail = paiementDetail({ etat, payeLe, montant, date: dateVol }, today);
 
   return (
-    <div className="space-y-3.5 rounded-[16px] border border-st-line p-3.5">
+    <div id="reglement-bloc" className="space-y-3.5 rounded-[16px] border border-st-line p-3.5">
       <div className="flex items-center justify-between gap-2">
         <p className="text-[13px] font-semibold text-st-text">Règlement</p>
         <EtatBadge etat={etat} />
@@ -132,6 +144,16 @@ export function AnnoncePiloteActions({
           </p>
         )}
       </div>
+
+      {clientDeclareLe && !piloteePaye && !done && !cancelled && (
+        <p className="flex items-start gap-2 rounded-[12px] bg-st-warn-soft px-3 py-2.5 text-[12.5px] font-semibold text-st-warn">
+          <Banknote size={15} className="mt-px shrink-0" />
+          <span>
+            Le client indique avoir payé ({new Date(clientDeclareLe).toLocaleString("fr-BE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Brussels" })}).
+            Vérifiez votre compte, puis « Marquer comme reçu ».
+          </span>
+        </p>
+      )}
 
       {cout != null && part != null && <PartageFrais cout={cout} part={part} />}
 

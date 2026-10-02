@@ -25,12 +25,14 @@ self.addEventListener("notificationclick", (event) => {
   const url = new URL(event.notification.data?.url || "/pilote", self.location.origin).href;
   event.waitUntil((async () => {
     const all = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    // App déjà ouverte : on la montre et on lui demande de naviguer (PushNavigator).
+    // client.navigate() est peu fiable sur iPhone et recharge toute la page.
     for (const c of all) {
-      if ("focus" in c) {
+      try {
         await c.focus();
-        if ("navigate" in c) await c.navigate(url).catch(() => {});
+        c.postMessage({ type: "navigate", url: new URL(url).pathname + new URL(url).search });
         return;
-      }
+      } catch { /* fenêtre morte : on essaie la suivante */ }
     }
     await self.clients.openWindow(url);
   })());

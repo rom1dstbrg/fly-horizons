@@ -256,7 +256,17 @@ export function OverviewTab({
   } else if (st === "heure_confirmee") {
     title = `Vol confirmé · ${dateCourte}${heure ? ` à ${heure}` : ""}`;
     text = "Préparez la masse & centrage avant le vol.";
-    if (isAdmin || !piloteVol) {
+    const volPasse = r.date_vol < new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Brussels" });
+    if (piloteVol && !isAdmin && volPasse && r.type_resa === "annonce_pilote") {
+      // Vol d'un pilote : c'est lui qui clôture, avec les minutes réellement volées (bloc Règlement plus bas).
+      title = "Le vol a eu lieu ? Faites le bilan";
+      text = "Indiquez les minutes réellement volées : le vol est clôturé et le client reçoit l'enquête de satisfaction.";
+      primary = (
+        <Button onClick={() => window.dispatchEvent(new Event("fh:ouvrir-bilan"))}>
+          <CheckCircle2 /> Faire le bilan du vol
+        </Button>
+      );
+    } else if (isAdmin || !piloteVol) {
       primary = (
         <Button onClick={() => ask({ title: "Marquer le vol comme effectué ?", consequences: [`${prenom} reçoit un email de remerciement avec une demande d'avis.`, "Le dossier est clôturé."], confirmLabel: "Marquer effectué et envoyer", run: () => onChangeStatut("vol_effectue") })} loading={isPending}>
           <CheckCircle2 /> Marquer vol effectué

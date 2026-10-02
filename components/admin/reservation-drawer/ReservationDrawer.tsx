@@ -433,6 +433,7 @@ export function ReservationDrawer({
                                 piloteePaye={r.pilote_paye === true}
                                 montant={r.acompte ?? null}
                                 payeLe={r.pilote_paye_at ?? null}
+                                clientDeclareLe={r.client_paiement_declare_at ?? null}
                                 cout={r.annonces_pilote?.prix_total ?? null}
                                 part={r.annonces_pilote?.part_pilote ?? null}
                                 dateVol={r.date_vol}

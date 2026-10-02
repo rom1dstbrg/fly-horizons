@@ -1,3 +1,4 @@
+import { PushNavigator } from "@/components/shared/PushNavigator";
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
@@ -56,6 +57,7 @@ export default async function AdminLayout({
   return (
     <AdminShell initialCollapsed={initialCollapsed}>
       <CommandPalette />
+      <PushNavigator />
       {/* Même largeur plafonnée que l'espace pilote : sur un grand écran, le contenu ne s'étire pas. */}
       <div className="mx-auto w-full max-w-[1320px]">
         <SignalConfigProvider value={signalConfig}>{children}</SignalConfigProvider>
