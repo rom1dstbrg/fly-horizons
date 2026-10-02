@@ -183,7 +183,13 @@ export function ReservationDrawer({
       const r = await updateStatutReservation(reservation.id, "heure_confirmee", routePayload);
       if (r.error) { showFeedback("Erreur : " + r.error, false); return; }
       onStatusChange?.(reservation.id, "heure_confirmee");
-      if (needsRoute) route.setLocalRouteStatus("sent");
+      if (needsRoute) {
+        route.setLocalRouteStatus("sent");
+        onFieldsChange?.(reservation.id, {
+          final_waypoints: routePayload!.waypoints,
+          route_proposals: [...(reservation.route_proposals ?? []), { status: "pending", created_at: new Date().toISOString() }],
+        });
+      }
       if (r.emailError) {
         showFeedback("Statut mis à jour · email non envoyé, réessayez", false);
       } else {

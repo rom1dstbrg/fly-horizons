@@ -1,6 +1,8 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { SlotProposalForm } from "./SlotProposalForm";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { makeRescheduleToken } from "@/lib/reschedule-token";
 
 export const metadata: Metadata = {
   title: "Nouveau créneau proposé · Fly Horizons",
@@ -16,7 +18,7 @@ export default async function CreneauProposePage({ params }: PageProps) {
 
   const { data: resa } = await supabase
     .from("reservations")
-    .select("id, date_vol, heure_vol, duree, slot_proposal_date, slot_proposal_heure, clients(prenom, nom, email)")
+    .select("id, date_vol, heure_vol, duree, slot_proposal_date, slot_proposal_heure, reschedule_token, clients(prenom, nom, email)")
     .eq("slot_proposal_token", token)
     .maybeSingle();
 
@@ -41,6 +43,9 @@ export default async function CreneauProposePage({ params }: PageProps) {
       </main>
     );
   }
+
+  // Le client a déjà refusé ce créneau et ouvert le report sans le terminer : on l'y ramène.
+  if (resa.reschedule_token) redirect(`/reservation/reporter/${makeRescheduleToken(resa.reschedule_token)}`);
 
   const client = resa.clients as unknown as { prenom: string; nom: string; email: string } | null;
 

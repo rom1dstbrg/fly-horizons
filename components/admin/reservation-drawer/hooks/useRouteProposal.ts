@@ -106,6 +106,7 @@ export function useRouteProposal(
     startTransition(async () => {
       const result = await saveFinalWaypoints(reservation.id, parsed);
       if (result.error) { showFeedback("Erreur : " + result.error, false); return; }
+      onFieldsChange?.(reservation.id, { final_waypoints: parsed });
       showFeedback("Route sauvegardée ✓");
       onSaved?.();
     });
@@ -130,6 +131,11 @@ export function useRouteProposal(
       if (result.error) { showFeedback("Erreur : " + result.error, false); return; }
       setLocalRouteStatus("sent");
       setLastSentWaypoints(routeDraft);
+      // La liste derrière le tiroir se met à jour sans rechargement (« À tracer » → villes).
+      onFieldsChange?.(reservation.id, {
+        final_waypoints: parsed,
+        route_proposals: [...(reservation.route_proposals ?? []), { status: "pending", created_at: new Date().toISOString() }],
+      });
       showFeedback(result.emailError ? "Route enregistrée · email non envoyé, réessayez" : "Route envoyée au client ✓", !result.emailError);
     });
   }

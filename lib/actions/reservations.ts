@@ -32,6 +32,26 @@ function pilotePropFrom(resa: { pilotes?: { nom: string }[] | { nom: string } | 
 const VALID_STATUTS_STD = ["demande_recue", "en_attente", "acompte_recu", "heure_confirmee", "vol_effectue", "annulee", "payment_pending"] as const;
 const VALID_STATUTS_PERSO = ["en_attente", "acompte_recu", "date_confirmee", "heure_confirmee", "solde", "vol_effectue", "annulee", "payment_pending"] as const;
 
+/** Le client a-t-il déjà reçu un itinéraire pour ce vol (proposition envoyée, route d'offre ou d'annonce) ? */
+async function hasRouteAlreadySent(
+  supabase: ReturnType<typeof createAdminClient>,
+  id: string,
+  resa: { route?: string | null; product_id?: string | null; annonce_id?: string | null },
+): Promise<boolean> {
+  if (resa.route?.trim()) return true;
+  const { count } = await supabase.from("route_proposals").select("*", { count: "exact", head: true }).eq("reservation_id", id);
+  if (count) return true;
+  if (resa.product_id) {
+    const { data } = await supabase.from("products").select("route_waypoints").eq("id", resa.product_id).maybeSingle();
+    if (data?.route_waypoints?.length) return true;
+  }
+  if (resa.annonce_id) {
+    const { data } = await supabase.from("annonces_pilote").select("route_waypoints").eq("id", resa.annonce_id).maybeSingle();
+    if (data?.route_waypoints?.length) return true;
+  }
+  return false;
+}
+
 export async function updateStatutReservation(
   id: string,
   statut: string,
@@ -152,7 +172,7 @@ export async function updateStatutReservation(
                 pilote,
               }),
             });
-          } else if (statut === "heure_confirmee" && resa.reschedule_pending) {
+          } else if (statut === "heure_confirmee" && resa.reschedule_pending && !hasFreshRoute && await hasRouteAlreadySent(supabase, id, resa)) {
             // Report déjà traité par le client : la route et les infos pratiques ont
             // été envoyées lors de la confirmation initiale, avant le report — on se
             // contente ici de confirmer la nouvelle date/heure, sans tout renvoyer.
@@ -184,6 +204,7 @@ export async function updateStatutReservation(
                 .single();
               if (proposal?.token) {
                 routeUrl = `${siteUrl}/vol/proposition/${proposal.token}`;
+                await supabase.from("reservations").update({ final_waypoints: routePayload.waypoints }).eq("id", id);
                 await supabase.from("reservation_history").insert({
                   reservation_id: id,
                   action: "route_proposal_sent",
@@ -214,6 +235,7 @@ export async function updateStatutReservation(
               html: reservationHeureConfirmeeEmail({ prenom: client.prenom, dateStr, heure: resa.heure_vol, duree: resa.duree, route: resa.route, routeUrl, dateISO: resa.date_vol, pilote }),
               ...(boardingPass ? { attachments: [boardingPass] } : {}),
             });
+            if (resa.reschedule_pending) await supabase.from("reservations").update({ reschedule_pending: false }).eq("id", id);
           } else if (statut === "vol_effectue") {
             await resend.emails.send({
               from: EMAIL_FROM,
@@ -774,6 +796,10 @@ export async function rescheduleReservation(token: string, newDate: string, newH
       statut: newStatut,
       reschedule_token: null,
       reschedule_pending: true,
+      // Un créneau proposé par le pilote puis refusé : le report le remplace.
+      slot_proposal_token: null,
+      slot_proposal_date: null,
+      slot_proposal_heure: null,
     }).eq("id", resa.id);
 
     // Email de confirmation au client
@@ -1042,16 +1068,16 @@ export async function respondToSlotProposal(token: string, action: "accept" | "d
       return { success: true };
     }
 
-    // action === "decline" — le client choisit lui-même une autre date (report libre existant)
+    // action === "decline" — le client choisit lui-même une autre date (report libre existant).
+    // Le lien de proposition reste valable jusqu'au report effectué : si le client ferme
+    // l'onglet avant de choisir, il rouvre le même email et retombe sur la page de report.
+    if (resa.reschedule_token) {
+      return { success: true, redirectUrl: `/reservation/reporter/${makeRescheduleToken(resa.reschedule_token)}` };
+    }
     const rescheduleUuid = crypto.randomUUID();
     const { data: declined } = await supabase
       .from("reservations")
-      .update({
-        slot_proposal_token: null,
-        slot_proposal_date: null,
-        slot_proposal_heure: null,
-        reschedule_token: rescheduleUuid,
-      })
+      .update({ reschedule_token: rescheduleUuid })
       .eq("id", resa.id)
       .eq("slot_proposal_token", token)
       .select("id")

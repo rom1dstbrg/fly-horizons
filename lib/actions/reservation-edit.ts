@@ -247,6 +247,8 @@ export async function sendRouteProposalToClient(
       .single();
 
     if (propError || !proposal) return { error: "Erreur création proposition" };
+    // La route envoyée devient la route finale (sinon la liste affichait « À tracer » après rechargement).
+    await supabase.from("reservations").update({ final_waypoints: waypoints }).eq("id", reservationId);
 
     const rawUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
     const siteUrl = rawUrl.startsWith("http://localhost") || rawUrl.startsWith("http://127")
