@@ -702,10 +702,12 @@ export async function rescheduleReservation(token: string, newDate: string, newH
     }
 
     // Valider que la nouvelle date est au moins J+2
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const minDate = new Date(today);
-    minDate.setDate(minDate.getDate() + 2);
+    // Jour courant à Bruxelles (pas l'heure du serveur, en UTC sur Vercel).
+    const brusselsToday = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Europe/Brussels", year: "numeric", month: "2-digit", day: "2-digit",
+    }).format(new Date());
+    const minDate = new Date(brusselsToday + "T00:00:00Z");
+    minDate.setUTCDate(minDate.getUTCDate() + 2);
     const pickedDate = new Date(newDate + "T12:00:00Z");
     if (pickedDate < minDate) return { error: "La date doit être au moins 48 h à l'avance" };
     if (!newHeure) return { error: "Veuillez sélectionner un créneau horaire" };

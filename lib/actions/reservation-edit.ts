@@ -443,6 +443,18 @@ export async function respondToRouteProposal(
       }),
     });
 
+    // Route acceptée mais aucun montant connu : le lien de paiement ne peut pas partir.
+    // Avant, ce cas était silencieux (le client attendait un lien qui ne venait jamais).
+    if (!skipPayment && isAnnonce && status === "accepted" && !(proposalAcompte > 0)) {
+      await resend.emails.send({
+        from: EMAIL_FROM,
+        to: [EMAIL_REPLY_TO],
+        subject: `[À traiter] Route acceptée sans montant · ${client?.prenom ?? ""} ${client?.nom ?? ""}`,
+        html: `<p><strong>${client?.prenom ?? ""} ${client?.nom ?? ""}</strong> a accepté la route du vol du ${dateStr}, mais aucun montant n'est défini : <strong>le lien de paiement n'a pas été envoyé.</strong></p>
+<p>Vérifiez le prix de l'annonce (groupe à clôturer ?) puis envoyez le paiement depuis la réservation : <a href="${siteUrl}/admin/reservations/${resa?.id ?? ""}">${siteUrl}/admin/reservations/${resa?.id ?? ""}</a></p>`,
+      }).catch(() => {});
+    }
+
     // Lien de paiement au client (annonce pilote) : virement direct au pilote, page de
     // paiement dédiée. Seulement si non encore payé, montant dû, et pas de paiement cash prévu.
     if (!skipPayment && isAnnonce && status === "accepted" && client?.email && paymentToken && proposalAcompte > 0) {

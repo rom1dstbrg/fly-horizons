@@ -1693,8 +1693,8 @@ export function rescheduleConfirmationEmail(p: {
   pilote?: { prenom: string } | null;
 }): string {
   const nextStepText = p.pilote?.prenom
-    ? `${esc(p.pilote.prenom)} vous confirmera votre nouveau cr&eacute;neau horaire dans les prochains jours. Votre provision reste acquise.`
-    : `Nous vous confirmerons votre nouveau cr&eacute;neau horaire dans les prochains jours. Votre provision reste acquise.`;
+    ? `${esc(p.pilote.prenom)} vous confirmera votre nouveau cr&eacute;neau horaire dans les prochains jours.`
+    : `Nous vous confirmerons votre nouveau cr&eacute;neau horaire dans les prochains jours.`;
 
   const body = `
     <p class="em-body" style="margin:0 0 28px;font-size:16px;color:#334155;line-height:1.7;">

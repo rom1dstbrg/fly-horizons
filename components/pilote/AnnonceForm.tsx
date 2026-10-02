@@ -399,8 +399,8 @@ export function AnnonceForm({ editing }: { editing?: AnnonceRow }) {
                   <SumRow label="Solde à partager entre les passagers">{eur(prixClient)}</SumRow>
                   <SumRow label="Prix par passager si complet" strong>{eur(prixParPlace)}</SumRow>
                   <p className="mt-2 text-xs leading-snug text-st-muted">
-                    Recalculé sur les occupants réels à la clôture du groupe : plus cher par passager si le groupe
-                    part avant d&apos;être complet.
+                    La première réservation ferme l&apos;annonce : le prix réel est partagé entre vous et les passagers
+                    inscrits, donc plus cher par passager s&apos;il reste des places vides.
                   </p>
                 </>
               )}
