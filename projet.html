@@ -270,6 +270,21 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-10-02 (32) · Annonces « à la place » : une annonce = un groupe, clôturée dès la 1re réservation</p>
+      <h3>La 1re demande ferme l'annonce et fige le prix (frais ÷ (passagers + pilote)) ; le public voit « dès X € »</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Test A → Z de Romain (02/10) : avec 2 passagers sur une annonce « à la place » non pleine, le prix restait indéfini, la route acceptée n'envoyait aucun lien de paiement (silencieux) et le client attendait sans fin. Un avion = un groupe : on n'attend pas que d'autres passagers viennent.</dd>
+        <dt>Décision</dt>
+        <dd><code>/api/vol-annonce/submit</code> : en mode « place », la 1re réservation ferme l'annonce (<code>reservee</code>) et fige l'acompte via <code>finalizeAnnonceGroupPricing</code> (part égale pilote + passagers : 2 passagers = ⅔ pour les clients, ⅓ pour le pilote). Pages publiques : prix affiché « dès X € / pers. » (prix pour un avion complet), compteur « Jusqu'à N passagers », note sur le prix final communiqué avant tout paiement. Si une route est acceptée sans montant : email « [À traiter] » à l'admin au lieu d'un silence.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Annonce ouverte avec blocage propre de la route tant que le groupe n'est pas clos ; clôture automatique à l'acceptation de la route ; suppression du mode « à la place » (seul le mode avion entier donnerait un prix connu d'avance).</dd>
+        <dt>Conséquences</dt>
+        <dd>Le prix final peut dépasser le « dès » si l'avion part avec des places vides. Les annonces déjà partiellement réservées avant ce changement restent à clôturer à la main (« Clôturer le groupe »). Le champ « places » ne sert plus qu'à refuser une demande trop grosse. <b>Migration <code>20261002_route_proposals_acompte_numeric.sql</code></b> (<code>route_proposals.acompte</code> en numeric) : exécutée le 02/10.</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-10-01 (31) · Espace pilote : réglages de notification</p>
       <h3>Le pilote choisit quelles notifications il reçoit et les active depuis Profil &gt; Notifications</h3>
       <dl>
@@ -1835,6 +1850,19 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-10-02 (99) — Audit du flow réservation : 12 correctifs après le test A → Z</h3>
+      <ul>
+        <li><b>Report client</b> : plus de faux « Ce lien n'est plus valide » (retrait de <code>revalidatePath</code> dans <code>rescheduleReservation</code>, qui relançait le rendu après avoir vidé le token) ; jour J+2 calculé à l'heure de Bruxelles ; email de report sans « provision reste acquise ». Lien « Voir la proposition » réutilisable jusqu'au report (<code>respondToSlotProposal</code>, page <code>creneau-propose</code> redirige vers le report ; le report vide <code>slot_proposal_*</code>).</li>
+        <li><b>Route</b> : cause racine de « la route n'arrive pas avec la confirmation » = <code>route_proposals.acompte</code> en entier face à 170,66 € (échec 22P02 silencieux) → migration <code>20261002_route_proposals_acompte_numeric.sql</code> + erreur remontée au pilote ; route obligatoire aussi pour les annonces (serveur) ; l'envoi fige <code>final_waypoints</code> ; liste mise à jour sans rechargement ; email « itinéraire déjà reçu » seulement si une route a vraiment été envoyée (<code>hasRouteAlreadySent</code>).</li>
+        <li><b>Annonces « à la place »</b> : clôture dès la 1re réservation, « dès X € » (voir Décision 32). Alerte admin si route acceptée sans montant.</li>
+        <li><b>Espace pilote</b> : carte « Prochaine étape » claire quand le client demande une modification de route (Modifier, puis Renvoyer) ; « Faire le bilan du vol » ouvre une fenêtre centrée (portail) qui explique la clôture ; « Le client indique avoir payé » dans Règlement ; notifications « route validée / modification » enfin émises (<code>respondToRouteProposal</code>).</li>
+        <li><b>Notifications push</b> : <code>redirectTo</code> garde la query (<code>?ouvrir=</code>) ; <code>PushNavigator</code> + <code>public/sw.js</code> naviguent par le routeur au lieu de <code>client.navigate</code> ; tiroir ouvert quand <code>?ouvrir</code> change ; <code>sw.js</code> hors middleware. <b>Non vérifié sur iPhone</b> (reconnexion à chaque clic et filtre sombre : cause non confirmée).</li>
+        <li><b>Emails</b> : heures sans secondes partout (<code>hhmm</code>). <b>Site public</b> : fond blanc du conteneur (bande grise sous les pages courtes).</li>
+        <li>Vérifié : <code>tsc</code> sans erreur ; test réel complet en local par Romain (demande, créneau proposé, report, route, modification, paiement, reçu, bilan, avis). Non vérifié : Outlook (email de confirmation non reçu, piste : pièce jointe PDF ou authentification du domaine), push iPhone.</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-10-01 (98) — Espace pilote : onglet Profil &gt; Notifications</h3>
