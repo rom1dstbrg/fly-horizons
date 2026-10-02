@@ -403,6 +403,10 @@ export function ReservationDrawer({
                           reservation={r}
                           viewerRole={viewerRole}
                           routeStatus={route.localRouteStatus}
+                          routeFeedback={route.localRouteFeedback}
+                          routeUnsent={route.hasUnsentChanges()}
+                          onOpenEditor={() => setEditorOpen(true)}
+                          onResendRoute={route.sendRoute}
                           hasRoute={hasRoute}
                           isPending={isPending}
                           isCashPending={isCashPending}

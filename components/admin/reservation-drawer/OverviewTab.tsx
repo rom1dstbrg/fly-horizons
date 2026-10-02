@@ -109,10 +109,16 @@ function CashForm({ acompte, isPending, onRecord }: { acompte: number; isPending
   );
 }
 
+const terminalStatut = (st: string) => st === "vol_effectue" || st === "annulee";
+
 export function OverviewTab({
   reservation: r,
   viewerRole,
   routeStatus,
+  routeFeedback,
+  routeUnsent,
+  onOpenEditor,
+  onResendRoute,
   hasRoute,
   isPending,
   isCashPending,
@@ -134,6 +140,13 @@ export function OverviewTab({
   reservation: DrawerReservation;
   viewerRole: "admin" | "pilote";
   routeStatus: string | null;
+  /** Commentaire du client quand il demande une modification de la route. */
+  routeFeedback: string | null;
+  /** La route du tiroir diffère de la dernière route envoyée. */
+  routeUnsent: boolean;
+  onOpenEditor: () => void;
+  /** Envoie la route actuelle au client (nouvelle proposition). */
+  onResendRoute: () => void;
   hasRoute: boolean;
   isPending: boolean;
   isCashPending: boolean;
@@ -258,6 +271,41 @@ export function OverviewTab({
       );
     }
     secondary.push(<Button key="back" variant="ghost" onClick={() => onChangeStatut("en_attente")}><ChevronLeft /> Revenir en attente</Button>);
+  }
+
+  // Le client a demandé une modification de la route : c'est LA prochaine étape, quel que soit
+  // le statut du vol (il faut modifier puis renvoyer, sinon il n'a plus rien à valider).
+  if (routeStatus === "modification_requested" && !terminalStatut(st)) {
+    secondary.length = 0;
+    if (routeUnsent) {
+      title = `Renvoyer la route à ${prenom}`;
+      text = "Vous avez modifié la route. Renvoyez-la pour que le client la valide : il reçoit un nouvel email avec le lien.";
+      primary = (
+        <Button
+          onClick={() => ask({
+            title: "Renvoyer la route au client ?",
+            consequences: [`${prenom} reçoit la route modifiée par email et peut la valider ou redemander une modification.`],
+            confirmLabel: "Renvoyer la route",
+            run: onResendRoute,
+          })}
+          loading={isPending}
+        >
+          <Send /> Renvoyer la route
+        </Button>
+      );
+      secondary.push(<Button key="edit" variant="secondary" onClick={onOpenEditor}><RouteIcon /> Modifier encore</Button>);
+    } else {
+      title = `${prenom} demande une modification de la route`;
+      text = (
+        <>
+          {routeFeedback ? <>« {routeFeedback} »<br /></> : null}
+          Modifiez la route dans l&apos;éditeur, enregistrez, puis renvoyez-la depuis cet écran.
+        </>
+      );
+      primary = <Button onClick={onOpenEditor}><RouteIcon /> Modifier la route</Button>;
+    }
+  } else if (routeStatus === "sent" && st === "heure_confirmee") {
+    text = `Route envoyée, en attente de la validation de ${prenom}. En attendant, préparez la masse & centrage.`;
   }
 
   const netInfo = stripeNetInfo({
