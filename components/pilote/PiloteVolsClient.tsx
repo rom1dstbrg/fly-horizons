@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plane, Scale } from "lucide-react";
 import { ReservationDrawer } from "@/components/admin/reservation-drawer/ReservationDrawer";
@@ -44,14 +44,15 @@ export function PiloteVolsClient({ reservations: initial, openId }: {
   const [reservations, setReservations] = useState<Reservation[]>(initial);
   const [drawer, setDrawer] = useState<Reservation | null>(() => initial.find((r) => r.id === openId) ?? null);
   // Clic sur une notification app ouverte : la page est déjà montée, seule `openId` change.
-  useEffect(() => {
-    if (!openId) return;
+  // Ajustement d'état pendant le rendu (pas d'effet) quand `openId` change.
+  const [lastOpenId, setLastOpenId] = useState(openId);
+  if (openId !== lastOpenId) {
+    setLastOpenId(openId);
     // Un vol arrivé depuis l'ouverture de la page n'est pas dans l'état local : on prend les données fraîches.
-    const found = reservations.find((r) => r.id === openId) ?? initial.find((r) => r.id === openId);
+    const found = openId ? reservations.find((r) => r.id === openId) ?? initial.find((r) => r.id === openId) : undefined;
     if (found && !reservations.some((r) => r.id === openId)) setReservations(initial);
     if (found) setDrawer(found);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [openId]);
+  }
   // « Tout » d'abord, comme dans Transactions (demande du 27/09).
   const [view, setView] = useState<"tout" | "avenir" | "passes">("tout");
   const [query, setQuery] = useState("");
