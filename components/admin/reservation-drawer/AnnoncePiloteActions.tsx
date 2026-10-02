@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
+import { createPortal } from "react-dom";
 import { Check, Clock, Banknote, Send, PlaneLanding, Download, Receipt, Mail, Timer, Wallet } from "lucide-react";
 import { Button, Input } from "@/components/pilote/studio";
 import {
@@ -280,18 +281,20 @@ function BilanVolDialog({ open, dureePrevue, dureeReelle, setDureeReelle, valide
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onCancel]);
   useScrollLock(open);
-  const swipeRef = useSwipeToClose(onCancel, { enabled: open });
-  if (!open) return null;
+  const swipeRef = useSwipeToClose(onCancel, { enabled: false });
+  if (!open || typeof document === "undefined") return null;
 
-  return (
-    <div className="fixed inset-0 z-[300] flex items-end justify-center bg-st-ink/30 backdrop-blur-[1.5px] motion-safe:animate-in motion-safe:fade-in sm:items-center sm:p-4" onClick={onCancel}>
+  // Portail sur <body> : le tiroir est animé (transform), un `fixed` posé dedans se centrerait
+  // sur le tiroir et non sur l'écran. Centré partout, téléphone compris.
+  return createPortal(
+    <div className="pilote-studio fixed inset-0 z-[300] flex items-center justify-center bg-st-ink/30 p-4 backdrop-blur-[1.5px] motion-safe:animate-in motion-safe:fade-in" onClick={onCancel}>
       <div
         ref={swipeRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="bilan-title"
         onClick={(e) => e.stopPropagation()}
-        className="w-full space-y-4 rounded-t-[26px] bg-white p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-st-panel motion-safe:animate-in motion-safe:slide-in-from-bottom-4 sm:max-w-[420px] sm:rounded-[20px] sm:pb-5"
+        className="max-h-[calc(100dvh-2rem)] w-full max-w-[420px] space-y-4 overflow-y-auto rounded-[20px] bg-white p-5 shadow-st-panel motion-safe:animate-in motion-safe:zoom-in-95 motion-safe:fade-in"
       >
         <div>
           <h2 id="bilan-title" className="text-base font-semibold text-st-text">Bilan du vol</h2>
@@ -335,6 +338,7 @@ function BilanVolDialog({ open, dureePrevue, dureeReelle, setDureeReelle, valide
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
