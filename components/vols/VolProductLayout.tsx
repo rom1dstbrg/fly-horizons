@@ -55,9 +55,8 @@ function Seat({ taken }: { taken: boolean }) {
 }
 
 function Seats({ places, libres, mode }: { places: number; libres: number; mode: "place" | "avion" }) {
-  const label = mode === "place"
-    ? `${libres} place${libres > 1 ? "s" : ""} libre${libres > 1 ? "s" : ""} sur ${places}`
-    : `Jusqu'à ${places} passager${places > 1 ? "s" : ""}`;
+  // La 1re réservation ferme l'annonce : plus de « places libres », seulement la capacité.
+  const label = `Jusqu'à ${places} passager${places > 1 ? "s" : ""}`;
   return (
     <span className="inline-flex items-center gap-2.5">
       <span className="inline-flex gap-[3px]" aria-hidden>
@@ -92,7 +91,7 @@ export function VolProductLayout(p: VolProductProps) {
   const hasRoute = !!p.route && p.route.length > 0;
   const paras = (p.description ?? "").split(/\n{2,}/).map((s) => s.trim()).filter(Boolean);
   const placeNote = p.mode === "place"
-    ? "Prix par personne pour un vol complet : il est recalculé si des places restent libres, et vous le connaissez avant de payer."
+    ? "Prix par personne à partir de, pour un avion complet. Le prix final dépend du nombre de passagers de votre réservation (les frais sont partagés à parts égales avec le pilote) et vous le connaissez avant de payer."
     : null;
 
   const ETAPES = [

@@ -61,7 +61,7 @@ export function AnnonceCard({ annonce, newTab = false, onClick }: { annonce: Ann
           </h3>
           <div className="flex items-center justify-between gap-2">
             <span className="text-white font-black text-[24px] leading-none">
-              {annonce.prix_client} €
+              {annonce.mode_vente === "place" ? "dès " : ""}{annonce.prix_client} €
               <span className="text-[12px] font-semibold text-white/60">
                 {annonce.mode_vente === "place" ? " / pers." : " / avion"}
               </span>

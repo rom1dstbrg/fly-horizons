@@ -379,6 +379,7 @@ export function AnnonceReserveClient({ annonce }: { annonce: AnnonceReserveInfo 
               </dl>
               <p className="mt-4 text-[12.5px] leading-relaxed text-foreground/55">
                 Vous ne payez pas à cette étape : le pilote vous enverra les infos de paiement une fois votre créneau confirmé.
+                {annonce.modeVente === "place" && " Le prix affiché est un « dès » : le prix final partage les frais à parts égales entre le pilote et vos passagers, il vous est communiqué avant tout paiement."}
               </p>
             </div>
           </aside>
