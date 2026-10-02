@@ -411,6 +411,11 @@ function infoRows(rows: Array<[string, string]>): string {
   </table>`;
 }
 
+/** « 17:00:00 » → « 17:00 » (les autres formats passent tels quels). */
+function hhmm(h: string): string {
+  return /^\d{2}:\d{2}:\d{2}/.test(h) ? h.slice(0, 5) : h;
+}
+
 function callout(text: string): string {
   return `<p class="em-body" style="margin:0 0 28px;font-size:15px;color:#334155;line-height:1.7;border-left:3px solid #F2B705;padding:2px 0 2px 16px;">${text}</p>`;
 }
@@ -1002,7 +1007,9 @@ export function reservationDateConfirmeeEmail(p: ReservationDateConfirmeeProps):
 
 // ── 10. Créneau horaire confirmé (admin) ──────────────────────────────────────
 
-export function reservationHeureConfirmeeEmail(p: ReservationHeureConfirmeeProps): string {
+export function reservationHeureConfirmeeEmail(props: ReservationHeureConfirmeeProps): string {
+  // La base renvoie « 17:00:00 » : on n'affiche jamais les secondes.
+  const p = { ...props, heure: hhmm(props.heure) };
   const hasRoute = !!p.routeUrl;
   const routeSection = routeSectionBlock(p.route, p.routeUrl);
 
@@ -1057,7 +1064,8 @@ export interface ReservationReportConfirmeeProps {
   pilote?: { prenom: string } | null;
 }
 
-export function reservationReportConfirmeeEmail(p: ReservationReportConfirmeeProps): string {
+export function reservationReportConfirmeeEmail(props: ReservationReportConfirmeeProps): string {
+  const p = { ...props, heure: hhmm(props.heure) };
   const body = `
     <p class="em-body" style="margin:0 0 28px;font-size:16px;color:#334155;line-height:1.7;">Bonjour <strong style="color:#0b2238;">${esc(p.prenom)}</strong>, la nouvelle date de votre vol report&eacute; est confirm&eacute;e.</p>
 

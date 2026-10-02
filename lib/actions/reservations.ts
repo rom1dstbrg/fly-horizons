@@ -49,14 +49,19 @@ export async function updateStatutReservation(
     if (statut === "heure_confirmee" && !hasFreshRoute) {
       const { data: check } = await supabase
         .from("reservations")
-        .select("route, type_resa, product_id")
+        .select("route, type_resa, product_id, annonce_id")
         .eq("id", id)
         .single();
-      const hasProductRoute = check?.product_id
+      let hasProductRoute = check?.product_id
         ? !!(await supabase.from("products").select("route_waypoints").eq("id", check.product_id).single())
             .data?.route_waypoints?.length
         : false;
-      if (check?.type_resa === "standard" && !check?.route?.trim() && !hasProductRoute) {
+      // Annonce « itinéraire » : la route est déjà celle de l'annonce, acceptée par le client.
+      if (!hasProductRoute && check?.annonce_id) {
+        hasProductRoute = !!(await supabase.from("annonces_pilote").select("route_waypoints").eq("id", check.annonce_id).single())
+          .data?.route_waypoints?.length;
+      }
+      if ((check?.type_resa === "standard" || check?.type_resa === "annonce_pilote") && !check?.route?.trim() && !hasProductRoute) {
         // final_waypoints seul ne suffit pas : c'est un brouillon (bouton "Sauvegarder"),
         // pas une preuve que le client a reçu la route. Il faut au moins un envoi ("Envoyer au client").
         const { count } = await supabase
@@ -798,8 +803,9 @@ export async function rescheduleReservation(token: string, newDate: string, newH
     });
 
     await notifyPiloteReservation(resa.id, "report", newDateTimeStr);
-    revalidatePath("/admin/vols");
-    revalidatePath("/account");
+    // Pas de revalidatePath ici : l'action relance le rendu de la page de report
+    // (le token vient d'être vidé) et la confirmation sur place était remplacée par
+    // « Ce lien n'est plus valide ». /admin/vols et /account sont dynamiques.
     return { success: true, newDateStr: newDateTimeStr };
   } catch (e) {
     console.error("rescheduleReservation error:", e);

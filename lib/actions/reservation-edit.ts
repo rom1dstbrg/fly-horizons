@@ -6,6 +6,7 @@ import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { toForeFlight, buildForeFlightRoute } from "@/lib/foreflight";
 import { routeProposalEmail, routeFeedbackAdminEmail, annoncePaiementVirementEmail } from "@/lib/email-templates";
 import { requireAdminOrOwningPilote as checkAdminOrOwningPilote } from "./auth-guards";
+import { notifyPiloteReservation } from "@/lib/push";
 
 async function logHistory(params: {
   reservation_id: string;
@@ -356,6 +357,8 @@ export async function respondToRouteProposal(
     const proposalAcompte = (proposal as { acompte?: number | null }).acompte ?? resa?.acompte ?? 0;
 
     if (resa?.id) {
+      // Le pilote était censé être prévenu (réglages Profil > Notifications) mais rien ne partait.
+      await notifyPiloteReservation(resa.id, status === "accepted" ? "route_validee" : "route_modif", clientComment);
       await logHistory({
         reservation_id: resa.id,
         action: "client_response",
