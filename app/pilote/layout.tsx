@@ -1,9 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { PiloteSidebar, type PilotIdInfo } from "@/components/pilote/PiloteSidebar";
+import { type PilotIdInfo } from "@/components/pilote/PiloteSidebar";
+import { PiloteShell } from "@/components/pilote/PiloteShell";
+import { PILOTE_NAV_COOKIE } from "@/components/pilote/pilote-nav";
 import { PiloteTopBar } from "@/components/pilote/PiloteTopBar";
 import { PiloteTabBar } from "@/components/pilote/PiloteTabBar";
 import { MetarChip } from "@/components/pilote/MetarChip";
@@ -141,10 +144,12 @@ export default async function PiloteLayout({ children }: { children: React.React
   return (
     <div className="pilote-studio flex min-h-screen bg-st-bg font-sans text-st-text">
       <PushNavigator />
-      <PiloteSidebar counts={counts} pilot={pilotIdInfo} isAdmin={profile?.role === "admin"} />
-      {/* lg:pl-[76px] = largeur du rail replié : ouvert au survol, il se pose
-          PAR-DESSUS le contenu sans le pousser (choix du 24/09, Studio). */}
-      <div className="flex min-h-screen min-w-0 flex-1 flex-col lg:pl-[76px]">
+      <PiloteShell
+        initialCollapsed={(await cookies()).get(PILOTE_NAV_COOKIE)?.value === "collapsed"}
+        counts={counts}
+        pilot={pilotIdInfo}
+        isAdmin={profile?.role === "admin"}
+      >
         <PiloteTopBar
           pilot={pilotIdInfo}
           metar={<Suspense fallback={null}><MetarChip /></Suspense>}
@@ -155,7 +160,7 @@ export default async function PiloteLayout({ children }: { children: React.React
             <SignalConfigProvider value={signalConfigFrom(await getAppSettings())}>{children}</SignalConfigProvider>
           </div>
         </main>
-      </div>
+      </PiloteShell>
       <PiloteTabBar
         pilot={pilotIdInfo}
         isAdmin={profile?.role === "admin"}

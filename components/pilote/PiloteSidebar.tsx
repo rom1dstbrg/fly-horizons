@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   LayoutDashboard, PlaneTakeoff, Plane, CalendarRange, Scale, User,
-  ArrowLeftRight, LogOut, AlertCircle, BookOpen, Receipt, Navigation, NotebookPen, Flag,
+  ArrowLeftRight, LogOut, AlertCircle, BookOpen, Receipt, Navigation, NotebookPen, Flag, PanelLeftClose, PanelLeftOpen,
 } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 import { cn } from "@/lib/utils";
@@ -131,33 +131,50 @@ const rowCls = "group relative flex h-10 w-full shrink-0 items-center gap-3 roun
 const labelCls = (open: boolean) =>
   cn("min-w-0 flex-1 overflow-hidden whitespace-nowrap text-left transition-[opacity,transform] duration-200 ease-out", open ? "translate-x-0 opacity-100" : "-translate-x-1.5 opacity-0");
 
-export function PiloteSidebar({ counts = {}, pilot, isAdmin = false }: {
+export function PiloteSidebar({ counts = {}, pilot, isAdmin = false, collapsed, onToggle }: {
   counts?: Record<string, number>;
   pilot?: PilotIdInfo | null;
   isAdmin?: boolean;
+  collapsed: boolean;
+  onToggle: () => void;
 }) {
   const pathname = usePathname() ?? "";
-  const [open, setOpen] = useState(false);
+  const open = !collapsed;
   const [retourOpen, setRetourOpen] = useState(false);
 
   return (
     <>
     <aside
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
+      aria-label="Navigation pilote"
       className={cn(
-        "fixed inset-y-0 left-0 z-40 hidden flex-col gap-0.5 overflow-hidden border-r border-st-line bg-white px-3 py-3.5 transition-[width,box-shadow] duration-200 ease-out lg:flex",
-        open ? "w-64 shadow-[0_24px_60px_-20px_rgba(15,17,23,0.35)]" : "w-[76px]",
+        "fixed bottom-3 left-3 top-3 z-40 hidden flex-col gap-0.5 overflow-hidden rounded-[22px] border border-st-line bg-white px-3 py-3.5 shadow-st-lg transition-[width] duration-200 ease-out lg:flex",
+        open ? "w-64" : "w-[76px]",
       )}
     >
-      {/* Marque : l'icône ne bouge jamais ; ouvert, le nom apparaît à côté. (Le
-          logotype complet contient déjà l'icône : l'afficher ici la doublait.) */}
-      <Link href="/pilote" className="mb-3.5 flex h-10 shrink-0 items-center gap-3 px-[10px]">
-        <Image src="/icone.svg" alt="Fly Horizons" width={28} height={28} className="h-7 w-7 shrink-0" unoptimized priority />
-        <span className={cn(labelCls(open), "text-[15px] font-semibold tracking-[-0.01em] text-st-ink")}>Fly Horizons</span>
-      </Link>
+      <div className="mb-2 flex h-11 shrink-0 items-center gap-3 pl-[6px]">
+        <Link href="/pilote" aria-label="Tableau de bord" className="flex min-w-0 flex-1 items-center gap-3 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-st-ink/20">
+          <Image src="/icone.svg" alt="Fly Horizons" width={34} height={34} className="shrink-0" style={{ width: 34, height: 34 }} unoptimized priority />
+          {open && <span className="min-w-0 truncate text-[15px] font-semibold tracking-[-0.01em] text-st-ink">Fly Horizons</span>}
+        </Link>
+        {open && (
+          <button
+            type="button"
+            onClick={onToggle}
+            title="Réduire la barre"
+            aria-label="Réduire la barre latérale"
+            className="grid size-8 shrink-0 cursor-pointer place-items-center rounded-[9px] text-st-muted transition-colors hover:bg-st-surface hover:text-st-text"
+          >
+            <PanelLeftClose size={17} strokeWidth={1.8} />
+          </button>
+        )}
+      </div>
+      {!open && (
+        <button type="button" onClick={onToggle} title="Ouvrir la barre" aria-label="Ouvrir la barre latérale" className={cn(rowCls, "cursor-pointer font-medium text-st-text-2 hover:bg-st-surface hover:text-st-text")}>
+          <PanelLeftOpen size={18} strokeWidth={1.8} className="shrink-0 text-st-muted" />
+        </button>
+      )}
 
-      <nav className="flex flex-col gap-0.5" aria-label="Navigation pilote">
+      <nav className="flex min-h-0 flex-col gap-0.5 overflow-y-auto [scrollbar-width:none]" aria-label="Navigation pilote">
         {PILOTE_NAV.map((item) => {
           const active = isPiloteNavActive(item, pathname);
           const Icon = item.icon;
@@ -177,8 +194,8 @@ export function PiloteSidebar({ counts = {}, pilot, isAdmin = false }: {
               {count > 0 && (
                 <>
                   {/* Rail replié : un point sur l'icône ; ouvert : le compteur. */}
-                  <span className={cn("absolute left-[31px] top-[9px] h-[7px] w-[7px] rounded-full ring-2 ring-white transition-opacity", dotCls, open && "opacity-0")} />
-                  <span className={cn("st-num grid h-5 min-w-5 shrink-0 place-items-center rounded-full px-1.5 text-[11px] font-semibold text-white transition-opacity", dotCls, open ? "opacity-100" : "opacity-0")}>
+                  <span className={cn("absolute left-[31px] top-[9px] h-[7px] w-[7px] rounded-full ring-2 ring-white", dotCls, open && "hidden")} />
+                  <span className={cn("st-num grid h-5 min-w-5 shrink-0 place-items-center rounded-full px-1.5 text-[11px] font-semibold text-white", dotCls, !open && "hidden")}>
                     {count > 99 ? "99+" : count}
                   </span>
                 </>
@@ -188,7 +205,7 @@ export function PiloteSidebar({ counts = {}, pilot, isAdmin = false }: {
         })}
       </nav>
 
-      <div className="mt-auto flex flex-col gap-0.5">
+      <div className="mt-auto flex shrink-0 flex-col gap-0.5 pt-2">
         {isAdmin && (
           <Link href="/admin" title={open ? undefined : "Vue admin"} className={cn(rowCls, "font-medium text-st-text-2 hover:bg-st-surface hover:text-st-text")}>
             <ArrowLeftRight size={18} strokeWidth={1.8} className="shrink-0 text-st-muted" />
