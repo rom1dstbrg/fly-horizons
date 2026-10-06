@@ -26,12 +26,13 @@ function SectionHead({ w = "w-72" }: { w?: string }) {
 export function HomeSkeleton() {
   return (
     <main className="bg-white flex-1" aria-busy="true" aria-label="Chargement">
-      <section className="relative h-[70vh] lg:h-screen min-h-[480px] bg-gradient-to-br from-[#0b2238] via-[#0e3060] to-[#1a4a8a]">
-        <div className={`${WRAP} h-full flex flex-col justify-end pb-16 lg:pb-24`}>
-          <div className="animate-pulse h-[11px] w-44 rounded-md bg-white/20 mb-4" />
-          <div className="animate-pulse h-[40px] lg:h-[72px] w-[85%] max-w-[760px] rounded-md bg-white/20" />
-          <div className="animate-pulse mt-3 h-[40px] lg:h-[72px] w-[55%] max-w-[500px] rounded-md bg-white/20" />
-          <div className="animate-pulse mt-8 h-[50px] w-48 rounded-[10px] bg-primary/50" />
+      <section className="relative h-[70vh] lg:h-[calc(100vh-80px)] min-h-[440px]">
+        <div className={`${WRAP} h-full flex flex-col justify-center`}>
+          <Bar className="h-[11px] w-44 mb-4" />
+          <Bar className="h-[40px] lg:h-[72px] w-[85%] max-w-[760px]" />
+          <Bar className="mt-3 h-[40px] lg:h-[72px] w-[55%] max-w-[500px]" />
+          <Rows n={2} className="mt-6 max-w-[460px]" />
+          <Bar className="mt-8 h-[50px] w-48 rounded-[10px]" />
         </div>
       </section>
       <section className="border-b border-border">
