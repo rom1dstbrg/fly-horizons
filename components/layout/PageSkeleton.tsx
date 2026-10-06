@@ -1,6 +1,6 @@
 // Écrans de chargement : la silhouette de la page à venir, sur fond blanc
 // (même fond que le contenu), au lieu d'un logo + anneau sur fond gris.
-function Bar({ className = "" }: { className?: string }) {
+export function Bar({ className = "" }: { className?: string }) {
   return <div className={`animate-pulse rounded-md bg-[#eef0f4] ${className}`} />;
 }
 
@@ -53,15 +53,15 @@ export function AccountSkeleton() {
 // Squelettes propres à chaque page : mêmes conteneurs, mêmes écarts, mêmes
 // proportions que la page réelle, pour que rien ne bouge quand elle arrive.
 // ---------------------------------------------------------------------------
-const WRAP = "max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10";
-const BLOCK = "animate-pulse bg-[#eef0f4]";
+export const WRAP = "max-w-[1400px] mx-auto px-4 sm:px-6 xl:px-10";
+export const BLOCK = "animate-pulse bg-[#eef0f4]";
 
 function Delay({ i, className }: { i: number; className: string }) {
   return <div style={{ animationDelay: `${i * 90}ms` }} className={`${BLOCK} ${className}`} />;
 }
 
 // En-tête des pages refaites : eyebrow, h1 34/52, texte.
-function PageHead({ lines = 2, narrow = true }: { lines?: number; narrow?: boolean }) {
+export function PageHead({ lines = 2, narrow = true }: { lines?: number; narrow?: boolean }) {
   return (
     <div className={`mb-10 lg:mb-14 ${narrow ? "max-w-[620px]" : ""}`}>
       <Bar className="h-[11px] w-40 mb-3" />
@@ -76,7 +76,7 @@ function PageHead({ lines = 2, narrow = true }: { lines?: number; narrow?: boole
 }
 
 // Carte d'annonce : photo 4/3 (3/4 dès sm), coins lg, comme AnnonceCard.
-function CardSkeleton({ i = 0 }: { i?: number }) {
+export function CardSkeleton({ i = 0 }: { i?: number }) {
   return <Delay i={i} className="rounded-lg aspect-[4/3] sm:aspect-[3/4]" />;
 }
 
