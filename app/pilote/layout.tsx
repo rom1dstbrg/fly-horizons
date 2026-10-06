@@ -154,7 +154,7 @@ export default async function PiloteLayout({ children }: { children: React.React
           pilot={pilotIdInfo}
           metar={<Suspense fallback={null}><MetarChip /></Suspense>}
         />
-        <main className="flex-1 px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-[calc(1.25rem+env(safe-area-inset-top))] sm:px-6 lg:px-7 lg:pb-8 lg:pt-6">
+        <main className="flex-1 px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-[calc(1.25rem+env(safe-area-inset-top))] sm:px-6 lg:pl-4 lg:pr-7 lg:pb-8 lg:pt-5">
           {/* Largeur plafonnée : sur un grand écran les cartes ne s'étirent pas sur 2 000 px. */}
           <div className="mx-auto w-full max-w-[1320px]">
             <SignalConfigProvider value={signalConfigFrom(await getAppSettings())}>{children}</SignalConfigProvider>

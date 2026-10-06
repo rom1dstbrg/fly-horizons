@@ -26,7 +26,7 @@ export function PiloteShell({ initialCollapsed, counts, pilot, isAdmin, children
   return (
     <>
       <PiloteSidebar counts={counts} pilot={pilot} isAdmin={isAdmin} collapsed={collapsed} onToggle={toggle} />
-      <div className={cn("flex min-h-screen min-w-0 flex-1 flex-col transition-[padding] duration-200 ease-out", collapsed ? "lg:pl-[104px]" : "lg:pl-[284px]")}>
+      <div className={cn("flex min-h-screen min-w-0 flex-1 flex-col transition-[padding] duration-200 ease-out", collapsed ? "lg:pl-[100px]" : "lg:pl-[280px]")}>
         {children}
       </div>
     </>

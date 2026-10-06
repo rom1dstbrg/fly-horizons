@@ -22,7 +22,7 @@ export function PiloteTopBar({ metar, pilot }: { metar?: React.ReactNode; pilot?
   const pathname = usePathname() ?? "";
   const { section, step } = crumbOf(pathname);
   return (
-    <header className="sticky top-0 z-30 hidden h-[60px] shrink-0 items-center gap-2.5 border-b border-st-line bg-white/90 px-7 backdrop-blur-xl lg:flex">
+    <header className="sticky top-3 z-30 mr-3 mt-3 hidden h-[60px] shrink-0 items-center gap-2.5 rounded-[22px] border border-st-line bg-white/90 px-6 shadow-st-sm backdrop-blur-xl lg:flex">
       <p className="min-w-0 truncate text-[15px] font-semibold text-st-text">
         {section}
         {step && <span className="font-medium text-st-muted"> / {step}</span>}

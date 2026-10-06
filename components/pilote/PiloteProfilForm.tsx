@@ -308,7 +308,7 @@ export function PiloteProfilForm({ pilote, documentsSlot, initialTab }: {
 
       <div className="grid gap-5 lg:grid-cols-[240px_minmax(0,1fr)] lg:items-start">
         {/* Bureau : menu des sections */}
-        <nav aria-label="Sections du profil" className="hidden rounded-[20px] border border-st-line bg-white p-2 shadow-st-sm lg:sticky lg:top-[84px] lg:block">
+        <nav aria-label="Sections du profil" className="hidden rounded-[20px] border border-st-line bg-white p-2 shadow-st-sm lg:sticky lg:top-[88px] lg:block">
           {TABS.map((t) => {
             const Icon = t.icon;
             const active = t.key === tab;
