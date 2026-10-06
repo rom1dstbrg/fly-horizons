@@ -1852,6 +1852,16 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
+      <h3>2026-10-06 (100) — Chargements en squelette, /account corrigé, espace pilote flottant</h3>
+      <ul>
+        <li><b>Squelettes de chargement</b> : un <code>loading.tsx</code> par page publique (accueil, offres, galerie, fiche vol, réservation, pilote, contact, FAQ, légal, à propos, devenir pilote, accès, confirmations, créneau, proposition, report) et pour <code>/account</code>, sur fond blanc, calqués sur la mise en page réelle. Code : <code>components/layout/PageSkeleton.tsx</code> et <code>PublicSkeletons.tsx</code>. Ticket et messages gardent leur squelette existant.</li>
+        <li><b>/account</b> : layout avec fond blanc et pied de page (bande grise sous la page courte).</li>
+        <li><b>Espace pilote</b> : barre latérale et barre du haut flottantes comme l'admin ; barre réductible, choix en cookie <code>fh_pilote_nav</code> (<code>PiloteShell.tsx</code>) ; menu du profil sticky sous la barre du haut.</li>
+        <li>Vérifié : <code>tsc</code>. Non vérifié : rendu visuel dans le navigateur.</li>
+      </ul>
+    </div>
+
+    <div class="log">
       <h3>2026-10-02 (99) — Audit du flow réservation : 12 correctifs après le test A → Z</h3>
       <ul>
         <li><b>Report client</b> : plus de faux « Ce lien n'est plus valide » (retrait de <code>revalidatePath</code> dans <code>rescheduleReservation</code>, qui relançait le rendu après avoir vidé le token) ; jour J+2 calculé à l'heure de Bruxelles ; email de report sans « provision reste acquise ». Lien « Voir la proposition » réutilisable jusqu'au report (<code>respondToSlotProposal</code>, page <code>creneau-propose</code> redirige vers le report ; le report vide <code>slot_proposal_*</code>).</li>
