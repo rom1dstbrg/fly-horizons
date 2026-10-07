@@ -307,7 +307,14 @@ export function ReservationDrawer({
   const r = reservation;
   const isSmUp = useIsSmUp();
   const isAdmin = viewerRole === "admin";
-  const hasRoute = !!route.localRouteStatus || route.routeDraft.length > 0 || !!r?.products?.route_waypoints?.length;
+  // Les routes déjà envoyées ou figées sont dans la ligne elle-même : on n'attend pas le chargement
+  // (asynchrone) du brouillon, sinon « Tracez d'abord la route » clignote avant de laisser place à « Confirmer ».
+  const hasRoute =
+    !!route.localRouteStatus ||
+    route.routeDraft.length > 0 ||
+    !!r?.products?.route_waypoints?.length ||
+    !!r?.final_waypoints?.length ||
+    !!r?.route_proposals?.length;
 
   function runConfirmed(time?: string) {
     if (!pendingAction) return;
