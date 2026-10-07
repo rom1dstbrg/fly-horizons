@@ -42,7 +42,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
 // Pages rangées sous « Plus ».
 const PLUS_PREFIXES = [
   "/admin/plus", "/admin/satisfaction", "/admin/newsletter", "/admin/chat",
-  "/admin/analytics", "/admin/galerie", "/admin/emails-preview",
+  "/admin/analytics", "/admin/galerie",
 ];
 
 export function isAdminNavActive(item: AdminNavItem, pathname: string, tab: string | null): boolean {

@@ -54,6 +54,8 @@ const CLASSIFICATION: Record<string, { side: "admin" | "public"; category: strin
   boardingPassEmail: { side: "public", category: "Réservation standard", rank: 11 },
   flightReminderEmail: { side: "public", category: "Réservation standard", rank: 12 },
   postVolEmail: { side: "public", category: "Réservation standard", rank: 13 },
+  satisfactionReminderEmail: { side: "public", category: "Réservation standard", rank: 14 },
+  rescheduleReminderEmail: { side: "public", category: "Réservation standard", rank: 8.5 },
   // Vol sur mesure
   routeProposalEmail: { side: "public", category: "Vol sur mesure", rank: 1 },
   routeFeedbackAdminEmail: { side: "admin", category: "Vol sur mesure", rank: 5 },
@@ -261,6 +263,22 @@ entries.push(render(24, "postVolEmail", "Post-vol — remerciement + lien enquê
     dateStr: "samedi 3 octobre 2026",
     duree: 60,
     surveyUrl: "https://fly-horizons.com/satisfaction/exemple",
+  })));
+
+entries.push(render(42, "satisfactionReminderEmail", "Rappel enquête satisfaction (client sans réponse, envoi manuel)", 1543, () =>
+  T.satisfactionReminderEmail({
+    prenom: "Sophie",
+    dateStr: "samedi 3 octobre 2026",
+    duree: 60,
+    surveyUrl: "https://fly-horizons.com/satisfaction/exemple",
+  })));
+
+entries.push(render(43, "rescheduleReminderEmail", "Rappel de report (client sans réponse, envoi manuel)", 1687, () =>
+  T.rescheduleReminderEmail({
+    prenom: "Sophie",
+    dateStr: "samedi 3 octobre 2026",
+    duree: 60,
+    rescheduleUrl: "https://fly-horizons.com/reservation/report/exemple",
   })));
 
 entries.push(render(25, "satisfactionResultEmail", "Résultat enquête satisfaction (notification admin)", 1879, () =>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BarChart2, Bot, ChevronRight, Images, Mail, Mails, Star } from "lucide-react";
+import { BarChart2, Bot, ChevronRight, Images, Mails, Star } from "lucide-react";
 import { Card, PageHeader } from "@/components/pilote/studio";
 
 export const metadata = { title: "Plus — Admin" };
@@ -13,7 +13,6 @@ const PLUS_PAGES = [
   { href: "/admin/chat", icon: Bot, label: "Assistant", description: "Conversations du chatbot" },
   { href: "/admin/analytics", icon: BarChart2, label: "Analytiques", description: "Trafic et statistiques du site" },
   { href: "/admin/galerie", icon: Images, label: "Galerie", description: "Photos du site public" },
-  { href: "/admin/emails-preview", icon: Mail, label: "Emails", description: "Aperçu des modèles envoyés aux clients" },
 ];
 
 export default function AdminPlusPage() {

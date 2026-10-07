@@ -7,7 +7,7 @@ import {
   CalendarDays,
   Users, MessageSquare, Settings, ArrowRight, User,
   X, Loader2,
-  UserCog, Star, Mails, Bot, BarChart2, Images, Mail, Receipt, LayoutGrid, Flag,
+  UserCog, Star, Mails, Bot, BarChart2, Images, Receipt, LayoutGrid, Flag,
 } from "lucide-react";
 
 interface SearchResult {
@@ -32,7 +32,6 @@ const QUICK_LINKS = [
   { href: "/admin/chat",                       label: "Assistant",            icon: Bot,             group: "Plus" },
   { href: "/admin/analytics",                  label: "Analytiques",          icon: BarChart2,       group: "Plus" },
   { href: "/admin/galerie",                    label: "Galerie",              icon: Images,          group: "Plus" },
-  { href: "/admin/emails-preview",             label: "Emails",               icon: Mail,            group: "Plus" },
 ];
 
 

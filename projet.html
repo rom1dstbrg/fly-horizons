@@ -1895,10 +1895,11 @@
     <div class="log">
       <h3>2026-10-07 (103) — Avis de satisfaction sans réponse : signal 5 j / 10 j + rappel unique</h3>
       <ul>
+        <li><b>Page <code>/admin/emails-preview</code> supprimée</b> (et ses liens : Plus, palette de commandes). Seul <code>email-preview.html</code> reste, régénéré avec le rappel d'enquête (n° 42) et le rappel de report (n° 43) ; texte du rappel d'enquête réécrit (« nous vous avions écrit après votre vol… »).</li>
         <li><b>Migration à exécuter avant le push</b> : <code>supabase/migrations/20261007b_satisfaction_relance.sql</code> (<code>satisfaction_invite_at</code>, <code>satisfaction_reminder_at</code>).</li>
         <li><b>Signal</b> <code>satisfaction_sans_reponse</code> (<code>lib/reservation-signals.ts</code>) : orange 5 j, rouge 10 j, réglable (Paramètres › Suivi et alertes + Notifications), compté dans « Sans réponse » et « À traiter ». Le cron <code>signaux</code> et le tableau de bord suivent maintenant les vols effectués tant que l'avis attend.</li>
         <li><b>Envoi daté</b> aux 3 endroits où part <code>postVolEmail</code> (<code>updateStatutReservation</code> ×2, <code>pilote-paiement.ts</code>) ; effacé dans <code>/api/satisfaction/submit</code> quand le client répond.</li>
-        <li><b>Rappel</b> : action <code>sendSatisfactionReminder</code>, mail <code>satisfactionReminderEmail</code> (aperçu dans <code>/admin/emails-preview</code>), bouton « Relancer pour l'avis » dans le tiroir, une seule fois.</li>
+        <li><b>Rappel</b> : action <code>sendSatisfactionReminder</code>, mail <code>satisfactionReminderEmail</code> (aperçu dans <code>email-preview.html</code>, n° 42), bouton « Relancer pour l'avis » dans le tiroir, une seule fois.</li>
         <li><b>Rattrapage</b> des vols déjà effectués : <code>scripts/backfill-satisfaction-invite.mjs</code> (liste, puis <code>&lt;id&gt; AAAA-MM-JJ --apply</code>).</li>
       </ul>
     </div>
