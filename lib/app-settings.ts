@@ -71,8 +71,8 @@ export const SETTING_DEFS: { [K in keyof AppSettings]: Def } = {
   paiementRougeJ:     { key: "signal_paiement_rouge_j",      kind: "int", def: 5,  min: 1, max: 60 },
   nonClotureOrangeH:  { key: "signal_non_cloture_orange_h",  kind: "int", def: 24, min: 1, max: 720 },
   nonClotureRougeH:   { key: "signal_non_cloture_rouge_h",   kind: "int", def: 72, min: 1, max: 720 },
-  reportOrangeJ:      { key: "signal_report_orange_j",       kind: "int", def: 14, min: 1, max: 90 },
-  reportRougeJ:       { key: "signal_report_rouge_j",        kind: "int", def: 21, min: 1, max: 90 },
+  reportOrangeJ:      { key: "signal_report_orange_j",       kind: "int", def: 7,  min: 1, max: 90 },
+  reportRougeJ:       { key: "signal_report_rouge_j",        kind: "int", def: 12, min: 1, max: 90 },
   sansHeureActif:     { key: "signal_sans_heure_actif",      kind: "bool", def: true },
 
   notifSansReponse: { key: "notif_sans_reponse", kind: "bool", def: true },

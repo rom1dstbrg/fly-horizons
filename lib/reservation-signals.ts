@@ -56,7 +56,7 @@ export const DEFAULT_SIGNAL_CONFIG: SignalConfig = {
   clientPaye: [36 * H, 48 * H],
   paiement: [3 * D, 5 * D],
   nonCloture: [24 * H, 72 * H],
-  report: [14 * D, 21 * D],
+  report: [7 * D, 12 * D],
   sansHeure: true,
 };
 

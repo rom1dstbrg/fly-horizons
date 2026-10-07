@@ -270,7 +270,20 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
-      <p class="date">2026-10-07 (33) · Report sans réponse : signal à 14 jours et un seul rappel manuel</p>
+      <p class="date">2026-10-07 (34) · Report sans réponse : seuils ramenés à 7 jours (orange) et 12 jours (rouge)</p>
+      <h3>Remplace les seuils de la décision 33 (14 j / 21 j) pour voir les reports qui traînent plus vite</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Romain préfère être alerté plus tôt : un report sans réponse après une semaine mérite déjà un coup d'œil.</dd>
+        <dt>Décision</dt>
+        <dd>Valeurs par défaut : orange à 7 jours, rouge à 12 jours après l'envoi du mail. Toujours réglables dans Paramètres › Suivi et alertes (rien n'était enregistré en base, les défauts s'appliquent directement). Le reste de la décision 33 ne change pas.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>14 j / 21 j (décision 33, jugé trop tardif).</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
+      <p class="date">2026-10-07 (33) ·Report sans réponse : signal à 14 jours et un seul rappel manuel</p>
       <h3>Un report dont le client n'a pas choisi la date reste visible, avec un bouton « Relancer le client » (une seule fois)</h3>
       <dl>
         <dt>Contexte</dt>
@@ -1867,7 +1880,14 @@
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
 
     <div class="log">
-      <h3>2026-10-07 (101) — Report sans réponse : signal à 14 jours + rappel unique</h3>
+      <h3>2026-10-07 (102) — Report sans réponse : seuils 7 j / 12 j</h3>
+      <ul>
+        <li>Seuils par défaut du signal <code>report_sans_reponse</code> passés de 14 j / 21 j à 7 j / 12 j (<code>lib/reservation-signals.ts</code>, <code>lib/app-settings.ts</code>), voir Décision 34.</li>
+      </ul>
+    </div>
+
+    <div class="log">
+      <h3>2026-10-07 (101)— Report sans réponse : signal à 14 jours + rappel unique</h3>
       <ul>
         <li><b>Signal</b> <code>report_sans_reponse</code> (<code>lib/reservation-signals.ts</code>) : orange 14 j, rouge 21 j, réglable (Paramètres › Suivi et alertes, notification push dans l'onglet Notifications), compté dans le filtre « Sans réponse » de l'admin et dans « À traiter » du tableau de bord.</li>
         <li><b>Rappel</b> : action <code>sendRescheduleReminder</code>, mail <code>rescheduleReminderEmail</code> (« Votre vol attend une nouvelle date »), bouton « Relancer le client » dans le tiroir (admin et pilote), une seule fois ; ensuite le tiroir indique d'appeler ou d'annuler.</li>

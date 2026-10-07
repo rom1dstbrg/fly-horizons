@@ -2,7 +2,7 @@
 --
 -- reschedule_invite_at   : le mail « Votre vol est reporté » (avec le lien pour choisir une
 --                          nouvelle date) est parti à cet instant. Point de départ du signal
---                          « Report sans réponse » (orange à 14 jours, rouge à 21 jours).
+--                          « Report sans réponse » (orange à 7 jours, rouge à 12 jours).
 -- reschedule_reminder_at : le client a reçu l'unique rappel (bouton « Relancer le client »).
 --
 -- Les deux sont remis à null quand le client choisit sa nouvelle date.
