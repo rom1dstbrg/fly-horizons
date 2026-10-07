@@ -27,6 +27,9 @@ export interface DrawerReservation {
   stripe_fee?: number | null;
   /** Lien de report envoyé au client (effacé quand il a choisi sa nouvelle date). */
   reschedule_token?: string | null;
+  /** Envoi du mail de report, puis de l'unique rappel (relance du client sans réponse). */
+  reschedule_invite_at?: string | null;
+  reschedule_reminder_at?: string | null;
   slot_proposal_token?: string | null;
   slot_proposal_date?: string | null;
   slot_proposal_heure?: string | null;

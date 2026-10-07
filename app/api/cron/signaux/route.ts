@@ -20,6 +20,7 @@ const TITRE: Record<SignalKind, string> = {
   paiement_attente: "Paiement en attente",
   non_cloture: "Vol à clôturer",
   sans_heure: "Vol sans heure",
+  report_sans_reponse: "Report sans réponse",
 };
 
 function dateCourte(d: string): string {
@@ -42,16 +43,18 @@ async function run(request: NextRequest) {
     paiement_attente: settings.notifPaiement,
     non_cloture: settings.notifNonCloture,
     sans_heure: false,
+    report_sans_reponse: settings.notifReport,
   };
   const since = new Date(Date.now() - 14 * 86_400_000).toISOString().slice(0, 10);
 
   const { data: resas } = await db
     .from("reservations")
     .select(
-      "id, statut, type_resa, date_vol, heure_vol, created_at, pilote_id, pilote_assigned_at, pilote_paye, paiement_demande_at, client_paiement_declare_at, reschedule_token, slot_proposal_token, clients(prenom, nom), pilotes(nom, user_id)",
+      "id, statut, type_resa, date_vol, heure_vol, created_at, pilote_id, pilote_assigned_at, pilote_paye, paiement_demande_at, client_paiement_declare_at, reschedule_token, reschedule_invite_at, reschedule_reminder_at, slot_proposal_token, clients(prenom, nom), pilotes(nom, user_id)",
     )
     .not("statut", "in", "(annulee,vol_effectue)")
-    .gte("date_vol", since);
+    // Un report en cours garde son ancienne date de vol : on le suit jusqu'à ce que le client choisisse.
+    .or(`date_vol.gte.${since},reschedule_token.not.is.null`);
 
   const { data: admins } = await db.from("profiles").select("id").eq("role", "admin");
   const adminIds = (admins ?? []).map((a) => a.id as string);

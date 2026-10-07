@@ -13,7 +13,7 @@ import { brusselsTimestamp } from "@/lib/utils";
 import type { AppSettings } from "@/lib/app-settings";
 
 export type SignalLevel = "warn" | "bad";
-export type SignalKind = "sans_reponse" | "client_dit_paye" | "paiement_attente" | "non_cloture" | "sans_heure";
+export type SignalKind = "sans_reponse" | "client_dit_paye" | "paiement_attente" | "non_cloture" | "sans_heure" | "report_sans_reponse";
 
 export interface Signal {
   kind: SignalKind;
@@ -33,6 +33,8 @@ export interface SignalInput {
   paiement_demande_at?: string | null;
   client_paiement_declare_at?: string | null;
   reschedule_token?: string | null;
+  reschedule_invite_at?: string | null;
+  reschedule_reminder_at?: string | null;
   slot_proposal_token?: string | null;
 }
 
@@ -45,6 +47,7 @@ export interface SignalConfig {
   clientPaye: [number, number];
   paiement: [number, number];
   nonCloture: [number, number];
+  report: [number, number];
   sansHeure: boolean;
 }
 
@@ -53,6 +56,7 @@ export const DEFAULT_SIGNAL_CONFIG: SignalConfig = {
   clientPaye: [36 * H, 48 * H],
   paiement: [3 * D, 5 * D],
   nonCloture: [24 * H, 72 * H],
+  report: [14 * D, 21 * D],
   sansHeure: true,
 };
 
@@ -62,6 +66,7 @@ export function signalConfigFrom(s: AppSettings): SignalConfig {
     clientPaye: [s.clientPayeOrangeH * H, s.clientPayeRougeH * H],
     paiement: [s.paiementOrangeJ * D, s.paiementRougeJ * D],
     nonCloture: [s.nonClotureOrangeH * H, s.nonClotureRougeH * H],
+    report: [s.reportOrangeJ * D, s.reportRougeJ * D],
     sansHeure: s.sansHeureActif,
   };
 }
@@ -120,6 +125,23 @@ export function getSignals(r: SignalInput, now: number = Date.now(), cfg: Signal
   // Report ou créneau proposé en cours : la date en base est périmée, le client
   // doit encore en choisir une. Ni « non clôturé » ni « sans heure » n'ont de sens.
   const dateAReprendre = !!(r.reschedule_token || r.slot_proposal_token);
+
+  // 3 bis. Lien de report envoyé, le client n'a toujours pas choisi de nouvelle date.
+  // Compté depuis l'envoi du mail ; une fois l'unique rappel parti, le signal reste
+  // et invite à appeler le client ou à annuler.
+  if (r.reschedule_token && r.reschedule_invite_at) {
+    const ms = now - new Date(r.reschedule_invite_at).getTime();
+    const l = niveau(ms, ...cfg.report);
+    if (l) {
+      out.push({
+        kind: "report_sans_reponse",
+        level: l,
+        label: r.reschedule_reminder_at
+          ? `Report relancé, sans réponse depuis ${depuis(ms)} : à appeler`
+          : `Report sans réponse depuis ${depuis(ms)}`,
+      });
+    }
+  }
 
   // 4. Vol passé jamais clôturé
   if (!dateAReprendre && !TERMINE.includes(r.statut) && !DEMANDE.includes(r.statut) && r.statut !== "payment_pending") {

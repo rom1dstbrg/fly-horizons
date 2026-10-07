@@ -131,6 +131,7 @@ export function OverviewTab({
   onChangeStatut,
   onSendBoardingPass,
   onSendReschedule,
+  onSendRescheduleReminder,
   onRecordCash,
   onProposeSlot,
   onGoTo,
@@ -161,6 +162,8 @@ export function OverviewTab({
   onChangeStatut: (s: string) => void;
   onSendBoardingPass: () => void;
   onSendReschedule: () => void;
+  /** Unique rappel au client qui n'a pas choisi sa nouvelle date. */
+  onSendRescheduleReminder: () => void;
   onRecordCash: (n: number) => void;
   onProposeSlot: (date: string, heure: string) => void;
   onGoTo: (tab: "route" | "messages" | "dossier") => void;
@@ -382,6 +385,31 @@ export function OverviewTab({
           {sg.label}
         </p>
       ))}
+
+      {/* Report sans réponse : un seul rappel possible, ensuite on appelle ou on annule. */}
+      {r.reschedule_token && getSignals(r).some((s) => s.kind === "report_sans_reponse") && (
+        r.reschedule_reminder_at ? (
+          <p className="text-[12.5px] text-st-muted">
+            Rappel envoyé le {fmtDate(r.reschedule_reminder_at.slice(0, 10))}. Pas de deuxième rappel : appelez {prenom} ou annulez la réservation.
+          </p>
+        ) : (
+          <Button
+            variant="secondary"
+            loading={isPending}
+            onClick={() => ask({
+              title: "Relancer le client ?",
+              consequences: [
+                `${prenom} reçoit un email de rappel avec un nouveau lien (valable 30 jours) pour choisir sa nouvelle date.`,
+                "C'est le seul rappel prévu : il ne pourra pas être renvoyé.",
+              ],
+              confirmLabel: "Envoyer le rappel",
+              run: onSendRescheduleReminder,
+            })}
+          >
+            <Send /> Relancer le client
+          </Button>
+        )
+      )}
 
       {isAdmin && (r.slot_change_count ?? 0) > 0 && (
         <p className={cn("flex items-center gap-2 text-[12.5px]", (r.slot_change_count ?? 0) >= 2 ? "font-semibold text-st-warn" : "text-st-muted")}>

@@ -11,6 +11,7 @@ import {
   setAvionReserve,
   recordCashPayment,
   sendRescheduleInvite,
+  sendRescheduleReminder,
   sendBoardingPassEmail,
   proposeSlot,
   setCashPayment,
@@ -203,8 +204,18 @@ export function ReservationDrawer({
     startTransition(async () => {
       const r = await sendRescheduleInvite(reservation.id);
       if (r.error) { showFeedback("Erreur : " + r.error, false); return; }
-      onFieldsChange?.(reservation.id, { reschedule_token: "envoye" });
+      onFieldsChange?.(reservation.id, { reschedule_token: "envoye", reschedule_invite_at: new Date().toISOString(), reschedule_reminder_at: null });
       showFeedback(r.emailError ? "Lien de report créé · email non envoyé, réessayez" : "Email de report envoyé au client ✓", !r.emailError);
+    });
+  }
+
+  function doSendRescheduleReminder() {
+    if (!reservation) return;
+    startTransition(async () => {
+      const r = await sendRescheduleReminder(reservation.id);
+      if (r.error) { showFeedback("Erreur : " + r.error, false); return; }
+      onFieldsChange?.(reservation.id, { reschedule_reminder_at: r.reminderAt });
+      showFeedback("Rappel envoyé au client ✓");
     });
   }
 
@@ -422,6 +433,7 @@ export function ReservationDrawer({
                           onChangeStatut={doChangeStatut}
                           onSendBoardingPass={doSendBoardingPass}
                           onSendReschedule={doSendRescheduleInvite}
+                          onSendRescheduleReminder={doSendRescheduleReminder}
                           onRecordCash={doRecordCash}
                           onProposeSlot={doProposeSlot}
                           onGoTo={setActiveTab}

@@ -42,7 +42,7 @@ const monthLabel = (iso: string) =>
 
 // « Paiement » regroupe l'attente d'un virement et la confirmation à donner par le pilote.
 const MATCH: Record<Exclude<Filtre, "tous">, SignalKind[]> = {
-  sans_reponse: ["sans_reponse"],
+  sans_reponse: ["sans_reponse", "report_sans_reponse"],
   client_dit_paye: ["client_dit_paye"],
   paiement: ["paiement_attente", "client_dit_paye"],
   sans_heure: ["sans_heure"],

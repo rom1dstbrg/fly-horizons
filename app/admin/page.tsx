@@ -27,7 +27,7 @@ type Resa = SignalInput & {
 
 const COLS = `id, statut, type_resa, date_vol, heure_vol, duree, passagers, created_at, payment_status,
   pilote_id, pilote_assigned_at, pilote_paye, paiement_demande_at, client_paiement_declare_at,
-  reschedule_token, slot_proposal_token, clients(prenom, nom), pilotes(nom)`;
+  reschedule_token, reschedule_invite_at, reschedule_reminder_at, slot_proposal_token, clients(prenom, nom), pilotes(nom)`;
 
 const one = <T,>(v: T | T[] | null): T | null => (Array.isArray(v) ? v[0] ?? null : v);
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);

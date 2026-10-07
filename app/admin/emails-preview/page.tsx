@@ -13,6 +13,7 @@ import {
   customEmail,
   routeFeedbackAdminEmail,
   rescheduleInviteEmail,
+  rescheduleReminderEmail,
   rescheduleConfirmationEmail,
   routeProposalEmail,
   newsletterFromBlocksEmail,
@@ -75,6 +76,17 @@ export default function EmailsPreviewPage() {
       category: "Rappels & annulation",
       label: "Invitation à reporter (météo)",
       html: rescheduleInviteEmail({
+        prenom: "Camille",
+        dateStr: "samedi 15 août 2026",
+        duree: 60,
+        rescheduleUrl: "https://fly-horizons.com/reservation/reporter/exemple",
+      }),
+    },
+    {
+      id: "reschedule-reminder",
+      category: "Rappels & annulation",
+      label: "Rappel de report (client sans réponse)",
+      html: rescheduleReminderEmail({
         prenom: "Camille",
         dateStr: "samedi 15 août 2026",
         duree: 60,

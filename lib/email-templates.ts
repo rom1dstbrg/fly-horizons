@@ -1682,6 +1682,33 @@ export function rescheduleInviteEmail(p: {
   return emailBase(body, "Votre vol est reporté · Fly Horizons");
 }
 
+// ── 19 bis. Rappel : le client n'a pas encore choisi sa nouvelle date ────────
+
+export function rescheduleReminderEmail(p: {
+  prenom: string;
+  dateStr: string;
+  duree: number;
+  rescheduleUrl: string;
+  pilote?: { prenom: string } | null;
+}): string {
+  const body = `
+    <p class="em-body" style="margin:0 0 28px;font-size:16px;color:#334155;line-height:1.7;">
+      Bonjour <strong style="color:#0b2238;">${esc(p.prenom)}</strong>, votre vol du <strong style="color:#0b2238;">${esc(p.dateStr)}</strong> (${esc(fmtDuration(p.duree))}) n&rsquo;a pas pu avoir lieu et attend toujours une nouvelle date.
+    </p>
+    <p class="em-body" style="margin:0 0 28px;font-size:16px;color:#334155;line-height:1.7;">
+      Votre provision est toujours conserv&eacute;e. Quand vous le souhaitez, choisissez un nouveau cr&eacute;neau ci-dessous. Le lien est valable 30 jours &agrave; partir d&rsquo;aujourd&rsquo;hui.
+    </p>
+    ${ctaButton(p.rescheduleUrl, "Choisir une nouvelle date")}
+
+    ${separator()}
+    ${signOff(p.pilote)}
+    <p class="em-muted" style="margin:0;font-size:13px;color:#64748b;">
+      Un souci avec cette date ou une question ? R&eacute;pondez directement &agrave; cet email, nous trouverons une solution ensemble.
+    </p>`;
+
+  return emailBase(body, "Votre vol attend une nouvelle date · Fly Horizons");
+}
+
 // ── 20. Confirmation de report ────────────────────────────────────────────────
 
 export function rescheduleConfirmationEmail(p: {

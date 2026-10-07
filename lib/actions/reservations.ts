@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationReportConfirmeeEmail, boardingPassEmail, reservationPaymentConfirmationEmail, volSurMesureAcompteEmail, postVolEmail, customEmail, rescheduleInviteEmail, rescheduleConfirmationEmail, reservationAutoAnnuleeEmail, slotProposalEmail } from "@/lib/email-templates";
+import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationReportConfirmeeEmail, boardingPassEmail, reservationPaymentConfirmationEmail, volSurMesureAcompteEmail, postVolEmail, customEmail, rescheduleInviteEmail, rescheduleReminderEmail,rescheduleConfirmationEmail, reservationAutoAnnuleeEmail, slotProposalEmail } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { makeRescheduleToken, parseRescheduleToken } from "@/lib/reschedule-token";
 import { rescheduleScope, piloteDeparts } from "@/lib/pilote-dispo";
@@ -577,7 +577,7 @@ export async function sendCustomEmail(id: string, subject: string, body: string,
       const siteUrl = rawUrl.startsWith("http://localhost") || rawUrl.startsWith("http://127")
         ? rawUrl : "https://fly-horizons.com";
       const uuid = crypto.randomUUID();
-      await supabase.from("reservations").update({ reschedule_token: uuid }).eq("id", id);
+      await supabase.from("reservations").update({ reschedule_token: uuid, reschedule_invite_at: new Date().toISOString(), reschedule_reminder_at: null }).eq("id", id);
       rescheduleUrl = `${siteUrl}/reservation/reporter/${makeRescheduleToken(uuid)}`;
     }
 
@@ -626,7 +626,7 @@ export async function sendRescheduleInvite(id: string) {
       ? rawUrl : "https://fly-horizons.com";
 
     const uuid = crypto.randomUUID();
-    await supabase.from("reservations").update({ reschedule_token: uuid }).eq("id", id);
+    await supabase.from("reservations").update({ reschedule_token: uuid, reschedule_invite_at: new Date().toISOString(), reschedule_reminder_at: null }).eq("id", id);
 
     const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
       weekday: "long", day: "numeric", month: "long", year: "numeric",
@@ -659,6 +659,67 @@ export async function sendRescheduleInvite(id: string) {
     return { success: true, emailError };
   } catch (e) {
     console.error("sendRescheduleInvite error:", e);
+    return { error: "Erreur serveur" };
+  }
+}
+
+// ── Report resté sans réponse : un seul rappel au client ──────────────────────
+// Même lien que le mail d'origine (re-signé : 30 jours de validité à partir de maintenant).
+
+export async function sendRescheduleReminder(id: string) {
+  try {
+    await checkAdminOrOwningPilote(id);
+    const supabase = createAdminClient();
+
+    const { data: resa } = await supabase
+      .from("reservations")
+      .select("*, clients(*), pilotes(nom)")
+      .eq("id", id)
+      .single();
+
+    if (!resa) return { error: "Réservation introuvable" };
+    if (!resa.reschedule_token) return { error: "Aucun report en attente pour ce vol" };
+    if (resa.reschedule_reminder_at) return { error: "Le client a déjà été relancé" };
+    if (["annulee", "vol_effectue"].includes(resa.statut)) return { error: "Impossible de relancer ce vol" };
+
+    const client = resa.clients as { prenom: string; nom: string; email: string } | null;
+    if (!client?.email) return { error: "Email client introuvable" };
+
+    const rawUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+    const siteUrl = rawUrl.startsWith("http://localhost") || rawUrl.startsWith("http://127")
+      ? rawUrl : "https://fly-horizons.com";
+
+    const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
+      weekday: "long", day: "numeric", month: "long", year: "numeric",
+    });
+
+    const { error: emailError } = await resend.emails.send({
+      from: EMAIL_FROM,
+      to: [client.email],
+      replyTo: EMAIL_REPLY_TO,
+      subject: "Fly Horizons · Votre vol attend une nouvelle date",
+      html: rescheduleReminderEmail({
+        prenom: client.prenom,
+        dateStr,
+        duree: resa.duree,
+        pilote: pilotePropFrom(resa),
+        rescheduleUrl: `${siteUrl}/reservation/reporter/${makeRescheduleToken(resa.reschedule_token)}`,
+      }),
+    });
+    if (emailError) {
+      console.error("[sendRescheduleReminder] Erreur email:", emailError);
+      return { error: "Email non envoyé, réessayez" };
+    }
+
+    // Marqué seulement si le mail est parti : un échec ne consomme pas l'unique rappel.
+    const reminderAt = new Date().toISOString();
+    await supabase.from("reservations").update({ reschedule_reminder_at: reminderAt }).eq("id", id);
+
+    revalidatePath("/admin/vols");
+    revalidatePath("/pilote/vols");
+    return { success: true, reminderAt };
+  } catch (e) {
+    console.error("sendRescheduleReminder error:", e);
     return { error: "Erreur serveur" };
   }
 }
@@ -800,6 +861,8 @@ export async function rescheduleReservation(token: string, newDate: string, newH
       heure_vol: newHeure,
       statut: newStatut,
       reschedule_token: null,
+      reschedule_invite_at: null,
+      reschedule_reminder_at: null,
       reschedule_pending: true,
       // Un créneau proposé par le pilote puis refusé : le report le remplace.
       slot_proposal_token: null,
