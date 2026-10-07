@@ -270,6 +270,19 @@
       écartées · Conséquences</i>. Plus récent en haut.</p>
 
     <div class="dec">
+      <p class="date">2026-10-07 (35) · Avis de satisfaction sans réponse : signal à 5 jours et un seul rappel manuel</p>
+      <h3>Même logique que le report : un vol effectué dont le client n'a pas rempli l'enquête reste visible, avec un bouton « Relancer pour l'avis » (une seule fois)</h3>
+      <dl>
+        <dt>Contexte</dt>
+        <dd>Deux vols réservés sur le site n'avaient pas reçu de réponse à l'enquête de satisfaction. Contrairement au report, rien ne bloque le client : l'avis est facultatif, donc la relance doit rester discrète.</dd>
+        <dt>Décision</dt>
+        <dd>Le mail « Merci pour votre vol » enregistre son envoi (<code>satisfaction_invite_at</code>). Orange à 5 jours, rouge à 10 jours, réglables dans Paramètres › Suivi et alertes, notification push activable. Un seul rappel manuel (<code>satisfaction_reminder_at</code>), jamais automatique ; ensuite le tiroir dit qu'il n'y en aura pas d'autre. La date d'envoi est effacée dès que le client répond, ce qui éteint le signal. Un vol sans cette date (effectué avant la migration) n'est pas suivi, sauf rattrapage par <code>scripts/backfill-satisfaction-invite.mjs</code>.</dd>
+        <dt>Alternatives écartées</dt>
+        <dd>Rappel automatique par cron (risque de harcèlement, Romain garde la main) ; 14 j / 21 j comme le report (le souvenir du vol s'efface vite, un rappel tardif ne sert plus à rien) ; 48 h (trop court, le client n'a pas eu le temps).</dd>
+      </dl>
+    </div>
+
+    <div class="dec">
       <p class="date">2026-10-07 (34) · Report sans réponse : seuils ramenés à 7 jours (orange) et 12 jours (rouge)</p>
       <h3>Remplace les seuils de la décision 33 (14 j / 21 j) pour voir les reports qui traînent plus vite</h3>
       <dl>
@@ -1878,6 +1891,17 @@
   <section id="changelog" class="panel">
     <p class="meta">Ce qui a réellement changé dans le code / le projet. Plus récent en haut.
       Amorcé depuis la mémoire ; on ajoute une entrée à chaque session.</p>
+
+    <div class="log">
+      <h3>2026-10-07 (103) — Avis de satisfaction sans réponse : signal 5 j / 10 j + rappel unique</h3>
+      <ul>
+        <li><b>Migration à exécuter avant le push</b> : <code>supabase/migrations/20261007b_satisfaction_relance.sql</code> (<code>satisfaction_invite_at</code>, <code>satisfaction_reminder_at</code>).</li>
+        <li><b>Signal</b> <code>satisfaction_sans_reponse</code> (<code>lib/reservation-signals.ts</code>) : orange 5 j, rouge 10 j, réglable (Paramètres › Suivi et alertes + Notifications), compté dans « Sans réponse » et « À traiter ». Le cron <code>signaux</code> et le tableau de bord suivent maintenant les vols effectués tant que l'avis attend.</li>
+        <li><b>Envoi daté</b> aux 3 endroits où part <code>postVolEmail</code> (<code>updateStatutReservation</code> ×2, <code>pilote-paiement.ts</code>) ; effacé dans <code>/api/satisfaction/submit</code> quand le client répond.</li>
+        <li><b>Rappel</b> : action <code>sendSatisfactionReminder</code>, mail <code>satisfactionReminderEmail</code> (aperçu dans <code>/admin/emails-preview</code>), bouton « Relancer pour l'avis » dans le tiroir, une seule fois.</li>
+        <li><b>Rattrapage</b> des vols déjà effectués : <code>scripts/backfill-satisfaction-invite.mjs</code> (liste, puis <code>&lt;id&gt; AAAA-MM-JJ --apply</code>).</li>
+      </ul>
+    </div>
 
     <div class="log">
       <h3>2026-10-07 (102) — Report sans réponse : seuils 7 j / 12 j</h3>

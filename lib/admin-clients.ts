@@ -24,6 +24,8 @@ export interface ClientResa {
   reschedule_token: string | null;
   reschedule_invite_at: string | null;
   reschedule_reminder_at: string | null;
+  satisfaction_invite_at: string | null;
+  satisfaction_reminder_at: string | null;
   slot_proposal_token: string | null;
   final_waypoints: { nom?: string }[] | null;
   pilotes: { nom: string } | null;
@@ -53,7 +55,7 @@ export interface AdminClient {
 
 /** Colonnes lues sur `reservations` pour résumer un client (liste et fiche). */
 export const RESA_COLUMNS =
-  "id, date_vol, heure_vol, duree, statut, type_resa, payment_status, passagers, acompte, paye, created_at, pilote_id, pilote_assigned_at, pilote_paye, paiement_demande_at, client_paiement_declare_at, reschedule_token, reschedule_invite_at, reschedule_reminder_at, slot_proposal_token, final_waypoints, pilotes(nom), products(route_waypoints)";
+  "id, date_vol, heure_vol, duree, statut, type_resa, payment_status, passagers, acompte, paye, created_at, pilote_id, pilote_assigned_at, pilote_paye, paiement_demande_at, client_paiement_declare_at, reschedule_token, reschedule_invite_at, reschedule_reminder_at, satisfaction_invite_at, satisfaction_reminder_at, slot_proposal_token, final_waypoints, pilotes(nom), products(route_waypoints)";
 
 const TERMINE = ["annulee", "vol_effectue"];
 

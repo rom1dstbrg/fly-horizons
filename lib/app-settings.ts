@@ -31,10 +31,13 @@ export interface AppSettings {
   nonClotureRougeH: number;
   reportOrangeJ: number;
   reportRougeJ: number;
+  satisfactionOrangeJ: number;
+  satisfactionRougeJ: number;
   sansHeureActif: boolean;
   // Notifications
   notifSansReponse: boolean;
   notifReport: boolean;
+  notifSatisfaction: boolean;
   notifPaiement: boolean;
   notifClientPaye: boolean;
   notifNonCloture: boolean;
@@ -73,10 +76,13 @@ export const SETTING_DEFS: { [K in keyof AppSettings]: Def } = {
   nonClotureRougeH:   { key: "signal_non_cloture_rouge_h",   kind: "int", def: 72, min: 1, max: 720 },
   reportOrangeJ:      { key: "signal_report_orange_j",       kind: "int", def: 7,  min: 1, max: 90 },
   reportRougeJ:       { key: "signal_report_rouge_j",        kind: "int", def: 12, min: 1, max: 90 },
+  satisfactionOrangeJ: { key: "signal_satisfaction_orange_j", kind: "int", def: 5,  min: 1, max: 90 },
+  satisfactionRougeJ:  { key: "signal_satisfaction_rouge_j",  kind: "int", def: 10, min: 1, max: 90 },
   sansHeureActif:     { key: "signal_sans_heure_actif",      kind: "bool", def: true },
 
   notifSansReponse: { key: "notif_sans_reponse", kind: "bool", def: true },
   notifReport:      { key: "notif_report",       kind: "bool", def: true },
+  notifSatisfaction: { key: "notif_satisfaction", kind: "bool", def: true },
   notifPaiement:    { key: "notif_paiement",     kind: "bool", def: true },
   notifClientPaye:  { key: "notif_client_paye",  kind: "bool", def: true },
   notifNonCloture:  { key: "notif_non_cloture",  kind: "bool", def: true },
@@ -134,7 +140,8 @@ export function serializePatch(patch: Partial<AppSettings>): { rows: { key: stri
     || merged.clientPayeOrangeH >= merged.clientPayeRougeH
     || merged.paiementOrangeJ >= merged.paiementRougeJ
     || merged.nonClotureOrangeH >= merged.nonClotureRougeH
-    || merged.reportOrangeJ >= merged.reportRougeJ) {
+    || merged.reportOrangeJ >= merged.reportRougeJ
+    || merged.satisfactionOrangeJ >= merged.satisfactionRougeJ) {
     return { error: "Le seuil rouge doit être plus grand que le seuil orange." };
   }
   return { rows };

@@ -132,6 +132,7 @@ export function OverviewTab({
   onSendBoardingPass,
   onSendReschedule,
   onSendRescheduleReminder,
+  onSendSatisfactionReminder,
   onRecordCash,
   onProposeSlot,
   onGoTo,
@@ -164,6 +165,8 @@ export function OverviewTab({
   onSendReschedule: () => void;
   /** Unique rappel au client qui n'a pas choisi sa nouvelle date. */
   onSendRescheduleReminder: () => void;
+  /** Unique rappel au client qui n'a pas rempli l'enquête de satisfaction. */
+  onSendSatisfactionReminder: () => void;
   onRecordCash: (n: number) => void;
   onProposeSlot: (date: string, heure: string) => void;
   onGoTo: (tab: "route" | "messages" | "dossier") => void;
@@ -407,6 +410,31 @@ export function OverviewTab({
             })}
           >
             <Send /> Relancer le client
+          </Button>
+        )
+      )}
+
+      {/* Avis sans réponse : un seul rappel possible, l'avis reste facultatif. */}
+      {r.satisfaction_invite_at && getSignals(r).some((s) => s.kind === "satisfaction_sans_reponse") && (
+        r.satisfaction_reminder_at ? (
+          <p className="text-[12.5px] text-st-muted">
+            Rappel envoyé le {fmtDate(r.satisfaction_reminder_at.slice(0, 10))}. Pas de deuxième rappel : l&apos;avis est facultatif.
+          </p>
+        ) : (
+          <Button
+            variant="secondary"
+            loading={isPending}
+            onClick={() => ask({
+              title: "Relancer le client ?",
+              consequences: [
+                `${prenom} reçoit un email de rappel avec le lien de l'enquête de satisfaction.`,
+                "C'est le seul rappel prévu : il ne pourra pas être renvoyé.",
+              ],
+              confirmLabel: "Envoyer le rappel",
+              run: onSendSatisfactionReminder,
+            })}
+          >
+            <Send /> Relancer pour l&apos;avis
           </Button>
         )
       )}

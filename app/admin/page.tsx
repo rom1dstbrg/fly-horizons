@@ -27,7 +27,7 @@ type Resa = SignalInput & {
 
 const COLS = `id, statut, type_resa, date_vol, heure_vol, duree, passagers, created_at, payment_status,
   pilote_id, pilote_assigned_at, pilote_paye, paiement_demande_at, client_paiement_declare_at,
-  reschedule_token, reschedule_invite_at, reschedule_reminder_at, slot_proposal_token, clients(prenom, nom), pilotes(nom)`;
+  reschedule_token, reschedule_invite_at, reschedule_reminder_at, satisfaction_invite_at, satisfaction_reminder_at, slot_proposal_token, clients(prenom, nom), pilotes(nom)`;
 
 const one = <T,>(v: T | T[] | null): T | null => (Array.isArray(v) ? v[0] ?? null : v);
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -73,7 +73,7 @@ export default async function AdminDashboardPage() {
   const today = brusselsDay(now);
 
   const [{ data: actives }, { data: recentes }, { count: contactsNonLus }, { count: retoursATraiter }] = await Promise.all([
-    db.from("reservations").select(COLS).neq("type_resa", "perso").not("statut", "in", "(annulee,vol_effectue)").gte("date_vol", addDays(today, -30)).order("date_vol", { ascending: true }),
+    db.from("reservations").select(COLS).neq("type_resa", "perso").neq("statut", "annulee").or(`and(statut.neq.vol_effectue,date_vol.gte.${addDays(today, -30)}),satisfaction_invite_at.not.is.null`).order("date_vol", { ascending: true }),
     db.from("reservations").select(COLS).neq("type_resa", "perso").order("created_at", { ascending: false }).limit(5),
     db.from("contacts").select("id", { count: "exact", head: true }).eq("statut", "nouveau"),
     db.from("pilote_retours").select("id", { count: "exact", head: true }).eq("statut", "a_traiter"),

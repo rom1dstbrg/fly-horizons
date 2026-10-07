@@ -14,6 +14,7 @@ import {
   routeFeedbackAdminEmail,
   rescheduleInviteEmail,
   rescheduleReminderEmail,
+  satisfactionReminderEmail,
   rescheduleConfirmationEmail,
   routeProposalEmail,
   newsletterFromBlocksEmail,
@@ -207,6 +208,17 @@ export default function EmailsPreviewPage() {
       category: "Post-vol",
       label: "Remerciement + enquête",
       html: postVolEmail({
+        prenom: "Camille",
+        dateStr: "samedi 15 août 2026",
+        duree: 60,
+        surveyUrl: "https://fly-horizons.com/satisfaction/exemple",
+      }),
+    },
+    {
+      id: "satisfaction-reminder",
+      category: "Post-vol",
+      label: "Rappel d'enquête (client sans réponse)",
+      html: satisfactionReminderEmail({
         prenom: "Camille",
         dateStr: "samedi 15 août 2026",
         duree: 60,

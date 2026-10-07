@@ -30,6 +30,9 @@ export interface DrawerReservation {
   /** Envoi du mail de report, puis de l'unique rappel (relance du client sans réponse). */
   reschedule_invite_at?: string | null;
   reschedule_reminder_at?: string | null;
+  /** Envoi du mail d'enquête après le vol, puis de l'unique rappel (null une fois l'avis reçu). */
+  satisfaction_invite_at?: string | null;
+  satisfaction_reminder_at?: string | null;
   slot_proposal_token?: string | null;
   slot_proposal_date?: string | null;
   slot_proposal_heure?: string | null;

@@ -12,6 +12,7 @@ import {
   recordCashPayment,
   sendRescheduleInvite,
   sendRescheduleReminder,
+  sendSatisfactionReminder,
   sendBoardingPassEmail,
   proposeSlot,
   setCashPayment,
@@ -215,6 +216,16 @@ export function ReservationDrawer({
       const r = await sendRescheduleReminder(reservation.id);
       if (r.error) { showFeedback("Erreur : " + r.error, false); return; }
       onFieldsChange?.(reservation.id, { reschedule_reminder_at: r.reminderAt });
+      showFeedback("Rappel envoyé au client ✓");
+    });
+  }
+
+  function doSendSatisfactionReminder() {
+    if (!reservation) return;
+    startTransition(async () => {
+      const r = await sendSatisfactionReminder(reservation.id);
+      if (r.error) { showFeedback("Erreur : " + r.error, false); return; }
+      onFieldsChange?.(reservation.id, { satisfaction_reminder_at: r.reminderAt });
       showFeedback("Rappel envoyé au client ✓");
     });
   }
@@ -441,6 +452,7 @@ export function ReservationDrawer({
                           onSendBoardingPass={doSendBoardingPass}
                           onSendReschedule={doSendRescheduleInvite}
                           onSendRescheduleReminder={doSendRescheduleReminder}
+                          onSendSatisfactionReminder={doSendSatisfactionReminder}
                           onRecordCash={doRecordCash}
                           onProposeSlot={doProposeSlot}
                           onGoTo={setActiveTab}

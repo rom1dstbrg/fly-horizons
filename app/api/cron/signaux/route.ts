@@ -21,6 +21,7 @@ const TITRE: Record<SignalKind, string> = {
   non_cloture: "Vol à clôturer",
   sans_heure: "Vol sans heure",
   report_sans_reponse: "Report sans réponse",
+  satisfaction_sans_reponse: "Avis sans réponse",
 };
 
 function dateCourte(d: string): string {
@@ -44,17 +45,19 @@ async function run(request: NextRequest) {
     non_cloture: settings.notifNonCloture,
     sans_heure: false,
     report_sans_reponse: settings.notifReport,
+    satisfaction_sans_reponse: settings.notifSatisfaction,
   };
   const since = new Date(Date.now() - 14 * 86_400_000).toISOString().slice(0, 10);
 
   const { data: resas } = await db
     .from("reservations")
     .select(
-      "id, statut, type_resa, date_vol, heure_vol, created_at, pilote_id, pilote_assigned_at, pilote_paye, paiement_demande_at, client_paiement_declare_at, reschedule_token, reschedule_invite_at, reschedule_reminder_at, slot_proposal_token, clients(prenom, nom), pilotes(nom, user_id)",
+      "id, statut, type_resa, date_vol, heure_vol, created_at, pilote_id, pilote_assigned_at, pilote_paye, paiement_demande_at, client_paiement_declare_at, reschedule_token, reschedule_invite_at, reschedule_reminder_at, satisfaction_invite_at, satisfaction_reminder_at, slot_proposal_token, clients(prenom, nom), pilotes(nom, user_id)",
     )
-    .not("statut", "in", "(annulee,vol_effectue)")
+    .neq("statut", "annulee")
     // Un report en cours garde son ancienne date de vol : on le suit jusqu'à ce que le client choisisse.
-    .or(`date_vol.gte.${since},reschedule_token.not.is.null`);
+    // Un vol effectué ne reste suivi que tant que son enquête de satisfaction attend une réponse.
+    .or(`and(statut.neq.vol_effectue,date_vol.gte.${since}),and(statut.neq.vol_effectue,reschedule_token.not.is.null),satisfaction_invite_at.not.is.null`);
 
   const { data: admins } = await db.from("profiles").select("id").eq("role", "admin");
   const adminIds = (admins ?? []).map((a) => a.id as string);

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationReportConfirmeeEmail, boardingPassEmail, reservationPaymentConfirmationEmail, volSurMesureAcompteEmail, postVolEmail, customEmail, rescheduleInviteEmail, rescheduleReminderEmail,rescheduleConfirmationEmail, reservationAutoAnnuleeEmail, slotProposalEmail } from "@/lib/email-templates";
+import { reservationDateConfirmeeEmail, reservationHeureConfirmeeEmail, reservationReportConfirmeeEmail, boardingPassEmail, reservationPaymentConfirmationEmail, volSurMesureAcompteEmail, postVolEmail, customEmail, rescheduleInviteEmail, rescheduleReminderEmail, satisfactionReminderEmail, rescheduleConfirmationEmail, reservationAutoAnnuleeEmail, slotProposalEmail } from "@/lib/email-templates";
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/resend";
 import { makeRescheduleToken, parseRescheduleToken } from "@/lib/reschedule-token";
 import { rescheduleScope, piloteDeparts } from "@/lib/pilote-dispo";
@@ -242,7 +242,7 @@ export async function updateStatutReservation(
             });
             if (resa.reschedule_pending) await supabase.from("reservations").update({ reschedule_pending: false }).eq("id", id);
           } else if (statut === "vol_effectue") {
-            await resend.emails.send({
+            const { error: surveyMailError } = await resend.emails.send({
               from: EMAIL_FROM,
               to: [client.email],
               replyTo: EMAIL_REPLY_TO,
@@ -254,6 +254,8 @@ export async function updateStatutReservation(
                 surveyUrl: `${siteUrl}/satisfaction/${id}`,
               }),
             });
+            // Point de départ du signal « Avis sans réponse » (et de l'unique rappel).
+            if (!surveyMailError) await supabase.from("reservations").update({ satisfaction_invite_at: new Date().toISOString(), satisfaction_reminder_at: null }).eq("id", id);
           } else {
             // annulee
             await resend.emails.send({
@@ -392,7 +394,7 @@ export async function updateStatutReservationPerso(id: string, statut: string) {
               ...(boardingPass ? { attachments: [boardingPass] } : {}),
             });
           } else if (statut === "vol_effectue") {
-            await resend.emails.send({
+            const { error: surveyMailError } = await resend.emails.send({
               from: EMAIL_FROM,
               to: [client.email],
               replyTo: EMAIL_REPLY_TO,
@@ -404,6 +406,8 @@ export async function updateStatutReservationPerso(id: string, statut: string) {
                 surveyUrl: `${siteUrl}/satisfaction/${id}`,
               }),
             });
+            // Point de départ du signal « Avis sans réponse » (et de l'unique rappel).
+            if (!surveyMailError) await supabase.from("reservations").update({ satisfaction_invite_at: new Date().toISOString(), satisfaction_reminder_at: null }).eq("id", id);
           } else {
             // annulee
             await resend.emails.send({
@@ -720,6 +724,70 @@ export async function sendRescheduleReminder(id: string) {
     return { success: true, reminderAt };
   } catch (e) {
     console.error("sendRescheduleReminder error:", e);
+    return { error: "Erreur serveur" };
+  }
+}
+
+// ── Enquête de satisfaction restée sans réponse : un seul rappel au client ────
+
+export async function sendSatisfactionReminder(id: string) {
+  try {
+    await checkAdminOrOwningPilote(id);
+    const supabase = createAdminClient();
+
+    const { data: resa } = await supabase
+      .from("reservations")
+      .select("*, clients(*), pilotes(nom)")
+      .eq("id", id)
+      .single();
+
+    if (!resa) return { error: "Réservation introuvable" };
+    if (resa.statut !== "vol_effectue") return { error: "Le vol n'est pas marqué effectué" };
+    if (!resa.satisfaction_invite_at) return { error: "Aucune enquête en attente pour ce vol" };
+    if (resa.satisfaction_reminder_at) return { error: "Le client a déjà été relancé" };
+
+    // Le client a peut-être répondu entre-temps : rien à relancer.
+    const { data: existing } = await supabase.from("satisfaction_surveys").select("id").eq("reservation_id", id).maybeSingle();
+    if (existing) return { error: "Le client a déjà donné son avis" };
+
+    const client = resa.clients as { prenom: string; nom: string; email: string } | null;
+    if (!client?.email) return { error: "Email client introuvable" };
+
+    const rawUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+    const siteUrl = rawUrl.startsWith("http://localhost") || rawUrl.startsWith("http://127")
+      ? rawUrl : "https://fly-horizons.com";
+
+    const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {
+      weekday: "long", day: "numeric", month: "long", year: "numeric",
+    });
+
+    const { error: emailError } = await resend.emails.send({
+      from: EMAIL_FROM,
+      to: [client.email],
+      replyTo: EMAIL_REPLY_TO,
+      subject: "Fly Horizons · Votre avis sur votre vol",
+      html: satisfactionReminderEmail({
+        prenom: client.prenom,
+        dateStr,
+        duree: resa.duree,
+        pilote: pilotePropFrom(resa),
+        surveyUrl: `${siteUrl}/satisfaction/${id}`,
+      }),
+    });
+    if (emailError) {
+      console.error("[sendSatisfactionReminder] Erreur email:", emailError);
+      return { error: "Email non envoyé, réessayez" };
+    }
+
+    // Marqué seulement si le mail est parti : un échec ne consomme pas l'unique rappel.
+    const reminderAt = new Date().toISOString();
+    await supabase.from("reservations").update({ satisfaction_reminder_at: reminderAt }).eq("id", id);
+
+    revalidatePath("/admin/vols");
+    revalidatePath("/pilote/vols");
+    return { success: true, reminderAt };
+  } catch (e) {
+    console.error("sendSatisfactionReminder error:", e);
     return { error: "Erreur serveur" };
   }
 }

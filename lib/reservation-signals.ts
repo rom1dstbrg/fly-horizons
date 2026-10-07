@@ -13,7 +13,7 @@ import { brusselsTimestamp } from "@/lib/utils";
 import type { AppSettings } from "@/lib/app-settings";
 
 export type SignalLevel = "warn" | "bad";
-export type SignalKind = "sans_reponse" | "client_dit_paye" | "paiement_attente" | "non_cloture" | "sans_heure" | "report_sans_reponse";
+export type SignalKind = "sans_reponse" | "client_dit_paye" | "paiement_attente" | "non_cloture" | "sans_heure" | "report_sans_reponse" | "satisfaction_sans_reponse";
 
 export interface Signal {
   kind: SignalKind;
@@ -35,6 +35,8 @@ export interface SignalInput {
   reschedule_token?: string | null;
   reschedule_invite_at?: string | null;
   reschedule_reminder_at?: string | null;
+  satisfaction_invite_at?: string | null;
+  satisfaction_reminder_at?: string | null;
   slot_proposal_token?: string | null;
 }
 
@@ -48,6 +50,7 @@ export interface SignalConfig {
   paiement: [number, number];
   nonCloture: [number, number];
   report: [number, number];
+  satisfaction: [number, number];
   sansHeure: boolean;
 }
 
@@ -57,6 +60,7 @@ export const DEFAULT_SIGNAL_CONFIG: SignalConfig = {
   paiement: [3 * D, 5 * D],
   nonCloture: [24 * H, 72 * H],
   report: [7 * D, 12 * D],
+  satisfaction: [5 * D, 10 * D],
   sansHeure: true,
 };
 
@@ -67,6 +71,7 @@ export function signalConfigFrom(s: AppSettings): SignalConfig {
     paiement: [s.paiementOrangeJ * D, s.paiementRougeJ * D],
     nonCloture: [s.nonClotureOrangeH * H, s.nonClotureRougeH * H],
     report: [s.reportOrangeJ * D, s.reportRougeJ * D],
+    satisfaction: [s.satisfactionOrangeJ * D, s.satisfactionRougeJ * D],
     sansHeure: s.sansHeureActif,
   };
 }
@@ -93,6 +98,23 @@ function niveau(ms: number, orange: number, rouge: number): SignalLevel | null {
 export function getSignals(r: SignalInput, now: number = Date.now(), cfg: SignalConfig = current): Signal[] {
   const out: Signal[] = [];
   if (r.statut === "annulee") return out;
+
+  // 0. Vol effectué, enquête de satisfaction envoyée mais pas remplie. Compté depuis l'envoi
+  // du mail ; la date est remise à null dès que le client répond. Une fois l'unique rappel
+  // parti, le signal reste mais ne propose plus rien : l'avis est facultatif.
+  if (r.statut === "vol_effectue" && r.satisfaction_invite_at) {
+    const ms = now - new Date(r.satisfaction_invite_at).getTime();
+    const l = niveau(ms, ...cfg.satisfaction);
+    if (l) {
+      out.push({
+        kind: "satisfaction_sans_reponse",
+        level: l,
+        label: r.satisfaction_reminder_at
+          ? `Avis relancé, sans réponse depuis ${depuis(ms)}`
+          : `Avis sans réponse depuis ${depuis(ms)}`,
+      });
+    }
+  }
 
   // 1. Demande restée sans réponse
   if (DEMANDE.includes(r.statut)) {

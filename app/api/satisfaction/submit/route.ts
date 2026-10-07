@@ -89,6 +89,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Erreur serveur." }, { status: 500 });
     }
 
+    // Avis reçu : plus rien à relancer (remet à zéro le signal « Avis sans réponse »).
+    await supabase.from("reservations").update({ satisfaction_invite_at: null }).eq("id", reservation_id);
+
     const client = resa.clients as unknown as { prenom: string; nom: string; email: string };
     const pilote = (Array.isArray(resa.pilotes) ? resa.pilotes[0] : resa.pilotes) as { nom: string } | null;
     const dateStr = new Date(resa.date_vol + "T12:00:00Z").toLocaleDateString("fr-BE", {

@@ -277,6 +277,7 @@ export function SettingsClient({ settings, tarifs, currentTarifId }: { settings:
                       <PairRow orange="paiementOrangeJ" rouge="paiementRougeJ" unit="jours" title="Paiement en attente" desc="Depuis l'envoi du lien de paiement." />
                       <PairRow orange="nonClotureOrangeH" rouge="nonClotureRougeH" unit="h" title="Vol passé non marqué effectué" desc="Depuis l'heure du vol." />
                       <PairRow orange="reportOrangeJ" rouge="reportRougeJ" unit="jours" title="Report sans réponse du client" desc="Depuis l'envoi du mail de report. Un bouton permet alors de relancer le client une fois." />
+                      <PairRow orange="satisfactionOrangeJ" rouge="satisfactionRougeJ" unit="jours" title="Avis de satisfaction sans réponse" desc="Depuis l'envoi du mail après le vol. Un bouton permet alors de relancer le client une fois." />
                     </Group>
                     <Group title="Vol proche">
                       <ToggleRow k="sansHeureActif" title="Signaler un vol proche sans heure" desc="Orange à moins de 48 h, rouge le jour même." />
@@ -292,6 +293,7 @@ export function SettingsClient({ settings, tarifs, currentTarifId }: { settings:
                       <ToggleRow k="notifClientPaye" title="Client dit avoir payé" />
                       <ToggleRow k="notifNonCloture" title="Vol non marqué effectué" />
                       <ToggleRow k="notifReport" title="Report sans réponse du client" />
+                      <ToggleRow k="notifSatisfaction" title="Avis de satisfaction sans réponse" />
                     </Group>
                     <Group title="Niveau">
                       <Row title="Notifier à partir de" desc="Orange : dès le premier seuil. Rouge : seulement les cas graves." wrap>

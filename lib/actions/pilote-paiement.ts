@@ -299,7 +299,7 @@ export async function marquerVolEffectue(
         weekday: "long", day: "numeric", month: "long", year: "numeric",
       });
       try {
-        await resend.emails.send({
+        const { error: surveyMailError } = await resend.emails.send({
           from: EMAIL_FROM,
           to: [client.email],
           replyTo: EMAIL_REPLY_TO,
@@ -311,6 +311,8 @@ export async function marquerVolEffectue(
             surveyUrl: `${siteUrl()}/satisfaction/${reservationId}`,
           }),
         });
+        if (surveyMailError) emailError = true;
+        else await db.from("reservations").update({ satisfaction_invite_at: new Date().toISOString(), satisfaction_reminder_at: null }).eq("id", reservationId);
       } catch {
         emailError = true;
       }

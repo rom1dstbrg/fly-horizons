@@ -1539,6 +1539,28 @@ export function postVolEmail(p: PostVolEmailProps): string {
   return emailBase(body, "Merci pour votre vol · Fly Horizons");
 }
 
+// ── 15 bis. Rappel : l'enquête de satisfaction n'a pas encore été remplie ────
+
+export function satisfactionReminderEmail(p: {
+  prenom: string;
+  dateStr: string;
+  duree: number;
+  surveyUrl: string;
+  pilote?: { prenom: string } | null;
+}): string {
+  const body = `
+    <p class="em-body" style="margin:0 0 24px;font-size:16px;color:#334155;line-height:1.7;">
+      Bonjour <strong style="color:#0b2238;">${esc(p.prenom)}</strong>, nous esp&eacute;rons que le souvenir de votre vol du <strong>${esc(p.dateStr)}</strong> (${p.duree}&nbsp;min) est toujours aussi beau.
+    </p>
+    <p class="em-body" style="margin:0 0 4px;font-size:16px;color:#334155;line-height:1.7;">
+      Si vous avez une minute, votre avis nous aide &agrave; veiller &agrave; la qualit&eacute; de chaque vol. C&rsquo;est notre seul rappel, et il n&rsquo;y a aucune obligation.
+    </p>
+    ${ctaButton(p.surveyUrl, "Donner mon avis")}
+    ${separator()}
+    ${signOff(p.pilote, "À bientôt,")}`;
+  return emailBase(body, "Votre avis sur votre vol · Fly Horizons");
+}
+
 // ── 16. Résultat enquête — notification admin ─────────────────────────────────
 
 interface SatisfactionResultEmailProps {
