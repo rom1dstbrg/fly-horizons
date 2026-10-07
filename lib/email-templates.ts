@@ -1550,7 +1550,7 @@ export function satisfactionReminderEmail(p: {
 }): string {
   const body = `
     <p class="em-body" style="margin:0 0 24px;font-size:16px;color:#334155;line-height:1.7;">
-      Bonjour <strong style="color:#0b2238;">${esc(p.prenom)}</strong>, nous vous avions &eacute;crit apr&egrave;s votre vol du <strong>${esc(p.dateStr)}</strong> (${p.duree}&nbsp;min) pour vous demander votre avis. Il nous manque encore le v&ocirc;tre.
+      Bonjour <strong style="color:#0b2238;">${esc(p.prenom)}</strong>, nous vous avions &eacute;crit apr&egrave;s votre vol du <strong>${esc(p.dateStr)}</strong> (${p.duree}&nbsp;min) pour vous demander votre avis. Si vous avez un petit moment, nous serions heureux de le recevoir.
     </p>
     <p class="em-body" style="margin:0 0 4px;font-size:16px;color:#334155;line-height:1.7;">
       L&rsquo;enqu&ecirc;te prend moins d&rsquo;une minute et nous lisons chaque r&eacute;ponse. C&rsquo;est le seul rappel que nous vous enverrons, et vous &ecirc;tes libre de ne pas y r&eacute;pondre.
